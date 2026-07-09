@@ -1,0 +1,297 @@
+.saldar-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 1100;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: saldar-fade-in var(--transition-fast) ease-out;
+}
+
+.saldar-modal-card {
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: saldar-scale-in var(--transition-fast) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.saldar-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.saldar-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--text);
+}
+
+.saldar-modal-close {
+  background: transparent;
+  border: 0;
+  color: var(--text-2);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.saldar-modal-close:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.saldar-modal-body {
+  padding: 18px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.saldar-modal-deuda {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.saldar-modal-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.saldar-modal-monto {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: var(--text);
+  line-height: 1.1;
+}
+
+.saldar-modal-detalle {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.saldar-modal-tipo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.saldar-modal-tipo-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  text-align: left;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  color: var(--text);
+  transition: all 0.15s ease;
+}
+
+.saldar-modal-tipo-card:hover {
+  border-color: var(--coral);
+  transform: translateY(-1px);
+}
+
+.saldar-modal-tipo-card strong {
+  font-size: 14px;
+}
+
+.saldar-modal-tipo-card p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.4;
+}
+
+.saldar-modal-tipo-icon {
+  font-size: 22px;
+}
+
+.saldar-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.saldar-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.saldar-form-group label,
+.saldar-form-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.saldar-form-group input,
+.saldar-form-group select {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 10px 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.saldar-form-group input:focus,
+.saldar-form-group select:focus {
+  outline: none;
+  border-color: var(--coral);
+}
+
+.saldar-monto-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.saldar-monto-row input {
+  flex: 1;
+  font-family: var(--font-mono);
+}
+
+.saldar-monto-row .btn-secondary {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 700;
+  padding: 10px 12px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.saldar-monto-row .btn-secondary:hover {
+  border-color: var(--coral);
+}
+
+.saldar-monto-help {
+  margin: 0;
+  font-size: 12px;
+  color: var(--accent-amber);
+}
+
+.saldar-direccion-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.saldar-radio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.saldar-radio input[type="radio"] {
+  accent-color: var(--coral);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.saldar-modal-error {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid var(--coral);
+  color: var(--coral);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.saldar-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.saldar-modal-footer .btn {
+  min-width: 110px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.saldar-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 999px;
+  animation: saldar-spin 0.7s linear infinite;
+}
+
+@keyframes saldar-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes saldar-scale-in {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+@keyframes saldar-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 520px) {
+  .saldar-modal-tipo-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .saldar-modal-footer {
+    padding: 12px 16px;
+  }
+}

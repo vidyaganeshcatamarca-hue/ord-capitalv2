@@ -1,0 +1,196 @@
+/* ── SideNav — Desktop Sidebar Navigation ── */
+
+.side-nav {
+  display: none; /* Oculto en móvil */
+}
+
+@media (min-width: 768px) {
+  .side-nav {
+    display: flex;
+    flex-direction: column;
+    width: 240px;
+    min-width: 240px;
+    height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: var(--space-6) var(--space-4);
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 40;
+    gap: var(--space-4);
+  }
+
+  /* ── Logo ── */
+  .side-nav-logo {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-2);
+  }
+
+  .side-nav-logo-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--blue), var(--mint));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 180, 216, 0.3);
+  }
+
+  .side-nav-logo-icon svg {
+    width: 20px;
+    height: 20px;
+    color: white;
+  }
+
+  .side-nav-logo-text {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--text);
+    letter-spacing: -0.02em;
+  }
+
+  /* ── FAB de registro ── */
+  .side-nav-fab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    width: 100%;
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    background: linear-gradient(135deg, var(--blue), var(--mint));
+    color: white;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    transition: all var(--transition-fast);
+    box-shadow: 0 4px 16px rgba(0, 180, 216, 0.25);
+  }
+
+  .side-nav-fab:hover {
+    box-shadow: 0 6px 20px rgba(0, 180, 216, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .side-nav-fab:active {
+    transform: scale(0.97) translateY(0);
+  }
+
+  .side-nav-fab svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* ── Divider ── */
+  .side-nav-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 0 var(--space-2);
+  }
+
+  .side-nav-bell-row {
+    display: flex;
+    justify-content: center;
+    padding: var(--space-1) var(--space-2);
+  }
+
+  /* ── Nav Items ── */
+  .side-nav-items {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .side-nav-item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-3);
+    border-radius: var(--radius-md);
+    color: var(--text-3);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    position: relative;
+    transition: all var(--transition-fast);
+  }
+
+  .side-nav-item:hover {
+    background: var(--surface-2);
+    color: var(--text);
+  }
+
+  .side-nav-item.active {
+    background: var(--blue-dim);
+    color: var(--mint);
+    font-weight: 600;
+  }
+
+  .side-nav-item-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .side-nav-item-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .side-nav-item-label {
+    flex: 1;
+  }
+
+  .side-nav-item-indicator {
+    width: 3px;
+    height: 18px;
+    background: var(--mint);
+    border-radius: var(--radius-full);
+    position: absolute;
+    right: -4px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  /* ── Footer ── */
+  .side-nav-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  .side-nav-footer-badge {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .side-nav-version {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-4);
+  }
+}

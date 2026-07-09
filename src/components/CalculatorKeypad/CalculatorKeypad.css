@@ -1,0 +1,94 @@
+/* ── CalculatorKeypad CSS ── */
+
+.calculator-keypad-container {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  max-width: 320px;
+  margin: var(--space-3) auto 0;
+  box-shadow: var(--shadow-md);
+}
+
+/* En la PC, se renderiza al lado del input o flotante de manera compacta */
+@media (min-width: 768px) {
+  .calculator-keypad-container {
+    max-width: 260px;
+    padding: var(--space-2);
+  }
+}
+
+.calc-display-expr {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--text-3);
+  text-align: right;
+  min-height: 18px;
+  margin-bottom: 4px;
+  word-wrap: break-word;
+}
+
+.calc-buttons-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+
+@media (min-width: 768px) {
+  .calc-buttons-grid {
+    gap: 4px;
+  }
+}
+
+.calc-btn {
+  height: 46px;
+  border-radius: var(--radius-md);
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  user-select: none;
+  transition: all var(--transition-fast);
+}
+
+@media (min-width: 768px) {
+  .calc-btn {
+    height: 38px;
+    font-size: 14px;
+  }
+}
+
+.calc-btn:active {
+  transform: scale(0.95);
+  background: var(--border);
+}
+
+.calc-btn.operator {
+  background: rgba(0, 180, 216, 0.1);
+  color: var(--mint);
+  border-color: rgba(0, 180, 216, 0.2);
+}
+
+.calc-btn.operator:active {
+  background: rgba(0, 180, 216, 0.2);
+}
+
+.calc-btn.equals {
+  background: var(--mint);
+  color: var(--bg);
+  border-color: var(--mint);
+}
+
+.calc-btn.equals:active {
+  background: #3eb5ad;
+}
+
+.calc-btn.clear {
+  color: var(--coral);
+}

@@ -1,0 +1,73 @@
+.recordatorio-form {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+}
+
+.recordatorio-form label {
+  display: grid;
+  gap: 4px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.recordatorio-form input[type="text"],
+.recordatorio-form input[type="time"],
+.recordatorio-form input[type="date"],
+.recordatorio-form textarea {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.recordatorio-form textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.recordatorio-form-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.recordatorio-form-row label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+  cursor: pointer;
+}
+
+.recordatorio-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.recordatorio-form-actions button {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 0;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.recordatorio-form-actions .secondary {
+  background: transparent;
+  color: #cbd5e1;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.recordatorio-form-actions .primary {
+  background: #4ecdc4;
+  color: #042f2e;
+}

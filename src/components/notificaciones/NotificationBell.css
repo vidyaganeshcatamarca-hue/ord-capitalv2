@@ -1,0 +1,31 @@
+.notif-bell {
+  position: relative;
+  background: transparent;
+  border: 0;
+  color: #cbd5e1;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.notif-bell:hover {
+  background: rgba(78, 205, 196, 0.08);
+  color: #4ecdc4;
+}
+
+.notif-bell-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #ff6b6b;
+  color: #1a0a0a;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}

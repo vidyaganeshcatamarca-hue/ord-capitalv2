@@ -1,0 +1,214 @@
+.liquidar-inversion-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: liquidar-inversion-fade-in var(--transition-fast, 150ms) ease-out;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .liquidar-inversion-modal-overlay {
+    align-items: center;
+    padding: 24px;
+  }
+}
+
+.liquidar-inversion-modal-card {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--surface, #2D2D2D);
+  border: 1px solid var(--border, #3D3D3D);
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  box-shadow: var(--shadow-xl, 0 10px 40px rgba(0, 0, 0, 0.5));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  animation: liquidar-inversion-slide-up var(--transition-fast, 150ms) ease-out;
+}
+
+@media (min-width: 640px) {
+  .liquidar-inversion-modal-card {
+    border-radius: 20px;
+  }
+}
+
+.liquidar-inversion-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.liquidar-inversion-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary, #FFFFFF);
+}
+
+.liquidar-inversion-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #FFFFFF);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast, 150ms) ease;
+}
+
+.liquidar-inversion-modal-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.liquidar-inversion-modal-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--bg, #1A1A1A);
+  border: 1px solid var(--border, #3D3D3D);
+}
+
+.liquidar-inversion-modal-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+}
+
+.liquidar-inversion-modal-summary-label {
+  color: var(--text-secondary, #A0A0A0);
+  font-weight: 500;
+}
+
+.liquidar-inversion-modal-summary-value {
+  color: var(--text-primary, #FFFFFF);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.liquidar-inversion-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+}
+
+.liquidar-inversion-toggle-group {
+  display: flex;
+  background: var(--bg, #1A1A1A);
+  border-radius: 12px;
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--border, #3D3D3D);
+}
+
+.liquidar-inversion-toggle-btn {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #A0A0A0);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast, 150ms) ease;
+}
+
+.liquidar-inversion-toggle-btn--active {
+  background: var(--mint, #4ECDC4);
+  color: #000;
+}
+
+.liquidar-inversion-toggle-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.liquidar-inversion-modal-helper {
+  font-size: 12px;
+  color: var(--text-secondary, #A0A0A0);
+  margin-top: 2px;
+}
+
+.liquidar-inversion-ganancia-block {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: var(--bg, #1A1A1A);
+  border: 1px solid var(--border, #3D3D3D);
+}
+
+.liquidar-inversion-ganancia-label {
+  color: var(--text-secondary, #A0A0A0);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.liquidar-inversion-ganancia-value {
+  font-size: 16px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.liquidar-inversion-ganancia-value--positive {
+  color: var(--mint, #4ECDC4);
+}
+
+.liquidar-inversion-ganancia-value--negative {
+  color: var(--coral, #FF6B6B);
+}
+
+.liquidar-inversion-ganancia-value--zero {
+  color: var(--text-secondary, #A0A0A0);
+}
+
+.liquidar-inversion-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.liquidar-inversion-modal-actions .btn {
+  flex: 1;
+}
+
+@keyframes liquidar-inversion-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes liquidar-inversion-slide-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (min-width: 640px) {
+  @keyframes liquidar-inversion-slide-up {
+    from { transform: scale(0.96); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+}

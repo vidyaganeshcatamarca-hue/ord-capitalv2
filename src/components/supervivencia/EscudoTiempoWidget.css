@@ -1,0 +1,60 @@
+.escudo-numero-grande {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.escudo-dias {
+  font-size: 42px;
+  font-weight: 800;
+  color: #F8FAFC;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.escudo-unidad {
+  font-size: 14px;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.escudo-meta {
+  font-size: 12px;
+  color: #94A3B8;
+  margin-bottom: 8px;
+}
+
+.escudo-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: #CBD5E1;
+  padding: 4px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.escudo-detail-row strong {
+  color: #F8FAFC;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.escudo-alerta-roja {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  background: rgba(255, 107, 107, 0.12);
+  color: #FF6B6B;
+  font-size: 12px;
+  border-radius: 6px;
+  border-left: 3px solid #FF6B6B;
+}
+
+.war-widget-empty {
+  font-size: 13px;
+  color: #94A3B8;
+  margin: 0;
+  text-align: center;
+  padding: 12px 0;
+}

@@ -1,0 +1,60 @@
+.radar-criticos {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.radar-criticos-num {
+  font-size: 36px;
+  font-weight: 800;
+  color: #FF6B6B;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.radar-criticos-label {
+  font-size: 13px;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+.radar-progress {
+  margin-top: 12px;
+}
+
+.radar-progress-bar {
+  position: relative;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.radar-progress-fill {
+  position: absolute;
+  top: 0;
+  height: 100%;
+}
+
+.radar-progress-rojo {
+  background: #FF6B6B;
+  left: 0;
+}
+
+.radar-progress-amarillo {
+  background: #FFE66D;
+}
+
+.radar-progress-labels {
+  display: flex;
+  justify-content: flex-end;
+  font-size: 11px;
+  color: #64748B;
+  margin-top: 4px;
+}
+
+.radar-ok {
+  color: #4ECDC4 !important;
+  font-weight: 600;
+}

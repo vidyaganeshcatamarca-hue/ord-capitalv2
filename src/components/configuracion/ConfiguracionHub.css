@@ -1,0 +1,59 @@
+.config-hub {
+  display: grid;
+  gap: 12px;
+  max-width: 880px;
+  padding: 16px 0;
+}
+
+.config-hub-card {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.72);
+  text-align: left;
+  color: #f8fafc;
+  cursor: pointer;
+  font: inherit;
+  width: 100%;
+}
+
+.config-hub-card:hover {
+  border-color: rgba(78, 205, 196, 0.32);
+}
+
+button.config-hub-card {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.config-hub-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(78, 205, 196, 0.12);
+  font-size: 22px;
+}
+
+.config-hub-card-content h3 {
+  margin: 0 0 4px;
+  font-size: 0.95rem;
+  color: #f8fafc;
+}
+
+.config-hub-card-content p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.config-hub-card-chevron {
+  color: #94A3B8;
+  font-size: 1.5rem;
+}

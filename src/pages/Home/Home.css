@@ -1,0 +1,811 @@
+.home-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: calc(var(--safe-top) + 8px) var(--space-5) 4px;
+}
+
+.home-greeting {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.home-name {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.home-header-actions {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.home-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  position: relative;
+}
+
+/* ── Patrimonio Card ── */
+.home-patrimonio {
+  padding: 12px 18px;
+}
+
+.home-patrimonio-top-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+.home-patrimonio-main-info {
+  text-align: left;
+  flex: 1;
+  min-width: 160px;
+}
+
+.home-patrimonio-extra-info {
+  text-align: right;
+  flex: 0 0 auto;
+}
+
+.home-patrimonio-label-right {
+  font-size: 12px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: var(--space-1);
+}
+
+.home-patrimonio-extra-amount {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+@media (max-width: 480px) {
+  .home-patrimonio-top-flex {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+  }
+  .home-patrimonio-main-info {
+    text-align: left;
+  }
+  .home-patrimonio-extra-info {
+    text-align: left;
+    margin-top: var(--space-2);
+  }
+}
+
+.home-patrimonio-label {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.home-patrimonio-ars {
+  font-size: 30px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.home-patrimonio-usd {
+  font-size: 14px;
+  color: var(--text-3);
+  margin-bottom: 4px;
+}
+
+.home-patrimonio-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--surface-2);
+  border-radius: var(--radius-full);
+  padding: 2px 8px;
+}
+
+/* ── Safe-to-Spend ── */
+.home-safe-card {
+  padding: var(--space-5);
+}
+
+.home-safe-amount {
+  font-size: 36px;
+  font-weight: 800;
+  color: var(--mint);
+}
+
+/* ── Acciones rápidas ── */
+.home-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+}
+
+.home-action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-2);
+  border-radius: var(--radius-lg);
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.home-action-emoji {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.home-action-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-2);
+}
+
+/* ── Empty donut placeholder ── */
+.home-empty-donut {
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ── Coachmarks Overlay ── */
+.coachmark-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(10, 14, 20, 0.88); /* Más oscuro y limpio, sin blur confuso */
+  z-index: 1000;
+  pointer-events: all;
+}
+
+/* Banner Superior de Tutorial */
+.coachmark-tutorial-banner {
+  position: absolute;
+  top: calc(var(--safe-top) + var(--space-4));
+  left: var(--space-5);
+  right: var(--space-5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  z-index: 1002;
+  box-shadow: var(--shadow-md);
+}
+
+.tutorial-badge {
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--mint);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.tutorial-step {
+  font-size: 12px;
+  color: var(--text-3);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Efecto de Foco Titilante (Linterna) */
+.highlight-pulse {
+  position: relative;
+  z-index: 1001 !important; /* Arriba del overlay */
+  border-color: var(--mint) !important;
+  box-shadow: 0 0 0 3px var(--mint), 0 0 20px rgba(0, 180, 216, 0.6) !important;
+  animation: highlight-pulse-anim 2s infinite ease-in-out !important;
+  pointer-events: none; /* Evitar clics accidentales durante el tutorial */
+}
+
+@keyframes highlight-pulse-anim {
+  0%, 100% {
+    box-shadow: 0 0 0 2px var(--mint), 0 0 10px rgba(0, 180, 216, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 4px var(--mint), 0 0 24px rgba(0, 180, 216, 0.75);
+  }
+}
+
+.coachmark-box {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  max-width: 320px;
+}
+
+.coachmark-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-xl);
+}
+
+.coachmark-text {
+  font-size: 13.5px;
+  color: var(--text);
+  line-height: 1.55;
+  font-weight: 500;
+  margin: 0;
+}
+
+.coachmark-arrow {
+  width: 0;
+  height: 0;
+  border-style: solid;
+  position: absolute;
+}
+
+/* ── Posiciones y Flechas Específicas ── */
+.coachmark-hero {
+  top: 240px; /* Posicionado un poco más abajo para no chocar textos */
+  left: 50%;
+  transform: translateX(-50%);
+}
+.coachmark-hero .coachmark-arrow {
+  border-width: 0 10px 10px 10px;
+  border-color: transparent transparent var(--surface) transparent;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.coachmark-fab {
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.coachmark-fab .coachmark-arrow {
+  border-width: 10px 10px 0 10px;
+  border-color: var(--surface) transparent transparent transparent;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.coachmark-bell {
+  top: 76px;
+  right: var(--space-5);
+}
+.coachmark-bell .coachmark-arrow {
+  border-width: 0 10px 10px 10px;
+  border-color: transparent transparent var(--surface) transparent;
+  top: -10px;
+  right: 12px;
+}
+
+/* ── Desglose de Categorías ── */
+.category-breakdown-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-1) 0;
+}
+
+.category-breakdown-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.category-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13.5px;
+}
+
+.category-label-wrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.category-icon-badge {
+  font-size: 16px;
+}
+
+.category-name {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.category-amount-wrap {
+  text-align: right;
+}
+
+.category-amount {
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-2);
+}
+
+.category-percentage {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-left: var(--space-2);
+}
+
+.category-progress-bar-bg {
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.category-progress-bar-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width var(--transition-slow);
+}
+
+/* ── Feed de Actividad (Línea de Tiempo) ── */
+.timeline-feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.timeline-item:last-child {
+  border-bottom: none;
+}
+
+.timeline-item-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.timeline-item-details {
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.timeline-item-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 2px;
+}
+
+.timeline-item-category {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.timeline-item-amount {
+  font-size: 14.5px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.timeline-item-amount.positive {
+  color: var(--mint);
+}
+
+.timeline-item-amount.negative {
+  color: var(--coral);
+}
+
+.timeline-item-subtext-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+.timeline-item-detail {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Dropdown / Panel de Alertas ── */
+.home-alerts-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: var(--shadow-lg);
+}
+
+.home-alerts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--space-2);
+}
+
+.home-alerts-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.alert-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-2);
+  background: var(--surface-2);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: var(--text-2);
+  border-left: 3px solid var(--coral);
+}
+
+.alert-item-label {
+  font-weight: 500;
+}
+
+.alert-item-badge {
+  background: var(--coral-dim);
+  color: var(--coral);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.alert-vencimientos-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.alert-vencimiento-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface-2);
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  border-left: 3px solid var(--amber);
+}
+
+/* ── Billeteras Horizontal Scroll ── */
+.billeteras-horizontal-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: calc((100% - var(--space-3)) / 2);
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding: var(--space-2) 0 var(--space-3) 0;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* En la PC, mostramos en grilla responsiva de columnas estables */
+@media (min-width: 768px) {
+  .billeteras-horizontal-scroll {
+    display: grid;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+    overflow-x: visible;
+    padding: 0;
+    margin: 0;
+    scroll-snap-type: none;
+  }
+}
+
+.billeteras-horizontal-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.billeteras-horizontal-scroll::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: var(--radius-full);
+}
+
+.billetera-card {
+  scroll-snap-align: start;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 122px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+@media (min-width: 768px) {
+  .billetera-card {
+    flex: none;
+    min-height: 122px;
+  }
+}
+
+.billetera-card:active {
+  transform: scale(0.97);
+}
+
+.billetera-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.billetera-emoji-badge {
+  font-size: 16px;
+}
+
+.billetera-card-main {
+  margin-top: 4px;
+  flex-grow: 1;
+}
+
+.billetera-card-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-2);
+  margin-bottom: 1px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+  min-height: calc(1.2em * 2);
+}
+
+.billetera-card-saldo {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.billetera-last-conciliated {
+  font-size: 10px;
+  color: var(--text-3);
+  display: block;
+  margin-top: 1px;
+}
+
+.btn-conciliar-action {
+  background: rgba(0, 180, 216, 0.08);
+  color: var(--mint);
+  border: 1px solid rgba(0, 180, 216, 0.25);
+  padding: 4px 0;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-weight: 700;
+  cursor: pointer;
+  width: 100%;
+  margin-top: 6px;
+  transition: all var(--transition-fast);
+}
+
+.btn-conciliar-action:hover {
+  background: rgba(0, 180, 216, 0.15);
+  border-color: var(--mint);
+}
+
+/* ── Layout Principal Adaptativo (Observación 1) ── */
+.home-dashboard-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+@media (max-width: 767px) {
+  .home-dashboard-left-col,
+  .home-dashboard-right-col {
+    display: contents;
+  }
+
+  .home-section-total {
+    order: 1;
+  }
+  .home-section-billeteras {
+    order: 2;
+  }
+  .home-section-donut {
+    order: 3;
+  }
+  .home-section-fugas {
+    order: 4;
+  }
+  .home-section-feed {
+    order: 5;
+  }
+}
+
+@media (min-width: 768px) {
+  .home-dashboard-layout {
+    display: grid;
+    grid-template-columns: 1.15fr 0.85fr;
+    gap: var(--space-5);
+    padding: 0;
+    align-items: start;
+  }
+}
+
+.scroll-hint-mobile {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+@media (min-width: 768px) {
+  .scroll-hint-mobile {
+    display: none; /* Ocultar pista de scroll en desktop */
+  }
+}
+
+@media (max-width: 420px) {
+  .billeteras-horizontal-scroll {
+    grid-auto-columns: calc((100% - var(--space-2)) / 2);
+    gap: var(--space-2);
+  }
+
+  .billetera-card {
+    padding: 10px;
+    min-height: 110px;
+  }
+}
+
+.timeline-item-delete-btn {
+  background: none;
+  border: none;
+  font-size: 14px;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  opacity: 0.3;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  color: var(--coral);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-item:hover .timeline-item-delete-btn {
+  opacity: 0.7;
+}
+
+.timeline-item-delete-btn:hover {
+  opacity: 1 !important;
+  transform: scale(1.15);
+}
+
+@media (max-width: 768px) {
+  .timeline-item-delete-btn {
+    opacity: 0.6; /* Más visible en dispositivos táctiles sin hover */
+  }
+}
+
+/* ─── Donut Chart & Breakdown Styles ─── */
+.donut-section-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+}
+
+@media (min-width: 480px) {
+  .donut-section-wrapper {
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+    gap: var(--space-5);
+  }
+}
+
+.donut-chart-container {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.donut-chart-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.donut-center-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.donut-center-label {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+}
+
+.donut-center-amount {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin-top: 2px;
+}
+
+/* ── Botón para ocultar fugas de capital ── */
+.fugas-misterio-ocultar-btn {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  background: none;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  padding: var(--space-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-2);
+}
+
+.fugas-misterio-ocultar-btn:hover {
+  opacity: 0.9;
+  transform: scale(1.15);
+}
+

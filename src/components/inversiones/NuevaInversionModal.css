@@ -1,0 +1,156 @@
+.nueva-inversion-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  animation: nueva-inversion-fade-in var(--transition-fast, 150ms) ease-out;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .nueva-inversion-modal-overlay {
+    align-items: center;
+    padding: 24px;
+  }
+}
+
+.nueva-inversion-modal-card {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--surface, #2D2D2D);
+  border: 1px solid var(--border, #3D3D3D);
+  border-radius: 20px 20px 0 0;
+  padding: 20px;
+  box-shadow: var(--shadow-xl, 0 10px 40px rgba(0, 0, 0, 0.5));
+  animation: nueva-inversion-slide-up var(--transition-fast, 150ms) ease-out;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+}
+
+@media (min-width: 640px) {
+  .nueva-inversion-modal-card {
+    border-radius: 20px;
+  }
+}
+
+.nueva-inversion-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.nueva-inversion-modal-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary, #FFFFFF);
+}
+
+.nueva-inversion-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #FFFFFF);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition-fast, 150ms) ease;
+}
+
+.nueva-inversion-modal-close:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.nueva-inversion-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+}
+
+.nueva-inversion-tipo-group,
+.nueva-inversion-moneda-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 8px;
+}
+
+.nueva-inversion-tipo-option,
+.nueva-inversion-moneda-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg, #1A1A1A);
+  border: 1px solid var(--border, #3D3D3D);
+  color: var(--text-secondary, #A0A0A0);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all var(--transition-fast, 150ms) ease;
+}
+
+.nueva-inversion-tipo-option--active,
+.nueva-inversion-moneda-option--active {
+  border-color: var(--mint, #4ECDC4);
+  background: rgba(78, 205, 196, 0.1);
+  color: var(--text-primary, #FFFFFF);
+}
+
+.nueva-inversion-tipo-option input,
+.nueva-inversion-moneda-option input {
+  width: auto;
+  margin: 0;
+  accent-color: var(--mint, #4ECDC4);
+}
+
+.nueva-inversion-modal-disclaimer {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 230, 109, 0.08);
+  border: 1px solid rgba(255, 230, 109, 0.2);
+  color: var(--amber, #FFE66D);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.nueva-inversion-modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.nueva-inversion-modal-actions .btn {
+  flex: 1;
+}
+
+@keyframes nueva-inversion-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes nueva-inversion-slide-up {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (min-width: 640px) {
+  @keyframes nueva-inversion-slide-up {
+    from { transform: scale(0.96); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+}

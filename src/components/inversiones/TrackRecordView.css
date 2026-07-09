@@ -1,0 +1,91 @@
+.track-record-view {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4, 16px);
+  width: 100%;
+  padding: var(--space-4, 16px);
+}
+
+.track-record-view-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4, 16px);
+}
+
+.track-record-view-title {
+  margin: 0;
+  color: var(--text, #e6edf3);
+  font-family: var(--font-display, system-ui, sans-serif);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.track-record-view-subtitle {
+  margin: var(--space-1, 4px) 0 0;
+  color: var(--text-3, #8b949e);
+  font-size: 14px;
+}
+
+.track-record-view-tabs {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  background: var(--surface, #161b22);
+  border: 1px solid var(--border, #30363d);
+  border-radius: var(--radius-full, 9999px);
+  flex-shrink: 0;
+}
+
+.track-record-view-tab {
+  border: none;
+  border-radius: var(--radius-full, 9999px);
+  padding: 8px 14px;
+  background: transparent;
+  color: var(--text-3, #8b949e);
+  cursor: pointer;
+  font-family: var(--font-body, system-ui, sans-serif);
+  font-size: 13px;
+  font-weight: 700;
+  transition: background var(--transition-fast, 150ms ease),
+              color var(--transition-fast, 150ms ease);
+  white-space: nowrap;
+}
+
+.track-record-view-tab:hover {
+  color: var(--text, #e6edf3);
+}
+
+.track-record-view-tab:focus-visible {
+  outline: 2px solid var(--mint, #00B4D8);
+  outline-offset: 2px;
+}
+
+.track-record-view-tab--active {
+  background: var(--mint-dim, rgba(0, 180, 216, 0.12));
+  color: var(--mint, #00B4D8);
+}
+
+.track-record-view-panel {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .track-record-view {
+    padding: var(--space-3, 12px);
+  }
+
+  .track-record-view-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .track-record-view-tabs {
+    width: 100%;
+  }
+
+  .track-record-view-tab {
+    flex: 1;
+  }
+}

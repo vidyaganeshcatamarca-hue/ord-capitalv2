@@ -1,0 +1,76 @@
+.health-history {
+  display: grid;
+  gap: 14px;
+}
+
+.health-history-chart {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.health-history-svg {
+  display: block;
+  width: 100%;
+  min-height: 220px;
+}
+
+.health-history-ref {
+  stroke: rgba(148, 163, 184, 0.28);
+  stroke-dasharray: 5 5;
+  stroke-width: 1;
+}
+
+.health-history-ref-label {
+  fill: #94a3b8;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.health-history-area {
+  fill: rgba(16, 185, 129, 0.14);
+}
+
+.health-history-line {
+  fill: none;
+  stroke: #10b981;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.health-history-dot {
+  fill: #d1fae5;
+  stroke: #10b981;
+  stroke-width: 1.5;
+  cursor: pointer;
+}
+
+.health-history-empty {
+  padding: 20px;
+  border: 1px dashed rgba(148, 163, 184, 0.28);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.48);
+  color: #cbd5e1;
+}
+
+.health-history-empty p,
+.health-history-tooltip {
+  margin: 0;
+}
+
+.health-history-tooltip {
+  color: #cbd5e1;
+  font-size: 0.9rem;
+}
+
+.health-history-retry {
+  margin-top: 12px;
+  padding: 8px 12px;
+  border: 1px solid rgba(16, 185, 129, 0.34);
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #bbf7d0;
+  font-weight: 800;
+}

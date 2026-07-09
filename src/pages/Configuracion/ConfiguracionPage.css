@@ -1,0 +1,28 @@
+.config-page {
+  min-height: 100vh;
+  padding: 24px 16px 96px;
+  background: #0f172a;
+  color: #f8fafc;
+  display: grid;
+  gap: 18px;
+}
+
+.config-page-header h1 {
+  margin: 0 0 6px;
+  font-size: clamp(2rem, 9vw, 3.2rem);
+  line-height: 0.95;
+}
+
+.config-page-header p {
+  margin: 0;
+  color: #cbd5e1;
+  max-width: 680px;
+}
+
+@media (min-width: 768px) {
+  .config-page {
+    margin-left: var(--sidebar-width);
+    margin-right: auto;
+    padding: 32px 28px 72px;
+  }
+}

@@ -1,0 +1,85 @@
+.salud-page {
+  min-height: 100vh;
+  padding: 24px 16px 96px;
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.salud-header {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 22px;
+}
+
+.salud-kicker {
+  margin: 0;
+  color: #10b981;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.salud-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 9vw, 3.6rem);
+  line-height: 0.95;
+}
+
+.salud-header p:last-child {
+  max-width: 680px;
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+
+.salud-grid {
+  display: grid;
+  gap: 18px;
+  margin: 18px 0;
+}
+
+.salud-page--loading,
+.salud-page--error {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  text-align: center;
+}
+
+.salud-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid rgba(148, 163, 184, 0.24);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: salud-spin 0.8s linear infinite;
+}
+
+.salud-retry {
+  padding: 10px 14px;
+  border: 1px solid rgba(16, 185, 129, 0.36);
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #bbf7d0;
+  font-weight: 800;
+}
+
+@keyframes salud-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (min-width: 768px) {
+  .salud-page {
+    max-width: 1180px;
+    margin-left: var(--sidebar-width);
+    margin-right: auto;
+    padding: 32px 28px 72px;
+  }
+
+  .salud-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(340px, 0.9fr);
+    align-items: start;
+  }
+}

@@ -1,0 +1,51 @@
+.score-radar {
+  width: min(100%, 360px);
+  margin: 0 auto;
+}
+
+.score-radar-svg {
+  display: block;
+  width: 100%;
+  min-height: 260px;
+}
+
+.score-radar-grid {
+  fill: none;
+  stroke: rgba(148, 163, 184, 0.22);
+  stroke-width: 1;
+}
+
+.score-radar-axis {
+  stroke: rgba(148, 163, 184, 0.28);
+  stroke-width: 1;
+}
+
+.score-radar-area {
+  fill: rgba(16, 185, 129, 0.22);
+  stroke: none;
+}
+
+.score-radar-line {
+  fill: none;
+  stroke: #10b981;
+  stroke-linejoin: round;
+  stroke-width: 2.5;
+}
+
+.score-radar-dot {
+  fill: #d1fae5;
+  stroke: #10b981;
+  stroke-width: 1.5;
+}
+
+.score-radar-label {
+  fill: #cbd5e1;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+@media (max-width: 420px) {
+  .score-radar-label {
+    font-size: 7px;
+  }
+}

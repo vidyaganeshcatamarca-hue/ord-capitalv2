@@ -1,0 +1,88 @@
+.cuarentena-page {
+  padding: 24px 16px;
+  min-height: 100vh;
+  padding-bottom: 100px;
+}
+
+@media (min-width: 768px) {
+  .cuarentena-page {
+    margin-left: var(--sidebar-width);
+  }
+}
+
+.cuarentena-header {
+  margin-bottom: 24px;
+}
+
+.cuarentena-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.cuarentena-stat-card {
+  flex: 1;
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  border: 1px solid var(--border);
+}
+
+.cuarentena-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cuarentena-item {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cuarentena-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.cuarentena-item-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+
+.btn-cuarentena {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-cuarentena.approve {
+  background: rgba(34, 197, 94, 0.1);
+  color: var(--mint);
+}
+
+.btn-cuarentena.reject {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--coral);
+}
+
+.btn-cuarentena.edit {
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--blue);
+}

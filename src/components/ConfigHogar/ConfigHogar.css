@@ -1,0 +1,238 @@
+.config-hogar {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.config-hogar-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.config-hogar-card-danger {
+  border-color: var(--coral);
+  background: rgba(255, 107, 107, 0.05);
+}
+
+.config-hogar-label {
+  display: inline-block;
+  color: var(--coral);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.config-hogar-label-danger {
+  color: var(--coral);
+}
+
+.config-hogar-text {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.config-hogar-integrantes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.config-hogar-integrante {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+}
+
+.config-hogar-integrante-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.config-hogar-integrante strong {
+  display: block;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.config-hogar-integrante span {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.config-hogar-proporcion {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.config-hogar-proporcion-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 48px;
+  gap: 10px;
+  align-items: center;
+}
+
+.config-hogar-proporcion-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.config-hogar-proporcion-track {
+  width: 100%;
+  height: 8px;
+  background: var(--surface-3);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.config-hogar-proporcion-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.2s ease;
+}
+
+.config-hogar-proporcion-fill-creador {
+  background: var(--coral);
+}
+
+.config-hogar-proporcion-fill-invitado {
+  background: var(--accent-mint);
+}
+
+.config-hogar-proporcion-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--coral);
+}
+
+.config-hogar-proporcion-row strong {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  text-align: right;
+}
+
+.config-hogar-proporcion-error {
+  margin: 0;
+  color: var(--coral);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.config-hogar-codigo {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.config-hogar-codigo-text {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 22px;
+  letter-spacing: 0.15em;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+  color: var(--coral);
+  font-weight: 800;
+}
+
+.config-hogar-codigo-expira {
+  color: var(--text-3);
+  font-size: 12px;
+  text-align: center;
+}
+
+.config-hogar-codigo-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.config-hogar-codigo-actions button {
+  flex: 1;
+  min-width: 120px;
+}
+
+.config-hogar-danger-text {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.config-hogar-danger-input,
+.config-hogar-unirse-input {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 10px 12px;
+}
+
+.config-hogar-danger-input:focus,
+.config-hogar-unirse-input:focus {
+  outline: none;
+  border-color: var(--coral);
+}
+
+.btn-danger {
+  background: var(--coral);
+  border: 1px solid var(--coral);
+  color: #FFFFFF;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  padding: 10px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-danger:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 520px) {
+  .config-hogar-integrantes {
+    grid-template-columns: 1fr;
+  }
+
+  .config-hogar-proporcion-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .config-hogar-proporcion-row strong {
+    text-align: left;
+  }
+}

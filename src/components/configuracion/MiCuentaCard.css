@@ -1,0 +1,71 @@
+.mi-cuenta-card {
+  display: grid;
+  gap: 12px;
+}
+
+.mi-cuenta-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mi-cuenta-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, #ff6b6b, #ffe66d);
+  color: #1a0a0a;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.mi-cuenta-info h3 {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #f8fafc;
+}
+
+.mi-cuenta-info p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+}
+
+.mi-cuenta-form {
+  display: grid;
+  gap: 6px;
+}
+
+.mi-cuenta-form label {
+  display: grid;
+  gap: 4px;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+}
+
+.mi-cuenta-form input {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: #0f172a;
+  color: #f8fafc;
+}
+
+.mi-cuenta-button {
+  align-self: flex-start;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #4ecdc4;
+  color: #042f2e;
+  border: 0;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.mi-cuenta-button.ghost {
+  background: rgba(255, 107, 107, 0.1);
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.32);
+}

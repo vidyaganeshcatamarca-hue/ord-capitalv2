@@ -1,0 +1,1282 @@
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { supabase } from '@/lib/supabase'
+import { useToast } from '@/contexts/ToastContext'
+import { t, parseError } from '@/locales/i18n'
+import './Presupuestos.css'
+
+// ─── TIPOS ────────────────────────────────────────────────────────────────────
+
+interface SobreDetalle {
+  estructura_id: number
+  nombre_categoria: string
+  icono: string
+  color: string
+  tipo_cupo: string
+  padre_id: number | null
+  monto_asignado: number
+  monto_gastado: number
+  monto_disponible: number
+  arrastre_mes_anterior: number
+  estado_sobre: string
+  metodo_sobregasto: string | null
+  isVirtualDisponible?: boolean
+}
+
+interface ConfigPresupuesto {
+  modo_presupuesto: 'base_cero' | 'anticipado'
+  porcentaje_necesidades: number
+  porcentaje_deseos: number
+  porcentaje_ahorro: number
+  porcentaje_diezmo: number
+  dia_ancla_ciclo: number
+}
+
+interface SugerenciaActivacion {
+  estructura_id: number
+  nombre: string
+  tipo_cupo: string
+  monto_sugerido: number
+}
+
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
+
+const formatMonto = (n: number) => {
+  const abs = Math.abs(n)
+  const str = Math.round(abs).toLocaleString('es-AR')
+  return n < 0 ? `-$${str}` : `$${str}`
+}
+
+const getMesPeriodo = (offset: number = 0): Date => {
+  const d = new Date()
+  d.setDate(1)
+  d.setMonth(d.getMonth() + offset)
+  return d
+}
+
+const formatMesLabel = (d: Date) =>
+  d.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' })
+    .replace(/^\w/, c => c.toUpperCase())
+
+const TIPO_CUPO_META: Record<string, { label: string; icono: string }> = {
+  need: { label: 'NECESIDADES', icono: '🏠' },
+  want: { label: 'DESEOS', icono: '✨' },
+  investment: { label: 'AHORRO E INVERSIÓN', icono: '💎' },
+  saving: { label: 'AHORRO E INVERSIÓN', icono: '💎' },
+  tithe: { label: 'DIEZMO', icono: '🙏' },
+}
+
+const getColorBarra = (estado: string) => {
+  if (estado === 'verde') return 'verde'
+  if (estado === 'amarillo_precaucion') return 'amarillo'
+  if (estado === 'rojo_excedido') return 'rojo'
+  return 'verde'
+}
+
+const getPctBarra = (gastado: number, asignado: number) => {
+  if (asignado <= 0) return gastado > 0 ? 100 : 0
+  return Math.min(Math.round((gastado / asignado) * 100), 100)
+}
+
+// ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
+
+export function PresupuestosPage() {
+  const { showToast } = useToast()
+
+  // Estado de datos
+  const [saldoAsignar, setSaldoAsignar] = useState<number | null>(null)
+  const [sobres, setSobres] = useState<SobreDetalle[]>([])
+  const [config, setConfig] = useState<ConfigPresupuesto | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  // Mes seleccionado (offset respecto a hoy, 0 = mes actual)
+  const [mesOffset, setMesOffset] = useState(0)
+  const [showMesDropdown, setShowMesDropdown] = useState(false)
+
+  // Acordeones abiertos
+  const [acordeonesAbiertos, setAcordeonesAbiertos] = useState<Set<string>>(
+    new Set(['need', 'want', 'investment', 'saving', 'tithe'])
+  )
+
+  // Modales
+  const [sobreSeleccionado, setSobreSeleccionado] = useState<SobreDetalle | null>(null)
+  const [showAsignarSheet, setShowAsignarSheet] = useState(false)
+  const [showTransferirModal, setShowTransferirModal] = useState(false)
+  const [showReglasModal, setShowReglasModal] = useState(false)
+  const [showBaseCeroModal, setShowBaseCeroModal] = useState(false)
+
+  // Estado Asignar Sheet
+  const [montoManual, setMontoManual] = useState('')
+  const [mostrando, setMostrando] = useState<'opciones' | 'monto'>('opciones')
+  const montoRef = useRef<HTMLInputElement>(null)
+
+  // Estado Transferir
+  const [origenSeleccionado, setOrigenSeleccionado] = useState<SobreDetalle | null>(null)
+  const [montoTransferir, setMontoTransferir] = useState('')
+  const [loadingTransferir, setLoadingTransferir] = useState(false)
+
+  // Estado Reglas de Oro
+  const [reglasForm, setReglasForm] = useState({
+    necesidades: 50, deseos: 30, ahorro: 20, diezmo: 0, diaAncla: 1
+  })
+  const [modoForm, setModoForm] = useState<'base_cero' | 'anticipado'>('anticipado')
+  const [loadingReglas, setLoadingReglas] = useState(false)
+
+  // Estado Activar Base Cero
+  const [acepto, setAcepto] = useState('')
+  const [paso, setPaso] = useState<1 | 2>(1)
+  const [sugerencias, setSugerencias] = useState<SugerenciaActivacion[]>([])
+  const [liquidezActivacion, setLiquidezActivacion] = useState(0)
+  const [montosEditados, setMontosEditados] = useState<Record<number, string>>({})
+  const [loadingActivar, setLoadingActivar] = useState(false)
+
+  const mesPeriodo = getMesPeriodo(mesOffset)
+  const mesPeriodoStr = mesPeriodo.toISOString().slice(0, 10)
+
+  // ─── CARGA INICIAL ────────────────────────────────────────────────────────
+
+  const cargarDatos = useCallback(async () => {
+    setLoading(true)
+    try {
+      const [rSaldo, rSobres, rConfig] = await Promise.all([
+        supabase.rpc('fn_obtener_saldo_a_asignar', { p_mes_periodo: mesPeriodoStr }),
+        supabase.rpc('fn_reporte_sobres_detalle', { p_mes_periodo: mesPeriodoStr }),
+        supabase.rpc('fn_obtener_config_presupuesto'),
+      ])
+
+      if (rSaldo.error) throw rSaldo.error
+      if (rSobres.error) throw rSobres.error
+
+      setSaldoAsignar(Number(rSaldo.data ?? 0))
+      const sobresFiltrados = ((rSobres.data ?? []) as SobreDetalle[]).filter(
+        s => {
+          const nombreLower = (s.nombre_categoria || '').toLowerCase();
+          return nombreLower !== 'cat_misterio' && 
+                 nombreLower !== 'cat_mystery' && 
+                 nombreLower !== 'misterio/olvido' && 
+                 nombreLower !== 'misterio' &&
+                 nombreLower !== 'olvido';
+        }
+      )
+      setSobres(sobresFiltrados)
+
+      if (!rConfig.error && rConfig.data) {
+        // fn_obtener_config_presupuesto retorna TABLE → data es array, tomar primer elemento
+        const rawData = rConfig.data as ConfigPresupuesto[]
+        const cfg = Array.isArray(rawData) ? rawData[0] : rawData as unknown as ConfigPresupuesto
+        if (cfg) {
+          setConfig(cfg)
+          setReglasForm({
+            necesidades: Number(cfg.porcentaje_necesidades ?? 50),
+            deseos: Number(cfg.porcentaje_deseos ?? 30),
+            ahorro: Number(cfg.porcentaje_ahorro ?? 20),
+            diezmo: Number(cfg.porcentaje_diezmo ?? 0),
+            diaAncla: Number(cfg.dia_ancla_ciclo ?? 1),
+          })
+          setModoForm(cfg.modo_presupuesto ?? 'anticipado')
+        }
+      }
+    } catch (err: any) {
+      console.error('Error cargando presupuestos:', err)
+      showToast('Error al cargar presupuestos', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }, [mesPeriodoStr])
+
+  useEffect(() => {
+    cargarDatos()
+    const handleSuccess = () => {
+      cargarDatos()
+    }
+    window.addEventListener('movement-added', handleSuccess)
+    return () => {
+      window.removeEventListener('movement-added', handleSuccess)
+    }
+  }, [cargarDatos])
+
+  // ─── LÓGICA DE ACORDEONES ─────────────────────────────────────────────────
+
+  const toggleAcordeon = (tipo: string) => {
+    setAcordeonesAbiertos(prev => {
+      const next = new Set(prev)
+      if (next.has(tipo)) next.delete(tipo)
+      else next.add(tipo)
+      return next
+    })
+  }
+
+  // ─── AGRUPACIÓN DE SOBRES ─────────────────────────────────────────────────
+
+  const gruposOrdenados = (() => {
+    const mapa: Record<string, SobreDetalle[]> = {}
+    for (const s of sobres) {
+      // Si estamos en Base Cero y el sobre está en rojo (déficit), no lo mostramos abajo (se muestra arriba en prioridad)
+      if (config?.modo_presupuesto === 'base_cero' && s.monto_disponible < 0) {
+        continue
+      }
+      const tipo = s.tipo_cupo || 'other'
+      // Unificar investment y saving bajo la misma clave
+      const key = (tipo === 'saving' || tipo === 'investment') ? 'investment' : tipo
+      if (!mapa[key]) mapa[key] = []
+      mapa[key].push(s)
+    }
+    // Orden: need → want → investment → tithe
+    const orden = ['need', 'want', 'investment', 'tithe']
+    return orden.filter(k => mapa[k]).map(k => ({ tipo: k, items: mapa[k] }))
+  })()
+
+  // ─── HEADER DISPONIBLE ────────────────────────────────────────────────────
+
+  const getEstadoDisponible = () => {
+    if (config?.modo_presupuesto === 'anticipado') return 'estado-anticipado'
+    if (saldoAsignar === null) return 'estado-positivo'
+    if (saldoAsignar > 0) return 'estado-positivo'
+    if (saldoAsignar === 0) return 'estado-cero'
+    return 'estado-negativo'
+  }
+
+  const getLabelDisponible = () => {
+    if (config?.modo_presupuesto === 'anticipado') return 'PROYECCIÓN DEL MES'
+    if (saldoAsignar === 0) return '¡BASE CERO ALCANZADO! ✅'
+    if (saldoAsignar !== null && saldoAsignar < 0) return 'SOBRE-ASIGNACIÓN'
+    return 'DISPONIBLE PARA ASIGNAR'
+  }
+
+  const getSubtextoDisponible = () => {
+    if (config?.modo_presupuesto === 'anticipado') return t('budget_subtexto_anticipado') || 'Modo libertad activo — según tu dinero ideal'
+    if (saldoAsignar !== null && saldoAsignar < 0) return 'Estás presupuestando dinero que no tienes'
+    if (saldoAsignar === 0) return 'Cada peso tiene un destino asignado'
+    if (saldoAsignar !== null && saldoAsignar > 0) return 'Dinero esperando destino'
+    return ''
+  }
+
+  // ─── ASIGNAR PRESUPUESTO ─────────────────────────────────────────────────
+
+  const handleAbrirAsignar = (sobre: SobreDetalle) => {
+    setSobreSeleccionado(sobre)
+    setMostrando('opciones')
+    setMontoManual('')
+    setShowAsignarSheet(true)
+  }
+
+  const ejecutarAsignacion = async (monto: number) => {
+    if (!sobreSeleccionado) return
+    if (isNaN(monto) || monto <= 0) {
+      showToast('Ingresa un monto válido', 'error')
+      return
+    }
+    try {
+      const { error } = await supabase.rpc('fn_asignar_presupuesto', {
+        p_estructura_egreso_id: sobreSeleccionado.estructura_id,
+        p_monto_asignado: monto,
+        p_mes_periodo: mesPeriodoStr,
+      })
+      if (error) throw error
+      showToast(`$${Math.round(monto).toLocaleString('es-AR')} ${t('toast_assigned_to') || 'asignado a'} ${t(sobreSeleccionado.nombre_categoria)}`, 'success')
+      setShowAsignarSheet(false)
+      setSobreSeleccionado(null)
+      await cargarDatos()
+    } catch (err: any) {
+      const msg = err?.message?.includes('error_budget_insufficient_base_zero')
+        ? `No puedes asignar más. Disponible: ${formatMonto(saldoAsignar ?? 0)}`
+        : 'Error al asignar presupuesto'
+      showToast(msg, 'error')
+    }
+  }
+
+  const handleLlenarHueco = async () => {
+    if (!sobreSeleccionado || sobreSeleccionado.monto_disponible >= 0) return
+    let monto = Math.abs(sobreSeleccionado.monto_disponible)
+    
+    // En base_cero, no podemos asignar más de lo que tenemos disponible globalmente
+    if (config?.modo_presupuesto === 'base_cero' && saldoAsignar !== null) {
+      monto = Math.min(monto, Math.max(0, saldoAsignar))
+    }
+    
+    if (monto <= 0) {
+      showToast(t('budget_error_insufficient_funds') || 'No hay saldo disponible para asignar.', 'error')
+      return
+    }
+    
+    // El backend REEMPLAZA el límite, por lo que debemos sumar el monto al límite actual.
+    const nuevoLimite = Number(sobreSeleccionado.monto_asignado ?? 0) + monto;
+    await ejecutarAsignacion(nuevoLimite)
+  }
+
+  const handleAsignarTodo = async () => {
+    if (!sobreSeleccionado || saldoAsignar === null) return
+    const nuevoLimite = Number(sobreSeleccionado.monto_asignado ?? 0) + saldoAsignar;
+    await ejecutarAsignacion(nuevoLimite)
+  }
+
+  const handleMontoManualConfirmar = async () => {
+    const montoAAgregar = parseFloat(montoManual.replace(/\./g, '').replace(',', '.'))
+    if (isNaN(montoAAgregar) || montoAAgregar <= 0) {
+      showToast('Ingresa un monto válido', 'error')
+      return
+    }
+    const nuevoLimite = Number(sobreSeleccionado?.monto_asignado ?? 0) + montoAAgregar;
+    await ejecutarAsignacion(nuevoLimite)
+  }
+
+  // ─── TRANSFERIR ENTRE SOBRES ──────────────────────────────────────────────
+
+  const sobresConDisponible = sobres.filter(s =>
+    s.estructura_id !== sobreSeleccionado?.estructura_id &&
+    s.monto_disponible > 0
+  )
+
+  const fuentesDisponibles = useMemo(() => {
+    return [
+      ...(saldoAsignar !== null && saldoAsignar > 0 ? [{
+        estructura_id: -999,
+        nombre_categoria: 'budget_label_available_to_assign',
+        icono: '💰',
+        color: '',
+        tipo_cupo: '',
+        padre_id: null,
+        monto_asignado: 0,
+        monto_gastado: 0,
+        monto_disponible: saldoAsignar,
+        arrastre_mes_anterior: 0,
+        estado_sobre: '',
+        metodo_sobregasto: null,
+        isVirtualDisponible: true
+      } as SobreDetalle] : []),
+      ...sobresConDisponible
+    ]
+  }, [sobresConDisponible, saldoAsignar])
+
+  const handleTransferir = async () => {
+    if (!origenSeleccionado || !sobreSeleccionado) return
+    const monto = parseFloat(montoTransferir.replace(/\./g, '').replace(',', '.'))
+    if (isNaN(monto) || monto <= 0) {
+      showToast('Ingresa un monto válido', 'error')
+      return
+    }
+
+    // Validar en cliente que no deje el origen en negativo
+    if (origenSeleccionado.isVirtualDisponible) {
+      if (monto > (saldoAsignar ?? 0)) {
+        showToast('No puedes asignar más del saldo disponible', 'error')
+        return
+      }
+    } else {
+      if (monto > origenSeleccionado.monto_disponible) {
+        showToast('No puedes transferir más de lo disponible en el sobre origen', 'error')
+        return
+      }
+    }
+
+    setLoadingTransferir(true)
+    try {
+      if (origenSeleccionado.isVirtualDisponible) {
+        const nuevoLimite = Number(sobreSeleccionado.monto_asignado ?? 0) + monto
+        const { error } = await supabase.rpc('fn_asignar_presupuesto', {
+          p_estructura_egreso_id: sobreSeleccionado.estructura_id,
+          p_monto_asignado: nuevoLimite,
+          p_mes_periodo: mesPeriodoStr,
+        })
+        if (error) throw error
+        showToast(`✅ Se cubrió el déficit con disponible para asignar`, 'success')
+      } else {
+        const { error } = await supabase.rpc('fn_transferir_entre_sobres', {
+          p_origen_id: origenSeleccionado.estructura_id,
+          p_destino_id: sobreSeleccionado.estructura_id,
+          p_monto: monto,
+          p_mes_periodo: mesPeriodoStr,
+        })
+        if (error) throw error
+      }
+      
+      const nuevoDeficit = sobreSeleccionado.monto_disponible + monto
+      if (nuevoDeficit >= 0) {
+        setShowTransferirModal(false)
+        setShowAsignarSheet(false)
+        setSobreSeleccionado(null)
+        setOrigenSeleccionado(null)
+        setMontoTransferir('')
+      } else {
+        setSobreSeleccionado(prev => prev ? {
+          ...prev,
+          monto_disponible: nuevoDeficit,
+          monto_asignado: prev.monto_asignado + monto
+        } : null)
+        setOrigenSeleccionado(null)
+        setMontoTransferir(String(Math.round(Math.abs(nuevoDeficit))))
+      }
+      await cargarDatos()
+    } catch (err: any) {
+      const msg = err?.message?.includes('error_insufficient_funds_in_envelope')
+        ? 'Fondos insuficientes en el sobre de origen'
+        : 'Error al transferir entre sobres'
+      showToast(msg, 'error')
+    } finally {
+      setLoadingTransferir(false)
+    }
+  }
+
+  const handleAbrirTransferenciaDirecta = (sobre: SobreDetalle) => {
+    setSobreSeleccionado(sobre)
+    setOrigenSeleccionado(null)
+    setMontoTransferir('')
+    if (sobre.monto_disponible < 0) {
+      setMontoTransferir(String(Math.abs(sobre.monto_disponible)))
+    }
+    setShowTransferirModal(true)
+  }
+
+  const sobresExcedidos = useMemo(() => {
+    if (config?.modo_presupuesto !== 'base_cero') return []
+    return sobres.filter(s => s.monto_disponible < 0)
+  }, [sobres, config])
+
+  // ─── GUARDAR REGLAS DE ORO ────────────────────────────────────────────────
+
+  const sumaReglas = reglasForm.necesidades + reglasForm.deseos + reglasForm.ahorro + reglasForm.diezmo
+  const reglasValidas = Math.abs(sumaReglas - 100) < 0.01
+
+  const handleGuardarReglas = async () => {
+    if (!reglasValidas) {
+      showToast('Los porcentajes deben sumar 100%', 'error')
+      return
+    }
+    if (reglasForm.diaAncla < 1 || reglasForm.diaAncla > 31) {
+      showToast('El día ancla debe estar entre 1 y 31', 'error')
+      return
+    }
+    setLoadingReglas(true)
+    try {
+      // Guardar reglas de oro
+      const { error: errReglas } = await supabase.rpc('fn_configurar_reglas_oro', {
+        p_pct_necesidades: reglasForm.necesidades,
+        p_pct_deseos: reglasForm.deseos,
+        p_pct_ahorro: reglasForm.ahorro,
+        p_pct_diezmo: reglasForm.diezmo,
+        p_dia_ancla_ciclo: reglasForm.diaAncla,
+      })
+      if (errReglas) throw errReglas
+
+      // Si cambia el modo (y no va a Base Cero por primera vez), actualizar
+      const modoActual = config?.modo_presupuesto ?? 'anticipado'
+      if (modoForm !== modoActual) {
+        if (modoForm === 'base_cero') {
+          // Mostrar modal de contrato en lugar de guardar directo
+          setShowReglasModal(false)
+          setShowBaseCeroModal(true)
+          return
+        } else {
+          const { error: errModo } = await supabase.rpc('fn_configurar_modo_presupuesto', { p_modo: modoForm })
+          if (errModo) throw errModo
+          window.dispatchEvent(new CustomEvent('budget-mode-changed'))
+        }
+      }
+
+      showToast(t('toast_golden_rules_success'), 'success')
+      setShowReglasModal(false)
+      await cargarDatos()
+    } catch (err: any) {
+      const errStr = String(err?.message || '') + ' ' + JSON.stringify(err);
+      if (errStr.includes('error_base_cero_locked')) {
+        showToast(t('error_base_cero_locked') || 'No puedes volver al modo Libertad hasta el mes que viene.', 'error')
+      } else {
+        showToast(t('toast_golden_rules_error') || 'Error al guardar la distribución de ingresos', 'error')
+      }
+    } finally {
+      setLoadingReglas(false)
+    }
+  }
+
+  // ─── ACTIVAR BASE CERO ────────────────────────────────────────────────────
+
+  const handleAbrirBaseCero = async () => {
+    setPaso(1)
+    setAcepto('')
+    setSugerencias([])
+    setMontosEditados({})
+    setShowBaseCeroModal(true)
+  }
+
+  const handlePasar2 = async () => {
+    if (acepto.trim().toUpperCase() !== 'ACEPTO') {
+      showToast(t('toast_write_accept_confirm'), 'error')
+      return
+    }
+    try {
+      const { data, error } = await supabase.rpc('fn_sugerir_distribucion_activacion')
+      if (error) throw error
+      const d = data as { liquidez_actual: number; sugerencias: SugerenciaActivacion[] }
+      setLiquidezActivacion(Number(d.liquidez_actual ?? 0))
+      const sugerenciasFiltradas = (d.sugerencias ?? []).filter(s => {
+        const nombreLower = (s.nombre || '').toLowerCase();
+        return nombreLower !== 'cat_misterio' && 
+               nombreLower !== 'cat_mystery' && 
+               nombreLower !== 'misterio/olvido' && 
+               nombreLower !== 'misterio' &&
+               nombreLower !== 'olvido';
+      })
+      setSugerencias(sugerenciasFiltradas)
+      const iniciales: Record<number, string> = {}
+      for (const s of sugerenciasFiltradas) {
+        iniciales[s.estructura_id] = String(Math.round(s.monto_sugerido))
+      }
+      setMontosEditados(iniciales)
+      setPaso(2)
+    } catch {
+      showToast('Error al obtener sugerencias', 'error')
+    }
+  }
+
+  const handleConfirmarActivacion = async (skipSuggestions = false) => {
+    setLoadingActivar(true)
+    try {
+      // 1. Cambiar modo
+      const { error: errModo } = await supabase.rpc('fn_configurar_modo_presupuesto', { p_modo: 'base_cero' })
+      if (errModo) throw errModo
+      window.dispatchEvent(new CustomEvent('budget-mode-changed'))
+
+      // 2. Asignar cada sugerencia
+      if (!skipSuggestions) {
+        for (const s of sugerencias) {
+          const monto = parseFloat(montosEditados[s.estructura_id] || '0')
+          if (monto > 0) {
+            const { error } = await supabase.rpc('fn_asignar_presupuesto', {
+              p_estructura_egreso_id: s.estructura_id,
+              p_monto_asignado: monto,
+              p_mes_periodo: mesPeriodoStr,
+            })
+            if (error) console.warn('Error asignando:', s.nombre, error.message)
+          }
+        }
+      }
+
+      showToast('🎯 Modo Base Cero activado. ¡A presupuestar!', 'success')
+      setShowBaseCeroModal(false)
+      await cargarDatos()
+    } catch {
+      showToast('Error al activar Modo Base Cero', 'error')
+    } finally {
+      setLoadingActivar(false)
+    }
+  }
+
+  // ─── RENDER ───────────────────────────────────────────────────────────────
+
+  return (
+    <div className="page presupuestos-page">
+
+      {/* ── HEADER ── */}
+      <div className="presupuestos-header">
+        <h1>Presupuestos</h1>
+        <div className="mes-selector">
+          <button
+            className="mes-selector-btn"
+            onClick={() => setShowMesDropdown(v => !v)}
+          >
+            {formatMesLabel(mesPeriodo)}
+            <span className="chevron">▾</span>
+          </button>
+          {showMesDropdown && (
+            <>
+              <div className="mes-dropdown-overlay" onClick={() => setShowMesDropdown(false)} />
+              <div className="mes-dropdown">
+                {[0, -1, -2].map(off => (
+                  <div
+                    key={off}
+                    className={`mes-dropdown-item${mesOffset === off ? ' activo' : ''}`}
+                    onClick={() => { setMesOffset(off); setShowMesDropdown(false) }}
+                  >
+                    {off === 0 ? '✅ Este mes' : off === -1 ? 'Mes anterior' : 'Hace 2 meses'}
+                    <span style={{ fontSize: 11, opacity: 0.6 }}>
+                      {formatMesLabel(getMesPeriodo(off))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+        <div className="header-actions">
+          <button
+            className="btn-icon"
+            title="Reglas de Oro"
+            onClick={() => setShowReglasModal(true)}
+          >⚙️</button>
+        </div>
+      </div>
+
+      {/* ── STICKY DISPONIBLE ── */}
+      <div className={`disponible-header ${getEstadoDisponible()}`}>
+        <div className="disponible-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+          {getLabelDisponible()}
+          {config?.modo_presupuesto === 'anticipado' && (
+            <InfoBubble
+              text={t('budget_info_proyeccion', {
+                pct_nec: String(config?.porcentaje_necesidades ?? 50),
+                pct_des: String(config?.porcentaje_deseos ?? 30),
+                pct_aho: String(config?.porcentaje_ahorro ?? 20),
+              }) || 'Proyección calculada en base a ingresos, porcentajes de distribución y gastos comprometidos de tarjetas.'}
+            />
+          )}
+        </div>
+        <div className="disponible-monto">
+          {saldoAsignar !== null ? formatMonto(saldoAsignar) : '—'}
+        </div>
+        <div className="disponible-subtexto">{getSubtextoDisponible()}</div>
+        {config?.modo_presupuesto === 'anticipado' && (
+          <div style={{ marginTop: 8 }}>
+            <button
+              style={{
+                background: 'rgba(255,107,107,0.15)',
+                color: '#FF6B6B',
+                border: '1px solid rgba(255,107,107,0.3)',
+                borderRadius: 20,
+                padding: '4px 12px',
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+              onClick={handleAbrirBaseCero}
+            >
+              🔒 Activar Modo Disciplina
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ── CONTENIDO ── */}
+      <div className="presupuestos-scroll">
+        {loading ? (
+          <div className="presupuestos-loading"><div className="spinner" /></div>
+        ) : sobres.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <>
+            {sobresExcedidos.length > 0 && (
+              <div className="sobres-excedidos-alerta">
+                <div className="alerta-header">
+                  <span className="alerta-icon">⚠️</span>
+                  <div className="alerta-text">
+                    <h4>{t('budget_exceeded_envelopes_title') || 'Tienes sobres excedidos'}</h4>
+                    <p>{t('budget_exceeded_envelopes_desc') || 'Cubre el déficit quitando dinero de otros sobres con saldo.'}</p>
+                  </div>
+                </div>
+                <div className="alerta-items">
+                  {sobresExcedidos.map(sobre => (
+                    <div key={sobre.estructura_id} className="alerta-sobre-row">
+                      <div className="sobre-info">
+                        <span className="sobre-icono">{sobre.icono}</span>
+                        <span className="sobre-nombre">{t(sobre.nombre_categoria)}</span>
+                      </div>
+                      <div className="sobre-detalles-derecha">
+                        <span className="sobre-monto negativo">
+                          {formatMonto(sobre.monto_disponible)}
+                        </span>
+                        <button
+                          type="button"
+                          className="btn-cubrir-deficit"
+                          onClick={() => handleAbrirTransferenciaDirecta(sobre)}
+                        >
+                          {t('btn_cubrir_deficit') || 'Cubrir'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {gruposOrdenados.map(({ tipo, items }) => (
+              <GrupoAcordeon
+                key={tipo}
+                tipo={tipo}
+                items={items}
+                abierto={acordeonesAbiertos.has(tipo)}
+                onToggle={() => toggleAcordeon(tipo)}
+                onAsignar={handleAbrirAsignar}
+              />
+            ))}
+
+            <div className="presupuestos-footer-tip">
+              <span className="tip-icono">💡</span>
+              <span>{t('budget_footer_tip_text') || 'Es normal ajustar los números en los primeros 2-3 meses. No te frustres si al principio requieres muchos cambios.'}</span>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* ══════════════════════════════════════════════════════════
+          MODAL: BOTTOM SHEET ASIGNAR
+          ══════════════════════════════════════════════════════════ */}
+      {showAsignarSheet && sobreSeleccionado && (
+        <div className="modal-overlay" onClick={() => setShowAsignarSheet(false)}>
+          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+            <div className="modal-handle" />
+            <div className="modal-titulo">{t('budget_modal_titulo_asignar') || 'Asignar presupuesto'}</div>
+
+            <div className="asignar-sheet-sobre">
+              <span style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: sobreSeleccionado.color || '#4ECDC4',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 16,
+              }}>
+                {sobreSeleccionado.icono}
+              </span>
+              <div>
+                <div className="asignar-sheet-sobre-nombre">{t(sobreSeleccionado.nombre_categoria)}</div>
+                <div className="asignar-sheet-sobre-saldo">
+                  {t('assigned')}: {formatMonto(sobreSeleccionado.monto_asignado)} ·{' '}
+                  {t('spent')}: {formatMonto(sobreSeleccionado.monto_gastado)}
+                </div>
+              </div>
+            </div>
+
+            {mostrando === 'opciones' ? (
+              <div className="asignar-opciones">
+                {config?.modo_presupuesto !== 'anticipado' && (
+                  <div className="asignar-opcion" onClick={handleLlenarHueco}>
+                    <span className="asignar-opcion-icono">💰</span>
+                    <div className="asignar-opcion-texto">
+                      <h4>{t('budget_opcion_llenar_hueco_title') || 'Llenar Hueco'}</h4>
+                      <p>{t('budget_opcion_llenar_hueco_desc') || 'Cubre el déficit o arrastre de esta categoría'}</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="asignar-opcion" onClick={() => {
+                  setMostrando('monto')
+                  setTimeout(() => montoRef.current?.focus(), 100)
+                }}>
+                  <span className="asignar-opcion-icono">⌨️</span>
+                  <div className="asignar-opcion-texto">
+                    <h4>{t('budget_opcion_ingresar_monto_title') || 'Ingresar Monto'}</h4>
+                    <p>{t('budget_opcion_ingresar_monto_desc') || 'Escribe el monto manualmente'}</p>
+                  </div>
+                </div>
+
+                <div className="asignar-opcion" onClick={handleAsignarTodo}>
+                  <span className="asignar-opcion-icono">💸</span>
+                  <div className="asignar-opcion-texto">
+                    <h4>{t('budget_opcion_asignar_todo_title') || 'Asignar Todo lo Disponible'}</h4>
+                    <p>{t('budget_opcion_asignar_todo_desc', { monto: formatMonto(saldoAsignar ?? 0) }) || `Mueve los ${formatMonto(saldoAsignar ?? 0)} libres aquí`}</p>
+                  </div>
+                </div>
+
+                {config?.modo_presupuesto !== 'anticipado' && (
+                  <div className="asignar-opcion" onClick={() => {
+                    setShowAsignarSheet(false)
+                    setOrigenSeleccionado(null)
+                    setMontoTransferir('')
+                    setShowTransferirModal(true)
+                  }}>
+                    <span className="asignar-opcion-icono">↔️</span>
+                    <div className="asignar-opcion-texto">
+                      <h4>{t('budget_opcion_cubrir_sobre_title') || 'Cubrir desde Otro Sobre'}</h4>
+                      <p>{t('budget_opcion_cubrir_sobre_desc') || 'Quítale dinero a otra categoría'}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="asignar-monto-inline">
+                <input
+                  ref={montoRef}
+                  className="asignar-monto-input"
+                  type="number"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={montoManual}
+                  onChange={e => setMontoManual(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleMontoManualConfirmar()}
+                  onFocus={e => {
+                    if (montoManual === '0') {
+                      setMontoManual('')
+                    } else {
+                      e.target.select()
+                    }
+                  }}
+                />
+                <button
+                  className="btn-confirmar-monto"
+                  onClick={handleMontoManualConfirmar}
+                  disabled={!montoManual || parseFloat(montoManual) <= 0}
+                >
+                  {t('budget_btn_assign')}
+                </button>
+              </div>
+            )}
+
+            <div style={{ marginTop: 16 }}>
+              <button className="btn-cancelar" style={{ width: '100%' }}
+                onClick={() => setShowAsignarSheet(false)}>
+                {t('btn_cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          MODAL: TRANSFERIR ENTRE SOBRES
+          ══════════════════════════════════════════════════════════ */}
+      {showTransferirModal && sobreSeleccionado && (
+        <div className="modal-overlay centrado" onClick={() => setShowTransferirModal(false)}>
+          <div className="modal-sheet centrado-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-titulo">{t('budget_opcion_cubrir_sobre_title')}</div>
+            <div className="modal-subtitulo">
+              {t('budget_label_destination')}: <strong>{t(sobreSeleccionado.nombre_categoria)}</strong>
+              {sobreSeleccionado.monto_disponible < 0 && (
+                <> · {t('budget_label_current_deficit')}: <span style={{ color: '#FF6B6B' }}>{formatMonto(sobreSeleccionado.monto_disponible)}</span></>
+              )}
+            </div>
+
+            <div style={{ fontSize: 12, color: '#A0A0A0', marginBottom: 8 }}>
+              {t('budget_label_transfer_source')}
+            </div>
+
+            {fuentesDisponibles.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '20px 0', color: '#A0A0A0', fontSize: 13 }}>
+                {t('budget_label_transfer_no_envelopes') || 'No hay fondos disponibles para cubrir el déficit'}
+              </div>
+            ) : (
+              <div className="transferir-lista-sobres">
+                {fuentesDisponibles.map(s => (
+                  <div
+                    key={s.estructura_id}
+                    className={`transferir-sobre-item${origenSeleccionado?.estructura_id === s.estructura_id ? ' seleccionado' : ''}`}
+                    onClick={() => {
+                      setOrigenSeleccionado(s)
+                      setMontoTransferir(String(Math.round(Math.min(Math.abs(sobreSeleccionado.monto_disponible), s.monto_disponible))))
+                    }}
+                  >
+                    <span className="transferir-sobre-nombre">
+                      {s.icono} {t(s.nombre_categoria)}
+                    </span>
+                    <span className="transferir-sobre-disponible">
+                      {formatMonto(s.monto_disponible)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {origenSeleccionado && (
+              <div className="transferir-monto-section">
+                <div className="transferir-monto-label">{t('budget_label_transfer_amount')}</div>
+                <div className="asignar-monto-inline">
+                  <input
+                    className="asignar-monto-input"
+                    type="number"
+                    inputMode="numeric"
+                    placeholder="0"
+                    value={montoTransferir}
+                    onChange={e => setMontoTransferir(e.target.value)}
+                    onFocus={e => {
+                      if (montoTransferir === '0') {
+                        setMontoTransferir('')
+                      } else {
+                        e.target.select()
+                      }
+                    }}
+                  />
+                  <button
+                    className="btn-confirmar-monto"
+                    onClick={() => setMontoTransferir(String(Math.round(Math.min(Math.abs(sobreSeleccionado.monto_disponible), origenSeleccionado.monto_disponible))))}
+                    style={{ fontSize: 11, padding: '10px 10px' }}
+                  >
+                    {t('budget_btn_all_deficit')}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="modal-btns">
+              <button className="btn-cancelar" onClick={() => setShowTransferirModal(false)}>
+                {t('btn_cancel')}
+              </button>
+              <button
+                className="btn-primario"
+                onClick={handleTransferir}
+                disabled={!origenSeleccionado || !montoTransferir || loadingTransferir}
+              >
+                {loadingTransferir ? t('budget_btn_transferring') : t('budget_btn_confirm')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          MODAL: REGLAS DE ORO
+          ══════════════════════════════════════════════════════════ */}
+      {showReglasModal && (
+        <div className="modal-overlay centrado" onClick={() => setShowReglasModal(false)}>
+          <div className="modal-sheet centrado-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-titulo">⚙️ {t('budget_modal_title_golden_rules')}</div>
+            <div className="modal-subtitulo">{t('budget_label_ideal_distribution')}</div>
+
+            {/* Modo */}
+            <div className="modo-toggle-section">
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <InfoBubble text={t('budget_info_modo_anticipado') || 'Modo anticipado: asignación libre sin restricciones de saldo real.'} />
+                <button
+                  className={`modo-toggle-btn${modoForm === 'anticipado' ? ' activo' : ''}`}
+                  onClick={() => setModoForm('anticipado')}
+                >
+                  🕊️ Anticipado
+                </button>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                <InfoBubble text={t('budget_info_modo_base_cero') || 'Modo base cero: cada peso debe tener un destino antes de gastarse.'} />
+                <button
+                  className={`modo-toggle-btn${modoForm === 'base_cero' ? ' activo' : ''}`}
+                  onClick={() => setModoForm('base_cero')}
+                >
+                  🔒 Base Cero
+                </button>
+              </div>
+            </div>
+
+            {/* Sliders */}
+            <div className="reglas-slider-grupo">
+              {([
+                { key: 'necesidades', emoji: '🏠', label: 'Necesidades' },
+                { key: 'deseos', emoji: '✨', label: 'Deseos' },
+                { key: 'ahorro', emoji: '💎', label: 'Ahorro/Inversión' },
+                { key: 'diezmo', emoji: '🙏', label: 'Diezmo' },
+              ] as const).map(({ key, emoji, label }) => (
+                <div className="regla-item" key={key}>
+                  <div className="regla-item-header">
+                    <span className="regla-item-label">{emoji} {label}</span>
+                    <input
+                      className="regla-pct-input"
+                      type="number"
+                      min={0} max={100}
+                      value={reglasForm[key]}
+                      onChange={e => setReglasForm(f => ({ ...f, [key]: Number(e.target.value) }))}
+                    />
+                  </div>
+                  <input
+                    type="range"
+                    className="regla-slider"
+                    min={0} max={100} step={1}
+                    value={reglasForm[key]}
+                    onChange={e => setReglasForm(f => ({ ...f, [key]: Number(e.target.value) }))}
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Suma */}
+            <div className={`reglas-suma-display ${reglasValidas ? 'ok' : 'error'}`}>
+              {reglasValidas
+                ? '✅ Total: 100% — ¡Perfecto!'
+                : `⚠️ Total: ${sumaReglas.toFixed(0)}% — Debe ser exactamente 100%`}
+            </div>
+
+            {/* Día ancla */}
+            <div className="dia-ancla-section">
+              <div className="dia-ancla-label">📅 Día de inicio del ciclo</div>
+              <input
+                className="dia-ancla-input"
+                type="number"
+                min={1} max={31}
+                value={reglasForm.diaAncla}
+                onChange={e => setReglasForm(f => ({ ...f, diaAncla: Number(e.target.value) }))}
+              />
+            </div>
+
+            <div className="modal-btns">
+              <button className="btn-cancelar" onClick={() => setShowReglasModal(false)}>
+                Cancelar
+              </button>
+              <button
+                className="btn-primario"
+                onClick={handleGuardarReglas}
+                disabled={!reglasValidas || loadingReglas}
+              >
+                {loadingReglas ? 'Guardando...' : 'Guardar Reglas'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          MODAL: ACTIVAR BASE CERO
+          ══════════════════════════════════════════════════════════ */}
+      {showBaseCeroModal && (
+        <div className="modal-overlay centrado" onClick={() => !loadingActivar && setShowBaseCeroModal(false)}>
+          <div className="modal-sheet centrado-modal" onClick={e => e.stopPropagation()}>
+            {paso === 1 ? (
+              <>
+                <div className="modal-titulo">🔒 Activar Modo Disciplina de Hierro</div>
+                <div className="modal-subtitulo">Estás por activar un compromiso serio</div>
+
+                <div className="contrato-lista">
+                  <div className="contrato-item">
+                    <span className="contrato-item-icono">⚠️</span>
+                    Cada peso deberá tener un destino asignado antes de gastarlo.
+                  </div>
+                  <div className="contrato-item">
+                    <span className="contrato-item-icono">⚠️</span>
+                    Si gastas de más en una categoría, deberás quitarle a otra.
+                  </div>
+                  <div className="contrato-item">
+                    <span className="contrato-item-icono">⚠️</span>
+                    El sistema te confrontará visualmente con las consecuencias (sin bloquear).
+                  </div>
+                </div>
+
+                <div className="contrato-acepto-section">
+                  <div className="contrato-acepto-label">{t('activate_base_cero_confirm_prompt')}</div>
+                  <input
+                    className={`contrato-acepto-input${acepto.toUpperCase() === 'ACEPTO' ? ' valido' : ''}`}
+                    type="text"
+                    placeholder="ACEPTO"
+                    value={acepto}
+                    onChange={e => setAcepto(e.target.value)}
+                  />
+                </div>
+
+                <div className="modal-btns">
+                  <button className="btn-cancelar" onClick={() => setShowBaseCeroModal(false)}>
+                    Cancelar
+                  </button>
+                  <button
+                    className="btn-primario peligro"
+                    onClick={handlePasar2}
+                    disabled={acepto.trim().toUpperCase() !== 'ACEPTO'}
+                  >
+                    Activar Disciplina
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="modal-titulo">{t('budget_golden_rules_modal_sug_title') || '💡 Sugerencia Inicial'}</div>
+                <div className="sugerencia-liquidez-info">
+                  {t('budget_golden_rules_modal_liquidity_info', { monto: formatMonto(liquidezActivacion) }) || `Tienes ${formatMonto(liquidezActivacion)} de liquidez real. Distribución sugerida según tus % de Distribución de Ingresos:`}
+                </div>
+
+                <div className="disclaimer-tip">
+                  <span>💡</span>
+                  <span>{t('budget_golden_rules_modal_disclaimer_text') || 'Es normal tardar 2-3 meses en ajustar estos números a tu realidad. No te frustres si las primeras semanas requieres muchos ajustes.'}</span>
+                </div>
+
+                {sugerencias.length === 0 ? (
+                  <div style={{ color: 'var(--color-text-muted)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>
+                    {t('budget_golden_rules_modal_no_categories') || 'No se encontraron gastos fijos ni variables para generar una sugerencia inicial. Podrás configurarlos luego.'}
+                  </div>
+                ) : (
+                  <div className="sugerencias-lista">
+                    {sugerencias.map(s => (
+                      <div key={s.estructura_id} className="sugerencia-item">
+                        <span className="sugerencia-nombre">
+                          {TIPO_CUPO_META[s.tipo_cupo]?.icono ?? '📦'} {t(s.nombre)}
+                        </span>
+                        <div className="sugerencia-monto">
+                          <input
+                            className="sugerencia-monto-input"
+                            type="number"
+                            value={montosEditados[s.estructura_id] ?? ''}
+                            onChange={e => setMontosEditados(prev => ({
+                              ...prev, [s.estructura_id]: e.target.value
+                            }))}
+                            onFocus={e => e.target.select()}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="modal-btns">
+                  <button className="btn-cancelar" onClick={() => handleConfirmarActivacion(true)} disabled={loadingActivar}>
+                    {t('btn_configure_later') || 'Configurar luego'}
+                  </button>
+                  <button
+                    className="btn-primario"
+                    onClick={() => handleConfirmarActivacion(false)}
+                    disabled={loadingActivar}
+                  >
+                    {loadingActivar ? t('budget_btn_activating') || 'Activando...' : t('budget_btn_confirm_and_assign') || 'Confirmar y Asignar'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── SUB-COMPONENTE: GRUPO ACORDEÓN ───────────────────────────────────────────
+
+interface GrupoProps {
+  tipo: string
+  items: SobreDetalle[]
+  abierto: boolean
+  onToggle: () => void
+  onAsignar: (s: SobreDetalle) => void
+}
+
+function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar }: GrupoProps) {
+  const meta = TIPO_CUPO_META[tipo] ?? { label: tipo.toUpperCase(), icono: '📦' }
+  const totalAsignado = items.reduce((s, i) => s + Number(i.monto_asignado ?? 0), 0)
+
+  return (
+    <div className="acord-grupo">
+      <div className="acord-grupo-header" onClick={onToggle}>
+        <div className="acord-grupo-left">
+          <span className="acord-grupo-icono">{meta.icono}</span>
+          <span className="acord-grupo-titulo">{meta.label}</span>
+        </div>
+        <div className="acord-grupo-right">
+          <span className="acord-grupo-total">
+            {totalAsignado > 0 ? `$${Math.round(totalAsignado).toLocaleString('es-AR')}` : '—'}
+          </span>
+          <span className={`acord-chevron${abierto ? ' abierto' : ''}`}>▶</span>
+        </div>
+      </div>
+
+      <div className={`acord-grupo-body${abierto ? ' abierto' : ''}`}>
+        <div className="acord-separador" />
+        {items.map((sobre, i) => (
+          <FilaSobre
+            key={sobre.estructura_id}
+            sobre={sobre}
+            isLast={i === items.length - 1}
+            onAsignar={() => onAsignar(sobre)}
+          />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─── SUB-COMPONENTE: FILA SOBRE ───────────────────────────────────────────────
+
+interface FilaSobreProps {
+  sobre: SobreDetalle
+  isLast: boolean
+  onAsignar: () => void
+}
+
+function FilaSobre({ sobre, isLast, onAsignar }: FilaSobreProps) {
+  const pct = getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
+  const colorBarra = getColorBarra(sobre.estado_sobre)
+  const sinDatos = sobre.estado_sobre === 'sin_movimiento'
+  const disponible = Number(sobre.monto_disponible ?? 0)
+  const arrastre = Number(sobre.arrastre_mes_anterior ?? 0)
+
+  const colorDisponible = () => {
+    if (disponible < 0) return 'rojo'
+    if (disponible === 0 && sobre.monto_asignado > 0) return 'neutro'
+    if (sobre.estado_sobre === 'amarillo_precaucion') return 'amarillo'
+    return 'verde'
+  }
+
+  return (
+    <div className={`sobre-fila${sinDatos ? ' sin-datos' : ''}`} style={isLast ? { borderBottom: 'none' } : {}}>
+      {/* Botón asignar */}
+      <button className="sobre-btn-asignar" onClick={e => { e.stopPropagation(); onAsignar() }}>
+        + Asignar
+      </button>
+
+      {/* Nombre */}
+      <div className="sobre-fila-top">
+        <div className="sobre-nombre">
+          <span
+            className="sobre-icono-circulo"
+            style={{ background: sobre.color || '#4ECDC4' }}
+          >
+            {sobre.icono}
+          </span>
+          <span>{t(sobre.nombre_categoria)}</span>
+        </div>
+        <span className={`sobre-disponible ${colorDisponible()}`} style={{ marginRight: 80 }}>
+          {disponible >= 0 ? `$${Math.round(disponible).toLocaleString('es-AR')}` : `-$${Math.round(Math.abs(disponible)).toLocaleString('es-AR')}`}
+        </span>
+      </div>
+
+      {/* Barra */}
+      {!sinDatos && (
+        <div className="sobre-barra-wrap">
+          <div
+            className={`sobre-barra-fill ${colorBarra}`}
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      )}
+
+      {/* Stats */}
+      <div className="sobre-stats">
+        <span className="sobre-stat">
+          <span className="sobre-stat-label">Asig: </span>
+          <span className="sobre-stat-val">${Math.round(Number(sobre.monto_asignado)).toLocaleString('es-AR')}</span>
+        </span>
+        <span className="sobre-stat">
+          <span className="sobre-stat-label">Gast: </span>
+          <span className="sobre-stat-val">${Math.round(Number(sobre.monto_gastado)).toLocaleString('es-AR')}</span>
+        </span>
+        {!sinDatos && (
+          <span className="sobre-stat">
+            <span className="sobre-stat-label">Avance: </span>
+            <span className="sobre-stat-val">{pct}%</span>
+          </span>
+        )}
+      </div>
+
+      {/* Arrastre badge */}
+      {arrastre > 0 && (
+        <div className="sobre-arrastre-badge">
+          ⚠️ Arrastre: -{`$${Math.round(arrastre).toLocaleString('es-AR')}`}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── INFO BUBBLE ─────────────────────────────────────────────────────────────
+
+function InfoBubble({ text }: { text: string }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <button
+        className="info-bubble-btn"
+        onClick={e => { e.stopPropagation(); setOpen(true) }}
+        aria-label="Información"
+      >
+        i
+      </button>
+      {open && (
+        <div className="info-bubble-overlay" onClick={() => setOpen(false)}>
+          <div className="info-bubble-popup" onClick={e => e.stopPropagation()}>
+            <div className="info-bubble-icon">💡</div>
+            <div className="info-bubble-text">{text}</div>
+            <button className="info-bubble-close" onClick={() => setOpen(false)}>Entendido</button>
+          </div>
+        </div>
+      )}
+    </>
+  )
+}
+
+// ─── EMPTY STATE ──────────────────────────────────────────────────────────────
+
+function EmptyState() {
+  return (
+    <div className="presupuestos-empty">
+      <div className="empty-icono">💰</div>
+      <h3>Sin categorías de presupuesto</h3>
+      <p>
+        Crea categorías con tipo de cupo (Necesidad / Deseo / Ahorro)
+        en la sección de <strong>Categorías</strong> para empezar a presupuestar.
+      </p>
+    </div>
+  )
+}

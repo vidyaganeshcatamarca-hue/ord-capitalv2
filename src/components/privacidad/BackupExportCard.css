@@ -1,0 +1,53 @@
+.privacidad-export {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(78, 205, 196, 0.22);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.privacidad-export h2 {
+  margin: 0;
+  color: #4ecdc4;
+  font-size: 1.1rem;
+}
+
+.privacidad-export p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.privacidad-export label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #cbd5e1;
+}
+
+.privacidad-export input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: #0f172a;
+  color: #f8fafc;
+  font-size: 0.95rem;
+}
+
+.privacidad-export-button {
+  align-self: flex-start;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(78, 205, 196, 0.36);
+  background: #4ecdc4;
+  color: #042f2e;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.privacidad-export-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

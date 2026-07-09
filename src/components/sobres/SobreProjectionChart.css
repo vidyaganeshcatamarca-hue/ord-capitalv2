@@ -1,0 +1,36 @@
+.sobre-projection {
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.sobre-projection-svg {
+  display: block;
+  width: 100%;
+  min-height: 180px;
+}
+
+.sobre-projection-axis {
+  stroke: rgba(148, 163, 184, 0.26);
+  stroke-width: 1;
+}
+
+.sobre-projection-ideal {
+  stroke: rgba(255, 230, 109, 0.72);
+  stroke-dasharray: 5 5;
+  stroke-width: 2;
+}
+
+.sobre-projection-real {
+  fill: none;
+  stroke: #4ecdc4;
+  stroke-linecap: round;
+  stroke-width: 4;
+}
+
+.sobre-projection-dot {
+  fill: #ccfbf1;
+  stroke: #4ecdc4;
+  stroke-width: 2;
+}

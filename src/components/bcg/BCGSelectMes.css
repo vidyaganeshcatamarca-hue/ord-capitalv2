@@ -1,0 +1,36 @@
+.bcg-select-mes {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  min-width: 180px;
+}
+
+.bcg-select-mes-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.bcg-select-mes-input {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 10px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.bcg-select-mes-input:focus {
+  border-color: var(--mint);
+}

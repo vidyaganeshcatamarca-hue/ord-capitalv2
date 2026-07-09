@@ -1,0 +1,70 @@
+.war-info-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.war-info-modal {
+  background: #1c2128;
+  border: 1px solid rgba(78, 205, 196, 0.3);
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 480px;
+  width: 100%;
+  position: relative;
+  color: #F8FAFC;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.war-info-modal h2 {
+  margin: 0 0 12px;
+  font-size: 20px;
+  color: #4ECDC4;
+}
+
+.war-info-modal p {
+  color: #CBD5E1;
+  line-height: 1.5;
+  font-size: 14px;
+  margin: 0 0 16px;
+}
+
+.war-info-modal ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  color: #94A3B8;
+}
+
+.war-info-close {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #94A3B8;
+  font-size: 24px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.war-info-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #F8FAFC;
+}

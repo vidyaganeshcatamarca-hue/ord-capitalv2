@@ -1,0 +1,10 @@
+.billetera-detail-modal {
+  display: flex;
+  flex-direction: column;
+  max-height: 85vh;
+}
+
+.billetera-detail-header {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}

@@ -1,0 +1,53 @@
+.respaldo-panel {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border: 1px solid rgba(255, 230, 109, 0.18);
+  border-radius: 22px;
+  background: rgba(15, 23, 42, 0.72);
+}
+
+.respaldo-panel h2,
+.respaldo-panel p {
+  margin: 0;
+}
+
+.respaldo-panel p {
+  color: #cbd5e1;
+}
+
+.respaldo-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.respaldo-grid label {
+  display: grid;
+  gap: 8px;
+  color: #cbd5e1;
+  font-weight: 700;
+}
+
+.respaldo-grid input,
+.respaldo-grid select {
+  padding: 11px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.9);
+  color: #f8fafc;
+}
+
+.respaldo-grid button {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 230, 109, 0.34);
+  border-radius: 999px;
+  background: rgba(255, 230, 109, 0.1);
+  color: #fde68a;
+  font-weight: 800;
+}
+
+@media (min-width: 820px) {
+  .respaldo-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

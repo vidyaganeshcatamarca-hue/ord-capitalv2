@@ -1,0 +1,66 @@
+.score-hero {
+  display: grid;
+  gap: 24px;
+  align-items: center;
+  padding: 24px;
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 28px;
+  background:
+    radial-gradient(circle at top left, rgba(16, 185, 129, 0.18), transparent 34%),
+    linear-gradient(145deg, rgba(15, 23, 42, 0.98), rgba(17, 24, 39, 0.94));
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+}
+
+.score-hero-copy {
+  min-width: 0;
+}
+
+.score-hero-eyebrow {
+  margin: 0 0 8px;
+  color: #93c5fd;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.score-hero-value {
+  margin: 0;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  font-size: clamp(2.9rem, 11vw, 5.7rem);
+  line-height: 0.95;
+}
+
+.score-hero-value--excellent { color: #10b981; }
+.score-hero-value--healthy { color: #4ade80; }
+.score-hero-value--risk { color: #f59e0b; }
+.score-hero-value--critical { color: #ef4444; }
+.score-hero-value--empty { color: #94a3b8; }
+
+.score-hero-badge {
+  display: inline-flex;
+  margin-top: 14px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.score-hero-badge--excellent { background: rgba(16, 185, 129, 0.16); color: #6ee7b7; }
+.score-hero-badge--healthy { background: rgba(74, 222, 128, 0.14); color: #bbf7d0; }
+.score-hero-badge--risk { background: rgba(245, 158, 11, 0.16); color: #fde68a; }
+.score-hero-badge--critical { background: rgba(239, 68, 68, 0.16); color: #fecaca; }
+.score-hero-badge--empty { background: rgba(148, 163, 184, 0.14); color: #cbd5e1; }
+
+.score-hero-delta {
+  margin: 14px 0 0;
+  color: #cbd5e1;
+  font-size: 0.95rem;
+}
+
+@media (min-width: 760px) {
+  .score-hero {
+    grid-template-columns: minmax(0, 0.9fr) minmax(320px, 1.1fr);
+    padding: 32px;
+  }
+}

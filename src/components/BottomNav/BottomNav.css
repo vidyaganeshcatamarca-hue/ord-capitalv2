@@ -1,0 +1,83 @@
+/* components/BottomNav/BottomNav.css */
+
+.bottom-nav-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 45;
+  animation: fade-in 0.2s ease-out;
+}
+
+.bottom-nav-menu-panel {
+  position: fixed;
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + 12px);
+  right: 16px;
+  width: 200px;
+  background: rgba(22, 28, 36, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-light);
+  border-radius: 16px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  z-index: 48;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: slide-up-menu 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: bottom right;
+}
+
+.bottom-nav-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: transparent;
+  border: none;
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 500;
+  text-align: left;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+  width: 100%;
+}
+
+.bottom-nav-menu-item:active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--mint);
+}
+
+.bottom-nav-menu-item.active {
+  color: var(--mint);
+  background: rgba(0, 180, 216, 0.08);
+}
+
+.bottom-nav-menu-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+}
+
+.bottom-nav-menu-item-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+@keyframes slide-up-menu {
+  from {
+    opacity: 0;
+    transform: scale(0.85) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}

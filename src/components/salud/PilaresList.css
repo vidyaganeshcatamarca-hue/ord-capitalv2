@@ -1,0 +1,80 @@
+.health-pillars {
+  display: grid;
+  gap: 14px;
+}
+
+.health-pillars-list {
+  display: grid;
+  gap: 10px;
+}
+
+.health-pillar-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.74);
+  color: inherit;
+  text-align: left;
+}
+
+.health-pillar-row:active {
+  transform: scale(0.99);
+}
+
+.health-pillar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 14px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #bbf7d0;
+  font-weight: 900;
+}
+
+.health-pillar-main {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+}
+
+.health-pillar-name {
+  color: #f8fafc;
+  font-weight: 800;
+}
+
+.health-pillar-weight {
+  color: #94a3b8;
+  font-size: 0.78rem;
+}
+
+.health-pillar-track {
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.health-pillar-progress {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+}
+
+.health-pillar-progress--excellent { background: #10b981; }
+.health-pillar-progress--healthy { background: #4ade80; }
+.health-pillar-progress--risk { background: #f59e0b; }
+.health-pillar-progress--critical { background: #ef4444; }
+
+.health-pillar-score {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  color: #e2e8f0;
+  font-size: 1.15rem;
+  font-weight: 900;
+}

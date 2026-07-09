@@ -1,0 +1,232 @@
+.escudo-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.escudo-detalle-header {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.escudo-detalle-kicker {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #4ECDC4;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.escudo-detalle-header h2 {
+  font-size: 24px;
+  margin: 0;
+  color: #F8FAFC;
+}
+
+.escudo-barra-grande {
+  position: relative;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.escudo-barra-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(78, 205, 196, 0.3), rgba(78, 205, 196, 0.6));
+  transition: width 0.6s ease;
+}
+
+.escudo-barra-texto {
+  position: relative;
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  z-index: 1;
+}
+
+.escudo-barra-num {
+  font-size: 48px;
+  font-weight: 800;
+  color: #F8FAFC;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.escudo-barra-unidad {
+  font-size: 14px;
+  color: #94A3B8;
+  font-weight: 600;
+}
+
+.escudo-detalle-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.escudo-detalle-lista li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #CBD5E1;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.escudo-detalle-lista li:last-child {
+  border-bottom: none;
+}
+
+.escudo-detalle-lista li strong {
+  color: #F8FAFC;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.escudo-config-cta {
+  width: 100%;
+}
+
+.escudo-recomendacion {
+  margin: 0;
+  padding: 12px 14px;
+  background: rgba(255, 230, 109, 0.08);
+  color: #FFE66D;
+  font-size: 13px;
+  border-radius: 8px;
+  border-left: 3px solid #FFE66D;
+  line-height: 1.4;
+}
+
+.escudo-recomendacion-ok {
+  background: rgba(78, 205, 196, 0.08);
+  color: #4ECDC4;
+  border-left-color: #4ECDC4;
+}
+
+.escudo-simulador {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.escudo-simulador h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #F8FAFC;
+}
+
+.escudo-simulador-intro {
+  margin: 0;
+  font-size: 13px;
+  color: #94A3B8;
+}
+
+.escudo-sim-loading {
+  padding: 24px;
+  display: flex;
+  justify-content: center;
+}
+
+.escudo-escenarios {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.escudo-escenario {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 3px solid #475569;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.3s ease;
+}
+
+.escudo-escenario.es-base {
+  border-left-color: #4ECDC4;
+  background: rgba(78, 205, 196, 0.04);
+}
+
+.escudo-escenario.shake {
+  animation: shake 0.4s ease;
+  border-left-color: #FF6B6B;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+.escudo-escenario-nombre {
+  font-size: 14px;
+  font-weight: 700;
+  color: #F8FAFC;
+}
+
+.escudo-escenario-desc {
+  margin: 0;
+  font-size: 12px;
+  color: #94A3B8;
+  line-height: 1.4;
+}
+
+.escudo-escenario-datos {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.escudo-escenario-dato {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.escudo-escenario-dato span {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #64748B;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.escudo-escenario-dato strong {
+  font-size: 16px;
+  font-weight: 700;
+  color: #F8FAFC;
+  font-variant-numeric: tabular-nums;
+}
+
+.escudo-escenario-dato strong.impacto-negativo {
+  color: #FF6B6B;
+}
+
+.escudo-escenario-dato strong.impacto-cero {
+  color: #94A3B8;
+}
+
+.escudo-fondo-cta {
+  width: 100%;
+  margin-top: 8px;
+}

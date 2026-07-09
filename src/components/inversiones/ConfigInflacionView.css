@@ -1,0 +1,160 @@
+.config-inflacion-view {
+  width: 100%;
+  padding: var(--space-5, 20px);
+  border: 1px solid rgba(255, 230, 109, 0.18);
+  border-radius: var(--radius-lg, 16px);
+  background:
+    radial-gradient(circle at top right, rgba(255, 230, 109, 0.08), transparent 34%),
+    var(--surface, #2D2D2D);
+  box-shadow: var(--shadow-lg, 0 8px 30px rgba(0, 0, 0, 0.35));
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5, 20px);
+}
+
+.config-inflacion-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4, 16px);
+}
+
+.config-inflacion-eyebrow {
+  margin: 0 0 var(--space-1, 4px);
+  color: var(--amber, #FFE66D);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.config-inflacion-title {
+  margin: 0;
+  color: var(--text, #FFFFFF);
+  font-family: var(--font-display, system-ui, sans-serif);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.config-inflacion-pill {
+  flex-shrink: 0;
+  max-width: 190px;
+  padding: 8px 10px;
+  border: 1px solid rgba(78, 205, 196, 0.28);
+  border-radius: var(--radius-full, 9999px);
+  background: rgba(78, 205, 196, 0.1);
+  color: var(--mint, #4ECDC4);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.config-inflacion-form {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4, 16px);
+}
+
+.config-inflacion-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2, 8px);
+  min-width: 0;
+}
+
+.config-inflacion-label {
+  color: var(--text-2, #D1D7DE);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.config-inflacion-field select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border, #3D3D3D);
+  border-radius: var(--radius-md, 12px);
+  background: var(--bg, #1A1A1A);
+  color: var(--text, #FFFFFF);
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+  transition: border-color var(--transition-fast, 150ms) ease,
+    box-shadow var(--transition-fast, 150ms) ease;
+}
+
+.config-inflacion-field select:focus {
+  border-color: var(--mint, #4ECDC4);
+  box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.14);
+}
+
+.config-inflacion-field select:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.config-inflacion-error {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 107, 107, 0.28);
+  border-radius: var(--radius-md, 12px);
+  background: rgba(255, 107, 107, 0.1);
+  color: var(--coral, #FF6B6B);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.config-inflacion-submit {
+  grid-column: 1 / -1;
+  min-height: 44px;
+}
+
+.config-inflacion-loading {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4, 16px);
+}
+
+.config-inflacion-skeleton {
+  height: 44px;
+  border-radius: var(--radius-md, 12px);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.06) 100%
+  );
+  background-size: 200% 100%;
+  animation: config-inflacion-shimmer 1.4s ease-in-out infinite;
+}
+
+.config-inflacion-skeleton--button {
+  max-width: 180px;
+}
+
+@keyframes config-inflacion-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@media (min-width: 720px) {
+  .config-inflacion-form,
+  .config-inflacion-loading {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .config-inflacion-view {
+    padding: var(--space-4, 16px);
+  }
+
+  .config-inflacion-header {
+    flex-direction: column;
+  }
+
+  .config-inflacion-pill {
+    max-width: none;
+  }
+}

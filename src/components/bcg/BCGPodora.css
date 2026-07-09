@@ -1,0 +1,342 @@
+.bcg-podora {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.bcg-podora-empty {
+  text-align: center;
+  padding: 56px 16px;
+  background: var(--surface);
+  border: 1px solid var(--mint);
+  border-radius: 20px;
+}
+
+.bcg-podora-empty-icon {
+  font-size: 48px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.bcg-podora-empty h2 {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 18px;
+}
+
+.bcg-podora-empty p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.bcg-podora-intro {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.bcg-podora-candidatos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bcg-podora-candidato {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.bcg-podora-cand-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.bcg-podora-cand-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  font-size: 22px;
+  filter: brightness(0);
+  flex-shrink: 0;
+}
+
+.bcg-podora-cand-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.bcg-podora-cand-body strong {
+  display: block;
+  color: var(--text);
+  font-size: 15px;
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bcg-podora-cand-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.bcg-podora-cand-stats strong {
+  display: inline;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.bcg-podora-cand-mensual {
+  color: var(--coral);
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.bcg-podora-cand-slider {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'label pct'
+    'slider ahorro';
+  gap: 6px 10px;
+  align-items: center;
+}
+
+.bcg-podora-cand-slider label {
+  grid-area: label;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-2);
+}
+
+.bcg-podora-cand-slider input[type="range"] {
+  grid-area: slider;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--coral) 0%, var(--coral) var(--val, 100%), var(--surface-2) var(--val, 100%), var(--surface-2) 100%);
+  outline: none;
+  cursor: pointer;
+}
+
+.bcg-podora-cand-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--coral);
+  border: 2px solid var(--bg);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  cursor: grab;
+}
+
+.bcg-podora-cand-slider input[type="range"]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--coral);
+  border: 2px solid var(--bg);
+  cursor: grab;
+}
+
+.bcg-podora-cand-pct {
+  grid-area: pct;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: var(--coral);
+  font-size: 14px;
+  text-align: right;
+  min-width: 44px;
+}
+
+.bcg-podora-cand-ahorro {
+  grid-area: ahorro;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--mint);
+  font-size: 13px;
+  text-align: right;
+}
+
+.bcg-podora-impacto {
+  background: var(--surface);
+  border: 1px solid var(--coral);
+  border-radius: 20px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.bcg-podora-impacto h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.bcg-podora-impacto > p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+.bcg-podora-impacto-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.bcg-podora-impacto-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.bcg-podora-impacto-grid span {
+  font-size: 11px;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.bcg-podora-impacto-grid strong {
+  color: var(--mint);
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.bcg-podora-equivalencia {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  background: var(--bg);
+  border: 1px dashed var(--mint);
+  border-radius: 12px;
+}
+
+.bcg-podora-equivalencia span {
+  font-size: 11px;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 700;
+}
+
+.bcg-podora-equivalencia strong {
+  color: var(--mint);
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.bcg-podora-destino {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bcg-podora-destino-toggle {
+  display: flex;
+  gap: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.bcg-podora-destino-toggle button {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--text-2);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.bcg-podora-destino-toggle button.active {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.bcg-podora-impacto-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px;
+  background: var(--bg);
+  border: 1px solid var(--mint);
+  border-radius: 12px;
+}
+
+.bcg-podora-impacto-detalle strong {
+  color: var(--mint);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.bcg-podora-impacto-detalle small {
+  color: var(--text-2);
+  font-size: 12px;
+}
+
+.bcg-podora-impacto-detalle.bcg-podora-sin-metas {
+  border-color: var(--amber);
+}
+
+.bcg-podora-impacto-detalle.bcg-podora-sin-metas span {
+  color: var(--amber);
+  font-size: 13px;
+}
+
+.bcg-podora-decision {
+  margin: 0;
+  color: var(--text-2);
+  font-size: 12px;
+  line-height: 1.5;
+  text-align: center;
+  font-style: italic;
+}
+
+.bcg-podora-capturar {
+  align-self: center;
+}
+
+.bcg-podora-muted {
+  color: var(--text-2);
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .bcg-podora-cand-head { flex-wrap: wrap; }
+  .bcg-podora-cand-head .btn { width: 100%; }
+}

@@ -1,0 +1,179 @@
+.lic-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.lic-detalle-header {
+  text-align: center;
+}
+
+.lic-detalle-kicker {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #4ECDC4;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.lic-detalle-header h2 {
+  font-size: 22px;
+  margin: 0 0 4px;
+  color: #F8FAFC;
+}
+
+.lic-detalle-periodo {
+  margin: 0;
+  font-size: 13px;
+  color: #94A3B8;
+}
+
+.lic-tarjetas {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.lic-tarjeta {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 12px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.lic-tarjeta-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: #94A3B8;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+.lic-tarjeta-valor {
+  font-size: 18px;
+  font-weight: 700;
+  color: #F8FAFC;
+  font-variant-numeric: tabular-nums;
+}
+
+.lic-tarjeta-valor.positivo {
+  color: #4ECDC4;
+}
+
+.lic-tarjeta-valor.negativo {
+  color: #FF6B6B;
+}
+
+.lic-grafico h3 {
+  font-size: 14px;
+  color: #94A3B8;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.lic-real-grande {
+  font-size: 56px;
+  font-weight: 800;
+  text-align: center;
+  padding: 16px 0;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -1px;
+}
+
+.lic-real-positivo {
+  color: #4ECDC4;
+}
+
+.lic-real-negativo {
+  color: #FF6B6B;
+}
+
+.lic-real-neutro {
+  color: #FFE66D;
+}
+
+.lic-barras {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.lic-barra-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 70px;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.lic-barra-label {
+  color: #CBD5E1;
+  font-weight: 500;
+}
+
+.lic-barra-track {
+  position: relative;
+  height: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.lic-barra-fill {
+  height: 100%;
+  border-radius: 8px;
+  transition: width 0.6s ease;
+}
+
+.lic-barra-azul {
+  background: linear-gradient(90deg, #0077B6, #00B4D8);
+}
+
+.lic-barra-rojo {
+  background: linear-gradient(90deg, #E63946, #FF6B6B);
+}
+
+.lic-barra-valor {
+  color: #F8FAFC;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.lic-insight {
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.08), rgba(78, 205, 196, 0.02));
+  border: 1px solid rgba(78, 205, 196, 0.2);
+  border-left: 3px solid #4ECDC4;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.lic-insight h3 {
+  font-size: 14px;
+  color: #4ECDC4;
+  margin: 0 0 8px;
+  font-weight: 700;
+}
+
+.lic-insight p {
+  margin: 0;
+  font-size: 14px;
+  color: #F8FAFC;
+  line-height: 1.5;
+}
+
+.lic-cta-inversiones {
+  width: 100%;
+}

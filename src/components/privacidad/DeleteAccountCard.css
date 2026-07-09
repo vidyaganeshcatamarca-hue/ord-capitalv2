@@ -1,0 +1,54 @@
+.privacidad-delete {
+  display: grid;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid rgba(255, 107, 107, 0.32);
+  border-radius: 18px;
+  background: rgba(127, 29, 29, 0.18);
+}
+
+.privacidad-delete h2 {
+  margin: 0;
+  color: #ff6b6b;
+  font-size: 1.1rem;
+}
+
+.privacidad-delete p {
+  margin: 0;
+  color: #fecaca;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+
+.privacidad-delete-input {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 107, 107, 0.4);
+  background: #1a0a0a;
+  color: #f8fafc;
+  font-size: 0.95rem;
+}
+
+.privacidad-delete-button {
+  align-self: flex-start;
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 107, 107, 0.5);
+  background: #ff6b6b;
+  color: #1a0a0a;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.privacidad-delete-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.privacidad-delete-scheduled {
+  color: #fde68a;
+  font-size: 0.9rem;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px dashed rgba(253, 230, 138, 0.4);
+}
