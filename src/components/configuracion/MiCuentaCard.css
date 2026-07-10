@@ -24,12 +24,12 @@
 .mi-cuenta-info h3 {
   margin: 0;
   font-size: 0.95rem;
-  color: #f8fafc;
+  color: var(--text);
 }
 
 .mi-cuenta-info p {
   margin: 0;
-  color: #cbd5e1;
+  color: var(--text-3);
   font-size: 0.82rem;
 }
 
@@ -41,31 +41,31 @@
 .mi-cuenta-form label {
   display: grid;
   gap: 4px;
-  color: #cbd5e1;
+  color: var(--text-2);
   font-size: 0.85rem;
 }
 
 .mi-cuenta-form input {
   padding: 8px 10px;
   border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: #0f172a;
-  color: #f8fafc;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
 }
 
 .mi-cuenta-button {
   align-self: flex-start;
   padding: 8px 12px;
   border-radius: 999px;
-  background: #4ecdc4;
-  color: #042f2e;
+  background: var(--mint);
+  color: var(--bg);
   border: 0;
   font-weight: 700;
   cursor: pointer;
 }
 
 .mi-cuenta-button.ghost {
-  background: rgba(255, 107, 107, 0.1);
-  color: #ff6b6b;
-  border: 1px solid rgba(255, 107, 107, 0.32);
+  background: var(--coral-dim);
+  color: var(--coral);
+  border: 1px solid rgba(230, 57, 70, 0.32);
 }

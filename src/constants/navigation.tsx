@@ -11,7 +11,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     path: '/',
     label: 'menu_inicio',
-    desktopLabel: 'menu_dashboard',
+    desktopLabel: 'menu_inicio',
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 0 : 1.8}>
         <path strokeLinecap="round" strokeLinejoin="round" d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
