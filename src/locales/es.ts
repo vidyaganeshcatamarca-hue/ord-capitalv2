@@ -137,7 +137,7 @@ export const success = {
   // Missing menu keys
   menu_salud: "Salud Financiera",
   menu_sobres: "Sobres",
-  menu_configuracion: "Configuración",
+  menu_configuracion: "Ajustes",
   menu_base_cero_short: "Base 0",
 
   // Modo App (Simple/Avanzado)
@@ -1803,7 +1803,7 @@ export const inversiones = {
   // Menús faltantes
   menu_salud: "Salud Financiera",
   menu_sobres: "Sobres",
-  menu_configuracion: "Configuración",
+  menu_configuracion: "Ajustes",
   menu_base_cero_short: "Base 0",
 
   // Modo App (Simple/Avanzado)

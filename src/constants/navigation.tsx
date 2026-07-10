@@ -148,8 +148,8 @@ export const NAV_ITEMS: NavItem[] = [
   },
   {
     path: '/configuracion',
-    label: 'menu_ajustes',
-    desktopLabel: 'menu_ajustes',
+    label: 'menu_configuracion',
+    desktopLabel: 'menu_configuracion',
     icon: (active: boolean) => (
       <svg viewBox="0 0 24 24" fill={active ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth={active ? 0 : 1.8}>
         <circle cx="12" cy="12" r="3" strokeLinecap="round" strokeLinejoin="round" />
