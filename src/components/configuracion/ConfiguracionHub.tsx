@@ -20,11 +20,11 @@ export function ConfiguracionHub() {
       <ModoAppCard />
       <AparienciaCard userId={user?.id} />
       
-      {hasFeature('config_notificaciones') && <NotificacionesCard />}
-      {hasFeature('config_datos') && <DatosCard />}
-      {hasFeature('config_billeteras') && <BilleterasCard />}
-      {hasFeature('config_categorias') && <CategoriasCard />}
-      {hasFeature('config_hogar') && <HogarCard />}
+      <NotificacionesCard />
+      <DatosCard />
+      <BilleterasCard />
+      <CategoriasCard />
+      <HogarCard />
     </div>
   )
 }

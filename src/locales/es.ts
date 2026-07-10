@@ -1852,10 +1852,11 @@ export const inversiones = {
   privacidad_csv_filename: "historial-financiero",
 
   // Configuracion y Notificaciones (Fase Transversal)
-  config_title: "Configuración",
+  config_title: "Ajustes",
   config_subtitle: "Personalizá tu cuenta, las notificaciones y los datos.",
-  config_mi_cuenta: "Mi Cuenta",
+  config_mi_cuenta: "Perfil",
   config_mi_cuenta_desc: "Tu nombre, email y sesión.",
+  menu_ajustes: "Ajustes",
   config_notificaciones: "Notificaciones",
   config_notificaciones_desc: "Elegí qué alertas querés recibir.",
   config_apariencia: "Apariencia",

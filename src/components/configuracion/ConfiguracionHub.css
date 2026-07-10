@@ -11,18 +11,18 @@
   gap: 12px;
   align-items: center;
   padding: 14px 16px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
+  border: 1px solid var(--color-border);
   border-radius: 16px;
-  background: rgba(15, 23, 42, 0.72);
+  background: var(--color-bg-light);
   text-align: left;
-  color: #f8fafc;
+  color: var(--color-text);
   cursor: pointer;
   font: inherit;
   width: 100%;
 }
 
 .config-hub-card:hover {
-  border-color: rgba(78, 205, 196, 0.32);
+  border-color: var(--color-mint);
 }
 
 button.config-hub-card {

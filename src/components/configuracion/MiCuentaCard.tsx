@@ -20,7 +20,18 @@ export function MiCuentaCard() {
   useEffect(() => {
     if (!user) return
     const meta = (user.user_metadata ?? {}) as { nombre?: string }
-    setNombre(meta.nombre ?? '')
+    
+    // Si no está en metadata, lo buscamos en app_usuarios
+    if (meta.nombre) {
+      setNombre(meta.nombre)
+    } else {
+      supabase.from('app_usuarios').select('nombre_completo').eq('id', user.id).single()
+        .then(({ data }) => {
+          if (data && data.nombre_completo) {
+            setNombre(data.nombre_completo)
+          }
+        })
+    }
   }, [user])
 
   const handleSave = async () => {

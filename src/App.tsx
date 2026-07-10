@@ -85,7 +85,6 @@ function AppLayout() {
           <Route path="/configuracion/categorias" element={<CategoriasConfigPage />} />
           <Route path="/configuracion/hogar" element={<HogarConfigPage />} />
           <Route path="/categorias" element={<CategoriasConfigPage />} />
-          <Route path="/perfil" element={<PerfilPage />} />
         </Routes>
       </Suspense>
 

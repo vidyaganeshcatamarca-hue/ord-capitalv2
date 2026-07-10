@@ -35,12 +35,24 @@ export function AparienciaCard({ userId }: AparienciaCardProps) {
         <h3 id="apariencia-title">{t('config_apariencia')}</h3>
         <p>{t('config_apariencia_desc')}</p>
         <div className="apariencia-card">
-          <label className="apariencia-row">
-            <span>{t('apariencia_ocultar_montos')}</span>
-            <input type="checkbox" checked={hide} onChange={(e) => toggle(e.target.checked)} />
-          </label>
           <div className="apariencia-row">
-            <span>{t('apariencia_idioma')}</span>
+            <span>Tema</span>
+            <select 
+              style={{ background: 'var(--color-bg-dark)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: '8px', padding: '4px 8px' }}
+              disabled
+            >
+              <option>Oscuro Clido (Actual)</option>
+            </select>
+          </div>
+          <div className="apariencia-row">
+            <span>Idioma</span>
+            <select 
+              style={{ background: 'var(--color-bg-dark)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: '8px', padding: '4px 8px' }}
+              disabled
+            >
+              <option>Espaol (Actual)</option>
+              <option>English (Prximamente)</option>
+            </select>
           </div>
         </div>
       </div>
