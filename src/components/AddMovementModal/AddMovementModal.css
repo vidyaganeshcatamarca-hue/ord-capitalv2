@@ -6,7 +6,7 @@
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
   backdrop-filter: blur(4px);
-  z-index: 900;
+  z-index: 1000;
   animation: fadeIn 0.2s ease;
 }
 @keyframes fadeIn {
@@ -19,7 +19,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  z-index: 901;
+  z-index: 1010;
   background: var(--surface);
   border-radius: 24px 24px 0 0;
   box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
@@ -794,8 +794,11 @@
   border: 1px solid var(--border);
   overflow-y: auto;
   overflow-x: hidden;
-  scrollbar-width: thin;
+  scrollbar-width: none;
   box-sizing: border-box;
+}
+.pc-form-col::-webkit-scrollbar {
+  display: none;
 }
 
 .pc-form-col.category-col {

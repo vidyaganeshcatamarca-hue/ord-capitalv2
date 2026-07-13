@@ -22,6 +22,7 @@ export function BilleterasPage() {
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showConciliarModal, setShowConciliarModal] = useState(false)
+  const [showInitialBalanceModal, setShowInitialBalanceModal] = useState(false)
   const [showConfirmArchive, setShowConfirmArchive] = useState(false)
 
   // Estado del Formulario de Creación
@@ -38,6 +39,8 @@ export function BilleterasPage() {
   // Estado del Formulario de Conciliación
   const [conciliarBilletera, setConciliarBilletera] = useState<any | null>(null)
   const [saldoReal, setSaldoReal] = useState('0')
+  const [initialBalanceBilletera, setInitialBalanceBilletera] = useState<any | null>(null)
+  const [initialBalanceValue, setInitialBalanceValue] = useState('0')
 
   // Estado del Detalle
   const [detailBilletera, setDetailBilletera] = useState<any | null>(null)
@@ -250,6 +253,35 @@ export function BilleterasPage() {
     }
   }
 
+  const openInitialBalance = (billetera: any) => {
+    setInitialBalanceBilletera(billetera)
+    setInitialBalanceValue('0')
+    setShowInitialBalanceModal(true)
+  }
+
+  const handleCompleteInitialBalance = async () => {
+    if (!initialBalanceBilletera) return
+    const saldoNum = parseFloat(initialBalanceValue)
+    if (isNaN(saldoNum) || saldoNum < 0) {
+      showToast(t('toast_invalid_opening_balance'), 'error')
+      return
+    }
+
+    try {
+      await rpc('fn_completar_saldo_inicial_billetera', {
+        p_billetera_id: initialBalanceBilletera.billetera_id,
+        p_saldo_apertura: saldoNum
+      })
+      showToast(t('wallet_initial_balance_completed'), 'success')
+      setShowInitialBalanceModal(false)
+      setInitialBalanceBilletera(null)
+      setInitialBalanceValue('0')
+      fetchData()
+    } catch (err: any) {
+      showToast(parseError(err), 'error')
+    }
+  }
+
   // Utilidades para inputs de números
   const handleFocus = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.FocusEvent<HTMLInputElement>) => {
     if (e.target.value === '0') {
@@ -368,6 +400,7 @@ export function BilleterasPage() {
                           <span className="billetera-item-name">
                             {b.nombre}
                             {b.es_fondo_prevision && <span className="prevision-badge">Fondo Previsión</span>}
+                            {b.saldo_inicial_pendiente && <span className="prevision-badge">{t('wallet_pending_initial_balance_badge')}</span>}
                           </span>
                           <span className="billetera-item-type" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                             <span>{b.moneda === 'USD' ? 'USD (Reserva)' : 'ARS (Moneda local)'}</span>
@@ -385,6 +418,11 @@ export function BilleterasPage() {
                           {formatAmount(b.saldo_actual, b.moneda)}
                         </span>
                         <div className="billetera-item-actions">
+                          {b.saldo_inicial_pendiente && (
+                            <button className="btn-billetera-action primary" onClick={() => openInitialBalance(b)}>
+                              {t('wallet_complete_initial_balance')}
+                            </button>
+                          )}
                           <button className="btn-billetera-action primary" onClick={() => openConciliar(b)}>
                             ⚖️ Conciliar
                           </button>
@@ -622,6 +660,56 @@ export function BilleterasPage() {
                 </button>
                 <button className="btn btn-primary flex-1" onClick={handleConciliar}>
                   Confirmar Ajuste
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      {/* ── MODAL: CARGAR SALDO INICIAL PENDIENTE ── */}
+      {showInitialBalanceModal && initialBalanceBilletera && (
+        <>
+          <div className="bottom-sheet-overlay" onClick={() => setShowInitialBalanceModal(false)} />
+          <div className="bottom-sheet wallet-modal-sheet">
+            <div className="bottom-sheet-handle" />
+            <div style={{ padding: 'var(--space-2) var(--space-2)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+                <h3 className="font-display" style={{ fontSize: '18px', margin: 0 }}>
+                  {t('wallet_complete_initial_balance_title', { name: initialBalanceBilletera.nombre })}
+                </h3>
+                <button type="button" className="text-xs text-muted" onClick={() => setShowInitialBalanceModal(false)}>{t('btn_close')}</button>
+              </div>
+
+              <div className="card mb-3" style={{ background: 'var(--surface-2)', padding: 'var(--space-3)' }}>
+                <p className="text-sm text-muted" style={{ margin: 0 }}>{t('wallet_complete_initial_balance_desc')}</p>
+              </div>
+
+              <div className="form-group mb-4">
+                <label className="text-xs text-muted mb-2 block font-semibold">{t('wallet_initial_balance_amount')}</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', color: 'var(--text-3)' }}>
+                    {initialBalanceBilletera.moneda === 'USD' ? 'U$S' : '$'}
+                  </span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="form-control font-mono"
+                    style={{ paddingLeft: 45, fontSize: '18px', fontWeight: 'bold' }}
+                    value={initialBalanceValue}
+                    onChange={(e) => setInitialBalanceValue(e.target.value)}
+                    onFocus={handleFocus(setInitialBalanceValue)}
+                    onBlur={handleBlur(setInitialBalanceValue)}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button className="btn btn-secondary flex-1" onClick={() => setShowInitialBalanceModal(false)}>
+                  {t('btn_cancel')}
+                </button>
+                <button className="btn btn-primary flex-1" onClick={handleCompleteInitialBalance}>
+                  {t('wallet_complete_initial_balance')}
                 </button>
               </div>
             </div>

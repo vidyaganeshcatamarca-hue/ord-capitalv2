@@ -12,19 +12,16 @@ function getInitials(email?: string | null): string {
 }
 
 export function MiCuentaCard() {
-  const { user, signOut } = useAuth()
+  const { user, signOut, nombreUsuario, setNombreUsuario } = useAuth()
   const { showToast } = useToast()
   const [nombre, setNombre] = useState('')
   const [originalNombre, setOriginalNombre] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
-    if (!user) return
-    const meta = (user.user_metadata ?? {}) as { nombre?: string; full_name?: string; name?: string }
-    const currentName = meta.nombre || meta.full_name || meta.name || ''
-    setNombre(currentName)
-    setOriginalNombre(currentName)
-  }, [user])
+    setNombre(nombreUsuario)
+    setOriginalNombre(nombreUsuario)
+  }, [nombreUsuario])
 
   const handleSave = async () => {
     if (nombre.trim().length < 2) {
@@ -37,11 +34,14 @@ export function MiCuentaCard() {
       const { error: rpcError } = await supabase.rpc('fn_actualizar_nombre_usuario', { p_nombre: nombre.trim() })
       if (rpcError) throw rpcError
 
-      // 2. Sincronizar en los metadatos de autenticación para propagar el cambio reactivamente por toda la app
-      const { error: authError } = await supabase.auth.updateUser({
+      // 2. Sincronizar en el contexto reactivo para propagar el cambio al instante por toda la app
+      setNombreUsuario(nombre.trim())
+      setOriginalNombre(nombre.trim())
+
+      // 3. Metadatos de autenticación como respaldo
+      await supabase.auth.updateUser({
         data: { nombre: nombre.trim() }
-      })
-      if (authError) throw authError
+      }).catch(err => console.warn('Error al actualizar metadatos auth de respaldo:', err))
 
       showToast(t('mi_cuenta_name_saved'), 'success')
       haptics.success()

@@ -8,8 +8,9 @@ import { PrivateRoute, PublicRoute } from '@/router/guards'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
 import { SideNav } from '@/components/SideNav/SideNav'
 
-// Lazy-loaded: solo se parsean cuando el usuario los abre por primera vez
-const AddMovementModal = lazy(() => import('@/components/AddMovementModal/AddMovementModal').then(m => ({ default: m.AddMovementModal })))
+// Lazy-loaded, but preloaded after app idle because this is the primary quick-capture path.
+const loadAddMovementModal = () => import('@/components/AddMovementModal/AddMovementModal').then(m => ({ default: m.AddMovementModal }))
+const AddMovementModal = lazy(loadAddMovementModal)
 const PerfilPage = lazy(() => import('@/pages/Perfil/PerfilPage').then(m => ({ default: m.PerfilPage })))
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary'
 import '@/styles/index.css'
@@ -57,6 +58,13 @@ function AppLayout() {
     }
     window.addEventListener('open-transfer-modal', handleOpenTransfer)
     return () => window.removeEventListener('open-transfer-modal', handleOpenTransfer)
+  }, [])
+
+  useEffect(() => {
+    const requestIdle = window.requestIdleCallback ?? ((cb: IdleRequestCallback) => window.setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 0 } as IdleDeadline), 1200))
+    const cancelIdle = window.cancelIdleCallback ?? window.clearTimeout
+    const idleId = requestIdle(() => { void loadAddMovementModal() })
+    return () => cancelIdle(idleId as number)
   }, [])
 
   return (

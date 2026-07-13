@@ -4,10 +4,18 @@ import { useToast } from '@/contexts/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { safeEval } from '@/utils/math'
+import { t, parseError } from '@/locales/i18n'
 import './Auth.css'
 
 type Mode = 'login' | 'register'
 type BudgetMode = 'libertad' | 'disciplina'
+
+const withTimeout = <T,>(promise: PromiseLike<T>, ms = 4000): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+  ])
+}
 
 export function AuthPage() {
   const navigate = useNavigate()
@@ -29,6 +37,7 @@ export function AuthPage() {
   const [walletName, setWalletName] = useState('')
   const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS')
   const [calcInput, setCalcInput] = useState('0')
+  const [cashBalanceInput, setCashBalanceInput] = useState('0')
   const [isCalculated, setIsCalculated] = useState(true)
   const [selectedIcon, setSelectedIcon] = useState('💵')
 
@@ -56,32 +65,49 @@ export function AuthPage() {
     }
   }, [session])
 
-  const checkExistingOnboarding = async () => {
+  const checkExistingOnboarding = async (retries = 3, delay = 200) => {
     setLoading(true)
+    const localCompleted = localStorage.getItem('onboarding_completo') === 'true'
+
     try {
       if (!session?.user?.id) {
         setSlide(3)
         return
       }
 
-      // Consultar el estado del onboarding mediante la RPC segura (SECURITY DEFINER)
-      const { data: status, error } = await supabase.rpc('fn_verificar_status_onboarding')
-
-      if (error) {
-        console.error('Error al verificar status de onboarding:', error)
-        setSlide(3)
-        return
+      for (let i = 0; i < retries; i++) {
+        try {
+          const { data: status, error } = await withTimeout(
+            supabase.rpc('fn_verificar_status_onboarding'),
+            3000
+          )
+          if (!error && status) {
+            if (status.onboarding_completo) {
+              setOnboardingCompleto(true)
+              localStorage.setItem('onboarding_completo', 'true')
+              localStorage.removeItem('onboarding_slide')
+              navigate('/', { replace: true })
+            } else {
+              setSlide(3)
+              localStorage.setItem('onboarding_slide', '3')
+            }
+            return // Éxito
+          }
+          console.warn(`Intento ${i + 1} de checkExistingOnboarding falló:`, error)
+        } catch (err) {
+          console.warn(`Intento ${i + 1} de checkExistingOnboarding lanzó excepción/timeout:`, err)
+        }
+        if (i < retries - 1) {
+          await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
+        }
       }
 
-      if (status?.onboarding_completo) {
-        // Ya completó onboarding antes
+      // Fallback si todos los reintentos de la RPC fallaron
+      if (localCompleted) {
         setOnboardingCompleto(true)
-        localStorage.removeItem('onboarding_slide')
         navigate('/', { replace: true })
       } else {
-        // No ha completado, mandar a Slide 3 (Primera Billetera)
         setSlide(3)
-        localStorage.setItem('onboarding_slide', '3')
       }
     } catch (err) {
       console.error('Error general en checkExistingOnboarding:', err)
@@ -206,22 +232,29 @@ export function AuthPage() {
   const handleSaveWallet = async (skipBalance = false) => {
     setLoading(true)
     const saldo = skipBalance ? 0 : parseFloat(calcInput) || 0
-    const name = walletName.trim() || 'Efectivo'
+    const cashSaldo = skipBalance ? 0 : parseFloat(cashBalanceInput) || 0
+    const name = walletName.trim() || t('wallet_primary_default_name')
+    const cashName = t('wallet_cash_default_name')
 
     try {
-      const { error } = await supabase.rpc('fn_crear_billetera_inicial', {
-        p_nombre: name,
-        p_moneda: currency,
-        p_saldo_apertura: saldo,
-        p_icono: selectedIcon
+      const { error } = await supabase.rpc('fn_crear_billeteras_iniciales', {
+        p_cuenta_nombre: name,
+        p_cuenta_moneda: currency,
+        p_cuenta_saldo_apertura: saldo,
+        p_cuenta_saldo_omitido: skipBalance || saldo <= 0,
+        p_cuenta_icono: selectedIcon,
+        p_efectivo_nombre: cashName,
+        p_efectivo_saldo_apertura: cashSaldo,
+        p_efectivo_saldo_omitido: skipBalance || cashSaldo <= 0,
+        p_efectivo_icono: '💵'
       })
 
       if (error) throw error
 
-      showToast(`¡Billetera ${name} creada exitosamente!`, 'success')
+      showToast(t('toast_initial_wallets_created'), 'success')
       goToSlide(4)
     } catch (err: any) {
-      showToast(err.message || 'Error al crear la billetera inicial', 'error')
+      showToast(parseError(err), 'error')
     } finally {
       setLoading(false)
     }
@@ -486,10 +519,10 @@ export function AuthPage() {
               </div>
             </div>
 
-            {/* Calculadora de Saldo Inicial */}
-            <div className="form-group mb-3">
-              <label className="form-label">Saldo Inicial</label>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              {/* Calculadora de Saldo Inicial */}
+              <div className="form-group mb-3">
+                <label className="form-label">{t('label_primary_initial_balance')}</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 <span style={{ 
                   position: 'absolute', 
                   left: '16px', 
@@ -558,18 +591,55 @@ export function AuthPage() {
                   =
                 </button>
               </div>
-            </div>
+              </div>
+
+              <div className="form-group mb-3">
+                <label className="form-label">{t('label_cash_initial_balance')}</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <span style={{
+                    position: 'absolute',
+                    left: '16px',
+                    fontSize: '22px',
+                    fontWeight: 'bold',
+                    color: 'var(--text-3)'
+                  }}>
+                    {currency === 'ARS' ? '$' : 'U$S'}
+                  </span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    className="calc-display font-mono"
+                    style={{
+                      width: '100%',
+                      paddingLeft: '64px',
+                      textAlign: 'right',
+                      fontSize: '24px',
+                      fontWeight: 'bold'
+                    }}
+                    value={cashBalanceInput}
+                    onChange={e => setCashBalanceInput(e.target.value)}
+                    onFocus={e => {
+                      if (cashBalanceInput === '0') setCashBalanceInput('')
+                    }}
+                    onBlur={() => {
+                      if (!cashBalanceInput || parseFloat(cashBalanceInput) < 0) setCashBalanceInput('0')
+                    }}
+                  />
+                </div>
+                <p className="text-xs text-muted mt-1">{t('onboarding_cash_balance_hint')}</p>
+              </div>
 
             <div className="slide-footer flex flex-col gap-2">
               <button
                 className="btn btn-primary btn-full btn-lg"
                 onClick={() => handleSaveWallet(false)}
-                disabled={walletName.trim().length === 0 || parseFloat(calcInput) <= 0 || loading}
+                disabled={walletName.trim().length === 0 || loading}
               >
-                {loading ? 'Guardando...' : 'Guardar mi primera cuenta'}
+                {loading ? t('btn_saving') : t('btn_save_initial_wallets')}
               </button>
               <button className="onboarding-link-btn" onClick={() => handleSaveWallet(true)}>
-                No quiero cargar saldo ahora &gt;
+                {t('btn_skip_initial_balances')}
               </button>
             </div>
           </div>

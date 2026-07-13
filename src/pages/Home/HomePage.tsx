@@ -140,7 +140,7 @@ function DonutChart({ data, hideAmounts }: DonutChartProps) {
 
 export function HomePage() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, nombreUsuario } = useAuth()
   const { showToast } = useToast()
   const [hideAmounts, setHideAmounts] = useState(false)
   const [alertsOpen, setAlertsOpen] = useState(false)
@@ -311,8 +311,7 @@ export function HomePage() {
   }, [fetchData])
 
   // Nombre Real para el Saludo (Observación 9)
-  const nombreReal = user?.user_metadata?.nombre || user?.user_metadata?.full_name
-  const saludoTexto = nombreReal ? `${getGreeting()}, ${nombreReal} 👋` : `${getGreeting()} 👋`
+  const saludoTexto = nombreUsuario ? `${getGreeting()}, ${nombreUsuario} 👋` : `${getGreeting()} 👋`
 
   // Crear mapa de monedas para los movimientos (caché en frontend)
   const walletCurrencyMap = useMemo(() => {
@@ -818,7 +817,7 @@ export function HomePage() {
       {selectedBilletera && (
         <>
           <div className="bottom-sheet-overlay" onClick={() => setSelectedBilletera(null)} />
-          <div className="bottom-sheet add-movement-sheet">
+          <div className="bottom-sheet wallet-modal-sheet">
             <div className="bottom-sheet-handle" />
             <div style={{ padding: 'var(--space-2) var(--space-2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>

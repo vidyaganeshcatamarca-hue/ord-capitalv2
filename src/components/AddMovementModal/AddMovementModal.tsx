@@ -340,6 +340,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
         t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es', { sensitivity: 'base' })
       ),
     }))
+  const remoteSectionLoading = loadingData
 
   const reloadCategorias = async () => {
     try {
@@ -740,12 +741,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
             <button className="modal-close-btn" onClick={onClose}>✕</button>
           </div>
 
-          {loadingData ? (
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '48px 0' }}>
-              <div className="spinner" />
-            </div>
-          ) : (
-            <div className="modal-steps-body">
+          <div className="modal-steps-body">
               {!isMobile ? (
                 /* ─── VISTA UNIFICADA EN PC (TODAS LAS PANTALLAS EN UNA) ─── */
                 <div className="pc-unified-form">
@@ -790,6 +786,12 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                     <label className="step-label">
                       {tipo === 'transfer' ? 'Cuenta Origen' : (tipo === 'expense' ? 'Cuenta o Tarjeta' : 'Cuenta / Billetera')}
                     </label>
+                    {remoteSectionLoading ? (
+                      <div className="warning-card" style={{ padding: '16px', textAlign: 'center', width: '100%' }}>
+                        <div className="spinner" style={{ margin: '0 auto 10px auto' }} />
+                        {t('loading')}
+                      </div>
+                    ) : (
                     <div className="cuenta-lista pc-max-height">
                       {tipo === 'expense' && origenOptions.length === 0 ? (
                         <div className="warning-card" style={{ color: 'var(--coral)', padding: '12px', textAlign: 'center', background: 'rgba(255,107,107,0.08)', borderRadius: '10px', fontSize: '13px', margin: '8px 0', width: '100%' }}>
@@ -826,6 +828,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                         </button>
                       ))}
                     </div>
+                    )}
 
                     {/* Cuotas PC */}
                     {tipo === 'expense' && origenTipo === 'tarjeta' && (
@@ -872,7 +875,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                     )}
 
                     {/* Destino (solo transfer) */}
-                    {tipo === 'transfer' && (
+                    {tipo === 'transfer' && !remoteSectionLoading && (
                       <>
                         <label className="step-label" style={{ marginTop: '16px' }}>Cuenta Destino</label>
                         {destinoOptions.length === 0 ? (
@@ -898,8 +901,8 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                   </div>
 
                   {/* COLUMNA 2: CATEGORÍA (Solo para Gastos) */}
-                  {tipo === 'expense' && (
-                    <div className="pc-form-col category-col">
+                    {tipo === 'expense' && (
+                      <div className="pc-form-col category-col">
                       {showAllCat && !categoriaEgreso ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                           <div className="step-title" style={{ margin: 0 }}>2. Categoría</div>
@@ -922,7 +925,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                       )}
 
                       {/* Selector de proyectos (sólo si tiene pareja y hay proyectos) */}
-                      {hogarEstado?.tiene_pareja && proyectosHogar.length > 0 && !showAllCat && (
+                      {!remoteSectionLoading && hogarEstado?.tiene_pareja && proyectosHogar.length > 0 && !showAllCat && (
                         <ProyectosSelector
                           proyectos={proyectosHogar}
                           proyectoSeleccionadoId={proyectoSeleccionadoId}
@@ -933,7 +936,12 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                         />
                       )}
                       
-                      {categoriaEgreso ? (
+                      {remoteSectionLoading ? (
+                        <div className="warning-card" style={{ padding: '16px', textAlign: 'center', width: '100%' }}>
+                          <div className="spinner" style={{ margin: '0 auto 10px auto' }} />
+                          {t('loading')}
+                        </div>
+                      ) : categoriaEgreso ? (
                         <div className="cat-selected-pill" onClick={() => { setCategoriaEgreso(null); setQueryCat('') }} style={{ border: `1px solid ${categoriaEgreso.color}` }}>
                           <span style={{
                             width: '28px',
@@ -1027,33 +1035,35 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                                         <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>{t(rubro.nombre_cuenta)}</span>
                                       </div>
                                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                                        <button
-                                          type="button"
-                                          className="btn-add-subcat-quick"
-                                          title="Agregar subcategoría"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            openNewSubcatModal(rubro);
-                                          }}
-                                          style={{
-                                            background: 'rgba(255,255,255,0.06)',
-                                            border: '1px solid rgba(255,255,255,0.15)',
-                                            borderRadius: '6px',
-                                            color: '#FFFFFF',
-                                            width: '26px',
-                                            height: '26px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            fontSize: '18px',
-                                            fontWeight: 'bold',
-                                            cursor: 'pointer',
-                                            marginRight: '8px',
-                                            transition: 'all 0.15s'
-                                          }}
-                                        >
-                                          +
-                                        </button>
+                                        {(rubro.hijos.length === 0 || !!expandedRubros[rubro.estructura_id]) && (
+                                          <button
+                                            type="button"
+                                            className="btn-add-subcat-quick"
+                                            title="Agregar subcategoría"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              openNewSubcatModal(rubro);
+                                            }}
+                                            style={{
+                                              background: 'rgba(255,255,255,0.06)',
+                                              border: '1px solid rgba(255,255,255,0.15)',
+                                              borderRadius: '6px',
+                                              color: '#FFFFFF',
+                                              width: '26px',
+                                              height: '26px',
+                                              display: 'flex',
+                                              alignItems: 'center',
+                                              justifyContent: 'center',
+                                              fontSize: '18px',
+                                              fontWeight: 'bold',
+                                              cursor: 'pointer',
+                                              marginRight: '8px',
+                                              transition: 'all 0.15s'
+                                            }}
+                                          >
+                                            +
+                                          </button>
+                                        )}
                                         {rubro.hijos.length > 0 && (
                                           <span style={{ color: 'var(--text-3)', fontSize: '14px', marginRight: '6px' }}>
                                             {expandedRubros[rubro.estructura_id] ? '▾' : '▸'}
@@ -1191,7 +1201,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                     )}
 
                     {/* Fuente de ingreso si es Income */}
-                    {tipo === 'income' && (
+                    {tipo === 'income' && !remoteSectionLoading && (
                       <>
                         <label className="step-label" style={{ marginTop: '12px' }}>Fuente de Ingreso</label>
                         <div className="cuenta-lista pc-max-height">
@@ -1258,6 +1268,13 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                     </div>
                   </div>
 
+                  {remoteSectionLoading ? (
+                    <div className="warning-card" style={{ padding: '16px', textAlign: 'center', width: '100%', marginBottom: '16px' }}>
+                      <div className="spinner" style={{ margin: '0 auto 10px auto' }} />
+                      {t('loading')}
+                    </div>
+                  ) : (
+                  <>
                   {/* Cuentas en desplegables */}
                   <label className="step-label">Cuenta Origen</label>
                   <select
@@ -1369,6 +1386,8 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                       fontSize: '14px',
                       marginBottom: '16px'
                     }} />
+                  </>
+                  )}
 
                 </div>
               ) : (
@@ -1412,101 +1431,110 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                     <div className="mobile-category-picker-section" style={{ marginBottom: '16px' }}>
                       <label className="step-label">Categoría</label>
 
-                      {/* Selector de proyectos compartidos (Fase 4) */}
-                      {hogarEstado?.tiene_pareja && proyectosHogar.length > 0 && (
-                        <ProyectosSelector
-                          proyectos={proyectosHogar}
-                          proyectoSeleccionadoId={proyectoSeleccionadoId}
-                          selectProyecto={selectProyecto}
-                        />
-                      )}
-                      
-                      {categoriaEgreso ? (
-                        <div className="cat-selected-pill" onClick={() => { setMobileShowAllCat(true); setShowCalculator(false); }} style={{ border: `1px solid ${categoriaEgreso.color || 'var(--border)'}`, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                          <span style={{
-                            width: '28px',
-                            height: '28px',
-                            borderRadius: '8px',
-                            backgroundColor: categoriaEgreso.color,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#000000',
-                            fontWeight: 'bold'
-                          }}>
-                            <span style={{ filter: 'brightness(0)' }}>{categoriaEgreso.icono}</span>
-                          </span>
-                          <span>{categoriaEgreso.nombre}</span>
-                          <span className="cat-selected-edit" style={{ marginLeft: 'auto' }}>✏️</span>
+                      {remoteSectionLoading ? (
+                        <div className="warning-card" style={{ padding: '16px', textAlign: 'center', width: '100%' }}>
+                          <div className="spinner" style={{ margin: '0 auto 10px auto' }} />
+                          {t('loading')}
                         </div>
                       ) : (
-                        <div className="cat-placeholder-pill" onClick={() => { setMobileShowAllCat(true); setShowCalculator(false); }} style={{
-                          padding: '12px',
-                          border: '1px dashed var(--border)',
-                          borderRadius: '10px',
-                          color: 'var(--text-3)',
-                          cursor: 'pointer',
-                          textAlign: 'center',
-                          fontSize: '14px',
-                          marginBottom: '12px'
-                        }}>
-                          🔍 Selecciona una categoría...
-                        </div>
-                      )}
+                        <>
+                          {/* Selector de proyectos compartidos (Fase 4) */}
+                          {hogarEstado?.tiene_pareja && proyectosHogar.length > 0 && (
+                            <ProyectosSelector
+                              proyectos={proyectosHogar}
+                              proyectoSeleccionadoId={proyectoSeleccionadoId}
+                              selectProyecto={selectProyecto}
+                            />
+                          )}
 
-                      {/* Las 5 categorías más usadas recientemente */}
-                      <div className="mobile-frecuentes-section" style={{ margin: '12px 0' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                          {frecuentesMobile.map((cat, i) => (
-                            <button
-                              key={i}
-                              type="button"
-                              className="cat-recent-icon-btn"
-                              style={{
-                                width: '32px',
-                                height: '32px',
-                                borderRadius: '50%',
-                                backgroundColor: cat.color,
-                                border: categoriaEgreso?.estructura_id === cat.estructura_id ? '3px solid var(--text)' : '1px solid rgba(255,255,255,0.1)',
-                                display: 'flex',
+                          {categoriaEgreso ? (
+                            <div className="cat-selected-pill" onClick={() => { setMobileShowAllCat(true); setShowCalculator(false); }} style={{ border: `1px solid ${categoriaEgreso.color || 'var(--border)'}`, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                              <span style={{
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '8px',
+                                backgroundColor: categoriaEgreso.color,
+                                display: 'inline-flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                fontSize: '16px',
                                 color: '#000000',
-                                cursor: 'pointer',
-                                transition: 'transform 0.1s',
-                                boxShadow: categoriaEgreso?.estructura_id === cat.estructura_id ? `0 0 10px ${cat.color}` : 'none'
-                              }}
-                              onClick={() => {
-                                setCategoriaEgreso(cat)
-                                setShowCalculator(false)
-                              }}
-                            >
-                              <span style={{ filter: 'brightness(0)' }}>{cat.icono}</span>
-                            </button>
-                          ))}
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-sm"
-                            style={{
-                              marginLeft: 'auto',
-                              padding: '6px 12px',
-                              borderRadius: '20px',
-                              fontSize: '11px',
-                              fontWeight: 'bold',
-                              height: '32px',
-                              display: 'flex',
-                              alignItems: 'center'
-                            }}
-                            onClick={() => {
-                              setMobileShowAllCat(true)
-                              setShowCalculator(false)
-                            }}
-                          >
-                            Ver todas
-                          </button>
-                        </div>
-                      </div>
+                                fontWeight: 'bold'
+                              }}>
+                                <span style={{ filter: 'brightness(0)' }}>{categoriaEgreso.icono}</span>
+                              </span>
+                              <span>{categoriaEgreso.nombre}</span>
+                              <span className="cat-selected-edit" style={{ marginLeft: 'auto' }}>✏️</span>
+                            </div>
+                          ) : (
+                            <div className="cat-placeholder-pill" onClick={() => { setMobileShowAllCat(true); setShowCalculator(false); }} style={{
+                              padding: '12px',
+                              border: '1px dashed var(--border)',
+                              borderRadius: '10px',
+                              color: 'var(--text-3)',
+                              cursor: 'pointer',
+                              textAlign: 'center',
+                              fontSize: '14px',
+                              marginBottom: '12px'
+                            }}>
+                              🔍 Selecciona una categoría...
+                            </div>
+                          )}
+
+                          {/* Las 5 categorías más usadas recientemente */}
+                          <div className="mobile-frecuentes-section" style={{ margin: '12px 0' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                              {frecuentesMobile.map((cat, i) => (
+                                <button
+                                  key={i}
+                                  type="button"
+                                  className="cat-recent-icon-btn"
+                                  style={{
+                                    width: '32px',
+                                    height: '32px',
+                                    borderRadius: '50%',
+                                    backgroundColor: cat.color,
+                                    border: categoriaEgreso?.estructura_id === cat.estructura_id ? '3px solid var(--text)' : '1px solid rgba(255,255,255,0.1)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    fontSize: '16px',
+                                    color: '#000000',
+                                    cursor: 'pointer',
+                                    transition: 'transform 0.1s',
+                                    boxShadow: categoriaEgreso?.estructura_id === cat.estructura_id ? `0 0 10px ${cat.color}` : 'none'
+                                  }}
+                                  onClick={() => {
+                                    setCategoriaEgreso(cat)
+                                    setShowCalculator(false)
+                                  }}
+                                >
+                                  <span style={{ filter: 'brightness(0)' }}>{cat.icono}</span>
+                                </button>
+                              ))}
+                              <button
+                                type="button"
+                                className="btn btn-secondary"
+                                style={{
+                                  marginLeft: 'auto',
+                                  padding: '8px 16px',
+                                  borderRadius: '20px',
+                                  fontSize: '14px',
+                                  fontWeight: 'bold',
+                                  height: '36px',
+                                  display: 'flex',
+                                  alignItems: 'center'
+                                }}
+                                onClick={() => {
+                                  setMobileShowAllCat(true)
+                                  setShowCalculator(false)
+                                }}
+                              >
+                                Ver todas
+                              </button>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   )}
 
@@ -1520,7 +1548,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                         </div>
                         <div className="centered-cat-modal-body">
                           <div className="cat-acordeon" style={{ maxHeight: 'none' }}>
-                            {rubros.map(rubro => {
+                            {filteredRubrosDesktop.map(rubro => {
                               const hasChildren = rubro.hijos && rubro.hijos.length > 0
                               const isExpanded = !!expandedRubros[rubro.estructura_id]
                               return (
@@ -1580,33 +1608,35 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                                       )}
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                                      <button
-                                        type="button"
-                                        className="btn-add-subcat-quick"
-                                        title="Agregar subcategoría"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          openNewSubcatModal(rubro);
-                                        }}
-                                        style={{
-                                          background: 'rgba(255,255,255,0.06)',
-                                          border: '1px solid rgba(255,255,255,0.15)',
-                                          borderRadius: '6px',
-                                          color: '#FFFFFF',
-                                          width: '26px',
-                                          height: '26px',
-                                          display: 'flex',
-                                          alignItems: 'center',
-                                          justifyContent: 'center',
-                                          fontSize: '18px',
-                                          fontWeight: 'bold',
-                                          cursor: 'pointer',
-                                          marginRight: '8px',
-                                          transition: 'all 0.15s'
-                                        }}
-                                      >
-                                        +
-                                      </button>
+                                      {(!hasChildren || isExpanded) && (
+                                        <button
+                                          type="button"
+                                          className="btn-add-subcat-quick"
+                                          title="Agregar subcategoría"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            openNewSubcatModal(rubro);
+                                          }}
+                                          style={{
+                                            background: 'rgba(255,255,255,0.06)',
+                                            border: '1px solid rgba(255,255,255,0.15)',
+                                            borderRadius: '6px',
+                                            color: '#FFFFFF',
+                                            width: '26px',
+                                            height: '26px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '18px',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            marginRight: '8px',
+                                            transition: 'all 0.15s'
+                                          }}
+                                        >
+                                          +
+                                        </button>
+                                      )}
                                       {hasChildren && (
                                         <span style={{ color: 'var(--text-3)', fontSize: '12px' }}>
                                           {isExpanded ? '▾' : '▸'}
@@ -1686,6 +1716,13 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
 
                   {/* Cuenta / Billetera / Tarjeta */}
                   <label className="step-label">{tipo === 'expense' ? 'Cuenta o Tarjeta' : 'Cuenta / Billetera'}</label>
+                  {remoteSectionLoading ? (
+                    <div className="warning-card" style={{ padding: '16px', textAlign: 'center', width: '100%', marginBottom: '16px' }}>
+                      <div className="spinner" style={{ margin: '0 auto 10px auto' }} />
+                      {t('loading')}
+                    </div>
+                  ) : (
+                  <>
                   {tipo === 'expense' && origenOptions.length === 0 && (
                     <div className="warning-card" style={{ color: 'var(--coral)', padding: '12px', background: 'rgba(255,107,107,0.08)', borderRadius: '10px', fontSize: '13px', marginBottom: '16px' }}>
                       ⚠️ {t('error_no_sufficient_balance_wallets')}
@@ -1823,7 +1860,9 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                           </option>
                         ))}
                       </select>
-                    </>
+                        </>
+                      )}
+                  </>
                   )}
 
                   {/* Cuándo (Fecha) */}
@@ -1896,7 +1935,6 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                 </div>
               )}
             </div>
-          )}
 
           {/* ── BOTÓN STICKY DE CONFIRMACIÓN ── */}
           {!loadingData && (

@@ -17,6 +17,7 @@ interface EditMovementModalProps {
     billetera_destino_id?: number | null
     estructura_egreso_id?: number | null
     cuenta_ingreso_id?: number | null
+    nombre_cuenta_historico?: string | null
     tarjeta_id?: number | null
     cuotas_totales?: number | null
   }
@@ -112,12 +113,22 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
       setBilleteras(billeterasLoaded)
       setTarjetas(tarjetasLoaded)
       setFuentesIngreso(ingresosLoaded)
-      setCategoriasEgreso(flatCats)
+
+      // Add pseudo-categories for adjustments so they appear in the dropdown
+      const pseudoCats = [
+        { id: -1, label: t('adjustment_mystery') },
+        { id: -2, label: t('adjustment_surplus') }
+      ]
+      setCategoriasEgreso([...flatCats, ...pseudoCats])
 
       // ── Initialize form values using freshly loaded data ──
       setFecha(movement.fecha)
       setMonto(Math.abs(movement.monto).toString())
-      setDetalle(movement.detalle || '')
+      if (movement.detalle === 'adjustment_mystery' || movement.detalle === 'adjustment_surplus') {
+        setDetalle('')
+      } else {
+        setDetalle(movement.detalle || '')
+      }
 
       // 1. Origen: Billetera o Tarjeta
       if (movement.tarjeta_id) {
@@ -152,8 +163,35 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
           setEstructuraEgresoId(Number(movement.estructura_egreso_id))
         } else {
           const cleanName = movement.nombre_categoria
-          const foundCat = flatCats.find(c => c.label === cleanName || c.label.endsWith(` › ${cleanName}`))
-          if (foundCat) setEstructuraEgresoId(foundCat.id)
+          const foundCat = flatCats.find(c => {
+            const labelLower = c.label.toLowerCase()
+            const queryLower = cleanName.toLowerCase()
+            
+            // Si la búsqueda se refiere a una categoría de misterio/olvido/desviación
+            const isMysteryQuery = 
+              queryLower === 'no_detail' || 
+              queryLower === 'cat_mystery' || 
+              queryLower === 'type_adjustment_mystery' ||
+              queryLower === t('no_detail').toLowerCase() || 
+              queryLower === t('cat_mystery').toLowerCase() ||
+              queryLower === t('adjustment_mystery').toLowerCase()
+            
+            const isMysteryLabel = 
+              labelLower.includes('misterio') || 
+              labelLower.includes('olvido')
+            
+            if (isMysteryQuery && isMysteryLabel) {
+              return true
+            }
+            
+            return labelLower === queryLower || labelLower.endsWith(` › ${queryLower}`)
+          })
+          if (foundCat) {
+            setEstructuraEgresoId(foundCat.id)
+          } else if (movement.tipo === 'adjustment') {
+            if (movement.detalle === 'adjustment_mystery') setEstructuraEgresoId(-1)
+            else if (movement.detalle === 'adjustment_surplus') setEstructuraEgresoId(-2)
+          }
         }
       }
 
@@ -208,6 +246,32 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
         }
       }
 
+      let nuevoTipo = movement.tipo
+      let nuevoNombreHistorico = movement.nombre_cuenta_historico || null
+      let submitEstructuraEgresoId = null
+      let submitDetalle = detalle.trim() || null
+
+      if (usesExpenseCategory && estructuraEgresoId) {
+        if (estructuraEgresoId < 0) {
+          // It's an adjustment
+          nuevoTipo = 'adjustment'
+          nuevoNombreHistorico = estructuraEgresoId === -1 ? t('adjustment_mystery') : t('adjustment_surplus')
+          submitEstructuraEgresoId = null
+          submitDetalle = estructuraEgresoId === -1 ? 'adjustment_mystery' : 'adjustment_surplus'
+        } else {
+          // It's a real expense
+          if (movement.tipo === 'adjustment') nuevoTipo = 'expense'
+          const cat = categoriasEgreso.find(c => c.id === estructuraEgresoId)
+          if (cat) nuevoNombreHistorico = cat.label
+          submitEstructuraEgresoId = estructuraEgresoId
+          submitDetalle = detalle.trim() || null
+        }
+      } else if (usesIncomeCategory && cuentaIngresoId) {
+        if (movement.tipo === 'adjustment') nuevoTipo = 'income'
+        const fuente = fuentesIngreso.find(f => f.producto_id === cuentaIngresoId)
+        if (fuente) nuevoNombreHistorico = fuente.nombre
+      }
+
       await rpc('fn_editar_movimiento_caja', {
         p_caja_id: movement.p_caja_id,
         p_nueva_fecha: fecha,
@@ -215,11 +279,13 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
         p_nuevo_valor_egreso: valEgreso,
         p_billetera_origen_id: origenTipo === 'billetera' ? origenId : null,
         p_billetera_destino_id: movement.tipo === 'transfer' ? billeteraDestinoId : null,
-        p_estructura_egreso_id: usesExpenseCategory ? estructuraEgresoId : null,
+        p_estructura_egreso_id: submitEstructuraEgresoId,
         p_cuenta_ingreso_id: usesIncomeCategory ? cuentaIngresoId : null,
-        p_nuevo_detalle: detalle.trim() || null,
+        p_nuevo_detalle: submitDetalle,
         p_nueva_descripcion: null, // Remove observations and leave it null
-        p_tarjeta_id: origenTipo === 'tarjeta' ? origenId : null
+        p_tarjeta_id: origenTipo === 'tarjeta' ? origenId : null,
+        p_nuevo_tipo: nuevoTipo,
+        p_nombre_cuenta_historico: nuevoNombreHistorico
       })
 
       showToast(t('edit_movement_success'), 'success')
