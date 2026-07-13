@@ -36,7 +36,7 @@ export function NotificacionesCard() {
         <p>
           {activeCount === null
             ? t('config_notificaciones_desc')
-            : `${activeCount}/12 categorías activas`}
+            : t('config_notifications_active_count', { count: activeCount, total: 12 })}
         </p>
       </div>
       <span className="config-hub-card-chevron" aria-hidden="true">›</span>

@@ -300,6 +300,15 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
     return () => clearTimeout(timer)
   }, [monto])
 
+  useEffect(() => {
+    if (isMobile || loadingData) return
+    const timer = window.setTimeout(() => {
+      amountInputRef.current?.focus()
+      amountInputRef.current?.select()
+    }, 50)
+    return () => window.clearTimeout(timer)
+  }, [isMobile, loadingData, tipo])
+
   // ── UI helpers ──
   const [queryCat, setQueryCat] = useState('')
   const [expandedRubros, setExpandedRubros] = useState<Record<number, boolean>>({})
@@ -307,10 +316,30 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   const [fechaPersonalizada, setFechaPersonalizada] = useState(false)
   const inputFechaRef = useRef<HTMLInputElement>(null)
   const selectOrigenRef = useRef<HTMLSelectElement>(null)
+  const amountInputRef = useRef<HTMLInputElement>(null)
 
   // ── Creación rápida de subcategoría ──
   const [showNewSubcatModal, setShowNewSubcatModal] = useState(false)
   const [newSubcatParent, setNewSubcatParent] = useState<Rubro | null>(null)
+
+  const normalizedCategoryQuery = queryCat.trim().toLowerCase()
+  const filteredRubrosDesktop = rubros
+    .filter((rubro) => {
+      if (!normalizedCategoryQuery) return true
+      const rubroName = t(rubro.nombre_cuenta).toLowerCase()
+      if (rubroName.includes(normalizedCategoryQuery)) return true
+      return (rubro.hijos ?? []).some((hijo) => {
+        const childName = t(hijo.nombre_cuenta).toLowerCase()
+        const combinedName = `${rubroName} ${childName}`
+        return childName.includes(normalizedCategoryQuery) || combinedName.includes(normalizedCategoryQuery)
+      })
+    })
+    .map((rubro) => ({
+      ...rubro,
+      hijos: [...(rubro.hijos ?? [])].sort((a, b) =>
+        t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es', { sensitivity: 'base' })
+      ),
+    }))
 
   const reloadCategorias = async () => {
     try {
@@ -732,6 +761,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                           {monedaOrigen === 'USD' ? 'U$S' : '$'}
                         </span>
                         <input
+                          ref={amountInputRef}
                           type="text"
                           className="monto-input-box-field"
                           placeholder="0"
@@ -932,6 +962,11 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                           
                           {!showAllCat && frecuentesMobile.length > 0 ? (
                             <>
+                              <div className="desktop-categories-toolbar">
+                                <button type="button" className="btn-link-ver-todas desktop-visible-link" onClick={() => setShowAllCat(true)}>
+                                  + Ver todas las categorías
+                                </button>
+                              </div>
                               <div className="cat-frecuentes-grid">
                                 {frecuentesMobile.slice(0, 5).map((cat, i) => {
                                   const rubro = rubros.find(r => r.estructura_id === cat.estructura_id || r.hijos?.some(h => h.estructura_id === cat.estructura_id))
@@ -959,15 +994,10 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
                                   )
                                 })}
                               </div>
-                              <button type="button" className="btn-link-ver-todas" onClick={() => setShowAllCat(true)}>
-                                + Ver todas las categorías
-                              </button>
                             </>
                           ) : (
                             <div className="cat-acordeon">
-                              {rubros
-                                .filter(r => !queryCat || r.nombre_cuenta.toLowerCase().includes(queryCat.toLowerCase()) || r.hijos?.some(h => h.nombre_cuenta.toLowerCase().includes(queryCat.toLowerCase())))
-                                .map(rubro => (
+                              {filteredRubrosDesktop.map(rubro => (
                                   <div key={rubro.estructura_id} className="cat-acordeon-rubro">
                                     <div className="cat-acordeon-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px' }}>
                                       <div 
@@ -1934,5 +1964,3 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
     </>
   )
 }
-
-

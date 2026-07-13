@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Capacitor } from '@capacitor/core'
+import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
@@ -8,6 +9,7 @@ import { setupPersistentCaptureNotification, cancelPersistentCaptureNotification
 import { useReminders } from '@/hooks/useReminders'
 import { RecordatorioList } from '@/components/recordatorios/RecordatorioList'
 import './NotificacionesPage.css'
+import './ConfigSectionPage.css'
 
 interface NotifPrefs {
   push_enabled: boolean
@@ -142,6 +144,7 @@ export function NotificacionesPage() {
 
   return (
     <main className="page notif-page" aria-labelledby="notif-page-title">
+      <ConfigBackButton />
       <header className="config-page-header">
         <h1 id="notif-page-title">{t('notif_title')}</h1>
       </header>

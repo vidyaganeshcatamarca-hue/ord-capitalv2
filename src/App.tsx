@@ -34,6 +34,10 @@ const ConfiguracionPage = lazy(() => import('@/pages/Configuracion/Configuracion
 const NotificacionesPage = lazy(() => import('@/pages/Configuracion/NotificacionesPage').then(module => ({ default: module.NotificacionesPage })))
 const CategoriasConfigPage = lazy(() => import('@/pages/Configuracion/CategoriasConfigPage').then(module => ({ default: module.CategoriasConfigPage })))
 const HogarConfigPage = lazy(() => import('@/pages/Configuracion/HogarConfigPage').then(module => ({ default: module.HogarConfigPage })))
+const RegionFormatoPage = lazy(() => import('@/pages/Configuracion/RegionFormatoPage').then(module => ({ default: module.RegionFormatoPage })))
+const PresupuestoCicloPage = lazy(() => import('@/pages/Configuracion/PresupuestoCicloPage').then(module => ({ default: module.PresupuestoCicloPage })))
+const PreferenciasOperativasPage = lazy(() => import('@/pages/Configuracion/PreferenciasOperativasPage').then(module => ({ default: module.PreferenciasOperativasPage })))
+const AcercaPage = lazy(() => import('@/pages/Configuracion/AcercaPage').then(module => ({ default: module.AcercaPage })))
 
 
 const LoadingSpinner = () => (
@@ -81,10 +85,13 @@ function AppLayout() {
           <Route path="/sobres" element={<SobresPage />} />
           <Route path="/privacidad" element={<PrivacidadPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
+          <Route path="/configuracion/region" element={<RegionFormatoPage />} />
+          <Route path="/configuracion/presupuesto" element={<PresupuestoCicloPage />} />
           <Route path="/configuracion/notificaciones" element={<NotificacionesPage />} />
+          <Route path="/configuracion/operativas" element={<PreferenciasOperativasPage />} />
+          <Route path="/configuracion/acerca" element={<AcercaPage />} />
           <Route path="/configuracion/categorias" element={<CategoriasConfigPage />} />
           <Route path="/configuracion/hogar" element={<HogarConfigPage />} />
-          <Route path="/categorias" element={<CategoriasConfigPage />} />
         </Routes>
       </Suspense>
 

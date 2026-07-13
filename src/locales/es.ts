@@ -393,6 +393,10 @@ export const config = {
   config_section_appearance: "Apariencia",
   config_section_operational: "Preferencias Operativas",
   config_section_about: "Acerca de",
+  config_region_desc: "País, moneda principal y formato de números.",
+  config_budget_desc: "Modo de presupuesto, día ancla y reglas de distribución.",
+  config_operational_desc: "Cuentas, categorías, hogar y automatizaciones de carga.",
+  config_about_desc: "Versión, invitaciones, feedback y enlaces legales.",
 
   // Mi Cuenta
   config_profile: "Perfil",
@@ -410,7 +414,11 @@ export const config = {
 
   // Región
   config_country: "País",
+  config_country_argentina: "Argentina",
+  config_country_usa: "Estados Unidos",
+  config_country_uruguay: "Uruguay",
   config_language: "Idioma",
+  config_language_spanish: "Español",
   config_currency: "Moneda",
   config_currency_main: "Moneda Principal",
   config_currency_secondary: "Segunda Moneda (Reserva)",
@@ -427,9 +435,20 @@ export const config = {
   config_first_day_week: "Primer día de la semana",
   config_date_format: "Formato de fecha",
   config_preview: "Vista Previa",
+  config_format_numbers: "Formato de números",
+  config_separator_space: "Espacio",
+  config_loading: "Cargando configuración...",
+  config_back_to_settings: "Volver a Ajustes",
 
   // Presupuesto
   config_budget_mode: "Modo de Presupuesto",
+  config_budget_menu_title: "Configuración presupuestaria",
+  config_budget_menu_desc: "Las opciones activas se gestionan desde la pantalla de Presupuestos para mantener una sola fuente de verdad.",
+  config_budget_settings_button: "Abrir configuración de presupuesto",
+  config_budget_settings_button_desc: "Modo, día ancla y Reglas de Oro en un solo flujo.",
+  config_budget_mode_desc: "Cambiar entre Libertad y Base Cero.",
+  config_anchor_day_desc: "Ajustar el inicio real de tu ciclo financiero.",
+  config_golden_rules_desc: "Editar porcentajes de Necesidades, Deseos, Ahorro y Diezmo.",
   config_mode_anticipado: "Modo Libertad (Anticipado)",
   config_mode_base_cero: "Modo Disciplina (Base Cero)",
   config_mode_anticipado_desc: "Registra gastos sin presión. Solo tracking.",
@@ -441,6 +460,7 @@ export const config = {
   config_cycle_range: "Tu ciclo actual va del {start} al {end}",
   config_average_income: "Ingreso Promedio (últimos 90 días)",
   config_average_income_desc: "Se usa como Techo Presupuestario en Base Cero",
+  config_readonly_backend: "Calculado automáticamente",
   config_golden_rules: "Reglas de Oro",
   config_needs: "Necesidades",
   config_wants: "Deseos",
@@ -455,6 +475,7 @@ export const config = {
   config_notifications_categories: "Categorías",
   config_notifications_advanced: "Configuración Avanzada",
   config_notifications_threshold: "Umbral balance hogar",
+  config_notifications_active_count: "{count}/{total} categorías activas",
 
   // Apariencia
   config_theme: "Tema",
@@ -473,6 +494,8 @@ export const config = {
   // Operativas
   config_default_wallet_expense: "Billetera para Egresos",
   config_default_wallet_income: "Billetera para Ingresos",
+  config_default_wallets: "Billeteras predeterminadas",
+  config_none: "Sin predeterminado",
   config_default_category: "Categoría para 'Sin Clasificar'",
   config_detect_ants: "Detectar gastos hormiga automáticamente",
   config_ants_threshold: "Umbral",
@@ -481,9 +504,16 @@ export const config = {
   config_ocr_auto_approve: "OCR - Auto-aprobar tickets",
   config_ocr_confidence: "Confianza mínima IA",
   config_voice_enabled: "Carga por Voz",
+  config_operational_shortcuts: "Gestión operativa",
+  config_preferences_backend_pending: "Preferencias avanzadas pendientes de RPC",
 
   // Acerca de
   config_about: "Acerca de",
+  config_app_name: "ORD Capital Personal",
+  config_app_version_value: "1.0.0",
+  config_about_actions: "Comunidad y soporte",
+  config_feedback_desc: "Envíanos mejoras o problemas desde la app.",
+  config_legal: "Legal",
   config_rate_app: "Calificar en Tienda",
   config_rate_desc: "Ayúdanos con tu reseña",
   config_invite_friend: "Invitar a un Amigo",
@@ -744,6 +774,10 @@ export const ui = {
   edit_movement_save_btn: "Guardar Cambios",
 
   // --- Nuevas traducciones para i18n ---
+  budget_exceeded_envelopes_title: "Sobres Excedidos",
+  budget_exceeded_envelopes_desc: "Tienes deudas en algunos sobres. Cubre el déficit quitando dinero de otros sobres con saldo.",
+  btn_cubrir_deficit: "Cubrir Déficit",
+
   // Menú y Navegación
   menu_inicio: "Inicio",
   menu_dashboard: "Dashboard",

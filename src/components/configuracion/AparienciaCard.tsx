@@ -22,7 +22,8 @@ export function AparienciaCard({ userId }: AparienciaCardProps) {
     setHide(next)
     if (userId) window.localStorage.setItem(`ocultar_montos:${userId}`, String(next))
     try {
-      await supabase.rpc('fn_actualizar_preferencia_usuario', { p_ocultar_montos: next })
+      const { error } = await supabase.rpc('fn_actualizar_preferencia_usuario', { p_ocultar_montos: next })
+      if (error) throw error
     } catch (err) {
       showToast(parseError(err), 'error')
     }
@@ -36,24 +37,27 @@ export function AparienciaCard({ userId }: AparienciaCardProps) {
         <p>{t('config_apariencia_desc')}</p>
         <div className="apariencia-card">
           <div className="apariencia-row">
-            <span>Tema</span>
+            <span>{t('config_theme')}</span>
             <select 
               style={{ background: 'var(--color-bg-dark)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: '8px', padding: '4px 8px' }}
               disabled
             >
-              <option>Oscuro Clido (Actual)</option>
+              <option>{t('config_theme_dark')}</option>
             </select>
           </div>
           <div className="apariencia-row">
-            <span>Idioma</span>
+            <span>{t('config_language')}</span>
             <select 
               style={{ background: 'var(--color-bg-dark)', color: 'var(--color-text)', border: '1px solid var(--color-border)', borderRadius: '8px', padding: '4px 8px' }}
               disabled
             >
-              <option>Espaol (Actual)</option>
-              <option>English (Prximamente)</option>
+              <option>{t('config_language_spanish')}</option>
             </select>
           </div>
+          <label className="apariencia-row">
+            <span>{t('config_hide_amounts')}</span>
+            <input type="checkbox" checked={hide} onChange={(event) => toggle(event.target.checked)} />
+          </label>
         </div>
       </div>
     </article>

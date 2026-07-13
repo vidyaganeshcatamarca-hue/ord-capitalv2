@@ -1,0 +1,184 @@
+.config-section-list {
+  display: grid;
+  gap: 12px;
+  max-width: 880px;
+}
+
+.config-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.55);
+  color: #e2e8f0;
+  padding: 8px 12px;
+  font: inherit;
+  cursor: pointer;
+}
+
+.config-back-button:hover {
+  border-color: var(--mint);
+}
+
+.config-section-card {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.config-section-card h2,
+.config-section-card h3 {
+  margin: 0;
+  color: #f8fafc;
+}
+
+.config-section-card p {
+  margin: 0;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+
+.config-section-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.config-section-row span:first-child {
+  color: #e2e8f0;
+}
+
+.config-section-row span:last-child {
+  color: #94a3b8;
+  text-align: right;
+}
+
+.config-section-field {
+  display: grid;
+  gap: 6px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.config-section-field label,
+.config-section-field > span {
+  color: #e2e8f0;
+  font-weight: 650;
+}
+
+.config-section-field select,
+.config-section-field input {
+  width: 100%;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #f8fafc;
+  padding: 10px 12px;
+  font: inherit;
+}
+
+.config-section-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.config-section-inline input[type='checkbox'] {
+  width: 20px;
+  height: 20px;
+}
+
+.config-section-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.config-section-action {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 14px;
+  background: rgba(15, 23, 42, 0.55);
+  color: inherit;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.config-section-action:hover:not(:disabled) {
+  border-color: var(--mint);
+}
+
+.config-section-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.config-section-action-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: rgba(78, 205, 196, 0.12);
+}
+
+.config-section-action-title {
+  display: block;
+  color: #f8fafc;
+  font-weight: 700;
+}
+
+.config-section-action-desc {
+  display: block;
+  margin-top: 3px;
+  color: #94a3b8;
+  font-size: 0.84rem;
+}
+
+.config-section-pill {
+  display: inline-flex;
+  justify-self: start;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 230, 109, 0.12);
+  color: var(--amber);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.config-section-save {
+  justify-self: start;
+  border: 0;
+  border-radius: 12px;
+  background: var(--mint);
+  color: #071311;
+  padding: 10px 14px;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.config-section-save:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+@media (min-width: 768px) {
+  .config-section-list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

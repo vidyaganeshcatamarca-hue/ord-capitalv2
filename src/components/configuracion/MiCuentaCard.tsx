@@ -15,21 +15,15 @@ export function MiCuentaCard() {
   const { user, signOut } = useAuth()
   const { showToast } = useToast()
   const [nombre, setNombre] = useState('')
+  const [originalNombre, setOriginalNombre] = useState('')
   const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     if (!user) return
     const meta = (user.user_metadata ?? {}) as { nombre?: string; full_name?: string; name?: string }
-    const initialName = meta.nombre || meta.full_name || meta.name || ''
-    setNombre(initialName)
-
-    // Buscamos el nombre real guardado en la base de datos (fuente de verdad)
-    supabase.from('usuarios').select('nombre').eq('auth_id', user.id).single()
-      .then(({ data }) => {
-        if (data && data.nombre) {
-          setNombre(data.nombre)
-        }
-      })
+    const currentName = meta.nombre || meta.full_name || meta.name || ''
+    setNombre(currentName)
+    setOriginalNombre(currentName)
   }, [user])
 
   const handleSave = async () => {
@@ -39,8 +33,16 @@ export function MiCuentaCard() {
     }
     setSaving(true)
     try {
-      const { error } = await supabase.rpc('fn_actualizar_nombre_usuario', { p_nombre: nombre.trim() })
-      if (error) throw error
+      // 1. Guardar en base de datos via RPC (Cumpliendo la Regla 0)
+      const { error: rpcError } = await supabase.rpc('fn_actualizar_nombre_usuario', { p_nombre: nombre.trim() })
+      if (rpcError) throw rpcError
+
+      // 2. Sincronizar en los metadatos de autenticación para propagar el cambio reactivamente por toda la app
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { nombre: nombre.trim() }
+      })
+      if (authError) throw authError
+
       showToast(t('mi_cuenta_name_saved'), 'success')
       haptics.success()
     } catch (err) {
@@ -58,6 +60,8 @@ export function MiCuentaCard() {
       showToast(parseError(err), 'error')
     }
   }
+
+  const isNameChanged = nombre.trim() !== originalNombre.trim()
 
   return (
     <article className="config-hub-card mi-cuenta-card" aria-labelledby="mi-cuenta-title">
@@ -77,9 +81,11 @@ export function MiCuentaCard() {
             <span>{t('mi_cuenta_name_label')}</span>
             <input value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={50} />
           </label>
-          <button type="button" className="mi-cuenta-button" disabled={saving} onClick={handleSave}>
-            {t('mi_cuenta_name_save')}
-          </button>
+          {isNameChanged && (
+            <button type="button" className="mi-cuenta-button" disabled={saving} onClick={handleSave}>
+              {t('mi_cuenta_name_save')}
+            </button>
+          )}
         </div>
         <button type="button" className="mi-cuenta-button ghost" onClick={handleSignOut}>
           {t('mi_cuenta_signout')}

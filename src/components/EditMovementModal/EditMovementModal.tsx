@@ -57,6 +57,8 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
+  const usesIncomeCategory = movement.tipo === 'income'
+  const usesExpenseCategory = !['income', 'transfer', 'opening'].includes(movement.tipo)
 
   // Form states — use null/empty as "not yet set" sentinel
   const [fecha, setFecha] = useState('')
@@ -145,7 +147,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
       }
 
       // 4. Categoría de Egreso: prefer stored ID, fallback to label match
-      if (movement.tipo === 'expense') {
+      if (usesExpenseCategory) {
         if (movement.estructura_egreso_id) {
           setEstructuraEgresoId(Number(movement.estructura_egreso_id))
         } else {
@@ -196,7 +198,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
 
       if (movement.tipo === 'income' || movement.tipo === 'opening') {
         valIngreso = montoNum
-      } else if (movement.tipo === 'expense' || movement.tipo === 'transfer') {
+      } else if (movement.tipo === 'expense' || movement.tipo === 'transfer' || movement.tipo === 'pago_tarjeta') {
         valEgreso = montoNum
       } else if (movement.tipo === 'adjustment') {
         if (movement.monto >= 0) {
@@ -213,8 +215,8 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
         p_nuevo_valor_egreso: valEgreso,
         p_billetera_origen_id: origenTipo === 'billetera' ? origenId : null,
         p_billetera_destino_id: movement.tipo === 'transfer' ? billeteraDestinoId : null,
-        p_estructura_egreso_id: movement.tipo === 'expense' ? estructuraEgresoId : null,
-        p_cuenta_ingreso_id: movement.tipo === 'income' ? cuentaIngresoId : null,
+        p_estructura_egreso_id: usesExpenseCategory ? estructuraEgresoId : null,
+        p_cuenta_ingreso_id: usesIncomeCategory ? cuentaIngresoId : null,
         p_nuevo_detalle: detalle.trim() || null,
         p_nueva_descripcion: null, // Remove observations and leave it null
         p_tarjeta_id: origenTipo === 'tarjeta' ? origenId : null
@@ -353,7 +355,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
             )}
 
             {/* Categoría (Solo Egreso) */}
-            {movement.tipo === 'expense' && (
+            {usesExpenseCategory && (
               <div className="form-group mb-3">
                 <label className="edit-movement-label">{t('edit_movement_category')}</label>
                 <select
@@ -374,7 +376,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
             )}
 
             {/* Fuente de Ingresos (Solo Ingreso) */}
-            {movement.tipo === 'income' && (
+            {usesIncomeCategory && (
               <div className="form-group mb-3">
                 <label className="edit-movement-label">{t('edit_movement_source')}</label>
                 <select

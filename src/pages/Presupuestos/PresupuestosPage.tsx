@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { t, parseError } from '@/locales/i18n'
@@ -81,6 +82,9 @@ const getPctBarra = (gastado: number, asignado: number) => {
 
 export function PresupuestosPage() {
   const { showToast } = useToast()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const [returnToConfig, setReturnToConfig] = useState(false)
 
   // Estado de datos
   const [saldoAsignar, setSaldoAsignar] = useState<number | null>(null)
@@ -129,8 +133,41 @@ export function PresupuestosPage() {
   const [montosEditados, setMontosEditados] = useState<Record<number, string>>({})
   const [loadingActivar, setLoadingActivar] = useState(false)
 
+  // Estado Resumen Mes Anterior
+  const [showResumenModal, setShowResumenModal] = useState(false)
+  const [resumenData, setResumenData] = useState<{ total_asignado: number, total_gastado: number, saldo_final: number } | null>(null)
+  const [loadingResumen, setLoadingResumen] = useState(false)
+
+  const [hasInitializedOffset, setHasInitializedOffset] = useState(false)
+
   const mesPeriodo = getMesPeriodo(mesOffset)
   const mesPeriodoStr = mesPeriodo.toISOString().slice(0, 10)
+
+  const diaAncla = config?.dia_ancla_ciclo ? Number(config.dia_ancla_ciclo) : 1
+  const activeOffset = new Date().getDate() < diaAncla ? -1 : 0
+
+  const getLabelForOffset = (offset: number) => {
+    if (offset === activeOffset) return `✅ Ciclo Actual`
+    if (offset === activeOffset - 1) return `Ciclo Anterior`
+    if (offset === activeOffset - 2) return `Doble Anterior`
+    return `Ciclo Actual`
+  }
+
+  useEffect(() => {
+    if (searchParams.get('openConfig') !== '1') return
+    setReturnToConfig(searchParams.get('returnTo') === 'configuracion')
+    setShowReglasModal(true)
+    navigate('/presupuesto', { replace: true })
+  }, [navigate, searchParams])
+
+  const closeBudgetSettings = () => {
+    setShowReglasModal(false)
+    setShowBaseCeroModal(false)
+    if (returnToConfig) {
+      setReturnToConfig(false)
+      navigate('/configuracion')
+    }
+  }
 
   // ─── CARGA INICIAL ────────────────────────────────────────────────────────
 
@@ -165,12 +202,20 @@ export function PresupuestosPage() {
         const cfg = Array.isArray(rawData) ? rawData[0] : rawData as unknown as ConfigPresupuesto
         if (cfg) {
           setConfig(cfg)
+          const ancla = Number(cfg.dia_ancla_ciclo ?? 1)
+          if (!hasInitializedOffset) {
+            const today = new Date()
+            if (today.getDate() < ancla) {
+              setMesOffset(-1)
+            }
+            setHasInitializedOffset(true)
+          }
           setReglasForm({
             necesidades: Number(cfg.porcentaje_necesidades ?? 50),
             deseos: Number(cfg.porcentaje_deseos ?? 30),
             ahorro: Number(cfg.porcentaje_ahorro ?? 20),
             diezmo: Number(cfg.porcentaje_diezmo ?? 0),
-            diaAncla: Number(cfg.dia_ancla_ciclo ?? 1),
+            diaAncla: ancla,
           })
           setModoForm(cfg.modo_presupuesto ?? 'anticipado')
         }
@@ -330,7 +375,7 @@ export function PresupuestosPage() {
     return [
       ...(saldoAsignar !== null && saldoAsignar > 0 ? [{
         estructura_id: -999,
-        nombre_categoria: 'budget_label_available_to_assign',
+        nombre_categoria: 'Disponible para Asignar',
         icono: '💰',
         color: '',
         tipo_cupo: '',
@@ -431,6 +476,13 @@ export function PresupuestosPage() {
     return sobres.filter(s => s.monto_disponible < 0)
   }, [sobres, config])
 
+  useEffect(() => {
+    if (showTransferirModal && fuentesDisponibles.length === 1 && !origenSeleccionado && sobreSeleccionado) {
+      setOrigenSeleccionado(fuentesDisponibles[0])
+      setMontoTransferir(String(Math.round(Math.min(Math.abs(sobreSeleccionado.monto_disponible), fuentesDisponibles[0].monto_disponible))))
+    }
+  }, [showTransferirModal, fuentesDisponibles, origenSeleccionado, sobreSeleccionado])
+
   // ─── GUARDAR REGLAS DE ORO ────────────────────────────────────────────────
 
   const sumaReglas = reglasForm.necesidades + reglasForm.deseos + reglasForm.ahorro + reglasForm.diezmo
@@ -475,6 +527,10 @@ export function PresupuestosPage() {
       showToast(t('toast_golden_rules_success'), 'success')
       setShowReglasModal(false)
       await cargarDatos()
+      if (returnToConfig) {
+        setReturnToConfig(false)
+        navigate('/configuracion')
+      }
     } catch (err: any) {
       const errStr = String(err?.message || '') + ' ' + JSON.stringify(err);
       if (errStr.includes('error_base_cero_locked')) {
@@ -518,7 +574,7 @@ export function PresupuestosPage() {
       setSugerencias(sugerenciasFiltradas)
       const iniciales: Record<number, string> = {}
       for (const s of sugerenciasFiltradas) {
-        iniciales[s.estructura_id] = String(Math.round(s.monto_sugerido))
+        iniciales[s.estructura_id] = '' // Dejar vacío para que sea sugerencia visual y no asignación forzada
       }
       setMontosEditados(iniciales)
       setPaso(2)
@@ -553,10 +609,37 @@ export function PresupuestosPage() {
       showToast('🎯 Modo Base Cero activado. ¡A presupuestar!', 'success')
       setShowBaseCeroModal(false)
       await cargarDatos()
+      if (returnToConfig) {
+        setReturnToConfig(false)
+        navigate('/configuracion')
+      }
     } catch {
       showToast('Error al activar Modo Base Cero', 'error')
     } finally {
       setLoadingActivar(false)
+    }
+  }
+
+  const handleVerResumen = async () => {
+    console.log('handleVerResumen clickeado');
+    setShowResumenModal(true)
+    setLoadingResumen(true)
+    try {
+      const mesAnterior = getMesPeriodo(-1).toISOString().slice(0, 10)
+      console.log('Mes anterior calculado:', mesAnterior);
+      const { data, error } = await supabase.rpc('fn_resumen_mes', { p_mes_periodo: mesAnterior })
+      if (error) {
+        console.error('Error RPC fn_resumen_mes:', error);
+        throw error;
+      }
+      console.log('Datos obtenidos de fn_resumen_mes:', data);
+      setResumenData(data as any)
+    } catch (err: any) {
+      console.error('Error en catch handleVerResumen:', err);
+      showToast('Error al cargar resumen del mes anterior', 'error')
+      alert('Error al cargar el resumen del mes anterior. Revisa la consola o asegúrate de haber creado la función RPC fn_resumen_mes en Supabase.');
+    } finally {
+      setLoadingResumen(false)
     }
   }
 
@@ -573,30 +656,35 @@ export function PresupuestosPage() {
             className="mes-selector-btn"
             onClick={() => setShowMesDropdown(v => !v)}
           >
-            {formatMesLabel(mesPeriodo)}
+            {getLabelForOffset(mesOffset)}
             <span className="chevron">▾</span>
           </button>
           {showMesDropdown && (
             <>
               <div className="mes-dropdown-overlay" onClick={() => setShowMesDropdown(false)} />
               <div className="mes-dropdown">
-                {[0, -1, -2].map(off => (
-                  <div
-                    key={off}
-                    className={`mes-dropdown-item${mesOffset === off ? ' activo' : ''}`}
-                    onClick={() => { setMesOffset(off); setShowMesDropdown(false) }}
-                  >
-                    {off === 0 ? '✅ Este mes' : off === -1 ? 'Mes anterior' : 'Hace 2 meses'}
-                    <span style={{ fontSize: 11, opacity: 0.6 }}>
-                      {formatMesLabel(getMesPeriodo(off))}
-                    </span>
-                  </div>
-                ))}
+                {[0, 1, 2].map(d => {
+                  const off = activeOffset - d;
+                  return (
+                    <div
+                      key={off}
+                      className={`mes-dropdown-item${mesOffset === off ? ' activo' : ''}`}
+                      onClick={() => { setMesOffset(off); setShowMesDropdown(false) }}
+                    >
+                      {getLabelForOffset(off)}
+                    </div>
+                  )
+                })}
               </div>
             </>
           )}
         </div>
         <div className="header-actions">
+          <button
+            className="btn-icon"
+            title="Resumen Mes Anterior"
+            onClick={handleVerResumen}
+          >📉</button>
           <button
             className="btn-icon"
             title="Reglas de Oro"
@@ -911,7 +999,7 @@ export function PresupuestosPage() {
           MODAL: REGLAS DE ORO
           ══════════════════════════════════════════════════════════ */}
       {showReglasModal && (
-        <div className="modal-overlay centrado" onClick={() => setShowReglasModal(false)}>
+        <div className="modal-overlay centrado" onClick={closeBudgetSettings}>
           <div className="modal-sheet centrado-modal" onClick={e => e.stopPropagation()}>
             <div className="modal-titulo">⚙️ {t('budget_modal_title_golden_rules')}</div>
             <div className="modal-subtitulo">{t('budget_label_ideal_distribution')}</div>
@@ -988,7 +1076,7 @@ export function PresupuestosPage() {
             </div>
 
             <div className="modal-btns">
-              <button className="btn-cancelar" onClick={() => setShowReglasModal(false)}>
+              <button className="btn-cancelar" onClick={closeBudgetSettings}>
                 Cancelar
               </button>
               <button
@@ -1007,7 +1095,7 @@ export function PresupuestosPage() {
           MODAL: ACTIVAR BASE CERO
           ══════════════════════════════════════════════════════════ */}
       {showBaseCeroModal && (
-        <div className="modal-overlay centrado" onClick={() => !loadingActivar && setShowBaseCeroModal(false)}>
+        <div className="modal-overlay centrado" onClick={() => !loadingActivar && closeBudgetSettings()}>
           <div className="modal-sheet centrado-modal" onClick={e => e.stopPropagation()}>
             {paso === 1 ? (
               <>
@@ -1041,7 +1129,7 @@ export function PresupuestosPage() {
                 </div>
 
                 <div className="modal-btns">
-                  <button className="btn-cancelar" onClick={() => setShowBaseCeroModal(false)}>
+                  <button className="btn-cancelar" onClick={closeBudgetSettings}>
                     Cancelar
                   </button>
                   <button
@@ -1106,6 +1194,47 @@ export function PresupuestosPage() {
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          MODAL: RESUMEN MES ANTERIOR
+          ══════════════════════════════════════════════════════════ */}
+      {showResumenModal && (
+        <div className="modal-overlay centrado" onClick={() => setShowResumenModal(false)}>
+          <div className="modal-sheet centrado-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-titulo" style={{ marginBottom: '5px' }}>Resumen del Mes Pasado</div>
+            <div className="modal-subtitulo" style={{ marginBottom: '20px' }}>
+              Totales finales del último ciclo cerrado.
+            </div>
+
+            {loadingResumen ? (
+              <div style={{ textAlign: 'center', padding: '20px', color: '#A0A0A0' }}>Cargando resumen...</div>
+            ) : resumenData ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 15, marginBottom: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 15px', background: 'rgba(255,255,255,0.05)', borderRadius: 10 }}>
+                  <span style={{ color: '#A0A0A0' }}>Asignado (Presupuestado):</span>
+                  <span style={{ fontWeight: '500' }}>{formatMonto(resumenData.total_asignado)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 15px', background: 'rgba(255,255,255,0.05)', borderRadius: 10 }}>
+                  <span style={{ color: '#A0A0A0' }}>Gastado:</span>
+                  <span style={{ fontWeight: '500' }}>{formatMonto(resumenData.total_gastado)}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 15px', background: resumenData.saldo_final >= 0 ? 'rgba(74,222,128,0.1)' : 'rgba(255,107,107,0.1)', borderRadius: 10 }}>
+                  <span style={{ color: resumenData.saldo_final >= 0 ? '#4ade80' : '#FF6B6B', fontWeight: 'bold' }}>Saldo Final:</span>
+                  <span style={{ color: resumenData.saldo_final >= 0 ? '#4ade80' : '#FF6B6B', fontWeight: 'bold' }}>{formatMonto(resumenData.saldo_final)}</span>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '20px', color: '#FF6B6B' }}>No se pudo cargar el resumen.</div>
+            )}
+
+            <div className="modal-btns">
+              <button className="btn-primario" onClick={() => setShowResumenModal(false)}>
+                Cerrar
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -376,6 +376,16 @@
   font-family: var(--font-sans);
 }
 
+.desktop-categories-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.desktop-visible-link {
+  padding: 0;
+}
+
 /* ─── Categoría seleccionada (pill) ─────────────────────────────────────── */
 .cat-selected-pill {
   display: flex;
@@ -792,6 +802,25 @@
   flex: 1.2;
 }
 
+@media (min-width: 768px) {
+  .pc-form-col {
+    gap: 10px;
+  }
+
+  .pc-max-height {
+    max-height: 150px;
+  }
+
+  .cat-frecuentes-grid {
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+
+  .cat-tile {
+    padding: 10px 8px;
+  }
+}
+
 .pc-max-height {
   max-height: 180px;
   overflow-y: auto;
@@ -1051,7 +1080,6 @@
 .compartido-switch.active .compartido-switch-knob {
   transform: translateX(18px);
 }
-
 
 
 
