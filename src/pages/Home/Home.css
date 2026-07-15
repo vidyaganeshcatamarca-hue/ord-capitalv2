@@ -38,7 +38,7 @@
 
 /* ── Patrimonio Card ── */
 .home-patrimonio {
-  padding: 12px 18px;
+  padding: 10px 16px;
 }
 
 .home-patrimonio-top-flex {
@@ -46,7 +46,7 @@
   justify-content: space-between;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-4);
+  gap: var(--space-3);
   width: 100%;
 }
 
@@ -62,15 +62,15 @@
 }
 
 .home-patrimonio-label-right {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  margin-bottom: var(--space-1);
+  margin-bottom: 2px;
 }
 
 .home-patrimonio-extra-amount {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   line-height: 1.1;
 }
@@ -91,7 +91,7 @@
 }
 
 .home-patrimonio-label {
-  font-size: 11px;
+  font-size: 10px;
   color: var(--text-3);
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -99,14 +99,14 @@
 }
 
 .home-patrimonio-ars {
-  font-size: 30px;
+  font-size: 28px;
   font-weight: 800;
   line-height: 1;
   margin-bottom: 2px;
 }
 
 .home-patrimonio-usd {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-3);
   margin-bottom: 4px;
 }
@@ -118,6 +118,79 @@
   background: var(--surface-2);
   border-radius: var(--radius-full);
   padding: 2px 8px;
+}
+
+.home-wallet-title-filter {
+  display: inline-flex;
+  align-items: center;
+  min-height: 42px;
+  gap: 0;
+  min-width: 0;
+  padding: 4px 4px 4px 12px;
+  border: 1px solid rgba(78, 205, 196, 0.2);
+  border-radius: 15px;
+  background: linear-gradient(135deg, rgba(78, 205, 196, 0.08), rgba(0, 180, 216, 0.035));
+}
+
+.home-wallet-title-filter .section-title {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  margin: 0;
+  color: var(--text-2);
+  white-space: nowrap;
+}
+
+.home-wallet-inline-filter select {
+  min-height: 34px;
+  max-width: 116px;
+  margin-left: 10px;
+  border: 0;
+  border-left: 1px solid rgba(78, 205, 196, 0.26);
+  border-radius: 0 10px 10px 0;
+  background: rgba(78, 205, 196, 0.12);
+  color: var(--text);
+  padding: 0 30px 0 11px;
+  font-size: 12px;
+  font-weight: 800;
+  outline: none;
+  cursor: pointer;
+}
+
+.home-wallet-inline-filter select:focus {
+  outline: 2px solid var(--mint);
+  outline-offset: -2px;
+}
+
+/* Los menus nativos de escritorio ignoran el tema del select cerrado. */
+.home-wallet-inline-filter option {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.home-wallets-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.home-wallets-header .scroll-hint-mobile {
+  grid-column: 1 / -1;
+  justify-self: end;
+  margin-top: -4px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ── Safe-to-Spend ── */
@@ -166,6 +239,203 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* ── Filtros de datos Home ── */
+.home-donut-card {
+  position: relative;
+  display: grid;
+  gap: var(--space-4);
+  padding: var(--space-4);
+}
+
+.home-period-tabs {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  padding: 6px;
+  overflow-x: auto;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+  scrollbar-width: none;
+}
+
+.home-period-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.home-period-tab,
+.home-range-shortcuts button {
+  flex: 1 0 auto;
+  min-height: 44px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--text-2);
+  padding: 0 12px;
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.home-period-tab:hover,
+.home-range-shortcuts button:hover {
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.075);
+}
+
+.home-period-tab.active {
+  color: #061616;
+  background: linear-gradient(135deg, var(--mint), #18a8d8);
+  border-color: rgba(78, 205, 196, 0.75);
+  box-shadow: 0 8px 20px rgba(0, 180, 216, 0.22);
+}
+
+.home-wallet-filter-row,
+.home-custom-range label {
+  display: grid;
+  gap: 6px;
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.home-wallet-filter-row {
+  grid-template-columns: auto minmax(160px, 1fr);
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.home-wallet-filter-row span {
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.home-wallet-filter-row select,
+.home-custom-range input {
+  min-height: 44px;
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 0 12px;
+  font: inherit;
+}
+
+.home-wallet-filter-row select {
+  min-height: 40px;
+  text-align: right;
+  font-weight: 800;
+}
+
+.home-custom-range {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.home-range-shortcuts {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.home-custom-range input {
+  min-width: 0;
+  padding: 0 9px;
+  font-size: 14px;
+}
+
+.home-range-shortcuts button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.home-filter-error {
+  margin: 0;
+  grid-column: 1 / -1;
+  color: var(--coral);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.home-filter-loading {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 0;
+  height: 2px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(78, 205, 196, 0.16);
+}
+
+.home-filter-loading::after {
+  content: '';
+  display: block;
+  width: 40%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--mint);
+  animation: home-filter-loading 900ms ease-in-out infinite;
+}
+
+@keyframes home-filter-loading {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(260%); }
+}
+
+@media (min-width: 768px) {
+  .home-custom-range {
+    grid-template-columns: repeat(2, minmax(180px, 1fr)) minmax(260px, 0.9fr);
+    align-items: end;
+  }
+
+  .home-filter-error {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 420px) {
+  .home-period-tabs {
+    gap: 6px;
+    padding: 5px;
+  }
+
+  .home-period-tab {
+    min-width: 78px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .home-wallet-filter-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .home-wallet-filter-row select {
+    text-align: left;
+  }
+
+  .home-wallets-header {
+    gap: 8px;
+  }
+
+  .home-wallets-header .scroll-hint-mobile {
+    font-size: 11px;
+  }
 }
 
 /* ── Coachmarks Overlay ── */
@@ -650,10 +920,10 @@
   .home-section-total {
     order: 1;
   }
-  .home-section-billeteras {
+  .home-section-donut {
     order: 2;
   }
-  .home-section-donut {
+  .home-section-billeteras {
     order: 3;
   }
   .home-section-fugas {
@@ -808,4 +1078,3 @@
   opacity: 0.9;
   transform: scale(1.15);
 }
-

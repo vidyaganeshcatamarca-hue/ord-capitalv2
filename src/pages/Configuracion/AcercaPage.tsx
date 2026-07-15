@@ -30,7 +30,7 @@ export function AcercaPage() {
                 <span className="config-section-action-title">{t('config_rate_app')}</span>
                 <span className="config-section-action-desc">{t('config_rate_desc')}</span>
               </span>
-              <span>{t('config_coming_soon')}</span>
+              <span className="config-section-pill">{t('config_coming_soon')}</span>
             </button>
             <button type="button" className="config-section-action" disabled>
               <span className="config-section-action-icon" aria-hidden="true">📤</span>
@@ -38,7 +38,7 @@ export function AcercaPage() {
                 <span className="config-section-action-title">{t('config_invite_friend')}</span>
                 <span className="config-section-action-desc">{t('config_invite_desc')}</span>
               </span>
-              <span>{t('config_coming_soon')}</span>
+              <span className="config-section-pill">{t('config_coming_soon')}</span>
             </button>
             <button type="button" className="config-section-action" disabled>
               <span className="config-section-action-icon" aria-hidden="true">💡</span>
@@ -46,7 +46,7 @@ export function AcercaPage() {
                 <span className="config-section-action-title">{t('config_send_suggestion')}</span>
                 <span className="config-section-action-desc">{t('config_feedback_desc')}</span>
               </span>
-              <span>{t('config_coming_soon')}</span>
+              <span className="config-section-pill">{t('config_coming_soon')}</span>
             </button>
           </div>
         </article>
@@ -55,11 +55,11 @@ export function AcercaPage() {
           <h2>{t('config_legal')}</h2>
           <div className="config-section-row">
             <span>{t('config_terms')}</span>
-            <span>{t('config_coming_soon')}</span>
+            <span className="config-section-pill">{t('config_coming_soon')}</span>
           </div>
           <div className="config-section-row">
             <span>{t('config_privacy_policy')}</span>
-            <span>{t('config_coming_soon')}</span>
+            <span className="config-section-pill">{t('config_coming_soon')}</span>
           </div>
         </article>
       </section>

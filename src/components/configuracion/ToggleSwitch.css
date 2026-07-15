@@ -1,0 +1,77 @@
+.toggle-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: none;
+  border-radius: 999px;
+  padding: 2px;
+  transition: background 240ms cubic-bezier(0.16, 1, 0.3, 1);
+  outline-offset: 3px;
+}
+
+.toggle-switch:focus-visible {
+  outline: 2px solid var(--mint);
+}
+
+.toggle-switch:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* Sizes */
+.toggle-switch--md {
+  width: 48px;
+  height: 28px;
+}
+
+.toggle-switch--sm {
+  width: 38px;
+  height: 22px;
+}
+
+/* Colors */
+.toggle-switch--on {
+  background: var(--mint, #4ECDC4);
+}
+
+.toggle-switch--off {
+  background: var(--coral, #FF6B6B);
+}
+
+/* Thumb */
+.toggle-switch-thumb {
+  display: block;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.toggle-switch--md .toggle-switch-thumb {
+  width: 24px;
+  height: 24px;
+}
+
+.toggle-switch--sm .toggle-switch-thumb {
+  width: 18px;
+  height: 18px;
+}
+
+/* Slide positions */
+.toggle-switch--on.toggle-switch--md .toggle-switch-thumb {
+  transform: translateX(20px);
+}
+
+.toggle-switch--off.toggle-switch--md .toggle-switch-thumb {
+  transform: translateX(0px);
+}
+
+.toggle-switch--on.toggle-switch--sm .toggle-switch-thumb {
+  transform: translateX(16px);
+}
+
+.toggle-switch--off.toggle-switch--sm .toggle-switch-thumb {
+  transform: translateX(0px);
+}

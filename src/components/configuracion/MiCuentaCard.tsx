@@ -17,6 +17,7 @@ export function MiCuentaCard() {
   const [nombre, setNombre] = useState('')
   const [originalNombre, setOriginalNombre] = useState('')
   const [saving, setSaving] = useState(false)
+  const [open, setOpen] = useState(false)
 
   useEffect(() => {
     setNombre(nombreUsuario)
@@ -30,19 +31,12 @@ export function MiCuentaCard() {
     }
     setSaving(true)
     try {
-      // 1. Guardar en base de datos via RPC (Cumpliendo la Regla 0)
       const { error: rpcError } = await supabase.rpc('fn_actualizar_nombre_usuario', { p_nombre: nombre.trim() })
       if (rpcError) throw rpcError
-
-      // 2. Sincronizar en el contexto reactivo para propagar el cambio al instante por toda la app
       setNombreUsuario(nombre.trim())
       setOriginalNombre(nombre.trim())
-
-      // 3. Metadatos de autenticación como respaldo
-      await supabase.auth.updateUser({
-        data: { nombre: nombre.trim() }
-      }).catch(err => console.warn('Error al actualizar metadatos auth de respaldo:', err))
-
+      await supabase.auth.updateUser({ data: { nombre: nombre.trim() } })
+        .catch(err => console.warn('Error al actualizar metadatos auth:', err))
       showToast(t('mi_cuenta_name_saved'), 'success')
       haptics.success()
     } catch (err) {
@@ -65,32 +59,56 @@ export function MiCuentaCard() {
 
   return (
     <article className="config-hub-card mi-cuenta-card" aria-labelledby="mi-cuenta-title">
-      <span className="config-hub-card-icon" aria-hidden="true">👤</span>
-      <div className="config-hub-card-content">
-        <h3 id="mi-cuenta-title">{t('config_mi_cuenta')}</h3>
-        <p>{t('config_mi_cuenta_desc')}</p>
-        <div className="mi-cuenta-row">
-          <div className="mi-cuenta-avatar">{getInitials(user?.email)}</div>
-          <div className="mi-cuenta-info">
-            <h3>{user?.email ?? '—'}</h3>
-            <p>{t('mi_cuenta_email_label')}</p>
+      {/* ── Cabecera (siempre visible, clickeable) ── */}
+      <button
+        type="button"
+        className="mi-cuenta-header"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+        aria-controls="mi-cuenta-body"
+      >
+        <span className="config-hub-card-icon" aria-hidden="true">👤</span>
+        <div className="config-hub-card-content">
+          <h3 id="mi-cuenta-title">{nombreUsuario || user?.email || t('config_mi_cuenta')}</h3>
+          <p>{user?.email}</p>
+        </div>
+        <span className={`mi-cuenta-chevron ${open ? 'mi-cuenta-chevron--open' : ''}`} aria-hidden="true">›</span>
+      </button>
+
+      {/* ── Cuerpo (plegable) ── */}
+      {open && (
+        <div id="mi-cuenta-body" className="mi-cuenta-body">
+          <div className="mi-cuenta-avatar-row">
+            <div className="mi-cuenta-avatar">{getInitials(user?.email)}</div>
+            <div className="mi-cuenta-info">
+              <p className="mi-cuenta-email">{user?.email ?? '—'}</p>
+              <p className="mi-cuenta-email-label">{t('mi_cuenta_email_label')}</p>
+            </div>
           </div>
+
+          <div className="mi-cuenta-form">
+            <label htmlFor="mi-cuenta-nombre">
+              <span>{t('mi_cuenta_name_label')}</span>
+              <input
+                id="mi-cuenta-nombre"
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
+                maxLength={50}
+                placeholder={t('mi_cuenta_name_label')}
+              />
+            </label>
+            {isNameChanged && (
+              <button type="button" className="mi-cuenta-button" disabled={saving} onClick={handleSave}>
+                {saving ? '…' : t('mi_cuenta_name_save')}
+              </button>
+            )}
+          </div>
+
+          <button type="button" className="mi-cuenta-button ghost" onClick={handleSignOut}>
+            {t('mi_cuenta_signout')}
+          </button>
         </div>
-        <div className="mi-cuenta-form">
-          <label>
-            <span>{t('mi_cuenta_name_label')}</span>
-            <input value={nombre} onChange={(e) => setNombre(e.target.value)} maxLength={50} />
-          </label>
-          {isNameChanged && (
-            <button type="button" className="mi-cuenta-button" disabled={saving} onClick={handleSave}>
-              {t('mi_cuenta_name_save')}
-            </button>
-          )}
-        </div>
-        <button type="button" className="mi-cuenta-button ghost" onClick={handleSignOut}>
-          {t('mi_cuenta_signout')}
-        </button>
-      </div>
+      )}
     </article>
   )
 }

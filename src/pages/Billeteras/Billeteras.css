@@ -15,9 +15,10 @@
 
 
 .billetera-item {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: var(--space-3);
   padding: var(--space-4);
   background: var(--surface);
@@ -217,6 +218,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 @media (max-width: 767px) {

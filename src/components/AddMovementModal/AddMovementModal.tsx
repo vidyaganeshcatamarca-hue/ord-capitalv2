@@ -12,6 +12,7 @@ import { safeEval } from '@/utils/math'
 import { t, parseError } from '@/locales/i18n'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
 import { AudioRecorderModal } from '@/components/saneamiento/AudioRecorderModal'
+import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBalanceModal'
 import './AddMovementModal.css'
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -23,6 +24,7 @@ interface Billetera {
   moneda: string
   saldo_actual: number
   es_fondo_prevision: boolean
+  saldo_inicial_pendiente?: boolean
   icono: string
 }
 
@@ -258,6 +260,8 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   const [detallesAbiertos, setDetallesAbiertos] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showAudioRecorder, setShowAudioRecorder] = useState(false)
+  const [showInitialBalanceModal, setShowInitialBalanceModal] = useState(false)
+  const [initialBalanceBilletera, setInitialBalanceBilletera] = useState<Billetera | null>(null)
 
   // ── Fase 4: Modo Familiar ──
   const { estado: hogarEstado } = useHogar()
@@ -267,7 +271,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
 
   // ── Paso actual ──
   const [paso, setPaso] = useState<Paso>('categoria')
-  const [frecuentesMobile, setFrecuentesMobile] = useState<CategoriaSeleccionada[]>([])
+  const [frecuentesRecientes, setFrecuentesRecientes] = useState<CategoriaSeleccionada[]>([])
   const [showCalculator, setShowCalculator] = useState(true)
   const [mobileShowAllCat, setMobileShowAllCat] = useState(false)
 
@@ -322,6 +326,13 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   const [showNewSubcatModal, setShowNewSubcatModal] = useState(false)
   const [newSubcatParent, setNewSubcatParent] = useState<Rubro | null>(null)
 
+let cachedBilleteras: Billetera[] | null = null;
+let cachedRubros: Rubro[] | null = null;
+let cachedCatIngresos: CatIngreso[] | null = null;
+let cachedTarjetas: any[] | null = null;
+let cachedUsd: number | null = null;
+let cachedProyectosHogar: ProyectoHogar[] | null = null;
+
   const normalizedCategoryQuery = queryCat.trim().toLowerCase()
   const filteredRubrosDesktop = rubros
     .filter((rubro) => {
@@ -340,14 +351,29 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
         t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es', { sensitivity: 'base' })
       ),
     }))
-  const remoteSectionLoading = loadingData
+  
+  // NUNCA mostrar el cartel de cargando, como pidió el usuario.
+  const remoteSectionLoading = false
 
   const reloadCategorias = async () => {
     try {
       const rubr = await rpc<Rubro[]>('fn_obtener_arbol_categorias')
-      setRubros(rubr ?? [])
+      cachedRubros = rubr ?? []
+      setRubros(cachedRubros)
     } catch (e) {
       console.error('Error reloading categories:', e)
+    }
+  }
+
+  const reloadBilleteras = async () => {
+    try {
+      const bill = await rpc<Billetera[]>('fn_obtener_billeteras_ordenadas_por_uso').catch(
+        () => rpc<Billetera[]>('fn_obtener_billeteras_activas').catch(() => [])
+      )
+      cachedBilleteras = bill ?? []
+      setBilleteras(cachedBilleteras)
+    } catch (e) {
+      console.error('Error reloading billeteras:', e)
     }
   }
 
@@ -356,11 +382,20 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
     setShowNewSubcatModal(true)
   }
 
-  // ── Carga inicial en paralelo ──
+  // ── Carga inicial en paralelo con Caché en Memoria ──
   useEffect(() => {
     let alive = true
     ;(async () => {
-      setLoadingData(true)
+      // Usar caché de inmediato si existe para que sea instantáneo
+      if (cachedBilleteras) setBilleteras(cachedBilleteras)
+      if (cachedRubros) setRubros(cachedRubros)
+      if (cachedCatIngresos) setCatIngresos(cachedCatIngresos)
+      if (cachedTarjetas) setTarjetas(cachedTarjetas)
+      if (cachedUsd !== null) setCotizacionUsd(cachedUsd)
+      if (cachedProyectosHogar && hogarEstado?.tiene_pareja) setProyectosHogar(cachedProyectosHogar)
+
+      if (!cachedBilleteras) setLoadingData(true)
+      
       try {
         const [bill, rubr, ingrCat, tarj, resUsd] = await Promise.all([
           rpc<Billetera[]>('fn_obtener_billeteras_ordenadas_por_uso').catch(
@@ -372,19 +407,27 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
           rpc<number>('fn_obtener_cotizacion_usd').catch(() => 1),
         ])
         if (!alive) return
-        setBilleteras(bill ?? [])
-        setRubros(rubr ?? [])
-        setCatIngresos(ingrCat ?? [])
-        setTarjetas(tarj ?? [])
-        setCotizacionUsd(resUsd ?? 1)
+        cachedBilleteras = bill ?? []
+        cachedRubros = rubr ?? []
+        cachedCatIngresos = ingrCat ?? []
+        cachedTarjetas = tarj ?? []
+        cachedUsd = resUsd ?? 1
+        
+        setBilleteras(cachedBilleteras)
+        setRubros(cachedRubros)
+        setCatIngresos(cachedCatIngresos)
+        setTarjetas(cachedTarjetas)
+        setCotizacionUsd(cachedUsd)
 
         // Si el usuario tiene hogar + pareja, cargar proyectos compartidos disponibles
         if (hogarEstado?.tiene_pareja) {
           try {
             const proyectos = await rpc<ProyectoHogar[]>('fn_reporte_proyectos_hogar')
-            setProyectosHogar(proyectos ?? [])
+            cachedProyectosHogar = proyectos ?? []
+            setProyectosHogar(cachedProyectosHogar)
           } catch (e) {
             console.error('Error cargando proyectos del hogar:', e)
+            cachedProyectosHogar = []
             setProyectosHogar([])
           }
         }
@@ -417,7 +460,9 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
         const data = await rpc<any[]>('fn_reporte_movimientos_recientes', {
           p_limit: 20,
           p_offset: 0,
-          p_filtro_tipo: 'expense'
+          p_filtro_tipo: 'expense',
+          p_fecha_inicio: '2000-01-01',
+          p_fecha_fin: '2100-01-01'
         })
         
         if (data && data.length > 0) {
@@ -460,7 +505,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
           }
           
           if (uniqueCats.length > 0) {
-            setFrecuentesMobile(uniqueCats)
+            setFrecuentesRecientes(uniqueCats)
             return
           }
         }
@@ -491,7 +536,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
           })
         }
       }
-      setFrecuentesMobile(fallbackList.slice(0, 5))
+      setFrecuentesRecientes(fallbackList.slice(0, 8))
     }
 
     loadRecents()
@@ -528,20 +573,9 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
     b.moneda === monedaOrigen && b.billetera_id !== billeteraOrigenId
   )
 
-  // ── 8 frecuentes: últimas 8 categorías hojas de localStorage + completar con lista ──
-  const frecuentes: CategoriaSeleccionada[] = (() => {
-    const hojas: CategoriaSeleccionada[] = []
-    for (const r of rubros) {
-      if (r.hijos && r.hijos.length > 0) {
-        for (const h of r.hijos) {
-          hojas.push({ estructura_id: h.estructura_id, nombre: t(h.nombre_cuenta), icono: h.icono, color: r.color, es_padre: false })
-        }
-      } else {
-        hojas.push({ estructura_id: r.estructura_id, nombre: t(r.nombre_cuenta), icono: r.icono, color: r.color, es_padre: true })
-      }
-    }
-    return hojas.slice(0, 8)
-  })()
+  // ── 8 frecuentes: tomadas directamente de los movimientos recientes de la DB ──
+  const frecuentes: CategoriaSeleccionada[] = frecuentesRecientes.slice(0, 8)
+  const frecuentesMobile: CategoriaSeleccionada[] = frecuentesRecientes.slice(0, 5)
 
   // ── Selección de categoría egreso ──
   const selectCatEgreso = useCallback((cat: CategoriaSeleccionada, rubro?: Rubro, forceParent = false) => {
@@ -620,11 +654,30 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
     const montoNum = parseFloat(monto)
     if (!montoNum || montoNum <= 0) return showToast('Monto inválido', 'error')
     if (origenTipo === 'billetera' && !billeteraOrigenId) return showToast('Selecciona una cuenta', 'error')
+    
+    // Check pending initial balance
+    if (origenTipo === 'billetera' && billeteraOrigenId) {
+      const bOrigen = billeteras.find(b => b.billetera_id === billeteraOrigenId)
+      if (bOrigen?.saldo_inicial_pendiente) {
+        setInitialBalanceBilletera(bOrigen)
+        setShowInitialBalanceModal(true)
+        return
+      }
+    }
+    
     if (origenTipo === 'tarjeta' && !tarjetaId) return showToast('Selecciona una tarjeta', 'error')
     if (tipo === 'expense' && !categoriaEgreso && !proyectoSeleccionadoId) {
       return showToast(t('familia.error_no_categoria_ni_proyecto'), 'error')
     }
     if (tipo === 'transfer' && !billeteraDestinoId) return showToast('Selecciona cuenta destino', 'error')
+    if (tipo === 'transfer' && billeteraDestinoId) {
+      const bDest = billeteras.find(b => b.billetera_id === billeteraDestinoId)
+      if (bDest?.saldo_inicial_pendiente) {
+        setInitialBalanceBilletera(bDest)
+        setShowInitialBalanceModal(true)
+        return
+      }
+    }
 
     // Determinar flags de hogar y descripción
     const proyectoId = proyectoSeleccionadoId
@@ -1997,6 +2050,21 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
         <AudioRecorderModal
           isOpen={showAudioRecorder}
           onClose={() => setShowAudioRecorder(false)}
+        />
+      )}
+
+      {showInitialBalanceModal && initialBalanceBilletera && (
+        <InitialBalanceModal
+          billetera={initialBalanceBilletera as any}
+          onClose={() => {
+            setShowInitialBalanceModal(false)
+            setInitialBalanceBilletera(null)
+          }}
+          onSuccess={() => {
+            reloadBilleteras()
+            setShowInitialBalanceModal(false)
+            setInitialBalanceBilletera(null)
+          }}
         />
       )}
     </>

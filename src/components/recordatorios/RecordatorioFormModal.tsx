@@ -92,7 +92,7 @@ export function RecordatorioFormModal({ mode, initial, onClose, onSubmit }: Reco
     <div className="sobre-modal-backdrop" role="presentation">
       <form className="sobre-modal recordatorio-form" onSubmit={handleSubmit}>
         <header className="sobre-modal-header">
-          <h2>{t(mode === 'create' ? 'recordatorio_create' : 'recordatorio_edit')}</h2>
+          <h2>{t(mode === 'create' ? 'recordatorio_modal_title_new' : 'recordatorio_modal_title_edit')}</h2>
           <button type="button" onClick={onClose}>{t('btn_close')}</button>
         </header>
 
@@ -104,6 +104,7 @@ export function RecordatorioFormModal({ mode, initial, onClose, onSubmit }: Reco
             onChange={(e) => setForm((f) => ({ ...f, titulo: e.target.value }))}
             maxLength={60}
             required
+            className="recordatorio-input"
           />
         </label>
 
@@ -113,64 +114,72 @@ export function RecordatorioFormModal({ mode, initial, onClose, onSubmit }: Reco
             value={form.descripcion ?? ''}
             onChange={(e) => setForm((f) => ({ ...f, descripcion: e.target.value }))}
             maxLength={200}
-          />
-        </label>
-
-        <label>
-          <span>{t('recordatorio_hora')}</span>
-          <input
-            type="time"
-            value={form.hora.slice(0, 5)}
-            onChange={(e) => setForm((f) => ({ ...f, hora: e.target.value + ':00' }))}
-            required
+            className="recordatorio-input"
+            rows={2}
           />
         </label>
 
         <div className="recordatorio-form-row">
-          <label>
+          <label className="recordatorio-flex-label">
+            <span>{t('recordatorio_hora')}</span>
             <input
-              type="radio"
-              checked={form.recurrente}
-              onChange={() => setForm((f) => ({ ...f, recurrente: true }))}
+              type="time"
+              value={form.hora.slice(0, 5)}
+              onChange={(e) => setForm((f) => ({ ...f, hora: e.target.value + ':00' }))}
+              required
+              className="recordatorio-input"
             />
-            {t('recordatorio_recurrente')}
           </label>
-          <label>
-            <input
-              type="radio"
-              checked={!form.recurrente}
-              onChange={() => setForm((f) => ({ ...f, recurrente: false }))}
-            />
-            {t('recordatorio_unico')}
-          </label>
+        </div>
+
+        {/* Botones segmentados */}
+        <div className="recordatorio-segmented">
+          <button
+            type="button"
+            className={`recordatorio-seg-btn ${form.recurrente ? 'recordatorio-seg-btn--active' : ''}`}
+            onClick={() => setForm((f) => ({ ...f, recurrente: true }))}
+          >
+            {t('recordatorio_repetir')}
+          </button>
+          <button
+            type="button"
+            className={`recordatorio-seg-btn ${!form.recurrente ? 'recordatorio-seg-btn--active' : ''}`}
+            onClick={() => setForm((f) => ({ ...f, recurrente: false }))}
+          >
+            {t('recordatorio_una_vez')}
+          </button>
         </div>
 
         {form.recurrente ? (
           <div>
-            <span style={{ display: 'block', marginBottom: 6, color: '#cbd5e1', fontSize: '0.85rem' }}>
+            <span className="recordatorio-label-text">
               {t('recordatorio_dias')}
             </span>
-            <div className="recordatorio-form-row">
-              {DAYS.map((d) => (
-                <label key={d.key}>
-                  <input
-                    type="checkbox"
-                    checked={(form.diasSemana ?? []).includes(d.key)}
-                    onChange={() => toggleDay(d.key)}
-                  />
-                  {t(d.i18nKey)}
-                </label>
-              ))}
+            <div className="recordatorio-days-container">
+              {DAYS.map((d) => {
+                const isActive = (form.diasSemana ?? []).includes(d.key)
+                return (
+                  <button
+                    key={d.key}
+                    type="button"
+                    className={`recordatorio-day-pill ${isActive ? 'recordatorio-day-pill--active' : ''}`}
+                    onClick={() => toggleDay(d.key)}
+                  >
+                    {t(d.i18nKey)}
+                  </button>
+                )
+              })}
             </div>
           </div>
         ) : (
-          <label>
+          <label className="recordatorio-flex-label">
             <span>{t('recordatorio_fecha')}</span>
             <input
               type="date"
               value={form.fechaUnica ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, fechaUnica: e.target.value }))}
               required
+              className="recordatorio-input"
             />
           </label>
         )}

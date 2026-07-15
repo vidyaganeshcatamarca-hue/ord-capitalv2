@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
+import { ToggleSwitch } from '@/components/configuracion/ToggleSwitch'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
@@ -149,84 +150,102 @@ export function NotificacionesPage() {
         <h1 id="notif-page-title">{t('notif_title')}</h1>
       </header>
 
+      {/* ── Generales ── */}
       <section className="notif-section">
-        <h2>Generales</h2>
-        <label className="notif-row">
+        <h2>{t('config_notif_generales')}</h2>
+
+        <div className="notif-row">
           <span>{t('notif_push_enabled')}</span>
-          <input
-            type="checkbox"
+          <ToggleSwitch
             checked={prefs.push_enabled}
-            onChange={(e) => updateBool('push_enabled', e.target.checked)}
+            onChange={(v) => updateBool('push_enabled', v)}
             disabled={savingKey === 'push_enabled'}
           />
-        </label>
-        <label className="notif-row">
+        </div>
+
+        <label className="notif-row notif-row--label" htmlFor="notif-time">
           <span>{t('notif_push_time')}</span>
           <input
+            id="notif-time"
             type="time"
             value={prefs.push_time?.slice(0, 5) ?? '09:00'}
             onChange={(e) => updateTime(e.target.value + ':00')}
             disabled={!prefs.push_enabled}
+            className="notif-time-input"
           />
         </label>
       </section>
 
+      {/* ── Captura rápida persistente ── */}
       <section className="notif-section">
-        <h2>Captura rápida persistente</h2>
-        <label className="notif-row">
+        <h2>{t('config_notif_captura_rapida')}</h2>
+
+        <div className="notif-row">
           <span>{t('notif_persistent_enabled')}</span>
-          <input
-            type="checkbox"
-            checked={persistent.enabled}
-            onChange={(e) => togglePersistent(e.target.checked)}
-          />
-        </label>
-        <p style={{ color: '#94A3B8', fontSize: '0.78rem', margin: 0 }}>
+          <ToggleSwitch checked={persistent.enabled} onChange={togglePersistent} />
+        </div>
+
+        <p className="notif-hint">
           {platform === 'ios' ? t('notif_ios_unsupported') : t('notif_android_persistent_desc')}
         </p>
+
         {persistent.enabled && (
-          <label className="notif-row">
+          <div className="notif-row">
             <span>{t('notif_persistent_default_type')}</span>
-            <select
-              value={persistent.defaultTipo}
-              onChange={(e) => changeDefaultTipo(e.target.value === 'income' ? 'income' : 'expense')}
-            >
-              <option value="expense">{t('notif_persistent_default_expense')}</option>
-              <option value="income">{t('notif_persistent_default_income')}</option>
-            </select>
-          </label>
+            <div className="notif-segmented">
+              <button
+                type="button"
+                className={`notif-seg-btn ${persistent.defaultTipo === 'expense' ? 'notif-seg-btn--active' : ''}`}
+                onClick={() => changeDefaultTipo('expense')}
+              >
+                {t('notif_persistent_default_expense')}
+              </button>
+              <button
+                type="button"
+                className={`notif-seg-btn ${persistent.defaultTipo === 'income' ? 'notif-seg-btn--active' : ''}`}
+                onClick={() => changeDefaultTipo('income')}
+              >
+                {t('notif_persistent_default_income')}
+              </button>
+            </div>
+          </div>
         )}
-        <p style={{ color: '#cbd5e1', fontSize: '0.82rem', margin: 0 }}>
-          {t('notif_persistent_desc')}
-        </p>
+
+        <p className="notif-hint">{t('notif_persistent_desc')}</p>
       </section>
 
+      {/* ── Categorías ── */}
       <section className="notif-section">
-        <h2>Categorías</h2>
+        <h2>{t('config_notif_categorias')}</h2>
+
         {cats.map(([key, label]) => (
-          <label key={key} className="notif-row">
+          <div key={key} className="notif-row">
             <span>{label}</span>
-            <input
-              type="checkbox"
+            <ToggleSwitch
               checked={Boolean((prefs as unknown as Record<string, unknown>)[key])}
-              onChange={(e) => updateBool(key, e.target.checked)}
+              onChange={(v) => updateBool(key, v)}
               disabled={!prefs.push_enabled || savingKey === String(key)}
+              size="sm"
             />
-          </label>
+          </div>
         ))}
-        <label className="notif-row">
+
+        <label className="notif-row notif-row--label" htmlFor="notif-threshold">
           <span>{t('notif_balance_threshold')}</span>
           <input
+            id="notif-threshold"
             type="number"
             min="0"
             value={prefs.balance_desequilibrado_threshold}
             onChange={(e) => setPrefs((p) => ({ ...p, balance_desequilibrado_threshold: Number(e.target.value) }))}
             onBlur={(e) => updateThreshold(Number(e.target.value))}
             disabled={!prefs.push_enabled}
+            className="notif-threshold-input"
           />
         </label>
       </section>
 
+      {/* ── Recordatorios ── */}
       <section className="notif-section">
         <RecordatorioList
           reminders={remindersApi.reminders}

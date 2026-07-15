@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
@@ -13,6 +13,140 @@ function getGreeting() {
   if (h < 12) return t('greeting_morning')
   if (h < 19) return t('greeting_afternoon')
   return t('greeting_night')
+}
+
+type HomePeriodPreset = 'today' | 'week' | 'month' | 'custom'
+type HomeCategoryLevel = 'parents' | 'all'
+
+type HomeFilters = {
+  preset: HomePeriodPreset
+  fechaInicio: string
+  fechaFin: string
+  billeteraId: number | null
+  nivelCategorias: HomeCategoryLevel
+}
+
+const HOME_PREFERENCES_KEY_PREFIX = 'home_preferences:'
+const DATE_INPUT_PATTERN = /^\d{4}-\d{2}-\d{2}$/
+
+function toDateInputValue(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function formatShortDateValue(value: string) {
+  const [year, month, day] = value.split('-').map(Number)
+  if (!year || !month || !day) return value
+  return `${String(day).padStart(2, '0')}/${String(month).padStart(2, '0')}`
+}
+
+function getBudgetCycleRange(referenceDate: Date, diaAncla: number, offsetMonths = 0) {
+  const year = referenceDate.getFullYear()
+  const month = referenceDate.getMonth() + offsetMonths
+  const day = referenceDate.getDate()
+  const normalizedAnchor = Math.max(1, Math.min(28, diaAncla || 1))
+  const startsThisMonth = day >= normalizedAnchor
+  const startMonth = startsThisMonth ? month : month - 1
+  const start = new Date(year, startMonth, normalizedAnchor)
+  const end = new Date(year, startMonth + 1, normalizedAnchor - 1)
+  return { fechaInicio: toDateInputValue(start), fechaFin: toDateInputValue(end) }
+}
+
+function getPresetRange(preset: HomePeriodPreset, diaAncla: number) {
+  const today = new Date()
+  if (preset === 'today') {
+    const value = toDateInputValue(today)
+    return { fechaInicio: value, fechaFin: value }
+  }
+
+  if (preset === 'week') {
+    const day = today.getDay()
+    const diffToMonday = day === 0 ? -6 : 1 - day
+    const monday = new Date(today)
+    monday.setDate(today.getDate() + diffToMonday)
+    const sunday = new Date(monday)
+    sunday.setDate(monday.getDate() + 6)
+    return { fechaInicio: toDateInputValue(monday), fechaFin: toDateInputValue(sunday) }
+  }
+
+  return getBudgetCycleRange(today, diaAncla)
+}
+
+function getDefaultHomeFilters(diaAncla: number): HomeFilters {
+  const range = getPresetRange('month', diaAncla)
+  return { preset: 'month', ...range, billeteraId: null, nivelCategorias: 'parents' }
+}
+
+function isValidDateInput(value: unknown): value is string {
+  return typeof value === 'string' && DATE_INPUT_PATTERN.test(value) && !Number.isNaN(new Date(`${value}T00:00:00`).getTime())
+}
+
+function parseHomePreferences(value: unknown, diaAncla: number, activeWalletIds: Set<number>): HomeFilters | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null
+
+  const preferences = value as Record<string, unknown>
+  const preset = preferences.periodo
+  const categoryLevel = preferences.nivel_categorias
+  const walletIdValue = preferences.billetera_id
+
+  if (!['today', 'week', 'month', 'custom'].includes(String(preset))) return null
+  if (!['parents', 'all'].includes(String(categoryLevel))) return null
+
+  const billeteraId = walletIdValue === null || walletIdValue === undefined
+    ? null
+    : Number(walletIdValue)
+  if (billeteraId !== null && (!Number.isInteger(billeteraId) || !activeWalletIds.has(billeteraId))) return null
+
+  if (preset === 'custom') {
+    const fechaInicio = preferences.fecha_inicio
+    const fechaFin = preferences.fecha_fin
+    if (!isValidDateInput(fechaInicio) || !isValidDateInput(fechaFin) || fechaInicio > fechaFin) return null
+    return { preset, fechaInicio, fechaFin, billeteraId, nivelCategorias: categoryLevel as HomeCategoryLevel }
+  }
+
+  return {
+    preset: preset as HomePeriodPreset,
+    ...getPresetRange(preset as HomePeriodPreset, diaAncla),
+    billeteraId,
+    nivelCategorias: categoryLevel as HomeCategoryLevel
+  }
+}
+
+function serializeHomePreferences(filters: HomeFilters) {
+  return {
+    periodo: filters.preset,
+    fecha_inicio: filters.fechaInicio,
+    fecha_fin: filters.fechaFin,
+    billetera_id: filters.billeteraId,
+    nivel_categorias: filters.nivelCategorias
+  }
+}
+
+function hasValidHomeFilterRange(filters: HomeFilters) {
+  return isValidDateInput(filters.fechaInicio)
+    && isValidDateInput(filters.fechaFin)
+    && filters.fechaInicio <= filters.fechaFin
+}
+
+function getShortcutRange(shortcut: 'yesterday' | 'year' | 'previous_month', diaAncla: number) {
+  const today = new Date()
+  if (shortcut === 'yesterday') {
+    const yesterday = new Date(today)
+    yesterday.setDate(today.getDate() - 1)
+    const value = toDateInputValue(yesterday)
+    return { fechaInicio: value, fechaFin: value }
+  }
+
+  if (shortcut === 'year') {
+    return {
+      fechaInicio: toDateInputValue(new Date(today.getFullYear(), 0, 1)),
+      fechaFin: toDateInputValue(new Date(today.getFullYear(), 11, 31))
+    }
+  }
+
+  return getBudgetCycleRange(today, diaAncla, -1)
 }
 
 // ── Color derivation utilities (mirrors fn_generar_variacion_color SQL logic) ──
@@ -173,10 +307,14 @@ export function HomePage() {
   const [billeteras, setBilleteras] = useState<any[]>([])
   const [topCategorias, setTopCategorias] = useState<any[]>([])
   const [rankingCategorias, setRankingCategorias] = useState<any[]>([])
-  const [showSubcategories, setShowSubcategories] = useState(false)
   const [movimientos, setMovimientos] = useState<any[]>([])
   const [misterio, setMisterio] = useState<{ olvidos_pesos: number; olvidos_dolares: number } | null>(null)
   const [diaAncla, setDiaAncla] = useState<number>(1)
+  const [homeFilters, setHomeFilters] = useState<HomeFilters>(() => getDefaultHomeFilters(1))
+  const [filteredDataLoading, setFilteredDataLoading] = useState(false)
+  const latestHomeFiltersRef = useRef(homeFilters)
+  const homePreferencesDirtyRef = useRef(false)
+  const homePreferencesHydratedUserRef = useRef<string | null>(null)
 
   // Modal de Conciliación
   const [selectedBilletera, setSelectedBilletera] = useState<any | null>(null)
@@ -240,7 +378,7 @@ export function HomePage() {
   }, [showToast])
 
   const activeCategoriasData = useMemo(() => {
-    if (!showSubcategories) {
+    if (homeFilters.nivelCategorias === 'parents') {
       return topCategorias.map(c => ({
         ...c,
         total_consumido: Number(c.total_consumido) || 0,
@@ -290,7 +428,85 @@ export function HomePage() {
         porcentaje_del_total: total > 0 ? (Number(c.total_consumido) / total) * 100 : 0
       }
     })
-  }, [showSubcategories, topCategorias, rankingCategorias])
+  }, [topCategorias, rankingCategorias, homeFilters.nivelCategorias])
+
+  const fetchFilteredDashboardData = useCallback(async (filters: HomeFilters) => {
+    if (!filters.fechaInicio || !filters.fechaFin || filters.fechaInicio > filters.fechaFin) return
+
+    try {
+      setFilteredDataLoading(true)
+      const [topCategoriasRes, rankingCategoriasRes, movimientosRes] = await Promise.all([
+        rpc<any[]>('fn_reporte_top_categorias_mes', {
+          p_fecha_inicio: filters.fechaInicio,
+          p_fecha_fin: filters.fechaFin,
+          p_billetera_id: filters.billeteraId
+        }).catch(() => [] as any[]),
+        rpc<any[]>('fn_reporte_ranking_categorias', {
+          p_fecha_inicio: filters.fechaInicio,
+          p_fecha_fin: filters.fechaFin,
+          p_billetera_id: filters.billeteraId
+        }).catch(() => [] as any[]),
+        rpc<any[]>('fn_reporte_movimientos_recientes', {
+          p_limit: 20,
+          p_offset: 0,
+          p_fecha_inicio: filters.fechaInicio,
+          p_fecha_fin: filters.fechaFin,
+          p_billetera_id: filters.billeteraId
+        }).catch(() => [] as any[])
+      ])
+
+      setTopCategorias(topCategoriasRes)
+      setRankingCategorias(rankingCategoriasRes)
+      setMovimientos(movimientosRes)
+    } catch (err: any) {
+      showToast(parseError(err), 'error')
+    } finally {
+      setFilteredDataLoading(false)
+    }
+  }, [showToast])
+
+  const cacheHomePreferences = useCallback((filters: HomeFilters) => {
+    if (!user?.id) return
+
+    localStorage.setItem(`${HOME_PREFERENCES_KEY_PREFIX}${user.id}`, JSON.stringify(serializeHomePreferences(filters)))
+    localStorage.setItem(`${HOME_PREFERENCES_KEY_PREFIX}pending:${user.id}`, 'true')
+    homePreferencesDirtyRef.current = true
+  }, [user?.id])
+
+  const updateHomeFilters = useCallback((filters: HomeFilters) => {
+    setHomeFilters(filters)
+    if (!hasValidHomeFilterRange(filters)) return
+
+    latestHomeFiltersRef.current = filters
+    cacheHomePreferences(filters)
+  }, [cacheHomePreferences])
+
+  const flushHomePreferences = useCallback(async () => {
+    if (!user?.id || !homePreferencesDirtyRef.current) return
+
+    const filtersToPersist = latestHomeFiltersRef.current
+    const serializedPreferences = serializeHomePreferences(filtersToPersist)
+    const serializedSnapshot = JSON.stringify(serializedPreferences)
+    const cacheKey = `${HOME_PREFERENCES_KEY_PREFIX}${user.id}`
+    const pendingKey = `${HOME_PREFERENCES_KEY_PREFIX}pending:${user.id}`
+
+    try {
+      await rpc('fn_actualizar_preferencia_usuario', { p_home_preferencias: serializedPreferences })
+      const preferenceResponse = await rpc<{ home_preferencias: unknown }[]>('fn_obtener_preferencias_usuario')
+
+      // Do not replace a newer local selection made while the request was in flight.
+      if (JSON.stringify(serializeHomePreferences(latestHomeFiltersRef.current)) !== serializedSnapshot) return
+
+      const persistedPreferences = preferenceResponse?.[0]?.home_preferencias
+      if (persistedPreferences && typeof persistedPreferences === 'object') {
+        localStorage.setItem(cacheKey, JSON.stringify(persistedPreferences))
+      }
+      localStorage.removeItem(pendingKey)
+      homePreferencesDirtyRef.current = false
+    } catch {
+      // The cache and pending marker are intentionally retained for the next session.
+    }
+  }, [user?.id])
 
   useEffect(() => {
     localStorage.setItem('has_seen_coachmarks', 'true')
@@ -309,6 +525,85 @@ export function HomePage() {
       window.removeEventListener('fugas-config-changed', handleFugasChanged)
     }
   }, [fetchData])
+
+  useEffect(() => {
+    setHomeFilters((current) => {
+      if (current.preset !== 'month') return current
+      const nextRange = getPresetRange('month', diaAncla)
+      if (current.fechaInicio === nextRange.fechaInicio && current.fechaFin === nextRange.fechaFin) return current
+      return { ...current, ...nextRange }
+    })
+  }, [diaAncla])
+
+  useEffect(() => {
+    if (hasValidHomeFilterRange(homeFilters)) {
+      latestHomeFiltersRef.current = homeFilters
+    }
+  }, [homeFilters])
+
+  useEffect(() => {
+    if (loading || !user?.id || homePreferencesHydratedUserRef.current === user.id) return
+
+    homePreferencesHydratedUserRef.current = user.id
+    const activeWalletIds = new Set(billeteras.map((billetera) => Number(billetera.billetera_id)))
+    const cacheKey = `${HOME_PREFERENCES_KEY_PREFIX}${user.id}`
+    const pendingKey = `${HOME_PREFERENCES_KEY_PREFIX}pending:${user.id}`
+    const hasPendingPreferences = localStorage.getItem(pendingKey) === 'true'
+
+    try {
+      const cachedPreferences = localStorage.getItem(cacheKey)
+      if (cachedPreferences) {
+        const cachedFilters = parseHomePreferences(JSON.parse(cachedPreferences), diaAncla, activeWalletIds)
+        if (cachedFilters) {
+          latestHomeFiltersRef.current = cachedFilters
+          setHomeFilters(cachedFilters)
+        }
+      }
+    } catch {
+      localStorage.removeItem(cacheKey)
+    }
+
+    if (hasPendingPreferences) {
+      homePreferencesDirtyRef.current = true
+      return
+    }
+
+    void (async () => {
+      try {
+        const preferenceResponse = await rpc<{ home_preferencias: unknown }[]>('fn_obtener_preferencias_usuario')
+        const remoteFilters = parseHomePreferences(preferenceResponse?.[0]?.home_preferencias, diaAncla, activeWalletIds)
+        if (!remoteFilters) return
+
+        latestHomeFiltersRef.current = remoteFilters
+        setHomeFilters(remoteFilters)
+        localStorage.setItem(cacheKey, JSON.stringify(serializeHomePreferences(remoteFilters)))
+      } catch {
+        // A local/default selection keeps Home usable when preferences cannot be read.
+      }
+    })()
+  }, [billeteras, diaAncla, loading, user?.id])
+
+  useEffect(() => {
+    const flushWhenHidden = () => {
+      if (document.visibilityState === 'hidden') void flushHomePreferences()
+    }
+    const flushOnPageHide = () => {
+      void flushHomePreferences()
+    }
+
+    document.addEventListener('visibilitychange', flushWhenHidden)
+    window.addEventListener('pagehide', flushOnPageHide)
+    return () => {
+      document.removeEventListener('visibilitychange', flushWhenHidden)
+      window.removeEventListener('pagehide', flushOnPageHide)
+      void flushHomePreferences()
+    }
+  }, [flushHomePreferences])
+
+  useEffect(() => {
+    if (loading) return
+    fetchFilteredDashboardData(homeFilters)
+  }, [homeFilters, fetchFilteredDashboardData, loading])
 
   // Nombre Real para el Saludo (Observación 9)
   const saludoTexto = nombreUsuario ? `${getGreeting()}, ${nombreUsuario} 👋` : `${getGreeting()} 👋`
@@ -435,6 +730,24 @@ export function HomePage() {
   const tieneFugaMisterio = 
     ((misterio?.olvidos_pesos ?? 0) > 0 || (misterio?.olvidos_dolares ?? 0) > 0) &&
     !fugasMisterioOcultado
+  const filterRangeInvalid = !homeFilters.fechaInicio || !homeFilters.fechaFin || homeFilters.fechaInicio > homeFilters.fechaFin
+  const visibleBilleteras = homeFilters.billeteraId === null
+    ? billeteras
+    : billeteras.filter((b) => b.billetera_id === homeFilters.billeteraId)
+
+  const handlePeriodChange = (preset: HomePeriodPreset) => {
+    if (preset === 'custom') {
+      updateHomeFilters({ ...homeFilters, preset: 'custom' })
+      return
+    }
+    const range = getPresetRange(preset, diaAncla)
+    updateHomeFilters({ ...homeFilters, preset, ...range })
+  }
+
+  const handleShortcutRange = (shortcut: 'yesterday' | 'year' | 'previous_month') => {
+    const range = getShortcutRange(shortcut, diaAncla)
+    updateHomeFilters({ ...homeFilters, preset: 'custom', ...range })
+  }
 
   return (
     <div className="page">
@@ -537,11 +850,11 @@ export function HomePage() {
               </div>
               {/* Ocultar dólares si es cero */}
               {patrimonioUSD > 0 && (
-                <p className="home-patrimonio-usd font-mono" style={{ marginTop: '8px', textAlign: 'left' }}>
+                <p className="home-patrimonio-usd font-mono" style={{ marginTop: '4px', textAlign: 'left' }}>
                   {hideAmounts ? '*** USD' : `U$S ${patrimonioUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </p>
               )}
-              <div className="home-patrimonio-badge" style={{ marginTop: '12px' }}>
+              <div className="home-patrimonio-badge" style={{ marginTop: '8px' }}>
                 <span className="dot dot-green" />
                 <span className="text-xs text-muted">{t('hero_sync_ok')}</span>
               </div>
@@ -550,18 +863,35 @@ export function HomePage() {
 
           {/* ── SECCIÓN DE BILLETERAS ── */}
           <div className="section home-section-billeteras" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0, paddingBottom: '4px' }}>
-            <div className="flex items-center justify-between mb-3">
-              <span className="section-title">{t('section_my_wallets')}</span>
+            <div className="home-wallets-header mb-3">
+              <div className="home-wallet-title-filter">
+                <span className="section-title">{t('section_my_wallets')}</span>
+                <label className="home-wallet-inline-filter">
+                  <span className="sr-only">{t('home_filter_wallet_label')}</span>
+                  <select
+                    value={homeFilters.billeteraId ?? ''}
+                    onChange={(event) => {
+                      const value = event.target.value
+                      updateHomeFilters({ ...homeFilters, billeteraId: value ? Number(value) : null })
+                    }}
+                  >
+                    <option value="">{t('home_filter_wallet_all')}</option>
+                    {billeteras.map((b) => (
+                      <option key={b.billetera_id} value={b.billetera_id}>{b.nombre}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
               <span className="text-xs text-muted scroll-hint-mobile">{t('horizontal_scroll_hint')}</span>
             </div>
             
-            {billeteras.length === 0 ? (
+            {visibleBilleteras.length === 0 ? (
               <div className="card p-5 text-center">
                 <p className="text-sm text-muted">{t('wallets_empty')}</p>
               </div>
             ) : (
               <div className="billeteras-horizontal-scroll">
-                {billeteras.map(b => {
+                {visibleBilleteras.map(b => {
                   const sem = getSemaforoDetails(b.ultima_conciliacion_at)
                   return (
                     <div key={b.billetera_id} className="billetera-card card">
@@ -629,61 +959,86 @@ export function HomePage() {
           <div className="section home-section-donut" style={{ paddingTop: '4px', paddingLeft: 0, paddingRight: 0, paddingBottom: '4px' }}>
             <div className="flex items-center justify-between mb-3">
               <span className="section-title">
-                {(() => {
-                  const today = new Date()
-                  const year = today.getFullYear()
-                  const month = today.getMonth()
-                  const day = today.getDate()
-                  let start: Date
-                  let end: Date
-                  if (day >= diaAncla) {
-                    start = new Date(year, month, diaAncla)
-                    end = new Date(year, month + 1, diaAncla - 1)
-                  } else {
-                    start = new Date(year, month - 1, diaAncla)
-                    end = new Date(year, month, diaAncla - 1)
-                  }
-                  const formatShortDate = (d: Date) => {
-                    const dd = String(d.getDate()).padStart(2, '0')
-                    const mm = String(d.getMonth() + 1).padStart(2, '0')
-                    return `${dd}/${mm}`
-                  }
-                  return t('section_expense_distribution_cycle', {
-                    start: formatShortDate(start),
-                    end: formatShortDate(end)
-                  })
-                })()}
+                {t('section_expense_distribution_cycle', {
+                  start: formatShortDateValue(homeFilters.fechaInicio),
+                  end: formatShortDateValue(homeFilters.fechaFin)
+                })}
               </span>
               <div className="segmented-control" style={{ maxWidth: '200px' }}>
                 <button
                   type="button"
-                  className={`segmented-item ${!showSubcategories ? 'active' : ''}`}
-                  onClick={() => setShowSubcategories(false)}
+                  className={`segmented-item ${homeFilters.nivelCategorias === 'parents' ? 'active' : ''}`}
+                  onClick={() => updateHomeFilters({ ...homeFilters, nivelCategorias: 'parents' })}
                   style={{ fontSize: '11px', padding: '4px 8px' }}
                 >
                   {t('segmented_only_parents')}
                 </button>
                 <button
                   type="button"
-                  className={`segmented-item ${showSubcategories ? 'active' : ''}`}
-                  onClick={() => setShowSubcategories(true)}
+                  className={`segmented-item ${homeFilters.nivelCategorias === 'all' ? 'active' : ''}`}
+                  onClick={() => updateHomeFilters({ ...homeFilters, nivelCategorias: 'all' })}
                   style={{ fontSize: '11px', padding: '4px 8px' }}
                 >
                   {t('segmented_all')}
                 </button>
               </div>
             </div>
-            
-            {activeCategoriasData.length === 0 ? (
-              <div className="card" style={{ padding: '24px', textAlign: 'center' }}>
+
+            <div className="card home-donut-card">
+              <div className="home-period-tabs" role="group" aria-label={t('section_expense_distribution')}>
+                {(['today', 'week', 'month', 'custom'] as HomePeriodPreset[]).map((preset) => (
+                  <button
+                    key={preset}
+                    type="button"
+                    className={`home-period-tab ${homeFilters.preset === preset ? 'active' : ''}`}
+                    onClick={() => handlePeriodChange(preset)}
+                    aria-pressed={homeFilters.preset === preset}
+                  >
+                    {t(`home_filter_period_${preset}`)}
+                  </button>
+                ))}
+              </div>
+
+              {homeFilters.preset === 'custom' && (
+                <div className="home-custom-range">
+                  <label>
+                    <span>{t('home_filter_from')}</span>
+                    <input
+                      type="date"
+                      value={homeFilters.fechaInicio}
+                      onChange={(event) => updateHomeFilters({ ...homeFilters, fechaInicio: event.target.value })}
+                      aria-invalid={filterRangeInvalid}
+                    />
+                  </label>
+                  <label>
+                    <span>{t('home_filter_to')}</span>
+                    <input
+                      type="date"
+                      value={homeFilters.fechaFin}
+                      onChange={(event) => updateHomeFilters({ ...homeFilters, fechaFin: event.target.value })}
+                      aria-invalid={filterRangeInvalid}
+                    />
+                  </label>
+                  <div className="home-range-shortcuts" aria-label={t('home_filter_period_custom')}>
+                    <button type="button" onClick={() => handleShortcutRange('yesterday')}>{t('home_filter_shortcut_yesterday')}</button>
+                    <button type="button" onClick={() => handleShortcutRange('previous_month')}>{t('home_filter_shortcut_previous_month')}</button>
+                    <button type="button" onClick={() => handleShortcutRange('year')}>{t('home_filter_shortcut_year')}</button>
+                  </div>
+                  {filterRangeInvalid && (
+                    <p className="home-filter-error" role="alert">{t('home_filters_invalid_range')}</p>
+                  )}
+                </div>
+              )}
+
+              {filteredDataLoading && <div className="home-filter-loading" aria-live="polite" />}
+
+              {activeCategoriasData.length === 0 ? (
                 <div className="empty-state">
                   <span className="empty-state-icon">📊</span>
                   <h3>{t('donut_empty_title')}</h3>
                   <p>{t('donut_empty_desc')}</p>
                 </div>
-              </div>
-            ) : (
-              <div className="card" style={{ padding: 'var(--space-4)' }}>
+              ) : (
                 <div className="donut-section-wrapper">
                   <DonutChart data={activeCategoriasData} hideAmounts={hideAmounts} />
                   <div className="category-breakdown-list" style={{ flex: 1, width: '100%' }}>
@@ -726,8 +1081,8 @@ export function HomePage() {
                     ))}
                   </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
 
           {/* ── FEED RECIENTE ── */}

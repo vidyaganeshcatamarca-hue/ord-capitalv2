@@ -182,3 +182,47 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* Segmented control reutilizable */
+.config-segmented {
+  display: flex;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+.config-seg-btn {
+  flex: 1;
+  padding: 9px 14px;
+  border: none;
+  background: rgba(15, 23, 42, 0.55);
+  color: #94a3b8;
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: all 160ms ease;
+  white-space: nowrap;
+}
+
+.config-seg-btn + .config-seg-btn {
+  border-left: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+.config-seg-btn--active {
+  font-weight: 700;
+}
+
+.config-seg-btn--expense.config-seg-btn--active {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--coral, #FF6B6B);
+}
+
+.config-seg-btn--income.config-seg-btn--active {
+  background: rgba(78, 205, 196, 0.15);
+  color: var(--mint, #4ECDC4);
+}
+
+.config-seg-btn:hover:not(.config-seg-btn--active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+}

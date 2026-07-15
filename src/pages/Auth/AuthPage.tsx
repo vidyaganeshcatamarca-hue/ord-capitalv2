@@ -9,6 +9,7 @@ import './Auth.css'
 
 type Mode = 'login' | 'register'
 type BudgetMode = 'libertad' | 'disciplina'
+type CurrencyCode = 'ARS' | 'USD' | 'MXN' | 'EUR' | 'CLP' | 'COP' | 'PEN' | 'UYU'
 
 const withTimeout = <T,>(promise: PromiseLike<T>, ms = 4000): Promise<T> => {
   return Promise.race([
@@ -35,7 +36,7 @@ export function AuthPage() {
 
   // Slide 3: Wallet State
   const [walletName, setWalletName] = useState('')
-  const [currency, setCurrency] = useState<'ARS' | 'USD'>('ARS')
+  const [currency, setCurrency] = useState<CurrencyCode>('ARS')
   const [calcInput, setCalcInput] = useState('0')
   const [cashBalanceInput, setCashBalanceInput] = useState('0')
   const [isCalculated, setIsCalculated] = useState(true)
@@ -229,10 +230,11 @@ export function AuthPage() {
   }
 
   // --- LLAMADA RPC SLIDE 3: Guardar Billetera ---
-  const handleSaveWallet = async (skipBalance = false) => {
+  const handleSaveWallet = async () => {
+    const saldo = parseFloat(calcInput) || 0
+    const cashSaldo = parseFloat(cashBalanceInput) || 0
+
     setLoading(true)
-    const saldo = skipBalance ? 0 : parseFloat(calcInput) || 0
-    const cashSaldo = skipBalance ? 0 : parseFloat(cashBalanceInput) || 0
     const name = walletName.trim() || t('wallet_primary_default_name')
     const cashName = t('wallet_cash_default_name')
 
@@ -241,11 +243,11 @@ export function AuthPage() {
         p_cuenta_nombre: name,
         p_cuenta_moneda: currency,
         p_cuenta_saldo_apertura: saldo,
-        p_cuenta_saldo_omitido: skipBalance || saldo <= 0,
+        p_cuenta_saldo_omitido: saldo <= 0,
         p_cuenta_icono: selectedIcon,
         p_efectivo_nombre: cashName,
         p_efectivo_saldo_apertura: cashSaldo,
-        p_efectivo_saldo_omitido: skipBalance || cashSaldo <= 0,
+        p_efectivo_saldo_omitido: cashSaldo <= 0,
         p_efectivo_icono: '💵'
       })
 
@@ -464,27 +466,21 @@ export function AuthPage() {
       {slide === 3 && (
         <div className="onboarding-slide slide-active">
           <div className="slide-content scroll-area">
-            <div className="slide-header-actions">
-              <button className="onboarding-skip-btn" onClick={() => handleSaveWallet(true)}>
-                Saltar
-              </button>
-            </div>
-
-            <h2 className="slide-title">¿Dónde guardas tu dinero del día a día?</h2>
-            <p className="slide-subtitle">Solo la cuenta que más usas para transaccionar. Podrás agregar más luego.</p>
+            <h2 className="slide-title">{t('onboarding_wallet_title')}</h2>
+            <p className="slide-subtitle">{t('onboarding_wallet_subtitle')}</p>
 
             <div className="form-group mb-3">
-              <label className="form-label">Nombre de la cuenta</label>
+              <label className="form-label">{t('label_wallet_name')}</label>
               <input
                 type="text"
-                placeholder="Ej: MercadoPago, Efectivo, Banco Galicia"
+                placeholder={t('placeholder_wallet_name')}
                 value={walletName}
                 onChange={e => setWalletName(e.target.value)}
               />
             </div>
 
             <div className="form-group mb-3">
-              <label className="form-label">Icono de la cuenta</label>
+              <label className="form-label">{t('label_wallet_icon')}</label>
               <div className="emoji-selector-grid">
                 {['💵', '💶', '💷', '💴', '💰', '🪙', '💸', '💳', '🏦', '📱', '💼', '👛', '📈', '💎', '🏧'].map(emoji => (
                   <button
@@ -500,23 +496,31 @@ export function AuthPage() {
             </div>
 
             <div className="form-group mb-3">
-              <label className="form-label">Moneda</label>
-              <div className="segmented">
-                <button
-                  type="button"
-                  className={`segmented-item ${currency === 'ARS' ? 'active' : ''}`}
-                  onClick={() => setCurrency('ARS')}
-                >
-                  ARS 🇦🇷
-                </button>
-                <button
-                  type="button"
-                  className={`segmented-item ${currency === 'USD' ? 'active' : ''}`}
-                  onClick={() => setCurrency('USD')}
-                >
-                  USD 🇺🇸
-                </button>
-              </div>
+              <label className="form-label">{t('label_country_residence')}</label>
+              <select
+                className="form-control"
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--border)',
+                  borderRadius: '10px',
+                  color: 'var(--text)',
+                  fontSize: '16px',
+                  outline: 'none'
+                }}
+                value={currency}
+                onChange={e => setCurrency(e.target.value as CurrencyCode)}
+              >
+                <option value="ARS">{t('country_ar')}</option>
+                <option value="USD">{t('country_us')}</option>
+                <option value="MXN">{t('country_mx')}</option>
+                <option value="EUR">{t('country_es')}</option>
+                <option value="CLP">{t('country_cl')}</option>
+                <option value="COP">{t('country_co')}</option>
+                <option value="PEN">{t('country_pe')}</option>
+                <option value="UYU">{t('country_uy')}</option>
+              </select>
             </div>
 
               {/* Calculadora de Saldo Inicial */}
@@ -530,7 +534,7 @@ export function AuthPage() {
                   fontWeight: 'bold', 
                   color: 'var(--text-3)' 
                 }}>
-                  {currency === 'ARS' ? '$' : 'U$S'}
+                  {currency === 'EUR' ? '€' : currency === 'USD' ? 'U$S' : '$'}
                 </span>
                 <input
                   type="text"
@@ -603,7 +607,7 @@ export function AuthPage() {
                     fontWeight: 'bold',
                     color: 'var(--text-3)'
                   }}>
-                    {currency === 'ARS' ? '$' : 'U$S'}
+                    {currency === 'EUR' ? '€' : currency === 'USD' ? 'U$S' : '$'}
                   </span>
                   <input
                     type="number"
@@ -633,13 +637,10 @@ export function AuthPage() {
             <div className="slide-footer flex flex-col gap-2">
               <button
                 className="btn btn-primary btn-full btn-lg"
-                onClick={() => handleSaveWallet(false)}
+                onClick={() => handleSaveWallet()}
                 disabled={walletName.trim().length === 0 || loading}
               >
                 {loading ? t('btn_saving') : t('btn_save_initial_wallets')}
-              </button>
-              <button className="onboarding-link-btn" onClick={() => handleSaveWallet(true)}>
-                {t('btn_skip_initial_balances')}
               </button>
             </div>
           </div>
@@ -652,12 +653,12 @@ export function AuthPage() {
           <div className="slide-content">
             <div className="slide-header-actions">
               <button className="onboarding-skip-btn" onClick={() => { setAnchorDay(1); goToSlide(5); }}>
-                Saltar
+                {t('btn_skip')}
               </button>
             </div>
 
-            <h2 className="slide-title">¿Qué día del mes cobras o recibes tus ingresos?</h2>
-            <p className="slide-subtitle">Esto nos ayuda a estructurar y saber cuándo inicia tu mes financiero.</p>
+            <h2 className="slide-title">{t('onboarding_anchor_day_subtitle')}</h2>
+            <p className="slide-subtitle">{t('onboarding_anchor_day_title')}</p>
 
             {/* Selector de Día Ancla (Spinner/Grid) */}
             <div className="anchor-day-selector">
@@ -688,10 +689,10 @@ export function AuthPage() {
 
             <div className="slide-footer flex flex-col gap-2">
               <button className="btn btn-primary btn-full btn-lg" onClick={() => goToSlide(5)}>
-                Siguiente
+                {t('btn_next')}
               </button>
               <button className="onboarding-link-btn" onClick={() => { setAnchorDay(1); goToSlide(5); }}>
-                No estoy seguro, usar día 1 &gt;
+                {t('btn_use_day_1')}
               </button>
             </div>
           </div>
@@ -702,8 +703,8 @@ export function AuthPage() {
       {slide === 5 && (
         <div className="onboarding-slide slide-active">
           <div className="slide-content scroll-area">
-            <h2 className="slide-title">¿Cómo quieres que te acompañemos?</h2>
-            <p className="slide-subtitle">Configura el método de presupuesto inicial. Podrás cambiarlo cuando desees.</p>
+            <h2 className="slide-title">{t('onboarding_budget_mode_title')}</h2>
+            <p className="slide-subtitle">{t('onboarding_budget_mode_subtitle')}</p>
 
             <div className="mode-cards flex flex-col gap-3">
               {/* Tarjeta A: Modo Libertad */}
@@ -714,12 +715,12 @@ export function AuthPage() {
                 <div className="mode-card-header">
                   <span className="mode-emoji">🕊️</span>
                   <div className="mode-title-wrap">
-                    <h3 className="mode-card-title">Modo Libertad</h3>
-                    <span className="mode-badge-recommended">Recomendado</span>
+                    <h3 className="mode-card-title">{t('budget_mode_libertad_title')}</h3>
+                    <span className="mode-badge-recommended">{t('label_recommended')}</span>
                   </div>
                 </div>
                 <p className="mode-card-desc">
-                  Registra tus movimientos diarios y la app te mostrará exactamente en qué se va tu dinero. Claridad sin presiones.
+                  {t('budget_mode_libertad_desc')}
                 </p>
               </div>
 
@@ -731,18 +732,18 @@ export function AuthPage() {
                 <div className="mode-card-header">
                   <span className="mode-emoji">🔒</span>
                   <div className="mode-title-wrap">
-                    <h3 className="mode-card-title">Modo Disciplina de Hierro</h3>
+                    <h3 className="mode-card-title">{t('budget_mode_base_cero_title')}</h3>
                   </div>
                 </div>
                 <p className="mode-card-desc">
-                  Asigna un propósito a cada centavo antes de que empiece el mes. La app te enviará alertas rigurosas si te desvías del plan.
+                  {t('budget_mode_base_cero_desc')}
                 </p>
               </div>
             </div>
 
             <div className="slide-footer">
               <button className="btn btn-primary btn-full btn-lg mt-4" onClick={handleFinishOnboarding} disabled={loading}>
-                {loading ? 'Creando espacio...' : 'Crear mi espacio'}
+                {loading ? t('btn_creating_space', { defaultValue: 'Creando espacio...' }) : t('btn_create_my_space')}
               </button>
             </div>
           </div>

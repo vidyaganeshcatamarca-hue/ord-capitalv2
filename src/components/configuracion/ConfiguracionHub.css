@@ -57,3 +57,53 @@ button.config-hub-card {
   color: #94A3B8;
   font-size: 1.5rem;
 }
+
+/* PresupuestoCicloCard — card con header clickeable + toggle opcional */
+article.presupuesto-ciclo-card.config-hub-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+
+.presupuesto-ciclo-header {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  width: 100%;
+  padding: 14px 16px;
+  background: none;
+  border: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.presupuesto-ciclo-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.presupuesto-ciclo-toggle-label {
+  flex: 1;
+  min-width: 0;
+}
+
+.presupuesto-ciclo-toggle-label span {
+  display: block;
+  color: #e2e8f0;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.presupuesto-ciclo-toggle-label p {
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}

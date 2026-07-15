@@ -1,64 +1,147 @@
 .recordatorio-form {
   display: grid;
-  gap: 12px;
-  padding: 16px;
+  gap: 16px;
+  padding: 18px 16px;
 }
 
 .recordatorio-form label {
   display: grid;
-  gap: 4px;
-  font-size: 0.85rem;
-  color: #cbd5e1;
+  gap: 6px;
 }
 
-.recordatorio-form input[type="text"],
-.recordatorio-form input[type="time"],
-.recordatorio-form input[type="date"],
-.recordatorio-form textarea {
-  padding: 8px 10px;
+.recordatorio-form label span {
+  font-size: 0.88rem;
+  color: #e2e8f0;
+  font-weight: 600;
+}
+
+.recordatorio-input {
+  padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  background: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.72);
   color: #f8fafc;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-family: inherit;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 150ms;
 }
 
-.recordatorio-form textarea {
+.recordatorio-input:focus {
+  outline: none;
+  border-color: var(--mint, #4ECDC4);
+}
+
+textarea.recordatorio-input {
   resize: vertical;
   min-height: 60px;
 }
 
-.recordatorio-form-row {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+.recordatorio-flex-label {
+  display: flex !important;
   align-items: center;
+  justify-content: space-between;
+  flex-direction: row !important;
+  width: 100%;
 }
 
-.recordatorio-form-row label {
+.recordatorio-flex-label .recordatorio-input {
+  width: auto;
+  min-width: 120px;
+}
+
+/* Botones segmentados (Repetir / Una vez) */
+.recordatorio-segmented {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.85rem;
-  color: #cbd5e1;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+.recordatorio-seg-btn {
+  flex: 1;
+  padding: 9px 14px;
+  border: none;
+  background: rgba(15, 23, 42, 0.55);
+  color: #94a3b8;
+  font: inherit;
+  font-size: 0.88rem;
   cursor: pointer;
+  transition: all 160ms ease;
+  white-space: nowrap;
+}
+
+.recordatorio-seg-btn + .recordatorio-seg-btn {
+  border-left: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+.recordatorio-seg-btn--active {
+  background: rgba(78, 205, 196, 0.15);
+  color: var(--mint, #4ECDC4);
+  font-weight: 700;
+}
+
+.recordatorio-seg-btn:hover:not(.recordatorio-seg-btn--active) {
+  background: rgba(255, 255, 255, 0.05);
+  color: #e2e8f0;
+}
+
+/* Días de la semana */
+.recordatorio-label-text {
+  display: block;
+  font-size: 0.88rem;
+  color: #e2e8f0;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.recordatorio-days-container {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.recordatorio-day-pill {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(15, 23, 42, 0.55);
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  transition: all 150ms;
+}
+
+.recordatorio-day-pill:hover {
+  border-color: var(--mint, #4ECDC4);
+  color: #e2e8f0;
+}
+
+.recordatorio-day-pill--active {
+  background: var(--mint, #4ECDC4);
+  color: #071311;
+  border-color: var(--mint, #4ECDC4);
 }
 
 .recordatorio-form-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 8px;
-  margin-top: 6px;
+  gap: 12px;
+  margin-top: 12px;
 }
 
 .recordatorio-form-actions button {
-  padding: 8px 14px;
-  border-radius: 999px;
+  padding: 10px 18px;
+  border-radius: 12px;
   border: 0;
   cursor: pointer;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 .recordatorio-form-actions .secondary {
@@ -68,6 +151,6 @@
 }
 
 .recordatorio-form-actions .primary {
-  background: #4ecdc4;
+  background: var(--mint, #4ECDC4);
   color: #042f2e;
 }
