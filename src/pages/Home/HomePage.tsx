@@ -276,7 +276,10 @@ export function HomePage() {
   const navigate = useNavigate()
   const { user, nombreUsuario } = useAuth()
   const { showToast } = useToast()
-  const [hideAmounts, setHideAmounts] = useState(false)
+  const [hideAmounts, setHideAmounts] = useState(() => {
+    const globalHide = window.localStorage.getItem(`ocultar_montos:${user?.id}`) === 'true'
+    return globalHide
+  })
   const [alertsOpen, setAlertsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [movementToDelete, setMovementToDelete] = useState<number | null>(null)

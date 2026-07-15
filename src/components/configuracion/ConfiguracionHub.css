@@ -36,25 +36,25 @@ button.config-hub-card {
   border-radius: 12px;
   display: grid;
   place-items: center;
-  background: rgba(78, 205, 196, 0.12);
+  background: var(--mint-dim);
   font-size: 22px;
 }
 
 .config-hub-card-content h3 {
   margin: 0 0 4px;
   font-size: 0.95rem;
-  color: #f8fafc;
+  color: var(--text);
 }
 
 .config-hub-card-content p {
   margin: 0;
-  color: #cbd5e1;
+  color: var(--text-2);
   font-size: 0.82rem;
   line-height: 1.4;
 }
 
 .config-hub-card-chevron {
-  color: #94A3B8;
+  color: var(--text-3);
   font-size: 1.5rem;
 }
 
@@ -86,7 +86,7 @@ article.presupuesto-ciclo-card.config-hub-card {
   align-items: center;
   gap: 12px;
   padding: 12px 16px 14px;
-  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  border-top: 1px solid var(--border);
 }
 
 .presupuesto-ciclo-toggle-label {
@@ -96,14 +96,14 @@ article.presupuesto-ciclo-card.config-hub-card {
 
 .presupuesto-ciclo-toggle-label span {
   display: block;
-  color: #e2e8f0;
+  color: var(--text);
   font-size: 0.88rem;
   font-weight: 600;
 }
 
 .presupuesto-ciclo-toggle-label p {
   margin: 3px 0 0;
-  color: #64748b;
+  color: var(--text-3);
   font-size: 0.78rem;
   line-height: 1.4;
 }

@@ -439,11 +439,12 @@
   font-weight: 700;
   text-align: center;
   margin-bottom: 6px;
+  color: var(--text);
 }
 
 .modal-subtitulo {
   font-size: 13px;
-  color: var(--text-secondary, #A0A0A0);
+  color: var(--text-3);
   text-align: center;
   margin-bottom: 20px;
   line-height: 1.5;
@@ -884,15 +885,15 @@
   flex: 1;
   padding: 13px;
   border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1px solid var(--border);
   background: transparent;
-  color: var(--text-secondary, #A0A0A0);
+  color: var(--text-3);
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
 }
-.btn-cancelar:hover { background: rgba(255,255,255,0.07); }
+.btn-cancelar:hover { background: var(--surface-2); }
 
 .btn-primario {
   flex: 1;

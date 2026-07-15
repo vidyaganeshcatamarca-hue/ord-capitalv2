@@ -6,9 +6,9 @@
   display: grid;
   gap: 0;
   padding: 16px;
-  border: 1px solid var(--border, rgba(148, 163, 184, 0.18));
+  border: 1px solid var(--border);
   border-radius: 16px;
-  background: var(--surface, #2D2D2D);
+  background: var(--surface);
   margin-bottom: 12px;
   max-width: 880px;
 }
@@ -19,7 +19,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--mint, #4ECDC4);
+  color: var(--mint);
 }
 
 /* Row genérico */
@@ -29,7 +29,7 @@
   align-items: center;
   gap: 12px;
   padding: 11px 0;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+  border-bottom: 1px solid var(--border);
 }
 
 .notif-row:last-of-type {
@@ -37,7 +37,7 @@
 }
 
 .notif-row span {
-  color: #e2e8f0;
+  color: var(--text);
   font-size: 0.9rem;
   flex: 1;
   min-width: 0;
@@ -51,10 +51,10 @@
 /* Inputs */
 .notif-time-input,
 .notif-threshold-input {
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: rgba(15, 23, 42, 0.72);
-  color: #f8fafc;
+  background: var(--surface-2);
+  color: var(--text);
   padding: 7px 10px;
   font: inherit;
   font-size: 0.88rem;
@@ -67,7 +67,7 @@
 /* Hint texto secundario */
 .notif-hint {
   margin: 6px 0 0;
-  color: #64748b;
+  color: var(--text-3);
   font-size: 0.78rem;
   line-height: 1.4;
 }
@@ -77,7 +77,7 @@
   display: flex;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid var(--border);
   flex-shrink: 0;
 }
 
@@ -85,8 +85,8 @@
   flex: 1;
   padding: 7px 12px;
   border: none;
-  background: rgba(15, 23, 42, 0.55);
-  color: #94a3b8;
+  background: var(--surface-2);
+  color: var(--text-3);
   font: inherit;
   font-size: 0.83rem;
   cursor: pointer;
@@ -95,16 +95,16 @@
 }
 
 .notif-seg-btn + .notif-seg-btn {
-  border-left: 1px solid rgba(148, 163, 184, 0.28);
+  border-left: 1px solid var(--border);
 }
 
 .notif-seg-btn--active {
-  background: rgba(78, 205, 196, 0.15);
-  color: var(--mint, #4ECDC4);
+  background: var(--mint-dim);
+  color: var(--mint);
   font-weight: 700;
 }
 
 .notif-seg-btn:hover:not(.notif-seg-btn--active) {
-  background: rgba(255, 255, 255, 0.05);
-  color: #e2e8f0;
+  background: var(--surface-3);
+  color: var(--text);
 }

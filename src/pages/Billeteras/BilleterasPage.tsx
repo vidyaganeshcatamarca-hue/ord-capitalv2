@@ -1,4 +1,6 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
@@ -10,14 +12,21 @@ import '@/pages/Categorias/Categorias.css'
 import './Billeteras.css'
 
 const FINANCIAL_EMOJIS = ['💵', '💳', '🏦', '🪙', '💸', '💼', '📊', '📈', '📉', '💰', '🛡️', '🐖', '🎯', '🔑', '🏧']
-
 export function BilleterasPage() {
+  const [searchParams] = useSearchParams()
+  const confirmConciliarBtnRef = useRef<HTMLButtonElement>(null)
+  const { user } = useAuth()
   const { showToast } = useToast()
   const [billeteras, setBilleteras] = useState<any[]>([])
   const [healthReport, setHealthReport] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [hideAmounts, setHideAmounts] = useState(false)
-  const [activeMenuTab, setActiveMenuTab] = useState<'cuentas_ingreso' | 'categorias_egresos'>('cuentas_ingreso')
+  const [hideAmounts, setHideAmounts] = useState(() => {
+    return window.localStorage.getItem(`ocultar_montos:${user?.id}`) === 'true'
+  })
+  const [activeMenuTab, setActiveMenuTab] = useState<'cuentas_ingreso' | 'categorias_egresos'>(() => {
+    if (searchParams.get('tab') === 'categorias_egresos') return 'categorias_egresos'
+    return 'cuentas_ingreso'
+  })
 
   // Modales
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -597,7 +606,7 @@ export function BilleterasPage() {
           <div className="bottom-sheet-overlay" onClick={() => setShowConciliarModal(false)} />
           <div className="bottom-sheet wallet-modal-sheet">
             <div className="bottom-sheet-handle" />
-            <div style={{ padding: 'var(--space-2) var(--space-2)' }}>
+            <form onSubmit={(e) => { e.preventDefault(); handleConciliar(); }} style={{ padding: 'var(--space-2) var(--space-2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
                 <h3 className="font-display" style={{ fontSize: '18px', margin: 0 }}>
                   ⚖️ Conciliar {conciliarBilletera.nombre}
@@ -627,19 +636,30 @@ export function BilleterasPage() {
                     onChange={(e) => setSaldoReal(e.target.value)}
                     onFocus={handleFocus(setSaldoReal)}
                     onBlur={handleBlur(setSaldoReal)}
+                    enterKeyHint="next"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        confirmConciliarBtnRef.current?.focus()
+                      }
+                    }}
                   />
                 </div>
               </div>
 
               <div className="flex gap-3">
-                <button className="btn btn-secondary flex-1" onClick={() => setShowConciliarModal(false)}>
+                <button type="button" className="btn btn-secondary flex-1" onClick={() => setShowConciliarModal(false)}>
                   Cancelar
                 </button>
-                <button className="btn btn-primary flex-1" onClick={handleConciliar}>
+                <button
+                  type="submit"
+                  ref={confirmConciliarBtnRef}
+                  className="btn btn-primary flex-1"
+                >
                   Confirmar Ajuste
                 </button>
               </div>
-            </div>
+            </form>
           </div>
         </>
       )}

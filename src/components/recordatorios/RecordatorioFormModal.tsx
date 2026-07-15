@@ -93,7 +93,6 @@ export function RecordatorioFormModal({ mode, initial, onClose, onSubmit }: Reco
       <form className="sobre-modal recordatorio-form" onSubmit={handleSubmit}>
         <header className="sobre-modal-header">
           <h2>{t(mode === 'create' ? 'recordatorio_modal_title_new' : 'recordatorio_modal_title_edit')}</h2>
-          <button type="button" onClick={onClose}>{t('btn_close')}</button>
         </header>
 
         <label>

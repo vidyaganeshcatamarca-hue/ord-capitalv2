@@ -106,14 +106,21 @@ function AppLayout() {
       {showAdd && (
         <Suspense fallback={null}>
           <AddMovementModal
-            onClose={() => { setShowAdd(false); setAddConfig(null); }}
+            onClose={() => {
+              setShowAdd(false)
+              setAddConfig(null)
+            }}
             onSuccess={() => {
               window.dispatchEvent(new CustomEvent('movement-added'))
               setShowAdd(false)
               setAddConfig(null)
             }}
-            defaultTipo={addConfig?.defaultTipo || 'expense'}
-            initialBilleteraId={addConfig?.initialBilleteraId}
+            defaultTipo={addConfig?.defaultTipo || (localStorage.getItem('tipo_movimiento_default') as 'expense' | 'income' || 'expense')}
+            initialBilleteraId={addConfig?.initialBilleteraId || (
+              (addConfig?.defaultTipo || localStorage.getItem('tipo_movimiento_default') || 'expense') === 'income' 
+                ? Number(localStorage.getItem('billetera_default_ingreso')) 
+                : Number(localStorage.getItem('billetera_default_egreso'))
+            ) || undefined}
           />
         </Suspense>
       )}

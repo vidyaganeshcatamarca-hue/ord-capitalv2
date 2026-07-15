@@ -2063,7 +2063,7 @@ export const inversiones = {
 
   // Ajustes: Notificaciones - secciones
   config_notif_generales: "Generales",
-  config_notif_captura_rapida: "Captura rápida persistente",
+  config_notif_captura_rapida: "Notificación permanente",
   config_notif_categorias: "Categorías de alertas",
 
   // Ajustes: Preferencias Operativas

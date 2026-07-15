@@ -11,8 +11,8 @@
   justify-self: start;
   border: 1px solid var(--border);
   border-radius: 999px;
-  background: rgba(15, 23, 42, 0.55);
-  color: #e2e8f0;
+  background: var(--surface-2);
+  color: var(--text);
   padding: 8px 12px;
   font: inherit;
   cursor: pointer;
@@ -34,12 +34,12 @@
 .config-section-card h2,
 .config-section-card h3 {
   margin: 0;
-  color: #f8fafc;
+  color: var(--text);
 }
 
 .config-section-card p {
   margin: 0;
-  color: #cbd5e1;
+  color: var(--text-2);
   line-height: 1.45;
 }
 
@@ -49,15 +49,15 @@
   gap: 16px;
   align-items: center;
   padding: 12px 0;
-  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  border-top: 1px solid var(--border);
 }
 
 .config-section-row span:first-child {
-  color: #e2e8f0;
+  color: var(--text);
 }
 
 .config-section-row span:last-child {
-  color: #94a3b8;
+  color: var(--text-3);
   text-align: right;
 }
 
@@ -65,22 +65,22 @@
   display: grid;
   gap: 6px;
   padding: 12px 0;
-  border-top: 1px solid rgba(148, 163, 184, 0.18);
+  border-top: 1px solid var(--border);
 }
 
 .config-section-field label,
 .config-section-field > span {
-  color: #e2e8f0;
+  color: var(--text);
   font-weight: 650;
 }
 
 .config-section-field select,
 .config-section-field input {
   width: 100%;
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  background: rgba(15, 23, 42, 0.72);
-  color: #f8fafc;
+  background: var(--surface-2);
+  color: var(--text);
   padding: 10px 12px;
   font: inherit;
 }
@@ -109,9 +109,9 @@
   align-items: center;
   width: 100%;
   padding: 12px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  border: 1px solid var(--border);
   border-radius: 14px;
-  background: rgba(15, 23, 42, 0.55);
+  background: var(--surface-2);
   color: inherit;
   text-align: left;
   font: inherit;
@@ -133,19 +133,19 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: rgba(78, 205, 196, 0.12);
+  background: var(--mint-dim);
 }
 
 .config-section-action-title {
   display: block;
-  color: #f8fafc;
+  color: var(--text);
   font-weight: 700;
 }
 
 .config-section-action-desc {
   display: block;
   margin-top: 3px;
-  color: #94a3b8;
+  color: var(--text-3);
   font-size: 0.84rem;
 }
 
@@ -154,7 +154,7 @@
   justify-self: start;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(255, 230, 109, 0.12);
+  background: var(--amber-dim);
   color: var(--amber);
   font-size: 0.78rem;
   font-weight: 700;
@@ -188,15 +188,15 @@
   display: flex;
   border-radius: 10px;
   overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.28);
+  border: 1px solid var(--border);
 }
 
 .config-seg-btn {
   flex: 1;
   padding: 9px 14px;
   border: none;
-  background: rgba(15, 23, 42, 0.55);
-  color: #94a3b8;
+  background: var(--surface-2);
+  color: var(--text-3);
   font: inherit;
   font-size: 0.88rem;
   cursor: pointer;
@@ -205,7 +205,7 @@
 }
 
 .config-seg-btn + .config-seg-btn {
-  border-left: 1px solid rgba(148, 163, 184, 0.28);
+  border-left: 1px solid var(--border);
 }
 
 .config-seg-btn--active {
@@ -213,16 +213,16 @@
 }
 
 .config-seg-btn--expense.config-seg-btn--active {
-  background: rgba(255, 107, 107, 0.15);
-  color: var(--coral, #FF6B6B);
+  background: var(--coral-dim);
+  color: var(--coral);
 }
 
 .config-seg-btn--income.config-seg-btn--active {
-  background: rgba(78, 205, 196, 0.15);
-  color: var(--mint, #4ECDC4);
+  background: var(--mint-dim);
+  color: var(--mint);
 }
 
 .config-seg-btn:hover:not(.config-seg-btn--active) {
-  background: rgba(255, 255, 255, 0.05);
-  color: #e2e8f0;
+  background: var(--surface-3);
+  color: var(--text);
 }

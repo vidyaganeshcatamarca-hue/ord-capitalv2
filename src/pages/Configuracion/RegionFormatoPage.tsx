@@ -102,40 +102,57 @@ export function RegionFormatoPage() {
     return () => { cancelled = true }
   }, [])
 
-  const updateCountry = (pais_codigo: string) => {
-    setRegion((current) => ({
-      ...current,
-      pais_codigo,
-      moneda_default: getCurrencyForCountry(pais_codigo),
-    }))
+  const saveRegion = async (newRegion: RegionPrefs) => {
+    try {
+      await rpc('fn_configurar_region_usuario', {
+        p_pais_codigo: newRegion.pais_codigo,
+        p_moneda_local: newRegion.moneda_default,
+        p_idioma: newRegion.idioma_default,
+      })
+    } catch (err) {
+      showToast(parseError(err), 'error')
+    }
   }
 
-  const save = async () => {
-    if (prefs.separador_miles === prefs.separador_decimal) {
+  const savePrefs = async (newPrefs: UserPrefs) => {
+    if (newPrefs.separador_miles === newPrefs.separador_decimal) {
       showToast(t('error_separators_must_differ'), 'error')
       return
     }
-    setSaving(true)
     try {
-      await rpc('fn_configurar_region_usuario', {
-        p_pais_codigo: region.pais_codigo,
-        p_moneda_local: region.moneda_default,
-        p_idioma: region.idioma_default,
-      })
       await rpc('fn_actualizar_preferencia_usuario', {
-        p_decimales_moneda_local: prefs.decimales_moneda_local,
-        p_decimales_segunda_moneda: prefs.decimales_segunda_moneda,
-        p_separador_miles: prefs.separador_miles,
-        p_separador_decimal: prefs.separador_decimal,
-        p_primer_dia_semana: prefs.primer_dia_semana,
-        p_formato_fecha: prefs.formato_fecha,
+        p_decimales_moneda_local: newPrefs.decimales_moneda_local,
+        p_decimales_segunda_moneda: newPrefs.decimales_segunda_moneda,
+        p_separador_miles: newPrefs.separador_miles,
+        p_separador_decimal: newPrefs.separador_decimal,
+        p_primer_dia_semana: newPrefs.primer_dia_semana,
+        p_formato_fecha: newPrefs.formato_fecha,
       })
-      showToast(t('success_preferences_saved'), 'success')
     } catch (err) {
       showToast(parseError(err), 'error')
-    } finally {
-      setSaving(false)
     }
+  }
+
+  const updateCountry = (pais_codigo: string) => {
+    const nextRegion = {
+      ...region,
+      pais_codigo,
+      moneda_default: getCurrencyForCountry(pais_codigo),
+    }
+    setRegion(nextRegion)
+    saveRegion(nextRegion)
+  }
+
+  const updateRegionField = <K extends keyof RegionPrefs>(key: K, value: RegionPrefs[K]) => {
+    const nextRegion = { ...region, [key]: value }
+    setRegion(nextRegion)
+    saveRegion(nextRegion)
+  }
+
+  const updatePref = <K extends keyof UserPrefs>(key: K, value: UserPrefs[K]) => {
+    const nextPrefs = { ...prefs, [key]: value }
+    setPrefs(nextPrefs)
+    savePrefs(nextPrefs)
   }
 
   const preview = `125${prefs.separador_miles}000${prefs.separador_decimal}${'0'.repeat(prefs.decimales_moneda_local)}`
@@ -156,8 +173,10 @@ export function RegionFormatoPage() {
           <div className="config-section-field">
             <label htmlFor="pais-codigo">{t('config_country')}</label>
             <select id="pais-codigo" value={region.pais_codigo} onChange={(e) => updateCountry(e.target.value)}>
-              {COUNTRY_OPTIONS.map((c) => (
-                <option key={c.code} value={c.code}>{t(c.labelKey)}</option>
+              {[...COUNTRY_OPTIONS]
+                .sort((a, b) => t(a.labelKey).localeCompare(t(b.labelKey)))
+                .map((c) => (
+                  <option key={c.code} value={c.code}>{t(c.labelKey)}</option>
               ))}
             </select>
           </div>
@@ -166,7 +185,7 @@ export function RegionFormatoPage() {
             <select
               id="idioma-default"
               value={region.idioma_default}
-              onChange={(e) => setRegion((current) => ({ ...current, idioma_default: e.target.value }))}
+              onChange={(e) => updateRegionField('idioma_default', e.target.value)}
             >
               <option value="es">{t('config_language_spanish')}</option>
             </select>
@@ -191,7 +210,7 @@ export function RegionFormatoPage() {
           <h2>{t('config_format_numbers')}</h2>
           <div className="config-section-field">
             <label htmlFor="decimales-local">{t('config_decimals_local')}</label>
-            <select id="decimales-local" value={prefs.decimales_moneda_local} onChange={(e) => setPrefs((p) => ({ ...p, decimales_moneda_local: Number(e.target.value) }))}>
+            <select id="decimales-local" value={prefs.decimales_moneda_local} onChange={(e) => updatePref('decimales_moneda_local', Number(e.target.value))}>
               <option value={0}>0</option>
               <option value={1}>1</option>
               <option value={2}>2</option>
@@ -199,7 +218,7 @@ export function RegionFormatoPage() {
           </div>
           <div className="config-section-field">
             <label htmlFor="decimales-usd">{t('config_decimals_usd')}</label>
-            <select id="decimales-usd" value={prefs.decimales_segunda_moneda} onChange={(e) => setPrefs((p) => ({ ...p, decimales_segunda_moneda: Number(e.target.value) }))}>
+            <select id="decimales-usd" value={prefs.decimales_segunda_moneda} onChange={(e) => updatePref('decimales_segunda_moneda', Number(e.target.value))}>
               <option value={0}>0</option>
               <option value={1}>1</option>
               <option value={2}>2</option>
@@ -207,7 +226,7 @@ export function RegionFormatoPage() {
           </div>
           <div className="config-section-field">
             <label htmlFor="separador-miles">{t('config_thousands_separator')}</label>
-            <select id="separador-miles" value={prefs.separador_miles} onChange={(e) => setPrefs((p) => ({ ...p, separador_miles: e.target.value }))}>
+            <select id="separador-miles" value={prefs.separador_miles} onChange={(e) => updatePref('separador_miles', e.target.value)}>
               <option value=".">.</option>
               <option value=",">,</option>
               <option value=" ">{t('config_separator_space')}</option>
@@ -215,7 +234,7 @@ export function RegionFormatoPage() {
           </div>
           <div className="config-section-field">
             <label htmlFor="separador-decimal">{t('config_decimal_separator')}</label>
-            <select id="separador-decimal" value={prefs.separador_decimal} onChange={(e) => setPrefs((p) => ({ ...p, separador_decimal: e.target.value }))}>
+            <select id="separador-decimal" value={prefs.separador_decimal} onChange={(e) => updatePref('separador_decimal', e.target.value)}>
               <option value=",">,</option>
               <option value=".">.</option>
             </select>
@@ -234,16 +253,13 @@ export function RegionFormatoPage() {
             <select
               id="primer-dia-semana"
               value={prefs.primer_dia_semana}
-              onChange={(e) => setPrefs((p) => ({ ...p, primer_dia_semana: Number(e.target.value) }))}
+              onChange={(e) => updatePref('primer_dia_semana', Number(e.target.value))}
             >
               {WEEKDAY_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
               ))}
             </select>
           </div>
-          <button type="button" className="config-section-save" disabled={saving || loading} onClick={save}>
-            {saving ? t('btn_saving') : t('btn_save_changes')}
-          </button>
         </article>
 
       </section>

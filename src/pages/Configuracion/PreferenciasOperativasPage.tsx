@@ -53,7 +53,14 @@ export function PreferenciasOperativasPage() {
         if (cancelled) return
         const row = Array.isArray(prefData) ? prefData[0] : prefData
         setWallets(walletData ?? [])
-        if (row) setPrefs({ ...DEFAULT_PREFS, ...row })
+        if (row) {
+          const localTipo = localStorage.getItem('tipo_movimiento_default') as 'expense' | 'income'
+          setPrefs({ 
+            ...DEFAULT_PREFS, 
+            ...row,
+            tipo_movimiento_default: localTipo === 'income' ? 'income' : 'expense'
+          })
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -67,21 +74,26 @@ export function PreferenciasOperativasPage() {
     [wallets]
   )
 
-  const save = async () => {
-    setSaving(true)
+  const savePreferences = async (newPrefs: OperationalPrefs) => {
     try {
       await rpc('fn_actualizar_preferencia_usuario', {
-        p_billetera_default_egreso: prefs.billetera_default_egreso,
-        p_billetera_default_ingreso: prefs.billetera_default_ingreso,
-        p_ocr_auto_aprobar: prefs.ocr_auto_aprobar,
-        p_voz_activada: prefs.voz_activada,
+        p_billetera_default_egreso: newPrefs.billetera_default_egreso,
+        p_billetera_default_ingreso: newPrefs.billetera_default_ingreso,
+        p_ocr_auto_aprobar: newPrefs.ocr_auto_aprobar,
+        p_voz_activada: newPrefs.voz_activada,
       })
-      showToast(t('success_preferences_saved'), 'success')
+      localStorage.setItem('tipo_movimiento_default', newPrefs.tipo_movimiento_default)
+      if (newPrefs.billetera_default_egreso) localStorage.setItem('billetera_default_egreso', String(newPrefs.billetera_default_egreso))
+      if (newPrefs.billetera_default_ingreso) localStorage.setItem('billetera_default_ingreso', String(newPrefs.billetera_default_ingreso))
     } catch (err) {
       showToast(parseError(err), 'error')
-    } finally {
-      setSaving(false)
     }
+  }
+
+  const updatePref = <K extends keyof OperationalPrefs>(key: K, value: OperationalPrefs[K]) => {
+    const nextPrefs = { ...prefs, [key]: value }
+    setPrefs(nextPrefs)
+    savePreferences(nextPrefs)
   }
 
   return (
@@ -106,7 +118,7 @@ export function PreferenciasOperativasPage() {
               </span>
               <span aria-hidden="true">›</span>
             </button>
-            <button type="button" className="config-section-action" onClick={() => navigate('/categorias?backTo=/configuracion/operativas')}>
+            <button type="button" className="config-section-action" onClick={() => navigate('/billeteras?tab=categorias_egresos&backTo=/configuracion/operativas')}>
               <span className="config-section-action-icon" aria-hidden="true">🏷️</span>
               <span>
                 <span className="config-section-action-title">{t('config_categorias')}</span>
@@ -133,7 +145,7 @@ export function PreferenciasOperativasPage() {
             <select
               id="default-expense-wallet"
               value={prefs.billetera_default_egreso ?? ''}
-              onChange={(e) => setPrefs((p) => ({ ...p, billetera_default_egreso: e.target.value ? Number(e.target.value) : null }))}
+              onChange={(e) => updatePref('billetera_default_egreso', e.target.value ? Number(e.target.value) : null)}
             >
               <option value="">{t('config_none')}</option>
               {operationalWallets.map((w) => (
@@ -146,7 +158,7 @@ export function PreferenciasOperativasPage() {
             <select
               id="default-income-wallet"
               value={prefs.billetera_default_ingreso ?? ''}
-              onChange={(e) => setPrefs((p) => ({ ...p, billetera_default_ingreso: e.target.value ? Number(e.target.value) : null }))}
+              onChange={(e) => updatePref('billetera_default_ingreso', e.target.value ? Number(e.target.value) : null)}
             >
               <option value="">{t('config_none')}</option>
               {operationalWallets.map((w) => (
@@ -158,21 +170,21 @@ export function PreferenciasOperativasPage() {
           {/* Tipo de movimiento predeterminado al tocar + */}
           <div className="config-section-field">
             <label>{t('config_tipo_movimiento_default')}</label>
-            <p style={{ margin: '2px 0 8px', color: '#64748b', fontSize: '0.8rem' }}>
+            <p style={{ margin: '2px 0 8px', color: 'var(--text-3)', fontSize: '0.8rem' }}>
               {t('config_tipo_movimiento_default_desc')}
             </p>
             <div className="config-segmented">
               <button
                 type="button"
                 className={`config-seg-btn ${prefs.tipo_movimiento_default === 'expense' ? 'config-seg-btn--active config-seg-btn--expense' : ''}`}
-                onClick={() => setPrefs((p) => ({ ...p, tipo_movimiento_default: 'expense' }))}
+                onClick={() => updatePref('tipo_movimiento_default', 'expense')}
               >
                 {t('config_tipo_movimiento_egreso')}
               </button>
               <button
                 type="button"
                 className={`config-seg-btn ${prefs.tipo_movimiento_default === 'income' ? 'config-seg-btn--active config-seg-btn--income' : ''}`}
-                onClick={() => setPrefs((p) => ({ ...p, tipo_movimiento_default: 'income' }))}
+                onClick={() => updatePref('tipo_movimiento_default', 'income')}
               >
                 {t('config_tipo_movimiento_ingreso')}
               </button>
@@ -186,37 +198,33 @@ export function PreferenciasOperativasPage() {
 
           <div className="config-section-inline">
             <div>
-              <span style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>{t('config_ocr_enabled')}</span>
-              <p style={{ margin: '2px 0 0', color: '#64748b', fontSize: '0.78rem' }}>{t('config_ocr_enabled_desc')}</p>
+              <span style={{ color: 'var(--text)', fontSize: '0.9rem' }}>{t('config_ocr_enabled')}</span>
+              <p style={{ margin: '2px 0 0', color: 'var(--text-3)', fontSize: '0.78rem' }}>{t('config_ocr_enabled_desc')}</p>
             </div>
             <ToggleSwitch
               checked={prefs.ocr_enabled}
-              onChange={(v) => setPrefs((p) => ({ ...p, ocr_enabled: v }))}
+              onChange={(v) => updatePref('ocr_enabled', v)}
             />
           </div>
 
           <div className="config-section-inline" style={{ marginTop: 10 }}>
             <div>
-              <span style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>{t('config_voice_enabled')}</span>
-              <p style={{ margin: '2px 0 0', color: '#64748b', fontSize: '0.78rem' }}>{t('config_voice_enabled_desc')}</p>
+              <span style={{ color: 'var(--text)', fontSize: '0.9rem' }}>{t('config_voice_enabled')}</span>
+              <p style={{ margin: '2px 0 0', color: 'var(--text-3)', fontSize: '0.78rem' }}>{t('config_voice_enabled_desc')}</p>
             </div>
             <ToggleSwitch
               checked={prefs.voz_activada}
-              onChange={(v) => setPrefs((p) => ({ ...p, voz_activada: v }))}
+              onChange={(v) => updatePref('voz_activada', v)}
             />
           </div>
 
           <div className="config-section-inline" style={{ marginTop: 10 }}>
-            <span style={{ color: '#e2e8f0', fontSize: '0.9rem' }}>{t('config_ocr_auto_approve')}</span>
+            <span style={{ color: 'var(--text)', fontSize: '0.9rem' }}>{t('config_ocr_auto_approve')}</span>
             <ToggleSwitch
               checked={prefs.ocr_auto_aprobar}
-              onChange={(v) => setPrefs((p) => ({ ...p, ocr_auto_aprobar: v }))}
+              onChange={(v) => updatePref('ocr_auto_aprobar', v)}
             />
           </div>
-
-          <button type="button" className="config-section-save" disabled={saving || loading} onClick={save} style={{ marginTop: 14 }}>
-            {saving ? t('btn_saving') : t('btn_save_changes')}
-          </button>
         </article>
 
       </section>

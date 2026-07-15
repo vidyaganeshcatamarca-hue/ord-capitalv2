@@ -69,7 +69,7 @@ export function MiCuentaCard() {
       >
         <span className="config-hub-card-icon" aria-hidden="true">👤</span>
         <div className="config-hub-card-content">
-          <h3 id="mi-cuenta-title">{nombreUsuario || user?.email || t('config_mi_cuenta')}</h3>
+          <h3 id="mi-cuenta-title">{t('config_mi_cuenta')}</h3>
           <p>{user?.email}</p>
         </div>
         <span className={`mi-cuenta-chevron ${open ? 'mi-cuenta-chevron--open' : ''}`} aria-hidden="true">›</span>
@@ -78,14 +78,6 @@ export function MiCuentaCard() {
       {/* ── Cuerpo (plegable) ── */}
       {open && (
         <div id="mi-cuenta-body" className="mi-cuenta-body">
-          <div className="mi-cuenta-avatar-row">
-            <div className="mi-cuenta-avatar">{getInitials(user?.email)}</div>
-            <div className="mi-cuenta-info">
-              <p className="mi-cuenta-email">{user?.email ?? '—'}</p>
-              <p className="mi-cuenta-email-label">{t('mi_cuenta_email_label')}</p>
-            </div>
-          </div>
-
           <div className="mi-cuenta-form">
             <label htmlFor="mi-cuenta-nombre">
               <span>{t('mi_cuenta_name_label')}</span>
