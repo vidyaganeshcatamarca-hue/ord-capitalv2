@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ORD Capital Personal — Presentación</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --bg:#0b0b12;--surface:#151520;--surface-2:#1e1e30;--surface-3:#2a2a40;
+    --border:#2a2a3e;--border-light:#3a3a50;
+    --text:#e8e8f0;--text-2:#9898b0;--text-3:#6868a0;
+    --mint:#00c9a5;--mint-dim:rgba(0,201,165,.12);
+    --coral:#ff6b6b;--gold:#f0c040;--blue:#4a9eff;--purple:#a78bfa;
+    --gradient:linear-gradient(135deg,#00c9a5 0%,#4a9eff 50%,#a78bfa 100%);
+    --radius:12px;--radius-sm:8px;--shadow:0 4px 24px rgba(0,0,0,0.4)
+  }
+  html{scroll-behavior:smooth}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
+  .slide{min-height:100vh;padding:60px 20px;max-width:1200px;margin:0 auto;display:flex;flex-direction:column;justify-content:center}
+  .slide-inner{max-width:1000px;margin:0 auto;width:100%}
+  h1{font-size:clamp(2.5rem,6vw,4rem);font-weight:900;letter-spacing:-0.03em;line-height:1.05;margin-bottom:16px}
+  h1 .hl{background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  h2{font-size:clamp(1.5rem,3.5vw,2.2rem);font-weight:700;letter-spacing:-0.02em;margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  h2 .badge{font-size:.65rem;font-weight:600;padding:4px 12px;border-radius:20px;background:var(--surface-2);color:var(--text-2);-webkit-text-fill-color:var(--text-2);white-space:nowrap;border:1px solid var(--border)}
+  h2 .badge.mint{border-color:var(--mint);color:var(--mint);-webkit-text-fill-color:var(--mint);background:var(--mint-dim)}
+  h3{font-size:1.05rem;font-weight:600;margin-bottom:6px;color:var(--mint)}
+  h4{font-size:.9rem;font-weight:600;color:var(--text);margin:12px 0 4px}
+  p{margin-bottom:10px;color:var(--text-2);font-size:.9rem;line-height:1.7}
+  .hero{text-align:center;padding:80px 20px;min-height:100vh;justify-content:center}
+  .hero-tag{font-size:.75rem;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--mint);margin-bottom:16px}
+  .hero p.sub{font-size:clamp(1rem,2.5vw,1.3rem);color:var(--text);font-weight:300;max-width:600px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-bottom:32px}
+  .grid-3{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+  .grid-4{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;transition:transform .2s,border-color .2s,box-shadow .2s}
+  .card:hover{transform:translateY(-3px);border-color:var(--mint);box-shadow:0 8px 32px rgba(0,201,165,.08)}
+  .card .icon{font-size:1.8rem;margin-bottom:6px;display:block}
+  .card .tag{display:inline-block;font-size:.65rem;padding:2px 10px;border-radius:10px;background:var(--surface-2);color:var(--text-2);margin:6px 0 0;font-weight:500}
+  .card ul{list-style:none;margin-top:6px}
+  .card ul li{padding:3px 0;font-size:.82rem;color:var(--text-2);padding-left:14px;position:relative}
+  .card ul li::before{content:'→';position:absolute;left:0;color:var(--mint)}
+  .tech-grid{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 20px}
+  .tech-tag{padding:6px 14px;border-radius:20px;background:var(--surface-2);border:1px solid var(--border);font-size:.8rem;font-weight:500}
+  .tech-tag.primary{border-color:var(--mint);background:var(--mint-dim)}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:768px){.two-col{grid-template-columns:1fr}}
+  .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
+  .menu-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px 12px;text-align:center;font-size:.8rem}
+  .menu-item .num{font-size:1.3rem;font-weight:800;color:var(--mint);margin-bottom:2px;display:block}
+  .menu-item .lab{color:var(--text-2);font-size:.78rem}
+  .rpc-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;margin:12px 0}
+  .rpc-item{padding:5px 10px;font-size:.75rem;color:var(--text-2);font-family:'JetBrains Mono',monospace;background:var(--surface);border-radius:6px;border:1px solid var(--border)}
+  .rpc-item::before{content:'fn_';color:var(--purple);opacity:.5}
+  .flow-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;margin:16px 0;padding:16px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border)}
+  .flow-node{padding:8px 14px;border-radius:6px;font-size:.8rem;font-weight:500;text-align:center}
+  .flow-node.client{background:rgba(74,158,255,.12);border:1px solid var(--blue);color:var(--blue)}
+  .flow-node.rpc{background:rgba(167,139,250,.12);border:1px solid var(--purple);color:var(--purple)}
+  .flow-node.db{background:rgba(0,201,165,.12);border:1px solid var(--mint);color:var(--mint)}
+  .flow-arrow{color:var(--text-3);font-size:1.1rem}
+  .stats-row{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0}
+  .stat-card{flex:1;min-width:120px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 12px;text-align:center}
+  .stat-card .num{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1.2}
+  .stat-card .label{font-size:.72rem;color:var(--text-3);margin-top:2px}
+  .nav-stack{display:flex;flex-direction:column;gap:3px;margin:6px 0}
+  .nav-stack li{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--surface);border-radius:6px;font-size:.82rem;border:1px solid var(--border)}
+  .nav-stack li .key{font-family:'JetBrains Mono',monospace;color:var(--gold);font-size:.72rem;min-width:130px;font-weight:500}
+  .nav-stack li .desc{color:var(--text-2)}
+  ul.bullet{list-style:none;margin:6px 0 12px}
+  ul.bullet li{padding:4px 0 4px 18px;position:relative;color:var(--text-2);font-size:.85rem}
+  ul.bullet li::before{content:'▸';position:absolute;left:0;color:var(--mint);font-weight:700}
+  code{font-family:'JetBrains Mono',monospace;background:var(--surface-2);padding:2px 6px;border-radius:4px;font-size:.78rem;color:var(--gold)}
+  .footer{text-align:center;padding:32px 20px;color:var(--text-3);font-size:.8rem;border-top:1px solid var(--border);margin-top:32px}
+
+  .bcg-table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.82rem}
+  .bcg-table th,.bcg-table td{padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+  .bcg-table th{background:var(--surface-2);color:var(--text);font-weight:600;font-size:.75rem;text-transform:uppercase;letter-spacing:.05em}
+  .bcg-table td{color:var(--text-2)}
+  .bcg-star{color:var(--gold)}
+  .bcg-cow{color:var(--mint)}
+  .bcg-dilemma{color:var(--blue)}
+  .bcg-dog{color:var(--coral)}
+
+  .feature-section{margin:32px 0 0}
+  .section-marker{height:1px;background:var(--border);margin:40px 0 24px}
+
+  .timeline{display:flex;flex-direction:column;gap:10px;margin:16px 0}
+  .tl-item{display:flex;gap:12px;align-items:flex-start}
+  .tl-dot{min-width:12px;height:12px;border-radius:50%;margin-top:5px}
+  .tl-dot.fix{background:var(--coral)}
+  .tl-dot.feature{background:var(--mint)}
+  .tl-dot.perf{background:var(--blue)}
+  .tl-content{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;flex:1}
+  .tl-content .tl-tag{font-size:.65rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:1px 8px;border-radius:4px}
+  .tl-content .tl-tag.fix{color:var(--coral);background:rgba(255,107,107,.1)}
+  .tl-content .tl-tag.feature{color:var(--mint);background:var(--mint-dim)}
+  .tl-content .tl-tag.perf{color:var(--blue);background:rgba(74,158,255,.1)}
+  .tl-content p{font-size:.78rem;margin:4px 0 0}
+</style>
+</head>
+<body>
+
+<!-- ==================== PORTADA ==================== -->
+<div class="slide hero">
+  <div class="slide-inner">
+    <p class="hero-tag">Módulo Personal · ORD Capital v2</p>
+    <h1><span class="hl">ORD Capital</span><br><span style="font-size:.5em;font-weight:300;letter-spacing:-.01em">Personal</span></h1>
+    <p class="sub">Gestor financiero personal cross-platform.<br>Control total de tu dinero en un solo lugar.</p>
+    <div class="tech-grid" style="justify-content:center;margin-top:20px">
+      <span class="tech-tag primary">React 19</span>
+      <span class="tech-tag primary">TypeScript 5.6</span>
+      <span class="tech-tag primary">Vite 6</span>
+      <span class="tech-tag primary">Supabase</span>
+      <span class="tech-tag">Capacitor 7</span>
+      <span class="tech-tag">PostgreSQL</span>
+      <span class="tech-tag">React Router v7</span>
+      <span class="tech-tag">PWA</span>
+    </div>
+    <div class="stats-row" style="max-width:700px;margin:32px auto 0">
+      <div class="stat-card"><div class="num">17</div><div class="label">Páginas</div></div>
+      <div class="stat-card"><div class="num">26+</div><div class="label">Componentes</div></div>
+      <div class="stat-card"><div class="num">216</div><div class="label">RPCs SQL</div></div>
+      <div class="stat-card"><div class="num">1,348</div><div class="label">Nodos código</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== PLATAFORMA ==================== -->
+<div class="slide">
+  <div class="slide-inner">
+    <h2><span class="hl">Plataforma</span> <span class="badge mint">ARQUITECTURA</span></h2>
+    <div class="two-col">
+      <div>
+        <h3>Stack Tecnológico</h3>
+        <ul class="bullet">
+          <li><strong>Frontend:</strong> React 19 + TypeScript 5.6, Vite 6 (~3s build)</li>
+          <li><strong>UI:</strong> CSS propio + design system con variables, responsive mobile-first</li>
+          <li><strong>Mobile:</strong> Capacitor 7 (Android + iOS nativo)</li>
+          <li><strong>Backend:</strong> Supabase (Auth + PostgreSQL + Storage + Realtime)</li>
+          <li><strong>Routing:</strong> React Router v7 con lazy-loading + route guards</li>
+          <li><strong>i18n:</strong> Sistema propio con <code>t()</code> y <code>parseError()</code></li>
+          <li><strong>PWA:</strong> Service worker + manifest para instalación</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Arquitectura</h3>
+        <div class="flow-row" style="flex-direction:column;align-items:stretch">
+          <div class="flow-node client">🖥️ React SPA (Vite + TS)</div>
+          <div style="text-align:center;color:var(--text-3);font-size:.8rem">↓ RPC calls via supabase-js</div>
+          <div class="flow-node db">☁️ Supabase Auth + PostgreSQL</div>
+          <div style="text-align:center;color:var(--text-3);font-size:.8rem">↓ 216 stored procedures</div>
+          <div class="flow-node rpc">📦 fn_* RPCs (seguridad por auth.uid())</div>
+        </div>
+        <p style="margin-top:6px;font-size:.78rem;color:var(--text-3)">Toda la lógica de negocio vive en PostgreSQL. El frontend nunca accede a tablas directamente.</p>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top:24px">
+      <div>
+        <h3>Contextos Globales (Providers)</h3>
+        <ul class="nav-stack">
+          <li><span class="key">AuthContext</span><span class="desc">Sesión Supabase, onboarding, nombre usuario, signOut</span></li>
+          <li><span class="key">HogarContext</span><span class="desc">Estado del hogar/pareja compartida, rol</span></li>
+          <li><span class="key">ModoAppContext</span><span class="desc">Modo Simple / Avanzado + feature flags vía hasFeature()</span></li>
+          <li><span class="key">ToastContext</span><span class="desc">Sistema de notificaciones toast (61 llamados)</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Route Guards</h3>
+        <ul class="nav-stack">
+          <li><span class="key">PrivateRoute</span><span class="desc">Verifica sesión + onboarding. Redirige a /auth si no hay sesión</span></li>
+          <li><span class="key">PublicRoute</span><span class="desc">Solo para AuthPage. Redirige a / si ya hay sesión</span></li>
+        </ul>
+        <h3 style="margin-top:12px">Modos de App</h3>
+        <ul class="bullet">
+          <li><strong>Simple:</strong> Cuentas, gastos/ingresos, dashboard básico</li>
+          <li><strong>Avanzado:</strong> Presupuesto base cero, sobres, inversiones, BCG, salud, saneamiento</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MENÚS Y NAVEGACIÓN ==================== -->
+<div class="slide">
+  <div class="slide-inner">
+    <h2><span class="hl">Menús y Navegación</span> <span class="badge mint">13 RUTAS</span></h2>
+    <p>Dos interfaces: <strong>Sidebar</strong> en desktop (≥768px) y <strong>BottomNav</strong> en mobile. Las rutas visibles se adaptan según el modo de app (Simple/Avanzado) y tipo de presupuesto.</p>
+
+    <div class="two-col" style="margin-bottom:20px">
+      <div>
+        <h3>BottomNav (Mobile)</h3>
+        <ul class="nav-stack">
+          <li><span class="key">🏠 Inicio · 💳 Cuentas</span><span class="desc">Fijos siempre visibles</span></li>
+          <li><span class="key">➕ FAB central</span><span class="desc">Registro rápido de movimiento</span></li>
+          <li><span class="key">3<sup>er</sup> slot dinámico</span><span class="desc">Tarjetas o Presupuesto según modo</span></li>
+          <li><span class="key">⋮ Menú expandible</span><span class="desc">Resto de módulos agrupados</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Sidebar (Desktop)</h3>
+        <ul class="nav-stack">
+          <li><span class="key">Logo ORD Capital</span><span class="desc">Identidad visual + tagline</span></li>
+          <li><span class="key">➕ Registrar</span><span class="desc">Acceso directo a nuevo movimiento</span></li>
+          <li><span class="key">🔔 Notificaciones</span><span class="desc">Campana con contador de no leídas</span></li>
+          <li><span class="key">Lista completa</span><span class="desc">Todos los módulos visibles en columna</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>Rutas del Aplicativo</h3>
+    <div class="menu-grid">
+      <div class="menu-item"><span class="num">🏠</span><span class="lab">/ — Inicio · Dashboard</span></div>
+      <div class="menu-item"><span class="num">💳</span><span class="lab">/billeteras — Cuentas</span></div>
+      <div class="menu-item"><span class="num">💳</span><span class="lab">/tarjetas — Tarjetas crédito</span></div>
+      <div class="menu-item"><span class="num">📊</span><span class="lab">/presupuesto — Presupuesto</span></div>
+      <div class="menu-item"><span class="num">📥</span><span class="lab">/cuarentena — Gastos revisión</span></div>
+      <div class="menu-item"><span class="num">👨‍👩‍👧</span><span class="lab">/familia — Hogar compartido</span></div>
+      <div class="menu-item"><span class="num">🧠</span><span class="lab">/analisis-emocional — BCG</span></div>
+      <div class="menu-item"><span class="num">🛡️</span><span class="lab">/supervivencia — Emergencia</span></div>
+      <div class="menu-item"><span class="num">🧹</span><span class="lab">/saneamiento — Deudas</span></div>
+      <div class="menu-item"><span class="num">📈</span><span class="lab">/inversiones — Cartera</span></div>
+      <div class="menu-item"><span class="num">❤️</span><span class="lab">/salud — Score financiero</span></div>
+      <div class="menu-item"><span class="num">✉️</span><span class="lab">/sobres — Presupuesto sobres</span></div>
+      <div class="menu-item"><span class="num">⚙️</span><span class="lab">/configuracion — Ajustes</span></div>
+      <div class="menu-item"><span class="num">🔐</span><span class="lab">/privacidad — Privacidad</span></div>
+      <div class="menu-item"><span class="num">👤</span><span class="lab">/perfil — Perfil usuario</span></div>
+    </div>
+
+    <h3 style="margin-top:20px">Subrutas de Configuración</h3>
+    <div class="flow-row" style="gap:4px">
+      <span class="flow-node rpc" style="padding:4px 10px;font-size:.72rem">/region</span>
+      <span class="flow-arrow" style="font-size:.8rem">·</span>
+      <span class="flow-node rpc" style="padding:4px 10px;font-size:.72rem">/presupuesto</span>
+      <span class="flow-arrow" style="font-size:.8rem">·</span>
+      <span class="flow-node rpc" style="padding:4px 10px;font-size:.72rem">/notificaciones</span>
+      <span class="flow-arrow" style="font-size:.8rem">·</span>
+      <span class="flow-node rpc" style="padding:4px 10px;font-size:.72rem">/operativas</span>
+      <span class="flow-arrow" style="font-size:.8rem">·</span>
+      <span class="flow-node rpc" style="padding:4px 10px;font-size:.72rem">/acerca</span>
+      <span class="flow-arrow" style="font-size:.8rem">·</span>
+      <span class="flow-node rpc" style="padding:4px 10px;font-size:.72rem">/categorias</span>
+      <span class="flow-arrow" style="font-size:.8rem">·</span>
+      <span class="flow-node rpc" style="padding:4px 10px;font-size:.72rem">/hogar</span>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FUNCIONALIDADES CORE ==================== -->
+<div class="slide">
+  <div class="slide-inner">
+    <h2><span class="hl">Funcionalidades Core</span> <span class="badge mint">MÓDULOS PRINCIPALES</span></h2>
+    <div class="grid">
+      <div class="card">
+        <span class="icon">🏠</span>
+        <h3>Home / Dashboard</h3>
+        <p>Panel principal con patrimonio neto (ARS+USD), donut chart de gastos por categoría, tarjetas de cuentas con semáforo de conciliación, feed de actividad, alertas y fugas misterio.</p>
+        <span class="tag">Filtros por período, billetera y nivel</span>
+      </div>
+      <div class="card">
+        <span class="icon">💳</span>
+        <h3>Cuentas (Billeteras)</h3>
+        <p>CRUD completo de cuentas. Conciliación saldo contable vs real, archivado, badge de saldo inicial pendiente. Vista en pestañas: activas / archivadas.</p>
+        <span class="tag">Onboarding crea 2 cuentas</span>
+      </div>
+      <div class="card">
+        <span class="icon">📊</span>
+        <h3>Presupuesto</h3>
+        <p>Dos modos: <strong>Base Cero</strong> (asignar cada peso) y <strong>Anticipado</strong> (techos). Ciclo con día de ancla, reglas 50/30/20, sobres virtuales, transferencias entre sobres.</p>
+        <span class="tag">Sugerencias de asignación automática</span>
+      </div>
+      <div class="card">
+        <span class="icon">💳</span>
+        <h3>Tarjetas de Crédito</h3>
+        <p>Gestión completa: creación, compras en cuotas, pago anticipado, próximos vencimientos, semáforo de uso, termómetro de pasivo.</p>
+        <span class="tag">Compromisos + tendencias</span>
+      </div>
+      <div class="card">
+        <span class="icon">📥</span>
+        <h3>Cuarentena de Gastos</h3>
+        <p>Workflow de aprobación: los gastos entran en cuarentena y requieren aprobación o rechazo. Reduce gastos hormiga e impulsivos.</p>
+        <span class="tag">Aprobación individual o por lote</span>
+      </div>
+      <div class="card">
+        <span class="icon">👨‍👩‍👧</span>
+        <h3>Familia / Hogar</h3>
+        <p>Finanzas compartidas con pareja. Vinculación por código de invitación. Proyectos comunes, balances, split de gastos, feed social compartido.</p>
+        <span class="tag">Roles: creador / invitado</span>
+      </div>
+      <div class="card">
+        <span class="icon">📈</span>
+        <h3>Inversiones</h3>
+        <p>Cartera de inversiones (plazos fijos, fondos). Rendimiento vs inflación, distribución, track record, liquidación y rescate.</p>
+        <span class="tag">Rendimiento real ajustado por inflación</span>
+      </div>
+      <div class="card">
+        <span class="icon">❤️</span>
+        <h3>Salud Financiera</h3>
+        <p>Score diario (0-1000), escudo de tiempo (días de autonomía), radar de asfixia, timeline de proyección, detector de licuadora inflacionaria.</p>
+        <span class="tag">Score histórico + insights</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FUNCIONALIDADES AVANZADAS ==================== -->
+<div class="slide">
+  <div class="slide-inner">
+    <h2><span class="hl">Funcionalidades Avanzadas</span> <span class="badge">MODO AVANZADO</span></h2>
+    <div class="grid">
+      <div class="card">
+        <span class="icon">🧠</span>
+        <h3>Matriz BCG (Análisis Emocional)</h3>
+        <p>Clasifica gastos en 4 cuadrantes según frecuencia vs placer. Scatter plot interactivo, acordeón por cuadrante, podadora con sliders, buzón de previsión.</p>
+        <span class="tag">ROI emocional + estrategia de recorte</span>
+      </div>
+      <div class="card">
+        <span class="icon">🛡️</span>
+        <h3>Supervivencia</h3>
+        <p>Modo emergencia financiera: recorte forzado, priorización de gastos esenciales, escudo de tiempo extendido, reporte de crisis.</p>
+        <span class="tag">Plan de ataque</span>
+      </div>
+      <div class="card">
+        <span class="icon">🧹</span>
+        <h3>Saneamiento</h3>
+        <p>Bola de nieve para deudas, mapa de acreedores, límite seguro de deuda, gastos hormiga (detección automática), fugas silenciosas, calendario financiero.</p>
+        <span class="tag">Estrategia bola de nieve</span>
+      </div>
+      <div class="card">
+        <span class="icon">✉️</span>
+        <h3>Sobres de Presupuesto</h3>
+        <p>Cada categoría es un sobre con saldo asignado. Transferencias entre sobres, cuota calculada, respaldo físico configurable.</p>
+        <span class="tag">Asignación mensual por sobre</span>
+      </div>
+      <div class="card">
+        <span class="icon">🐜</span>
+        <h3>Gastos Hormiga</h3>
+        <p>Detección automática de pequeños gastos recurrentes (suscripciones, apps). Barras de tendencia mes a mes, reto para eliminarlos, impacto anualizado.</p>
+        <span class="tag">Detección + reto</span>
+      </div>
+      <div class="card">
+        <span class="icon">📋</span>
+        <h3>Reportes Especializados</h3>
+        <p>40+ reportes: ranking categorías, evolución presupuestaria, proyección, simulador de escenarios, punto de equilibrio, variación intermensual.</p>
+        <span class="tag">Simulador de impacto</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== MATRIZ BCG ==================== -->
+<div class="slide">
+  <div class="slide-inner">
+    <h2><span class="hl">Matriz BCG</span> <span class="badge mint">ANÁLISIS EMOCIONAL</span></h2>
+    <p>Adaptación financiera de la matriz Boston Consulting Group. Clasifica cada categoría de gasto según <strong>frecuencia (eje X)</strong> vs <strong>placer (eje Y)</strong> para decidir qué recortar, mantener o potenciar.</p>
+    <div class="two-col">
+      <div>
+        <h3>Los 4 Cuadrantes</h3>
+        <table class="bcg-table">
+          <tr><th>Cuadrante</th><th>Frecuencia</th><th>Placer</th><th>Estrategia</th></tr>
+          <tr>
+            <td class="bcg-star">⭐ Estrella</td>
+            <td>Alta</td><td>Alto</td>
+            <td>Mantener y optimizar</td>
+          </tr>
+          <tr>
+            <td class="bcg-cow">🐄 Vaca Lechera</td>
+            <td>Alta</td><td>Bajo</td>
+            <td>Reducir: necesarios pero displacenteros</td>
+          </tr>
+          <tr>
+            <td class="bcg-dilemma">❓ Interrogante</td>
+            <td>Baja</td><td>Alto</td>
+            <td>Evaluar: gustos ocasionales</td>
+          </tr>
+          <tr>
+            <td class="bcg-dog">🐕 Perro</td>
+            <td>Baja</td><td>Bajo</td>
+            <td>Eliminar: innecesarios y displacenteros</td>
+          </tr>
+        </table>
+      </div>
+      <div>
+        <h3>Componentes BCG</h3>
+        <ul class="nav-stack">
+          <li><span class="key">BCGScatterPlot</span><span class="desc">Gráfico dispersión SVG interactivo</span></li>
+          <li><span class="key">BCGCuadranteAcordeon</span><span class="desc">Acordeón por cuadrante con totales</span></li>
+          <li><span class="key">BCGResumenCuadrantes</span><span class="desc">Tarjetas resumen con emoji y montos</span></li>
+          <li><span class="key">BCGHormigas</span><span class="desc">Tendencia de pequeños gastos</span></li>
+          <li><span class="key">BCGPodora</span><span class="desc">Simulador de recorte con sliders</span></li>
+          <li><span class="key">BCGDetalleCategoria</span><span class="desc">Sliders placer/flexibilidad + autoguardado</span></li>
+          <li><span class="key">BCGSelectMes</span><span class="desc">Selector de mes para filtrar</span></li>
+          <li><span class="key">BCGBuzonModal</span><span class="desc">Modal para fondo de previsión</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== REGISTRO DE MOVIMIENTOS ==================== -->
+<div class="slide">
+  <div class="slide-inner">
+    <h2><span class="hl">Registro de Movimientos</span> <span class="badge">UX</span></h2>
+    <div class="two-col">
+      <div>
+        <h3>AddMovementModal</h3>
+        <ul class="bullet">
+          <li>Modal universal para <strong>gastos, ingresos y transferencias</strong></li>
+          <li><strong>Precarga inteligente:</strong> chunk lazy-load via <code>requestIdleCallback</code></li>
+          <li><strong>Caché en memoria:</strong> billeteras, categorías y tarjetas cacheadas globalmente</li>
+          <li><strong>UI inmediata:</strong> importe y calculadora visibles desde frame 1</li>
+          <li><strong>Calculadora custom</strong> con keypad numérico propio</li>
+          <li>Selector: tipo, cuenta, categoría, tarjeta, proyecto, fuente ingreso</li>
+          <li>Bloqueo si la cuenta tiene saldo inicial pendiente</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Flujo de Datos</h3>
+        <div class="flow-row" style="flex-direction:column;align-items:stretch">
+          <div class="flow-node client">➕ Botón + (Nav) → setIdleCallback</div>
+          <div class="flow-arrow" style="text-align:center">↓</div>
+          <div class="flow-node rpc">fn_registrar_movimiento_caja(params)</div>
+          <div class="flow-arrow" style="text-align:center">↓</div>
+          <div class="flow-node db">INSERT p_caja + UPDATE p_billeteras.saldo_actual</div>
+          <div class="flow-arrow" style="text-align:center">↓</div>
+          <div class="flow-node client">Evento 'movement-added' → refresh Home</div>
+        </div>
+        <p style="margin-top:10px;font-size:.78rem;color:var(--text-3)">Edición vía <code>EditMovementModal</code> con conversión de ajustes a gastos reales.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== AUTENTICACIÓN Y ONBOARDING ==================== -->
+<div class="slide">
+  <div class="slide-inner">
+    <h2><span class="hl">Auth y Onboarding</span> <span class="badge mint">FLUJO</span></h2>
+    <div class="two-col">
+      <div>
+        <h3>Autenticación</h3>
+        <ul class="bullet">
+          <li><strong>Supabase Auth</strong> con flujo PKCE</li>
+          <li>Email/password + <strong>Google OAuth</strong></li>
+          <li>Sesión persistente con auto-refresh</li>
+          <li>Route guards: <code>PrivateRoute</code> + <code>PublicRoute</code></li>
+          <li>Timeout 4s en getSession para evitar bloqueos</li>
+          <li>Nombre usuario desde DB via <code>fn_obtener_nombre_usuario</code></li>
+          <li>Onboarding optimista con localStorage + RPC retry</li>
+          <li>Trigger <code>fn_handle_new_user</code> captura nombre real de OAuth</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Onboarding (3 pasos)</h3>
+        <ul class="bullet">
+          <li><strong>Paso 1:</strong> Nombre del usuario</li>
+          <li><strong>Paso 2:</strong> País de residencia → moneda automática (ARS/USD/EUR...)</li>
+          <li><strong>Paso 3:</strong> Creación de <strong>2 cuentas iniciales</strong> (principal + efectivo) con saldo opcional</li>
+          <li>Si se omite saldo → flag <code>saldo_inicial_pendiente</code></li>
+          <li>Desktop: max-width 480px centrado (mobile-first)</li>
+          <li>Mobile: calculadora sin teclado nativo (<code>inputMode="none"</code>)</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== BACKEND SQL ==================== -->
+<div class="slide">
+  <div class="slide-inner">
+    <h2><span class="hl">Backend SQL</span> <span class="badge mint">216 RPCs</span></h2>
+    <p>Toda la lógica de negocio vive en <strong>PostgreSQL</strong> como funciones RPC. El frontend nunca accede a tablas directamente — solo llama <code>supabase.rpc('fn_*', params)</code>. Cada RPC usa <code>auth.uid()</code> para seguridad.</p>
+    <div class="stats-row">
+      <div class="stat-card"><div class="num">200+</div><div class="label">RPCs negocio</div></div>
+      <div class="stat-card"><div class="num">10+</div><div class="label">Triggers</div></div>
+      <div class="stat-card"><div class="num">~40</div><div class="label">Reportes</div></div>
+      <div class="stat-card"><div class="num">~30</div><div class="label">CRUDs</div></div>
+    </div>
+    <h3>Categorías de RPCs</h3>
+    <div class="rpc-list">
+      <div class="rpc-item">registrar_movimiento_caja</div>
+      <div class="rpc-item">editar_movimiento_caja</div>
+      <div class="rpc-item">conciliar_billetera</div>
+      <div class="rpc-item">reporte_patrimonio_neto</div>
+      <div class="rpc-item">reporte_top_categorias_mes</div>
+      <div class="rpc-item">reporte_ranking_categorias</div>
+      <div class="rpc-item">reporte_movimientos_recientes</div>
+      <div class="rpc-item">reporte_alertas_home</div>
+      <div class="rpc-item">obtener_billeteras_activas</div>
+      <div class="rpc-item">crear_billeteras_iniciales</div>
+      <div class="rpc-item">asignar_sobre</div>
+      <div class="rpc-item">configurar_presupuesto</div>
+      <div class="rpc-item">reporte_bola_nieve</div>
+      <div class="rpc-item">reporte_bcg_roi_emocional</div>
+      <div class="rpc-item">reporte_salud_billeteras</div>
+      <div class="rpc-item">reporte_score_salud</div>
+      <div class="rpc-item">reporte_gastos_hormiga</div>
+      <div class="rpc-item">guardar_reglas_presupuesto</div>
+      <div class="rpc-item">transferir_entre_sobres</div>
+      <div class="rpc-item">guardar_pago_tarjeta</div>
+      <div class="rpc-item">cargar_inversiones</div>
+      <div class="rpc-item">cargar_patrimonio</div>
+      <div class="rpc-item">guardar_prefs_notificacion</div>
+      <div class="rpc-item">verificar_onboarding</div>
+      <div class="rpc-item">marcar_onboarding_completo</div>
+      <div class="rpc-item">... y 190 más</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== BASE DE DATOS ==================== -->
+<div class="slide">
+  <div class="slide-inner">
+    <h2><span class="hl">Base de Datos</span> <span class="badge">POSTGRESQL</span></h2>
+    <div class="two-col">
+      <div>
+        <h3>Tablas Principales</h3>
+        <ul class="nav-stack">
+          <li><span class="key">p_usuarios</span><span class="desc">Usuarios, suscripción, región, moneda</span></li>
+          <li><span class="key">p_billeteras</span><span class="desc">Cuentas financieras, saldos, moneda, tipo</span></li>
+          <li><span class="key">p_caja</span><span class="desc">Movimientos (ingresos/gastos/transferencias)</span></li>
+          <li><span class="key">p_categorias</span><span class="desc">Árbol jerárquico de categorías</span></li>
+          <li><span class="key">p_presupuestos</span><span class="desc">Presupuestos mensuales por categoría</span></li>
+          <li><span class="key">p_sobres</span><span class="desc">Sobres de presupuesto con saldo</span></li>
+          <li><span class="key">p_tarjetas_credito</span><span class="desc">Tarjetas, cuotas, pagos, compromisos</span></li>
+          <li><span class="key">p_hogar</span><span class="desc">Hogar/pareja compartida, roles</span></li>
+          <li><span class="key">p_inversiones</span><span class="desc">Cartera de inversiones</span></li>
+          <li><span class="key">p_salud</span><span class="desc">Score diario sanitario + histórico</span></li>
+          <li><span class="key">p_preferencias_usuario</span><span class="desc">Preferencias UI/UX y features</span></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Seguridad y Reglas</h3>
+        <ul class="bullet">
+          <li>RLS (Row Level Security) en todas las tablas</li>
+          <li>RPCs reciben <code>auth.uid()</code> — nunca user_id como parámetro</li>
+          <li>Trigger: <code>fn_handle_new_user</code> en INSERT auth.users</li>
+          <li>Cascada de borrado con FOREIGN KEY ON DELETE CASCADE</li>
+          <li>Soft-delete con período de gracia de 30 días</li>
+        </ul>
+        <h3 style="margin-top:16px">Internacionalización (i18n)</h3>
+        <ul class="bullet">
+          <li>Un solo locale: <code>es.ts</code> con 28 secciones (~600+ claves)</li>
+          <li>Sistema <code>t(key, params)</code> con búsqueda recursiva anidada</li>
+          <li><code>parseError()</code> para errores SQL con parseo JSON</li>
+          <li>Secciones: alerts, bcg, budget, config, familia, inversiones, onboarding, etc.</li>
+        </ul>
+        <h3 style="margin-top:16px">Utilidades (lib/)</h3>
+        <ul class="nav-stack">
+          <li><span class="key">format.ts</span><span class="desc">formateo moneda/fecha/número</span></li>
+          <li><span class="key">crypto.ts</span><span class="desc">cifrado AES, exportación CSV segura</span></li>
+          <li><span class="key">haptics.ts</span><span class="desc">feedback háptico (light/success/error)</span></li>
+          <li><span class="key">bcgUtils.ts</span><span class="desc">clasificación BCG, formato ARS, radio burbuja</span></li>
+          <li><span class="key">reminders.ts</span><span class="desc">recordatorios push programados</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== UX / DISEÑO ==================== -->
+<div class="slide">
+  <div class="slide-inner">
+    <h2><span class="hl">UX y Diseño</span> <span class="badge">EXPERIENCIA</span></h2>
+    <div class="grid grid-3">
+      <div class="card">
+        <span class="icon">🎨</span>
+        <h3>Tema Oscuro</h3>
+        <p>Paleta oscura premium con acentos mint/coral/blue/gold. Design system basado en CSS variables. Compatible modo claro/oscuro.</p>
+        <span class="tag">Design system propio</span>
+      </div>
+      <div class="card">
+        <span class="icon">📱</span>
+        <h3>Mobile First</h3>
+        <p>BottomNav en mobile, Sidebar en desktop. Grillas adaptativas, scroll horizontal en wallets, modales bottom-sheet, touch targets ≥44px.</p>
+        <span class="tag">Responsive</span>
+      </div>
+      <div class="card">
+        <span class="icon">⚡</span>
+        <h3>Performance</h3>
+        <p>Lazy-loading + precarga idle de chunks vía requestIdleCallback. Caché en memoria de RPCs. UI inmediata con placeholders locales.</p>
+        <span class="tag">Sin bloqueos</span>
+      </div>
+      <div class="card">
+        <span class="icon">🔐</span>
+        <h3>Privacidad</h3>
+        <p>Montos ocultables (👁️/🙈). Modo incógnito. Borrado de cuenta con gracia de 30 días. Zero hardcoding de textos (todo vía i18n).</p>
+        <span class="tag">Ocultamiento global</span>
+      </div>
+      <div class="card">
+        <span class="icon">🔄</span>
+        <h3>Persistencia Dual</h3>
+        <p>Filtros del Home (período, billetera, nivel) persisten en localStorage + DB. Sincronización diferida al salir de la pantalla.</p>
+        <span class="tag">localStorage + DB</span>
+      </div>
+      <div class="card">
+        <span class="icon">📲</span>
+        <h3>Notificaciones</h3>
+        <p>Notificaciones push (Capacitor) + locales. Recordatorios de pagos, vencimientos, cuarentena. Preferencias configurables por tipo.</p>
+        <span class="tag">Push + local + ongoing</span>
+      </div>
+    </div>
+
+    <div class="two-col" style="margin-top:16px">
+      <div>
+        <h3>Estilo de Código</h3>
+        <ul class="bullet">
+          <li>TypeScript estricto con tipos exportados</li>
+          <li>Componentes modulares con lazy-loading</li>
+          <li>Nunca se hardcodean textos en español (todo i18n)</li>
+          <li>Mensajes de error via <code>parseError()</code></li>
+        </ul>
+      </div>
+      <div>
+        <h3>Optimizaciones Clave</h3>
+        <ul class="bullet">
+          <li>Precarga del modal Registrar en idle callback</li>
+          <li>Caché global de billeteras/categorías/tarjetas</li>
+          <li>Placeholders locales para datos remotos</li>
+          <li>Toggle expense/income sin recargar</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== EVOLUCIÓN ==================== -->
+<div class="slide">
+  <div class="slide-inner">
+    <h2><span class="hl">Evolución del Proyecto</span> <span class="badge">HITOS</span></h2>
+    <p>Más de 25 iteraciones documentadas. Hitos clave:</p>
+    <div class="timeline">
+      <div class="tl-item">
+        <div class="tl-dot feature"></div>
+        <div class="tl-content">
+          <span class="tl-tag feature">FEATURE</span>
+          <strong style="font-size:.85rem">Dos cuentas iniciales en onboarding</strong>
+          <p>Onboarding crea cuenta principal + efectivo con flag de saldo pendiente si se omite.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot perf"></div>
+        <div class="tl-content">
+          <span class="tl-tag perf">PERF</span>
+          <strong style="font-size:.85rem">Precarga del modal Registrar</strong>
+          <p>requestIdleCallback + caché en memoria global para apertura instantánea.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot fix"></div>
+        <div class="tl-content">
+          <span class="tl-tag fix">FIX</span>
+          <strong style="font-size:.85rem">Pantalla borrosa en conciliación</strong>
+          <p>Conflicto de z-index entre CSS lazy-loaded. Homogeneización a z-index 1000/1010.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot fix"></div>
+        <div class="tl-content">
+          <span class="tl-tag fix">FIX</span>
+          <strong style="font-size:.85rem">Nombre usuario OAuth desde DB</strong>
+          <p>Lectura desde DB via fn_obtener_nombre_usuario en lugar de metadata volátil.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot feature"></div>
+        <div class="tl-content">
+          <span class="tl-tag feature">FEATURE</span>
+          <strong style="font-size:.85rem">Filtros persistentes en Home</strong>
+          <p>Periodo, billetera y nivel guardados en localStorage + DB con sincronización diferida.</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot fix"></div>
+        <div class="tl-content">
+          <span class="tl-tag fix">FIX</span>
+          <strong style="font-size:.85rem">Consistencia día de ancla</strong>
+          <p>UPDATE en cascada en p_presupuestos al cambiar el día de ancla global del ciclo.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FOOTER ==================== -->
+<div class="footer">
+  <p style="font-size:1.1rem;font-weight:700;color:var(--text);margin-bottom:4px">ORD Capital <span style="color:var(--mint)">Personal</span></p>
+  <p>React 19 · TypeScript · Vite 6 · Supabase · Capacitor 7 · PostgreSQL</p>
+  <p style="margin-top:6px;font-size:.7rem">Presentación generada del análisis completo del repositorio <code>personal/</code> usando codebase-memory-mcp</p>
+</div>
+
+</body>
+</html>

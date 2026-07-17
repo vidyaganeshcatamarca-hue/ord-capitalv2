@@ -629,9 +629,8 @@ export function AuthPage() {
                     {currency === 'EUR' ? '€' : currency === 'USD' ? 'U$S' : '$'}
                   </span>
                   <input
-                    type="number"
-                    step="0.01"
-                    min="0"
+                    type="text"
+                    inputMode="decimal"
                     className="calc-display font-mono"
                     style={{
                       width: '100%',
@@ -641,7 +640,12 @@ export function AuthPage() {
                       fontWeight: 'bold'
                     }}
                     value={cashBalanceInput}
-                    onChange={e => setCashBalanceInput(e.target.value)}
+                    onChange={e => {
+                      const val = e.target.value
+                      if (/^[0-9.]*$/.test(val)) {
+                        setCashBalanceInput(val)
+                      }
+                    }}
                     onFocus={e => {
                       if (cashBalanceInput === '0') setCashBalanceInput('')
                     }}

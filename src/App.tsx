@@ -50,6 +50,14 @@ const LoadingSpinner = () => (
 function AppLayout() {
   const [showAdd, setShowAdd] = useState(false)
   const [addConfig, setAddConfig] = useState<{ defaultTipo?: 'expense' | 'income' | 'transfer', initialBilleteraId?: number } | null>(null)
+  
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('action') === 'add_movement') {
+      setShowAdd(true)
+      window.history.replaceState({}, '', window.location.pathname)
+    }
+  }, [])
 
   useEffect(() => {
     const handleOpenTransfer = (e: any) => {
