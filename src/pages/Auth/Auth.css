@@ -56,15 +56,26 @@
 }
 
 .slide-content {
-  padding: calc(var(--safe-top) + var(--space-10)) var(--space-6) calc(var(--safe-bottom) + var(--space-6));
+  padding: calc(var(--safe-top) + var(--space-6)) var(--space-6) calc(var(--safe-bottom) + var(--space-8));
   display: flex;
   flex-direction: column;
   height: 100%;
+  max-height: 100dvh;
   width: 100%;
   max-width: 480px;
   margin: 0 auto;
   justify-content: space-between;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
+
+.slide-footer {
+  margin-top: auto;
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+  flex-shrink: 0;
+}
+
 
 /* ─── Botones de Acción Superiores ─── */
 .slide-header-actions {
@@ -236,6 +247,13 @@
   grid-template-columns: repeat(4, 1fr);
   gap: var(--space-2);
 }
+
+@media (min-width: 768px), (hover: hover) and (pointer: fine) {
+  .calc-keyboard {
+    display: none !important;
+  }
+}
+
 
 .calc-key {
   height: 48px;

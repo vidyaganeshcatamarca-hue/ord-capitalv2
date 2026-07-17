@@ -48,6 +48,22 @@ export function AuthPage() {
   // Slide 5: Psychological Contract State
   const [budgetMode, setBudgetMode] = useState<BudgetMode>('libertad')
 
+  // Mobile detection (requires touch support + small screen)
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    return hasTouch && window.innerWidth <= 768
+  })
+
+  useEffect(() => {
+    const handleResize = () => {
+      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+      setIsMobile(hasTouch && window.innerWidth <= 768)
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
+
   // Redirección si ya está autenticado al cargar
   useEffect(() => {
     if (session) {
@@ -538,6 +554,7 @@ export function AuthPage() {
                 </span>
                 <input
                   type="text"
+                  inputMode={isMobile ? "none" : "text"}
                   className="calc-display font-mono"
                   style={{ 
                     width: '100%', 
@@ -576,25 +593,27 @@ export function AuthPage() {
                 />
               </div>
 
-              {/* Teclado Calculadora */}
-              <div className="calc-keyboard mt-2">
-                {['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', 'C', '+'].map(char => (
-                  <button
-                    key={char}
-                    type="button"
-                    className="calc-key"
-                    onClick={() => handleCalcKeyPress(char)}
-                  >
-                    {char}
+              {/* Teclado Calculadora (Sólo en móvil) */}
+              {isMobile && (
+                <div className="calc-keyboard mt-2">
+                  {['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', 'C', '+'].map(char => (
+                    <button
+                      key={char}
+                      type="button"
+                      className="calc-key"
+                      onClick={() => handleCalcKeyPress(char)}
+                    >
+                      {char}
+                    </button>
+                  ))}
+                  <button type="button" className="calc-key calc-key-backspace" onClick={() => handleCalcKeyPress('⌫')}>
+                    ⌫
                   </button>
-                ))}
-                <button type="button" className="calc-key calc-key-backspace" onClick={() => handleCalcKeyPress('⌫')}>
-                  ⌫
-                </button>
-                <button type="button" className="calc-key calc-key-eval" onClick={() => handleCalcKeyPress('=')}>
-                  =
-                </button>
-              </div>
+                  <button type="button" className="calc-key calc-key-eval" onClick={() => handleCalcKeyPress('=')}>
+                    =
+                  </button>
+                </div>
+              )}
               </div>
 
               <div className="form-group mb-3">

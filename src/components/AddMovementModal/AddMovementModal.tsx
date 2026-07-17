@@ -954,8 +954,8 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                   </div>
 
                   {/* COLUMNA 2: CATEGORÍA (Solo para Gastos) */}
-                    {tipo === 'expense' && (
-                      <div className="pc-form-col category-col">
+                  {tipo === 'expense' ? (
+                    <div className="pc-form-col category-col">
                       {showAllCat && !categoriaEgreso ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                           <div className="step-title" style={{ margin: 0 }}>2. Categoría</div>
@@ -1177,7 +1177,23 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         </>
                       )}
                     </div>
-                  )}
+                  ) : tipo === 'income' ? (
+                    <div className="pc-form-col category-col">
+                      <div className="step-title">2. Fuente de Ingreso</div>
+                      {!remoteSectionLoading && (
+                        <div className="cuenta-lista" style={{ overflowY: 'auto', flex: 1, gap: '8px', display: 'flex', flexDirection: 'column' }}>
+                          {catIngresos.map(ci => (
+                            <button key={ci.producto_id} type="button"
+                              className={`cuenta-item ${categoriaIngreso?.producto_id === ci.producto_id ? 'active' : ''}`}
+                              onClick={() => setCategoriaIngreso(p => p?.producto_id === ci.producto_id ? null : ci)}>
+                              <span className="cuenta-icono">{ci.icono}</span>
+                              <div className="cuenta-nombre">{ci.nombre}</div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
 
                   {/* COLUMNA 3: FECHA & DETALLES */}
                   <div className="pc-form-col details-col">
@@ -1253,22 +1269,6 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       />
                     )}
 
-                    {/* Fuente de ingreso si es Income */}
-                    {tipo === 'income' && !remoteSectionLoading && (
-                      <>
-                        <label className="step-label" style={{ marginTop: '12px' }}>Fuente de Ingreso</label>
-                        <div className="cuenta-lista pc-max-height">
-                          {catIngresos.map(ci => (
-                            <button key={ci.producto_id} type="button"
-                              className={`cuenta-item ${categoriaIngreso?.producto_id === ci.producto_id ? 'active' : ''}`}
-                              onClick={() => setCategoriaIngreso(p => p?.producto_id === ci.producto_id ? null : ci)}>
-                              <span className="cuenta-icono">{ci.icono}</span>
-                              <div className="cuenta-nombre">{ci.nombre}</div>
-                            </button>
-                          ))}
-                        </div>
-                      </>
-                    )}
 
                     {/* Resumen sutil */}
                     <div className="pc-summary-box" style={{ marginTop: 'auto' }}>
