@@ -14,13 +14,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null)
-
-const withTimeout = <T,>(promise: PromiseLike<T>, ms = 4000): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
-  ])
-}
+import { withTimeout } from '@/utils/async'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)

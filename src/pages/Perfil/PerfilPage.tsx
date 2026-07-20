@@ -17,16 +17,16 @@ export function PerfilPage() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      showToast('Sesión cerrada correctamente', 'success');
+      showToast(t('toast_sign_out_success'), 'success');
     } catch (error: any) {
-      showToast('Error al cerrar sesión: ' + (error.message || error), 'error');
+      showToast(t('error_generic') + ': ' + (error.message || error), 'error');
     }
   };
 
   return (
     <div className="page">
       <div className="page-header">
-        <h2 className="font-display" style={{ fontSize: 22 }}>Mi Perfil</h2>
+        <h2 className="font-display" style={{ fontSize: 22 }}>{t('profile_title_page')}</h2>
       </div>
       <div className="section" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px' }}>
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

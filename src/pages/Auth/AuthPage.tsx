@@ -4,18 +4,12 @@ import { useToast } from '@/contexts/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { t, parseError } from '@/locales/i18n'
+import { withTimeout } from '@/utils/async'
 import './Auth.css'
 
 type Mode = 'login' | 'register'
 type BudgetMode = 'libertad' | 'disciplina'
 type CurrencyCode = 'ARS' | 'USD' | 'MXN' | 'EUR' | 'CLP' | 'COP' | 'PEN' | 'UYU'
-
-const withTimeout = <T,>(promise: PromiseLike<T>, ms = 4000): Promise<T> => {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
-  ])
-}
 
 export function AuthPage() {
   const navigate = useNavigate()
