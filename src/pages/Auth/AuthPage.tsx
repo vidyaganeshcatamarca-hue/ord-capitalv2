@@ -3,7 +3,6 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
-import { safeEval } from '@/utils/math'
 import { t, parseError } from '@/locales/i18n'
 import './Auth.css'
 
@@ -39,7 +38,6 @@ export function AuthPage() {
   const [currency, setCurrency] = useState<CurrencyCode>('ARS')
   const [calcInput, setCalcInput] = useState('0')
   const [cashBalanceInput, setCashBalanceInput] = useState('0')
-  const [isCalculated, setIsCalculated] = useState(true)
   const [selectedIcon, setSelectedIcon] = useState('💵')
 
   // Slide 4: Anchor Day State
@@ -47,22 +45,6 @@ export function AuthPage() {
 
   // Slide 5: Psychological Contract State
   const [budgetMode, setBudgetMode] = useState<BudgetMode>('libertad')
-
-  // Mobile detection (requires touch support + small screen)
-  const [isMobile, setIsMobile] = useState(() => {
-    if (typeof window === 'undefined') return false
-    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-    return hasTouch && window.innerWidth <= 768
-  })
-
-  useEffect(() => {
-    const handleResize = () => {
-      const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-      setIsMobile(hasTouch && window.innerWidth <= 768)
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   // Redirección si ya está autenticado al cargar
   useEffect(() => {

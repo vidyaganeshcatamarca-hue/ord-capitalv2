@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
+import { useBilleteras } from '@/hooks/useBilleteras'
+import { Billetera } from '@/types/Billetera'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
@@ -17,9 +19,7 @@ export function BilleterasPage() {
   const confirmConciliarBtnRef = useRef<HTMLButtonElement>(null)
   const { user } = useAuth()
   const { showToast } = useToast()
-  const [billeteras, setBilleteras] = useState<any[]>([])
-  const [healthReport, setHealthReport] = useState<any[]>([])
-  const [loading, setLoading] = useState(true)
+  const { billeteras, healthReport, loading, fetchData } = useBilleteras()
   const [hideAmounts, setHideAmounts] = useState(() => {
     return window.localStorage.getItem(`ocultar_montos:${user?.id}`) === 'true'
   })
@@ -42,49 +42,23 @@ export function BilleterasPage() {
   const [newIcono, setNewIcono] = useState('💳')
 
   // Estado del Formulario de Edición
-  const [selectedBilletera, setSelectedBilletera] = useState<any | null>(null)
+  const [selectedBilletera, setSelectedBilletera] = useState<Billetera | null>(null)
   const [editName, setEditName] = useState('')
   const [editIcono, setEditIcono] = useState('💳')
 
   // Estado del Formulario de Conciliación
-  const [conciliarBilletera, setConciliarBilletera] = useState<any | null>(null)
+  const [conciliarBilletera, setConciliarBilletera] = useState<Billetera | null>(null)
   const [saldoReal, setSaldoReal] = useState('0')
-  const [initialBalanceBilletera, setInitialBalanceBilletera] = useState<any | null>(null)
+  const [initialBalanceBilletera, setInitialBalanceBilletera] = useState<Billetera | null>(null)
   const [initialBalanceValue, setInitialBalanceValue] = useState('0')
 
   // Estado del Detalle
-  const [detailBilletera, setDetailBilletera] = useState<any | null>(null)
-
-  const fetchData = async () => {
-    try {
-      setLoading(true)
-      const [billeterasRes, healthRes] = await Promise.all([
-        rpc<any[]>('fn_obtener_billeteras_activas').catch(() => [] as any[]),
-        rpc<any[]>('fn_reporte_salud_billeteras').catch(() => [] as any[])
-      ])
-
-      setBilleteras(billeterasRes)
-      setHealthReport(healthRes)
-    } catch (err: any) {
-      showToast('Error al cargar cuentas: ' + (err.message || err), 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [detailBilletera, setDetailBilletera] = useState<Billetera | null>(null)
 
   useEffect(() => {
     // Cargar preferencia de ocultar montos
     const val = localStorage.getItem('hide_amounts') === 'true'
     setHideAmounts(val)
-    fetchData()
-
-    const handleSuccess = () => {
-      fetchData()
-    }
-    window.addEventListener('movement-added', handleSuccess)
-    return () => {
-      window.removeEventListener('movement-added', handleSuccess)
-    }
   }, [])
 
   useEffect(() => {
@@ -249,7 +223,7 @@ export function BilleterasPage() {
         p_saldo_real: saldoNum
       })
       
-      const diff = saldoNum - parseFloat(conciliarBilletera.saldo_actual)
+      const diff = saldoNum - Number(conciliarBilletera.saldo_actual)
       if (diff === 0) {
         showToast(t('success_conciliation_no_diff'), 'success')
       } else {

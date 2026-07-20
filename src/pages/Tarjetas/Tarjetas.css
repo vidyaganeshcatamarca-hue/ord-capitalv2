@@ -47,7 +47,7 @@
 }
 
 .tarjetas-btn-new {
-  background: linear-gradient(135deg, var(--color-coral), #e0525a);
+  background: linear-gradient(135deg, var(--mint), var(--blue));
   color: #fff;
   border: none;
   padding: 8px 16px;
@@ -58,12 +58,13 @@
   display: flex;
   align-items: center;
   gap: 6px;
+  box-shadow: 0 2px 10px rgba(0, 180, 216, 0.25);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .tarjetas-btn-new:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(255,107,107,0.4);
+  box-shadow: 0 4px 14px rgba(0, 180, 216, 0.4);
 }
 
 /* ── Scroll area ────────────────────────────────────────────────── */
@@ -363,9 +364,8 @@
 
 .tarjetas-empty-icon { font-size: 56px; }
 .tarjetas-empty h3 { font-size: 18px; font-weight: 700; color: var(--color-text); margin: 0; }
-.tarjetas-empty p { font-size: 14px; color: var(--color-text-muted); margin: 0; }
 .tarjetas-empty-btn {
-  background: linear-gradient(135deg, var(--color-coral), #e0525a);
+  background: linear-gradient(135deg, var(--mint), var(--blue));
   color: #fff;
   border: none;
   padding: 12px 24px;
@@ -373,6 +373,12 @@
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 180, 216, 0.3);
+  transition: all 0.2s ease;
+}
+.tarjetas-empty-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 180, 216, 0.45);
 }
 
 /* ── Vista Detalle ──────────────────────────────────────────────── */

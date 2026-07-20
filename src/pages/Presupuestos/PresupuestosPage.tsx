@@ -685,16 +685,7 @@ export function PresupuestosPage() {
         {config?.modo_presupuesto === 'anticipado' && (
           <div style={{ marginTop: 8 }}>
             <button
-              style={{
-                background: 'rgba(255,107,107,0.15)',
-                color: '#FF6B6B',
-                border: '1px solid rgba(255,107,107,0.3)',
-                borderRadius: 20,
-                padding: '4px 12px',
-                fontSize: 11,
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
+              className="btn-modo-disciplina"
               onClick={handleAbrirBaseCero}
             >
               🔒 Activar Modo Disciplina
