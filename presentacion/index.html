@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ORD Capital · Personal · Presentación del Proyecto</title>
+<style>
+  :root {
+    --bg-0: #0a0e14;
+    --bg-1: #0f141c;
+    --bg-2: #161c24;
+    --bg-3: #1d2530;
+    --border: #2a3441;
+    --border-light: #3a4555;
+    --text: #e6edf3;
+    --text-2: #b3becd;
+    --text-3: #7a8696;
+    --text-4: #5a6573;
+    --blue: #00b4d8;
+    --blue-dim: rgba(0, 180, 216, 0.12);
+    --mint: #5eead4;
+    --mint-dim: rgba(94, 234, 212, 0.12);
+    --purple: #a78bfa;
+    --pink: #f472b6;
+    --orange: #fb923c;
+    --yellow: #fbbf24;
+    --green: #4ade80;
+    --red: #f87171;
+    --gradient-1: linear-gradient(135deg, #00b4d8 0%, #5eead4 100%);
+    --gradient-2: linear-gradient(135deg, #a78bfa 0%, #f472b6 100%);
+    --gradient-3: linear-gradient(135deg, #fb923c 0%, #fbbf24 100%);
+    --gradient-4: linear-gradient(135deg, #4ade80 0%, #00b4d8 100%);
+    --font-display: 'Inter', -apple-system, system-ui, sans-serif;
+    --font-body: 'Inter', -apple-system, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--bg-0); color: var(--text); font-family: var(--font-body); -webkit-font-smoothing: antialiased; line-height: 1.5; }
+  body { background-image: radial-gradient(ellipse at top, rgba(0, 180, 216, 0.08), transparent 50%), radial-gradient(ellipse at bottom, rgba(167, 139, 250, 0.05), transparent 50%); background-attachment: fixed; }
+
+  /* ── Layout ── */
+  .container { max-width: 1280px; margin: 0 auto; padding: 0 32px; }
+  section { padding: 80px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+
+  /* ── Hero ── */
+  .hero { padding: 100px 0 80px; position: relative; overflow: hidden; }
+  .hero::before { content: ''; position: absolute; top: -200px; right: -200px; width: 500px; height: 500px; background: var(--gradient-1); border-radius: 50%; filter: blur(140px); opacity: 0.15; }
+  .hero::after { content: ''; position: absolute; bottom: -200px; left: -200px; width: 500px; height: 500px; background: var(--gradient-2); border-radius: 50%; filter: blur(140px); opacity: 0.12; }
+  .hero-content { position: relative; z-index: 1; }
+  .breadcrumb { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12px; color: var(--text-3); padding: 6px 12px; border: 1px solid var(--border); border-radius: 999px; background: var(--bg-2); margin-bottom: 28px; }
+  .breadcrumb .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); }
+  h1 { font-size: clamp(40px, 6vw, 72px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; margin-bottom: 20px; }
+  h1 .gradient { background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .lead { font-size: 20px; color: var(--text-2); max-width: 760px; margin-bottom: 40px; line-height: 1.6; }
+  .hero-meta { display: flex; flex-wrap: wrap; gap: 12px; }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 999px; font-size: 13px; color: var(--text-2); }
+  .pill .icon { font-size: 14px; }
+  .pill.green { color: var(--green); border-color: rgba(74, 222, 128, 0.3); background: rgba(74, 222, 128, 0.08); }
+
+  /* ── Stats ── */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: 56px; }
+  .stat { background: var(--bg-1); border: 1px solid var(--border); border-radius: 16px; padding: 24px; }
+  .stat-num { font-size: 36px; font-weight: 800; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -0.02em; }
+  .stat-label { font-size: 13px; color: var(--text-3); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+  /* ── Section heads ── */
+  .section-eyebrow { font-family: var(--font-mono); font-size: 12px; color: var(--blue); text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 12px; }
+  h2 { font-size: 36px; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 12px; }
+  .section-sub { font-size: 17px; color: var(--text-2); max-width: 720px; margin-bottom: 48px; }
+
+  /* ── Tech grid ── */
+  .tech-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; }
+  .tech-card { background: var(--bg-1); border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: all 0.2s; position: relative; overflow: hidden; }
+  .tech-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+  .tech-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--gradient-1); transform: scaleX(0); transform-origin: left; transition: transform 0.3s; }
+  .tech-card:hover::before { transform: scaleX(1); }
+  .tech-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 22px; margin-bottom: 16px; }
+  .tech-icon.blue { background: var(--blue-dim); color: var(--blue); }
+  .tech-icon.mint { background: var(--mint-dim); color: var(--mint); }
+  .tech-icon.purple { background: rgba(167, 139, 250, 0.12); color: var(--purple); }
+  .tech-icon.orange { background: rgba(251, 146, 60, 0.12); color: var(--orange); }
+  .tech-icon.pink { background: rgba(244, 114, 182, 0.12); color: var(--pink); }
+  .tech-icon.yellow { background: rgba(251, 191, 36, 0.12); color: var(--yellow); }
+  .tech-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+  .tech-card .version { font-family: var(--font-mono); font-size: 11px; color: var(--text-4); margin-bottom: 8px; }
+  .tech-card p { font-size: 13px; color: var(--text-3); line-height: 1.5; }
+
+  /* ── Platform cards ── */
+  .platform-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .platform { background: var(--bg-1); border: 1px solid var(--border); border-radius: 20px; padding: 32px; position: relative; overflow: hidden; }
+  .platform::before { content: ''; position: absolute; top: 0; right: 0; width: 200px; height: 200px; background: var(--gradient-1); filter: blur(80px); opacity: 0.1; }
+  .platform-badge { display: inline-block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; padding: 4px 10px; border-radius: 6px; background: var(--blue-dim); color: var(--blue); margin-bottom: 16px; }
+  .platform h3 { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+  .platform p { color: var(--text-2); font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+  .platform ul { list-style: none; }
+  .platform li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--text-2); padding: 6px 0; }
+  .platform li::before { content: '→'; color: var(--blue); flex-shrink: 0; }
+
+  /* ── Menu grid ── */
+  .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+  .menu-card { background: var(--bg-1); border: 1px solid var(--border); border-radius: 16px; padding: 24px; transition: all 0.2s; position: relative; overflow: hidden; }
+  .menu-card:hover { border-color: var(--border-light); transform: translateY(-3px); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4); }
+  .menu-card-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .menu-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+  .menu-icon.i-home { background: var(--blue-dim); color: var(--blue); }
+  .menu-icon.i-wallets { background: var(--mint-dim); color: var(--mint); }
+  .menu-icon.i-cards { background: rgba(167, 139, 250, 0.12); color: var(--purple); }
+  .menu-icon.i-budget { background: rgba(251, 146, 60, 0.12); color: var(--orange); }
+  .menu-icon.i-quarantine { background: rgba(251, 191, 36, 0.12); color: var(--yellow); }
+  .menu-icon.i-family { background: rgba(244, 114, 182, 0.12); color: var(--pink); }
+  .menu-icon.i-emotional { background: rgba(167, 139, 250, 0.12); color: var(--purple); }
+  .menu-icon.i-survival { background: rgba(74, 222, 128, 0.12); color: var(--green); }
+  .menu-icon.i-cleanup { background: rgba(248, 113, 113, 0.12); color: var(--red); }
+  .menu-icon.i-invest { background: var(--blue-dim); color: var(--blue); }
+  .menu-icon.i-health { background: rgba(244, 114, 182, 0.12); color: var(--pink); }
+  .menu-icon.i-envelopes { background: rgba(251, 146, 60, 0.12); color: var(--orange); }
+  .menu-icon.i-config { background: var(--bg-3); color: var(--text-2); }
+  .menu-icon.i-privacy { background: rgba(248, 113, 113, 0.12); color: var(--red); }
+  .menu-icon.i-auth { background: var(--mint-dim); color: var(--mint); }
+  .menu-card h3 { font-size: 16px; font-weight: 700; }
+  .menu-card .path { font-family: var(--font-mono); font-size: 11px; color: var(--text-4); margin-top: 2px; }
+  .menu-card p { font-size: 13px; color: var(--text-2); line-height: 1.55; margin-bottom: 14px; }
+  .menu-card .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tag { font-family: var(--font-mono); font-size: 10px; padding: 3px 8px; border-radius: 4px; background: var(--bg-2); color: var(--text-3); border: 1px solid var(--border); }
+
+  /* ── Architecture diagram ── */
+  .arch { background: var(--bg-1); border: 1px solid var(--border); border-radius: 20px; padding: 40px; }
+  .arch-layers { display: grid; gap: 16px; }
+  .arch-layer { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .arch-layer-title { display: flex; align-items: center; gap: 10px; font-size: 12px; font-family: var(--font-mono); color: var(--blue); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px; }
+  .arch-layer-title::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 8px var(--blue); }
+  .arch-items { display: flex; flex-wrap: wrap; gap: 8px; }
+  .arch-item { font-family: var(--font-mono); font-size: 12px; padding: 6px 12px; background: var(--bg-3); border: 1px solid var(--border); border-radius: 6px; color: var(--text-2); }
+
+  /* ── Features ── */
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+  .feature { background: var(--bg-1); border: 1px solid var(--border); border-radius: 16px; padding: 28px; }
+  .feature-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .feature-num { font-family: var(--font-mono); font-size: 11px; color: var(--text-4); }
+  .feature h3 { font-size: 18px; font-weight: 700; }
+  .feature p { color: var(--text-2); font-size: 14px; line-height: 1.6; }
+  .feature code { font-family: var(--font-mono); font-size: 12px; background: var(--bg-3); padding: 2px 6px; border-radius: 4px; color: var(--mint); }
+
+  /* ── Flow ── */
+  .flow { background: var(--bg-1); border: 1px solid var(--border); border-radius: 20px; padding: 32px; }
+  .flow-row { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 16px; align-items: center; }
+  .flow-node { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; text-align: center; }
+  .flow-node .icon { font-size: 28px; margin-bottom: 8px; }
+  .flow-node h4 { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .flow-node p { font-size: 12px; color: var(--text-3); }
+  .flow-arrow { font-size: 24px; color: var(--blue); }
+
+  /* ── Footer ── */
+  footer { padding: 60px 0; text-align: center; color: var(--text-3); font-size: 13px; }
+  footer .brand { font-family: var(--font-display); font-weight: 800; font-size: 18px; background: var(--gradient-1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; margin-bottom: 8px; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .container { padding: 0 20px; }
+    section { padding: 60px 0; }
+    h1 { font-size: 40px; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .flow-row { grid-template-columns: 1fr; }
+    .flow-arrow { transform: rotate(90deg); justify-self: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HERO ═══════════════ -->
+<section class="hero">
+  <div class="container hero-content">
+    <div class="breadcrumb">
+      <span class="dot"></span>
+      <span>ORD Capital v2 · /Personal · v0.1.0</span>
+    </div>
+    <h1>ORD Capital <span class="gradient">Personal</span></h1>
+    <p class="lead">
+      Aplicación web y móvil para la gestión financiera personal con un enfoque conductual.
+      Combina billeteras, tarjetas, presupuestos, análisis emocional del gasto, control de deudas
+      y planificación de inversiones en una sola plataforma multi-perfil.
+    </p>
+    <div class="hero-meta">
+      <span class="pill green"><span class="icon">●</span> Producción</span>
+      <span class="pill"><span class="icon">⚡</span> React 19 + Vite 6</span>
+      <span class="pill"><span class="icon">📱</span> Capacitor 7 (iOS / Android)</span>
+      <span class="pill"><span class="icon">☁️</span> Supabase Backend</span>
+      <span class="pill"><span class="icon">🌐</span> i18n (es.ts)</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-num">156</div>
+        <div class="stat-label">Archivos TS/TSX</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">14</div>
+        <div class="stat-label">Páginas / Menú</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">40+</div>
+        <div class="stat-label">Modales / Componentes</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">105</div>
+        <div class="stat-label">Llamadas RPC a Supabase</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ PLATAFORMA ═══════════════ -->
+<section>
+  <div class="container">
+    <div class="section-eyebrow">// 01 · Plataforma</div>
+    <h2>Una sola base de código, dos plataformas</h2>
+    <p class="section-sub">
+      Construido con Vite + React 19 y empaquetado con Capacitor para generar apps nativas iOS y Android
+      sin sacrificar la experiencia web. La lógica de negocio es 100% compartida.
+    </p>
+
+    <div class="platform-grid">
+      <div class="platform">
+        <span class="platform-badge">Web App</span>
+        <h3>🌐 Navegador</h3>
+        <p>Single Page Application servida desde Vite con React Router 7. Funciona en cualquier navegador moderno y se adapta automáticamente al dispositivo con CSS responsivo.</p>
+        <ul>
+          <li>Sidebar fija en desktop (≥768px)</li>
+          <li>Bottom navigation en móvil</li>
+          <li>Lazy loading con <code>React.lazy</code> + Suspense</li>
+          <li>Error Boundary global</li>
+        </ul>
+      </div>
+
+      <div class="platform">
+        <span class="platform-badge">Native</span>
+        <h3>📱 iOS & Android</h3>
+        <p>Empaquetado nativo vía Capacitor 7. Acceso a APIs del dispositivo sin sacrificar el rendimiento web. Build con <code>npm run cap:sync</code>.</p>
+        <ul>
+          <li>Cámara y micrófono (AudioRecorderModal)</li>
+          <li>Notificaciones push locales</li>
+          <li>Haptic feedback en acciones</li>
+          <li>Filesystem, Share, Network status</li>
+        </ul>
+      </div>
+
+      <div class="platform">
+        <span class="platform-badge">Cloud</span>
+        <h3>☁️ Backend Supabase</h3>
+        <p>Toda la persistencia y lógica de negocio vive en Supabase. El cliente <strong>solo</strong> invoca funciones RPC (nunca accede a tablas directamente), garantizando seguridad a nivel de fila.</p>
+        <ul>
+          <li>RPC functions como capa de servicio</li>
+          <li>AuthContext con sesión persistida</li>
+          <li>Realtime para sincronización</li>
+          <li>Row Level Security habilitado</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ STACK ═══════════════ -->
+<section>
+  <div class="container">
+    <div class="section-eyebrow">// 02 · Stack Tecnológico</div>
+    <h2>Tecnologías principales</h2>
+    <p class="section-sub">
+      Stack moderno, tipado fuerte, optimizado para entrega rápida y mantenimiento a largo plazo.
+    </p>
+
+    <div class="tech-grid">
+      <div class="tech-card">
+        <div class="tech-icon blue">⚛️</div>
+        <h3>React 19</h3>
+        <div class="version">^19.1.0</div>
+        <p>Hooks, Suspense, lazy loading, transiciones y el nuevo compilador.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon blue">📘</div>
+        <h3>TypeScript</h3>
+        <div class="version">~5.6.2</div>
+        <p>Tipado estático extremo a extremo. 196 interfaces, 38 types, 10 métodos.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon mint">⚡</div>
+        <h3>Vite 6</h3>
+        <div class="version">^6.0.5</div>
+        <p>Dev server instantáneo y build optimizado con HMR nativo.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon purple">🧭</div>
+        <h3>React Router 7</h3>
+        <div class="version">^7.1.0</div>
+        <p>Navegación SPA con guards <code>PublicRoute</code> y <code>PrivateRoute</code>.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon orange">🎨</div>
+        <h3>MUI + Emotion</h3>
+        <div class="version">^9.1.1 / 11.14</div>
+        <p>Componentes accesibles y sistema de estilos CSS-in-JS.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon mint">☁️</div>
+        <h3>Supabase JS</h3>
+        <div class="version">^2.49.0</div>
+        <p>Cliente oficial. 105 fan-in a <code>supabase.rpc()</code>.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon pink">📱</div>
+        <h3>Capacitor 7</h3>
+        <div class="version">^7.0.0</div>
+        <p>13 plugins nativos: cámara, haptics, push, filesystem, share, etc.</p>
+      </div>
+      <div class="tech-card">
+        <div class="tech-icon yellow">🌍</div>
+        <h3>i18n propio</h3>
+        <div class="version">es.ts</div>
+        <p>Sistema de internacionalización basado en <code>es.ts</code> + <code>t()</code>.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ ARQUITECTURA ═══════════════ -->
+<section>
+  <div class="container">
+    <div class="section-eyebrow">// 03 · Arquitectura</div>
+    <h2>Estructura de capas</h2>
+    <p class="section-sub">
+      Organización modular por dominio funcional. Cada feature vive en su propia carpeta y comparte
+      contextos globales y utilidades comunes.
+    </p>
+
+    <div class="arch">
+      <div class="arch-layers">
+        <div class="arch-layer">
+          <div class="arch-layer-title">Capa de Presentación · src/components & src/pages</div>
+          <div class="arch-items">
+            <span class="arch-item">pages/Home</span>
+            <span class="arch-item">pages/Billeteras</span>
+            <span class="arch-item">pages/Tarjetas</span>
+            <span class="arch-item">pages/Presupuestos</span>
+            <span class="arch-item">pages/Cuarentena</span>
+            <span class="arch-item">pages/Familia</span>
+            <span class="arch-item">pages/AnalisisEmocional</span>
+            <span class="arch-item">pages/Supervivencia</span>
+            <span class="arch-item">pages/Saneamiento</span>
+            <span class="arch-item">pages/Inversiones</span>
+            <span class="arch-item">pages/Salud</span>
+            <span class="arch-item">pages/Sobres</span>
+            <span class="arch-item">pages/Configuracion</span>
+            <span class="arch-item">pages/Auth</span>
+            <span class="arch-item">components/* (40+ modales)</span>
+          </div>
+        </div>
+
+        <div class="arch-layer">
+          <div class="arch-layer-title">Lógica de Negocio · src/hooks & src/lib</div>
+          <div class="arch-items">
+            <span class="arch-item">hooks/useReminders</span>
+            <span class="arch-item">hooks/useNotificationCount</span>
+            <span class="arch-item">lib/supabase</span>
+            <span class="arch-item">lib/format</span>
+            <span class="arch-item">lib/crypto</span>
+            <span class="arch-item">lib/haptics</span>
+            <span class="arch-item">lib/reminders</span>
+            <span class="arch-item">lib/bcgUtils</span>
+            <span class="arch-item">lib/notificationPreferences</span>
+            <span class="arch-item">lib/persistentNotification</span>
+          </div>
+        </div>
+
+        <div class="arch-layer">
+          <div class="arch-layer-title">Estado Global · src/contexts</div>
+          <div class="arch-items">
+            <span class="arch-item">AuthContext</span>
+            <span class="arch-item">HogarContext</span>
+            <span class="arch-item">ModoAppContext</span>
+            <span class="arch-item">ToastContext</span>
+          </div>
+        </div>
+
+        <div class="arch-layer">
+          <div class="arch-layer-title">Infraestructura Compartida</div>
+          <div class="arch-items">
+            <span class="arch-item">router/guards</span>
+            <span class="arch-item">constants/navigation</span>
+            <span class="arch-item">locales/es</span>
+            <span class="arch-item">locales/i18n</span>
+            <span class="arch-item">types/</span>
+            <span class="arch-item">utils/</span>
+            <span class="arch-item">styles/</span>
+            <span class="arch-item">components/ErrorBoundary</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ FLUJO ═══════════════ -->
+<section>
+  <div class="container">
+    <div class="section-eyebrow">// 04 · Flujo de Datos</div>
+    <h2>Cómo viaja la información</h2>
+    <p class="section-sub">
+      La arquitectura sigue un patrón estricto: la UI nunca toca tablas, solo RPCs.
+      Esto aísla la lógica de negocio y permite evolucionar el schema sin romper clientes.
+    </p>
+
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-node">
+          <div class="icon">🎨</div>
+          <h4>React UI</h4>
+          <p>Componente invoca una acción del usuario</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="icon">🪝</div>
+          <h4>Hook / Context</h4>
+          <p>useAuth, HogarContext, useReminders…</p>
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-node">
+          <div class="icon">☁️</div>
+          <h4>Supabase RPC</h4>
+          <p>supabase.rpc('fn_…') con argumentos tipados</p>
+        </div>
+      </div>
+      <div class="flow-row" style="margin-top: 24px;">
+        <div class="flow-node">
+          <div class="icon">🗄️</div>
+          <h4>PostgreSQL</h4>
+          <p>Funciones SQL con lógica y RLS</p>
+        </div>
+        <div class="flow-arrow">←</div>
+        <div class="flow-node">
+          <div class="icon">🔄</div>
+          <h4>Respuesta tipada</h4>
+          <p>parseError + toast si falla</p>
+        </div>
+        <div class="flow-arrow">←</div>
+        <div class="flow-node">
+          <div class="icon">📊</div>
+          <h4>Re-render</h4>
+          <p>Estado actualizado + haptics</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ MENÚ ═══════════════ -->
+<section>
+  <div class="container">
+    <div class="section-eyebrow">// 05 · Menú Principal</div>
+    <h2>14 módulos funcionales</h2>
+    <p class="section-sub">
+      Cada ruta corresponde a una página autocontenida con su propio estado y vistas especializadas.
+      El menú se adapta al modo de presupuesto (<code>base_cero</code> o <code>anticipado</code>).
+    </p>
+
+    <div class="menu-grid">
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-home">🏠</div>
+          <div>
+            <h3>Inicio</h3>
+            <div class="path">/ → HomePage</div>
+          </div>
+        </div>
+        <p>Dashboard principal con resumen de cuentas, accesos rápidos, calendario y atajos a los módulos más usados.</p>
+        <div class="tags"><span class="tag">Dashboard</span><span class="tag">Resumen</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-wallets">👛</div>
+          <div>
+            <h3>Billeteras</h3>
+            <div class="path">/billeteras → BilleterasPage</div>
+          </div>
+        </div>
+        <p>Cuentas de dinero (efectivo, banco, digitales). Subcuentas, balances iniciales, transferencias entre billeteras y detalle de movimientos.</p>
+        <div class="tags"><span class="tag">Cuentas</span><span class="tag">Saldos</span><span class="tag">Transferencias</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-cards">💳</div>
+          <div>
+            <h3>Tarjetas</h3>
+            <div class="path">/tarjetas → TarjetasPage</div>
+          </div>
+        </div>
+        <p>Tarjetas de crédito/débito con resumen, próximos vencimientos, días para corte y simulador de pago.</p>
+        <div class="tags"><span class="tag">Crédito</span><span class="tag">Vencimientos</span><span class="tag">Pagos</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-budget">📊</div>
+          <div>
+            <h3>Presupuesto</h3>
+            <div class="path">/presupuesto → PresupuestosPage</div>
+          </div>
+        </div>
+        <p>Planificación por ciclos. Dos modos: <code>base_cero</code> (asignación desde cero) y <code>anticipado</code> (proyección). Sobres, ejecución y sobrantes.</p>
+        <div class="tags"><span class="tag">Ciclos</span><span class="tag">Base Cero</span><span class="tag">Anticipado</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-quarantine">⏸️</div>
+          <div>
+            <h3>Cuarentena</h3>
+            <div class="path">/cuarentena → CuarentenaPage</div>
+          </div>
+        </div>
+        <p>Zona de espera para gastos impulsivos. Un movimiento se "congela" 24-72h antes de confirmarse, evitando compras emocionales.</p>
+        <div class="tags"><span class="tag">Buffer</span><span class="tag">Anti-impulso</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-family">👨‍👩‍👧</div>
+          <div>
+            <h3>Familia</h3>
+            <div class="path">/familia → FamiliaPage</div>
+          </div>
+        </div>
+        <p>Gestión multi-perfil. HogarContext permite compartir balances, asignar roles y sincronizar finanzas entre miembros del grupo familiar.</p>
+        <div class="tags"><span class="tag">Multi-perfil</span><span class="tag">Hogar</span><span class="tag">Roles</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-emotional">🧠</div>
+          <div>
+            <h3>Análisis Emocional</h3>
+            <div class="path">/analisis-emocional → AnalisisEmocionalPage</div>
+          </div>
+        </div>
+        <p>Matriz BCG (Boston Consulting Group) aplicada al gasto. Clasifica movimientos en Estrella, Vaca, Interrogante y Perro según frecuencia e impacto. Buzón emocional y hormigas.</p>
+        <div class="tags"><span class="tag">BCG</span><span class="tag">Conductual</span><span class="tag">Hormigas</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-survival">🛡️</div>
+          <div>
+            <h3>Supervivencia</h3>
+            <div class="path">/supervivencia → SupervivenciaPage</div>
+          </div>
+        </div>
+        <p>Fondo de emergencia. Calcula meses de autonomía, recomienda nivel objetivo y visualiza el progreso hacia la red de seguridad financiera.</p>
+        <div class="tags"><span class="tag">Emergencia</span><span class="tag">Autonomía</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-cleanup">🧹</div>
+          <div>
+            <h3>Saneamiento</h3>
+            <div class="path">/saneamiento → SaneamientoPage</div>
+          </div>
+        </div>
+        <p>Plan de ataque para deudas. Bandeja de cuarentena de gastos, calendario financiero, simulador de pagos y registro de audio de acuerdos.</p>
+        <div class="tags"><span class="tag">Deudas</span><span class="tag">Plan</span><span class="tag">Audio</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-invest">📈</div>
+          <div>
+            <h3>Inversiones</h3>
+            <div class="path">/inversiones → InversionesPage</div>
+          </div>
+        </div>
+        <p>Track-record de inversiones, distribución por tipo (donut chart), rendimiento vs inflación y detalle de cada posición con vista de aporte y rendimiento.</p>
+        <div class="tags"><span class="tag">Cartera</span><span class="tag">Rendimiento</span><span class="tag">Inflación</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-health">❤️</div>
+          <div>
+            <h3>Salud</h3>
+            <div class="path">/salud → SaludPage</div>
+          </div>
+        </div>
+        <p>Vinculación entre finanzas y salud. Gastos médicos, suscripciones de bienestar y métricas que correlacionan hábitos y dinero.</p>
+        <div class="tags"><span class="tag">Bienestar</span><span class="tag">Gastos</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-envelopes">✉️</div>
+          <div>
+            <h3>Sobres</h3>
+            <div class="path">/sobres → SobresPage</div>
+          </div>
+        </div>
+        <p>Metodología de sobres digitales. Cada sobre agrupa dinero con un propósito (vacaciones, regalos, etc.) y se ejecuta contra el presupuesto del ciclo.</p>
+        <div class="tags"><span class="tag">Envelopes</span><span class="tag">Ahorro</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-config">⚙️</div>
+          <div>
+            <h3>Configuración</h3>
+            <div class="path">/configuracion/*</div>
+          </div>
+        </div>
+        <p>Hub con sub-rutas: región y formato, ciclo de presupuesto, notificaciones, preferencias operativas, categorías, hogar y acerca de.</p>
+        <div class="tags"><span class="tag">Hub</span><span class="tag">Preferencias</span><span class="tag">7 sub-rutas</span></div>
+      </div>
+
+      <div class="menu-card">
+        <div class="menu-card-head">
+          <div class="menu-icon i-privacy">🔒</div>
+          <div>
+            <h3>Privacidad</h3>
+            <div class="path">/privacidad → PrivacidadPage</div>
+          </div>
+        </div>
+        <p>Control de datos del usuario, exportación, eliminación de cuenta y políticas. Lectura crítica antes de compartir información financiera.</p>
+        <div class="tags"><span class="tag">Datos</span><span class="tag">RGPD</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ FEATURES ═══════════════ -->
+<section>
+  <div class="container">
+    <div class="section-eyebrow">// 06 · Funcionalidades Clave</div>
+    <h2>Lo que hace único a este proyecto</h2>
+    <p class="section-sub">
+      Capacidades transversales que están presentes en toda la experiencia, no en una sola pantalla.
+    </p>
+
+    <div class="features">
+      <div class="feature">
+        <div class="feature-head">
+          <span class="feature-num">01</span>
+          <h3>Modo Presupuesto Dual</h3>
+        </div>
+        <p>El <code>BottomNav</code> lee la configuración del usuario (<code>fn_obtener_config_presupuesto</code>) y alterna entre vista <strong>Base Cero</strong> y <strong>Anticipado</strong> en tiempo real, escuchando el evento <code>budget-mode-changed</code>.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feature-head">
+          <span class="feature-num">02</span>
+          <h3>Saneamiento Emocional</h3>
+        </div>
+        <p>Flujo de <strong>Cuarentena → Bandeja → Audio → Plan de Ataque</strong>. Permite registrar acuerdos verbales como audio, congelar gastos impulsivos y atacar deudas con un plan explícito.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feature-head">
+          <span class="feature-num">03</span>
+          <h3>Análisis BCG del Gasto</h3>
+        </div>
+        <p>Cada movimiento se clasifica en una matriz 2x2 (frecuencia × impacto) para identificar categorías <em>Estrella</em>, <em>Vaca</em>, <em>Interrogante</em> y <em>Perro</em>. Buzón emocional y <strong>Hormigas</strong> (gastos pequeños recurrentes).</p>
+      </div>
+
+      <div class="feature">
+        <div class="feature-head">
+          <span class="feature-num">04</span>
+          <h3>Hogar Multi-perfil</h3>
+        </div>
+        <p>El <code>HogarContext</code> comparte balances entre miembros de un mismo hogar financiero. Cada integrante mantiene su <code>AuthContext</code> pero opera sobre los mismos datos.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feature-head">
+          <span class="feature-num">05</span>
+          <h3>Solo RPC, nunca tablas</h3>
+        </div>
+        <p>Regla de oro: el cliente <strong>no accede directamente a tablas</strong>. Toda operación pasa por funciones <code>fn_*</code> en Supabase. La app es 100% consumidora de la API de funciones.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feature-head">
+          <span class="feature-num">06</span>
+          <h3>100% i18n</h3>
+        </div>
+        <p>No existe un string hardcodeado en español en el código. Todo pasa por <code>t('llave')</code> y se resuelve desde <code>es.ts</code>, con 198 fan-in al traductor. La regla es estricta para permitir traducción futura sin refactors.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feature-head">
+          <span class="feature-num">07</span>
+          <h3>Haptics y feedback nativo</h3>
+        </div>
+        <p>Las acciones críticas disparan vibración háptica (<code>light</code>, <code>success</code>, <code>error</code>) vía <code>@capacitor/haptics</code>. En web, fallback a vibración del navegador. Da respuesta táctil incluso en formularios.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feature-head">
+          <span class="feature-num">08</span>
+          <h3>Notificaciones Inteligentes</h3>
+        </div>
+        <p>Sistema de <code>useNotificationCount</code> con panel de notificaciones, preferencias granulares, recordatorios automáticos y push notifications vía <code>@capacitor/push-notifications</code>.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feature-head">
+          <span class="feature-num">09</span>
+          <h3>Lazy Loading Estratégico</h3>
+        </div>
+        <p><code>AppLayout</code> usa <code>requestIdleCallback</code> para diferir la carga del <code>AddMovementModal</code> hasta que el navegador esté libre. <code>React.lazy</code> en cada <code>Page</code> con <code>Suspense</code> y <code>LoadingSpinner</code>.</p>
+      </div>
+
+      <div class="feature">
+        <div class="feature-head">
+          <span class="feature-num">10</span>
+          <h3>Diseño Adaptativo</h3>
+        </div>
+        <p>CSS con variables (<code>--blue</code>, <code>--mint</code>, <code>--surface</code>). <code>SideNav</code> aparece en ≥768px, <code>BottomNav</code> en menor resolución. Tema oscuro como base con acentos vibrantes.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ USO ═══════════════ -->
+<section>
+  <div class="container">
+    <div class="section-eyebrow">// 07 · Comandos</div>
+    <h2>Cómo correr el proyecto</h2>
+    <p class="section-sub">
+      Scripts disponibles en el package.json. La compilación móvil requiere Xcode o Android Studio.
+    </p>
+
+    <div class="arch">
+      <div class="arch-layers">
+        <div class="arch-layer">
+          <div class="arch-layer-title">Desarrollo</div>
+          <div class="arch-items">
+            <span class="arch-item">npm run dev → vite (dev server)</span>
+            <span class="arch-item">npm run build → tsc -b && vite build</span>
+            <span class="arch-item">npm run preview → vite preview</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-title">Mobile · Capacitor</div>
+          <div class="arch-items">
+            <span class="arch-item">npm run cap:add:android</span>
+            <span class="arch-item">npm run cap:add:ios</span>
+            <span class="arch-item">npm run cap:sync</span>
+            <span class="arch-item">npm run cap:run:android</span>
+            <span class="arch-item">npm run cap:run:ios</span>
+          </div>
+        </div>
+        <div class="arch-layer">
+          <div class="arch-layer-title">Reglas del proyecto</div>
+          <div class="arch-items">
+            <span class="arch-item">✓ Solo acceso vía RPC a Supabase</span>
+            <span class="arch-item">✓ Cero strings hardcodeados en español</span>
+            <span class="arch-item">✓ Tests solo en carpeta "tests/"</span>
+            <span class="arch-item">✓ CleanUp de datos de prueba obligatorio</span>
+            <span class="arch-item">✓ Sin subagentes (excepto paralelismo seguro)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════ FOOTER ═══════════════ -->
+<footer>
+  <div class="container">
+    <div class="brand">ORD Capital · Personal</div>
+    <div>Análisis generado a partir del grafo de código · 1348 nodos · 3648 aristas</div>
+    <div style="margin-top: 8px; font-family: var(--font-mono); font-size: 11px; color: var(--text-4);">
+      stack: React 19 · TypeScript 5.6 · Vite 6 · Supabase 2.49 · Capacitor 7 · MUI 9
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

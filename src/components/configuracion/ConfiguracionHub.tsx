@@ -7,6 +7,7 @@ import { ToggleSwitch } from './ToggleSwitch'
 import { MiCuentaCard } from './MiCuentaCard'
 import { AparienciaCard } from './AparienciaCard'
 import { NotificacionesCard } from './NotificacionesCard'
+import { PWACard } from './PWACard'
 import './ConfiguracionHub.css'
 
 const BASE_CERO_HOME_KEY = 'base_cero_como_inicio'
@@ -113,6 +114,7 @@ export function ConfiguracionHub() {
         descKey="config_about_desc"
         to="/configuracion/acerca"
       />
+      <PWACard />
     </div>
   )
 }

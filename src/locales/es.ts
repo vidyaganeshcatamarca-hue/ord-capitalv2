@@ -397,6 +397,10 @@ export const config = {
   config_budget_desc: "Modo de presupuesto, día ancla y reglas de distribución.",
   config_operational_desc: "Cuentas, categorías, hogar y automatizaciones de carga.",
   config_about_desc: "Versión, invitaciones, feedback y enlaces legales.",
+  config_pwa_install_title: 'Instalar App (PWA)',
+  config_pwa_install_desc: 'Instala ORD Capital en tu dispositivo para acceso rápido.',
+  pwa_install_ios_hint: 'Toca "Compartir" y luego "Agregar a Inicio" en Safari.',
+  pwa_already_installed_or_unsupported: 'La app ya está instalada o tu navegador no soporta esta función.',
 
   // Mi Cuenta
   config_profile: "Perfil",

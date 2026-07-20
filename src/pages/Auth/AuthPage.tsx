@@ -182,77 +182,22 @@ export function AuthPage() {
     }
   }
 
-  // --- LÓGICA DE LA CALCULADORA (SLIDE 3) ---
-  const handleCalcKeyPress = (key: string) => {
-    if (navigator.vibrate) navigator.vibrate(10) // Haptic feedback nativo simple
 
-    if (key === 'C') {
-      setCalcInput('0')
-      setIsCalculated(true)
-      return
-    }
-
-    if (key === '⌫') {
-      if (calcInput.length <= 1 || calcInput === 'Error') {
-        setCalcInput('0')
-        setIsCalculated(true)
-      } else {
-        setCalcInput(calcInput.slice(0, -1))
-      }
-      return
-    }
-
-    if (key === '=') {
-      evaluateOperation()
-      return
-    }
-
-    // Operadores
-    if (['+', '-', '*', '/'].includes(key)) {
-      // Evitar operadores repetidos
-      const lastChar = calcInput.slice(-1)
-      if (['+', '-', '*', '/'].includes(lastChar)) {
-        setCalcInput(calcInput.slice(0, -1) + key)
-      } else {
-        setCalcInput(calcInput + key)
-      }
-      setIsCalculated(false)
-      return
-    }
-
-    // Números
-    if (calcInput === '0' || calcInput === 'Error' || (isCalculated && !['+', '-', '*', '/'].includes(key))) {
-      setCalcInput(key)
-      setIsCalculated(false)
-    } else {
-      setCalcInput(calcInput + key)
-    }
-  }
-
-  const evaluateOperation = () => {
-    try {
-      const result = safeEval(calcInput)
-      if (isNaN(result) || !isFinite(result)) {
-        setCalcInput('Error')
-      } else {
-        // Redondear a 2 decimales máximo
-        setCalcInput(Number(result.toFixed(2)).toString())
-      }
-      setIsCalculated(true)
-    } catch {
-      setCalcInput('Error')
-      setIsCalculated(true)
-    }
-  }
 
   // --- LLAMADA RPC SLIDE 3: Guardar Billetera ---
   const handleSaveWallet = async () => {
     const saldo = parseFloat(calcInput) || 0
     const cashSaldo = parseFloat(cashBalanceInput) || 0
 
-    setLoading(true)
-    const name = walletName.trim() || t('wallet_primary_default_name')
+    const name = walletName.trim()
     const cashName = t('wallet_cash_default_name')
+
+    if (name.toLowerCase() === cashName.toLowerCase()) {
+      showToast(t('error_initial_wallet_names_must_differ'), 'error')
+      return
+    }
+
+    setLoading(true)
 
     try {
       const { error } = await supabase.rpc('fn_crear_billeteras_iniciales', {
@@ -539,81 +484,40 @@ export function AuthPage() {
               </select>
             </div>
 
-              {/* Calculadora de Saldo Inicial */}
+              {/* Balance de Cuenta Inicial */}
               <div className="form-group mb-3">
                 <label className="form-label">{t('label_primary_initial_balance')}</label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <span style={{ 
-                  position: 'absolute', 
-                  left: '16px', 
-                  fontSize: '22px', 
-                  fontWeight: 'bold', 
-                  color: 'var(--text-3)' 
-                }}>
-                  {currency === 'EUR' ? '€' : currency === 'USD' ? 'U$S' : '$'}
-                </span>
-                <input
-                  type="text"
-                  inputMode={isMobile ? "none" : "text"}
-                  className="calc-display font-mono"
-                  style={{ 
-                    width: '100%', 
-                    paddingLeft: '64px', 
-                    textAlign: 'right',
-                    fontSize: '24px',
-                    fontWeight: 'bold'
-                  }}
-                  value={calcInput}
-                  onChange={e => {
-                    const val = e.target.value
-                    if (/^[0-9+\-*/.\s]*$/.test(val)) {
-                      setCalcInput(val)
-                      setIsCalculated(false)
-                    }
-                  }}
-                  onFocus={e => {
-                    if (calcInput === '0') {
-                      setCalcInput('')
-                    }
-                  }}
-                  onBlur={e => {
-                    evaluateOperation()
-                    setTimeout(() => {
-                      setCalcInput(prev => {
-                        if (!prev || prev.trim() === '' || prev === 'Error') return '0'
-                        return prev
-                      })
-                    }, 50)
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      evaluateOperation()
-                    }
-                  }}
-                />
-              </div>
-
-              {/* Teclado Calculadora (Sólo en móvil) */}
-              {isMobile && (
-                <div className="calc-keyboard mt-2">
-                  {['7', '8', '9', '/', '4', '5', '6', '*', '1', '2', '3', '-', '0', '.', 'C', '+'].map(char => (
-                    <button
-                      key={char}
-                      type="button"
-                      className="calc-key"
-                      onClick={() => handleCalcKeyPress(char)}
-                    >
-                      {char}
-                    </button>
-                  ))}
-                  <button type="button" className="calc-key calc-key-backspace" onClick={() => handleCalcKeyPress('⌫')}>
-                    ⌫
-                  </button>
-                  <button type="button" className="calc-key calc-key-eval" onClick={() => handleCalcKeyPress('=')}>
-                    =
-                  </button>
+                  <span style={{ 
+                    position: 'absolute', 
+                    left: '16px', 
+                    fontSize: '22px', 
+                    fontWeight: 'bold', 
+                    color: 'var(--text-3)' 
+                  }}>
+                    {currency === 'EUR' ? '€' : currency === 'USD' ? 'U$S' : '$'}
+                  </span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    className="calc-display font-mono"
+                    style={{ 
+                      width: '100%', 
+                      paddingLeft: '64px', 
+                      textAlign: 'right',
+                      fontSize: '24px',
+                      fontWeight: 'bold'
+                    }}
+                    value={calcInput}
+                    onChange={e => setCalcInput(e.target.value)}
+                    onFocus={() => {
+                      if (calcInput === '0') setCalcInput('')
+                    }}
+                    onBlur={() => {
+                      if (!calcInput || parseFloat(calcInput) < 0) setCalcInput('0')
+                    }}
+                  />
                 </div>
-              )}
               </div>
 
               <div className="form-group mb-3">
@@ -629,7 +533,7 @@ export function AuthPage() {
                     {currency === 'EUR' ? '€' : currency === 'USD' ? 'U$S' : '$'}
                   </span>
                   <input
-                    type="text"
+                    type="number"
                     inputMode="decimal"
                     className="calc-display font-mono"
                     style={{
@@ -640,12 +544,7 @@ export function AuthPage() {
                       fontWeight: 'bold'
                     }}
                     value={cashBalanceInput}
-                    onChange={e => {
-                      const val = e.target.value
-                      if (/^[0-9.]*$/.test(val)) {
-                        setCashBalanceInput(val)
-                      }
-                    }}
+                    onChange={e => setCashBalanceInput(e.target.value)}
                     onFocus={e => {
                       if (cashBalanceInput === '0') setCashBalanceInput('')
                     }}
@@ -661,7 +560,7 @@ export function AuthPage() {
               <button
                 className="btn btn-primary btn-full btn-lg"
                 onClick={() => handleSaveWallet()}
-                disabled={walletName.trim().length === 0 || loading}
+                disabled={loading}
               >
                 {loading ? t('btn_saving') : t('btn_save_initial_wallets')}
               </button>
