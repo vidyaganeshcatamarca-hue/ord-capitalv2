@@ -351,45 +351,47 @@ export function BilleterasPage() {
                   const sem = getSemaforoDetails(b.ultima_conciliacion_at)
                   return (
                     <div key={b.billetera_id} className="billetera-item">
-                      <div className="billetera-item-left" onClick={() => setDetailBilletera(b)} style={{ cursor: 'pointer', flex: 1 }}>
-                        <div className="billetera-item-icon-wrapper">
-                          {b.icono || '💳'}
-                          <span className={`dot dot-${sem.color} billetera-item-semaforo`} />
+                      <div className="billetera-item-top">
+                        <div className="billetera-item-left" onClick={() => setDetailBilletera(b)} style={{ cursor: 'pointer' }}>
+                          <div className="billetera-item-icon-wrapper">
+                            {b.icono || '💳'}
+                            <span className={`dot dot-${sem.color} billetera-item-semaforo`} />
+                          </div>
+                          <div className="billetera-item-info">
+                            <div className="billetera-item-name">
+                              <span className="billetera-name-text">{b.nombre}</span>
+                              {b.es_fondo_prevision && <span className="prevision-badge">Fondo Previsión</span>}
+                              {b.saldo_inicial_pendiente && <span className="prevision-badge">{t('wallet_pending_initial_balance_badge')}</span>}
+                            </div>
+                            <div className="billetera-item-type">
+                              <span>{b.moneda === 'USD' ? 'USD (Reserva)' : 'ARS (Moneda local)'}</span>
+                              <span>•</span>
+                              <span style={{ color: `var(--text-3)`, fontWeight: 600 }}>
+                                {sem.text} {sem.days !== null && `(hace ${sem.days}d)`}
+                              </span>
+                            </div>
+                          </div>
                         </div>
-                        <div className="billetera-item-info">
-                          <span className="billetera-item-name">
-                            {b.nombre}
-                            {b.es_fondo_prevision && <span className="prevision-badge">Fondo Previsión</span>}
-                            {b.saldo_inicial_pendiente && <span className="prevision-badge">{t('wallet_pending_initial_balance_badge')}</span>}
-                          </span>
-                          <span className="billetera-item-type" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span>{b.moneda === 'USD' ? 'USD (Reserva)' : 'ARS (Moneda local)'}</span>
-                            <span>•</span>
-                            {/* Clarificación de la luz en la lista de cuentas (Observación 3) */}
-                            <span style={{ color: `var(--text-3)`, fontWeight: 600 }}>
-                              {sem.text} {sem.days !== null && `(hace ${sem.days}d)`}
-                            </span>
+
+                        <div className="billetera-item-saldo-wrap">
+                          <span className="billetera-item-saldo">
+                            {formatAmount(b.saldo_actual, b.moneda)}
                           </span>
                         </div>
                       </div>
 
-                      <div className="billetera-item-right">
-                        <span className="billetera-item-saldo">
-                          {formatAmount(b.saldo_actual, b.moneda)}
-                        </span>
-                        <div className="billetera-item-actions">
-                          {b.saldo_inicial_pendiente && (
-                            <button className="btn-billetera-action primary" onClick={() => openInitialBalance(b)}>
-                              {t('wallet_complete_initial_balance')}
-                            </button>
-                          )}
-                          <button className="btn-billetera-action primary" onClick={() => openConciliar(b)}>
-                            ⚖️ Conciliar
+                      <div className="billetera-item-actions">
+                        {b.saldo_inicial_pendiente && (
+                          <button className="btn-billetera-action primary" onClick={() => openInitialBalance(b)}>
+                            {t('wallet_complete_initial_balance')}
                           </button>
-                          <button className="btn-billetera-action" onClick={() => openEdit(b)}>
-                            ⚙️ Editar
-                          </button>
-                        </div>
+                        )}
+                        <button className="btn-billetera-action primary" onClick={() => openConciliar(b)}>
+                          ⚖️ Conciliar
+                        </button>
+                        <button className="btn-billetera-action" onClick={() => openEdit(b)}>
+                          ⚙️ Editar
+                        </button>
                       </div>
                     </div>
                   )
