@@ -135,18 +135,18 @@ export function RadarAsfixiaDetalle({ radar }: RadarAsfixiaDetalleProps) {
             </div>
             {diaSeleccionado.ingreso_esperado > 0 && (
               <div className="radar-detalle-row">
-                <span>💰 Ingreso esperado</span>
+                <span>{t('war_radar_leyenda_ingreso')}</span>
                 <strong>{formatMoneyARS(diaSeleccionado.ingreso_esperado)}</strong>
               </div>
             )}
             {diaSeleccionado.egreso_tarjeta > 0 && (
               <div className="radar-detalle-row">
-                <span>💳 Vencimiento tarjeta</span>
+                <span>{t('war_radar_leyenda_tarjeta')}</span>
                 <strong>{formatMoneyARS(diaSeleccionado.egreso_tarjeta)}</strong>
               </div>
             )}
             <div className="radar-detalle-row">
-              <span>🔥 Gasto diario supervivencia</span>
+              <span>{t('war_radar_detalle_gasto_diario')}</span>
               <strong>{formatMoneyARS(diaSeleccionado.egreso_goteo)}</strong>
             </div>
           </div>

@@ -809,7 +809,7 @@ export function PresupuestosPage() {
                   <span className="asignar-opcion-icono">💸</span>
                   <div className="asignar-opcion-texto">
                     <h4>{t('budget_opcion_asignar_todo_title')}</h4>
-                    <p>{t('budget_opcion_asignar_todo_desc', { monto: formatMonto(saldoAsignar ?? 0) }) || `Mueve los ${formatMonto(saldoAsignar ?? 0)} libres aquí`}</p>
+                    <p>{t('budget_opcion_asignar_todo_desc', { monto: formatMonto(saldoAsignar ?? 0) })}</p>
                   </div>
                 </div>
 
@@ -1107,7 +1107,7 @@ export function PresupuestosPage() {
               <>
                 <div className="modal-titulo">{t('budget_golden_rules_modal_sug_title')}</div>
                 <div className="sugerencia-liquidez-info">
-                  {t('budget_golden_rules_modal_liquidity_info', { monto: formatMonto(liquidezActivacion) }) || `Tienes ${formatMonto(liquidezActivacion)} de liquidez real. Distribución sugerida según tus % de Distribución de Ingresos:`}
+                  {t('budget_golden_rules_modal_liquidity_info', { monto: formatMonto(liquidezActivacion) })}
                 </div>
 
                 <div className="disclaimer-tip">

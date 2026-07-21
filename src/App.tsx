@@ -7,6 +7,8 @@ import { ModoAppProvider } from '@/contexts/ModoAppContext'
 import { PrivateRoute, PublicRoute } from '@/router/guards'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
 import { SideNav } from '@/components/SideNav/SideNav'
+import { PWABanner } from '@/components/PWABanner'
+
 
 // Lazy-loaded, but preloaded after app idle because this is the primary quick-capture path.
 const loadAddMovementModal = () => import('@/components/AddMovementModal/AddMovementModal').then(m => ({ default: m.AddMovementModal }))
@@ -82,6 +84,9 @@ function AppLayout() {
 
       {/* Navegación inferior para mobile (<768px) */}
       <BottomNav onAddPress={() => setShowAdd(!showAdd)} />
+
+      {/* Banner de instalación PWA persistente */}
+      <PWABanner />
 
       <Suspense fallback={<LoadingSpinner />}>
         <Routes>

@@ -1,4 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react'
+import { t } from '@/locales/i18n'
 
 interface Props {
   children: ReactNode

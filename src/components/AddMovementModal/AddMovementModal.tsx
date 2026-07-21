@@ -75,14 +75,14 @@ interface ProyectoHogar {
 type Paso = 'tipo' | 'categoria' | 'monto' | 'cuenta' | 'fecha' | 'detalles'
 
 const TIPO_CONFIG = {
-  expense:  { label: 'Gasto',         emoji: '➖', color: 'var(--coral)', btnLabel: 'Registrar Gasto' },
-  income:   { label: 'Ingreso',        emoji: '➕', color: 'var(--mint)',  btnLabel: 'Registrar Ingreso' },
-  transfer: { label: 'Transferencia',  emoji: '↔️', color: 'var(--blue)', btnLabel: 'Confirmar Transferencia' },
+  expense:  { label: t('type_expense', { defaultValue: 'Gasto' }),         emoji: '➖', color: 'var(--coral)', btnLabel: t('btn_add_expense', { defaultValue: 'Registrar Gasto' }) },
+  income:   { label: t('type_income', { defaultValue: 'Ingreso' }),        emoji: '➕', color: 'var(--mint)',  btnLabel: t('btn_add_income', { defaultValue: 'Registrar Ingreso' }) },
+  transfer: { label: t('type_transfer', { defaultValue: 'Transferencia' }),  emoji: '↔️', color: 'var(--blue)', btnLabel: t('btn_confirm_transfer', { defaultValue: 'Confirmar Transferencia' }) },
 }
 
 const FECHA_CHIPS = [
-  { label: 'Hoy',        offset: 0 },
-  { label: 'Ayer',       offset: 1 },
+  { label: t('home_filter_period_today', { defaultValue: 'Hoy' }),        offset: 0 },
+  { label: t('home_filter_shortcut_yesterday', { defaultValue: 'Ayer' }),       offset: 1 },
   { label: t('movement_days_ago_2'), offset: 2 },
 ]
 

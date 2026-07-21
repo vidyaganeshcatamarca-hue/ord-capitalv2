@@ -849,6 +849,7 @@ export const ui = {
   reconcile_theoretical_balance: "Saldo Teórico (App)",
   reconcile_real_balance: "Saldo Real (Home Banking)",
   btn_cancel: "Cancelar",
+  btn_install: "Instalar",
   btn_confirm_adjustment: "Confirmar Ajuste",
   delete_movement_title: "Eliminar Movimiento",
   btn_delete: "Eliminar",
@@ -1489,6 +1490,7 @@ export const war_room = {
   war_radar_leyenda_verde: "Verde: Día seguro",
   war_radar_leyenda_amarillo: "Amarillo: Precaución",
   war_radar_leyenda_rojo: "Rojo: Asfixia (gastos > ingresos)",
+  war_radar_detalle_gasto_diario: "🔥 Gasto diario supervivencia",
   war_radar_leyenda_ingreso: "💰 Ingreso esperado",
   war_radar_leyenda_tarjeta: "💳 Vencimiento de tarjeta",
   war_radar_sin_vencimientos: "📅 No hay vencimientos programados en los próximos 30 días. ¡Excelente!",
@@ -2099,7 +2101,7 @@ export const inversiones = {
   config_hogar_create_desc: "Comenzá a compartir gastos con tu pareja.",
   config_hogar_create_btn: "Crear hogar compartido",
   config_hogar_accept_btn: "Unirme al hogar",
-  config_hogar_invite_code_placeholder: "Ej: ABC-1234"
+  config_hogar_invite_code_placeholder: "Ej: ABC-1234",
 
   // Refactor PresupuestosPage
   budget_label_saving_investment: "AHORRO E INVERSIÓN",
@@ -2149,7 +2151,7 @@ export const inversiones = {
   card_stress_index: "Índice estrés",
   card_next_installment: "Próxima cuota",
   card_insufficient_data_analysis: "Sin datos suficientes para el análisis.",
-  card_archive_confirm_pending: "¿Archivar "{name}"? Solo deberías hacerlo si no tiene compromisos pendientes.",
+  card_archive_confirm_pending: "¿Archivar \"{name}\"? Solo deberías hacerlo si no tiene compromisos pendientes.",
   card_days_format: "{days} días",
   card_empty_state_title: "Sin tarjetas todavía",
   card_empty_state_desc: "Agregá tu primera tarjeta para gestionar tus deudas y cuotas",
@@ -2157,7 +2159,7 @@ export const inversiones = {
   card_type_loan: "Préstamo/Deuda",
   card_need_full_cycle_comparative: "Necesitás al menos un ciclo completo de uso para ver la comparativa mensual",
   card_excellent_discipline_reduced: "¡Excelente disciplina! Redujiste tu uso un {pct}% este mes.",
-  card_archive_confirm_reversible: "¿Archivar "{name}"? Esta acción es reversible desde ajustes.",
+  card_archive_confirm_reversible: "¿Archivar \"{name}\"? Esta acción es reversible desde ajustes.",
   card_form_closing_day: "Día de Cierre",
   card_form_due_day: "Día de Vencimiento",
   card_form_monthly_limit_optional: "Límite Mensual Un Pago ($) (Opcional)",
@@ -2165,6 +2167,7 @@ export const inversiones = {
   card_form_usd_surcharge_optional: "% Recargo Dólar (Opcional)",
 
   // Refactor AddMovementModal
+  btn_confirm_transfer: "Confirmar Transferencia",
   movement_days_ago_2: "Hace 2 días",
   card_usd_purchase: "Compra en Dólares (USD)",
   card_usd_quote_current: "Cotización actual: {rate} USD <br/> Recargo impositivo: {pct}%",
@@ -2193,9 +2196,15 @@ export const inversiones = {
   badge_prevision_fund: "Fondo Previsión",
   option_usd_currency: "Dólares Estadounidenses (USD)",
   label_theoretical_balance: "Saldo Teórico (App)",
-  confirm_archive_wallet: "¿Estás seguro de que deseas archivar la cuenta "{name}"? No aparecerá en el listado activo.",
+  confirm_archive_wallet: "¿Estás seguro de que deseas archivar la cuenta \"{name}\"? No aparecerá en el listado activo.",
 
   // Refactor CategoriasPage
+  cat_need_label: "Necesidad",
+  cat_need_desc: "Gastos obligatorios / fijos",
+  cat_want_label: "Deseo",
+  cat_want_desc: "Ocio, placer, gustos",
+  cat_tithe_label: "Diezmo",
+  cat_tithe_desc: "Donaciones, aportes",
   cat_saving_label: "Ahorro",
   cat_saving_desc: "Metas, previsión",
   cat_investment_label: "Inversión",
@@ -2206,7 +2215,7 @@ export const inversiones = {
   cat_empty_title: "Sin categorías",
   cat_child_empty: "Sin subcuentas aún",
   title_delete_category: "Eliminar Categoría",
-  confirm_delete_category: "¿Estás seguro de que deseas eliminar la categoría "{name}"? No se podrá recuperar.",
+  confirm_delete_category: "¿Estás seguro de que deseas eliminar la categoría \"{name}\"? No se podrá recuperar.",
   success_category_deleted: "Categoría eliminada",
   cat_empty_desc: "Crea las categorías de donde proviene tu dinero (Salario, Freelance, Alquiler…)",
   title_categories: "Categorías",
