@@ -21,6 +21,8 @@ export const errors = {
   error_no_orphan_savings_funds: "No hay sobres vinculados a esta Cuenta Madre para distribuir rendimientos.",
   error_opening_balance_negative: "El saldo de apertura no puede ser negativo.",
   error_transfer_different_currencies: "Operación inválida: No se permiten transferencias directas entre cuentas de diferentes monedas ({currency_from} a {currency_to}).",
+  menu_inicio: "Inicio",
+  menu_cuentas: "Cuentas",
   menu_tarjetas: "Tarjetas",
   menu_presupuesto: "Presupuesto",
   menu_cuarentena: "Cuarentena",
