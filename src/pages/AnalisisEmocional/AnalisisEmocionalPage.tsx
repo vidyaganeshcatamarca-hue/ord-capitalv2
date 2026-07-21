@@ -349,7 +349,7 @@ export function AnalisisEmocionalPage() {
 
       {!estado?.tiene_pareja && (tab === 'hormigas' || tab === 'podadora') && (
         <p className="bcg-muted" style={{ textAlign: 'center', marginTop: 16 }}>
-          💡 Algunas funciones avanzadas requieren pareja vinculada (se completan en próximas etapas).
+          {t("emotional_analysis_advanced_tip")}
         </p>
       )}
     </div>

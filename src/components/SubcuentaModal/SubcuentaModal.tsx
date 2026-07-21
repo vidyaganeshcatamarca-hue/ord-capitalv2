@@ -182,11 +182,11 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
             enterKeyHint="next"
             placeholder="Ej: Supermercado" required disabled={loading} />
 
-          <label className="cat-label">Ícono</label>
+          <label className="cat-label">{t("label_icon")}</label>
           <EmojiPicker value={icono} onChange={setIcono} selectedColor={parentColor} />
 
           <div className="bcg-section mt-3">
-            <div className="bcg-section-title">🎯 Calibración BCG (Fase 6)</div>
+            <div className="bcg-section-title">{t("bcg_calibration_title")}</div>
             <SliderBCG label="Utilidad / Placer" emoji="🎢" value={utilidad} onChange={setUtilidad} />
             <SliderBCG label="Flexibilidad de Recorte" emoji="✂️" value={flexibilidad} onChange={setFlexibilidad} />
           </div>

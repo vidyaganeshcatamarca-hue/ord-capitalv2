@@ -132,17 +132,17 @@ export function PresupuestoCicloPage() {
         
         {/* Modo de Presupuesto */}
         <article className="config-section-card">
-          <h2>{t('config_budget_mode_title') || 'Modo de Presupuesto'}</h2>
+          <h2>{t('config_budget_mode_title')}</h2>
           <div className="config-section-field">
-            <label htmlFor="modo-presupuesto">{t('config_budget_mode_label') || 'Selecciona el método de presupuestación'}</label>
+            <label htmlFor="modo-presupuesto">{t('config_budget_mode_label')}</label>
             <select
               id="modo-presupuesto"
               value={config.modo_presupuesto}
               onChange={(e) => updateMode(e.target.value as 'anticipado' | 'base_cero')}
               disabled={loading || saving}
             >
-              <option value="anticipado">🕊️ {t('budget_mode_anticipado') || 'Anticipado (Libertad)'}</option>
-              <option value="base_cero">🔒 {t('budget_mode_base_cero') || 'Base Cero (Disciplina de Hierro)'}</option>
+              <option value="anticipado">🕊️ {t('budget_mode_anticipado')}</option>
+              <option value="base_cero">🔒 {t('budget_mode_base_cero')}</option>
             </select>
           </div>
 
@@ -167,7 +167,7 @@ export function PresupuestoCicloPage() {
           <p>{t('budget_label_ideal_distribution')}</p>
           
           <div className="config-section-field">
-            <label htmlFor="dia-ancla">{t('config_budget_anchor_day_label') || '📅 Día de inicio del ciclo (Día Ancla)'}</label>
+            <label htmlFor="dia-ancla">{t('config_budget_anchor_day_label')}</label>
             <select
               id="dia-ancla"
               value={config.dia_ancla_ciclo}
@@ -182,7 +182,7 @@ export function PresupuestoCicloPage() {
 
           <div className="config-section-field">
             <label style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>🏠 {t('budget_rule_necesidades') || 'Necesidades'}</span>
+              <span>🏠 {t('budget_rule_necesidades')}</span>
               <span>{config.porcentaje_necesidades}%</span>
             </label>
             <input
@@ -197,7 +197,7 @@ export function PresupuestoCicloPage() {
 
           <div className="config-section-field">
             <label style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>✨ {t('budget_rule_deseos') || 'Deseos'}</span>
+              <span>✨ {t('budget_rule_deseos')}</span>
               <span>{config.porcentaje_deseos}%</span>
             </label>
             <input
@@ -212,7 +212,7 @@ export function PresupuestoCicloPage() {
 
           <div className="config-section-field">
             <label style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>💎 {t('budget_rule_ahorro') || 'Ahorro/Inversión'}</span>
+              <span>💎 {t('budget_rule_ahorro')}</span>
               <span>{config.porcentaje_ahorro}%</span>
             </label>
             <input
@@ -227,7 +227,7 @@ export function PresupuestoCicloPage() {
 
           <div className="config-section-field">
             <label style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span>🙏 {t('budget_rule_diezmo') || 'Diezmo'}</span>
+              <span>🙏 {t('budget_rule_diezmo')}</span>
               <span>{config.porcentaje_diezmo}%</span>
             </label>
             <input
@@ -253,8 +253,8 @@ export function PresupuestoCicloPage() {
             }}
           >
             {isRulesValid
-              ? `✅ Total: 100% — ${t('budget_rules_valid_sum') || '¡Distribución correcta!'}`
-              : `⚠️ Total: ${sumPercentages}% — ${t('budget_rules_invalid_sum') || 'Debe sumar exactamente 100%'}`}
+              ? `✅ Total: 100% — ${t('budget_rules_valid_sum')}`
+              : `⚠️ Total: ${sumPercentages}% — ${t('budget_rules_invalid_sum')}`}
           </div>
         </article>
 

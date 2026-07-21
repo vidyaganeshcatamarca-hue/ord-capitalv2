@@ -116,7 +116,7 @@ export function BilleterasPage() {
 
     const saldoNum = parseFloat(newSaldoApertura)
     if (isNaN(saldoNum) || saldoNum < 0) {
-      showToast('Saldo de apertura inválido', 'error')
+      showToast(t('error_invalid_opening_balance'), 'error')
       return
     }
 
@@ -152,7 +152,7 @@ export function BilleterasPage() {
     e.preventDefault()
     if (!selectedBilletera) return
     if (!editName.trim()) {
-      showToast('El nombre no puede estar vacío', 'error')
+      showToast(t('error_name_empty'), 'error')
       return
     }
 
@@ -176,7 +176,7 @@ export function BilleterasPage() {
     
     // Validar en cliente de manera clara por si tiene saldo
     if (selectedBilletera.saldo_actual !== 0) {
-      showToast('No se puede archivar una cuenta con saldo activo. Vacíala antes de archivar.', 'error')
+      showToast(t('error_archive_active_balance'), 'error')
       return
     }
 
@@ -314,8 +314,8 @@ export function BilleterasPage() {
                       <div className="health-alert-text">
                         <strong>{b.nombre}</strong>:{' '}
                         {b.alertas_keys.includes('negative_balance') && 'Saldo en descubierto / negativo. '}
-                        {b.alertas_keys.includes('unreconciled') && 'Lleva más de 10 días sin conciliar. '}
-                        {b.alertas_keys.includes('no_movements') && 'Sin movimientos en 60 días (candidata a archivar).'}
+                        {b.alertas_keys.includes('unreconciled') && t('alert_unreconciled_10_days')}
+                        {b.alertas_keys.includes('no_movements') && t('alert_no_movements_60_days')}
                       </div>
                       <div className="flex gap-2">
                         {b.alertas_keys.includes('unreconciled') && (
@@ -360,7 +360,7 @@ export function BilleterasPage() {
                           <div className="billetera-item-info">
                             <div className="billetera-item-name">
                               <span className="billetera-name-text">{b.nombre}</span>
-                              {b.es_fondo_prevision && <span className="prevision-badge">Fondo Previsión</span>}
+                              {b.es_fondo_prevision && <span className="prevision-badge">{t('badge_prevision_fund')}</span>}
                               {b.saldo_inicial_pendiente && <span className="prevision-badge">{t('wallet_pending_initial_balance_badge')}</span>}
                             </div>
                             <div className="billetera-item-type">
@@ -458,7 +458,7 @@ export function BilleterasPage() {
                 <label className="text-xs text-muted mb-1 block font-semibold">Moneda</label>
                 <select className="form-control" value={newMoneda} onChange={(e) => setNewMoneda(e.target.value)}>
                   <option value="ARS">Pesos Argentinos (ARS)</option>
-                  <option value="USD">Dólares Estadounidenses (USD)</option>
+                  <option value="USD">{t('option_usd_currency')}</option>
                 </select>
               </div>
 
@@ -591,7 +591,7 @@ export function BilleterasPage() {
               </div>
 
               <div className="card mb-3" style={{ background: 'var(--surface-2)', textAlign: 'center', padding: 'var(--space-3)' }}>
-                <p className="text-xs text-muted uppercase tracking-wider mb-1">Saldo Teórico (App)</p>
+                <p className="text-xs text-muted uppercase tracking-wider mb-1">{t('label_theoretical_balance')}</p>
                 <p className="font-mono font-bold" style={{ fontSize: '22px', color: 'var(--text)' }}>
                   {formatAmount(conciliarBilletera.saldo_actual, conciliarBilletera.moneda)}
                 </p>
@@ -654,7 +654,7 @@ export function BilleterasPage() {
       <ConfirmModal
         isOpen={showConfirmArchive}
         title="Archivar"
-        message={`¿Estás seguro de que deseas archivar la cuenta "${selectedBilletera?.nombre}"? No aparecerá en el listado activo.`}
+        message={t('confirm_archive_wallet', { name: selectedBilletera?.nombre })}
         confirmText="Archivar"
         cancelText="Cancelar"
         type="danger"

@@ -67,7 +67,7 @@ export function EscudoTiempoWidget({ escudo, onDetalle }: EscudoTiempoWidgetProp
       </div>
       <div className="escudo-detail-row">
         <span>{t('war_escudo_label_quemado')}</span>
-        <strong>{formatMoneyARS(escudo.burn_rate_supervivencia)}/día</strong>
+        <strong>{formatMoneyARS(escudo.burn_rate_supervivencia)}{t("shield_per_day")}</strong>
       </div>
       {escudo.capital_real <= 0 && (
         <p className="escudo-alerta-roja">⚠️ {t('war_room_sin_liquidez')}</p>

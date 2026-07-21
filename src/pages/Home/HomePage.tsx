@@ -805,7 +805,7 @@ export function HomePage() {
             )}
             {alerts.dias_asfixia_proximos > 0 && (
               <div className="alert-item-row" style={{ borderLeftColor: 'var(--coral)' }}>
-                <span className="alert-item-label">⚠️ Días de Asfixia Financiera próximos</span>
+                <span className="alert-item-label">{t("home_alert_asfixia")}</span>
                 <span className="alert-item-badge">{alerts.dias_asfixia_proximos}</span>
               </div>
             )}

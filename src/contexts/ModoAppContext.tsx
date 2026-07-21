@@ -69,7 +69,7 @@ export function ModoAppProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.rpc('fn_activar_modo_avanzado')
       if (error) {
         if (error.message.includes('error_modo_avanzado_no_disponible')) {
-          showToast('El modo avanzado no está habilitado globalmente', 'error')
+          showToast(t('error_advanced_mode_disabled'), 'error')
         } else {
           showToast('Error al activar el modo avanzado', 'error')
         }

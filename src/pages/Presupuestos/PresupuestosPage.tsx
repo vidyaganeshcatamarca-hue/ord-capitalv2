@@ -61,8 +61,8 @@ const formatMesLabel = (d: Date) =>
 const TIPO_CUPO_META: Record<string, { label: string; icono: string }> = {
   need: { label: 'NECESIDADES', icono: '🏠' },
   want: { label: 'DESEOS', icono: '✨' },
-  investment: { label: 'AHORRO E INVERSIÓN', icono: '💎' },
-  saving: { label: 'AHORRO E INVERSIÓN', icono: '💎' },
+  investment: { label: t('budget_label_saving_investment'), icono: '💎' },
+  saving: { label: t('budget_label_saving_investment'), icono: '💎' },
   tithe: { label: 'DIEZMO', icono: '🙏' },
 }
 
@@ -278,15 +278,15 @@ export function PresupuestosPage() {
   }
 
   const getLabelDisponible = () => {
-    if (config?.modo_presupuesto === 'anticipado') return 'PROYECCIÓN DEL MES'
-    if (saldoAsignar === 0) return '¡BASE CERO ALCANZADO! ✅'
-    if (saldoAsignar !== null && saldoAsignar < 0) return 'SOBRE-ASIGNACIÓN'
+    if (config?.modo_presupuesto === 'anticipado') return t('budget_projection_month')
+    if (saldoAsignar === 0) return t('budget_zero_base_reached')
+    if (saldoAsignar !== null && saldoAsignar < 0) return t('budget_over_allocation')
     return 'DISPONIBLE PARA ASIGNAR'
   }
 
   const getSubtextoDisponible = () => {
-    if (config?.modo_presupuesto === 'anticipado') return t('budget_subtexto_anticipado') || 'Modo libertad activo — según tu dinero ideal'
-    if (saldoAsignar !== null && saldoAsignar < 0) return 'Estás presupuestando dinero que no tienes'
+    if (config?.modo_presupuesto === 'anticipado') return t('budget_subtexto_anticipado')
+    if (saldoAsignar !== null && saldoAsignar < 0) return t('budget_over_allocation_desc')
     if (saldoAsignar === 0) return 'Cada peso tiene un destino asignado'
     if (saldoAsignar !== null && saldoAsignar > 0) return 'Dinero esperando destino'
     return ''
@@ -304,7 +304,7 @@ export function PresupuestosPage() {
   const ejecutarAsignacion = async (monto: number) => {
     if (!sobreSeleccionado) return
     if (isNaN(monto) || monto <= 0) {
-      showToast('Ingresa un monto válido', 'error')
+      showToast(t('error_invalid_amount'), 'error')
       return
     }
     try {
@@ -314,13 +314,13 @@ export function PresupuestosPage() {
         p_mes_periodo: mesPeriodoStr,
       })
       if (error) throw error
-      showToast(`$${Math.round(monto).toLocaleString('es-AR')} ${t('toast_assigned_to') || 'asignado a'} ${t(sobreSeleccionado.nombre_categoria)}`, 'success')
+      showToast(`$${Math.round(monto).toLocaleString('es-AR')} ${t('toast_assigned_to')} ${t(sobreSeleccionado.nombre_categoria)}`, 'success')
       setShowAsignarSheet(false)
       setSobreSeleccionado(null)
       await cargarDatos()
     } catch (err: any) {
       const msg = err?.message?.includes('error_budget_insufficient_base_zero')
-        ? `No puedes asignar más. Disponible: ${formatMonto(saldoAsignar ?? 0)}`
+        ? t('budget_error_exceeds_available', { amount: formatMonto(saldoAsignar ?? 0) })
         : 'Error al asignar presupuesto'
       showToast(msg, 'error')
     }
@@ -336,7 +336,7 @@ export function PresupuestosPage() {
     }
     
     if (monto <= 0) {
-      showToast(t('budget_error_insufficient_funds') || 'No hay saldo disponible para asignar.', 'error')
+      showToast(t('budget_error_insufficient_funds'), 'error')
       return
     }
     
@@ -354,7 +354,7 @@ export function PresupuestosPage() {
   const handleMontoManualConfirmar = async () => {
     const montoAAgregar = parseFloat(montoManual.replace(/\./g, '').replace(',', '.'))
     if (isNaN(montoAAgregar) || montoAAgregar <= 0) {
-      showToast('Ingresa un monto válido', 'error')
+      showToast(t('error_invalid_amount'), 'error')
       return
     }
     const nuevoLimite = Number(sobreSeleccionado?.monto_asignado ?? 0) + montoAAgregar;
@@ -393,19 +393,19 @@ export function PresupuestosPage() {
     if (!origenSeleccionado || !sobreSeleccionado) return
     const monto = parseFloat(montoTransferir.replace(/\./g, '').replace(',', '.'))
     if (isNaN(monto) || monto <= 0) {
-      showToast('Ingresa un monto válido', 'error')
+      showToast(t('error_invalid_amount'), 'error')
       return
     }
 
     // Validar en cliente que no deje el origen en negativo
     if (origenSeleccionado.isVirtualDisponible) {
       if (monto > (saldoAsignar ?? 0)) {
-        showToast('No puedes asignar más del saldo disponible', 'error')
+        showToast(t('budget_error_exceeds_available_simple'), 'error')
         return
       }
     } else {
       if (monto > origenSeleccionado.monto_disponible) {
-        showToast('No puedes transferir más de lo disponible en el sobre origen', 'error')
+        showToast(t('budget_error_transfer_exceeds'), 'error')
         return
       }
     }
@@ -420,7 +420,7 @@ export function PresupuestosPage() {
           p_mes_periodo: mesPeriodoStr,
         })
         if (error) throw error
-        showToast(`✅ Se cubrió el déficit con disponible para asignar`, 'success')
+        showToast(t('budget_success_deficit_covered'), 'success')
       } else {
         const { error } = await supabase.rpc('fn_transferir_entre_sobres', {
           p_origen_id: origenSeleccionado.estructura_id,
@@ -491,7 +491,7 @@ export function PresupuestosPage() {
       return
     }
     if (reglasForm.diaAncla < 1 || reglasForm.diaAncla > 31) {
-      showToast('El día ancla debe estar entre 1 y 31', 'error')
+      showToast(t('budget_error_invalid_anchor_day'), 'error')
       return
     }
     setLoadingReglas(true)
@@ -531,9 +531,9 @@ export function PresupuestosPage() {
     } catch (err: any) {
       const errStr = String(err?.message || '') + ' ' + JSON.stringify(err);
       if (errStr.includes('error_base_cero_locked')) {
-        showToast(t('error_base_cero_locked') || 'No puedes volver al modo Libertad hasta el mes que viene.', 'error')
+        showToast(t('error_base_cero_locked'), 'error')
       } else {
-        showToast(t('toast_golden_rules_error') || 'Error al guardar la distribución de ingresos', 'error')
+        showToast(t('toast_golden_rules_error'), 'error')
       }
     } finally {
       setLoadingReglas(false)
@@ -603,7 +603,7 @@ export function PresupuestosPage() {
         }
       }
 
-      showToast('🎯 Modo Base Cero activado. ¡A presupuestar!', 'success')
+      showToast(t('budget_success_base_cero_activated'), 'success')
       setShowBaseCeroModal(false)
       await cargarDatos()
       if (returnToConfig) {
@@ -674,7 +674,7 @@ export function PresupuestosPage() {
                 pct_nec: String(config?.porcentaje_necesidades ?? 50),
                 pct_des: String(config?.porcentaje_deseos ?? 30),
                 pct_aho: String(config?.porcentaje_ahorro ?? 20),
-              }) || 'Proyección calculada en base a ingresos, porcentajes de distribución y gastos comprometidos de tarjetas.'}
+              })}
             />
           )}
         </div>
@@ -707,8 +707,8 @@ export function PresupuestosPage() {
                 <div className="alerta-header">
                   <span className="alerta-icon">⚠️</span>
                   <div className="alerta-text">
-                    <h4>{t('budget_exceeded_envelopes_title') || 'Tienes sobres excedidos'}</h4>
-                    <p>{t('budget_exceeded_envelopes_desc') || 'Cubre el déficit quitando dinero de otros sobres con saldo.'}</p>
+                    <h4>{t('budget_exceeded_envelopes_title')}</h4>
+                    <p>{t('budget_exceeded_envelopes_desc')}</p>
                   </div>
                 </div>
                 <div className="alerta-items">
@@ -727,7 +727,7 @@ export function PresupuestosPage() {
                           className="btn-cubrir-deficit"
                           onClick={() => handleAbrirTransferenciaDirecta(sobre)}
                         >
-                          {t('btn_cubrir_deficit') || 'Cubrir'}
+                          {t('btn_cubrir_deficit')}
                         </button>
                       </div>
                     </div>
@@ -749,7 +749,7 @@ export function PresupuestosPage() {
 
             <div className="presupuestos-footer-tip">
               <span className="tip-icono">💡</span>
-              <span>{t('budget_footer_tip_text') || 'Es normal ajustar los números en los primeros 2-3 meses. No te frustres si al principio requieres muchos cambios.'}</span>
+              <span>{t('budget_footer_tip_text')}</span>
             </div>
           </>
         )}
@@ -762,7 +762,7 @@ export function PresupuestosPage() {
         <div className="modal-overlay" onClick={() => setShowAsignarSheet(false)}>
           <div className="modal-sheet" onClick={e => e.stopPropagation()}>
             <div className="modal-handle" />
-            <div className="modal-titulo">{t('budget_modal_titulo_asignar') || 'Asignar presupuesto'}</div>
+            <div className="modal-titulo">{t('budget_modal_titulo_asignar')}</div>
 
             <div className="asignar-sheet-sobre">
               <span style={{
@@ -788,8 +788,8 @@ export function PresupuestosPage() {
                   <div className="asignar-opcion" onClick={handleLlenarHueco}>
                     <span className="asignar-opcion-icono">💰</span>
                     <div className="asignar-opcion-texto">
-                      <h4>{t('budget_opcion_llenar_hueco_title') || 'Llenar Hueco'}</h4>
-                      <p>{t('budget_opcion_llenar_hueco_desc') || 'Cubre el déficit o arrastre de esta categoría'}</p>
+                      <h4>{t('budget_opcion_llenar_hueco_title')}</h4>
+                      <p>{t('budget_opcion_llenar_hueco_desc')}</p>
                     </div>
                   </div>
                 )}
@@ -800,15 +800,15 @@ export function PresupuestosPage() {
                 }}>
                   <span className="asignar-opcion-icono">⌨️</span>
                   <div className="asignar-opcion-texto">
-                    <h4>{t('budget_opcion_ingresar_monto_title') || 'Ingresar Monto'}</h4>
-                    <p>{t('budget_opcion_ingresar_monto_desc') || 'Escribe el monto manualmente'}</p>
+                    <h4>{t('budget_opcion_ingresar_monto_title')}</h4>
+                    <p>{t('budget_opcion_ingresar_monto_desc')}</p>
                   </div>
                 </div>
 
                 <div className="asignar-opcion" onClick={handleAsignarTodo}>
                   <span className="asignar-opcion-icono">💸</span>
                   <div className="asignar-opcion-texto">
-                    <h4>{t('budget_opcion_asignar_todo_title') || 'Asignar Todo lo Disponible'}</h4>
+                    <h4>{t('budget_opcion_asignar_todo_title')}</h4>
                     <p>{t('budget_opcion_asignar_todo_desc', { monto: formatMonto(saldoAsignar ?? 0) }) || `Mueve los ${formatMonto(saldoAsignar ?? 0)} libres aquí`}</p>
                   </div>
                 </div>
@@ -822,8 +822,8 @@ export function PresupuestosPage() {
                   }}>
                     <span className="asignar-opcion-icono">↔️</span>
                     <div className="asignar-opcion-texto">
-                      <h4>{t('budget_opcion_cubrir_sobre_title') || 'Cubrir desde Otro Sobre'}</h4>
-                      <p>{t('budget_opcion_cubrir_sobre_desc') || 'Quítale dinero a otra categoría'}</p>
+                      <h4>{t('budget_opcion_cubrir_sobre_title')}</h4>
+                      <p>{t('budget_opcion_cubrir_sobre_desc')}</p>
                     </div>
                   </div>
                 )}
@@ -887,7 +887,7 @@ export function PresupuestosPage() {
 
             {fuentesDisponibles.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '20px 0', color: '#A0A0A0', fontSize: 13 }}>
-                {t('budget_label_transfer_no_envelopes') || 'No hay fondos disponibles para cubrir el déficit'}
+                {t('budget_label_transfer_no_envelopes')}
               </div>
             ) : (
               <div className="transferir-lista-sobres">
@@ -969,7 +969,7 @@ export function PresupuestosPage() {
             {/* Modo */}
             <div className="modo-toggle-section">
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <InfoBubble text={t('budget_info_modo_anticipado') || 'Modo anticipado: asignación libre sin restricciones de saldo real.'} />
+                <InfoBubble text={t('budget_info_modo_anticipado')} />
                 <button
                   className={`modo-toggle-btn${modoForm === 'anticipado' ? ' activo' : ''}`}
                   onClick={() => setModoForm('anticipado')}
@@ -978,7 +978,7 @@ export function PresupuestosPage() {
                 </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                <InfoBubble text={t('budget_info_modo_base_cero') || 'Modo base cero: cada peso debe tener un destino antes de gastarse.'} />
+                <InfoBubble text={t('budget_info_modo_base_cero')} />
                 <button
                   className={`modo-toggle-btn${modoForm === 'base_cero' ? ' activo' : ''}`}
                   onClick={() => setModoForm('base_cero')}
@@ -993,7 +993,7 @@ export function PresupuestosPage() {
               {([
                 { key: 'necesidades', emoji: '🏠', label: 'Necesidades' },
                 { key: 'deseos', emoji: '✨', label: 'Deseos' },
-                { key: 'ahorro', emoji: '💎', label: 'Ahorro/Inversión' },
+                { key: 'ahorro', emoji: '💎', label: t('budget_rule_ahorro') },
                 { key: 'diezmo', emoji: '🙏', label: 'Diezmo' },
               ] as const).map(({ key, emoji, label }) => (
                 <div className="regla-item" key={key}>
@@ -1021,13 +1021,13 @@ export function PresupuestosPage() {
             {/* Suma */}
             <div className={`reglas-suma-display ${reglasValidas ? 'ok' : 'error'}`}>
               {reglasValidas
-                ? '✅ Total: 100% — ¡Perfecto!'
+                ? t('budget_rules_total_perfect')
                 : `⚠️ Total: ${sumaReglas.toFixed(0)}% — Debe ser exactamente 100%`}
             </div>
 
             {/* Día ancla */}
             <div className="dia-ancla-section">
-              <div className="dia-ancla-label">📅 Día de inicio del ciclo</div>
+              <div className="dia-ancla-label">{t("budget_golden_rules_anchor_day")}</div>
               <input
                 className="dia-ancla-input"
                 type="number"
@@ -1062,20 +1062,20 @@ export function PresupuestosPage() {
             {paso === 1 ? (
               <>
                 <div className="modal-titulo">🔒 Activar Modo Disciplina de Hierro</div>
-                <div className="modal-subtitulo">Estás por activar un compromiso serio</div>
+                <div className="modal-subtitulo">{t("budget_golden_rules_modal_subtitle")}</div>
 
                 <div className="contrato-lista">
                   <div className="contrato-item">
                     <span className="contrato-item-icono">⚠️</span>
-                    Cada peso deberá tener un destino asignado antes de gastarlo.
+                    {t("budget_golden_rules_modal_point1")}
                   </div>
                   <div className="contrato-item">
                     <span className="contrato-item-icono">⚠️</span>
-                    Si gastas de más en una categoría, deberás quitarle a otra.
+                    {t("budget_golden_rules_modal_point2")}
                   </div>
                   <div className="contrato-item">
                     <span className="contrato-item-icono">⚠️</span>
-                    El sistema te confrontará visualmente con las consecuencias (sin bloquear).
+                    {t("budget_golden_rules_modal_point3")}
                   </div>
                 </div>
 
@@ -1105,19 +1105,19 @@ export function PresupuestosPage() {
               </>
             ) : (
               <>
-                <div className="modal-titulo">{t('budget_golden_rules_modal_sug_title') || '💡 Sugerencia Inicial'}</div>
+                <div className="modal-titulo">{t('budget_golden_rules_modal_sug_title')}</div>
                 <div className="sugerencia-liquidez-info">
                   {t('budget_golden_rules_modal_liquidity_info', { monto: formatMonto(liquidezActivacion) }) || `Tienes ${formatMonto(liquidezActivacion)} de liquidez real. Distribución sugerida según tus % de Distribución de Ingresos:`}
                 </div>
 
                 <div className="disclaimer-tip">
                   <span>💡</span>
-                  <span>{t('budget_golden_rules_modal_disclaimer_text') || 'Es normal tardar 2-3 meses en ajustar estos números a tu realidad. No te frustres si las primeras semanas requieres muchos ajustes.'}</span>
+                  <span>{t('budget_golden_rules_modal_disclaimer_text')}</span>
                 </div>
 
                 {sugerencias.length === 0 ? (
                   <div style={{ color: 'var(--color-text-muted)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>
-                    {t('budget_golden_rules_modal_no_categories') || 'No se encontraron gastos fijos ni variables para generar una sugerencia inicial. Podrás configurarlos luego.'}
+                    {t('budget_golden_rules_modal_no_categories')}
                   </div>
                 ) : (
                   <div className="sugerencias-lista">
@@ -1144,14 +1144,14 @@ export function PresupuestosPage() {
 
                 <div className="modal-btns">
                   <button className="btn-cancelar" onClick={() => handleConfirmarActivacion(true)} disabled={loadingActivar}>
-                    {t('btn_configure_later') || 'Configurar luego'}
+                    {t('btn_configure_later')}
                   </button>
                   <button
                     className="btn-primario"
                     onClick={() => handleConfirmarActivacion(false)}
                     disabled={loadingActivar}
                   >
-                    {loadingActivar ? t('budget_btn_activating') || 'Activando...' : t('budget_btn_confirm_and_assign') || 'Confirmar y Asignar'}
+                    {loadingActivar ? t('budget_btn_activating') : t('budget_btn_confirm_and_assign')}
                   </button>
                 </div>
               </>
@@ -1285,7 +1285,7 @@ function FilaSobre({ sobre, isLast, onAsignar }: FilaSobreProps) {
       {/* Arrastre badge */}
       {arrastre > 0 && (
         <div className="sobre-arrastre-badge">
-          ⚠️ Arrastre: -{`$${Math.round(arrastre).toLocaleString('es-AR')}`}
+          ⚠️ {t('budget_carryover_warning')}: -{`$${Math.round(arrastre).toLocaleString('es-AR')}`}
         </div>
       )}
     </div>
@@ -1301,7 +1301,7 @@ function InfoBubble({ text }: { text: string }) {
       <button
         className="info-bubble-btn"
         onClick={e => { e.stopPropagation(); setOpen(true) }}
-        aria-label="Información"
+        aria-label={t("aria_label_info")}
       >
         i
       </button>
@@ -1310,7 +1310,7 @@ function InfoBubble({ text }: { text: string }) {
           <div className="info-bubble-popup" onClick={e => e.stopPropagation()}>
             <div className="info-bubble-icon">💡</div>
             <div className="info-bubble-text">{text}</div>
-            <button className="info-bubble-close" onClick={() => setOpen(false)}>Entendido</button>
+            <button className="info-bubble-close" onClick={() => setOpen(false)}>{t("btn_understood")}</button>
           </div>
         </div>
       )}
@@ -1324,10 +1324,10 @@ function EmptyState() {
   return (
     <div className="presupuestos-empty">
       <div className="empty-icono">💰</div>
-      <h3>Sin categorías de presupuesto</h3>
+      <h3>{t("budget_empty_state_title")}</h3>
       <p>
-        Crea categorías con tipo de cupo (Necesidad / Deseo / Ahorro)
-        en la sección de <strong>Categorías</strong> para empezar a presupuestar.
+        {t("budget_empty_state_desc1")}
+        en la sección de <strong>{t("menu_categorias")}</strong> para empezar a presupuestar.
       </p>
     </div>
   )

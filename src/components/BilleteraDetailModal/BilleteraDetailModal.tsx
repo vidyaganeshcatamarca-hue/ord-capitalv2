@@ -83,7 +83,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
         </div>
 
         <div className="billetera-detail-body" style={{ padding: '0 16px 16px', overflowY: 'auto', maxHeight: '60vh' }}>
-          <h3 style={{ fontSize: '14px', color: 'var(--text-2)', marginBottom: '12px' }}>Últimos Movimientos</h3>
+          <h3 style={{ fontSize: '14px', color: 'var(--text-2)', marginBottom: '12px' }}>{t("title_latest_movements")}</h3>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '24px' }}><div className="spinner" /></div>
           ) : error ? (

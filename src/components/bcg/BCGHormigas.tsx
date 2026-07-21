@@ -194,7 +194,7 @@ export function BCGHormigas({ hormigas, reto, onCategoriaClick }: BCGHormigasPro
             <h3>{t('bcg_hormiga_estado_transfer_titulo', { monto: formatMoneyARS(reto.total_hormigas_mes) })}</h3>
             <p>
               {t('bcg_hormiga_estado_transfer_desc', {
-                buzon: reto.buzon_nombre ?? 'Buzón',
+                buzon: reto.buzon_nombre ?? t('mailbox'),
                 saldo: formatMoneyARS(reto.buzon_saldo_actual ?? 0),
               })}
             </p>
@@ -221,7 +221,7 @@ export function BCGHormigas({ hormigas, reto, onCategoriaClick }: BCGHormigasPro
             window.dispatchEvent(new CustomEvent('movement-added'))
           }}
           buzonId={reto.buzon_id}
-          buzonNombre={reto.buzon_nombre ?? 'Buzón'}
+          buzonNombre={reto.buzon_nombre ?? t('mailbox')}
           monto={reto.total_hormigas_mes}
         />
       )}

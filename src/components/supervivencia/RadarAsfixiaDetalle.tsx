@@ -20,7 +20,7 @@ function formatMoneyARS(v: number): string {
   }
 }
 
-const DIAS_SEMANA = ['Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sá', 'Do']
+const DIAS_SEMANA = [t('day_short_lu', {defaultValue:'Lu'}), t('day_short_ma', {defaultValue:'Ma'}), t('day_short_mi', {defaultValue:'Mi'}), t('day_short_ju', {defaultValue:'Ju'}), t('day_short_vi', {defaultValue:'Vi'}), t('day_short_sa', {defaultValue:'Sá'}), t('day_short_do', {defaultValue:'Do'})]
 const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 
 export function RadarAsfixiaDetalle({ radar }: RadarAsfixiaDetalleProps) {
@@ -58,7 +58,7 @@ export function RadarAsfixiaDetalle({ radar }: RadarAsfixiaDetalleProps) {
         <p className="radar-detalle-periodo">{mesActual}</p>
       </header>
 
-      <div className="radar-heatmap" role="grid" aria-label="Mapa de calor 30 días">
+      <div className="radar-heatmap" role="grid" aria-label={t("radar_heatmap_aria")}>
         <div className="radar-heatmap-dow">
           {DIAS_SEMANA.map((d) => (
             <span key={d} className="radar-heatmap-dow-cell">{d}</span>

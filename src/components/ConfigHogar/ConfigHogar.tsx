@@ -245,7 +245,7 @@ export function ConfigHogar({ onChange }: ConfigHogarProps) {
                   <button
                     className="btn btn-secondary"
                     onClick={() => {
-                      const message = `Te invito a unirte a mi hogar en ORD Capital. Usa este código: ${codigo.codigo}`
+                      const message = t('invite_home_message', { codigo: codigo.codigo })
                       window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank')
                     }}
                   >

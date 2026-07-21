@@ -210,7 +210,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
     e.preventDefault()
     const montoNum = parseFloat(monto)
     if (isNaN(montoNum) || montoNum <= 0) {
-      showToast('Por favor, ingresa un importe válido mayor a cero.', 'error')
+      showToast(t('error_invalid_amount_positive'), 'error')
       return
     }
 
@@ -389,7 +389,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
                     </option>
                   ))}
                 </optgroup>
-                <optgroup label="Tarjetas de Crédito">
+                <optgroup label={t("group_credit_cards")}>
                   {tarjetas.map(t => (
                     <option key={`tarjeta-${t.tarjeta_id}`} value={`tarjeta-${t.tarjeta_id}`}>
                       💳 {t.nombre_tarjeta}
@@ -431,7 +431,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
                   required
                   disabled={loading}
                 >
-                  <option value="">Selecciona categoría</option>
+                  <option value="">{t('option_select_category')}</option>
                   {categoriasEgreso.map(cat => (
                     <option key={cat.id} value={cat.id}>
                       {cat.label}

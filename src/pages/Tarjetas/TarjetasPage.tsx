@@ -99,17 +99,17 @@ function getSemaforoClass(alerta: string) {
 
 function getSemaforoLabel(alerta: string) {
   if (alerta === 'green') return '🟢 Saludable'
-  if (alerta === 'yellow') return '🟡 Precaución'
+  if (alerta === 'yellow') return t('card_status_caution')
   return '🔴 En Riesgo'
 }
 
 function getUrgencyMsg(key: string, dias: number): string {
   const map: Record<string, string> = {
-    msg_vencimiento_critico: `⚠️ Vence en ${dias} días. Acción inmediata requerida.`,
-    msg_vencimiento_urgente: `🟠 Vence en ${dias} días. Pago urgente.`,
-    msg_vencimiento_precaucion: `🟡 Vence en ${dias} días.`,
+    msg_vencimiento_critico: t('card_due_critical', { dias }),
+    msg_vencimiento_urgente: t('card_due_urgent', { dias }),
+    msg_vencimiento_precaucion: t('card_due_caution', { dias }),
   }
-  return map[key] || `Vence en ${dias} días`
+  return map[key] || t('card_due_normal', { dias })
 }
 
 function getTendenciaMsg(key: string): string {
@@ -123,12 +123,12 @@ function getTendenciaMsg(key: string): string {
 
 function getTermMsg(key: string): string {
   const map: Record<string, string> = {
-    msg_learning_data: 'El sistema necesita más datos (mínimo 30 días) para analizar tu capacidad de pago.',
-    msg_sufficient_balance_high_expenses: 'Tienes saldo hoy, pero tus gastos fijos son altos. Mantén reservas.',
-    msg_insufficient_balance_deficit: 'Tu saldo actual no alcanza para cubrir la próxima cuota. Revisá tu situación.',
+    msg_learning_data: t('card_learning_data'),
+    msg_sufficient_balance_high_expenses: t('card_sufficient_balance_high_expenses'),
+    msg_insufficient_balance_deficit: t('card_insufficient_balance_deficit'),
     msg_sufficient_balance_future_compromise: 'Tienes saldo hoy, pero compromisos futuros preocupantes.',
     msg_high_quota_insufficient_balance: 'La cuota es alta respecto a tu capacidad de pago habitual.',
-    ok: 'Tu tarjeta está en buen estado. Seguí así.',
+    ok: t('card_status_ok'),
   }
   return map[key] || key
 }
@@ -419,7 +419,7 @@ export function TarjetasPage() {
 
   const handlePagar = async () => {
     const monto = parseFloat(pagarMonto)
-    if (isNaN(monto) || monto <= 0) { showToast('Ingresa un monto válido', 'error'); return }
+    if (isNaN(monto) || monto <= 0) { showToast(t('error_invalid_amount'), 'error'); return }
     if (!pagarBilleteraId) { showToast(t('toast_select_source_wallet'), 'error'); return }
     if (!targetCard) return
     try {
@@ -461,7 +461,7 @@ export function TarjetasPage() {
     try {
       setLoading(true)
       await rpc('fn_desarchivar_tarjeta_credito', { p_tarjeta_id: tarjetaId })
-      showToast('Tarjeta reactivada con éxito', 'success')
+      showToast(t('card_reactivated_success'), 'success')
       fetchData()
     } catch (err: any) {
       showToast('Error al reactivar tarjeta: ' + parseError(err), 'error')
@@ -510,19 +510,19 @@ export function TarjetasPage() {
               className="tarjeta-detalle-action-btn"
               style={{ width: 28, height: 28, fontSize: 14 }}
               onClick={e => { e.stopPropagation(); setMenuOpen(menuOpen === tc.tarjeta_id ? null : tc.tarjeta_id) }}
-              aria-label="Menú tarjeta"
+              aria-label={t("aria_label_card_menu")}
             >⋮</button>
           </div>
         </div>
 
         {isConfigRequired ? (
           <div className="tarjeta-config-required" onClick={e => { e.stopPropagation(); openEdit(tc) }}>
-            ⚙️ Configura los límites para ver el análisis completo →
+            ⚙️ {t("card_configure_limits_analysis")} →
           </div>
         ) : (
           <>
             <div className="tarjeta-progress-row">
-              <span className="tarjeta-progress-label">Límite mensual utilizado</span>
+              <span className="tarjeta-progress-label">{t("card_monthly_limit_used")}</span>
               <span className={`tarjeta-progress-pct ${progressClass === 'danger' ? 'text-coral' : ''}`}>{usoPct}%</span>
             </div>
             <div className="tarjeta-progress-bar">
@@ -581,7 +581,7 @@ export function TarjetasPage() {
 
           {/* Widget de Límite Disponible */}
           <div className="tarjeta-detalle-section">
-            <div className="tarjeta-detalle-section-title">💰 Límite Disponible</div>
+            <div className="tarjeta-detalle-section-title">💰 {t("card_available_limit")}</div>
             <div className="limite-row">
               <div className="limite-disponible">{fmtARS(selectedCard.un_pago_disponible)}</div>
               <div className="limite-total">de {fmtARS(selectedCard.limite_un_pago_total)}</div>
@@ -594,8 +594,8 @@ export function TarjetasPage() {
             {venc && (
               <div className="vencimiento-widget" style={{ marginTop: 14 }}>
                 <div className="vencimiento-info">
-                  <div className="vencimiento-label">📅 Próximo Vencimiento</div>
-                  <div className="vencimiento-date">Día {venc.dia_vencimiento} ({venc.dias_para_vencimiento} días)</div>
+                  <div className="vencimiento-label">📅 {t("card_next_due_date")}</div>
+                  <div className="vencimiento-date">{t("card_due_date_format", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })}</div>
                   <div className="vencimiento-monto">Estimado: {fmtARS(venc.monto_a_pagar)}</div>
                 </div>
                 <button className="btn-pagar-resumen" onClick={() => {
@@ -613,7 +613,7 @@ export function TarjetasPage() {
           {/* Termómetro de Estrés */}
           <div className="termometro-widget">
             <div className="termometro-header">
-              <span className="termometro-title">📊 Termómetro de Estrés</span>
+              <span className="termometro-title">📊 {t("card_stress_thermometer")}</span>
               {termometro && (
                 <span className={`termometro-badge ${termometro.estado_alerta}`}>
                   {getSemaforoLabel(termometro.estado_alerta)}
@@ -634,11 +634,11 @@ export function TarjetasPage() {
                 <div className="termometro-metrics">
                   <div className="termometro-metric">
                     <div className="termometro-metric-value">{Number(termometro.indice_estres).toFixed(0)}%</div>
-                    <div className="termometro-metric-label">Índice estrés</div>
+                    <div className="termometro-metric-label">{t("card_stress_index")}</div>
                   </div>
                   <div className="termometro-metric">
                     <div className="termometro-metric-value">{fmtARS(termometro.cuota_proxima)}</div>
-                    <div className="termometro-metric-label">Próxima cuota</div>
+                    <div className="termometro-metric-label">{t("card_next_installment")}</div>
                   </div>
                   <div className="termometro-metric">
                     <div className="termometro-metric-value">{fmtARS(termometro.capacidad_pago_promedio)}</div>
@@ -650,7 +650,7 @@ export function TarjetasPage() {
                 </div>
               </>
             ) : (
-              <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>Sin datos suficientes para el análisis.</div>
+              <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{t("card_insufficient_data_analysis")}</div>
             )}
           </div>
 
@@ -771,7 +771,7 @@ export function TarjetasPage() {
           <ConfirmModal
             isOpen={showArchiveConfirm}
             title="Archivar tarjeta"
-            message={`¿Archivar "${targetCard?.nombre_tarjeta}"? Solo deberías hacerlo si no tiene compromisos pendientes.`}
+            message={`t("card_archive_confirm_pending", { name: targetCard?.nombre_tarjeta })`}
             confirmText="Archivar"
             type="danger"
             onConfirm={handleArchive}
@@ -833,7 +833,7 @@ export function TarjetasPage() {
                   </div>
                   <div className="tarjetas-alert-monto">
                     <div className="tarjetas-alert-monto-value">{fmtARS(v.monto_a_pagar)}</div>
-                    <div className="tarjetas-alert-days">{v.dias_para_vencimiento} días</div>
+                    <div className="tarjetas-alert-days">{t("card_days_format", { days: v.dias_para_vencimiento })}</div>
                   </div>
                 </div>
               ))}
@@ -864,8 +864,8 @@ export function TarjetasPage() {
             ) : tarjetas.length === 0 ? (
               <div className="tarjetas-empty">
                 <div className="tarjetas-empty-icon">💳</div>
-                <h3>Sin tarjetas todavía</h3>
-                <p>Agregá tu primera tarjeta para gestionar tus deudas y cuotas</p>
+                <h3>{t("card_empty_state_title")}</h3>
+                <p>{t("card_empty_state_desc")}</p>
                 <button className="tarjetas-empty-btn" onClick={() => { resetForm(); setShowCreateModal(true) }}>
                   + Agregar Tarjeta
                 </button>
@@ -932,7 +932,7 @@ export function TarjetasPage() {
                       <div style={{ fontSize: '24px' }}>{a.icono || '💰'}</div>
                       <div>
                         <h4 style={{ margin: 0, fontSize: '16px' }}>{a.nombre_acreedor}</h4>
-                        <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-3)' }}>{a.tipo_deuda === 'tarjeta' ? 'Tarjeta de Crédito' : 'Préstamo/Deuda'}</p>
+                        <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-3)' }}>{a.tipo_deuda === 'tarjeta' ? t('card_type_credit') : t('card_type_loan')}</p>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
@@ -955,7 +955,7 @@ export function TarjetasPage() {
               <div className="tarjetas-empty">
                 <div className="tarjetas-empty-icon">📊</div>
                 <h3>Sin datos comparativos</h3>
-                <p>Necesitás al menos un ciclo completo de uso para ver la comparativa mensual</p>
+                <p>{t("card_need_full_cycle_comparative")}</p>
               </div>
             ) : (
               <div className="comparativa-list">
@@ -1080,7 +1080,7 @@ export function TarjetasPage() {
           <ConfirmModal
             isOpen={showArchiveConfirm}
             title="Archivar tarjeta"
-            message={`¿Archivar "${targetCard?.nombre_tarjeta}"? Esta acción es reversible desde ajustes.`}
+            message={`t("card_archive_confirm_reversible", { name: targetCard?.nombre_tarjeta })`}
             confirmText="Archivar"
             type="danger"
             onConfirm={handleArchive}
@@ -1187,13 +1187,13 @@ export function TarjetaFormModal({
           </div>
           <div className="tarjeta-form-row">
             <div>
-              <label className="tarjeta-form-label">Día de Cierre</label>
+              <label className="tarjeta-form-label">{t("card_form_closing_day")}</label>
               <input className="tarjeta-form-input" type="number" min={1} max={31}
                 value={formDiaCierre} onChange={e => setFormDiaCierre(e.target.value)}
                 placeholder="Ej: 5" inputMode="numeric" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
             </div>
             <div>
-              <label className="tarjeta-form-label">Día de Vencimiento</label>
+              <label className="tarjeta-form-label">{t("card_form_due_day")}</label>
               <input className="tarjeta-form-input" type="number" min={1} max={31}
                 value={formDiaVenc} onChange={e => setFormDiaVenc(e.target.value)}
                 placeholder="Ej: 10" inputMode="numeric" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
@@ -1201,20 +1201,20 @@ export function TarjetaFormModal({
           </div>
           <div className="tarjeta-form-row">
             <div>
-              <label className="tarjeta-form-label">Límite Mensual Un Pago ($) (Opcional)</label>
+              <label className="tarjeta-form-label">{t("card_form_monthly_limit_optional")}</label>
               <input className="tarjeta-form-input" type="number" min={0}
                 value={formLimiteUnPago} onChange={e => setFormLimiteUnPago(e.target.value)}
                 placeholder="Ej: 300000" inputMode="decimal" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
             </div>
             <div>
-              <label className="tarjeta-form-label">Límite para Compras en Cuotas ($) (Opcional)</label>
+              <label className="tarjeta-form-label">{t("card_form_installments_limit_optional")}</label>
               <input className="tarjeta-form-input" type="number" min={0}
                 value={formLimiteCuotas} onChange={e => setFormLimiteCuotas(e.target.value)}
                 placeholder="Ej: 500000" inputMode="decimal" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
             </div>
           </div>
           <div>
-            <label className="tarjeta-form-label">% Recargo Dólar (Opcional)</label>
+            <label className="tarjeta-form-label">{t("card_form_usd_surcharge_optional")}</label>
             <input className="tarjeta-form-input" type="number" min={0} step="0.01"
               value={formRecargoDolar} onChange={e => setFormRecargoDolar(e.target.value)}
               placeholder="Ej: 30" inputMode="decimal" enterKeyHint="done" onKeyDown={handleKeyDown} onFocus={handleFocus} />

@@ -4,12 +4,18 @@ import { useToast } from '@/contexts/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { t, parseError } from '@/locales/i18n'
-import { withTimeout } from '@/utils/async'
 import './Auth.css'
 
 type Mode = 'login' | 'register'
 type BudgetMode = 'libertad' | 'disciplina'
 type CurrencyCode = 'ARS' | 'USD' | 'MXN' | 'EUR' | 'CLP' | 'COP' | 'PEN' | 'UYU'
+
+const withTimeout = <T,>(promise: PromiseLike<T>, ms = 4000): Promise<T> => {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error('Timeout')), ms))
+  ])
+}
 
 export function AuthPage() {
   const navigate = useNavigate()
@@ -206,12 +212,12 @@ export function AuthPage() {
     
     if (anchorDay === 1) {
       const lastDayCurrent = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
-      return `Tu ciclo irá del 1 de ${currentMonth} al ${lastDayCurrent} de ${currentMonth}.`
+      return t('auth_cycle_preview_same_month', { currentMonth, lastDay: lastDayCurrent })
     } else {
       const nextMonthDate = new Date(today.getFullYear(), today.getMonth() + 1, 1)
       const nextMonth = nextMonthDate.toLocaleString('es-ES', { month: 'long' })
       const endDay = anchorDay - 1
-      return `Tu ciclo irá del ${anchorDay} de ${currentMonth} al ${endDay} de ${nextMonth}.`
+      return t('auth_cycle_preview_diff_month', { startDay: anchorDay, currentMonth, endDay, nextMonth })
     }
   }
 
@@ -561,7 +567,7 @@ export function AuthPage() {
             {/* Selector de Día Ancla (Spinner/Grid) */}
             <div className="anchor-day-selector">
               <div className="anchor-day-display">
-                Día <span className="anchor-day-number">{anchorDay}</span>
+                {t("auth_day")} <span className="anchor-day-number">{anchorDay}</span>
               </div>
               <input
                 type="range"

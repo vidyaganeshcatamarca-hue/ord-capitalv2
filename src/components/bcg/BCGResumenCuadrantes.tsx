@@ -24,7 +24,7 @@ const CUADRANTE_TO_BCG: Record<ResumenCuadrante['cuadrante_key'], keyof typeof B
 const CUADRANTE_ORDER: ResumenCuadrante['cuadrante_key'][] = ['dog', 'star', 'dilemma', 'cow']
 
 const MESSAGES: Record<ResumenCuadrante['cuadrante_key'], (monto: string) => string> = {
-  dog: (m) => `${m}/mes te están drenando`,
+  dog: (m) => `${t('bcg_dog_desc', { m })}`,
   star: (m) => `Aportan valor y suman ${m}`,
   dilemma: (m) => `Compras impulsivas por ${m}`,
   cow: (m) => `Inversiones puntuales por ${m}`,

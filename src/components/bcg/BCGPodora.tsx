@@ -150,7 +150,7 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
             <strong>{formatMoneyARS(totalMensual)}</strong>
           </div>
           <div>
-            <span>/ año</span>
+            <span>{t("bcg_per_year")}</span>
             <strong>{formatMoneyARS(totalAnual)}</strong>
           </div>
         </div>
@@ -199,7 +199,7 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
               ) : (
                 <span className="bcg-podora-muted">—</span>
               )}
-              <small>Escudo actual: {lineaBase.escudo_dias_actual} días</small>
+              <small>{t('bcg_current_shield', { dias: lineaBase.escudo_dias_actual })}</small>
             </div>
           ) : tieneMetas && metaPrioritaria ? (
             <div className="bcg-podora-impacto-detalle">
@@ -249,7 +249,7 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
 
   function showToastFallback() {
     // Toast inline sin html2canvas: placeholder.
-    alert('📷 html2canvas no disponible. Próximamente.')
+    alert(t('error_html2canvas_unavailable'))
   }
 }
 

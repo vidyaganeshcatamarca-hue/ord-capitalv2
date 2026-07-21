@@ -138,7 +138,7 @@ export function EscudoTiempoDetalle({ escudo, onRecargar, showToast }: EscudoTie
         </li>
         <li>
           <span>📉 {t('war_escudo_detalle_burn_supervivencia')}</span>
-          <strong>{formatMoneyARS(escudo.burn_rate_supervivencia)}/día</strong>
+          <strong>{formatMoneyARS(escudo.burn_rate_supervivencia)}{t("shield_per_day")}</strong>
         </li>
         <li>
           <span>📅 {t('war_escudo_detalle_ventana', { dias: escudo.ventana_dias_usada })}</span>
@@ -190,7 +190,7 @@ export function EscudoTiempoDetalle({ escudo, onRecargar, showToast }: EscudoTie
                 <div className="escudo-escenario-datos">
                   <div className="escudo-escenario-dato">
                     <span>{t('war_escudo_simulador_nuevo_escudo')}</span>
-                    <strong className="escudo-escenario-dias">{esc.dias} días</strong>
+                    <strong className="escudo-escenario-dias">{t("shield_days", { dias: esc.dias })}</strong>
                   </div>
                   {!esc.esBase && (
                     <div className="escudo-escenario-dato">

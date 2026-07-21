@@ -44,9 +44,9 @@ export function PWACard() {
         return /iphone|ipad|ipod/.test(userAgent)
       }
       if (isIos()) {
-        showToast(t('pwa_install_ios_hint') || 'Toca "Compartir" y luego "Agregar a Inicio" en Safari.', 'info')
+        showToast(t('pwa_install_ios_hint'), 'info')
       } else {
-        showToast(t('pwa_already_installed_or_unsupported') || 'La app ya está instalada o tu navegador no soporta esta función.', 'info')
+        showToast(t('pwa_already_installed_or_unsupported'), 'info')
       }
       return
     }

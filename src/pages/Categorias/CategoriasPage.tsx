@@ -157,9 +157,9 @@ function RubroModal({ rubro, onClose, onSaved }: {
             onChange={e => setNombre(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
             enterKeyHint="next"
-            placeholder="Ej: Alimentación" required disabled={loading} />
+            placeholder={t("placeholder_category_food")} required disabled={loading} />
 
-          <label className="cat-label">Clasificación Presupuestaria</label>
+          <label className="cat-label">{t("label_budget_classification")}</label>
           <div className="cat-cupo-grid mb-3">
             {CUPOS.map(c => (
               <button key={c.value} type="button"
@@ -171,7 +171,7 @@ function RubroModal({ rubro, onClose, onSaved }: {
             ))}
           </div>
 
-          <label className="cat-label">Ícono</label>
+          <label className="cat-label">{t("label_icon")}</label>
           <EmojiPicker value={icono} onChange={setIcono} selectedColor={color} />
 
           <label className="cat-label mt-3">Color</label>
@@ -276,7 +276,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
             }}
           />
 
-          <label className="cat-label">Descripción (opcional)</label>
+          <label className="cat-label">{t("label_desc_optional")}</label>
           <input
             id="ingreso-descripcion"
             className="form-control mb-3"
@@ -293,7 +293,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
             }}
           />
 
-          <label className="cat-label">Ícono</label>
+          <label className="cat-label">{t("label_icon")}</label>
           <EmojiPicker value={icono} onChange={setIcono} selectedColor={color} />
 
           <label className="cat-label mt-3">Color</label>
@@ -356,7 +356,7 @@ export function TabEgresos() {
   }
   const cupoLabel: Record<string, string> = {
     necesidad: 'Necesidad', deseo: 'Deseo', diezmo: 'Diezmo',
-    ahorro: 'Ahorro', inversion: 'Inversión',
+    ahorro: t('cat_saving_label'), inversion: t('cat_investment_label'),
     need: 'Necesidad', want: 'Deseo',
   }
 
@@ -366,7 +366,7 @@ export function TabEgresos() {
       <div className="cat-toolbar">
         <div className="cat-search-wrap">
           <span className="cat-search-icon">🔍</span>
-          <input className="cat-search" placeholder="Buscar categoría..." value={query}
+          <input className="cat-search" placeholder={t("placeholder_search_category")} value={query}
             onChange={e => setQuery(e.target.value)} />
         </div>
         <button className="btn btn-primary cat-new-btn"
@@ -380,7 +380,7 @@ export function TabEgresos() {
       ) : filteredRubros.length === 0 ? (
         <div className="cat-empty">
           <div className="cat-empty-icon">🏷️</div>
-          <div className="cat-empty-title">Sin categorías</div>
+          <div className="cat-empty-title">{t("cat_empty_title")}</div>
           <div className="cat-empty-desc">Crea tu primer rubro para comenzar a clasificar tus gastos.</div>
           <button className="btn btn-primary mt-3" onClick={() => setRubroModal({ open: true, rubro: null })}>+ Crear Rubro</button>
         </div>
@@ -422,7 +422,7 @@ export function TabEgresos() {
                 {isOpen && (
                   <div className="cat-hijos">
                     {hijos.length === 0 ? (
-                      <div className="cat-hijo-empty">Sin subcuentas aún</div>
+                      <div className="cat-hijo-empty">{t("cat_child_empty")}</div>
                     ) : (
                       hijos.map(hijo => (
                         <div key={hijo.estructura_id} className="cat-hijo-row">
@@ -474,15 +474,15 @@ export function TabEgresos() {
       )}
       <ConfirmModal
         isOpen={deleteConfirm.open}
-        title="Eliminar Categoría"
-        message={`¿Estás seguro de que deseas eliminar la categoría "${deleteConfirm.nombre}"? No se podrá recuperar.`}
+        title={t("title_delete_category")}
+        message={t('confirm_delete_category', { name: deleteConfirm.nombre })}
         confirmText="Eliminar"
         cancelText="Cancelar"
         type="danger"
         onConfirm={async () => {
           try {
             await rpc('fn_eliminar_estructura_egreso', { p_estructura_id: deleteConfirm.id })
-            showToast('Categoría eliminada', 'success')
+            showToast(t('success_category_deleted'), 'success')
             fetchRubros()
           } catch (err: any) {
             showToast(parseError(err), 'error')
@@ -540,7 +540,7 @@ export function TabIngresos({ hideNewBtn = false }: { hideNewBtn?: boolean }) {
         <div className="cat-empty">
           <div className="cat-empty-icon">💰</div>
           <div className="cat-empty-title">Sin fuentes de ingreso</div>
-          <div className="cat-empty-desc">Crea las categorías de donde proviene tu dinero (Salario, Freelance, Alquiler…)</div>
+          <div className="cat-empty-desc">{t("cat_empty_desc")}</div>
           <button className="btn btn-primary mt-3" onClick={() => setModal({ open: true, item: null })}>+ Crear Fuente</button>
         </div>
       ) : (
@@ -578,7 +578,7 @@ export function CategoriasPage() {
   return (
     <div className="page cat-page">
       <div className="cat-page-header">
-        <h1 className="font-display cat-page-title">Categorías</h1>
+        <h1 className="font-display cat-page-title">{t("title_categories")}</h1>
         <p className="cat-page-subtitle">Organiza tus movimientos financieros</p>
       </div>
 

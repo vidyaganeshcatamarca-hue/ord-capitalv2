@@ -53,10 +53,10 @@ export class ErrorBoundary extends Component<Props, State> {
           }}>
             <span style={{ fontSize: '48px', display: 'block', marginBottom: '16px' }}>⚠️</span>
             <h1 style={{ fontSize: '22px', margin: '0 0 12px 0', fontFamily: 'Outfit, sans-serif', fontWeight: 'bold' }}>
-              Algo salió mal
+              {t('error_boundary_title')}
             </h1>
             <p style={{ fontSize: '14px', color: '#A0A0A0', lineHeight: '1.6', margin: '0 0 24px 0' }}>
-              Ocurrió un error inesperado al renderizar esta sección. Hemos registrado el incidente para solucionarlo pronto.
+              {t('error_boundary_desc')}
             </p>
             <button
               onClick={() => window.location.reload()}
@@ -72,7 +72,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 transition: 'all 0.2s'
               }}
             >
-              Recargar aplicación
+              {t('btn_reload_app')}
             </button>
           </div>
         </div>

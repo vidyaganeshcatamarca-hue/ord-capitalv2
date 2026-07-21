@@ -112,8 +112,8 @@ export function AddCategoryModal({ onClose, onSuccess }: AddCategoryModalProps) 
       <div className="bottom-sheet" style={{ zIndex: 1030, maxHeight: '90%' }}>
         <div className="bottom-sheet-handle" />
         <form onSubmit={handleSubmit} style={{ padding: 'var(--space-4) var(--space-2)' }}>
-          <h3 className="font-display mb-1" style={{ fontSize: '18px' }}>🏷️ Crear Categoría</h3>
-          <p className="text-xs text-muted mb-4">Crea una categoría principal o agrégala bajo un rubro existente.</p>
+          <h3 className="font-display mb-1" style={{ fontSize: '18px' }}>{t("title_create_category")}</h3>
+          <p className="text-xs text-muted mb-4">{t("desc_create_category")}</p>
 
           {/* Selector de Tipo de Categoría */}
           <div className="movement-type-selector">
@@ -131,7 +131,7 @@ export function AddCategoryModal({ onClose, onSuccess }: AddCategoryModalProps) 
               style={isSubcategory ? { background: 'var(--surface-3)', color: 'var(--text)' } : {}}
               onClick={() => setIsSubcategory(true)}
             >
-              Subcategoría Hija
+              {t("label_subcategory_child")}
             </button>
           </div>
 
@@ -172,7 +172,7 @@ export function AddCategoryModal({ onClose, onSuccess }: AddCategoryModalProps) 
           {/* Tipo de Cupo (Solo para Principal) */}
           {!isSubcategory && (
             <div className="form-group mb-4">
-              <label className="text-xs text-muted mb-2 block font-semibold">Clasificación Presupuestaria</label>
+              <label className="text-xs text-muted mb-2 block font-semibold">{t("label_budget_classification")}</label>
               <select
                 className="form-control"
                 value={tipoCupo}
@@ -181,8 +181,8 @@ export function AddCategoryModal({ onClose, onSuccess }: AddCategoryModalProps) 
               >
                 <option value="need">Necesidades (Gastos obligatorios/fijos)</option>
                 <option value="want">Deseos (Ocio, placer, gustos)</option>
-                <option value="saving">Ahorro (Metas, previsión)</option>
-                <option value="investment">Inversión (Activos financieros)</option>
+                <option value="saving">{t("option_saving_desc")}</option>
+                <option value="investment">{t("option_investment_desc")}</option>
                 <option value="tithe">Diezmo (Donaciones, aportes)</option>
               </select>
             </div>
@@ -208,7 +208,7 @@ export function AddCategoryModal({ onClose, onSuccess }: AddCategoryModalProps) 
           {/* Selector de Colores (Solo para Principal) */}
           {!isSubcategory && (
             <div className="form-group mb-5">
-              <label className="text-xs text-muted mb-2 block font-semibold">Color Temático</label>
+              <label className="text-xs text-muted mb-2 block font-semibold">{t("label_theme_color")}</label>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {CATEGORY_COLORS.map((col) => (
                   <button

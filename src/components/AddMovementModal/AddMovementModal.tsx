@@ -652,7 +652,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
   // ── Guardar ──
   const handleSave = async () => {
     const montoNum = parseFloat(monto)
-    if (!montoNum || montoNum <= 0) return showToast('Monto inválido', 'error')
+    if (!montoNum || montoNum <= 0) return showToast(t('error_invalid_amount'), 'error')
     if (origenTipo === 'billetera' && !billeteraOrigenId) return showToast('Selecciona una cuenta', 'error')
     
     // Check pending initial balance
@@ -896,7 +896,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         />
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, padding: '12px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <span style={{ fontSize: 13, color: 'var(--color-text)', fontWeight: 500 }}>Compra en Dólares (USD)</span>
+                            <span style={{ fontSize: 13, color: 'var(--color-text)', fontWeight: 500 }}>{t('card_usd_purchase')}</span>
                           </div>
                           <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24 }}>
                             <input type="checkbox" checked={esUsd} onChange={e => setEsUsd(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
@@ -919,7 +919,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           const mFinal = montoNum * cotizacionUsd * (1 + rPct / 100)
                           return (
                             <div style={{ fontSize: 11, color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: 8, marginTop: 8, borderLeft: '3px solid var(--color-mint)' }}>
-                              Cotización actual: {formatMonto(cotizacionUsd.toString(), 'ARS')} USD <br/> Recargo impositivo: {rPct}%
+                              {t('card_usd_quote_current', { rate: formatMonto(cotizacionUsd.toString(), 'ARS'), pct: rPct })}
                               <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>Total estimado ARS: {formatMonto(mFinal.toString(), 'ARS')}</span>
                             </div>
                           )
@@ -958,7 +958,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     <div className="pc-form-col category-col">
                       {showAllCat && !categoriaEgreso ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                          <div className="step-title" style={{ margin: 0 }}>2. Categoría</div>
+                          <div className="step-title" style={{ margin: 0 }}>2. {t('step_category')}</div>
                           <button type="button" className="btn-back-recents" onClick={() => { setShowAllCat(false); setQueryCat(''); }} style={{
                             background: 'var(--surface-3)',
                             border: 'none',
@@ -974,7 +974,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           </button>
                         </div>
                       ) : (
-                        <div className="step-title">2. Categoría</div>
+                        <div className="step-title">2. {t('step_category')}</div>
                       )}
 
                       {/* Selector de proyectos (sólo si tiene pareja y hay proyectos) */}
@@ -1016,7 +1016,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         <>
                           <div className="cat-quick-search">
                             <span>🔍</span>
-                            <input placeholder="Buscar categoría..." value={queryCat}
+                            <input placeholder={t("placeholder_search_category")} value={queryCat}
                               onChange={e => { setQueryCat(e.target.value); setShowAllCat(true) }}
                               className="cat-quick-input" />
                           </div>
@@ -1025,7 +1025,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                             <>
                               <div className="desktop-categories-toolbar">
                                 <button type="button" className="btn-link-ver-todas desktop-visible-link" onClick={() => setShowAllCat(true)}>
-                                  + Ver todas las categorías
+                                  + {t("btn_see_all_categories")}
                                 </button>
                               </div>
                               <div className="cat-frecuentes-grid">
@@ -1092,7 +1092,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                           <button
                                             type="button"
                                             className="btn-add-subcat-quick"
-                                            title="Agregar subcategoría"
+                                            title={t("title_add_subcategory")}
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               openNewSubcatModal(rubro);
@@ -1278,7 +1278,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       </div>
                       {categoriaEgreso && (
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: 'var(--text-3)' }}>Categoría:</span>
+                          <span style={{ color: 'var(--text-3)' }}>{t("label_category")}:</span>
                           <span>{categoriaEgreso.icono} {categoriaEgreso.nombre}</span>
                         </div>
                       )}
@@ -1388,7 +1388,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                   </select>
 
                   {/* Cuándo (Fecha) */}
-                  <label className="step-label">¿Cuándo?</label>
+                  <label className="step-label">{t("step_when")}</label>
                   <div className="fecha-chips" style={{ marginBottom: '16px' }}>
                     {FECHA_CHIPS.map(chip => {
                       const val = toLocalDate(chip.offset)
@@ -1482,7 +1482,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                   {/* Categoría (solo para egresos) */}
                   {tipo === 'expense' && (
                     <div className="mobile-category-picker-section" style={{ marginBottom: '16px' }}>
-                      <label className="step-label">Categoría</label>
+                      <label className="step-label">{t("label_category")}</label>
 
                       {remoteSectionLoading ? (
                         <div className="warning-card" style={{ padding: '16px', textAlign: 'center', width: '100%' }}>
@@ -1529,7 +1529,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                               fontSize: '14px',
                               marginBottom: '12px'
                             }}>
-                              🔍 Selecciona una categoría...
+                              🔍 {t("placeholder_select_category")}
                             </div>
                           )}
 
@@ -1596,7 +1596,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     <div className="centered-cat-modal-overlay" onClick={() => setMobileShowAllCat(false)}>
                       <div className="centered-cat-modal" onClick={e => e.stopPropagation()}>
                         <div className="centered-cat-modal-header">
-                          <h3 className="font-display">Seleccionar Categoría</h3>
+                          <h3 className="font-display">{t("title_select_category")}</h3>
                           <button className="centered-cat-modal-close" onClick={() => setMobileShowAllCat(false)}>✕</button>
                         </div>
                         <div className="centered-cat-modal-body">
@@ -1665,7 +1665,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                         <button
                                           type="button"
                                           className="btn-add-subcat-quick"
-                                          title="Agregar subcategoría"
+                                          title={t("title_add_subcategory")}
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             openNewSubcatModal(rubro);
@@ -1825,7 +1825,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       ))}
                     </optgroup>
                     {tipo === 'expense' && tarjetas.length > 0 && (
-                      <optgroup label="Tarjetas de Crédito">
+                      <optgroup label={t("group_credit_cards")}>
                         {tarjetas.map(t => (
                           <option key={`t_${t.tarjeta_id}`} value={`t_${t.tarjeta_id}`} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
                             💳 {t.nombre_tarjeta}
@@ -1848,7 +1848,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       />
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, padding: '12px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                          <span style={{ fontSize: 14, color: 'var(--color-text)', fontWeight: 500 }}>Compra en Dólares (USD)</span>
+                          <span style={{ fontSize: 14, color: 'var(--color-text)', fontWeight: 500 }}>{t('card_usd_purchase')}</span>
                         </div>
                         <label style={{ position: 'relative', display: 'inline-block', width: 44, height: 24 }}>
                           <input type="checkbox" checked={esUsd} onChange={e => setEsUsd(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
@@ -1871,7 +1871,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         const mFinal = montoNum * cotizacionUsd * (1 + rPct / 100)
                         return (
                           <div style={{ fontSize: 12, color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: 8, marginTop: 10, borderLeft: '3px solid var(--color-mint)' }}>
-                            Cotización: {formatMonto(cotizacionUsd.toString(), 'ARS')} USD <br/> Recargo: {rPct}%
+                            {t('card_usd_quote_simple', { rate: formatMonto(cotizacionUsd.toString(), 'ARS'), pct: rPct })}
                             <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>Total estimado ARS: {formatMonto(mFinal.toString(), 'ARS')}</span>
                           </div>
                         )
@@ -1919,7 +1919,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                   )}
 
                   {/* Cuándo (Fecha) */}
-                  <label className="step-label">¿Cuándo?</label>
+                  <label className="step-label">{t("step_when")}</label>
                   <div className="fecha-chips" style={{ marginBottom: '16px' }} onClick={() => setShowCalculator(false)}>
                     {FECHA_CHIPS.map(chip => {
                       const val = toLocalDate(chip.offset)

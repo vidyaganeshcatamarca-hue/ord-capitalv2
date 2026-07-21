@@ -71,7 +71,7 @@ export function BCGDetalleCategoria() {
     return (
       <div className="bcg-detalle-empty">
         <span>📊</span>
-        <p>No hay datos de la categoría seleccionada.</p>
+        <p>{t("bcg_no_data")}</p>
         <button className="btn btn-secondary" onClick={() => navigate('/analisis-emocional')}>
           {t('btn_back')}
         </button>

@@ -85,7 +85,7 @@ export function LicuadoraDetalle({ licuadora, onIrAInversiones }: LicuadoraDetal
             <span className="lic-barra-valor">{formatPct(nominal)}</span>
           </div>
           <div className="lic-barra-row">
-            <span className="lic-barra-label">📈 Inflación</span>
+            <span className="lic-barra-label">{t("inflation_badge")}</span>
             <div className="lic-barra-track">
               <div
                 className="lic-barra-fill lic-barra-rojo"
