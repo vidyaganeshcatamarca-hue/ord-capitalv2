@@ -10,10 +10,16 @@ const ASSETS_TO_CACHE = [
 
 // Installation: Cache core shell
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    }).then(() => self.skipWaiting())
+      // We use map and catch to prevent one missing file from breaking the whole SW installation
+      return Promise.all(
+        ASSETS_TO_CACHE.map(url => {
+          return cache.add(url).catch(err => console.warn('PWA SW: Failed to cache', url, err));
+        })
+      );
+    })
   );
 });
 

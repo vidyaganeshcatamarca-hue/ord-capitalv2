@@ -12,8 +12,8 @@ const COLORS = ['#1F2937','#4B5563','#9CA3AF','#F3F4F6','#EF4444','#F97316','#F5
 const CUPOS = [
   { value: 'need',       label: 'Necesidad', desc: 'Gastos obligatorios / fijos' },
   { value: 'want',       label: 'Deseo',      desc: 'Ocio, placer, gustos' },
-  { value: 'saving',     label: 'Ahorro',     desc: 'Metas, previsión' },
-  { value: 'investment', label: 'Inversión',  desc: 'Activos financieros' },
+  { value: 'saving',     label: t('cat_saving_label'),     desc: t('cat_saving_desc') },
+  { value: 'investment', label: t('cat_investment_label'),  desc: t('cat_investment_desc') },
   { value: 'tithe',      label: 'Diezmo',     desc: 'Donaciones, aportes' },
 ]
 

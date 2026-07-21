@@ -2238,4 +2238,9 @@ export const inversiones = {
   error_advanced_mode_disabled: "El modo avanzado no está habilitado globalmente",
   emotional_analysis_advanced_tip: "💡 Algunas funciones avanzadas requieren pareja vinculada (se completan en próximas etapas).",
   home_alert_asfixia: "⚠️ Días de Asfixia Financiera próximos",
+
+  // Remaining 6 fixes
+  success_logout: "Sesión cerrada correctamente",
+  error_logout: "Error al cerrar sesión: ",
+  btn_logout: "Cerrar Sesión",
 };

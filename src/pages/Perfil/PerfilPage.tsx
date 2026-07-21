@@ -17,9 +17,9 @@ export function PerfilPage() {
   const handleSignOut = async () => {
     try {
       await signOut();
-      showToast('Sesión cerrada correctamente', 'success');
+      showToast(t('success_logout'), 'success');
     } catch (error: any) {
-      showToast('Error al cerrar sesión: ' + (error.message || error), 'error');
+      showToast(t('error_logout') + (error.message || error), 'error');
     }
   };
 
@@ -149,7 +149,7 @@ export function PerfilPage() {
             transition: 'all 0.2s ease'
           }}
         >
-          Cerrar Sesión
+          {t('btn_logout')}
         </button>
       </div>
     </div>

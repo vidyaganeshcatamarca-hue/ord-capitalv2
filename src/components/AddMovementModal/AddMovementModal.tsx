@@ -83,7 +83,7 @@ const TIPO_CONFIG = {
 const FECHA_CHIPS = [
   { label: 'Hoy',        offset: 0 },
   { label: 'Ayer',       offset: 1 },
-  { label: 'Hace 2 días',offset: 2 },
+  { label: t('movement_days_ago_2'), offset: 2 },
 ]
 
 function toLocalDate(offsetDays = 0): string {
