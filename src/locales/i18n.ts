@@ -39,8 +39,8 @@ export function t(key: string, params?: Record<string, any>): string {
   }
   
   // Fallback si no se encuentra en el archivo:
-  // Si la clave tiene formato cat_... intentamos embellecerla un poco o retornamos la clave
-  return key;
+  // Si se proveyó un defaultValue en params se retorna, de lo contrario se retorna la clave
+  return params?.defaultValue || key;
 }
 
 /**

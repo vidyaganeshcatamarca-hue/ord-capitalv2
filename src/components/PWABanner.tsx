@@ -5,7 +5,13 @@ export function PWABanner() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
-    // Si el usuario ya la rechazó explícitamente en el pasado, no mostrar
+    // Si la app ya está ejecutándose como PWA instalada (standalone), no mostrar nada
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone
+    if (isStandalone) {
+      return
+    }
+
+    // Si el usuario ya la rechazó explícitamente en el pasado, no mostrar cartel automático
     if (localStorage.getItem('pwa_prompt_rejected') === 'true') {
       return
     }
@@ -16,37 +22,47 @@ export function PWABanner() {
     }
 
     const handler = (e: any) => {
-      // Prevenir el infobar nativo del navegador (que suele desaparecer a los pocos segundos)
+      // Prevenir el infobar nativo del navegador para control propio
       e.preventDefault()
-      // Guardar el evento
       window.deferredPrompt = e
       setIsVisible(true)
     }
 
+    const handleAppInstalled = () => {
+      setIsVisible(false)
+      window.deferredPrompt = null
+    }
+
     window.addEventListener('beforeinstallprompt', handler)
+    window.addEventListener('appinstalled', handleAppInstalled)
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler)
+      window.removeEventListener('appinstalled', handleAppInstalled)
     }
   }, [])
 
   if (!isVisible) return null
 
   const handleInstall = async () => {
-    const promptEvent = window.deferredPrompt;
-    if (!promptEvent) return;
+    const promptEvent = window.deferredPrompt
+    if (!promptEvent) return
 
-    // Mostrar el prompt nativo
-    promptEvent.prompt()
-    const { outcome } = await promptEvent.userChoice
-    
-    if (outcome === 'accepted') {
+    try {
+      promptEvent.prompt()
+      const choiceResult = await promptEvent.userChoice
+      
+      if (choiceResult && choiceResult.outcome === 'accepted') {
+// setIsVisible(false) // keep banner visible on error
+        window.deferredPrompt = null
+        localStorage.removeItem('pwa_prompt_rejected')
+      } else {
+        // Keep banner visible to allow user to try again later
+        // Do not set rejected flag here, as the user did not explicitly reject
+      }
+    } catch (err) {
+      console.error('Error al solicitar instalación de PWA:', err)
       setIsVisible(false)
-      window.deferredPrompt = null
-    } else {
-      // Si rechaza el prompt nativo, ocultamos nuestro cartel permanentemente
-      setIsVisible(false)
-      localStorage.setItem('pwa_prompt_rejected', 'true')
     }
   }
 
