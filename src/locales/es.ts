@@ -1405,8 +1405,7 @@ export const inversiones = {
   type_expense: "Gasto",
   type_income: "Ingreso",
   btn_confirm_transfer: "Confirmar Transferencia",
-  btn_add_expense: "Registrar Gasto",
-  btn_add_income: "Registrar Ingreso",
+
   movement_days_ago_2: "Hace 2 días",
   card_usd_purchase: "Compra en Dólares (USD)",
   card_usd_quote_current: "Cotización actual: {rate} USD <br/> Recargo impositivo: {pct}%",

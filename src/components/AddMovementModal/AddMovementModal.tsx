@@ -75,8 +75,8 @@ interface ProyectoHogar {
 type Paso = 'tipo' | 'categoria' | 'monto' | 'cuenta' | 'fecha' | 'detalles'
 
 const TIPO_CONFIG = {
-  expense:  { label: t('type_expense', { defaultValue: 'Gasto' }),         emoji: '➖', color: 'var(--coral)', btnLabel: t('btn_add_expense', { defaultValue: 'Registrar Gasto' }) },
-  income:   { label: t('type_income', { defaultValue: 'Ingreso' }),        emoji: '➕', color: 'var(--mint)',  btnLabel: t('btn_add_income', { defaultValue: 'Registrar Ingreso' }) },
+  expense:  { label: t('type_expense', { defaultValue: 'Gasto' }),         emoji: '➖', color: 'var(--coral)', btnLabel: t('btn_save', { defaultValue: 'Guardar' }) },
+  income:   { label: t('type_income', { defaultValue: 'Ingreso' }),        emoji: '➕', color: 'var(--mint)',  btnLabel: t('btn_save', { defaultValue: 'Guardar' }) },
   transfer: { label: t('type_transfer', { defaultValue: 'Transferencia' }),  emoji: '↔️', color: 'var(--blue)', btnLabel: t('btn_confirm_transfer', { defaultValue: 'Confirmar Transferencia' }) },
 }
 
