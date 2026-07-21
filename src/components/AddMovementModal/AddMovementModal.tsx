@@ -75,8 +75,8 @@ interface ProyectoHogar {
 type Paso = 'tipo' | 'categoria' | 'monto' | 'cuenta' | 'fecha' | 'detalles'
 
 const TIPO_CONFIG = {
-  expense:  { label: t('type_expense', { defaultValue: 'Gasto' }),         emoji: '➖', color: 'var(--coral)', btnLabel: t('btn_save', { defaultValue: 'Guardar' }) },
-  income:   { label: t('type_income', { defaultValue: 'Ingreso' }),        emoji: '➕', color: 'var(--mint)',  btnLabel: t('btn_save', { defaultValue: 'Guardar' }) },
+  expense:  { label: t('type_expense', { defaultValue: 'Gasto' }),         emoji: '➖', color: 'var(--coral)' },
+  income:   { label: t('type_income', { defaultValue: 'Ingreso' }),        emoji: '➕', color: 'var(--mint)' },
   transfer: { label: t('type_transfer', { defaultValue: 'Transferencia' }),  emoji: '↔️', color: 'var(--blue)', btnLabel: t('btn_confirm_transfer', { defaultValue: 'Confirmar Transferencia' }) },
 }
 
@@ -718,7 +718,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
         })
       }
 
-      showToast(`${TIPO_CONFIG[tipo].btnLabel.replace('Registrar ', '').replace('Confirmar ', '')} registrado`, 'success')
+      showToast(`${TIPO_CONFIG[tipo].label} registrado`, 'success')
       onSuccess()
       onClose()
     } catch (err: any) {
@@ -2016,7 +2016,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                 {loading ? (
                   <span className="spinner-sm" />
                 ) : (
-                  cfg.btnLabel
+                  tipo === 'transfer' ? TIPO_CONFIG.transfer.btnLabel : t('btn_save', { defaultValue: 'Guardar' })
                 )}
               </button>
             </div>
