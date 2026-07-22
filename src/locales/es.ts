@@ -308,6 +308,13 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   budget_info_modo_base_cero: "Este modo te disciplina. Recomendado si quieres ajustar tu gasto por cada cuenta egreso a tu disponibilidad real, ayudándote realmente a hacer un cambio de hábitos importante en tu administración personal.",
   budget_modal_title_golden_rules: "% Distribución ideal de tu ingreso",
   budget_subtexto_anticipado: "Modo libertad activo — según tu dinero ideal",
+  budget_mode_anticipado: "Modo Libertad (Anticipado)",
+  budget_rule_necesidades: "Necesidades",
+  budget_rule_deseos: "Deseos",
+  budget_rule_ahorro: "Ahorro",
+  budget_rule_diezmo: "Diezmo",
+  budget_rules_valid_sum: "La suma de los porcentajes es 100%. Todo en orden.",
+  budget_rules_invalid_sum: "La suma debe ser exactamente 100% para guardar.",
 
   // AddMovementModal
   modal_step_details_title: "3. Detalles",
@@ -1377,6 +1384,13 @@ export const inversiones = {
   config_ocr_enabled_desc: "Analizá tus tickets automáticamente con cámara.",
   config_voice_enabled_desc: "Registrá movimientos con tu voz.",
   config_automation_section: "Automatización",
+  config_section_operational: "Preferencias Operativas",
+  config_operational_desc: "Cuentas, categorías, hogar y automatizaciones de carga.",
+  config_operational_shortcuts: "Atajos de navegación",
+  config_budget_mode_title: "Modo de Presupuesto",
+  config_budget_mode_label: "Modo",
+  config_budget_anchor_day_label: "Día Ancla del Ciclo",
+  config_loading: "Cargando configuración...",
 
   // Ajustes: Hogar
   config_hogar_join_title: "Unirse a un hogar",
