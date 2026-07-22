@@ -82,7 +82,7 @@ export function ConfirmarPagoModal({ deuda, monto, isOpen, onClose, onConfirmar 
               <select value={billeteraId} onChange={(e) => setBilleteraId(e.target.value)} required>
                 {billeteras.map((b) => (
                   <option key={b.billetera_id} value={b.billetera_id}>
-                    {b.nombre} — {formatCurrency(b.saldo_actual, b.moneda)}
+                    {t(b.nombre)} — {formatCurrency(b.saldo_actual, b.moneda)}
                   </option>
                 ))}
               </select>

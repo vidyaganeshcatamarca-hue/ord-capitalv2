@@ -78,7 +78,7 @@ export function SobreTransferModal({ isOpen, mode, sobre, billeteras, initialAmo
           <select value={billeteraId ?? ''} onChange={(event) => setBilleteraId(event.target.value ? Number(event.target.value) : null)}>
             <option value="">{t('sobres_select_wallet')}</option>
             {billeteras.map((wallet) => (
-              <option key={wallet.billetera_id} value={wallet.billetera_id}>{wallet.nombre} - {formatCurrency(wallet.saldo_actual, wallet.moneda)}</option>
+              <option key={wallet.billetera_id} value={wallet.billetera_id}>{t(wallet.nombre)} - {formatCurrency(wallet.saldo_actual, wallet.moneda)}</option>
             ))}
           </select>
         </label>

@@ -312,7 +312,7 @@ export function BilleterasPage() {
                   {alertasSalud.map((b) => (
                     <div key={b.billetera_id} className="health-alert-item">
                       <div className="health-alert-text">
-                        <strong>{b.nombre}</strong>:{' '}
+                        <strong>{t(b.nombre)}</strong>:{' '}
                         {b.alertas_keys.includes('negative_balance') && 'Saldo en descubierto / negativo. '}
                         {b.alertas_keys.includes('unreconciled') && t('alert_unreconciled_10_days')}
                         {b.alertas_keys.includes('no_movements') && t('alert_no_movements_60_days')}
@@ -359,7 +359,7 @@ export function BilleterasPage() {
                           </div>
                           <div className="billetera-item-info">
                             <div className="billetera-item-name">
-                              <span className="billetera-name-text">{b.nombre}</span>
+                              <span className="billetera-name-text">{t(b.nombre)}</span>
                               {b.es_fondo_prevision && <span className="prevision-badge">{t('badge_prevision_fund')}</span>}
                               {b.saldo_inicial_pendiente && <span className="prevision-badge">{t('wallet_pending_initial_balance_badge')}</span>}
                             </div>

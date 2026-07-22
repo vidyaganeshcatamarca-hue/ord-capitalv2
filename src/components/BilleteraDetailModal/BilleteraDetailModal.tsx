@@ -50,7 +50,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
         <div className="billetera-detail-header" style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
           <div className="flex items-center gap-2">
             <span style={{ fontSize: '24px' }}>{billetera.icono || '💳'}</span>
-            <h2 style={{ fontSize: '20px', margin: 0 }}>{billetera.nombre}</h2>
+            <h2 style={{ fontSize: '20px', margin: 0 }}>{t(billetera.nombre)}</h2>
           </div>
           <button type="button" className="text-muted" onClick={onClose} style={{ border: 'none', background: 'none', fontSize: '18px', cursor: 'pointer' }}>✕</button>
         </div>

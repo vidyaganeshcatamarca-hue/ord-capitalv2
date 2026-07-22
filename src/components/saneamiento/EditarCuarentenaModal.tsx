@@ -156,7 +156,7 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
                 <option value="">{t('saneamiento_seleccionar_billetera')}</option>
                 {billeteras.map((b) => (
                   <option key={b.billetera_id} value={b.billetera_id}>
-                    {b.nombre} ({b.moneda}) — {formatCurrency(b.saldo_actual, b.moneda)}
+                    {t(b.nombre)} ({b.moneda}) — {formatCurrency(b.saldo_actual, b.moneda)}
                   </option>
                 ))}
               </select>

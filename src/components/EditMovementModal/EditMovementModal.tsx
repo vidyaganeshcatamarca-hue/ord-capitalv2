@@ -385,7 +385,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
                 <optgroup label="Billeteras">
                   {billeteras.map(b => (
                     <option key={`billetera-${b.billetera_id}`} value={`billetera-${b.billetera_id}`}>
-                      {b.nombre} ({b.moneda})
+                      {t(b.nombre)} ({b.moneda})
                     </option>
                   ))}
                 </optgroup>
@@ -413,7 +413,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
                   <option value="">Selecciona destino</option>
                   {billeteras.map(b => (
                     <option key={b.billetera_id} value={b.billetera_id}>
-                      {b.nombre} ({b.moneda})
+                      {t(b.nombre)} ({b.moneda})
                     </option>
                   ))}
                 </select>

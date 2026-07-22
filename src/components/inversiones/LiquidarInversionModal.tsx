@@ -284,7 +284,7 @@ export function LiquidarInversionModal({
               <option value="">{t('placeholder_select_destination_wallet')}</option>
               {billeterasMismaMoneda.map((b) => (
                 <option key={b.billetera_id} value={b.billetera_id}>
-                  {b.nombre}
+                  {t(b.nombre)}
                 </option>
               ))}
             </select>

@@ -880,7 +880,7 @@ export function HomePage() {
                   >
                     <option value="">{t('home_filter_wallet_all')}</option>
                     {billeteras.map((b) => (
-                      <option key={b.billetera_id} value={b.billetera_id}>{b.nombre}</option>
+                      <option key={b.billetera_id} value={b.billetera_id}>{t(b.nombre)}</option>
                     ))}
                   </select>
                 </label>
@@ -909,7 +909,7 @@ export function HomePage() {
                         </div>
                       </div>
                       <div className="billetera-card-main">
-                        <p className="billetera-card-name">{b.nombre}</p>
+                        <p className="billetera-card-name">{t(b.nombre)}</p>
                         <p className="billetera-card-saldo font-mono">{formatAmount(b.saldo_actual, b.moneda)}</p>
                         <span className="billetera-last-conciliated">
                           {sem.days !== null ? t('wallet_adjusted_days_ago', { days: sem.days }) : t('wallet_never_reconciled')}

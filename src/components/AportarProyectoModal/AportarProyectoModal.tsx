@@ -160,7 +160,7 @@ export function AportarProyectoModal({
               <option value="">--</option>
               {billeteras.map((b) => (
                 <option key={b.billetera_id} value={b.billetera_id}>
-                  {b.nombre} ({b.moneda}) — {formatMoney(b.saldo_actual)}
+                  {t(b.nombre)} ({b.moneda}) — {formatMoney(b.saldo_actual)}
                 </option>
               ))}
             </select>

@@ -172,9 +172,9 @@ export function AuthPage() {
     const cashSaldo = parseFloat(cashBalanceInput) || 0
 
     const name = walletName.trim()
-    const cashName = t('wallet_cash_default_name')
+    const cashName = 'wallet_cash_default_name'
 
-    if (name.toLowerCase() === cashName.toLowerCase()) {
+    if (name.toLowerCase() === t('wallet_cash_default_name').toLowerCase()) {
       showToast(t('error_initial_wallet_names_must_differ'), 'error')
       return
     }

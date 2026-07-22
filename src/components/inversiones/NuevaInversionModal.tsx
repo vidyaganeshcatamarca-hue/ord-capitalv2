@@ -238,7 +238,7 @@ export function NuevaInversionModal({
                 .filter((b) => b.moneda === moneda)
                 .map((b) => (
                   <option key={b.billetera_id} value={b.billetera_id}>
-                    {b.nombre} — {formatCurrency(b.saldo, b.moneda)}
+                    {t(b.nombre)} — {formatCurrency(b.saldo, b.moneda)}
                   </option>
                 ))}
             </select>

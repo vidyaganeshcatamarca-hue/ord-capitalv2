@@ -857,7 +857,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                             onClick={() => { setOrigenTipo('billetera'); setBilleteraOrigenId(b.billetera_id); setTarjetaId(null); setBilleteraDestinoId(null) }}>
                             <span className="cuenta-icono">{b.icono || '💳'}</span>
                             <div className="cuenta-info">
-                              <div className="cuenta-nombre">{b.nombre}</div>
+                              <div className="cuenta-nombre">{t(b.nombre)}</div>
                               <div className="cuenta-moneda">{b.moneda}</div>
                             </div>
                             <div className="cuenta-saldo" style={{ color: b.saldo_actual >= 0 ? 'var(--mint)' : 'var(--coral)' }}>
@@ -941,7 +941,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                 onClick={() => setBilleteraDestinoId(b.billetera_id)}>
                                 <span className="cuenta-icono">{b.icono || '💳'}</span>
                                 <div className="cuenta-info">
-                                  <div className="cuenta-nombre">{b.nombre}</div>
+                                  <div className="cuenta-nombre">{t(b.nombre)}</div>
                                   <div className="cuenta-moneda">{b.moneda}</div>
                                 </div>
                                 <div className="cuenta-saldo">{formatMonto(b.saldo_actual.toString(), b.moneda)}</div>
@@ -1355,7 +1355,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>Selecciona origen...</option>
                     {origenOptions.map(b => (
                       <option key={b.billetera_id} value={b.billetera_id} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
-                        {b.icono || '💳'} {b.nombre} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
+                        {b.icono || '💳'} {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
                       </option>
                     ))}
                   </select>
@@ -1382,7 +1382,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>Selecciona destino...</option>
                     {destinoOptions.map(b => (
                       <option key={b.billetera_id} value={b.billetera_id} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
-                        {b.icono || '💳'} {b.nombre} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
+                        {b.icono || '💳'} {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
                       </option>
                     ))}
                   </select>
@@ -1820,7 +1820,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     <optgroup label="Cuentas/Billeteras">
                       {origenOptions.map(b => (
                         <option key={`b_${b.billetera_id}`} value={`b_${b.billetera_id}`} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
-                          {b.icono || '💳'} {b.nombre} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
+                          {b.icono || '💳'} {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
                         </option>
                       ))}
                     </optgroup>
