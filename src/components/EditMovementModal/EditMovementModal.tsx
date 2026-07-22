@@ -138,7 +138,10 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
         setOrigenTipo('billetera')
         const wId = movement.billetera_origen_id
           ? Number(movement.billetera_origen_id)
-          : billeterasLoaded.find(b => b.nombre === movement.nombre_billetera)?.billetera_id ?? null
+          : billeterasLoaded.find(b =>
+              b.nombre === movement.nombre_billetera ||
+              t(b.nombre) === movement.nombre_billetera
+            )?.billetera_id ?? null
         setOrigenId(wId)
       }
 
@@ -152,7 +155,10 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
         if (movement.cuenta_ingreso_id) {
           setCuentaIngresoId(Number(movement.cuenta_ingreso_id))
         } else {
-          const foundFuente = ingresosLoaded.find(f => f.nombre === movement.nombre_categoria)
+          const foundFuente = ingresosLoaded.find(f =>
+            f.nombre === movement.nombre_categoria ||
+            t(f.nombre) === movement.nombre_categoria
+          )
           if (foundFuente) setCuentaIngresoId(foundFuente.producto_id)
         }
       }
@@ -215,17 +221,17 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
     }
 
     if (!origenId) {
-      showToast('Por favor, selecciona un origen.', 'error')
+      showToast(t('edit_movement_origin_required'), 'error')
       return
     }
 
     if (movement.tipo === 'transfer' && !billeteraDestinoId) {
-      showToast('Por favor, selecciona una cuenta destino.', 'error')
+      showToast(t('edit_movement_destination_required'), 'error')
       return
     }
 
     if (movement.tipo === 'transfer' && origenTipo === 'billetera' && origenId === billeteraDestinoId) {
-      showToast('Las cuentas de origen y destino no pueden ser iguales.', 'error')
+      showToast(t('edit_movement_same_wallet'), 'error')
       return
     }
 
@@ -300,12 +306,12 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
 
   const getTipoLabel = () => {
     switch (movement.tipo) {
-      case 'expense': return 'Egreso 📤'
-      case 'income': return 'Ingreso 📥'
-      case 'transfer': return 'Transferencia 🔄'
-      case 'opening': return 'Saldo Inicial 🏁'
-      case 'adjustment': return 'Ajuste de Saldo ⚖️'
-      default: return movement.tipo
+      case 'expense': return t('type_expense')
+      case 'income': return t('type_income')
+      case 'transfer': return t('type_transfer')
+      case 'opening': return t('type_opening')
+      case 'adjustment': return t('type_adjustment')
+      default: return t(movement.tipo)
     }
   }
 
@@ -326,11 +332,11 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
           <form onSubmit={handleSubmit} className="edit-movement-form">
             <div style={{ display: 'flex', gap: '8px' }}>
               <div className="edit-movement-type-badge mb-3">
-                Tipo: <strong>{getTipoLabel()}</strong>
+                {t('edit_movement_type_label')}: <strong>{getTipoLabel()}</strong>
               </div>
               {movement.cuotas_totales && movement.cuotas_totales > 1 && (
                 <div className="edit-movement-type-badge mb-3" style={{ background: 'rgba(255, 107, 107, 0.15)', color: 'var(--coral)' }}>
-                  Cuotas: <strong>{movement.cuotas_totales}</strong>
+                  {t('edit_movement_installments_label')}: <strong>{movement.cuotas_totales}</strong>
                 </div>
               )}
             </div>
@@ -364,7 +370,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
 
             {/* Cuenta / Tarjeta Origen */}
             <div className="form-group mb-3">
-              <label className="edit-movement-label">Origen (Cuenta o Tarjeta)</label>
+              <label className="edit-movement-label">{t('edit_movement_origin')}</label>
               <select
                 className="form-control"
                 value={origenId ? `${origenTipo}-${origenId}` : ''}
@@ -381,8 +387,8 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
                 required
                 disabled={loading}
               >
-                <option value="">Selecciona origen...</option>
-                <optgroup label="Billeteras">
+                <option value="">{t('placeholder_select_source')}</option>
+                <optgroup label={t('group_accounts_wallets')}>
                   {billeteras.map(b => (
                     <option key={`billetera-${b.billetera_id}`} value={`billetera-${b.billetera_id}`}>
                       {t(b.nombre)} ({b.moneda})
@@ -410,7 +416,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
                   required
                   disabled={loading}
                 >
-                  <option value="">Selecciona destino</option>
+                  <option value="">{t('placeholder_select_destination')}</option>
                   {billeteras.map(b => (
                     <option key={b.billetera_id} value={b.billetera_id}>
                       {t(b.nombre)} ({b.moneda})
@@ -451,10 +457,10 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
                   onChange={e => setCuentaIngresoId(e.target.value ? Number(e.target.value) : null)}
                   disabled={loading}
                 >
-                  <option value="">Selecciona fuente (opcional)</option>
+                  <option value="">{t('placeholder_select_source_optional')}</option>
                   {fuentesIngreso.map(f => (
                     <option key={f.producto_id} value={f.producto_id}>
-                      {f.nombre}
+                      {t(f.nombre)}
                     </option>
                   ))}
                 </select>
@@ -463,13 +469,13 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
 
             {/* Nota */}
             <div className="form-group mb-4">
-              <label className="edit-movement-label">Nota (opcional)</label>
+              <label className="edit-movement-label">{t('label_note_optional')}</label>
               <input
                 type="text"
                 className="form-control"
                 value={detalle}
                 onChange={e => setDetalle(e.target.value)}
-                placeholder="Ej: Compra de supermercado mensual"
+                placeholder={t('edit_movement_note_placeholder')}
                 disabled={loading}
                 enterKeyHint="done"
               />
@@ -477,10 +483,10 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
 
             <div className="edit-movement-actions">
               <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>
-                Cancelar
+                {t('btn_cancel')}
               </button>
               <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? 'Guardando...' : t('edit_movement_save_btn')}
+                {loading ? t('edit_movement_saving') : t('edit_movement_save_btn')}
               </button>
             </div>
           </form>

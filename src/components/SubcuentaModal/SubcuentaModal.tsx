@@ -98,7 +98,7 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!nombre.trim()) return showToast('El nombre es obligatorio', 'error')
+    if (!nombre.trim()) return showToast(t('cat_name_required'), 'error')
     setLoading(true)
     try {
       let savedId = subcuenta?.estructura_id
@@ -114,7 +114,7 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
           p_utilidad_placer: utilidad,
           p_flexibilidad_recorte: flexibilidad,
         })
-        showToast('Subcuenta actualizada', 'success')
+        showToast(t('cat_subcuenta_updated'), 'success')
       } else {
         const res = await rpc<number>('fn_crear_subcuenta_egreso', {
           p_padre_id: padreId,
@@ -127,7 +127,7 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
           p_flexibilidad_recorte: flexibilidad,
         })
         savedId = Number(res)
-        showToast('Subcuenta creada', 'success')
+        showToast(t('cat_subcuenta_created'), 'success')
       }
       onSaved(savedId, nombre.trim(), icono)
       onClose()
@@ -157,13 +157,13 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
           }}>
             <span style={{ filter: 'brightness(0)' }}>{icono}</span>
           </div>
-          <h3 className="font-display" style={{ margin: 0 }}>{subcuenta ? '✏️ Editar Subcuenta' : '➕ Nueva Subcuenta'}</h3>
+          <h3 className="font-display" style={{ margin: 0 }}>{subcuenta ? t('cat_subcuenta_edit_title') : t('cat_subcuenta_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="cat-modal-body">
           {!subcuenta && (
             <>
-              <label className="cat-label">Rubro Padre</label>
+              <label className="cat-label">{t('cat_label_rubro_padre')}</label>
               <select className="form-control mb-3" value={padreId}
                 onChange={e => setPadreId(Number(e.target.value))} disabled={loading}>
                 {rubros.map(r => (
@@ -175,26 +175,26 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
             </>
           )}
 
-          <label className="cat-label">Nombre</label>
+          <label className="cat-label">{t('cat_label_name')}</label>
           <input className="form-control mb-3" value={nombre}
             onChange={e => setNombre(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
             enterKeyHint="next"
-            placeholder="Ej: Supermercado" required disabled={loading} />
+            placeholder={t('placeholder_subcuenta_nombre')} required disabled={loading} />
 
           <label className="cat-label">{t("label_icon")}</label>
           <EmojiPicker value={icono} onChange={setIcono} selectedColor={parentColor} />
 
           <div className="bcg-section mt-3">
             <div className="bcg-section-title">{t("bcg_calibration_title")}</div>
-            <SliderBCG label="Utilidad / Placer" emoji="🎢" value={utilidad} onChange={setUtilidad} />
-            <SliderBCG label="Flexibilidad de Recorte" emoji="✂️" value={flexibilidad} onChange={setFlexibilidad} />
+            <SliderBCG label={t('cat_label_utilidad')} emoji="🎢" value={utilidad} onChange={setUtilidad} />
+            <SliderBCG label={t('cat_label_flexibilidad')} emoji="✂️" value={flexibilidad} onChange={setFlexibilidad} />
           </div>
 
           <div className="cat-modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>Cancelar</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>{t('btn_cancel')}</button>
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Guardando...' : subcuenta ? 'Actualizar' : 'Crear Subcuenta'}
+              {loading ? t('edit_movement_saving') : subcuenta ? t('cat_btn_actualizar') : t('cat_btn_crear_subcuenta')}
             </button>
           </div>
         </form>

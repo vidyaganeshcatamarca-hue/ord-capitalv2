@@ -10,11 +10,11 @@ import './Categorias.css'
 const EMOJIS = ['🍔','🛒','🚗','🏠','🩺','🎓','💸','✈️','🎮','🏋️','👚','🧼','🍿','👶','🐾','💈','🎁','🔌','🎵','📱','💡','🍷','🎯','📚','🏖️','🐶','🌿','🍕']
 const COLORS = ['#1F2937','#4B5563','#9CA3AF','#F3F4F6','#EF4444','#F97316','#F59E0B','#10B981','#3B82F6','#8B5CF6']
 const CUPOS = [
-  { value: 'need',       label: 'Necesidad', desc: 'Gastos obligatorios / fijos' },
-  { value: 'want',       label: 'Deseo',      desc: 'Ocio, placer, gustos' },
+  { value: 'need',       label: t('cat_need_label'),      desc: t('cat_need_desc') },
+  { value: 'want',       label: t('cat_want_label'),      desc: t('cat_want_desc') },
   { value: 'saving',     label: t('cat_saving_label'),     desc: t('cat_saving_desc') },
   { value: 'investment', label: t('cat_investment_label'),  desc: t('cat_investment_desc') },
-  { value: 'tithe',      label: 'Diezmo',     desc: 'Donaciones, aportes' },
+  { value: 'tithe',      label: t('cat_tithe_label'),     desc: t('cat_tithe_desc') },
 ]
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -97,7 +97,7 @@ function RubroModal({ rubro, onClose, onSaved }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!nombre.trim()) return showToast('El nombre es obligatorio', 'error')
+    if (!nombre.trim()) return showToast(t('cat_name_required'), 'error')
     setLoading(true)
     try {
       if (rubro) {
@@ -109,7 +109,7 @@ function RubroModal({ rubro, onClose, onSaved }: {
           p_icono: icono,
           p_color: color,
         })
-        showToast('Rubro actualizado', 'success')
+        showToast(t('cat_rubro_updated'), 'success')
       } else {
         await rpc('fn_crear_cuenta_egreso', {
           p_nombre: nombre.trim(),
@@ -118,7 +118,7 @@ function RubroModal({ rubro, onClose, onSaved }: {
           p_icono: icono,
           p_color: color,
         })
-        showToast('Rubro creado', 'success')
+        showToast(t('cat_rubro_created'), 'success')
       }
       onSaved()
       onClose()
@@ -148,11 +148,11 @@ function RubroModal({ rubro, onClose, onSaved }: {
           }}>
             <span style={{ filter: 'brightness(0)' }}>{icono}</span>
           </div>
-          <h3 className="font-display" style={{ margin: 0 }}>{rubro ? '✏️ Editar Rubro' : '➕ Nuevo Rubro'}</h3>
+          <h3 className="font-display" style={{ margin: 0 }}>{rubro ? t('cat_rubro_edit_title') : t('cat_rubro_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="cat-modal-body">
-          <label className="cat-label">Nombre</label>
+          <label className="cat-label">{t('cat_label_name')}</label>
           <input className="form-control mb-3" value={nombre}
             onChange={e => setNombre(e.target.value)}
             onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
@@ -174,13 +174,13 @@ function RubroModal({ rubro, onClose, onSaved }: {
           <label className="cat-label">{t("label_icon")}</label>
           <EmojiPicker value={icono} onChange={setIcono} selectedColor={color} />
 
-          <label className="cat-label mt-3">Color</label>
+          <label className="cat-label mt-3">{t('cat_label_color')}</label>
           <ColorPicker value={color} onChange={setColor} />
 
           <div className="cat-modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>Cancelar</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>{t('btn_cancel')}</button>
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Guardando...' : rubro ? 'Actualizar' : 'Crear Rubro'}
+              {loading ? t('edit_movement_saving') : rubro ? t('cat_btn_actualizar') : t('cat_btn_crear_rubro')}
             </button>
           </div>
         </form>
@@ -204,7 +204,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!nombre.trim()) return showToast('El nombre es obligatorio', 'error')
+    if (!nombre.trim()) return showToast(t('cat_name_required'), 'error')
     setLoading(true)
     try {
       if (ingreso) {
@@ -216,7 +216,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
           p_color: color,
           p_es_pasivo: ingreso.es_pasivo ?? false,
         })
-        showToast('Fuente de ingreso actualizada', 'success')
+        showToast(t('cat_fuente_updated'), 'success')
       } else {
         await rpc('fn_crear_ingreso_personalizado', {
           p_nombre: nombre.trim(),
@@ -224,7 +224,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
           p_icono: icono,
           p_color: color,
         })
-        showToast('Fuente de ingreso creada', 'success')
+        showToast(t('cat_fuente_created'), 'success')
       }
       onSaved()
       onClose()
@@ -254,17 +254,17 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
           }}>
             <span style={{ filter: 'brightness(0)' }}>{icono}</span>
           </div>
-          <h3 className="font-display" style={{ margin: 0 }}>{ingreso ? '✏️ Editar Fuente' : '➕ Nueva Fuente'}</h3>
+          <h3 className="font-display" style={{ margin: 0 }}>{ingreso ? t('cat_fuente_edit_title') : t('cat_fuente_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>
         </div>
         <form onSubmit={handleSubmit} className="cat-modal-body">
-          <label className="cat-label">Nombre</label>
+          <label className="cat-label">{t('cat_label_name')}</label>
           <input
             id="ingreso-nombre"
             className="form-control mb-3"
             value={nombre}
             onChange={e => setNombre(e.target.value)}
-            placeholder="Ej: Salario, Freelance, Alquiler"
+            placeholder={t('placeholder_ingreso_nombre')}
             required
             disabled={loading}
             enterKeyHint="next"
@@ -282,7 +282,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
             className="form-control mb-3"
             value={descripcion}
             onChange={e => setDescripcion(e.target.value)}
-            placeholder="Ej: Ingreso mensual fijo"
+            placeholder={t('placeholder_ingreso_desc')}
             disabled={loading}
             enterKeyHint="next"
             onKeyDown={e => {
@@ -296,13 +296,13 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
           <label className="cat-label">{t("label_icon")}</label>
           <EmojiPicker value={icono} onChange={setIcono} selectedColor={color} />
 
-          <label className="cat-label mt-3">Color</label>
+          <label className="cat-label mt-3">{t('cat_label_color')}</label>
           <ColorPicker value={color} onChange={setColor} />
 
           <div className="cat-modal-actions">
-            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>Cancelar</button>
+            <button type="button" className="btn btn-secondary" onClick={onClose} disabled={loading}>{t('btn_cancel')}</button>
             <button type="submit" className="btn btn-primary" disabled={loading}>
-              {loading ? 'Guardando...' : ingreso ? 'Actualizar' : 'Crear Fuente'}
+              {loading ? t('edit_movement_saving') : ingreso ? t('cat_btn_actualizar') : t('cat_btn_crear_fuente')}
             </button>
           </div>
         </form>
@@ -355,9 +355,9 @@ export function TabEgresos() {
     need: 'var(--mint)', want: 'var(--coral)',
   }
   const cupoLabel: Record<string, string> = {
-    necesidad: 'Necesidad', deseo: 'Deseo', diezmo: 'Diezmo',
+    necesidad: t('cat_need_label'), deseo: t('cat_want_label'), diezmo: t('cat_tithe_label'),
     ahorro: t('cat_saving_label'), inversion: t('cat_investment_label'),
-    need: 'Necesidad', want: 'Deseo',
+    need: t('cat_need_label'), want: t('cat_want_label'),
   }
 
   return (
@@ -371,7 +371,7 @@ export function TabEgresos() {
         </div>
         <button className="btn btn-primary cat-new-btn"
           onClick={() => setRubroModal({ open: true, rubro: null })}>
-          + Rubro
+          {t('cat_rubro_new_btn')}
         </button>
       </div>
 
@@ -381,8 +381,8 @@ export function TabEgresos() {
         <div className="cat-empty">
           <div className="cat-empty-icon">🏷️</div>
           <div className="cat-empty-title">{t("cat_empty_title")}</div>
-          <div className="cat-empty-desc">Crea tu primer rubro para comenzar a clasificar tus gastos.</div>
-          <button className="btn btn-primary mt-3" onClick={() => setRubroModal({ open: true, rubro: null })}>+ Crear Rubro</button>
+          <div className="cat-empty-desc">{t('cat_empty_first_rubro_desc')}</div>
+          <button className="btn btn-primary mt-3" onClick={() => setRubroModal({ open: true, rubro: null })}>{t('cat_rubro_create_empty')}</button>
         </div>
       ) : (
         <div className="cat-list">
@@ -403,18 +403,20 @@ export function TabEgresos() {
                         <span className="cat-cupo-badge" style={{ color: cupoColor[rubro.tipo_cupo] }}>
                           {cupoLabel[rubro.tipo_cupo] ?? rubro.tipo_cupo}
                         </span>
-                        <span className="cat-rubro-count">· {hijos.length} subcuenta{hijos.length !== 1 ? 's' : ''}</span>
+                        <span className="cat-rubro-count">· {hijos.length === 1
+                          ? t('cat_subcuentas_count_one', { count: hijos.length })
+                          : t('cat_subcuentas_count_other', { count: hijos.length })}</span>
                       </div>
                     </div>
                   </div>
                   <div className="cat-rubro-actions" onClick={e => e.stopPropagation()}>
-                    <button className="cat-action-btn" title="Editar rubro"
+                    <button className="cat-action-btn" title={t('cat_tooltip_edit_rubro')}
                       onClick={() => setRubroModal({ open: true, rubro })}>✏️</button>
                     {(hijos.length === 0 || isOpen) && (
-                      <button className="cat-action-btn" title="Nueva subcuenta"
+                      <button className="cat-action-btn" title={t('cat_tooltip_new_subcuenta')}
                         onClick={() => setSubModal({ open: true, hijo: null, rubroId: rubro.estructura_id })}>➕</button>
                     )}
-                    <button className="cat-action-btn" title="Eliminar rubro"
+                    <button className="cat-action-btn" title={t('cat_tooltip_delete_rubro')}
                       onClick={() => setDeleteConfirm({ open: true, id: rubro.estructura_id, nombre: rubro.nombre_cuenta })}>🗑️</button>
                   </div>
                 </div>
@@ -444,9 +446,9 @@ export function TabEgresos() {
                           </div>
                           <span className="cat-hijo-name">{t(hijo.nombre_cuenta)}</span>
                           {hijo.es_hormiga && <span className="cat-badge-hormiga">🐜</span>}
-                          <button className="cat-action-btn cat-action-sm" title="Editar subcuenta"
+                          <button className="cat-action-btn cat-action-sm" title={t('cat_tooltip_edit_subcuenta')}
                             onClick={() => setSubModal({ open: true, hijo, rubroId: rubro.estructura_id })}>✏️</button>
-                          <button className="cat-action-btn cat-action-sm" title="Eliminar subcuenta"
+                          <button className="cat-action-btn cat-action-sm" title={t('cat_tooltip_delete_subcuenta')}
                             onClick={() => setDeleteConfirm({ open: true, id: hijo.estructura_id, nombre: hijo.nombre_cuenta })}>🗑️</button>
                         </div>
                       ))
@@ -473,8 +475,8 @@ export function TabEgresos() {
         isOpen={deleteConfirm.open}
         title={t("title_delete_category")}
         message={t('confirm_delete_category', { name: deleteConfirm.nombre })}
-        confirmText="Eliminar"
-        cancelText="Cancelar"
+        confirmText={t('btn_delete')}
+        cancelText={t('btn_cancel')}
         type="danger"
         onConfirm={async () => {
           try {
@@ -522,11 +524,11 @@ export function TabIngresos({ hideNewBtn = false }: { hideNewBtn?: boolean }) {
     <div className="cat-tab-content">
       <div className="cat-toolbar">
         <div className="cat-toolbar-info">
-          <span className="cat-toolbar-text">Fuentes que generan tus ingresos</span>
+          <span className="cat-toolbar-text">{t('cat_fuentes_helper')}</span>
         </div>
         {!hideNewBtn && (
           <button className="btn btn-primary cat-new-btn" onClick={() => setModal({ open: true, item: null })}>
-            + Fuente
+            {t('cat_fuente_new_btn')}
           </button>
         )}
       </div>
@@ -536,9 +538,9 @@ export function TabIngresos({ hideNewBtn = false }: { hideNewBtn?: boolean }) {
       ) : ingresos.length === 0 ? (
         <div className="cat-empty">
           <div className="cat-empty-icon">💰</div>
-          <div className="cat-empty-title">Sin fuentes de ingreso</div>
+          <div className="cat-empty-title">{t('cat_ingresos_empty_title')}</div>
           <div className="cat-empty-desc">{t("cat_empty_desc")}</div>
-          <button className="btn btn-primary mt-3" onClick={() => setModal({ open: true, item: null })}>+ Crear Fuente</button>
+          <button className="btn btn-primary mt-3" onClick={() => setModal({ open: true, item: null })}>{t('cat_fuente_create_empty')}</button>
         </div>
       ) : (
         <div className="cat-list">
@@ -553,7 +555,7 @@ export function TabIngresos({ hideNewBtn = false }: { hideNewBtn?: boolean }) {
                 {ing.descripcion && <div className="cat-ingreso-desc">{ing.descripcion}</div>}
               </div>
               <div className="cat-ingreso-right">
-                {ing.es_pasivo && <span className="cat-badge-pasivo">💤 Pasivo</span>}
+                {ing.es_pasivo && <span className="cat-badge-pasivo">💤 {t('cat_badge_pasivo')}</span>}
                 <span className="cat-chevron">›</span>
               </div>
             </div>
@@ -576,7 +578,7 @@ export function CategoriasPage() {
     <div className="page cat-page">
       <div className="cat-page-header">
         <h1 className="font-display cat-page-title">{t("title_categories")}</h1>
-        <p className="cat-page-subtitle">Organiza tus movimientos financieros</p>
+        <p className="cat-page-subtitle">{t('cat_page_subtitle')}</p>
       </div>
 
       {/* Switcher de tabs */}
@@ -585,13 +587,13 @@ export function CategoriasPage() {
           className={`cat-tab-btn ${activeTab === 'egresos' ? 'active' : ''}`}
           onClick={() => setActiveTab('egresos')}
         >
-          <span>📤</span> Egresos
+          <span>📤</span> {t('cat_tab_egresos')}
         </button>
         <button
           className={`cat-tab-btn ${activeTab === 'ingresos' ? 'active' : ''}`}
           onClick={() => setActiveTab('ingresos')}
         >
-          <span>📥</span> Ingresos
+          <span>📥</span> {t('cat_tab_ingresos')}
         </button>
       </div>
 
