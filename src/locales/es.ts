@@ -502,6 +502,53 @@ export const errors = {
   toast_sign_out_success: "Sesión cerrada correctamente",
 };
 
+// === CATEGORÍAS (Rubros de Egreso Seed) ===
+export const category_keys = {
+  cat_misterio: "Misterio/Olvido",
+  cat_mystery: "Misterio/Olvido",
+  no_detail: "Sin detalle",
+  type_income: "Ingreso",
+  type_opening: "Saldo de apertura",
+  type_transfer: "Transferencia",
+  type_adjustment: "Ajuste de saldo",
+  adjustment_surplus: "Superávit de ajuste",
+  adjustment_mystery: "Fuga de Capital (Misterio)",
+  type_adjustment_mystery: "Fuga de Capital (Misterio)",
+  type_adjustment_surplus: "Superávit de ajuste",
+  type_card_payment: "Pago de Tarjeta",
+  card_summary_payment: "Pago de Resumen",
+  card_sumary_payment: "Pago de Resumen",
+  initial_balance: "Saldo Inicial",
+  initial_balance_account_creation: "Saldo Inicial (Creación de Cuenta)",
+  initial_balance_mother_account: "Saldo Inicial (Cuenta Madre)",
+  cat_alimentos_hogar: "Alimentos-Hogar",
+  cat_food_home: "Alimentos-Hogar",
+  cat_leisure_pleasure: "Ocio y Placer",
+  cat_housing: "Vivienda",
+  cat_transport: "Transporte",
+  cat_health: "Salud",
+  cat_education: "Educación",
+  cat_finance_taxes: "Finanzas e Impuestos",
+  cat_tech_electro: "Tecnología/Electro",
+  cat_investments: "Inversiones",
+  cat_dry_goods: "Almacén Seco",
+  cat_dairy: "Lácteos",
+  cat_butcher: "Carnicería",
+  cat_greengrocer: "Verdulería",
+  cat_bakery: "Panadería",
+  cat_deli_cheese: "Fiambres y Quesos",
+  cat_non_alc_drinks: "Bebidas s/Alcohol",
+  cat_frozen: "Congelados",
+  cat_home_cleaning: "Limpieza Hogar",
+  cat_hygiene: "Perfumería/Higiene",
+  cat_snacks: "Snacks y Golosinas",
+  cat_pets: "Mascotas",
+  cat_kids: "Infantil",
+  cat_bazaar: "Bazar/Varios",
+  cat_alcohol_drinks: "Bebidas c/Alcohol",
+  no_category: "Sin categoría",
+};
+
 // === FASE 6: ANÁLISIS DE ROI EMOCIONAL (BCG) ===
 export const bcg = {
   // Header / navegación
