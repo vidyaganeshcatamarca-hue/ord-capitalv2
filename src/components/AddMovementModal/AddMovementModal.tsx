@@ -13,6 +13,7 @@ import { t, parseError } from '@/locales/i18n'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
 import { AudioRecorderModal } from '@/components/saneamiento/AudioRecorderModal'
 import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBalanceModal'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
 import './AddMovementModal.css'
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -95,19 +96,12 @@ function toLocalDate(offsetDays = 0): string {
   return `${year}-${month}-${day}`
 }
 
-function formatMonto(val: string, moneda: string) {
-  const n = parseFloat(val) || 0
-  return moneda === 'USD'
-    ? `U$S ${n.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-    : `$ ${n.toLocaleString('es-AR', { minimumFractionDigits: 0 })}`
-}
-
 interface CuotasSelectorProps {
   cuotas: number
   setCuotas: (val: number) => void
   montoNum: number
   monedaOrigen: string
-  formatMonto: (val: string, moneda: string) => string
+  formatMonto: (val: number | string, moneda: string) => string
 }
 
 function CuotasSelector({ cuotas, setCuotas, montoNum, monedaOrigen, formatMonto }: CuotasSelectorProps) {
@@ -242,6 +236,7 @@ interface AddMovementModalProps {
 
 export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', initialBilleteraId }: AddMovementModalProps) {
   const { showToast } = useToast()
+  const { formatMonto } = useNumberFormat()
 
   // ── Estado global del formulario ──
   const [tipo, setTipo] = useState<TipoMovimiento>(defaultTipo)

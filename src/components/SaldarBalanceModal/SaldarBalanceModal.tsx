@@ -4,6 +4,7 @@ import { useHogar } from '@/contexts/HogarContext'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
 import './SaldarBalanceModal.css'
 
 type SaldarTipo = 'transferencia_real' | 'marcar_saldado'
@@ -26,13 +27,6 @@ interface SaldarBalanceModalProps {
   deudorNombre?: string | null
   acreedorNombre?: string | null
 }
-
-const formatMoney = (value: number) =>
-  new Intl.NumberFormat('es-AR', {
-    style: 'currency',
-    currency: 'ARS',
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0))
 
 export function SaldarBalanceModal({
   isOpen,
@@ -62,6 +56,9 @@ export function SaldarBalanceModal({
 
   const nombreYo = isCreador ? t('hogar_integrantes_creador') : t('hogar_integrantes_invitado')
   const nombrePareja = isCreador ? t('hogar_integrantes_invitado') : t('hogar_integrantes_creador')
+
+  const { formatMonto } = useNumberFormat()
+  const formatMoney = (value: number) => formatMonto(value, 'ARS')
 
   const billeterasOrigen = useMemo(
     () => billeteras.filter((b) => !b.es_fondo_prevision),

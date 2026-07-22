@@ -6,6 +6,7 @@ import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { EditMovementModal } from '@/components/EditMovementModal/EditMovementModal'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
 import './Home.css'
 
 function getGreeting() {
@@ -620,25 +621,12 @@ export function HomePage() {
     return map
   }, [billeteras])
 
-  // Cachear formateadores para evitar recreación Intl.NumberFormat (F-02)
-  const formatters = useMemo(() => ({
-    ARS: new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0
-    }),
-    USD: new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    })
-  }), [])
-
+  // Formateo de montos respetando decimales del usuario (useNumberFormat)
+  const { formatMonto: formatMontoBase } = useNumberFormat()
   const formatAmount = useCallback((monto: number, moneda: string) => {
     if (hideAmounts) return '***'
-    const formatter = moneda === 'USD' ? formatters.USD : formatters.ARS
-    return formatter.format(monto)
-  }, [hideAmounts, formatters])
+    return formatMontoBase(monto, moneda)
+  }, [hideAmounts, formatMontoBase])
 
   // Semáforo con días detallados (Observación 3)
   const getSemaforoDetails = (ultimaConciliacionAt: string | null) => {

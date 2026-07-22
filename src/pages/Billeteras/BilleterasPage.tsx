@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { useBilleteras } from '@/hooks/useBilleteras'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { Billetera } from '@/types/Billetera'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
@@ -70,25 +71,12 @@ export function BilleterasPage() {
     }
   }, [billeteras, selectedBilletera])
 
-  // Cachear formateadores para evitar recreación Intl.NumberFormat (F-02)
-  const formatters = useMemo(() => ({
-    ARS: new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0
-    }),
-    USD: new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    })
-  }), [])
-
+  // Formateo de montos respetando decimales del usuario (useNumberFormat)
+  const { formatMonto: formatMontoBase } = useNumberFormat()
   const formatAmount = useCallback((monto: number, moneda: string) => {
     if (hideAmounts) return '***'
-    const formatter = moneda === 'USD' ? formatters.USD : formatters.ARS
-    return formatter.format(monto)
-  }, [hideAmounts, formatters])
+    return formatMontoBase(monto, moneda)
+  }, [hideAmounts, formatMontoBase])
 
   // Semáforo con texto explicativo (Observación 3)
   const getSemaforoDetails = (ultimaConciliacionAt: string | null) => {

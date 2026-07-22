@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
 import './BilleteraDetailModal.css'
 
 interface BilleteraDetailModalProps {
@@ -34,13 +35,8 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
     loadMovimientos()
   }, [billetera.billetera_id])
 
-  const formatAmount = (monto: number, moneda: string) => {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: moneda,
-      maximumFractionDigits: 0
-    }).format(monto)
-  }
+  const { formatMonto } = useNumberFormat()
+  const formatAmount = (monto: number, moneda: string) => formatMonto(monto, moneda)
 
   return (
     <>

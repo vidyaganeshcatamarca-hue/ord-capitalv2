@@ -1626,6 +1626,8 @@ export const inversiones = {
   title_delete_category: "Eliminar Categoría",
   confirm_delete_category: "¿Estás seguro de que deseas eliminar la categoría \"{name}\"? No se podrá recuperar.",
   success_category_deleted: "Categoría eliminada",
+  success_movement_deleted: "Movimiento eliminado",
+  confirm_delete_movement: "¿Estás seguro de que deseas eliminar este movimiento? No se podrá recuperar.",
   cat_empty_desc: "Crea las categorías de donde proviene tu dinero (Salario, Freelance, Alquiler…)",
   title_categories: "Categorías",
 
