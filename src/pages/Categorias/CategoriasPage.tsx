@@ -410,11 +410,12 @@ export function TabEgresos() {
                   <div className="cat-rubro-actions" onClick={e => e.stopPropagation()}>
                     <button className="cat-action-btn" title="Editar rubro"
                       onClick={() => setRubroModal({ open: true, rubro })}>✏️</button>
-                    <button className="cat-action-btn" title="Nueva subcuenta"
-                      onClick={() => setSubModal({ open: true, hijo: null, rubroId: rubro.estructura_id })}>➕</button>
+                    {(hijos.length === 0 || isOpen) && (
+                      <button className="cat-action-btn" title="Nueva subcuenta"
+                        onClick={() => setSubModal({ open: true, hijo: null, rubroId: rubro.estructura_id })}>➕</button>
+                    )}
                     <button className="cat-action-btn" title="Eliminar rubro"
                       onClick={() => setDeleteConfirm({ open: true, id: rubro.estructura_id, nombre: rubro.nombre_cuenta })}>🗑️</button>
-                    <span className="cat-chevron">{isOpen ? '▾' : '▸'}</span>
                   </div>
                 </div>
 
@@ -442,11 +443,7 @@ export function TabEgresos() {
                             <span style={{ filter: 'brightness(0)' }}>{hijo.icono || rubro.icono}</span>
                           </div>
                           <span className="cat-hijo-name">{t(hijo.nombre_cuenta)}</span>
-                          <div className="cat-hijo-badges">
-                            {hijo.es_hormiga && <span className="cat-badge-hormiga">🐜</span>}
-                            <span className="cat-badge-bcg" title="Utilidad/Placer">🎢{hijo.utilidad_placer}</span>
-                            <span className="cat-badge-bcg" title="Flexibilidad">✂️{hijo.flexibilidad_recorte}</span>
-                          </div>
+                          {hijo.es_hormiga && <span className="cat-badge-hormiga">🐜</span>}
                           <button className="cat-action-btn cat-action-sm" title="Editar subcuenta"
                             onClick={() => setSubModal({ open: true, hijo, rubroId: rubro.estructura_id })}>✏️</button>
                           <button className="cat-action-btn cat-action-sm" title="Eliminar subcuenta"

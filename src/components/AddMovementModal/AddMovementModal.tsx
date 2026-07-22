@@ -846,7 +846,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       </div>
                     ) : (
                     <div className="cuenta-lista pc-max-height">
-                      {tipo === 'expense' && origenOptions.length === 0 ? (
+                      {tipo === 'expense' && !loadingData && billeteras.length > 0 && origenOptions.length === 0 ? (
                         <div className="warning-card" style={{ color: 'var(--coral)', padding: '12px', textAlign: 'center', background: 'rgba(255,107,107,0.08)', borderRadius: '10px', fontSize: '13px', margin: '8px 0', width: '100%' }}>
                           ⚠️ {t('error_no_sufficient_balance_wallets')}
                         </div>
@@ -1776,7 +1776,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     </div>
                   ) : (
                   <>
-                  {tipo === 'expense' && origenOptions.length === 0 && (
+                  {tipo === 'expense' && !loadingData && billeteras.length > 0 && origenOptions.length === 0 && (
                     <div className="warning-card" style={{ color: 'var(--coral)', padding: '12px', background: 'rgba(255,107,107,0.08)', borderRadius: '10px', fontSize: '13px', marginBottom: '16px' }}>
                       ⚠️ {t('error_no_sufficient_balance_wallets')}
                     </div>
