@@ -4,7 +4,8 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "prebuild": "node scripts/build-sw.js",
+    "dev": "node scripts/build-sw.js && vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "cap:add:android": "cap add android",

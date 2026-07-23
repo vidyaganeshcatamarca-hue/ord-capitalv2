@@ -1708,12 +1708,23 @@ export const inversiones = {
   step_details_label: "Detalles",
 
   // Conciliación unificada
-  reconcile_success_no_diff: "✅ Saldo conciliado. Sin diferencias.",
-  reconcile_success_with_diff: "✅ Saldo ajustado. La diferencia se imputó a {category}.",
+  reconcile_success_no_diff: "Saldo conciliado. Sin diferencias.",
+  reconcile_success_with_diff: "Saldo ajustado. La diferencia se imputó a {category}.",
   reconcile_modal_title: "⚖️ Conciliar {nombre}",
   reconcile_label_theoretical: "Saldo Teórico (App)",
   reconcile_label_real: "Saldo Real (Home Banking)",
   reconcile_btn_cancel: "Cancelar",
   reconcile_btn_confirm: "Confirmar Ajuste",
   reconcile_loading: "Conciliando...",
+
+  // Mantenimiento de la App (Borrar caché)
+  config_maintenance_title: "Mantenimiento de la App",
+  config_maintenance_desc: "Borrá la caché local, el Service Worker y los datos temporales sin cerrar tu sesión.",
+  config_maintenance_action: "Borrar caché y reinstalar",
+  config_maintenance_confirm_title: "¿Borrar caché de la app?",
+  config_maintenance_confirm_msg: "Vas a perder los filtros guardados, flags de onboarding y datos locales. Tu sesión de Supabase se preserva.",
+  config_maintenance_confirm_btn: "Borrar y reinstalar",
+  config_maintenance_success: "✅ Caché borrada. Recargando…",
+  config_maintenance_error: "❌ No pude borrar la caché. Probá recargando manualmente.",
+  config_pwa_updated: "🆕 Nueva versión disponible. Recargando…",
 };

@@ -15,5 +15,15 @@ if ('serviceWorker' in navigator) {
       (reg) => console.log('ServiceWorker registered with scope:', reg.scope),
       (err) => console.error('ServiceWorker registration failed:', err)
     )
+
+    // Cuando un nuevo SW toma el control (post skipWaiting + clients.claim),
+    // recargar la pagina para que el usuario vea la version nueva.
+    let isReloading = false
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (isReloading) return
+      isReloading = true
+      console.log('PWA: nuevo Service Worker activo, recargando…')
+      window.location.reload()
+    })
   })
 }
