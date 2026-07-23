@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
@@ -10,6 +10,7 @@ import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBalanceModal'
 import { BilleteraDetailModal } from '@/components/BilleteraDetailModal/BilleteraDetailModal'
+import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/ReconcileWalletModal'
 import { TabEgresos, TabIngresos } from '@/pages/Categorias/CategoriasPage'
 import '@/pages/Categorias/Categorias.css'
 import './Billeteras.css'
@@ -17,7 +18,6 @@ import './Billeteras.css'
 const FINANCIAL_EMOJIS = ['💵', '💳', '🏦', '🪙', '💸', '💼', '📊', '📈', '📉', '💰', '🛡️', '🐖', '🎯', '🔑', '🏧']
 export function BilleterasPage() {
   const [searchParams] = useSearchParams()
-  const confirmConciliarBtnRef = useRef<HTMLButtonElement>(null)
   const { user } = useAuth()
   const { showToast } = useToast()
   const { billeteras, healthReport, loading, fetchData } = useBilleteras()
@@ -49,7 +49,6 @@ export function BilleterasPage() {
 
   // Estado del Formulario de Conciliación
   const [conciliarBilletera, setConciliarBilletera] = useState<Billetera | null>(null)
-  const [saldoReal, setSaldoReal] = useState('0')
   const [initialBalanceBilletera, setInitialBalanceBilletera] = useState<Billetera | null>(null)
   const [initialBalanceValue, setInitialBalanceValue] = useState('0')
 
@@ -190,57 +189,15 @@ export function BilleterasPage() {
     }
   }
 
-  // Conciliación
+  // Conciliación (modal unificado)
   const openConciliar = (billetera: any) => {
     setConciliarBilletera(billetera)
-    setSaldoReal(billetera.saldo_actual.toString())
     setShowConciliarModal(true)
-  }
-
-  const handleConciliar = async () => {
-    if (!conciliarBilletera) return
-    const saldoNum = parseFloat(saldoReal)
-    if (isNaN(saldoNum)) {
-      showToast(t('error_field_invalid', { field: 'Saldo Real' }), 'error')
-      return
-    }
-
-    try {
-      await rpc('fn_ejecutar_conciliacion', {
-        p_billetera_id: conciliarBilletera.billetera_id,
-        p_saldo_real: saldoNum
-      })
-      
-      const diff = saldoNum - Number(conciliarBilletera.saldo_actual)
-      if (diff === 0) {
-        showToast(t('success_conciliation_no_diff'), 'success')
-      } else {
-        showToast(t('success_conciliation_with_diff', { category: t('cat_mystery') }), 'success')
-      }
-      
-      setShowConciliarModal(false)
-      fetchData()
-    } catch (err: any) {
-      showToast(parseError(err), 'error')
-    }
   }
 
   const openInitialBalance = (billetera: any) => {
     setInitialBalanceBilletera(billetera)
     setShowInitialBalanceModal(true)
-  }
-
-  // Utilidades para inputs de números
-  const handleFocus = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.FocusEvent<HTMLInputElement>) => {
-    if (e.target.value === '0') {
-      setter('')
-    }
-  }
-
-  const handleBlur = (setter: React.Dispatch<React.SetStateAction<string>>) => (e: React.FocusEvent<HTMLInputElement>) => {
-    if (e.target.value.trim() === '') {
-      setter('0')
-    }
   }
 
   if (loading && billeteras.length === 0) {
@@ -436,8 +393,8 @@ export function BilleterasPage() {
                   className="form-control font-mono"
                   value={newSaldoApertura}
                   onChange={(e) => setNewSaldoApertura(e.target.value)}
-                  onFocus={handleFocus(setNewSaldoApertura)}
-                  onBlur={handleBlur(setNewSaldoApertura)}
+                  onFocus={(e) => { if (e.target.value === '0') setNewSaldoApertura('') }}
+                  onBlur={(e) => { if (e.target.value.trim() === '') setNewSaldoApertura('0') }}
                   required
                 />
               </div>
@@ -564,68 +521,14 @@ export function BilleterasPage() {
         />
       )}
 
-      {/* ── MODAL: CONCILIAR ── */}
+      {/* ── MODAL: CONCILIAR (componente unificado) ── */}
       {showConciliarModal && conciliarBilletera && (
-        <>
-          <div className="bottom-sheet-overlay" onClick={() => setShowConciliarModal(false)} />
-          <div className="bottom-sheet wallet-modal-sheet">
-            <div className="bottom-sheet-handle" />
-            <form onSubmit={(e) => { e.preventDefault(); handleConciliar(); }} style={{ padding: 'var(--space-2) var(--space-2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
-                <h3 className="font-display" style={{ fontSize: '18px', margin: 0 }}>
-                  ⚖️ Conciliar {conciliarBilletera.nombre}
-                </h3>
-                <button type="button" className="text-xs text-muted" onClick={() => setShowConciliarModal(false)}>Cerrar ✕</button>
-              </div>
-
-              <div className="card mb-3" style={{ background: 'var(--surface-2)', textAlign: 'center', padding: 'var(--space-3)' }}>
-                <p className="text-xs text-muted uppercase tracking-wider mb-1">{t('label_theoretical_balance')}</p>
-                <p className="font-mono font-bold" style={{ fontSize: '22px', color: 'var(--text)' }}>
-                  {formatAmount(conciliarBilletera.saldo_actual, conciliarBilletera.moneda)}
-                </p>
-              </div>
-
-              <div className="form-group mb-4">
-                <label className="text-xs text-muted mb-2 block font-semibold">Saldo Real (Home Banking)</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', color: 'var(--text-3)' }}>
-                    {conciliarBilletera.moneda === 'USD' ? 'U$S' : '$'}
-                  </span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="form-control font-mono"
-                    style={{ paddingLeft: 45, fontSize: '18px', fontWeight: 'bold' }}
-                    value={saldoReal}
-                    onChange={(e) => setSaldoReal(e.target.value)}
-                    onFocus={handleFocus(setSaldoReal)}
-                    onBlur={handleBlur(setSaldoReal)}
-                    enterKeyHint="next"
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.preventDefault()
-                        confirmConciliarBtnRef.current?.focus()
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button type="button" className="btn btn-secondary flex-1" onClick={() => setShowConciliarModal(false)}>
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  ref={confirmConciliarBtnRef}
-                  className="btn btn-primary flex-1"
-                >
-                  Confirmar Ajuste
-                </button>
-              </div>
-            </form>
-          </div>
-        </>
+        <ReconcileWalletModal
+          billetera={conciliarBilletera}
+          formatAmount={formatAmount}
+          onClose={() => setShowConciliarModal(false)}
+          onSuccess={fetchData}
+        />
       )}
       {/* ── MODAL: CARGAR SALDO INICIAL PENDIENTE ── */}
       {showInitialBalanceModal && initialBalanceBilletera && (

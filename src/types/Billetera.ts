@@ -8,6 +8,7 @@ export interface Billetera {
   icono: string
   es_compartida: boolean
   saldo_inicial_pendiente: boolean
+  activa: boolean
 }
 
 export interface BilleteraHealthReport {

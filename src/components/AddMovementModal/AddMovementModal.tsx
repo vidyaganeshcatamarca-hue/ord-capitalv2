@@ -27,6 +27,7 @@ interface Billetera {
   es_fondo_prevision: boolean
   saldo_inicial_pendiente?: boolean
   icono: string
+  activa?: boolean
 }
 
 interface Hijo {
@@ -555,18 +556,31 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
 
   // ── Filtros de billeteras ──
   const numericMonto = parseFloat(monto) || 0
+  const requiereSaldoSuficiente = tipo === 'expense' || tipo === 'transfer'
   const origenOptions = billeteras.filter(b => {
-    if (tipo === 'expense') {
-      return !b.es_fondo_prevision && b.saldo_actual >= numericMonto
-    }
+    if (!b.activa) return false
+    if (tipo === 'expense' && b.es_fondo_prevision) return false
+    if (requiereSaldoSuficiente && numericMonto > 0 && b.saldo_actual < numericMonto) return false
     return true
   })
-  const monedaOrigen = origenTipo === 'billetera' 
+  const monedaOrigen = origenTipo === 'billetera'
     ? (billeteras.find(b => b.billetera_id === billeteraOrigenId)?.moneda ?? 'ARS')
     : 'ARS'
   const destinoOptions = billeteras.filter(b =>
-    b.moneda === monedaOrigen && b.billetera_id !== billeteraOrigenId
+    b.activa && b.moneda === monedaOrigen && b.billetera_id !== billeteraOrigenId
   )
+
+  // ── Reseteo defensivo: si la billetera preseleccionada deja de ser válida
+  // (borrada, inactiva, o saldo insuficiente), limpiamos la selección
+  // para evitar que el botón de confirmar llame a la RPC con un id residual.
+  useEffect(() => {
+    if (origenTipo !== 'billetera' || billeteraOrigenId == null) return
+    const sel = origenOptions.find(b => b.billetera_id === billeteraOrigenId)
+    if (!sel) {
+      setBilleteraOrigenId(null)
+      setBilleteraDestinoId(null)
+    }
+  }, [origenTipo, billeteraOrigenId, origenOptions])
 
   // ── 8 frecuentes: tomadas directamente de los movimientos recientes de la DB ──
   const frecuentes: CategoriaSeleccionada[] = frecuentesRecientes.slice(0, 8)
@@ -647,27 +661,61 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
   // ── Guardar ──
   const handleSave = async () => {
     const montoNum = parseFloat(monto)
-    if (!montoNum || montoNum <= 0) return showToast(t('error_invalid_amount'), 'error')
-    if (origenTipo === 'billetera' && !billeteraOrigenId) return showToast('Selecciona una cuenta', 'error')
-    
-    // Check pending initial balance
-    if (origenTipo === 'billetera' && billeteraOrigenId) {
+    if (!montoNum || montoNum <= 0) {
+      showToast(t('error_invalid_amount'), 'error')
+      return
+    }
+
+    if (origenTipo === 'billetera') {
+      if (!billeteraOrigenId) {
+        showToast(t('movement_error_source_required'), 'error')
+        return
+      }
       const bOrigen = billeteras.find(b => b.billetera_id === billeteraOrigenId)
-      if (bOrigen?.saldo_inicial_pendiente) {
+      if (!bOrigen) {
+        showToast(t('movement_error_wallet_not_found'), 'error')
+        return
+      }
+      if (!bOrigen.activa) {
+        showToast(t('movement_error_wallet_inactive'), 'error')
+        return
+      }
+      if (bOrigen.saldo_inicial_pendiente) {
         setInitialBalanceBilletera(bOrigen)
         setShowInitialBalanceModal(true)
         return
       }
+      if ((tipo === 'expense' || tipo === 'transfer') && bOrigen.saldo_actual < montoNum) {
+        showToast(t('movement_error_transfer_insufficient'), 'error')
+        return
+      }
     }
-    
-    if (origenTipo === 'tarjeta' && !tarjetaId) return showToast('Selecciona una tarjeta', 'error')
+
+    if (origenTipo === 'tarjeta' && !tarjetaId) {
+      showToast(t('movement_error_source_required'), 'error')
+      return
+    }
+
     if (tipo === 'expense' && !categoriaEgreso && !proyectoSeleccionadoId) {
-      return showToast(t('familia.error_no_categoria_ni_proyecto'), 'error')
+      showToast(t('movement_error_category_required'), 'error')
+      return
     }
-    if (tipo === 'transfer' && !billeteraDestinoId) return showToast('Selecciona cuenta destino', 'error')
-    if (tipo === 'transfer' && billeteraDestinoId) {
+
+    if (tipo === 'transfer') {
+      if (!billeteraDestinoId) {
+        showToast(t('movement_error_destination_required'), 'error')
+        return
+      }
+      if (billeteraDestinoId === billeteraOrigenId) {
+        showToast(t('movement_error_transfer_same_wallet'), 'error')
+        return
+      }
       const bDest = billeteras.find(b => b.billetera_id === billeteraDestinoId)
-      if (bDest?.saldo_inicial_pendiente) {
+      if (!bDest) {
+        showToast(t('movement_error_wallet_not_found'), 'error')
+        return
+      }
+      if (bDest.saldo_inicial_pendiente) {
         setInitialBalanceBilletera(bDest)
         setShowInitialBalanceModal(true)
         return
@@ -678,8 +726,8 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
     const proyectoId = proyectoSeleccionadoId
     const proyectoObj = proyectosHogar.find(p => p.proyecto_id === proyectoId) ?? null
     const descripcionFinal = tipo === 'expense'
-      ? (categoriaEgreso?.nombre ?? proyectoObj?.nombre_proyecto ?? 'Gasto')
-      : (tipo === 'income' ? (categoriaIngreso?.nombre ?? null) : 'Transferencia')
+      ? (categoriaEgreso?.nombre ?? proyectoObj?.nombre_proyecto ?? t('type_expense', { defaultValue: 'Gasto' }))
+      : (tipo === 'income' ? (categoriaIngreso?.nombre ?? null) : t('type_transfer', { defaultValue: 'Transferencia' }))
 
     setLoading(true)
     try {
@@ -724,7 +772,46 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
   }
 
   const montoNum = parseFloat(monto) || 0
-  const canConfirm = montoNum > 0 && (origenTipo === 'billetera' ? !!billeteraOrigenId : !!tarjetaId) && (tipo !== 'expense' || !!categoriaEgreso || !!proyectoSeleccionadoId) && (tipo !== 'transfer' || !!billeteraDestinoId)
+  const bOrigenSel = origenTipo === 'billetera'
+    ? billeteras.find(b => b.billetera_id === billeteraOrigenId) ?? null
+    : null
+  const bDestSel = billeteras.find(b => b.billetera_id === billeteraDestinoId) ?? null
+  const faltaOrigen = origenTipo === 'billetera' ? !billeteraOrigenId : !tarjetaId
+  const faltaDestino = tipo === 'transfer' && !billeteraDestinoId
+  const mismoOrigenDestino = tipo === 'transfer' && !!billeteraOrigenId && billeteraOrigenId === billeteraDestinoId
+  const faltaCategoria = tipo === 'expense' && !categoriaEgreso && !proyectoSeleccionadoId
+  const faltaMonto = montoNum <= 0
+  const origenInactivo = origenTipo === 'billetera' && !!bOrigenSel && !bOrigenSel.activa
+  const origenSinSaldo = origenTipo === 'billetera' && (tipo === 'expense' || tipo === 'transfer')
+    && !!bOrigenSel && bOrigenSel.saldo_actual < montoNum
+  const destinoInactivo = tipo === 'transfer' && !!bDestSel && !bDestSel.activa
+
+  const canConfirm =
+    !faltaMonto &&
+    !faltaOrigen &&
+    !faltaDestino &&
+    !mismoOrigenDestino &&
+    !faltaCategoria &&
+    !origenInactivo &&
+    !destinoInactivo &&
+    !origenSinSaldo
+
+  const confirmBlockReason: string | null = faltaMonto
+    ? t('movement_btn_unmet_reason_amount')
+    : faltaOrigen
+      ? t('movement_btn_unmet_reason_source')
+      : faltaDestino
+        ? t('movement_btn_unmet_reason_destination')
+        : mismoOrigenDestino
+          ? t('movement_error_transfer_same_wallet')
+          : faltaCategoria
+            ? t('movement_btn_unmet_reason_category')
+            : origenInactivo || destinoInactivo
+              ? t('movement_error_wallet_inactive')
+              : origenSinSaldo
+                ? t('movement_error_transfer_insufficient')
+                : null
+
   const cfg = TIPO_CONFIG[tipo]
 
   // ─── RENDER ────────────────────────────────────────────────────────────────
@@ -832,7 +919,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
 
                     {/* Origen */}
                     <label className="step-label">
-                      {tipo === 'transfer' ? 'Cuenta Origen' : (tipo === 'expense' ? 'Cuenta o Tarjeta' : 'Cuenta / Billetera')}
+                      {tipo === 'transfer' ? t('label_source_wallet') : (tipo === 'expense' ? t('movement_select_origin_or_card') : t('label_source_wallet'))}
                     </label>
                     {remoteSectionLoading ? (
                       <div className="warning-card" style={{ padding: '16px', textAlign: 'center', width: '100%' }}>
@@ -841,7 +928,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       </div>
                     ) : (
                     <div className="cuenta-lista pc-max-height">
-                      {tipo === 'expense' && !loadingData && billeteras.length > 0 && origenOptions.length === 0 ? (
+                      {(tipo === 'expense' || tipo === 'transfer') && !loadingData && billeteras.length > 0 && origenOptions.length === 0 ? (
                         <div className="warning-card" style={{ color: 'var(--coral)', padding: '12px', textAlign: 'center', background: 'rgba(255,107,107,0.08)', borderRadius: '10px', fontSize: '13px', margin: '8px 0', width: '100%' }}>
                           ⚠️ {t('error_no_sufficient_balance_wallets')}
                         </div>
@@ -925,7 +1012,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     {/* Destino (solo transfer) */}
                     {tipo === 'transfer' && !remoteSectionLoading && (
                       <>
-                        <label className="step-label" style={{ marginTop: '16px' }}>Cuenta Destino</label>
+                        <label className="step-label" style={{ marginTop: '16px' }}>{t('step_account')}</label>
                         {destinoOptions.length === 0 ? (
                           <div className="step-warning">⚠️ No hay cuentas en {monedaOrigen} para transferir</div>
                         ) : (
@@ -1324,7 +1411,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                   ) : (
                   <>
                   {/* Cuentas en desplegables */}
-                  <label className="step-label">Cuenta Origen</label>
+                  <label className="step-label">{t('label_source_wallet')}</label>
                   <select
                     ref={selectOrigenRef}
                     className="form-control mb-3"
@@ -1347,7 +1434,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       marginBottom: '16px'
                     }}
                   >
-                    <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>Selecciona origen...</option>
+                    <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('movement_select_origin_placeholder')}</option>
                     {origenOptions.map(b => (
                       <option key={b.billetera_id} value={b.billetera_id} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
                         {b.icono || '💳'} {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
@@ -1355,7 +1442,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     ))}
                   </select>
 
-                  <label className="step-label">Cuenta Destino</label>
+                  <label className="step-label">{t('movement_select_destination_placeholder')}</label>
                   <select
                     className="form-control mb-3"
                     value={billeteraDestinoId || ''}
@@ -1374,7 +1461,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       marginBottom: '16px'
                     }}
                   >
-                    <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>Selecciona destino...</option>
+                    <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('movement_select_destination_placeholder')}</option>
                     {destinoOptions.map(b => (
                       <option key={b.billetera_id} value={b.billetera_id} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
                         {b.icono || '💳'} {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
@@ -1771,7 +1858,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     </div>
                   ) : (
                   <>
-                  {tipo === 'expense' && !loadingData && billeteras.length > 0 && origenOptions.length === 0 && (
+                  {requiereSaldoSuficiente && !loadingData && billeteras.length > 0 && origenOptions.length === 0 && (
                     <div className="warning-card" style={{ color: 'var(--coral)', padding: '12px', background: 'rgba(255,107,107,0.08)', borderRadius: '10px', fontSize: '13px', marginBottom: '16px' }}>
                       ⚠️ {t('error_no_sufficient_balance_wallets')}
                     </div>
@@ -1811,8 +1898,8 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       marginBottom: '16px'
                     }}
                   >
-                    <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>Selecciona un origen...</option>
-                    <optgroup label="Cuentas/Billeteras">
+                    <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('movement_select_origin_or_card')}</option>
+                    <optgroup label={t('label_source_wallet')}>
                       {origenOptions.map(b => (
                         <option key={`b_${b.billetera_id}`} value={`b_${b.billetera_id}`} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
                           {b.icono || '💳'} {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
@@ -2004,8 +2091,10 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                   background: cfg.color,
                   color: tipo === 'income' ? 'var(--bg)' : 'white',
                   cursor: 'pointer',
+                  opacity: canConfirm ? 1 : 0.55,
                 }}
-                disabled={loading}
+                disabled={loading || !canConfirm}
+                title={confirmBlockReason ?? undefined}
                 onClick={handleSave}
               >
                 {loading ? (

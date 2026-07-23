@@ -6,6 +6,7 @@ import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { EditMovementModal } from '@/components/EditMovementModal/EditMovementModal'
+import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/ReconcileWalletModal'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import './Home.css'
 
@@ -322,7 +323,6 @@ export function HomePage() {
 
   // Modal de Conciliación
   const [selectedBilletera, setSelectedBilletera] = useState<any | null>(null)
-  const [saldoReal, setSaldoReal] = useState<string>('0')
 
   const fetchData = useCallback(async () => {
     try {
@@ -646,47 +646,6 @@ export function HomePage() {
 
   const openConciliacion = (billetera: any) => {
     setSelectedBilletera(billetera)
-    setSaldoReal(billetera.saldo_actual.toString())
-  }
-
-  const handleConciliar = async () => {
-    if (!selectedBilletera) return
-    const saldoNum = parseFloat(saldoReal)
-    if (isNaN(saldoNum)) {
-      showToast(t('error_field_invalid', { field: 'Saldo Real' }), 'error')
-      return
-    }
-
-    try {
-      await rpc('fn_ejecutar_conciliacion', {
-        p_billetera_id: selectedBilletera.billetera_id,
-        p_saldo_real: saldoNum
-      })
-      
-      const diff = saldoNum - parseFloat(selectedBilletera.saldo_actual)
-      if (diff === 0) {
-        showToast(t('success_conciliation_no_diff'), 'success')
-      } else {
-        showToast(t('success_conciliation_with_diff', { category: t('cat_mystery') }), 'success')
-      }
-      
-      setSelectedBilletera(null)
-      fetchData()
-    } catch (err: any) {
-      showToast(parseError(err), 'error')
-    }
-  }
-
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (e.target.value === '0') {
-      setSaldoReal('')
-    }
-  }
-
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (e.target.value.trim() === '') {
-      setSaldoReal('0')
-    }
   }
 
   const handleDeleteMovement = (id: number) => {
@@ -1122,10 +1081,10 @@ export function HomePage() {
                           <div className="timeline-item-subtext-row">
                             <span className="timeline-item-detail">
                               {esEgreso && !m.billetera_origen_id && m.nombre_billetera ? (
-                                m.nombre_billetera
+                                t(m.nombre_billetera)
                               ) : (
                                 <>
-                                  {m.nombre_billetera}
+                                  {m.nombre_billetera ? t(m.nombre_billetera) : ''}
                                   {m.detalle ? ` · ${t(m.detalle)}` : ''}
                                 </>
                               )}
@@ -1161,55 +1120,12 @@ export function HomePage() {
 
       {/* ── MODAL CONCILIACIÓN RÁPIDA ── */}
       {selectedBilletera && (
-        <>
-          <div className="bottom-sheet-overlay" onClick={() => setSelectedBilletera(null)} />
-          <div className="bottom-sheet wallet-modal-sheet">
-            <div className="bottom-sheet-handle" />
-            <div style={{ padding: 'var(--space-2) var(--space-2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
-                <h3 className="font-display" style={{ fontSize: '18px', margin: 0 }}>
-                  {t('reconcile_wallet_title', { nombre: selectedBilletera.nombre })}
-                </h3>
-                <button type="button" className="text-xs text-muted" onClick={() => setSelectedBilletera(null)}>{t('btn_close')}</button>
-              </div>
-
-              <div className="card mb-3" style={{ background: 'var(--surface-2)', textAlign: 'center', padding: 'var(--space-3)' }}>
-                <p className="text-xs text-muted uppercase tracking-wider mb-1">{t('reconcile_theoretical_balance')}</p>
-                <p className="font-mono font-bold" style={{ fontSize: '22px', color: 'var(--text)' }}>
-                  {formatAmount(selectedBilletera.saldo_actual, selectedBilletera.moneda)}
-                </p>
-              </div>
-
-              <div className="form-group mb-4">
-                <label className="text-xs text-muted mb-2 block font-semibold">{t('reconcile_real_balance')}</label>
-                <div style={{ position: 'relative' }}>
-                  <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', color: 'var(--text-3)' }}>
-                    {selectedBilletera.moneda === 'USD' ? 'U$S' : '$'}
-                  </span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    className="form-control font-mono"
-                    style={{ paddingLeft: 45, fontSize: '18px', fontWeight: 'bold' }}
-                    value={saldoReal}
-                    onChange={(e) => setSaldoReal(e.target.value)}
-                    onFocus={handleFocus}
-                    onBlur={handleBlur}
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3">
-                <button className="btn btn-secondary flex-1" onClick={() => setSelectedBilletera(null)}>
-                  {t('btn_cancel')}
-                </button>
-                <button className="btn btn-primary flex-1" onClick={handleConciliar}>
-                  {t('btn_confirm_adjustment')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
+        <ReconcileWalletModal
+          billetera={selectedBilletera}
+          formatAmount={formatAmount}
+          onClose={() => setSelectedBilletera(null)}
+          onSuccess={fetchData}
+        />
       )}
       {/* ── MODAL: CONFIRM ELIMINAR ── */}
       <ConfirmModal
