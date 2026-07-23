@@ -557,8 +557,12 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
   // ── Filtros de billeteras ──
   const numericMonto = parseFloat(monto) || 0
   const requiereSaldoSuficiente = tipo === 'expense' || tipo === 'transfer'
+  // fn_obtener_billeteras_activas() no devuelve la columna `activa`; el RPC
+  // ya garantiza que solo trae billeteras activas, asi que default a true
+  // cuando el campo no esta presente evita filtrar todo por error.
+  const isWalletActive = (b: Billetera) => b.activa !== false
   const origenOptions = billeteras.filter(b => {
-    if (!b.activa) return false
+    if (!isWalletActive(b)) return false
     if (tipo === 'expense' && b.es_fondo_prevision) return false
     if (requiereSaldoSuficiente && numericMonto > 0 && b.saldo_actual < numericMonto) return false
     return true
@@ -567,7 +571,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
     ? (billeteras.find(b => b.billetera_id === billeteraOrigenId)?.moneda ?? 'ARS')
     : 'ARS'
   const destinoOptions = billeteras.filter(b =>
-    b.activa && b.moneda === monedaOrigen && b.billetera_id !== billeteraOrigenId
+    isWalletActive(b) && b.moneda === monedaOrigen && b.billetera_id !== billeteraOrigenId
   )
 
   // ── Reseteo defensivo: si la billetera preseleccionada deja de ser válida
@@ -676,7 +680,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
         showToast(t('movement_error_wallet_not_found'), 'error')
         return
       }
-      if (!bOrigen.activa) {
+      if (bOrigen.activa === false) {
         showToast(t('movement_error_wallet_inactive'), 'error')
         return
       }
@@ -781,10 +785,10 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
   const mismoOrigenDestino = tipo === 'transfer' && !!billeteraOrigenId && billeteraOrigenId === billeteraDestinoId
   const faltaCategoria = tipo === 'expense' && !categoriaEgreso && !proyectoSeleccionadoId
   const faltaMonto = montoNum <= 0
-  const origenInactivo = origenTipo === 'billetera' && !!bOrigenSel && !bOrigenSel.activa
+  const origenInactivo = origenTipo === 'billetera' && !!bOrigenSel && bOrigenSel.activa === false
   const origenSinSaldo = origenTipo === 'billetera' && (tipo === 'expense' || tipo === 'transfer')
     && !!bOrigenSel && bOrigenSel.saldo_actual < montoNum
-  const destinoInactivo = tipo === 'transfer' && !!bDestSel && !bDestSel.activa
+  const destinoInactivo = tipo === 'transfer' && !!bDestSel && bDestSel.activa === false
 
   const canConfirm =
     !faltaMonto &&

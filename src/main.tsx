@@ -8,6 +8,18 @@ createRoot(document.getElementById('root')!).render(
   </StrictMode>
 )
 
+// Bloquea el context menu globalmente (long-press en Chrome Android dispara
+// "Buscar con Google"). Esto evita que aparezca la lupa de Google Search y
+// el menu nativo de seleccion. Se excluyen inputs/textareas para que el
+// usuario pueda seguir corrigiendo texto.
+document.addEventListener('contextmenu', (e) => {
+  const target = e.target as HTMLElement | null
+  if (!target) return
+  const tag = target.tagName?.toLowerCase()
+  if (tag === 'input' || tag === 'textarea' || target.isContentEditable) return
+  e.preventDefault()
+}, { capture: true })
+
 // Register PWA Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
