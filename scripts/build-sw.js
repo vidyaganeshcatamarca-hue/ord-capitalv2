@@ -23,7 +23,15 @@ try {
   ref = String(Date.now())
 }
 
-const cacheName = `ord-capital-${ref}`
+// Si hay cambios sin commit, agregar timestamp para forzar un nuevo CACHE_NAME
+// y que el SW borre el cache viejo al activarse.
+let dirty = false
+try {
+  const status = execSync('git status --porcelain', { cwd: root, encoding: 'utf8' }).trim()
+  dirty = status.length > 0
+} catch { /* ignore */ }
+
+const cacheName = `ord-capital-${ref}${dirty ? '-' + Date.now() : ''}`
 console.log(`▶ Generando ${outputPath} con CACHE_NAME="${cacheName}"`)
 
 if (!existsSync(templatePath)) {

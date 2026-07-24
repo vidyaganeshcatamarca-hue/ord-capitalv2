@@ -8,6 +8,7 @@ import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { EditMovementModal } from '@/components/EditMovementModal/EditMovementModal'
 import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/ReconcileWalletModal'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { generateColorShade } from '@/lib/colorUtils'
 import './Home.css'
 
 function getGreeting() {
@@ -323,6 +324,7 @@ export function HomePage() {
 
   // Modal de Conciliación
   const [selectedBilletera, setSelectedBilletera] = useState<any | null>(null)
+  const [showAllTopCategories, setShowAllTopCategories] = useState(false)
 
   const fetchData = useCallback(async () => {
     try {
@@ -722,7 +724,7 @@ export function HomePage() {
           >
             🔔
             {totalAlertas > 0 && (
-              <span className="badge badge-red animate-pulse" style={{ position: 'absolute', top: -4, right: -4, fontSize: 10 }}>
+              <span className="badge badge-red animate-pulse" style={{ position: 'absolute', top: -4, right: -4, fontSize: 'calc(10px * var(--font-scale))' }}>
                 {totalAlertas}
               </span>
             )}
@@ -849,7 +851,7 @@ export function HomePage() {
                         <span className="billetera-emoji-badge">{b.icono || '💵'}</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           {/* Explicación textual sutil al lado del semáforo (Observación 3) */}
-                          <span style={{ fontSize: '10px', fontWeight: 600, color: `var(--text-3)` }}>
+                          <span style={{ fontSize: 'calc(10px * var(--font-scale))', fontWeight: 600, color: `var(--text-3)` }}>
                             {sem.text}
                           </span>
                           <span className={`dot dot-${sem.color}`} title={`Conciliado: ${sem.text}`} />
@@ -886,7 +888,7 @@ export function HomePage() {
                 >
                   👁️
                 </button>
-                <h4 style={{ margin: 0, fontSize: '14px', color: 'var(--coral)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <h4 style={{ margin: 0, fontSize: 'calc(14px * var(--font-scale))', color: 'var(--coral)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   {t('mystery_leak_warning')}
                 </h4>
                 <p className="text-xs text-muted mt-1 leading-relaxed">
@@ -919,7 +921,7 @@ export function HomePage() {
                   type="button"
                   className={`segmented-item ${homeFilters.nivelCategorias === 'parents' ? 'active' : ''}`}
                   onClick={() => updateHomeFilters({ ...homeFilters, nivelCategorias: 'parents' })}
-                  style={{ fontSize: '11px', padding: '4px 8px' }}
+                  style={{ fontSize: 'calc(11px * var(--font-scale))', padding: '4px 8px' }}
                 >
                   {t('segmented_only_parents')}
                 </button>
@@ -927,7 +929,7 @@ export function HomePage() {
                   type="button"
                   className={`segmented-item ${homeFilters.nivelCategorias === 'all' ? 'active' : ''}`}
                   onClick={() => updateHomeFilters({ ...homeFilters, nivelCategorias: 'all' })}
-                  style={{ fontSize: '11px', padding: '4px 8px' }}
+                  style={{ fontSize: 'calc(11px * var(--font-scale))', padding: '4px 8px' }}
                 >
                   {t('segmented_all')}
                 </button>
@@ -988,50 +990,172 @@ export function HomePage() {
                   <h3>{t('donut_empty_title')}</h3>
                   <p>{t('donut_empty_desc')}</p>
                 </div>
-              ) : (
-                <div className="donut-section-wrapper">
-                  <DonutChart data={activeCategoriasData} hideAmounts={hideAmounts} />
-                  <div className="category-breakdown-list" style={{ flex: 1, width: '100%' }}>
-                    {activeCategoriasData.map((c, i) => (
-                      <div key={i} className="category-breakdown-item">
-                        <div className="category-info-row">
-                          <div className="category-label-wrap">
-                            <span className="category-icon-badge" style={{
-                              backgroundColor: c.color || 'var(--surface-3)',
-                              borderColor: c.color || 'var(--border)',
-                              color: '#000000',
-                              width: '28px',
-                              height: '28px',
-                              borderRadius: '8px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '14px',
-                              flexShrink: 0
-                            }}>
-                              <span style={{ filter: 'brightness(0)' }}>{c.icono || '🏷️'}</span>
-                            </span>
-                            <span className="category-name">{t(c.nombre_categoria)}</span>
-                          </div>
-                          <div className="category-amount-wrap">
-                            <span className="category-amount">{formatAmount(c.total_consumido, 'ARS')}</span>
-                            <span className="category-percentage">{c.porcentaje_del_total.toFixed(0)}%</span>
-                          </div>
-                        </div>
-                        <div className="category-progress-bar-bg">
-                          <div
-                            className="category-progress-bar-fill"
+              ) : (() => {
+                const rawDataset = (showAllTopCategories && rankingCategorias.length > 0)
+                  ? rankingCategorias
+                  : activeCategoriasData
+
+                const totalConsumidoSum = rawDataset.reduce(
+                  (sum: number, cat: any) => sum + (Number(cat.total_consumido) || 0), 0
+                )
+
+                const parentColorMap: Record<string, string> = {}
+
+                topCategorias.forEach((tc: any) => {
+                  if (tc.nombre_categoria && tc.color) {
+                    parentColorMap[tc.nombre_categoria.toLowerCase()] = tc.color
+                    const translated = t(tc.nombre_categoria)
+                    if (translated) parentColorMap[translated.toLowerCase()] = tc.color
+                  }
+                })
+
+                rankingCategorias.forEach((rc: any) => {
+                  if (rc.nombre_rubro_padre && rc.color) {
+                    parentColorMap[rc.nombre_rubro_padre.toLowerCase()] = rc.color
+                    const translated = t(rc.nombre_rubro_padre)
+                    if (translated) parentColorMap[translated.toLowerCase()] = rc.color
+                  }
+                  if (rc.estructura_id && rc.color && rc.es_padre) {
+                    parentColorMap[`id:${rc.estructura_id}`] = rc.color
+                  }
+                })
+
+                const parentGroupCounts: Record<string, number> = {}
+                const parentGroupIndices: Record<string, number> = {}
+
+                rawDataset.forEach((cat: any) => {
+                  const parentName = cat.nombre_rubro_padre || cat.nombre_categoria || cat.nombre_cuenta || 'general'
+                  const key = parentName.toLowerCase()
+                  parentGroupCounts[key] = (parentGroupCounts[key] || 0) + 1
+                })
+
+                const sortedCategories = rawDataset
+                  .map((cat: any) => {
+                    const nombre = cat.nombre_categoria || cat.nombre_cuenta || ''
+                    const parentName = cat.nombre_rubro_padre || nombre
+                    const parentKey = parentName.toLowerCase()
+
+                    const baseColor = parentColorMap[`id:${cat.estructura_id}`]
+                      || parentColorMap[parentKey]
+                      || parentColorMap[t(parentName).toLowerCase()]
+                      || cat.color
+                      || 'var(--surface-3)'
+
+                    const isSubaccount = Boolean(cat.nombre_rubro_padre || cat.es_padre === false || parentColorMap[`id:${cat.estructura_id}`])
+
+                    const indexInGroup = parentGroupIndices[parentKey] || 0
+                    parentGroupIndices[parentKey] = indexInGroup + 1
+                    const groupCount = parentGroupCounts[parentKey] || 1
+
+                    const finalColor = isSubaccount
+                      ? generateColorShade(baseColor, indexInGroup, groupCount)
+                      : (cat.color || baseColor)
+
+                    const totalConsumido = Number(cat.total_consumido) || 0
+                    const porcentaje = (cat.porcentaje_del_total !== undefined && cat.porcentaje_del_total !== null)
+                      ? Number(cat.porcentaje_del_total)
+                      : (totalConsumidoSum > 0 ? (totalConsumido / totalConsumidoSum) * 100 : 0)
+
+                    return {
+                      ...cat,
+                      nombre_categoria: nombre,
+                      nombre_cuenta: nombre,
+                      total_consumido: totalConsumido,
+                      porcentaje_del_total: porcentaje,
+                      color: finalColor,
+                      icono: cat.icono || '🏷️'
+                    }
+                  })
+                  .sort((a: any, b: any) => b.total_consumido - a.total_consumido)
+
+                const displayedCategories = showAllTopCategories ? sortedCategories : sortedCategories.slice(0, 3)
+                const totalAvailableCount = Math.max(rankingCategorias.length, topCategorias.length, activeCategoriasData.length)
+                const canExpand = totalAvailableCount > 3 || (rankingCategorias.length > topCategorias.length)
+
+                return (
+                  <div className="donut-section-wrapper">
+                    <DonutChart data={sortedCategories} hideAmounts={hideAmounts} />
+                    <div className="category-breakdown-list" style={{ flex: 1, width: '100%' }}>
+                      {(canExpand || showAllTopCategories) && (
+                        <div className="category-breakdown-top-action" style={{
+                          display: 'flex',
+                          justifyContent: 'flex-start',
+                          alignItems: 'center',
+                          marginBottom: '8px',
+                          width: '100%'
+                        }}>
+                          <button
+                            type="button"
+                            className="btn-see-all-toggle"
                             style={{
-                              width: `${c.porcentaje_del_total}%`,
-                              backgroundColor: c.color || 'var(--mint)'
+                              background: 'rgba(0, 229, 153, 0.12)',
+                              color: 'var(--mint)',
+                              border: '1px solid rgba(0, 229, 153, 0.25)',
+                              borderRadius: '16px',
+                              padding: '4px 12px',
+                              fontSize: 'calc(0.78rem * var(--font-scale))',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              transition: 'all 0.2s ease'
                             }}
-                          />
+                            onClick={() => setShowAllTopCategories(!showAllTopCategories)}
+                          >
+                            <span>{showAllTopCategories ? '▲' : '▼'}</span>
+                            <span>
+                              {showAllTopCategories
+                                ? t('donut_show_less_categories')
+                                : t('donut_see_all_categories', { count: totalAvailableCount })}
+                            </span>
+                          </button>
                         </div>
-                      </div>
-                    ))}
+                      )}
+                      {displayedCategories.map((c, i) => {
+                        const pct = Number(c.porcentaje_del_total) || 0
+                        return (
+                          <div key={i} className="category-breakdown-item">
+                            <div className="category-info-row">
+                              <div className="category-label-wrap">
+                                <span className="category-icon-badge" style={{
+                                  backgroundColor: c.color || 'var(--surface-3)',
+                                  borderColor: c.color || 'var(--border)',
+                                  color: '#000000',
+                                  width: '28px',
+                                  height: '28px',
+                                  borderRadius: '8px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: 'calc(14px * var(--font-scale))',
+                                  flexShrink: 0
+                                }}>
+                                  <span>{c.icono || '🏷️'}</span>
+                                </span>
+                                <span className="category-name">{c.nombre_categoria ? t(c.nombre_categoria) : ''}</span>
+                              </div>
+                              <div className="category-amount-wrap">
+                                <span className="category-amount">{formatAmount(c.total_consumido, 'ARS')}</span>
+                                <span className="category-percentage">{pct.toFixed(0)}%</span>
+                              </div>
+                            </div>
+                            <div className="category-progress-bar-bg">
+                              <div
+                                className="category-progress-bar-fill"
+                                style={{
+                                  width: `${pct}%`,
+                                  backgroundColor: c.color || 'var(--mint)'
+                                }}
+                              />
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )
+              })()}
             </div>
           </div>
 
@@ -1068,7 +1192,7 @@ export function HomePage() {
                             justifyContent: 'center'
                           }}
                         >
-                          <span style={m.color_categoria ? { filter: 'brightness(0)' } : {}}>{m.icono_categoria || '💰'}</span>
+                          <span>{m.icono_categoria || '💰'}</span>
                         </div>
                         <div className="timeline-item-details">
                           <div className="timeline-item-title-row">

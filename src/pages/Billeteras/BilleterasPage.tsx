@@ -24,10 +24,19 @@ export function BilleterasPage() {
   const [hideAmounts, setHideAmounts] = useState(() => {
     return window.localStorage.getItem(`ocultar_montos:${user?.id}`) === 'true'
   })
-  const [activeMenuTab, setActiveMenuTab] = useState<'cuentas_ingreso' | 'categorias_egresos'>(() => {
-    if (searchParams.get('tab') === 'categorias_egresos') return 'categorias_egresos'
+  const [activeMenuTab, setActiveMenuTabState] = useState<'cuentas_ingreso' | 'categorias_egresos'>(() => {
+    const fromUrl = searchParams.get('tab')
+    if (fromUrl === 'categorias_egresos' || fromUrl === 'egresos') return 'categorias_egresos'
+    if (fromUrl === 'cuentas_ingreso' || fromUrl === 'ingresos') return 'cuentas_ingreso'
+    const fromSession = sessionStorage.getItem('last_billeteras_menu_tab') as 'cuentas_ingreso' | 'categorias_egresos'
+    if (fromSession === 'cuentas_ingreso' || fromSession === 'categorias_egresos') return fromSession
     return 'cuentas_ingreso'
   })
+
+  const setActiveMenuTab = (tab: 'cuentas_ingreso' | 'categorias_egresos') => {
+    setActiveMenuTabState(tab)
+    sessionStorage.setItem('last_billeteras_menu_tab', tab)
+  }
 
   // Modales
   const [showCreateModal, setShowCreateModal] = useState(false)

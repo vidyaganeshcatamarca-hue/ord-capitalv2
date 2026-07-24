@@ -9,7 +9,6 @@ const content = fs.readFileSync(esPath, 'utf-8')
 
 const required = {
   apariencia_font_size:        'Tamaño de fuente',
-  apariencia_font_size_desc:    'Escala el texto de la app. No afecta a la calculadora ni a la barra inferior.',
   apariencia_font_size_chico:   'Chico',
   apariencia_font_size_mediano: 'Mediano',
   apariencia_font_size_grande:  'Grande',

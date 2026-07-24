@@ -42,7 +42,7 @@ function EmojiPicker({ value, onChange, selectedColor }: { value: string; onChan
             boxShadow: `0 0 10px ${selectedColor}`
           } : {}}
           onClick={() => onChange(e)}>
-          <span style={value === e && selectedColor ? { filter: 'brightness(0)' } : {}}>{e}</span>
+          <span>{e}</span>
         </button>
       ))}
     </div>
@@ -155,7 +155,7 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
             flexShrink: 0,
             color: '#000000'
           }}>
-            <span style={{ filter: 'brightness(0)' }}>{icono}</span>
+            <span>{icono}</span>
           </div>
           <h3 className="font-display" style={{ margin: 0 }}>{subcuenta ? t('cat_subcuenta_edit_title') : t('cat_subcuenta_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>

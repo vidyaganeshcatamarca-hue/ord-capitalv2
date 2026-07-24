@@ -429,16 +429,14 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
         }
 
         // Preseleccionar la billetera inicial si se provee
-        if (initialBilleteraId) {
+        if (initialBilleteraId && initialBilleteraId > 0) {
           setBilleteraOrigenId(initialBilleteraId)
           if (defaultTipo === 'transfer') {
             const dest = (bill ?? []).find(b => b.billetera_id !== initialBilleteraId)
             if (dest) setBilleteraDestinoId(dest.billetera_id)
           }
         } else {
-          // Preseleccionar la primera billetera operativa
-          const primera = (bill ?? []).find(b => !b.es_fondo_prevision) ?? (bill ?? [])[0]
-          if (primera) setBilleteraOrigenId(primera.billetera_id)
+          setBilleteraOrigenId(null)
         }
       } finally {
         if (alive) setLoadingData(false)
@@ -550,6 +548,16 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
       setOrigenTipo('billetera')
       setTarjetaId(null)
     }
+
+    // Actualizar billetera por defecto según el tipo seleccionado (egreso vs ingreso)
+    const defaultKey = newTipo === 'income' ? 'billetera_default_ingreso' : 'billetera_default_egreso'
+    const rawDefault = localStorage.getItem(defaultKey)
+    if (rawDefault && Number(rawDefault) > 0) {
+      setBilleteraOrigenId(Number(rawDefault))
+    } else {
+      setBilleteraOrigenId(null)
+    }
+
     // Transfer e Income saltan la selección de categoría
     setPaso(newTipo === 'expense' ? 'categoria' : 'monto')
   }, [])

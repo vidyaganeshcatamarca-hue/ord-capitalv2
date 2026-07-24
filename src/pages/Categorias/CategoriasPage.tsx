@@ -4,6 +4,7 @@ import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
+import { generateColorShade } from '@/lib/colorUtils'
 import './Categorias.css'
 
 // ─── Constantes ────────────────────────────────────────────────────────────
@@ -61,7 +62,7 @@ function EmojiPicker({ value, onChange, selectedColor }: { value: string; onChan
             boxShadow: `0 0 10px ${selectedColor}`
           } : {}}
           onClick={() => onChange(e)}>
-          <span style={value === e && selectedColor ? { filter: 'brightness(0)' } : {}}>{e}</span>
+          <span>{e}</span>
         </button>
       ))}
     </div>
@@ -146,7 +147,7 @@ function RubroModal({ rubro, onClose, onSaved }: {
             flexShrink: 0,
             color: '#000000'
           }}>
-            <span style={{ filter: 'brightness(0)' }}>{icono}</span>
+            <span>{icono}</span>
           </div>
           <h3 className="font-display" style={{ margin: 0 }}>{rubro ? t('cat_rubro_edit_title') : t('cat_rubro_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>
@@ -252,7 +253,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
             flexShrink: 0,
             color: '#000000'
           }}>
-            <span style={{ filter: 'brightness(0)' }}>{icono}</span>
+            <span>{icono}</span>
           </div>
           <h3 className="font-display" style={{ margin: 0 }}>{ingreso ? t('cat_fuente_edit_title') : t('cat_fuente_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>
@@ -395,7 +396,7 @@ export function TabEgresos() {
                 <div className="cat-rubro-header" onClick={() => toggleExpanded(rubro.estructura_id)}>
                   <div className="cat-rubro-left">
                     <div className="cat-rubro-icon" style={{ background: rubro.color, borderColor: rubro.color, color: '#000000' }}>
-                      <span style={{ filter: 'brightness(0)' }}>{rubro.icono}</span>
+                      <span>{rubro.icono}</span>
                     </div>
                     <div>
                       <div className="cat-rubro-name">{t(rubro.nombre_cuenta)}</div>
@@ -427,31 +428,37 @@ export function TabEgresos() {
                     {hijos.length === 0 ? (
                       <div className="cat-hijo-empty">{t("cat_child_empty")}</div>
                     ) : (
-                      hijos.map(hijo => (
-                        <div key={hijo.estructura_id} className="cat-hijo-row">
-                          <div className="cat-hijo-icon" style={{
-                            background: hijo.color || rubro.color,
-                            borderColor: hijo.color || rubro.color,
-                            color: '#000000',
-                            width: '28px',
-                            height: '28px',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '14px',
-                            flexShrink: 0
-                          }}>
-                            <span style={{ filter: 'brightness(0)' }}>{hijo.icono || rubro.icono}</span>
+                      hijos.map((hijo, idx) => {
+                        const hijoColor = (hijo.color && hijo.color !== rubro.color)
+                          ? hijo.color
+                          : generateColorShade(rubro.color, idx, hijos.length)
+
+                        return (
+                          <div key={hijo.estructura_id} className="cat-hijo-row">
+                            <div className="cat-hijo-icon" style={{
+                              background: hijoColor,
+                              borderColor: hijoColor,
+                              color: '#000000',
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '8px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '14px',
+                              flexShrink: 0
+                            }}>
+                              <span>{hijo.icono || rubro.icono}</span>
+                            </div>
+                            <span className="cat-hijo-name">{t(hijo.nombre_cuenta)}</span>
+                            {hijo.es_hormiga && <span className="cat-badge-hormiga">🐜</span>}
+                            <button className="cat-action-btn cat-action-sm" title={t('cat_tooltip_edit_subcuenta')}
+                              onClick={() => setSubModal({ open: true, hijo, rubroId: rubro.estructura_id })}>✏️</button>
+                            <button className="cat-action-btn cat-action-sm" title={t('cat_tooltip_delete_subcuenta')}
+                              onClick={() => setDeleteConfirm({ open: true, id: hijo.estructura_id, nombre: hijo.nombre_cuenta })}>🗑️</button>
                           </div>
-                          <span className="cat-hijo-name">{t(hijo.nombre_cuenta)}</span>
-                          {hijo.es_hormiga && <span className="cat-badge-hormiga">🐜</span>}
-                          <button className="cat-action-btn cat-action-sm" title={t('cat_tooltip_edit_subcuenta')}
-                            onClick={() => setSubModal({ open: true, hijo, rubroId: rubro.estructura_id })}>✏️</button>
-                          <button className="cat-action-btn cat-action-sm" title={t('cat_tooltip_delete_subcuenta')}
-                            onClick={() => setDeleteConfirm({ open: true, id: hijo.estructura_id, nombre: hijo.nombre_cuenta })}>🗑️</button>
-                        </div>
-                      ))
+                        )
+                      })
                     )}
                   </div>
                 )}
@@ -548,7 +555,7 @@ export function TabIngresos({ hideNewBtn = false }: { hideNewBtn?: boolean }) {
             <div key={ing.producto_id} className="cat-ingreso-card"
               onClick={() => setModal({ open: true, item: ing })}>
               <div className="cat-ingreso-icon" style={{ background: ing.color, borderColor: ing.color, color: '#000000' }}>
-                <span style={{ filter: 'brightness(0)' }}>{ing.icono}</span>
+                <span>{ing.icono}</span>
               </div>
               <div className="cat-ingreso-info">
                 <div className="cat-ingreso-name">{ing.nombre}</div>
@@ -572,7 +579,14 @@ export function TabIngresos({ hideNewBtn = false }: { hideNewBtn?: boolean }) {
 
 // ─── Página principal ────────────────────────────────────────────────────────
 export function CategoriasPage() {
-  const [activeTab, setActiveTab] = useState<'egresos' | 'ingresos'>('egresos')
+  const [activeTab, setActiveTabState] = useState<'egresos' | 'ingresos'>(() => {
+    return (sessionStorage.getItem('last_categorias_tab') as 'egresos' | 'ingresos') || 'egresos'
+  })
+
+  const setActiveTab = (tab: 'egresos' | 'ingresos') => {
+    setActiveTabState(tab)
+    sessionStorage.setItem('last_categorias_tab', tab)
+  }
 
   return (
     <div className="page cat-page">

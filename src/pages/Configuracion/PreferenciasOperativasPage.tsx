@@ -77,14 +77,22 @@ export function PreferenciasOperativasPage() {
   const savePreferences = async (newPrefs: OperationalPrefs) => {
     try {
       await rpc('fn_actualizar_preferencia_usuario', {
-        p_billetera_default_egreso: newPrefs.billetera_default_egreso,
-        p_billetera_default_ingreso: newPrefs.billetera_default_ingreso,
+        p_billetera_default_egreso: newPrefs.billetera_default_egreso ?? -1,
+        p_billetera_default_ingreso: newPrefs.billetera_default_ingreso ?? -1,
         p_ocr_auto_aprobar: newPrefs.ocr_auto_aprobar,
         p_voz_activada: newPrefs.voz_activada,
       })
       localStorage.setItem('tipo_movimiento_default', newPrefs.tipo_movimiento_default)
-      if (newPrefs.billetera_default_egreso) localStorage.setItem('billetera_default_egreso', String(newPrefs.billetera_default_egreso))
-      if (newPrefs.billetera_default_ingreso) localStorage.setItem('billetera_default_ingreso', String(newPrefs.billetera_default_ingreso))
+      if (newPrefs.billetera_default_egreso) {
+        localStorage.setItem('billetera_default_egreso', String(newPrefs.billetera_default_egreso))
+      } else {
+        localStorage.removeItem('billetera_default_egreso')
+      }
+      if (newPrefs.billetera_default_ingreso) {
+        localStorage.setItem('billetera_default_ingreso', String(newPrefs.billetera_default_ingreso))
+      } else {
+        localStorage.removeItem('billetera_default_ingreso')
+      }
     } catch (err) {
       showToast(parseError(err), 'error')
     }
@@ -149,7 +157,9 @@ export function PreferenciasOperativasPage() {
             >
               <option value="">{t('config_none')}</option>
               {operationalWallets.map((w) => (
-                <option key={w.billetera_id} value={w.billetera_id}>{w.nombre} ({w.moneda})</option>
+                <option key={w.billetera_id} value={w.billetera_id}>
+                  {w.nombre === 'wallet_cash_default_name' ? t('wallet_cash_default_name') : t(w.nombre)} ({w.moneda})
+                </option>
               ))}
             </select>
           </div>
@@ -162,7 +172,9 @@ export function PreferenciasOperativasPage() {
             >
               <option value="">{t('config_none')}</option>
               {operationalWallets.map((w) => (
-                <option key={w.billetera_id} value={w.billetera_id}>{w.nombre} ({w.moneda})</option>
+                <option key={w.billetera_id} value={w.billetera_id}>
+                  {w.nombre === 'wallet_cash_default_name' ? t('wallet_cash_default_name') : t(w.nombre)} ({w.moneda})
+                </option>
               ))}
             </select>
           </div>

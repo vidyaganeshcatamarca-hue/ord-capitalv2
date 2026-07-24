@@ -121,3 +121,62 @@ article.apariencia-card-wrap.config-hub-card {
   font-weight: 700;
 }
 
+/* Selector de tamaño de fuente */
+.apariencia-font-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.apariencia-font-pill {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-3);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 180ms ease;
+  min-width: 52px;
+}
+
+.apariencia-font-pill:hover:not(:disabled) {
+  border-color: var(--mint);
+  color: var(--text);
+}
+
+.apariencia-font-pill:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.apariencia-font-pill--active {
+  border-color: var(--mint);
+  background: var(--mint-dim);
+  color: var(--mint);
+  font-weight: 600;
+}
+
+.apariencia-font-pill__preview {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1;
+  color: inherit;
+}
+.apariencia-font-pill__preview[data-size="chico"]    { font-size: 14px; }
+.apariencia-font-pill__preview[data-size="mediano"]  { font-size: 18px; }
+.apariencia-font-pill__preview[data-size="grande"]   { font-size: 22px; }
+.apariencia-font-pill__preview[data-size="gigante"]  { font-size: 26px; }
+
+.apariencia-font-pill__label {
+  font-size: 0.72rem;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
