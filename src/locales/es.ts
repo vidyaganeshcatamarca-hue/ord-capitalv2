@@ -1302,6 +1302,13 @@ export const inversiones = {
   mi_cuenta_signout: "Cerrar sesión",
   apariencia_ocultar_montos: "Ocultar montos en toda la app",
   apariencia_idioma: "Idioma (próximamente)",
+  apariencia_font_size: "Tamaño de fuente",
+  apariencia_font_size_desc: "Escala el texto de la app. No afecta a la calculadora ni a la barra inferior.",
+  apariencia_font_size_chico: "Chico",
+  apariencia_font_size_mediano: "Mediano",
+  apariencia_font_size_grande: "Grande",
+  apariencia_font_size_gigante: "Gigante",
+  font_size_saved: "Tamaño guardado",
 
   // Recordatorios personalizados (Fase Transversal)
   recordatorio_section_title: "Mis recordatorios",
