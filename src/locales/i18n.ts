@@ -1,4 +1,4 @@
-import * as es from './es';
+import * as es from './es.js';
 
 const locales: Record<string, any> = {
   es
