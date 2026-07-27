@@ -769,7 +769,7 @@ export function PresupuestosPage() {
                 width: 32, height: 32, borderRadius: 8,
                 background: sobreSeleccionado.color || '#4ECDC4',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 16,
+                fontSize: 'calc(16px * var(--font-scale))',
               }}>
                 {sobreSeleccionado.icono}
               </span>
@@ -881,12 +881,12 @@ export function PresupuestosPage() {
               )}
             </div>
 
-            <div style={{ fontSize: 12, color: '#A0A0A0', marginBottom: 8 }}>
+            <div style={{ fontSize: 'calc(12px * var(--font-scale))', color: '#A0A0A0', marginBottom: 8 }}>
               {t('budget_label_transfer_source')}
             </div>
 
             {fuentesDisponibles.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '20px 0', color: '#A0A0A0', fontSize: 13 }}>
+              <div style={{ textAlign: 'center', padding: '20px 0', color: '#A0A0A0', fontSize: 'calc(13px * var(--font-scale))' }}>
                 {t('budget_label_transfer_no_envelopes')}
               </div>
             ) : (
@@ -933,7 +933,7 @@ export function PresupuestosPage() {
                   <button
                     className="btn-confirmar-monto"
                     onClick={() => setMontoTransferir(String(Math.round(Math.min(Math.abs(sobreSeleccionado.monto_disponible), origenSeleccionado.monto_disponible))))}
-                    style={{ fontSize: 11, padding: '10px 10px' }}
+                    style={{ fontSize: 'calc(11px * var(--font-scale))', padding: '10px 10px' }}
                   >
                     {t('budget_btn_all_deficit')}
                   </button>
@@ -1116,7 +1116,7 @@ export function PresupuestosPage() {
                 </div>
 
                 {sugerencias.length === 0 ? (
-                  <div style={{ color: 'var(--color-text-muted)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>
+                  <div style={{ color: 'var(--color-text-muted)', fontSize: 'calc(13px * var(--font-scale))', textAlign: 'center', padding: '20px 0' }}>
                     {t('budget_golden_rules_modal_no_categories')}
                   </div>
                 ) : (

@@ -149,10 +149,10 @@ export function PresupuestoCicloPage() {
           {config.modo_presupuesto === 'base_cero' && (
             <div className="config-section-inline" style={{ marginTop: 10, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
               <div>
-                <span style={{ color: 'var(--text)', fontSize: '0.9rem', fontWeight: 650 }}>
+                <span style={{ color: 'var(--text)', fontSize: 'calc(0.9rem * var(--font-scale))', fontWeight: 650 }}>
                   {t('config_base_cero_home_toggle')}
                 </span>
-                <p style={{ margin: '2px 0 0', color: 'var(--text-3)', fontSize: '0.78rem' }}>
+                <p style={{ margin: '2px 0 0', color: 'var(--text-3)', fontSize: 'calc(0.78rem * var(--font-scale))' }}>
                   {t('config_base_cero_home_toggle_desc')}
                 </p>
               </div>
@@ -246,7 +246,7 @@ export function PresupuestoCicloPage() {
               borderRadius: '8px',
               textAlign: 'center',
               fontWeight: 'bold',
-              fontSize: '0.9rem',
+              fontSize: 'calc(0.9rem * var(--font-scale))',
               backgroundColor: isRulesValid ? 'rgba(78, 205, 196, 0.12)' : 'rgba(255, 107, 107, 0.12)',
               color: isRulesValid ? 'var(--mint)' : 'var(--coral)',
               border: `1px solid ${isRulesValid ? 'rgba(78, 205, 196, 0.3)' : 'rgba(255, 107, 107, 0.3)'}`

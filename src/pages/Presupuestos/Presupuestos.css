@@ -29,7 +29,7 @@
 
 .presupuestos-header h1 {
   font-family: 'Outfit', sans-serif;
-  font-size: 22px;
+  font-size: calc(22px * var(--font-scale));
   font-weight: 700;
   margin: 0;
   letter-spacing: -0.3px;
@@ -51,13 +51,13 @@
   border-radius: 20px;
   padding: 6px 12px;
   color: var(--text);
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 500;
   cursor: pointer;
   transition: background 0.2s;
 }
 .mes-selector-btn:hover { background: var(--border-light); }
-.mes-selector-btn .chevron { font-size: 10px; opacity: 0.7; }
+.mes-selector-btn .chevron { font-size: calc(10px * var(--font-scale)); opacity: 0.7; }
 
 .header-actions {
   display: flex;
@@ -74,7 +74,7 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   transition: all 0.2s;
   color: var(--text);
 }
@@ -93,7 +93,7 @@
 .disponible-header.estado-negativo .disponible-label { color: #FF6B6B; }
 
 .disponible-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 600;
   letter-spacing: 0.8px;
   text-transform: uppercase;
@@ -103,7 +103,7 @@
 
 .disponible-monto {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 32px;
+  font-size: calc(32px * var(--font-scale));
   font-weight: 700;
   letter-spacing: -1px;
   line-height: 1;
@@ -117,7 +117,7 @@
 .disponible-header.estado-anticipado .disponible-label { color: var(--amber); }
 
 .disponible-subtexto {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--text-3);
   margin-top: 4px;
 }
@@ -128,7 +128,7 @@
   border: 1px solid var(--coral-dim);
   border-radius: 20px;
   padding: 4px 12px;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -146,7 +146,7 @@
   color: var(--mint);
   border-radius: 12px;
   padding: 3px 10px;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 600;
   margin-top: 6px;
   animation: pulse-verde 2s infinite;
@@ -192,12 +192,12 @@
 }
 
 .acord-grupo-icono {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
 }
 
 .acord-grupo-titulo {
   font-family: 'Outfit', sans-serif;
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 600;
   letter-spacing: 0.2px;
 }
@@ -210,13 +210,13 @@
 
 .acord-grupo-total {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 600;
   color: var(--text-3);
 }
 
 .acord-chevron {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--text-3);
   transition: transform 0.25s ease;
 }
@@ -260,7 +260,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 500;
 }
 
@@ -271,13 +271,13 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   flex-shrink: 0;
 }
 
 .sobre-disponible {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
 }
 .sobre-disponible.verde { color: var(--mint); }
@@ -306,7 +306,7 @@
 .sobre-stats {
   display: flex;
   gap: 12px;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   color: var(--text-3);
 }
 .sobre-stat { display: flex; gap: 3px; }
@@ -322,7 +322,7 @@
   color: var(--coral);
   border-radius: 8px;
   padding: 2px 7px;
-  font-size: 10px;
+  font-size: calc(10px * var(--font-scale));
   font-weight: 600;
   margin-top: 4px;
 }
@@ -343,7 +343,7 @@
   border: 1px solid var(--mint-dim);
   border-radius: 20px;
   padding: 4px 10px;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -365,15 +365,15 @@
   text-align: center;
   gap: 12px;
 }
-.presupuestos-empty .empty-icono { font-size: 52px; }
+.presupuestos-empty .empty-icono { font-size: calc(52px * var(--font-scale)); }
 .presupuestos-empty h3 {
   font-family: 'Outfit', sans-serif;
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   font-weight: 700;
   margin: 0;
 }
 .presupuestos-empty p {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: var(--text-3);
   line-height: 1.6;
   margin: 0;
@@ -387,7 +387,7 @@
   background: rgba(255, 230, 109, 0.08);
   border: 1px solid rgba(255, 230, 109, 0.2);
   border-radius: 10px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #FFE66D;
   display: flex;
   gap: 8px;
@@ -452,7 +452,7 @@
 
 .modal-titulo {
   font-family: 'Outfit', sans-serif;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 700;
   text-align: center;
   margin-bottom: 6px;
@@ -460,7 +460,7 @@
 }
 
 .modal-subtitulo {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: var(--text-3);
   text-align: center;
   margin-bottom: 20px;
@@ -478,11 +478,11 @@
   margin-bottom: 20px;
 }
 .asignar-sheet-sobre-nombre {
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 600;
 }
 .asignar-sheet-sobre-saldo {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--text-3);
   font-family: 'JetBrains Mono', monospace;
 }
@@ -510,18 +510,18 @@
 }
 
 .asignar-opcion-icono {
-  font-size: 22px;
+  font-size: calc(22px * var(--font-scale));
   width: 36px;
   text-align: center;
 }
 
 .asignar-opcion-texto h4 {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 600;
   margin: 0 0 2px;
 }
 .asignar-opcion-texto p {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--text-3);
   margin: 0;
 }
@@ -540,7 +540,7 @@
   border-radius: 10px;
   padding: 10px 14px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   color: var(--text);
   outline: none;
 }
@@ -556,7 +556,7 @@
   border-radius: 10px;
   padding: 10px 18px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   cursor: pointer;
   transition: all 0.2s;
   white-space: nowrap;
@@ -591,10 +591,10 @@
   background: rgba(78,205,196,0.1);
 }
 
-.transferir-sobre-nombre { font-size: 14px; font-weight: 500; }
+.transferir-sobre-nombre { font-size: calc(14px * var(--font-scale)); font-weight: 500; }
 .transferir-sobre-disponible {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #4ECDC4;
 }
 
@@ -605,7 +605,7 @@
 }
 
 .transferir-monto-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--text-3);
   margin-bottom: 8px;
 }
@@ -634,7 +634,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 500;
 }
 
@@ -645,7 +645,7 @@
   border-radius: 8px;
   padding: 4px 8px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 700;
   color: var(--text);
   text-align: right;
@@ -678,7 +678,7 @@
   padding: 10px;
   border-radius: 10px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   margin-bottom: 12px;
   transition: all 0.2s;
 }
@@ -695,7 +695,7 @@
   margin-bottom: 20px;
 }
 .dia-ancla-label {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: var(--text-3);
   margin-bottom: 8px;
 }
@@ -706,7 +706,7 @@
   border-radius: 8px;
   padding: 8px 12px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   font-weight: 600;
   color: var(--text);
   outline: none;
@@ -726,7 +726,7 @@
   border: 1px solid var(--border-light);
   background: var(--surface-2, #3D3D3D);
   color: var(--text-3);
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -791,17 +791,17 @@
   background: rgba(255, 107, 107, 0.08);
   border: 1px solid rgba(255, 107, 107, 0.2);
   border-radius: 10px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   line-height: 1.5;
   color: #FF9999;
 }
-.contrato-item-icono { font-size: 16px; flex-shrink: 0; }
+.contrato-item-icono { font-size: calc(16px * var(--font-scale)); flex-shrink: 0; }
 
 .contrato-acepto-section {
   margin-bottom: 16px;
 }
 .contrato-acepto-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--text-3);
   margin-bottom: 6px;
   text-align: center;
@@ -814,7 +814,7 @@
   border-radius: 10px;
   padding: 12px 14px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   font-weight: 700;
   color: var(--text);
   text-align: center;
@@ -843,7 +843,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 500;
 }
 .sugerencia-monto {
@@ -853,7 +853,7 @@
 }
 .sugerencia-monto-val {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 600;
   color: #4ECDC4;
 }
@@ -864,13 +864,13 @@
   border-radius: 8px;
   padding: 4px 8px;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: var(--text);
   text-align: right;
   outline: none;
 }
 .sugerencia-liquidez-info {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--text-3);
   text-align: center;
   margin-bottom: 10px;
@@ -884,7 +884,7 @@
   background: rgba(255,230,109,0.08);
   border: 1px solid rgba(255,230,109,0.2);
   border-radius: 10px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #FFE66D;
   line-height: 1.5;
   margin-bottom: 16px;
@@ -905,7 +905,7 @@
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text-3);
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s;
@@ -919,7 +919,7 @@
   border: none;
   background: #4ECDC4;
   color: #1A1A1A;
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
@@ -974,7 +974,7 @@
 }
 .mes-dropdown-item {
   padding: 12px 16px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   cursor: pointer;
   transition: background 0.15s;
   display: flex;
@@ -1021,7 +1021,7 @@
   background: rgba(255, 255, 255, 0.18);
   border: 1.5px solid rgba(255, 255, 255, 0.35);
   color: rgba(255, 255, 255, 0.9);
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 700;
   font-style: italic;
   cursor: pointer;
@@ -1062,13 +1062,13 @@
 }
 
 .info-bubble-icon {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
   text-align: center;
   margin-bottom: 10px;
 }
 
 .info-bubble-text {
-  font-size: 13.5px;
+  font-size: calc(13.5px * var(--font-scale));
   line-height: 1.65;
   color: rgba(255, 255, 255, 0.85);
   text-align: left;
@@ -1082,7 +1082,7 @@
   border: 1px solid rgba(78, 205, 196, 0.3);
   border-radius: 10px;
   color: #4ECDC4;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: background 0.2s;
@@ -1113,20 +1113,20 @@
 }
 
 .sobres-excedidos-alerta .alerta-icon {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   margin-top: 2px;
 }
 
 .sobres-excedidos-alerta .alerta-text h4 {
   font-family: 'Outfit', sans-serif;
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 600;
   color: #FF6B6B;
   margin: 0 0 4px 0;
 }
 
 .sobres-excedidos-alerta .alerta-text p {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #C0C0C0;
   margin: 0;
   line-height: 1.4;
@@ -1152,7 +1152,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13.5px;
+  font-size: calc(13.5px * var(--font-scale));
   font-weight: 500;
 }
 
@@ -1163,7 +1163,7 @@
 }
 
 .sobres-excedidos-alerta .sobre-monto.negativo {
-  font-size: 13.5px;
+  font-size: calc(13.5px * var(--font-scale));
   font-weight: 700;
   color: #FF6B6B;
 }
@@ -1174,7 +1174,7 @@
   border: none;
   border-radius: 6px;
   padding: 6px 12px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
