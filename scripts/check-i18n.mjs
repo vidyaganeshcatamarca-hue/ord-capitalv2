@@ -77,15 +77,25 @@ function walk(dir, out = []) {
 }
 
 function extractTCalls(file) {
-  // Acepta t('key'), t("key"), t(`key`), t(  'key'  ).
+  // Acepta t('key'), t("key"), t(  'key'  ) — NO template literals con
+  // interpolacion (esos son key dinamicas, no se pueden validar
+  // estaticamente contra es.ts).
   // Tambien captura t('key', { ... }) con o sin el objeto.
+  // Si la llamada trae `defaultValue: '...'` en el segundo argumento,
+  // la marcamos hasDefault: true para no reportarla como USED-NOT-DEFINED.
   const source = readFileSync(file, 'utf-8')
-  const results = [] // { key, line }
+  const results = [] // { key, line, hasDefault }
   const lines = source.split('\n')
-  const re = /\bt\s*\(\s*['"`]([^'"`]+)['"`]/
+  const re = /\bt\s*\(\s*['"]([^'"]+)['"]\s*([,)])/
   for (let i = 0; i < lines.length; i++) {
+    // Saltar template literals: t(`...${var}...`)
+    if (/\bt\s*\(\s*`/.test(lines[i])) continue
     const m = lines[i].match(re)
-    if (m) results.push({ key: m[1], line: i + 1 })
+    if (m) {
+      const rest = m[2] === ',' ? lines[i].slice(lines[i].indexOf(m[1]) + m[1].length + 2) : ''
+      const hasDefault = /defaultValue\s*:/.test(rest)
+      results.push({ key: m[1], line: i + 1, hasDefault })
+    }
   }
   return results
 }
@@ -169,10 +179,15 @@ for (const file of allFiles) {
 }
 
 // USED-NOT-DEFINED: cada call site de t() que no resuelve
+// (ignoramos los que tienen defaultValue: son fallbacks explicitos)
 const unresolved = []
+const unresolvedWithDefault = []
 for (const u of usedKeys) {
   const r = resolveKey(u.key, sections)
-  if (!r.ok) unresolved.push(u)
+  if (!r.ok) {
+    if (u.hasDefault) unresolvedWithDefault.push(u)
+    else unresolved.push(u)
+  }
 }
 
 // DEAD-KEY: keys definidas que no se llaman
@@ -201,6 +216,7 @@ let hasFailure = false
 // 1) USED-NOT-DEFINED
 console.log('─'.repeat(72))
 console.log(`[1] USED-NOT-DEFINED: ${unresolved.length} keys llamadas que NO existen en es.ts`)
+console.log(`    (hay ${unresolvedWithDefault.length} adicionales con defaultValue — no rompen UI, ver [1b])`)
 console.log('─'.repeat(72))
 if (unresolved.length === 0) {
   console.log('OK — todas las keys llamadas resuelven en es.ts')
@@ -210,6 +226,22 @@ if (unresolved.length === 0) {
     console.log(`  ${u.file}:${u.line}  →  t('${u.key}')`)
   }
   if (unresolved.length > 50) console.log(`  ... y ${unresolved.length - 50} mas`)
+}
+console.log('')
+
+// 1b) USED-NOT-DEFINED con defaultValue (informativo, no falla)
+console.log('─'.repeat(72))
+console.log(`[1b] USED-NOT-DEFINED con defaultValue: ${unresolvedWithDefault.length} (no rompen UI, ver [1b])`)
+console.log('─'.repeat(72))
+if (unresolvedWithDefault.length > 0) {
+  console.log('  Estas keys tienen fallback en el codigo (defaultValue: ...),')
+  console.log('  asi que la UI muestra el fallback y no la key cruda. Aun asi')
+  console.log('  se recomienda mover el texto a es.ts para que los traductores')
+  console.log('  puedan localizarlo.')
+  for (const u of unresolvedWithDefault.slice(0, 20)) {
+    console.log(`  ${u.file}:${u.line}  →  t('${u.key}')`)
+  }
+  if (unresolvedWithDefault.length > 20) console.log(`  ... y ${unresolvedWithDefault.length - 20} mas`)
 }
 console.log('')
 
