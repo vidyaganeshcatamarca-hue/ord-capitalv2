@@ -1042,6 +1042,82 @@ export const saneamiento = {
 };
 
 // ============================================
+// FASE 1: PANTALLA 3 — BILLETERAS / CUENTAS
+// ============================================
+export const wallets = {
+  // Tab switcher (en /billeteras)
+  tab_cuentas_ingreso: "Ingresos",
+  tab_categorias_egresos: "Egresos",
+
+  // Semáforo de mantenimiento
+  sem_sin_conciliar: "Sin conciliar",
+  sem_sincronizado: "Sincronizado",
+  sem_desactualizado: "Desactualizado",
+  sem_dato_dudoso: "Dato Dudoso",
+  sem_hace_dias: "(hace {days}d)",
+
+  // Etiquetas de moneda
+  moneda_ars: "ARS (Moneda local)",
+  moneda_usd: "USD (Reserva)",
+
+  // Botones del header
+  btn_add_fuente: "+ Fuente",
+  btn_add_cuenta: "+ Cuenta",
+
+  // Botones de billetera
+  btn_conciliar: "Conciliar",
+  btn_editar: "Editar",
+  btn_archivar: "Archivar",
+
+  // Health widget
+  health_title: "⚠️ Mantenimiento Requerido ({count})",
+  health_alert_negative_balance: "Saldo en descubierto / negativo. ",
+  health_alert_unreconciled: "Lleva más de 10 días sin conciliar. ",
+  health_alert_no_movements: "Sin movimientos en 60 días (candidata a archivar).",
+
+  // Empty state
+  empty_title: "No tienes cuentas activas",
+  empty_desc: "Comienza agregando tu primera billetera de efectivo o banco.",
+  empty_btn_crear: "Crear Cuenta",
+
+  // Sección fuentes de ingreso
+  header_fuentes_ingreso: "Fuentes de Ingreso",
+
+  // Toasts
+  toast_enter_name: "Por favor, ingresa el nombre de la cuenta",
+  toast_created_success: "Cuenta creada correctamente",
+  toast_created_error: "Error al crear la cuenta: {error}",
+  toast_updated_success: "Cambios guardados",
+  toast_updated_error: "Error al guardar cambios: {error}",
+  toast_archived_success: "Cuenta archivada correctamente",
+  toast_archived_with_balance_error: "Error: No se puede archivar una cuenta con saldo activo.",
+  toast_archived_error: "Error al archivar la cuenta: {error}",
+
+  // Modal crear / editar
+  modal_nueva_title: "➕ Nueva Cuenta",
+  modal_editar_title: "⚙️ Editar {nombre}",
+  btn_cerrar_x: "Cerrar ✕",
+  btn_cancelar: "Cancelar",
+  btn_crear: "Crear Cuenta",
+  btn_guardar_cambios: "Guardar Cambios",
+
+  // Form labels
+  label_nombre: "Nombre de la cuenta",
+  label_saldo_apertura: "Saldo de Apertura (Inicial)",
+  label_moneda: "Moneda",
+  label_icono: "Icono Representativo",
+
+  // Form placeholders / options
+  placeholder_nombre: "Ej: Banco Galicia, Mercado Pago, Efectivo",
+  option_moneda_ars: "Pesos Argentinos (ARS)",
+
+  // Detail modal
+  detail_saldo_actual: "Saldo Actual",
+  detail_btn_transferir: "Transferir",
+  detail_empty_movimientos: "No hay movimientos recientes.",
+};
+
+// ============================================
 // FASE 9: PANTALLA 11 — INVERSIONES
 // ============================================
 export const inversiones = {

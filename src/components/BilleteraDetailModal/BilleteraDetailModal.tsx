@@ -52,7 +52,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
         </div>
 
         <div className="billetera-detail-saldo card" style={{ background: 'var(--surface)', margin: '0 16px 16px', padding: '16px', textAlign: 'center', borderRadius: '12px' }}>
-          <p style={{ color: 'var(--text-3)', fontSize: 'calc(12px * var(--font-scale))', marginBottom: '4px' }}>Saldo Actual</p>
+          <p style={{ color: 'var(--text-3)', fontSize: 'calc(12px * var(--font-scale))', marginBottom: '4px' }}>{t('wallets.detail_saldo_actual')}</p>
           <p className="font-display" style={{ fontSize: 'calc(24px * var(--font-scale))', color: billetera.saldo_actual >= 0 ? 'var(--mint)' : 'var(--coral)' }}>
             {formatAmount(billetera.saldo_actual, billetera.moneda)}
           </p>
@@ -63,7 +63,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
                 style={{ flex: 1 }} 
                 onClick={() => onTransferir(billetera)}
               >
-                ↔️ Transferir
+                ↔️ {t('wallets.detail_btn_transferir')}
               </button>
             )}
             {onConciliar && (
@@ -72,7 +72,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
                 style={{ flex: 1 }} 
                 onClick={() => onConciliar(billetera)}
               >
-                ⚖️ Conciliar
+                ⚖️ {t('wallets.btn_conciliar')}
               </button>
             )}
           </div>
@@ -85,7 +85,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
           ) : error ? (
             <div style={{ textAlign: 'center', color: 'var(--coral)', padding: '24px' }}>{error}</div>
           ) : movimientos.length === 0 ? (
-            <div style={{ textAlign: 'center', color: 'var(--text-3)', padding: '24px' }}>No hay movimientos recientes.</div>
+            <div style={{ textAlign: 'center', color: 'var(--text-3)', padding: '24px' }}>{t('wallets.detail_empty_movimientos')}</div>
           ) : (
             <div className="movimientos-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {movimientos.map((m, i) => {

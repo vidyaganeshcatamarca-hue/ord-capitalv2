@@ -89,24 +89,24 @@ export function BilleterasPage() {
   // Semáforo con texto explicativo (Observación 3)
   const getSemaforoDetails = (ultimaConciliacionAt: string | null) => {
     if (!ultimaConciliacionAt) {
-      return { color: 'red', text: 'Sin conciliar', days: null }
+      return { color: 'red', text: t('wallets.sem_sin_conciliar'), days: null }
     }
     const diffTime = Math.abs(new Date().getTime() - new Date(ultimaConciliacionAt).getTime())
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     if (diffDays < 5) {
-      return { color: 'green', text: 'Sincronizado', days: diffDays }
+      return { color: 'green', text: t('wallets.sem_sincronizado'), days: diffDays }
     }
     if (diffDays <= 10) {
-      return { color: 'yellow', text: 'Desactualizado', days: diffDays }
+      return { color: 'yellow', text: t('wallets.sem_desactualizado'), days: diffDays }
     }
-    return { color: 'red', text: 'Dato Dudoso', days: diffDays }
+    return { color: 'red', text: t('wallets.sem_dato_dudoso'), days: diffDays }
   }
 
   // Creación
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newName.trim()) {
-      showToast('Por favor, ingresa el nombre de la cuenta', 'error')
+      showToast(t('wallets.toast_enter_name'), 'error')
       return
     }
 
@@ -123,7 +123,7 @@ export function BilleterasPage() {
         p_saldo_apertura: saldoNum,
         p_icono: newIcono
       })
-      showToast('Cuenta creada correctamente', 'success')
+      showToast(t('wallets.toast_created_success'), 'success')
       setShowCreateModal(false)
       // Resetear campos
       setNewName('')
@@ -132,7 +132,7 @@ export function BilleterasPage() {
       setNewIcono('💳')
       fetchData()
     } catch (err: any) {
-      showToast('Error al crear la cuenta: ' + (err.message || err), 'error')
+      showToast(t('wallets.toast_created_error', { error: err.message || err }), 'error')
     }
   }
 
@@ -158,11 +158,11 @@ export function BilleterasPage() {
         p_nombre: editName,
         p_icono: editIcono
       })
-      showToast('Cambios guardados', 'success')
+      showToast(t('wallets.toast_updated_success'), 'success')
       setShowEditModal(false)
       fetchData()
     } catch (err: any) {
-      showToast('Error al guardar cambios: ' + (err.message || err), 'error')
+      showToast(t('wallets.toast_updated_error', { error: err.message || err }), 'error')
     }
   }
 
@@ -186,14 +186,14 @@ export function BilleterasPage() {
       await rpc('fn_archivar_billetera', {
         p_billetera_id: selectedBilletera.billetera_id
       })
-      showToast('Cuenta archivada correctamente', 'success')
+      showToast(t('wallets.toast_archived_success'), 'success')
       setShowEditModal(false)
       fetchData()
     } catch (err: any) {
       if (err.message?.includes('error_wallet_has_balance')) {
-        showToast('Error: No se puede archivar una cuenta con saldo activo.', 'error')
+        showToast(t('wallets.toast_archived_with_balance_error'), 'error')
       } else {
-        showToast('Error al archivar la cuenta: ' + (err.message || err), 'error')
+        showToast(t('wallets.toast_archived_error', { error: err.message || err }), 'error')
       }
     }
   }
@@ -228,13 +228,13 @@ export function BilleterasPage() {
           className={`cat-tab-btn ${activeMenuTab === 'cuentas_ingreso' ? 'active' : ''}`}
           onClick={() => setActiveMenuTab('cuentas_ingreso')}
         >
-          <span>💼</span> Ingresos
+          <span>💼</span> {t('wallets.tab_cuentas_ingreso')}
         </button>
         <button
           className={`cat-tab-btn ${activeMenuTab === 'categorias_egresos' ? 'active' : ''}`}
           onClick={() => setActiveMenuTab('categorias_egresos')}
         >
-          <span>📤</span> Egresos
+          <span>📤</span> {t('wallets.tab_categorias_egresos')}
         </button>
       </div>
 
@@ -247,10 +247,10 @@ export function BilleterasPage() {
                 className="btn btn-secondary btn-sm font-semibold"
                 onClick={() => window.dispatchEvent(new CustomEvent('open-crear-fuente'))}
               >
-                + Fuente
+                {t('wallets.btn_add_fuente')}
               </button>
               <button className="btn btn-primary btn-sm font-semibold" onClick={() => setShowCreateModal(true)}>
-                + Cuenta
+                {t('wallets.btn_add_cuenta')}
               </button>
             </div>
           </div>
@@ -260,26 +260,26 @@ export function BilleterasPage() {
             {alertasSalud.length > 0 && (
               <div className="health-widget">
                 <h4 className="health-widget-title">
-                  ⚠️ Mantenimiento Requerido ({alertasSalud.length})
+                  {t('wallets.health_title', { count: alertasSalud.length })}
                 </h4>
                 <div className="health-alerts-list">
                   {alertasSalud.map((b) => (
                     <div key={b.billetera_id} className="health-alert-item">
                       <div className="health-alert-text">
                         <strong>{t(b.nombre)}</strong>:{' '}
-                        {b.alertas_keys.includes('negative_balance') && 'Saldo en descubierto / negativo. '}
-                        {b.alertas_keys.includes('unreconciled') && t('alert_unreconciled_10_days')}
-                        {b.alertas_keys.includes('no_movements') && t('alert_no_movements_60_days')}
+                        {b.alertas_keys.includes('negative_balance') && t('wallets.health_alert_negative_balance')}
+                        {b.alertas_keys.includes('unreconciled') && t('wallets.health_alert_unreconciled')}
+                        {b.alertas_keys.includes('no_movements') && t('wallets.health_alert_no_movements')}
                       </div>
                       <div className="flex gap-2">
                         {b.alertas_keys.includes('unreconciled') && (
                           <button className="btn btn-xs btn-primary text-xs" onClick={() => openConciliar(b)}>
-                            ⚖️ Conciliar
+                            ⚖️ {t('wallets.btn_conciliar')}
                           </button>
                         )}
                         {b.alertas_keys.includes('no_movements') && b.saldo_actual === 0 && (
                           <button className="btn btn-xs btn-secondary text-xs" onClick={() => openEdit(b)}>
-                            ⚙️ Archivar
+                            ⚙️ {t('wallets.btn_archivar')}
                           </button>
                         )}
                       </div>
@@ -293,10 +293,10 @@ export function BilleterasPage() {
             {billeteras.length === 0 ? (
               <div className="empty-state">
                 <span className="empty-state-icon">💳</span>
-                <h3>No tienes cuentas activas</h3>
-                <p>Comienza agregando tu primera billetera de efectivo o banco.</p>
+                <h3>{t('wallets.empty_title')}</h3>
+                <p>{t('wallets.empty_desc')}</p>
                 <button className="btn btn-primary mt-4" onClick={() => setShowCreateModal(true)}>
-                  Crear Cuenta
+                  {t('wallets.empty_btn_crear')}
                 </button>
               </div>
             ) : (
@@ -318,10 +318,10 @@ export function BilleterasPage() {
                               {b.saldo_inicial_pendiente && <span className="prevision-badge">{t('wallet_pending_initial_balance_badge')}</span>}
                             </div>
                             <div className="billetera-item-type">
-                              <span>{b.moneda === 'USD' ? 'USD (Reserva)' : 'ARS (Moneda local)'}</span>
+                              <span>{b.moneda === 'USD' ? t('wallets.moneda_usd') : t('wallets.moneda_ars')}</span>
                               <span>•</span>
                               <span style={{ color: `var(--text-3)`, fontWeight: 600 }}>
-                                {sem.text} {sem.days !== null && `(hace ${sem.days}d)`}
+                                {sem.text} {sem.days !== null && t('wallets.sem_hace_dias', { days: sem.days })}
                               </span>
                             </div>
                           </div>
@@ -341,10 +341,10 @@ export function BilleterasPage() {
                           </button>
                         )}
                         <button className="btn-billetera-action primary" onClick={() => openConciliar(b)}>
-                          ⚖️ Conciliar
+                          ⚖️ {t('wallets.btn_conciliar')}
                         </button>
                         <button className="btn-billetera-action" onClick={() => openEdit(b)}>
-                          ⚙️ Editar
+                          ⚙️ {t('wallets.btn_editar')}
                         </button>
                       </div>
                     </div>
@@ -359,7 +359,7 @@ export function BilleterasPage() {
 
           {/* ── HEADER DE FUENTES DE INGRESO ── */}
           <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 className="font-display" style={{ fontSize: 'calc(20px * var(--font-scale))' }}>Fuentes de Ingreso</h2>
+            <h2 className="font-display" style={{ fontSize: 'calc(20px * var(--font-scale))' }}>{t('wallets.header_fuentes_ingreso')}</h2>
           </div>
 
           <TabIngresos hideNewBtn={true} />
@@ -376,16 +376,16 @@ export function BilleterasPage() {
             <div className="bottom-sheet-handle" />
             <form onSubmit={handleCreate} style={{ padding: 'var(--space-2) var(--space-2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
-                <h3 className="font-display" style={{ fontSize: 'calc(18px * var(--font-scale))', margin: 0 }}>➕ Nueva Cuenta</h3>
-                <button type="button" className="text-xs text-muted" onClick={() => setShowCreateModal(false)}>Cerrar ✕</button>
+                <h3 className="font-display" style={{ fontSize: 'calc(18px * var(--font-scale))', margin: 0 }}>{t('wallets.modal_nueva_title')}</h3>
+                <button type="button" className="text-xs text-muted" onClick={() => setShowCreateModal(false)}>{t('wallets.btn_cerrar_x')}</button>
               </div>
 
               <div className="form-group mb-3">
-                <label className="text-xs text-muted mb-1 block font-semibold">Nombre de la cuenta</label>
+                <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_nombre')}</label>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Ej: Banco Galicia, Mercado Pago, Efectivo"
+                  placeholder={t('wallets.placeholder_nombre')}
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
@@ -395,7 +395,7 @@ export function BilleterasPage() {
               </div>
 
               <div className="form-group mb-3">
-                <label className="text-xs text-muted mb-1 block font-semibold">Saldo de Apertura (Inicial)</label>
+                <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_saldo_apertura')}</label>
                 <input
                   type="number"
                   step="0.01"
@@ -409,15 +409,15 @@ export function BilleterasPage() {
               </div>
 
               <div className="form-group mb-3">
-                <label className="text-xs text-muted mb-1 block font-semibold">Moneda</label>
+                <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_moneda')}</label>
                 <select className="form-control" value={newMoneda} onChange={(e) => setNewMoneda(e.target.value)}>
-                  <option value="ARS">Pesos Argentinos (ARS)</option>
+                  <option value="ARS">{t('wallets.option_moneda_ars')}</option>
                   <option value="USD">{t('option_usd_currency')}</option>
                 </select>
               </div>
 
               <div className="form-group mb-4">
-                <label className="text-xs text-muted mb-2 block font-semibold">Icono Representativo</label>
+                <label className="text-xs text-muted mb-2 block font-semibold">{t('wallets.label_icono')}</label>
                 <div className="emojis-picker-grid">
                   {FINANCIAL_EMOJIS.map((emoji) => (
                     <button
@@ -434,10 +434,10 @@ export function BilleterasPage() {
 
               <div className="flex gap-3">
                 <button type="button" className="btn btn-secondary flex-1" onClick={() => setShowCreateModal(false)}>
-                  Cancelar
+                  {t('wallets.btn_cancelar')}
                 </button>
                 <button type="submit" className="btn btn-primary flex-1">
-                  Crear Cuenta
+                  {t('wallets.btn_crear')}
                 </button>
               </div>
             </form>
@@ -453,12 +453,12 @@ export function BilleterasPage() {
             <div className="bottom-sheet-handle" />
             <form onSubmit={handleEdit} style={{ padding: 'var(--space-2) var(--space-2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
-                <h3 className="font-display" style={{ fontSize: 'calc(18px * var(--font-scale))', margin: 0 }}>⚙️ Editar {selectedBilletera.nombre}</h3>
-                <button type="button" className="text-xs text-muted" onClick={() => setShowEditModal(false)}>Cerrar ✕</button>
+                <h3 className="font-display" style={{ fontSize: 'calc(18px * var(--font-scale))', margin: 0 }}>{t('wallets.modal_editar_title', { nombre: selectedBilletera.nombre })}</h3>
+                <button type="button" className="text-xs text-muted" onClick={() => setShowEditModal(false)}>{t('wallets.btn_cerrar_x')}</button>
               </div>
 
               <div className="form-group mb-3">
-                <label className="text-xs text-muted mb-1 block font-semibold">Nombre de la cuenta</label>
+                <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_nombre')}</label>
                 <input
                   type="text"
                   className="form-control"
@@ -471,7 +471,7 @@ export function BilleterasPage() {
               </div>
 
               <div className="form-group mb-4">
-                <label className="text-xs text-muted mb-2 block font-semibold">Icono Representativo</label>
+                <label className="text-xs text-muted mb-2 block font-semibold">{t('wallets.label_icono')}</label>
                 <div className="emojis-picker-grid">
                   {FINANCIAL_EMOJIS.map((emoji) => (
                     <button
@@ -489,10 +489,10 @@ export function BilleterasPage() {
               <div className="flex flex-col gap-3">
                 <div className="flex gap-3">
                   <button type="button" className="btn btn-secondary flex-1" onClick={() => setShowEditModal(false)}>
-                    Cancelar
+                    {t('wallets.btn_cancelar')}
                   </button>
                   <button type="submit" className="btn btn-primary flex-1">
-                    Guardar Cambios
+                    {t('wallets.btn_guardar_cambios')}
                   </button>
                 </div>
                 <button
@@ -506,7 +506,7 @@ export function BilleterasPage() {
                     marginTop: 'var(--space-1)'
                   }}
                 >
-                  Archivar
+                  ⚙️ {t('wallets.btn_archivar')}
                 </button>
               </div>
             </form>
@@ -553,10 +553,10 @@ export function BilleterasPage() {
       {/* ── MODAL: CONFIRM ARCHIVAR ── */}
       <ConfirmModal
         isOpen={showConfirmArchive}
-        title="Archivar"
+        title={t('wallets.btn_archivar')}
         message={t('confirm_archive_wallet', { name: selectedBilletera?.nombre })}
-        confirmText="Archivar"
-        cancelText="Cancelar"
+        confirmText={t('wallets.btn_archivar')}
+        cancelText={t('wallets.btn_cancelar')}
         type="danger"
         onConfirm={confirmArchivar}
         onCancel={() => setShowConfirmArchive(false)}
