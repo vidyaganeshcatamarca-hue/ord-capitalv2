@@ -508,7 +508,7 @@ export function TarjetasPage() {
             <div className={`tarjeta-semaforo ${semaforoClass}`}>{semaforoLabel}</div>
             <button
               className="tarjeta-detalle-action-btn"
-              style={{ width: 28, height: 28, fontSize: 14 }}
+              style={{ width: 28, height: 28, fontSize: 'calc(14px * var(--font-scale))' }}
               onClick={e => { e.stopPropagation(); setMenuOpen(menuOpen === tc.tarjeta_id ? null : tc.tarjeta_id) }}
               aria-label={t("aria_label_card_menu")}
             >⋮</button>
@@ -645,12 +645,12 @@ export function TarjetasPage() {
                     <div className="termometro-metric-label">Cap. de pago</div>
                   </div>
                 </div>
-                <div style={{ marginTop: 10, fontSize: 13, color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
+                <div style={{ marginTop: 10, fontSize: 'calc(13px * var(--font-scale))', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
                   {getTermMsg(termometro.estado_mensaje)}
                 </div>
               </>
             ) : (
-              <div style={{ fontSize: 13, color: 'var(--color-text-muted)' }}>{t("card_insufficient_data_analysis")}</div>
+              <div style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--color-text-muted)' }}>{t("card_insufficient_data_analysis")}</div>
             )}
           </div>
 
@@ -660,7 +660,7 @@ export function TarjetasPage() {
             {loadingDetalle ? (
               <div className="tarjeta-skeleton" style={{ height: 80 }} />
             ) : cuotasActivas.filter(c => !c.pagado).length === 0 ? (
-              <div style={{ fontSize: 13, color: 'var(--color-text-muted)', textAlign: 'center', padding: '12px 0' }}>
+              <div style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--color-text-muted)', textAlign: 'center', padding: '12px 0' }}>
                 No tienes compras en cuotas pendientes para esta tarjeta.
               </div>
             ) : (
@@ -690,7 +690,7 @@ export function TarjetasPage() {
             {loadingDetalle ? (
               <div className="tarjeta-skeleton" style={{ height: 80 }} />
             ) : historial.length === 0 ? (
-              <div style={{ fontSize: 13, color: 'var(--color-text-muted)', textAlign: 'center', padding: '12px 0' }}>
+              <div style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--color-text-muted)', textAlign: 'center', padding: '12px 0' }}>
                 Sin pagos registrados para esta tarjeta
               </div>
             ) : (
@@ -929,15 +929,15 @@ export function TarjetasPage() {
                 {acreedores.map((a: any, i: number) => (
                   <div key={i} className="tarjeta-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ fontSize: '24px' }}>{a.icono || '💰'}</div>
+                      <div style={{ fontSize: 'calc(24px * var(--font-scale))' }}>{a.icono || '💰'}</div>
                       <div>
-                        <h4 style={{ margin: 0, fontSize: '16px' }}>{a.nombre_acreedor}</h4>
-                        <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-3)' }}>{a.tipo_deuda === 'tarjeta' ? t('card_type_credit') : t('card_type_loan')}</p>
+                        <h4 style={{ margin: 0, fontSize: 'calc(16px * var(--font-scale))' }}>{a.nombre_acreedor}</h4>
+                        <p style={{ margin: 0, fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>{a.tipo_deuda === 'tarjeta' ? t('card_type_credit') : t('card_type_loan')}</p>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <p className="font-mono font-bold" style={{ margin: 0, fontSize: '16px', color: 'var(--coral)' }}>{fmtARS(a.monto_total)}</p>
-                      <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-3)' }}>{Number(a.porcentaje_total).toFixed(1)}% del total</p>
+                      <p className="font-mono font-bold" style={{ margin: 0, fontSize: 'calc(16px * var(--font-scale))', color: 'var(--coral)' }}>{fmtARS(a.monto_total)}</p>
+                      <p style={{ margin: 0, fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>{Number(a.porcentaje_total).toFixed(1)}% del total</p>
                     </div>
                   </div>
                 ))}
@@ -1307,7 +1307,7 @@ export function PagarModal({
           <button className="tarjeta-modal-close" onClick={onClose}>✕</button>
         </div>
         {targetCard && (
-          <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,107,107,0.08)', borderRadius: 10, fontSize: 13, color: 'var(--color-text-muted)' }}>
+          <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,107,107,0.08)', borderRadius: 10, fontSize: 'calc(13px * var(--font-scale))', color: 'var(--color-text-muted)' }}>
             {t('pay_resumen_card_label', { nombre: targetCard.nombre_tarjeta })}
           </div>
         )}
@@ -1315,7 +1315,7 @@ export function PagarModal({
           <div>
             <label className="tarjeta-form-label">{t('pay_resumen_wallet_label')} *</label>
             {filteredBilleteras.length === 0 && (
-              <div className="warning-card" style={{ color: 'var(--coral)', padding: '12px', background: 'rgba(255,107,107,0.08)', borderRadius: 10, fontSize: 13, marginBottom: '16px' }}>
+              <div className="warning-card" style={{ color: 'var(--coral)', padding: '12px', background: 'rgba(255,107,107,0.08)', borderRadius: 10, fontSize: 'calc(13px * var(--font-scale))', marginBottom: '16px' }}>
                 ⚠️ {t('error_no_sufficient_balance_wallets')}
               </div>
             )}

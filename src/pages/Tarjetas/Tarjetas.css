@@ -38,7 +38,7 @@
 }
 
 .tarjetas-view-title {
-  font-size: 22px;
+  font-size: calc(22px * var(--font-scale));
   font-weight: 700;
   color: var(--color-text);
   display: flex;
@@ -52,7 +52,7 @@
   border: none;
   padding: 8px 16px;
   border-radius: 20px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   display: flex;
@@ -87,7 +87,7 @@
 }
 
 .tarjetas-debt-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--color-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -95,7 +95,7 @@
 }
 
 .tarjetas-debt-amount {
-  font-size: 28px;
+  font-size: calc(28px * var(--font-scale));
   font-weight: 800;
   color: var(--color-coral);
   font-family: var(--font-mono, monospace);
@@ -103,13 +103,13 @@
 }
 
 .tarjetas-debt-meta {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--color-text-muted);
   margin-top: 4px;
 }
 
 .tarjetas-debt-icon {
-  font-size: 36px;
+  font-size: calc(36px * var(--font-scale));
   opacity: 0.6;
 }
 
@@ -163,14 +163,14 @@
 }
 
 .tarjetas-alert-info { flex: 1; }
-.tarjetas-alert-name { font-size: 13px; font-weight: 600; color: var(--color-text); }
-.tarjetas-alert-msg { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+.tarjetas-alert-name { font-size: calc(13px * var(--font-scale)); font-weight: 600; color: var(--color-text); }
+.tarjetas-alert-msg { font-size: calc(12px * var(--font-scale)); color: var(--color-text-muted); margin-top: 2px; }
 
 .tarjetas-alert-monto {
   text-align: right;
 }
 .tarjetas-alert-monto-value {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 700;
   font-family: var(--font-mono, monospace);
 }
@@ -179,14 +179,14 @@
 .warning .tarjetas-alert-monto-value { color: var(--color-amber); }
 
 .tarjetas-alert-days {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   color: var(--color-text-muted);
   margin-top: 2px;
 }
 
 /* ── Lista de Tarjetas ──────────────────────────────────────────── */
 .tarjetas-section-title {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -247,18 +247,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   flex-shrink: 0;
 }
 
 .tarjeta-card-name {
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 600;
   color: var(--color-text);
 }
 
 .tarjeta-card-banco {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--color-text-muted);
   margin-top: 2px;
 }
@@ -270,7 +270,7 @@
   gap: 6px;
   padding: 4px 8px;
   border-radius: 20px;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 600;
 }
 .semaforo-green { background: rgba(78,205,196,0.15); color: var(--color-mint); }
@@ -286,12 +286,12 @@
 }
 
 .tarjeta-progress-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   color: var(--color-text-muted);
 }
 
 .tarjeta-progress-pct {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 700;
 }
 
@@ -324,7 +324,7 @@
 }
 
 .tarjeta-footer-item {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--color-text-muted);
   display: flex;
   align-items: center;
@@ -346,7 +346,7 @@
   border-radius: 8px;
   padding: 8px 12px;
   margin-top: 8px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--color-amber);
   cursor: pointer;
 }
@@ -362,15 +362,15 @@
   text-align: center;
 }
 
-.tarjetas-empty-icon { font-size: 56px; }
-.tarjetas-empty h3 { font-size: 18px; font-weight: 700; color: var(--color-text); margin: 0; }
+.tarjetas-empty-icon { font-size: calc(56px * var(--font-scale)); }
+.tarjetas-empty h3 { font-size: calc(18px * var(--font-scale)); font-weight: 700; color: var(--color-text); margin: 0; }
 .tarjetas-empty-btn {
   background: linear-gradient(135deg, var(--mint), var(--blue));
   color: #fff;
   border: none;
   padding: 12px 24px;
   border-radius: 12px;
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   box-shadow: 0 4px 16px rgba(0, 180, 216, 0.3);
@@ -401,7 +401,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   flex-shrink: 0;
   transition: background 0.15s;
 }
@@ -409,7 +409,7 @@
 
 .tarjeta-detalle-title {
   flex: 1;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 700;
   color: var(--color-text);
 }
@@ -430,7 +430,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   transition: background 0.15s;
 }
 .tarjeta-detalle-action-btn:hover { background: var(--surface-3); }
@@ -452,7 +452,7 @@
 }
 
 .termometro-title {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: var(--color-text-muted);
   font-weight: 600;
   text-transform: uppercase;
@@ -460,7 +460,7 @@
 }
 
 .termometro-badge {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 20px;
@@ -500,14 +500,14 @@
 }
 
 .termometro-metric-value {
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 700;
   font-family: var(--font-mono, monospace);
   color: var(--color-text);
 }
 
 .termometro-metric-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   color: var(--color-text-muted);
   margin-top: 2px;
 }
@@ -530,10 +530,10 @@
 }
 
 .cuota-item-info { flex: 1; }
-.cuota-item-desc { font-size: 13px; font-weight: 600; color: var(--color-text); }
-.cuota-item-detail { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+.cuota-item-desc { font-size: calc(13px * var(--font-scale)); font-weight: 600; color: var(--color-text); }
+.cuota-item-detail { font-size: calc(11px * var(--font-scale)); color: var(--color-text-muted); margin-top: 2px; }
 .cuota-item-monto {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 700;
   font-family: var(--font-mono, monospace);
   color: var(--color-coral);
@@ -563,23 +563,23 @@
 }
 
 .historial-item-day {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 800;
   color: var(--color-text);
   line-height: 1;
 }
 
 .historial-item-month {
-  font-size: 10px;
+  font-size: calc(10px * var(--font-scale));
   color: var(--color-text-muted);
   text-transform: uppercase;
 }
 
 .historial-item-info { flex: 1; }
-.historial-item-card { font-size: 13px; font-weight: 600; color: var(--color-text); }
-.historial-item-source { font-size: 11px; color: var(--color-text-muted); margin-top: 2px; }
+.historial-item-card { font-size: calc(13px * var(--font-scale)); font-weight: 600; color: var(--color-text); }
+.historial-item-source { font-size: calc(11px * var(--font-scale)); color: var(--color-text-muted); margin-top: 2px; }
 .historial-item-badge {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   background: rgba(78,205,196,0.12);
   color: var(--color-mint);
   padding: 2px 7px;
@@ -589,7 +589,7 @@
 }
 
 .historial-item-monto {
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 700;
   font-family: var(--font-mono, monospace);
   color: var(--color-coral);
@@ -616,13 +616,13 @@
   margin-bottom: 10px;
 }
 
-.comparativa-name { font-size: 14px; font-weight: 600; color: var(--color-text); }
+.comparativa-name { font-size: calc(14px * var(--font-scale)); font-weight: 600; color: var(--color-text); }
 
 .comparativa-tendencia {
   display: flex;
   align-items: center;
   gap: 4px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 700;
 }
 .tendencia-up { color: var(--color-coral); }
@@ -655,18 +655,18 @@
 .comparativa-bar.actual { background: var(--color-coral); }
 
 .comparativa-bar-label {
-  font-size: 10px;
+  font-size: calc(10px * var(--font-scale));
   color: var(--color-text-muted);
 }
 
 .comparativa-bar-amount {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 600;
   font-family: var(--font-mono, monospace);
 }
 
 .comparativa-msg {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--color-text-muted);
   padding-top: 8px;
   border-top: 1px solid var(--border);
@@ -677,7 +677,7 @@
   color: var(--color-mint);
   border-radius: 8px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 600;
   margin-top: 8px;
   display: block;
@@ -694,7 +694,7 @@
 }
 
 .tarjeta-detalle-section-title {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -710,13 +710,13 @@
   margin-bottom: 8px;
 }
 .limite-disponible {
-  font-size: 26px;
+  font-size: calc(26px * var(--font-scale));
   font-weight: 800;
   font-family: var(--font-mono, monospace);
   color: var(--color-text);
 }
 .limite-total {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: var(--color-text-muted);
 }
 
@@ -729,9 +729,9 @@
 }
 
 .vencimiento-info {}
-.vencimiento-label { font-size: 12px; color: var(--color-text-muted); margin-bottom: 2px; }
-.vencimiento-date { font-size: 16px; font-weight: 700; color: var(--color-text); }
-.vencimiento-monto { font-size: 13px; color: var(--color-coral); margin-top: 2px; font-weight: 600; }
+.vencimiento-label { font-size: calc(12px * var(--font-scale)); color: var(--color-text-muted); margin-bottom: 2px; }
+.vencimiento-date { font-size: calc(16px * var(--font-scale)); font-weight: 700; color: var(--color-text); }
+.vencimiento-monto { font-size: calc(13px * var(--font-scale)); color: var(--color-coral); margin-top: 2px; font-weight: 600; }
 
 .btn-pagar-resumen {
   background: linear-gradient(135deg, var(--color-coral), #e0525a);
@@ -739,7 +739,7 @@
   border: none;
   padding: 10px 18px;
   border-radius: 12px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 700;
   cursor: pointer;
   flex-shrink: 0;
@@ -756,7 +756,7 @@
   border: 1px solid rgba(78,205,196,0.3);
   padding: 10px 18px;
   border-radius: 12px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -782,7 +782,7 @@
   border-radius: 9px;
   background: transparent;
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -816,7 +816,7 @@
   background: transparent;
   border: none;
   color: var(--color-text);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   cursor: pointer;
   transition: background 0.15s;
   text-align: left;
@@ -879,7 +879,7 @@
 }
 
 .tarjeta-modal-title {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 700;
   color: var(--color-text);
 }
@@ -892,7 +892,7 @@
   height: 32px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -905,7 +905,7 @@
 }
 
 .tarjeta-form-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 600;
   color: var(--color-text-muted);
   text-transform: uppercase;
@@ -921,7 +921,7 @@
   border-radius: 10px;
   padding: 10px 14px;
   color: var(--color-text);
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   transition: border-color 0.2s;
   box-sizing: border-box;
 }
@@ -971,7 +971,7 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--color-text-muted);
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
 }
@@ -983,7 +983,7 @@
   border: none;
   border-radius: 12px;
   color: #fff;
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -997,7 +997,7 @@
   border: none;
   border-radius: 12px;
   color: #1a1a1a;
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 700;
   cursor: pointer;
 }
@@ -1026,7 +1026,7 @@
   border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
 }
 
 .btn-modal-archive:hover {
@@ -1051,7 +1051,7 @@
   border: none;
   color: var(--text-secondary);
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1081,7 +1081,7 @@
   padding: 16px;
   text-align: center;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
 }
 
 .tarjeta-archivada-item {
@@ -1093,7 +1093,7 @@
   background: var(--bg);
   border: 1px solid var(--surface-2);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .btn-reactivar-tarjeta {
@@ -1103,7 +1103,7 @@
   padding: 6px 12px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 600;
   transition: all 0.2s ease;
 }
