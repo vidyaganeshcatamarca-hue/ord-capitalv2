@@ -16,6 +16,7 @@ const AddMovementModal = lazy(loadAddMovementModal)
 const PerfilPage = lazy(() => import('@/pages/Perfil/PerfilPage').then(m => ({ default: m.PerfilPage })))
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary'
 import '@/styles/index.css'
+import '@/pages/Categorias/Categorias.css'
 
 // Carga perezosa (lazy loading) de páginas principales
 const AuthPage = lazy(() => import('@/pages/Auth/AuthPage').then(module => ({ default: module.AuthPage })))
