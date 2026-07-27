@@ -669,6 +669,23 @@ export function HomePage() {
     }
   }
 
+  // ─── Hooks que SIEMPRE deben correr (incluso durante loading) ───
+  // Regla de hooks: los hooks deben llamarse en el mismo orden y misma
+  // cantidad en cada render. Si los movemos despues del return temprano
+  // del spinner, la primera render (loading=true) llama N hooks y la
+  // segunda (datos cargados) llama N+K → React error #310.
+  const totalAlertas = alerts?.total_alertas ?? 0
+  const patrimonioARS = patrimonio?.total_pesos ?? 0
+  const patrimonioUSD = patrimonio?.total_dolares ?? 0
+  // Animacion tipo velocimetro para el hero card. En el primer mount
+  // arranca desde 0 (efecto aceleracion); en renders siguientes con
+  // target cambiante, reanuda desde el valor actual.
+  const animatedPatrimonioARS = useCountUp(patrimonioARS, { duration: 1200 })
+  const tieneFugaMisterio =
+    ((misterio?.olvidos_pesos ?? 0) > 0 || (misterio?.olvidos_dolares ?? 0) > 0) &&
+    !fugasMisterioOcultado
+  const filterRangeInvalid = !homeFilters.fechaInicio || !homeFilters.fechaFin || homeFilters.fechaInicio > homeFilters.fechaFin
+
   if (loading && movimientos.length === 0 && billeteras.length === 0) {
     return (
       <div className="page flex items-center justify-center" style={{ minHeight: '80vh' }}>
@@ -677,16 +694,6 @@ export function HomePage() {
     )
   }
 
-  const totalAlertas = alerts?.total_alertas ?? 0
-  const patrimonioARS = patrimonio?.total_pesos ?? 0
-  const patrimonioUSD = patrimonio?.total_dolares ?? 0
-  // Animacion tipo velocimetro para el hero card. Re-dispara en cada
-  // cambio de target (incluye el primer mount, que es el caso comun).
-  const animatedPatrimonioARS = useCountUp(patrimonioARS, { duration: 1200 })
-  const tieneFugaMisterio = 
-    ((misterio?.olvidos_pesos ?? 0) > 0 || (misterio?.olvidos_dolares ?? 0) > 0) &&
-    !fugasMisterioOcultado
-  const filterRangeInvalid = !homeFilters.fechaInicio || !homeFilters.fechaFin || homeFilters.fechaInicio > homeFilters.fechaFin
   const visibleBilleteras = homeFilters.billeteraId === null
     ? billeteras
     : billeteras.filter((b) => b.billetera_id === homeFilters.billeteraId)

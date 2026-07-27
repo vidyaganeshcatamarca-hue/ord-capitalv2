@@ -5,10 +5,11 @@
 // de 0 al total cada vez que se monta la pantalla.
 //
 // Reglas:
+// - En el PRIMER mount, anima desde 0 hasta el target (efecto velocimetro).
+//   En renders subsiguientes con target cambiante, anima desde el valor
+//   actual al nuevo target (transicion suave, no reset a 0).
 // - Si `prefers-reduced-motion: reduce` esta activo, retorna el target
 //   inmediatamente (sin animar).
-// - Si el target cambia a mitad de la animacion, reinicia desde el valor
-//   actual (no desde 0) para que sea una transicion suave.
 // - Si duration <= 0 o NaN, retorna el target sin animar.
 
 import { useEffect, useRef, useState } from 'react'
@@ -37,11 +38,14 @@ export function useCountUp(
   { duration = 1200, easing = easeOutCubic, reducedMotion }: UseCountUpOptions = {}
 ): number {
   const safeTarget = Number.isFinite(target) ? target : 0
-  const [value, setValue] = useState<number>(safeTarget)
+  // Estado: arranca en 0 SIEMPRE. La animacion lo lleva al target en el
+  // primer effect run. En renders subsiguientes, el effect detecta que ya
+  // hubo un primer mount y reanuda desde el valor actual (no resetea a 0).
+  const [value, setValue] = useState<number>(0)
   const rafRef = useRef<number | null>(null)
   const startTimeRef = useRef<number | null>(null)
-  const startValueRef = useRef<number>(safeTarget)
-  const lastTargetRef = useRef<number>(safeTarget)
+  const startValueRef = useRef<number>(0)
+  const firstRunRef = useRef<boolean>(true)
 
   useEffect(() => {
     // Cancelar cualquier animacion pendiente.
@@ -54,14 +58,15 @@ export function useCountUp(
     const motionOff = reducedMotion ?? prefersReducedMotion()
     if (motionOff || duration <= 0) {
       setValue(safeTarget)
-      lastTargetRef.current = safeTarget
+      firstRunRef.current = false
       return
     }
 
-    // Si veniamos animando, retomar desde el valor actual para suavizar
-    // la transicion entre targets.
-    startValueRef.current = value
-    lastTargetRef.current = safeTarget
+    // En el primer mount arrancamos desde 0 (efecto velocimetro). En
+    // renders siguientes (target cambia), arrancamos desde el valor actual
+    // para que la transicion sea suave.
+    startValueRef.current = firstRunRef.current ? 0 : value
+    firstRunRef.current = false
 
     const tick = (now: number) => {
       if (startTimeRef.current === null) startTimeRef.current = now
@@ -86,7 +91,8 @@ export function useCountUp(
         rafRef.current = null
       }
     }
-    // intencionalmente solo dependemos de safeTarget para re-disparar al cambiar
+    // intencionalmente solo dependemos de safeTarget para re-disparar al cambiar.
+    // `value` se lee via closure para retomar la animacion desde donde quedo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [safeTarget, duration, reducedMotion])
 
