@@ -21,14 +21,14 @@ export function BandejaWidget({ items, onDetalle }: BandejaWidgetProps) {
       onClick={onDetalle}
     >
       {total === 0 ? (
-        <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+        <div style={{ color: 'var(--text-secondary)', fontSize: 'calc(14px * var(--font-scale))' }}>
           {t('saneamiento_bandejawidget_vacio')}
         </div>
       ) : (
         <>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '12px' }}>
-            <span style={{ fontSize: '32px', fontWeight: 800, fontFamily: 'var(--font-display)' }}>{total}</span>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{t('saneamiento_bandejawidget_pendientes')}</span>
+            <span style={{ fontSize: 'calc(32px * var(--font-scale))', fontWeight: 800, fontFamily: 'var(--font-display)' }}>{total}</span>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 'calc(14px * var(--font-scale))' }}>{t('saneamiento_bandejawidget_pendientes')}</span>
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '16px' }}>

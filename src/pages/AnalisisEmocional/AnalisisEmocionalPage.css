@@ -22,7 +22,7 @@
 
 .bcg-header h1 {
   margin: 6px 0 8px;
-  font-size: 32px;
+  font-size: calc(32px * var(--font-scale));
   color: var(--text);
 }
 
@@ -35,7 +35,7 @@
 .bcg-kicker {
   display: inline-block;
   color: var(--mint);
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -59,7 +59,7 @@
   color: var(--text-2);
   cursor: pointer;
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 700;
   padding: 10px 14px;
   transition: background 0.2s ease, color 0.2s ease;
@@ -93,7 +93,7 @@
 }
 
 .bcg-error span {
-  font-size: 36px;
+  font-size: calc(36px * var(--font-scale));
 }
 
 .bcg-tab-panel {
@@ -113,15 +113,15 @@
 @media (max-width: 640px) {
   .bcg-page { padding: 16px 16px 96px; }
   .bcg-header { flex-direction: column; align-items: stretch; }
-  .bcg-header h1 { font-size: 24px; }
+  .bcg-header h1 { font-size: calc(24px * var(--font-scale)); }
   .bcg-tabs { width: 100%; }
-  .bcg-tabs button { flex: 1; font-size: 13px; padding: 8px 10px; }
+  .bcg-tabs button { flex: 1; font-size: calc(13px * var(--font-scale)); padding: 8px 10px; }
 }
 
 .bcg-section-title {
   margin: 0 0 12px;
   color: var(--text);
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 800;
   font-family: var(--font-sans);
 }
@@ -142,7 +142,7 @@
 }
 
 .bcg-empty-icon {
-  font-size: 48px;
+  font-size: calc(48px * var(--font-scale));
   display: block;
   margin-bottom: 12px;
 }
@@ -150,7 +150,7 @@
 .bcg-empty-state h2 {
   margin: 0 0 6px;
   color: var(--text);
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 
 .bcg-podora-widget,
@@ -173,7 +173,7 @@
 .bcg-hormigas-widget p {
   margin: 0;
   color: var(--text-2);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   line-height: 1.4;
 }
 
@@ -181,7 +181,7 @@
 .bcg-hormigas-widget strong {
   color: var(--text);
   font-family: var(--font-mono);
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
 }
 
 .bcg-hormigas-widget {
@@ -191,5 +191,5 @@
 }
 
 .bcg-hormigas-icon {
-  font-size: 28px;
+  font-size: calc(28px * var(--font-scale));
 }

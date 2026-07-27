@@ -14,6 +14,7 @@ import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
 import { AudioRecorderModal } from '@/components/saneamiento/AudioRecorderModal'
 import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBalanceModal'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/categoryFilters'
 import './AddMovementModal.css'
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -354,7 +355,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
   const reloadCategorias = async () => {
     try {
       const rubr = await rpc<Rubro[]>('fn_obtener_arbol_categorias')
-      cachedRubros = rubr ?? []
+      cachedRubros = filterUserEditableCategories(rubr ?? [])
       setRubros(cachedRubros)
     } catch (e) {
       console.error('Error reloading categories:', e)
@@ -404,7 +405,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
         ])
         if (!alive) return
         cachedBilleteras = bill ?? []
-        cachedRubros = rubr ?? []
+        cachedRubros = filterUserEditableCategories(rubr ?? [])
         cachedCatIngresos = ingrCat ?? []
         cachedTarjetas = tarj ?? []
         cachedUsd = resUsd ?? 1

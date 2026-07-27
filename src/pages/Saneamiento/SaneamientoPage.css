@@ -39,13 +39,13 @@
 }
 
 .saneamiento-header h1 {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
   margin: 4px 0 0;
 }
 
 .saneamiento-kicker {
   display: block;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--mint, #4ECDC4);
@@ -55,7 +55,7 @@
 .saneamiento-header p {
   margin: 8px 0 0;
   color: var(--text-secondary, #A0A0A0);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .saneamiento-back-btn {
@@ -65,7 +65,7 @@
   background: transparent;
   border: none;
   color: var(--mint, #4ECDC4);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   margin-bottom: 16px;
@@ -112,7 +112,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   font-weight: 700;
   margin: 0;
 }
@@ -124,7 +124,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 
 .saneamiento-card-cta {
@@ -132,7 +132,7 @@
   align-items: center;
   gap: 6px;
   margin-top: 16px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 600;
   color: var(--mint, #4ECDC4);
   background: transparent;
@@ -165,7 +165,7 @@
   gap: 4px;
   padding: 4px 8px;
   border-radius: 8px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 600;
 }
 
@@ -195,19 +195,19 @@
 }
 
 .saneamiento-empty-icon {
-  font-size: 48px;
+  font-size: calc(48px * var(--font-scale));
   margin-bottom: 16px;
 }
 
 .saneamiento-empty h3 {
   margin: 0 0 8px;
   color: var(--text-primary, #FFFFFF);
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 
 .saneamiento-empty p {
   margin: 0;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 /* =========================================================
@@ -221,7 +221,7 @@
 }
 
 .saneamiento-seccion-titulo {
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   margin: 0 0 8px;
 }
 
@@ -238,7 +238,7 @@
   border: 1px solid var(--border, #3D3D3D);
   background: var(--surface, #2D2D2D);
   color: var(--text-secondary, #A0A0A0);
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -258,7 +258,7 @@
   background: rgba(78, 205, 196, 0.1);
   border: 1px solid var(--mint, #4ECDC4);
   border-radius: 12px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .saneamiento-loading-mini {
@@ -310,20 +310,20 @@
   flex-wrap: wrap;
   gap: 8px;
   font-weight: 700;
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   margin-bottom: 4px;
 }
 
 .saneamiento-item-detalle {
   margin: 0 0 4px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: var(--text-secondary, #A0A0A0);
   word-break: break-word;
 }
 
 .saneamiento-item-meta {
   margin: 0;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--text-3, #808080);
   line-height: 1.5;
 }
@@ -336,7 +336,7 @@
   background: transparent;
   border: none;
   color: var(--mint, #4ECDC4);
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   cursor: pointer;
   padding: 0;
 }
@@ -344,7 +344,7 @@
 .saneamiento-item-monto {
   text-align: right;
   white-space: nowrap;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   font-weight: 700;
   color: var(--coral, #FF6B6B);
 }
@@ -365,7 +365,7 @@
   padding: 8px 12px;
   border-radius: 10px;
   border: none;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: opacity 0.15s ease;
@@ -401,7 +401,7 @@
   border: 1px solid var(--border, #3D3D3D);
   background: var(--bg, #1A1A1A);
   color: var(--text-primary, #FFFFFF);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .saneamiento-prioridad {
@@ -413,7 +413,7 @@
   border-radius: 50%;
   background: var(--mint, #4ECDC4);
   color: #000;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 800;
 }
 
@@ -465,7 +465,7 @@
 
 .modal-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
 }
 
 .modal-close {
@@ -475,7 +475,7 @@
   border: none;
   background: rgba(255, 255, 255, 0.08);
   color: var(--text-primary, #FFFFFF);
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   cursor: pointer;
 }
 
@@ -495,7 +495,7 @@
 
 .saneamiento-form label {
   display: block;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   color: var(--text-secondary, #A0A0A0);
   margin-bottom: 6px;
@@ -509,7 +509,7 @@
   border: 1px solid var(--border, #3D3D3D);
   background: var(--bg, #1A1A1A);
   color: var(--text-primary, #FFFFFF);
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
 }
 
 .saneamiento-form input:focus,
@@ -550,7 +550,7 @@
   align-items: center;
   padding: 10px 0;
   border-bottom: 1px solid var(--border, #3D3D3D);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .saneamiento-sim-row.destacado {
@@ -563,7 +563,7 @@
   border-radius: 10px;
   background: rgba(255, 230, 109, 0.1);
   color: var(--amber, #FFE66D);
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
 }
 
 /* =========================================================
@@ -596,11 +596,11 @@
 }
 
 .saneamiento-estrategia strong {
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
 }
 
 .saneamiento-estrategia span {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: var(--text-secondary, #A0A0A0);
 }
 
@@ -644,7 +644,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   cursor: pointer;
   padding: 0;
   position: relative;
@@ -670,7 +670,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--text-secondary, #A0A0A0);
   margin-top: 8px;
 }
@@ -697,7 +697,7 @@
 }
 
 .saneamiento-subtitulo {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   margin: 8px 0 0;
 }
 
@@ -736,7 +736,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 36px;
+  font-size: calc(36px * var(--font-scale));
 }
 
 .saneamiento-recorder-pulse.recording {
@@ -756,14 +756,14 @@
 }
 
 .saneamiento-recorder-timer {
-  font-size: 32px;
+  font-size: calc(32px * var(--font-scale));
   font-weight: 700;
   font-family: var(--font-mono);
 }
 
 .saneamiento-recorder-hint {
   color: var(--text-secondary, #A0A0A0);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   text-align: center;
   margin: 0;
 }

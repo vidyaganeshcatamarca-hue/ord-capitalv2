@@ -85,7 +85,7 @@ export function CuarentenaPage() {
     <div className="page cuarentena-page fade-in">
       <div className="page-header" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         <button className="btn-back" onClick={() => navigate(-1)}>←</button>
-        <h1 className="font-display" style={{ fontSize: '24px', margin: 0 }}>{t('quarantine_title_page')}</h1>
+        <h1 className="font-display" style={{ fontSize: 'calc(24px * var(--font-scale))', margin: 0 }}>{t('quarantine_title_page')}</h1>
       </div>
 
       <p className="text-muted" style={{ marginBottom: '24px' }}>
@@ -105,16 +105,16 @@ export function CuarentenaPage() {
           <div className="cuarentena-stats">
             <div className="cuarentena-stat-card">
               <p className="text-xs text-muted font-semibold">{t('quarantine_stat_pending')}</p>
-              <p className="font-display" style={{ fontSize: '24px', color: 'var(--coral)' }}>{pendientes.length}</p>
+              <p className="font-display" style={{ fontSize: 'calc(24px * var(--font-scale))', color: 'var(--coral)' }}>{pendientes.length}</p>
             </div>
             <div className="cuarentena-stat-card">
               <p className="text-xs text-muted font-semibold">{t('quarantine_stat_total_ars')}</p>
-              <p className="font-mono font-bold" style={{ fontSize: '18px', color: 'var(--text)' }}>{formatAmount(totalARS, 'ARS')}</p>
+              <p className="font-mono font-bold" style={{ fontSize: 'calc(18px * var(--font-scale))', color: 'var(--text)' }}>{formatAmount(totalARS, 'ARS')}</p>
             </div>
             {totalUSD > 0 && (
               <div className="cuarentena-stat-card">
                 <p className="text-xs text-muted font-semibold">{t('quarantine_stat_total_usd')}</p>
-                <p className="font-mono font-bold" style={{ fontSize: '18px', color: 'var(--text)' }}>{formatAmount(totalUSD, 'USD')}</p>
+                <p className="font-mono font-bold" style={{ fontSize: 'calc(18px * var(--font-scale))', color: 'var(--text)' }}>{formatAmount(totalUSD, 'USD')}</p>
               </div>
             )}
           </div>
@@ -130,24 +130,24 @@ export function CuarentenaPage() {
               <div key={p.id} className="cuarentena-item">
                 <div className="cuarentena-item-header">
                   <div>
-                    <h4 style={{ margin: 0, fontSize: '16px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <h4 style={{ margin: 0, fontSize: 'calc(16px * var(--font-scale))', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {p.icono_categoria || '🛒'} {t(p.nombre_categoria)}
                     </h4>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '14px', color: 'var(--text-2)' }}>{p.descripcion || t('quarantine_no_detail')}</p>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-3)' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 'calc(14px * var(--font-scale))', color: 'var(--text-2)' }}>{p.descripcion || t('quarantine_no_detail')}</p>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>
                       {t('quarantine_item_received_date')}{new Date(p.fecha_ingreso).toLocaleDateString('es-AR')}
                     </p>
                     {p.motivo_cuarentena && (
-                      <span style={{ display: 'inline-block', marginTop: '8px', padding: '2px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--coral)', borderRadius: '4px', fontSize: '11px', fontWeight: 'bold' }}>
+                        <span style={{ display: 'inline-block', marginTop: '8px', padding: '2px 8px', background: 'rgba(239, 68, 68, 0.1)', color: 'var(--coral)', borderRadius: '4px', fontSize: 'calc(11px * var(--font-scale))', fontWeight: 'bold' }}>
                         {p.motivo_cuarentena === 'out_of_budget' ? t('quarantine_reason_out_of_budget') : t('quarantine_reason_impulsive_ant')}
                       </span>
                     )}
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p className="font-mono font-bold" style={{ margin: 0, fontSize: '16px', color: 'var(--coral)' }}>
+                    <p className="font-mono font-bold" style={{ margin: 0, fontSize: 'calc(16px * var(--font-scale))', color: 'var(--coral)' }}>
                       {formatAmount(p.monto, p.moneda)}
                     </p>
-                    <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'var(--text-3)' }}>
+                    <p style={{ margin: '4px 0 0 0', fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>
                       💳 {p.nombre_billetera}
                     </p>
                   </div>

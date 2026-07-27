@@ -41,7 +41,7 @@
   margin: 0;
   color: var(--text, #e6edf3);
   font-family: var(--font-display, system-ui, sans-serif);
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 700;
 }
 
@@ -50,7 +50,7 @@
 .rendimiento-chart-source {
   margin: var(--space-2, 8px) 0 0;
   color: var(--text-3, #8b949e);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .rendimiento-chart-cta-note {
@@ -79,7 +79,7 @@
   justify-content: center;
   padding: 6px 12px;
   border-radius: var(--radius-full, 9999px);
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -160,7 +160,7 @@
 .rendimiento-chart-bar-value {
   color: var(--text, #e6edf3);
   font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
@@ -168,7 +168,7 @@
 .rendimiento-chart-bar-label,
 .rendimiento-chart-footer-label {
   color: var(--text-3, #8b949e);
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 700;
   text-align: center;
   text-transform: uppercase;
@@ -187,7 +187,7 @@
 .rendimiento-chart-footer-value {
   color: var(--text, #e6edf3);
   font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 800;
 }
 

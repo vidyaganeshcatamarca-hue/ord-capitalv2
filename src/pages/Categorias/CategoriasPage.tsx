@@ -5,6 +5,7 @@ import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
 import { generateColorShade } from '@/lib/colorUtils'
+import { isUserEditableCategory } from '@/lib/categoryFilters'
 import './Categorias.css'
 
 // ─── Constantes ────────────────────────────────────────────────────────────
@@ -342,11 +343,20 @@ export function TabEgresos() {
 
   const deferredQuery = useDeferredValue(query)
   const filteredRubros = useMemo(() =>
-    rubros.filter(r =>
-      !deferredQuery ||
-      r.nombre_cuenta.toLowerCase().includes(deferredQuery.toLowerCase()) ||
-      r.hijos?.some(h => h.nombre_cuenta.toLowerCase().includes(deferredQuery.toLowerCase()))
-    ),
+    rubros
+      .filter(r => isUserEditableCategory(r))
+      .map(r => ({
+        ...r,
+        // Tambien ocultamos las subcuentas de sistema que pudieran aparecer
+        // dentro de un rubro editable (caso borde: estructura con hijos
+        // mezcla la categoria de misterio con categorias reales).
+        hijos: r.hijos?.filter(h => isUserEditableCategory(h)) ?? []
+      }))
+      .filter(r =>
+        !deferredQuery ||
+        r.nombre_cuenta.toLowerCase().includes(deferredQuery.toLowerCase()) ||
+        r.hijos?.some(h => h.nombre_cuenta.toLowerCase().includes(deferredQuery.toLowerCase()))
+      ),
     [rubros, deferredQuery]
   )
 

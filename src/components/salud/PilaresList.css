@@ -51,7 +51,7 @@
 
 .health-pillar-weight {
   color: #94a3b8;
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
 }
 
 .health-pillar-track {
@@ -75,6 +75,6 @@
 .health-pillar-score {
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   color: #e2e8f0;
-  font-size: 1.15rem;
+  font-size: calc(1.15rem * var(--font-scale));
   font-weight: 900;
 }

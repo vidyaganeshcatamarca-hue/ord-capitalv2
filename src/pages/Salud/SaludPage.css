@@ -14,7 +14,7 @@
 .salud-kicker {
   margin: 0;
   color: #10b981;
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   font-weight: 900;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -22,7 +22,7 @@
 
 .salud-header h1 {
   margin: 0;
-  font-size: clamp(2rem, 9vw, 3.6rem);
+  font-size: clamp(calc(2rem * var(--font-scale)), calc(9vw * var(--font-scale)), calc(3.6rem * var(--font-scale)));
   line-height: 0.95;
 }
 

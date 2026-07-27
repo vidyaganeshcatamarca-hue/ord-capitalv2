@@ -24,7 +24,7 @@
 
 .health-history-ref-label {
   fill: #94a3b8;
-  font-size: 9px;
+  font-size: calc(9px * var(--font-scale));
   font-weight: 700;
 }
 
@@ -62,7 +62,7 @@
 
 .health-history-tooltip {
   color: #cbd5e1;
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
 }
 
 .health-history-retry {

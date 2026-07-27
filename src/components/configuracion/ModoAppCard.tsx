@@ -23,14 +23,14 @@ export function ModoAppCard() {
       </div>
       <div className="config-card-body" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '13px', color: 'var(--text)' }}>
+          <span style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text)' }}>
             {t('config_modo_actual')}: <strong style={{ color: isAvanzado ? 'var(--accent-purple)' : 'var(--mint)' }}>
               {isAvanzado ? t('modo_avanzado') : t('modo_simple')}
             </strong>
           </span>
           <button
             className={`btn ${isAvanzado ? 'btn-secondary' : 'btn-primary'}`}
-            style={{ padding: '6px 12px', fontSize: '13px' }}
+            style={{ padding: '6px 12px', fontSize: 'calc(13px * var(--font-scale))' }}
             onClick={isAvanzado ? desactivarModoAvanzado : activarModoAvanzado}
             disabled={loading}
           >

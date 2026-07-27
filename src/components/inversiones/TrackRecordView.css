@@ -17,14 +17,14 @@
   margin: 0;
   color: var(--text, #e6edf3);
   font-family: var(--font-display, system-ui, sans-serif);
-  font-size: 22px;
+  font-size: calc(22px * var(--font-scale));
   font-weight: 800;
 }
 
 .track-record-view-subtitle {
   margin: var(--space-1, 4px) 0 0;
   color: var(--text-3, #8b949e);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .track-record-view-tabs {
@@ -46,7 +46,7 @@
   color: var(--text-3, #8b949e);
   cursor: pointer;
   font-family: var(--font-body, system-ui, sans-serif);
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 700;
   transition: background var(--transition-fast, 150ms ease),
               color var(--transition-fast, 150ms ease);

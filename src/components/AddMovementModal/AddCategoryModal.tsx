@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
+import { filterUserEditableCategories } from '@/lib/categoryFilters'
 
 interface AddCategoryModalProps {
   onClose: () => void
@@ -41,9 +42,10 @@ export function AddCategoryModal({ onClose, onSuccess }: AddCategoryModalProps) 
     const loadParents = async () => {
       try {
         const res = await rpc<any[]>('fn_obtener_arbol_categorias').catch(() => [])
-        setParentCategories(res)
-        if (res.length > 0) {
-          setParentCategoryId(res[0].estructura_id.toString())
+        const filtered = filterUserEditableCategories(res)
+        setParentCategories(filtered)
+        if (filtered.length > 0) {
+          setParentCategoryId(filtered[0].estructura_id.toString())
         }
       } catch (err: any) {
         showToast(parseError(err), 'error')

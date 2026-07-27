@@ -37,25 +37,25 @@ button.config-hub-card {
   display: grid;
   place-items: center;
   background: var(--mint-dim);
-  font-size: 22px;
+  font-size: calc(22px * var(--font-scale));
 }
 
 .config-hub-card-content h3 {
   margin: 0 0 4px;
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--font-scale));
   color: var(--text);
 }
 
 .config-hub-card-content p {
   margin: 0;
   color: var(--text-2);
-  font-size: 0.82rem;
+  font-size: calc(0.82rem * var(--font-scale));
   line-height: 1.4;
 }
 
 .config-hub-card-chevron {
   color: var(--text-3);
-  font-size: 1.5rem;
+  font-size: calc(1.5rem * var(--font-scale));
 }
 
 /* PresupuestoCicloCard — card con header clickeable + toggle opcional */
@@ -97,13 +97,13 @@ article.presupuesto-ciclo-card.config-hub-card {
 .presupuesto-ciclo-toggle-label span {
   display: block;
   color: var(--text);
-  font-size: 0.88rem;
+  font-size: calc(0.88rem * var(--font-scale));
   font-weight: 600;
 }
 
 .presupuesto-ciclo-toggle-label p {
   margin: 3px 0 0;
   color: var(--text-3);
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   line-height: 1.4;
 }

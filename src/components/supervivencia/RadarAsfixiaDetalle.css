@@ -7,7 +7,7 @@
 .radar-vacio {
   text-align: center;
   color: #94A3B8;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   padding: 48px 16px;
 }
 
@@ -17,7 +17,7 @@
 
 .radar-detalle-kicker {
   display: block;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #4ECDC4;
@@ -26,14 +26,14 @@
 }
 
 .radar-detalle-header h2 {
-  font-size: 22px;
+  font-size: calc(22px * var(--font-scale));
   margin: 0 0 4px;
   color: #F8FAFC;
 }
 
 .radar-detalle-periodo {
   margin: 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #94A3B8;
 }
 
@@ -52,7 +52,7 @@
 }
 
 .radar-heatmap-dow-cell {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   text-align: center;
   color: #64748B;
   font-weight: 600;
@@ -75,7 +75,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 600;
   color: #F8FAFC;
   cursor: pointer;
@@ -120,7 +120,7 @@
   position: absolute;
   top: 2px;
   right: 2px;
-  font-size: 8px;
+  font-size: calc(8px * var(--font-scale));
   line-height: 1;
 }
 
@@ -132,13 +132,13 @@
   color: #FF6B6B;
   top: 2px;
   right: 2px;
-  font-size: 8px;
+  font-size: calc(8px * var(--font-scale));
 }
 
 .radar-cell-mes {
   position: absolute;
   bottom: 1px;
-  font-size: 7px;
+  font-size: calc(7px * var(--font-scale));
   color: rgba(255, 255, 255, 0.5);
   font-weight: 500;
   text-transform: uppercase;
@@ -146,7 +146,7 @@
 }
 
 .radar-leyenda h3 {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #94A3B8;
   margin: 0 0 8px;
   text-transform: uppercase;
@@ -167,7 +167,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #CBD5E1;
 }
 
@@ -179,7 +179,7 @@
 }
 
 .radar-leyenda-icon {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .radar-detalle-overlay {
@@ -224,7 +224,7 @@
   background: transparent;
   border: none;
   color: #94A3B8;
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
   cursor: pointer;
   width: 32px;
   height: 32px;
@@ -241,13 +241,13 @@
 
 .radar-detalle-sheet h3 {
   margin: 0 0 4px;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   color: #4ECDC4;
 }
 
 .radar-detalle-fecha {
   margin: 0 0 16px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #94A3B8;
   text-transform: capitalize;
 }
@@ -260,12 +260,12 @@
   background: rgba(255, 255, 255, 0.05);
   border-radius: 8px;
   margin-bottom: 12px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #CBD5E1;
 }
 
 .radar-detalle-saldo strong {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -283,7 +283,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 12px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #CBD5E1;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -299,7 +299,7 @@
 }
 
 .radar-criticos-lista h3 {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #FF6B6B;
   margin: 0 0 8px;
   text-transform: uppercase;
@@ -308,7 +308,7 @@
 
 .radar-criticos-ok {
   color: #4ECDC4;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   margin: 0;
   padding: 12px;
   background: rgba(78, 205, 196, 0.05);
@@ -344,14 +344,14 @@
 }
 
 .radar-critico-fecha {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #F8FAFC;
   text-transform: capitalize;
   font-weight: 500;
 }
 
 .radar-critico-saldo {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #FF6B6B;
   font-weight: 700;
   font-variant-numeric: tabular-nums;

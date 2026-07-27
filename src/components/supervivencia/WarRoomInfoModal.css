@@ -24,14 +24,14 @@
 
 .war-info-modal h2 {
   margin: 0 0 12px;
-  font-size: 20px;
+  font-size: calc(20px * var(--font-scale));
   color: #4ECDC4;
 }
 
 .war-info-modal p {
   color: #CBD5E1;
   line-height: 1.5;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   margin: 0 0 16px;
 }
 
@@ -42,7 +42,7 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #94A3B8;
 }
 
@@ -53,7 +53,7 @@
   background: transparent;
   border: none;
   color: #94A3B8;
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
   cursor: pointer;
   width: 32px;
   height: 32px;

@@ -10,7 +10,7 @@
 
 .safe-detalle-kicker {
   display: block;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #4ECDC4;
@@ -19,7 +19,7 @@
 }
 
 .safe-detalle-header h2 {
-  font-size: 22px;
+  font-size: calc(22px * var(--font-scale));
   margin: 0;
   color: #F8FAFC;
 }
@@ -36,7 +36,7 @@
 }
 
 .safe-numero-gigante-monto {
-  font-size: 56px;
+  font-size: calc(56px * var(--font-scale));
   font-weight: 800;
   color: #F8FAFC;
   line-height: 1;
@@ -45,7 +45,7 @@
 }
 
 .safe-numero-gigante-semaforo {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   font-weight: 600;
   padding: 4px 12px;
   border-radius: 16px;
@@ -68,7 +68,7 @@
 }
 
 .safe-desglose h3 {
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   color: #F8FAFC;
   margin: 0 0 12px;
   font-weight: 700;
@@ -89,7 +89,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 14px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #CBD5E1;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -123,7 +123,7 @@
   padding: 12px 16px;
   background: rgba(78, 205, 196, 0.05);
   color: #CBD5E1;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   border-radius: 8px;
   font-style: italic;
   line-height: 1.5;

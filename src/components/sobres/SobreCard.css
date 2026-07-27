@@ -31,20 +31,20 @@
 
 .sobre-card-header h3 {
   color: #f8fafc;
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--font-scale));
 }
 
 .sobre-card-header p,
 .sobre-card-meta {
   color: #cbd5e1;
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
 }
 
 .sobre-card-status {
   flex: 0 0 auto;
   padding: 6px 10px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-size: calc(0.72rem * var(--font-scale));
   font-weight: 900;
 }
 

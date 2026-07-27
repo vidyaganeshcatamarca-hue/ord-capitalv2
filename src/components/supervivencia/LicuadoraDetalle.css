@@ -10,7 +10,7 @@
 
 .lic-detalle-kicker {
   display: block;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #4ECDC4;
@@ -19,14 +19,14 @@
 }
 
 .lic-detalle-header h2 {
-  font-size: 22px;
+  font-size: calc(22px * var(--font-scale));
   margin: 0 0 4px;
   color: #F8FAFC;
 }
 
 .lic-detalle-periodo {
   margin: 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #94A3B8;
 }
 
@@ -48,7 +48,7 @@
 }
 
 .lic-tarjeta-label {
-  font-size: 10px;
+  font-size: calc(10px * var(--font-scale));
   text-transform: uppercase;
   color: #94A3B8;
   letter-spacing: 0.5px;
@@ -56,7 +56,7 @@
 }
 
 .lic-tarjeta-valor {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 700;
   color: #F8FAFC;
   font-variant-numeric: tabular-nums;
@@ -71,7 +71,7 @@
 }
 
 .lic-grafico h3 {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #94A3B8;
   margin: 0 0 8px;
   text-transform: uppercase;
@@ -79,7 +79,7 @@
 }
 
 .lic-real-grande {
-  font-size: 56px;
+  font-size: calc(56px * var(--font-scale));
   font-weight: 800;
   text-align: center;
   padding: 16px 0;
@@ -115,7 +115,7 @@
   grid-template-columns: 100px 1fr 70px;
   align-items: center;
   gap: 8px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
 }
 
 .lic-barra-label {
@@ -161,7 +161,7 @@
 }
 
 .lic-insight h3 {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #4ECDC4;
   margin: 0 0 8px;
   font-weight: 700;
@@ -169,7 +169,7 @@
 
 .lic-insight p {
   margin: 0;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #F8FAFC;
   line-height: 1.5;
 }

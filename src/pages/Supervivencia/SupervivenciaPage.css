@@ -26,7 +26,7 @@
 }
 
 .war-error span {
-  font-size: 48px;
+  font-size: calc(48px * var(--font-scale));
 }
 
 .war-header {
@@ -41,7 +41,7 @@
 
 .war-kicker {
   display: inline-block;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #4ECDC4;
@@ -50,14 +50,14 @@
 }
 
 .war-header h1 {
-  font-size: 28px;
+  font-size: calc(28px * var(--font-scale));
   font-weight: 800;
   margin: 0 0 6px;
   color: #F8FAFC;
 }
 
 .war-header p {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #94A3B8;
   margin: 0;
 }
@@ -69,7 +69,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -88,7 +88,7 @@
   color: #94A3B8;
   padding: 8px 14px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   cursor: pointer;
   margin-bottom: 16px;
   transition: all 0.2s ease;

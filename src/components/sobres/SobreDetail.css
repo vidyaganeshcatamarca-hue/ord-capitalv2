@@ -40,7 +40,7 @@
 
 .sobre-detail-header h2 {
   color: #f8fafc;
-  font-size: clamp(1.8rem, 7vw, 3rem);
+  font-size: clamp(calc(1.8rem * var(--font-scale)), calc(7vw * var(--font-scale)), calc(3rem * var(--font-scale)));
 }
 
 .sobre-detail-metrics {
@@ -69,7 +69,7 @@
   margin-top: 5px;
   color: #f8fafc;
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  font-size: 1.25rem;
+  font-size: calc(1.25rem * var(--font-scale));
 }
 
 .sobre-detail-quota {

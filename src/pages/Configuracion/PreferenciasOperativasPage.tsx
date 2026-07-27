@@ -182,7 +182,7 @@ export function PreferenciasOperativasPage() {
           {/* Tipo de movimiento predeterminado al tocar + */}
           <div className="config-section-field">
             <label>{t('config_tipo_movimiento_default')}</label>
-            <p style={{ margin: '2px 0 8px', color: 'var(--text-3)', fontSize: '0.8rem' }}>
+            <p style={{ margin: '2px 0 8px', color: 'var(--text-3)', fontSize: 'calc(0.8rem * var(--font-scale))' }}>
               {t('config_tipo_movimiento_default_desc')}
             </p>
             <div className="config-segmented">
@@ -210,8 +210,8 @@ export function PreferenciasOperativasPage() {
 
           <div className="config-section-inline">
             <div>
-              <span style={{ color: 'var(--text)', fontSize: '0.9rem' }}>{t('config_ocr_enabled')}</span>
-              <p style={{ margin: '2px 0 0', color: 'var(--text-3)', fontSize: '0.78rem' }}>{t('config_ocr_enabled_desc')}</p>
+              <span style={{ color: 'var(--text)', fontSize: 'calc(0.9rem * var(--font-scale))' }}>{t('config_ocr_enabled')}</span>
+              <p style={{ margin: '2px 0 0', color: 'var(--text-3)', fontSize: 'calc(0.78rem * var(--font-scale))' }}>{t('config_ocr_enabled_desc')}</p>
             </div>
             <ToggleSwitch
               checked={prefs.ocr_enabled}
@@ -221,8 +221,8 @@ export function PreferenciasOperativasPage() {
 
           <div className="config-section-inline" style={{ marginTop: 10 }}>
             <div>
-              <span style={{ color: 'var(--text)', fontSize: '0.9rem' }}>{t('config_voice_enabled')}</span>
-              <p style={{ margin: '2px 0 0', color: 'var(--text-3)', fontSize: '0.78rem' }}>{t('config_voice_enabled_desc')}</p>
+              <span style={{ color: 'var(--text)', fontSize: 'calc(0.9rem * var(--font-scale))' }}>{t('config_voice_enabled')}</span>
+              <p style={{ margin: '2px 0 0', color: 'var(--text-3)', fontSize: 'calc(0.78rem * var(--font-scale))' }}>{t('config_voice_enabled_desc')}</p>
             </div>
             <ToggleSwitch
               checked={prefs.voz_activada}
@@ -231,7 +231,7 @@ export function PreferenciasOperativasPage() {
           </div>
 
           <div className="config-section-inline" style={{ marginTop: 10 }}>
-            <span style={{ color: 'var(--text)', fontSize: '0.9rem' }}>{t('config_ocr_auto_approve')}</span>
+            <span style={{ color: 'var(--text)', fontSize: 'calc(0.9rem * var(--font-scale))' }}>{t('config_ocr_auto_approve')}</span>
             <ToggleSwitch
               checked={prefs.ocr_auto_aprobar}
               onChange={(v) => updatePref('ocr_auto_aprobar', v)}

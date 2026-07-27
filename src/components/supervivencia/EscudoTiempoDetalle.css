@@ -11,7 +11,7 @@
 
 .escudo-detalle-kicker {
   display: block;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   letter-spacing: 1.5px;
   text-transform: uppercase;
   color: #4ECDC4;
@@ -20,7 +20,7 @@
 }
 
 .escudo-detalle-header h2 {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
   margin: 0;
   color: #F8FAFC;
 }
@@ -54,7 +54,7 @@
 }
 
 .escudo-barra-num {
-  font-size: 48px;
+  font-size: calc(48px * var(--font-scale));
   font-weight: 800;
   color: #F8FAFC;
   line-height: 1;
@@ -62,7 +62,7 @@
 }
 
 .escudo-barra-unidad {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #94A3B8;
   font-weight: 600;
 }
@@ -81,7 +81,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 10px 14px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #CBD5E1;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
@@ -105,7 +105,7 @@
   padding: 12px 14px;
   background: rgba(255, 230, 109, 0.08);
   color: #FFE66D;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   border-radius: 8px;
   border-left: 3px solid #FFE66D;
   line-height: 1.4;
@@ -127,13 +127,13 @@
 
 .escudo-simulador h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   color: #F8FAFC;
 }
 
 .escudo-simulador-intro {
   margin: 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #94A3B8;
 }
 
@@ -178,14 +178,14 @@
 }
 
 .escudo-escenario-nombre {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 700;
   color: #F8FAFC;
 }
 
 .escudo-escenario-desc {
   margin: 0;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #94A3B8;
   line-height: 1.4;
 }
@@ -204,7 +204,7 @@
 }
 
 .escudo-escenario-dato span {
-  font-size: 10px;
+  font-size: calc(10px * var(--font-scale));
   text-transform: uppercase;
   color: #64748B;
   letter-spacing: 0.5px;
@@ -212,7 +212,7 @@
 }
 
 .escudo-escenario-dato strong {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   font-weight: 700;
   color: #F8FAFC;
   font-variant-numeric: tabular-nums;

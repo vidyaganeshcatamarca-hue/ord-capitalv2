@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
+import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/categoryFilters'
 import './EditMovementModal.css'
 
 interface EditMovementModalProps {
@@ -92,11 +93,14 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
       const ingresosLoaded = ingresosRes || []
       const tarjetasLoaded = tarjetasRes || []
 
-      // Flatten categories for simpler select input
+      // Flatten categories for simpler select input. Filtramos la categoria
+      // de sistema "Misterio/Olvido" para que el usuario no la seleccione
+      // como destino de un movimiento manual.
       const flatCats: { id: number; label: string }[] = []
       if (rubrosRes) {
-        rubrosRes.forEach(rubro => {
-          const hijos = rubro.hijos || []
+        const rubrosEditables = filterUserEditableCategories(rubrosRes)
+        rubrosEditables.forEach(rubro => {
+          const hijos = (rubro.hijos || []).filter(h => isUserEditableCategory(h))
           if (hijos.length === 0) {
             flatCats.push({ id: rubro.estructura_id, label: t(rubro.nombre_cuenta) })
           } else {

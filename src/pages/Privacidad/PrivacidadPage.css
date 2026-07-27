@@ -9,7 +9,7 @@
 
 .privacidad-page-header h1 {
   margin: 0 0 6px;
-  font-size: clamp(2rem, 9vw, 3.2rem);
+  font-size: clamp(calc(2rem * var(--font-scale)), calc(9vw * var(--font-scale)), calc(3.2rem * var(--font-scale)));
   line-height: 0.95;
 }
 

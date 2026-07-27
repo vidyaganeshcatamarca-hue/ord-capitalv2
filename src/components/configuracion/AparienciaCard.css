@@ -21,7 +21,7 @@ article.apariencia-card-wrap.config-hub-card {
 
 .apariencia-chevron {
   color: var(--text-3);
-  font-size: 1.5rem;
+  font-size: calc(1.5rem * var(--font-scale));
   transition: transform 220ms ease;
   display: inline-block;
 }
@@ -60,7 +60,7 @@ article.apariencia-card-wrap.config-hub-card {
 
 .apariencia-row > span:first-child {
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
   font-weight: 600;
   min-width: 0;
   flex: 1;
@@ -73,7 +73,7 @@ article.apariencia-card-wrap.config-hub-card {
 
 .apariencia-row-label > span {
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
   font-weight: 600;
   display: block;
 }
@@ -81,7 +81,7 @@ article.apariencia-card-wrap.config-hub-card {
 .apariencia-row-desc {
   margin: 3px 0 0;
   color: var(--text-3);
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   line-height: 1.4;
 }
 
@@ -103,7 +103,7 @@ article.apariencia-card-wrap.config-hub-card {
   background: var(--surface-2);
   color: var(--text-3);
   font: inherit;
-  font-size: 0.82rem;
+  font-size: calc(0.82rem * var(--font-scale));
   cursor: pointer;
   transition: all 180ms ease;
   white-space: nowrap;
@@ -140,7 +140,7 @@ article.apariencia-card-wrap.config-hub-card {
   background: var(--surface-2);
   color: var(--text-3);
   font: inherit;
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   cursor: pointer;
   transition: all 180ms ease;
   min-width: 52px;
@@ -175,7 +175,7 @@ article.apariencia-card-wrap.config-hub-card {
 .apariencia-font-pill__preview[data-size="gigante"]  { font-size: 26px; }
 
 .apariencia-font-pill__label {
-  font-size: 0.72rem;
+  font-size: calc(0.72rem * var(--font-scale));
   line-height: 1.2;
   white-space: nowrap;
 }

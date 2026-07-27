@@ -759,7 +759,9 @@ input::placeholder, textarea::placeholder {
   box-sizing: border-box !important;
   bottom: 0 !important;
   top: auto !important;
-  overflow-y: auto !important;
+  /* El sheet ya no scrollea; el body interior lo hace. Asi el footer
+     con los botones de accion queda siempre visible. */
+  overflow: hidden !important;
   z-index: 1010 !important;
 }
 
@@ -767,9 +769,30 @@ input::placeholder, textarea::placeholder {
 .wallet-modal-sheet .modal-content-wrap {
   display: flex !important;
   flex-direction: column !important;
-  height: auto !important;
   width: 100% !important;
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
   box-sizing: border-box !important;
+}
+
+.wallet-modal-sheet .wallet-modal-body {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  padding: var(--space-2) var(--space-2) 0 !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+.wallet-modal-sheet .wallet-modal-actions {
+  flex: 0 0 auto !important;
+  display: flex !important;
+  gap: 12px !important;
+  padding: var(--space-3) var(--space-2) !important;
+  padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px)) !important;
+  background: var(--surface) !important;
+  border-top: 1px solid var(--border) !important;
+  /* Asegura que el fondo opaque cualquier contenido que scrollee detras. */
+  box-shadow: 0 -2px 8px rgba(0,0,0,0.18) !important;
 }
 
 @media (min-width: 768px) {

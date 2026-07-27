@@ -16,11 +16,36 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
   const [saldoReal, setSaldoReal] = useState(billetera.saldo_actual.toString())
   const [loading, setLoading] = useState(false)
   const confirmBtnRef = useRef<HTMLButtonElement>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
   const { showToast } = useToast()
 
   useEffect(() => {
     setSaldoReal(billetera.saldo_actual.toString())
   }, [billetera.billetera_id])
+
+  // Cuando el teclado se abre (visualViewport.height cae por debajo de
+  // window.innerHeight), limitamos la altura del bottom-sheet para que el
+  // footer sticky (Cancelar / Confirmar) siempre quede visible arriba del
+  // teclado. visualViewport funciona en iOS Safari, Android Chrome y web,
+  // incluyendo devtools de virtual keyboard.
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.visualViewport) return
+    const vv = window.visualViewport
+    const handleResize = () => {
+      const el = sheetRef.current
+      if (!el) return
+      const offset = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0))
+      el.style.maxHeight = `${Math.max(240, vv.height - 8)}px`
+      el.style.transform = offset > 0 ? `translateY(${offset}px)` : ''
+    }
+    vv.addEventListener('resize', handleResize)
+    vv.addEventListener('scroll', handleResize)
+    handleResize()
+    return () => {
+      vv.removeEventListener('resize', handleResize)
+      vv.removeEventListener('scroll', handleResize)
+    }
+  }, [])
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     if (e.target.value === '0') setSaldoReal('')
@@ -69,54 +94,56 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
   const modalContent = (
     <>
       <div className="bottom-sheet-overlay" onClick={onClose} />
-      <div className="bottom-sheet wallet-modal-sheet">
+      <div ref={sheetRef} className="bottom-sheet wallet-modal-sheet">
         <div className="bottom-sheet-handle" />
-        <form onSubmit={handleSubmit} style={{ padding: 'var(--space-2) var(--space-2)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
-            <h3 className="font-display" style={{ fontSize: '18px', margin: 0 }}>
-              {t('reconcile_modal_title', { nombre: t(billetera.nombre) })}
-            </h3>
-            <button type="button" className="text-xs text-muted" onClick={onClose} disabled={loading}>
-              {t('btn_close')}
-            </button>
-          </div>
+        <form onSubmit={handleSubmit} className="wallet-modal-form">
+          <div className="wallet-modal-body">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+              <h3 className="font-display" style={{ fontSize: '18px', margin: 0 }}>
+                {t('reconcile_modal_title', { nombre: t(billetera.nombre) })}
+              </h3>
+              <button type="button" className="text-xs text-muted" onClick={onClose} disabled={loading}>
+                {t('btn_close')}
+              </button>
+            </div>
 
-          <div className="card mb-3" style={{ background: 'var(--surface-2)', textAlign: 'center', padding: 'var(--space-3)' }}>
-            <p className="text-xs text-muted uppercase tracking-wider mb-1">{t('reconcile_label_theoretical')}</p>
-            <p className="font-mono font-bold" style={{ fontSize: '22px', color: 'var(--text)' }}>
-              {formatAmount(billetera.saldo_actual, billetera.moneda)}
-            </p>
-          </div>
+            <div className="card mb-3" style={{ background: 'var(--surface-2)', textAlign: 'center', padding: 'var(--space-3)' }}>
+              <p className="text-xs text-muted uppercase tracking-wider mb-1">{t('reconcile_label_theoretical')}</p>
+              <p className="font-mono font-bold" style={{ fontSize: '22px', color: 'var(--text)' }}>
+                {formatAmount(billetera.saldo_actual, billetera.moneda)}
+              </p>
+            </div>
 
-          <div className="form-group mb-4">
-            <label className="text-xs text-muted mb-2 block font-semibold">{t('reconcile_label_real')}</label>
-            <div style={{ position: 'relative' }}>
-              <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', color: 'var(--text-3)' }}>
-                {billetera.moneda === 'USD' ? 'U$S' : '$'}
-              </span>
-              <input
-                type="number"
-                step="0.01"
-                className="form-control font-mono"
-                style={{ paddingLeft: 45, fontSize: '18px', fontWeight: 'bold' }}
-                value={saldoReal}
-                onChange={(e) => setSaldoReal(e.target.value)}
-                onFocus={handleFocus}
-                onBlur={handleBlur}
-                enterKeyHint="next"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    confirmBtnRef.current?.focus()
-                  }
-                }}
-                disabled={loading}
-                autoFocus
-              />
+            <div className="form-group mb-4">
+              <label className="text-xs text-muted mb-2 block font-semibold">{t('reconcile_label_real')}</label>
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', color: 'var(--text-3)' }}>
+                  {billetera.moneda === 'USD' ? 'U$S' : '$'}
+                </span>
+                <input
+                  type="number"
+                  step="0.01"
+                  className="form-control font-mono"
+                  style={{ paddingLeft: 45, fontSize: '18px', fontWeight: 'bold' }}
+                  value={saldoReal}
+                  onChange={(e) => setSaldoReal(e.target.value)}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                  enterKeyHint="next"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      confirmBtnRef.current?.focus()
+                    }
+                  }}
+                  disabled={loading}
+                  autoFocus
+                />
+              </div>
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="wallet-modal-actions">
             <button type="button" className="btn btn-secondary flex-1" onClick={onClose} disabled={loading}>
               {t('reconcile_btn_cancel')}
             </button>

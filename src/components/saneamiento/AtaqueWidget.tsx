@@ -17,7 +17,7 @@ export function AtaqueWidget({ estado, onDetalle }: AtaqueWidgetProps) {
         iconBg="rgba(255, 107, 107, 0.15)"
         onClick={onDetalle}
       >
-        <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
+        <div style={{ color: 'var(--text-secondary)', fontSize: 'calc(14px * var(--font-scale))' }}>
           {t('saneamiento_ataquewidget_vacio')}
         </div>
       </SaneamientoWidgetCard>
@@ -35,10 +35,10 @@ export function AtaqueWidget({ estado, onDetalle }: AtaqueWidgetProps) {
       onClick={onDetalle}
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
-        <span style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'var(--font-display)' }}>
+        <span style={{ fontSize: 'calc(24px * var(--font-scale))', fontWeight: 800, fontFamily: 'var(--font-display)' }}>
           {formatCurrency(estado.deuda_total, 'ARS')}
         </span>
-        <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{t('saneamiento_ataquewidget_deuda_total')}</span>
+        <span style={{ color: 'var(--text-secondary)', fontSize: 'calc(14px * var(--font-scale))' }}>{t('saneamiento_ataquewidget_deuda_total')}</span>
       </div>
 
       <div className="saneamiento-progress-bg">
@@ -48,12 +48,12 @@ export function AtaqueWidget({ estado, onDetalle }: AtaqueWidgetProps) {
         />
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text-secondary)', marginBottom: '12px' }}>
         <span>{pct}% {t('saneamiento_ataquewidget_pagado')}</span>
         <span>{formatCurrency(estado.pagado_total, 'ARS')}</span>
       </div>
 
-      <div style={{ fontSize: '14px', marginBottom: '12px' }}>
+      <div style={{ fontSize: 'calc(14px * var(--font-scale))', marginBottom: '12px' }}>
         <span style={{ color: 'var(--text-secondary)' }}>{t('saneamiento_ataquewidget_estrategia')}:</span>{' '}
         <strong>{strategyLabel}</strong>
       </div>

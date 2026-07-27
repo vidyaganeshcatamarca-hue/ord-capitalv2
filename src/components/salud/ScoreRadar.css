@@ -40,12 +40,12 @@
 
 .score-radar-label {
   fill: #cbd5e1;
-  font-size: 8px;
+  font-size: calc(8px * var(--font-scale));
   font-weight: 700;
 }
 
 @media (max-width: 420px) {
   .score-radar-label {
-    font-size: 7px;
+    font-size: calc(7px * var(--font-scale));
   }
 }

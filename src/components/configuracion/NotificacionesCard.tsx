@@ -33,9 +33,18 @@ export function NotificacionesCard() {
       <span className="config-hub-card-icon" aria-hidden="true">🔔</span>
       <div className="config-hub-card-content">
         <h3>{t('config_notificaciones')}</h3>
-        <p>
+        {/*
+          Antes: cuando activeCount era null, mostrabamos
+          `config_notificaciones_desc` ("Elegi que alertas queres recibir.")
+          y al volver la RPC mostrabamos el count. Esto producia un flash
+          visible (desc -> count) en cada navegacion a /configuracion.
+          Ahora: el parrafo reserva la misma altura que tendria con el
+          count, asi no hay layout shift, y el contenido solo se muestra
+          cuando ya tenemos el dato real.
+        */}
+        <p className="config-hub-card-subtitle" aria-live="polite">
           {activeCount === null
-            ? t('config_notificaciones_desc')
+            ? '\u00A0'
             : t('config_notifications_active_count', { count: activeCount, total: 12 })}
         </p>
       </div>

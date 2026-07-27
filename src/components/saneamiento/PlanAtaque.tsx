@@ -107,8 +107,8 @@ export function PlanAtaque({ estadoInicial, onVolver, onChange }: PlanAtaqueProp
       {estado && (
         <div className="saneamiento-card" style={{ marginBottom: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>{t('saneamiento_ataquewidget_deuda_total')}</span>
-            <span style={{ fontSize: '24px', fontWeight: 800, fontFamily: 'var(--font-display)' }}>
+            <span style={{ color: 'var(--text-secondary)', fontSize: 'calc(14px * var(--font-scale))' }}>{t('saneamiento_ataquewidget_deuda_total')}</span>
+            <span style={{ fontSize: 'calc(24px * var(--font-scale))', fontWeight: 800, fontFamily: 'var(--font-display)' }}>
               {formatCurrency(estado.deuda_total, 'ARS')}
             </span>
           </div>
@@ -118,12 +118,12 @@ export function PlanAtaque({ estadoInicial, onVolver, onChange }: PlanAtaqueProp
               style={{ width: `${pct}%`, background: pct >= 70 ? 'var(--mint)' : pct >= 40 ? 'var(--amber)' : 'var(--coral)' }}
             />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-secondary)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text-secondary)' }}>
             <span>{pct}% {t('saneamiento_ataquewidget_pagado')}</span>
             <span>{formatCurrency(estado.pagado_total, 'ARS')}</span>
           </div>
           {estado.fecha_fin_estimada && (
-            <p style={{ margin: '12px 0 0', fontSize: '13px', color: 'var(--text-secondary)' }}>
+            <p style={{ margin: '12px 0 0', fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text-secondary)' }}>
               {t('saneamiento_ataquewidget_fin_estimada')}: {formatDateShort(estado.fecha_fin_estimada)}
             </p>
           )}

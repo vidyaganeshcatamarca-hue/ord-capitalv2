@@ -47,19 +47,19 @@
 }
 
 .war-widget-icon {
-  font-size: 24px;
+  font-size: calc(24px * var(--font-scale));
   flex-shrink: 0;
 }
 
 .war-widget-title {
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 700;
   margin: 0;
   color: #F8FAFC;
 }
 
 .war-widget-subtitle {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #94A3B8;
   margin: 2px 0 0;
 }
@@ -107,7 +107,7 @@
   color: #4ECDC4;
   padding: 8px 14px;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;

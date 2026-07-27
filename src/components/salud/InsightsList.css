@@ -6,7 +6,7 @@
 .health-section-header h2 {
   margin: 0;
   color: #f8fafc;
-  font-size: 1.05rem;
+  font-size: calc(1.05rem * var(--font-scale));
 }
 
 .health-insights-list {
@@ -63,7 +63,7 @@
 
 .health-insight-priority {
   color: #cbd5e1;
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;

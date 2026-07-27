@@ -8,6 +8,7 @@ import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { EditMovementModal } from '@/components/EditMovementModal/EditMovementModal'
 import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/ReconcileWalletModal'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { useCountUp } from '@/hooks/useCountUp'
 import { generateColorShade } from '@/lib/colorUtils'
 import './Home.css'
 
@@ -679,6 +680,9 @@ export function HomePage() {
   const totalAlertas = alerts?.total_alertas ?? 0
   const patrimonioARS = patrimonio?.total_pesos ?? 0
   const patrimonioUSD = patrimonio?.total_dolares ?? 0
+  // Animacion tipo velocimetro para el hero card. Re-dispara en cada
+  // cambio de target (incluye el primer mount, que es el caso comun).
+  const animatedPatrimonioARS = useCountUp(patrimonioARS, { duration: 1200 })
   const tieneFugaMisterio = 
     ((misterio?.olvidos_pesos ?? 0) > 0 || (misterio?.olvidos_dolares ?? 0) > 0) &&
     !fugasMisterioOcultado
@@ -788,7 +792,7 @@ export function HomePage() {
                 <div className="home-patrimonio-main-info">
                   <p className="home-patrimonio-label">{t('hero_title_total')}</p>
                   <p className="home-patrimonio-ars font-display animate-count">
-                    {formatAmount(patrimonioARS, 'ARS')}
+                    {formatAmount(animatedPatrimonioARS, 'ARS')}
                   </p>
                 </div>
                 {saldoHero && (
@@ -991,9 +995,7 @@ export function HomePage() {
                   <p>{t('donut_empty_desc')}</p>
                 </div>
               ) : (() => {
-                const rawDataset = (showAllTopCategories && rankingCategorias.length > 0)
-                  ? rankingCategorias
-                  : activeCategoriasData
+                const rawDataset = activeCategoriasData
 
                 const totalConsumidoSum = rawDataset.reduce(
                   (sum: number, cat: any) => sum + (Number(cat.total_consumido) || 0), 0
@@ -1003,17 +1005,29 @@ export function HomePage() {
 
                 topCategorias.forEach((tc: any) => {
                   if (tc.nombre_categoria && tc.color) {
-                    parentColorMap[tc.nombre_categoria.toLowerCase()] = tc.color
-                    const translated = t(tc.nombre_categoria)
-                    if (translated) parentColorMap[translated.toLowerCase()] = tc.color
+                    const rawName = tc.nombre_categoria.toLowerCase().trim()
+                    parentColorMap[rawName] = tc.color
+                    const baseName = rawName.split('-')[0].trim()
+                    if (baseName && !parentColorMap[baseName]) {
+                      parentColorMap[baseName] = tc.color
+                    }
+                    const translated = t(tc.nombre_categoria).toLowerCase().trim()
+                    if (translated) {
+                      parentColorMap[translated] = tc.color
+                      const baseTrans = translated.split('-')[0].trim()
+                      if (baseTrans && !parentColorMap[baseTrans]) {
+                        parentColorMap[baseTrans] = tc.color
+                      }
+                    }
                   }
                 })
 
                 rankingCategorias.forEach((rc: any) => {
                   if (rc.nombre_rubro_padre && rc.color) {
-                    parentColorMap[rc.nombre_rubro_padre.toLowerCase()] = rc.color
-                    const translated = t(rc.nombre_rubro_padre)
-                    if (translated) parentColorMap[translated.toLowerCase()] = rc.color
+                    const rawName = rc.nombre_rubro_padre.toLowerCase().trim()
+                    if (!parentColorMap[rawName]) parentColorMap[rawName] = rc.color
+                    const baseName = rawName.split('-')[0].trim()
+                    if (baseName && !parentColorMap[baseName]) parentColorMap[baseName] = rc.color
                   }
                   if (rc.estructura_id && rc.color && rc.es_padre) {
                     parentColorMap[`id:${rc.estructura_id}`] = rc.color
@@ -1025,7 +1039,7 @@ export function HomePage() {
 
                 rawDataset.forEach((cat: any) => {
                   const parentName = cat.nombre_rubro_padre || cat.nombre_categoria || cat.nombre_cuenta || 'general'
-                  const key = parentName.toLowerCase()
+                  const key = parentName.toLowerCase().trim()
                   parentGroupCounts[key] = (parentGroupCounts[key] || 0) + 1
                 })
 
@@ -1033,15 +1047,16 @@ export function HomePage() {
                   .map((cat: any) => {
                     const nombre = cat.nombre_categoria || cat.nombre_cuenta || ''
                     const parentName = cat.nombre_rubro_padre || nombre
-                    const parentKey = parentName.toLowerCase()
+                    const parentKey = parentName.toLowerCase().trim()
+                    const baseName = parentKey.split('-')[0].trim()
 
                     const baseColor = parentColorMap[`id:${cat.estructura_id}`]
                       || parentColorMap[parentKey]
-                      || parentColorMap[t(parentName).toLowerCase()]
+                      || parentColorMap[baseName]
                       || cat.color
                       || 'var(--surface-3)'
 
-                    const isSubaccount = Boolean(cat.nombre_rubro_padre || cat.es_padre === false || parentColorMap[`id:${cat.estructura_id}`])
+                    const isSubaccount = Boolean(cat.nombre_rubro_padre || cat.es_padre === false)
 
                     const indexInGroup = parentGroupIndices[parentKey] || 0
                     parentGroupIndices[parentKey] = indexInGroup + 1
@@ -1069,8 +1084,7 @@ export function HomePage() {
                   .sort((a: any, b: any) => b.total_consumido - a.total_consumido)
 
                 const displayedCategories = showAllTopCategories ? sortedCategories : sortedCategories.slice(0, 3)
-                const totalAvailableCount = Math.max(rankingCategorias.length, topCategorias.length, activeCategoriasData.length)
-                const canExpand = totalAvailableCount > 3 || (rankingCategorias.length > topCategorias.length)
+                const canExpand = sortedCategories.length > 3
 
                 return (
                   <div className="donut-section-wrapper">
@@ -1107,7 +1121,7 @@ export function HomePage() {
                             <span>
                               {showAllTopCategories
                                 ? t('donut_show_less_categories')
-                                : t('donut_see_all_categories', { count: totalAvailableCount })}
+                                : t('donut_see_all_categories', { count: sortedCategories.length })}
                             </span>
                           </button>
                         </div>

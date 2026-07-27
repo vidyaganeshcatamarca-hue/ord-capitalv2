@@ -74,7 +74,7 @@
   border-radius: 999px;
   background: var(--surface, #2D2D2D);
   color: var(--text-secondary, #A0A0A0);
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;

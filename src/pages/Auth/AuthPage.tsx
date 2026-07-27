@@ -449,7 +449,7 @@ export function AuthPage() {
                   border: '1px solid var(--border)',
                   borderRadius: '10px',
                   color: 'var(--text)',
-                  fontSize: '16px',
+                  fontSize: 'calc(16px * var(--font-scale))',
                   outline: 'none'
                 }}
                 value={currency}
@@ -473,7 +473,7 @@ export function AuthPage() {
                   <span style={{ 
                     position: 'absolute', 
                     left: '16px', 
-                    fontSize: '22px', 
+                    fontSize: 'calc(22px * var(--font-scale))', 
                     fontWeight: 'bold', 
                     color: 'var(--text-3)' 
                   }}>
@@ -487,7 +487,7 @@ export function AuthPage() {
                       width: '100%', 
                       paddingLeft: '64px', 
                       textAlign: 'right',
-                      fontSize: '24px',
+                      fontSize: 'calc(24px * var(--font-scale))',
                       fontWeight: 'bold'
                     }}
                     value={calcInput}
@@ -508,7 +508,7 @@ export function AuthPage() {
                   <span style={{
                     position: 'absolute',
                     left: '16px',
-                    fontSize: '22px',
+                    fontSize: 'calc(22px * var(--font-scale))',
                     fontWeight: 'bold',
                     color: 'var(--text-3)'
                   }}>
@@ -522,7 +522,7 @@ export function AuthPage() {
                       width: '100%',
                       paddingLeft: '64px',
                       textAlign: 'right',
-                      fontSize: '24px',
+                      fontSize: 'calc(24px * var(--font-scale))',
                       fontWeight: 'bold'
                     }}
                     value={cashBalanceInput}

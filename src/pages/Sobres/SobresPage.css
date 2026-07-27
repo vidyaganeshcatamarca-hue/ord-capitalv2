@@ -14,7 +14,7 @@
 .sobres-kicker {
   margin: 0 0 7px;
   color: #4ecdc4;
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   font-weight: 900;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -26,7 +26,7 @@
 }
 
 .sobres-header h1 {
-  font-size: clamp(2rem, 9vw, 3.4rem);
+  font-size: clamp(calc(2rem * var(--font-scale)), calc(9vw * var(--font-scale)), calc(3.4rem * var(--font-scale)));
   line-height: 0.95;
 }
 
@@ -77,7 +77,7 @@
 .sobres-summary span {
   display: block;
   color: #cbd5e1;
-  font-size: 0.82rem;
+  font-size: calc(0.82rem * var(--font-scale));
 }
 
 .sobres-summary strong {
@@ -85,7 +85,7 @@
   margin-top: 5px;
   color: #f8fafc;
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  font-size: 1.28rem;
+  font-size: calc(1.28rem * var(--font-scale));
 }
 
 .sobres-list {

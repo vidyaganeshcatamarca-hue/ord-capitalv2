@@ -18,7 +18,7 @@
 .score-hero-eyebrow {
   margin: 0 0 8px;
   color: #93c5fd;
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -27,7 +27,7 @@
 .score-hero-value {
   margin: 0;
   font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
-  font-size: clamp(2.9rem, 11vw, 5.7rem);
+  font-size: clamp(calc(2.9rem * var(--font-scale)), calc(11vw * var(--font-scale)), calc(5.7rem * var(--font-scale)));
   line-height: 0.95;
 }
 
@@ -42,7 +42,7 @@
   margin-top: 14px;
   padding: 7px 12px;
   border-radius: 999px;
-  font-size: 0.86rem;
+  font-size: calc(0.86rem * var(--font-scale));
   font-weight: 800;
 }
 
@@ -55,7 +55,7 @@
 .score-hero-delta {
   margin: 14px 0 0;
   color: #cbd5e1;
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--font-scale));
 }
 
 @media (min-width: 760px) {

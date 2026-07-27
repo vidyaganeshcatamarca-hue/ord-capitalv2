@@ -1051,13 +1051,13 @@
 }
 
 .info-bubble-popup {
-  background: #1a1a2e;
-  border: 1px solid rgba(78, 205, 196, 0.25);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px 18px 16px;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 -4px 32px rgba(0, 0, 0, 0.35);
   animation: slideUp 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -1070,7 +1070,7 @@
 .info-bubble-text {
   font-size: calc(13.5px * var(--font-scale));
   line-height: 1.65;
-  color: rgba(255, 255, 255, 0.85);
+  color: var(--text);
   text-align: left;
   margin-bottom: 16px;
 }
@@ -1078,10 +1078,10 @@
 .info-bubble-close {
   width: 100%;
   padding: 10px;
-  background: rgba(78, 205, 196, 0.15);
-  border: 1px solid rgba(78, 205, 196, 0.3);
+  background: var(--mint-dim);
+  border: 1px solid var(--border);
   border-radius: 10px;
-  color: #4ECDC4;
+  color: var(--mint);
   font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
@@ -1093,6 +1093,73 @@
 .info-bubble-btn.dark {
   background: var(--border-light);
   border-color: var(--border-light);
+  color: var(--text-2);
+}
+
+/* ─── Modo claro (warm-light): overrides WCAG AA ──────────────────────
+   El modal "Reglas de Oro" y los elementos relacionados tienen
+   hardcoded colors que no respetan el data-theme. Estos overrides
+   restauran contraste >= 4.5:1 en warm-light. */
+[data-theme="warm-light"] .regla-pct-input,
+[data-theme="warm-light"] .dia-ancla-input,
+[data-theme="warm-light"] .contrato-acepto-input,
+[data-theme="warm-light"] .sugerencia-monto-input {
+  color: var(--text);
+  background: var(--surface);
+  border-color: var(--border);
+}
+[data-theme="warm-light"] .regla-pct-input:focus,
+[data-theme="warm-light"] .dia-ancla-input:focus,
+[data-theme="warm-light"] .contrato-acepto-input:focus,
+[data-theme="warm-light"] .sugerencia-monto-input:focus {
+  border-color: var(--mint);
+}
+[data-theme="warm-light"] .modo-toggle-btn {
+  background: var(--surface-2);
+  color: var(--text-2);
+  border-color: var(--border);
+}
+[data-theme="warm-light"] .modo-toggle-btn.activo {
+  border-color: var(--mint);
+  background: var(--mint-dim);
+  color: var(--mint);
+}
+[data-theme="warm-light"] .reglas-suma-display.ok {
+  color: var(--mint);
+  background: var(--mint-dim);
+}
+[data-theme="warm-light"] .reglas-suma-display.error {
+  color: var(--coral);
+  background: var(--coral-dim);
+}
+[data-theme="warm-light"] .sugerencia-monto-val {
+  color: var(--mint);
+}
+[data-theme="warm-light"] .sugerencia-liquidez-info {
+  color: var(--text-2);
+  background: var(--mint-dim);
+}
+[data-theme="warm-light"] .contrato-item {
+  color: var(--text-2);
+  background: var(--coral-dim);
+  border-color: rgba(230, 57, 70, 0.25);
+}
+[data-theme="warm-light"] .contrato-acepto-label {
+  color: var(--text-2);
+}
+[data-theme="warm-light"] .contrato-acepto-input.valido {
+  border-color: var(--mint);
+}
+[data-theme="warm-light"] .regla-slider {
+  background: var(--border);
+}
+[data-theme="warm-light"] .info-bubble-btn {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-2);
+}
+[data-theme="warm-light"] .info-bubble-btn:hover {
+  background: var(--surface-3);
 }
 
 /* ---------- SOBRES EXCEDIDOS EN MODO BASE CERO ---------- */

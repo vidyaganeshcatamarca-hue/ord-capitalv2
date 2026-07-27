@@ -43,14 +43,14 @@
   margin: 0 0 var(--space-2, 8px);
   color: var(--text, #e6edf3);
   font-family: var(--font-display, system-ui, sans-serif);
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 700;
 }
 
 .track-record-list-empty-text {
   margin: 0;
   color: var(--text-3, #8b949e);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .track-record-list-items {
@@ -84,7 +84,7 @@
   margin: 0;
   color: var(--text, #e6edf3);
   font-family: var(--font-display, system-ui, sans-serif);
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   font-weight: 700;
   line-height: 1.3;
   word-break: break-word;
@@ -96,7 +96,7 @@
   align-items: center;
   gap: var(--space-2, 8px);
   color: var(--text-3, #8b949e);
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   flex-wrap: wrap;
@@ -121,7 +121,7 @@
 
 .track-record-list-label {
   color: var(--text-3, #8b949e);
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -131,7 +131,7 @@
 .track-record-list-value,
 .track-record-list-gain {
   font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;

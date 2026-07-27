@@ -6,7 +6,7 @@
 }
 
 .escudo-dias {
-  font-size: 42px;
+  font-size: calc(42px * var(--font-scale));
   font-weight: 800;
   color: #F8FAFC;
   line-height: 1;
@@ -14,13 +14,13 @@
 }
 
 .escudo-unidad {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #94A3B8;
   font-weight: 600;
 }
 
 .escudo-meta {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #94A3B8;
   margin-bottom: 8px;
 }
@@ -29,7 +29,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #CBD5E1;
   padding: 4px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
@@ -46,13 +46,13 @@
   padding: 8px 10px;
   background: rgba(255, 107, 107, 0.12);
   color: #FF6B6B;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   border-radius: 6px;
   border-left: 3px solid #FF6B6B;
 }
 
 .war-widget-empty {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #94A3B8;
   margin: 0;
   text-align: center;

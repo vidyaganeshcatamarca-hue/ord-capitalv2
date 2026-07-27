@@ -16,7 +16,7 @@
 
 .mi-cuenta-chevron {
   color: var(--text-3);
-  font-size: 1.5rem;
+  font-size: calc(1.5rem * var(--font-scale));
   transition: transform 220ms ease;
   display: inline-block;
 }
@@ -53,7 +53,7 @@
   background: linear-gradient(135deg, var(--coral), var(--amber));
   display: grid;
   place-items: center;
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 800;
   color: #1a1a1a;
   flex-shrink: 0;
@@ -62,14 +62,14 @@
 .mi-cuenta-email {
   margin: 0;
   color: var(--text);
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
   font-weight: 600;
 }
 
 .mi-cuenta-email-label {
   margin: 2px 0 0;
   color: var(--text-3);
-  font-size: 0.78rem;
+  font-size: calc(0.78rem * var(--font-scale));
 }
 
 .mi-cuenta-form {
@@ -84,7 +84,7 @@
 
 .mi-cuenta-form label span {
   color: var(--text);
-  font-size: 0.85rem;
+  font-size: calc(0.85rem * var(--font-scale));
   font-weight: 600;
 }
 
@@ -96,7 +96,7 @@
   color: var(--text);
   padding: 10px 12px;
   font: inherit;
-  font-size: 0.95rem;
+  font-size: calc(0.95rem * var(--font-scale));
   outline: none;
   box-sizing: border-box;
   transition: border-color 150ms;
@@ -115,7 +115,7 @@
   padding: 10px 16px;
   font: inherit;
   font-weight: 800;
-  font-size: 0.9rem;
+  font-size: calc(0.9rem * var(--font-scale));
   cursor: pointer;
   transition: opacity 150ms;
 }

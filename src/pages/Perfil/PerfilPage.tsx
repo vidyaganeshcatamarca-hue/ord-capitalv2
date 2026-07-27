@@ -26,7 +26,7 @@ export function PerfilPage() {
   return (
     <div className="page">
       <div className="page-header">
-        <h2 className="font-display" style={{ fontSize: 22 }}>Mi Perfil</h2>
+        <h2 className="font-display" style={{ fontSize: 'calc(22px * var(--font-scale))' }}>Mi Perfil</h2>
       </div>
       <div className="section" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px' }}>
         <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -38,26 +38,26 @@ export function PerfilPage() {
               background: 'linear-gradient(135deg, var(--color-coral), var(--color-amber))',
               display: 'grid',
               placeItems: 'center',
-              fontSize: '20px',
+              fontSize: 'calc(20px * var(--font-scale))',
               fontWeight: 'bold',
               color: 'var(--color-bg-dark)'
             }}>
               {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
             </div>
             <div>
-              <h4 style={{ margin: 0, fontSize: '16px', color: 'var(--color-text)' }}>Usuario Activo</h4>
-              <p style={{ margin: 0, fontSize: '14px', color: 'var(--color-text-muted)' }}>{user?.email}</p>
+              <h4 style={{ margin: 0, fontSize: 'calc(16px * var(--font-scale))', color: 'var(--color-text)' }}>Usuario Activo</h4>
+              <p style={{ margin: 0, fontSize: 'calc(14px * var(--font-scale))', color: 'var(--color-text-muted)' }}>{user?.email}</p>
             </div>
           </div>
         </div>
 
         {hasHiddenFugas && (
           <div className="card" style={{ display: 'flex', flexDirection: 'column', gap: '10px', padding: '16px' }}>
-            <h4 style={{ margin: 0, fontSize: '15px', color: 'var(--color-text)' }}>
+            <h4 style={{ margin: 0, fontSize: 'calc(15px * var(--font-scale))', color: 'var(--color-text)' }}>
               {t('config_fugas_title')}
             </h4>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '13px', color: 'var(--color-text-muted)', lineHeight: '1.4' }}>
+              <span style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--color-text-muted)', lineHeight: '1.4' }}>
                 {t('config_fugas_desc')}
               </span>
               <button
@@ -75,7 +75,7 @@ export function PerfilPage() {
                   padding: '6px 12px',
                   borderRadius: '8px',
                   cursor: 'pointer',
-                  fontSize: '13px',
+                  fontSize: 'calc(13px * var(--font-scale))',
                   fontWeight: '600',
                   whiteSpace: 'nowrap'
                 }}
@@ -97,7 +97,7 @@ export function PerfilPage() {
               padding: '12px',
               borderRadius: '12px',
               cursor: 'pointer',
-              fontSize: '15px',
+              fontSize: 'calc(15px * var(--font-scale))',
               fontWeight: '600',
               width: '100%',
               textAlign: 'left',
@@ -108,7 +108,7 @@ export function PerfilPage() {
             }}
           >
             <span>{t('privacidad_open')}</span>
-            <span style={{ fontSize: '12px', fontWeight: '400', color: 'var(--color-text-muted)' }}>
+            <span style={{ fontSize: 'calc(12px * var(--font-scale))', fontWeight: '400', color: 'var(--color-text-muted)' }}>
               {t('privacidad_subtitle')}
             </span>
           </button>
@@ -124,7 +124,7 @@ export function PerfilPage() {
             padding: '12px',
             borderRadius: '12px',
             cursor: 'pointer',
-            fontSize: '15px',
+            fontSize: 'calc(15px * var(--font-scale))',
             fontWeight: '600',
             width: '100%',
             textAlign: 'left',
@@ -143,7 +143,7 @@ export function PerfilPage() {
             padding: '12px',
             borderRadius: '12px',
             cursor: 'pointer',
-            fontSize: '15px',
+            fontSize: 'calc(15px * var(--font-scale))',
             fontWeight: '600',
             width: '100%',
             transition: 'all 0.2s ease'

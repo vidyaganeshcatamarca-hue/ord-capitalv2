@@ -10,7 +10,7 @@
 }
 
 .safe-monto {
-  font-size: 36px;
+  font-size: calc(36px * var(--font-scale));
   font-weight: 800;
   color: #F8FAFC;
   line-height: 1;
@@ -18,7 +18,7 @@
 }
 
 .safe-luz {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   color: #94A3B8;
   margin-top: 4px;
@@ -27,7 +27,7 @@
 .safe-mensaje {
   margin: 4px 0 0;
   padding: 0 8px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #94A3B8;
   text-align: center;
   line-height: 1.4;

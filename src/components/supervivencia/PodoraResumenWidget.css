@@ -6,7 +6,7 @@
 }
 
 .podora-potencial-label {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: #94A3B8;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -20,7 +20,7 @@
 }
 
 .podora-monto {
-  font-size: 32px;
+  font-size: calc(32px * var(--font-scale));
   font-weight: 800;
   color: #FFE66D;
   line-height: 1;
@@ -28,14 +28,14 @@
 }
 
 .podora-periodo {
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: #94A3B8;
   font-weight: 500;
 }
 
 .podora-mensaje {
   margin: 4px 0 0;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: #CBD5E1;
   line-height: 1.4;
 }

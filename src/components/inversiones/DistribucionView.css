@@ -16,14 +16,14 @@
   margin: 0;
   color: var(--text, #e6edf3);
   font-family: var(--font-display, system-ui, sans-serif);
-  font-size: 22px;
+  font-size: calc(22px * var(--font-scale));
   font-weight: 800;
 }
 
 .distribucion-subtitle {
   margin: 0;
   color: var(--text-3, #8b949e);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 .distribucion-card,
@@ -64,7 +64,7 @@
 .distribucion-donut-label {
   fill: var(--text, #e6edf3);
   font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
-  font-size: 28px;
+  font-size: calc(28px * var(--font-scale));
   font-weight: 800;
 }
 
@@ -88,7 +88,7 @@
 
 .distribucion-table th {
   color: var(--text-3, #8b949e);
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -98,7 +98,7 @@
 .distribucion-table td {
   color: var(--text-2, #d1d7de);
   font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -197,14 +197,14 @@
   margin: var(--space-4, 16px) 0 var(--space-2, 8px);
   color: var(--text, #e6edf3);
   font-family: var(--font-display, system-ui, sans-serif);
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 700;
 }
 
 .distribucion-empty-text {
   margin: 0;
   color: var(--text-3, #8b949e);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
 }
 
 @keyframes distribucion-shimmer {
