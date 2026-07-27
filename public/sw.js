@@ -2,7 +2,7 @@
 // Plantilla del Service Worker. El script scripts/build-sw.js genera
 // public/sw.js. No editar public/sw.js a mano: se sobreescribe.
 
-const CACHE_NAME = 'ord-capital-f6747e1-1784935506879';
+const CACHE_NAME = 'ord-capital-eb6dbff-1785152424175';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',

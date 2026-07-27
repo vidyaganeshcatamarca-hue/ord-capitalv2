@@ -45,15 +45,15 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
         <div className="bottom-sheet-handle" />
         <div className="billetera-detail-header" style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
           <div className="flex items-center gap-2">
-            <span style={{ fontSize: '24px' }}>{billetera.icono || '💳'}</span>
-            <h2 style={{ fontSize: '20px', margin: 0 }}>{t(billetera.nombre)}</h2>
+            <span style={{ fontSize: 'calc(24px * var(--font-scale))' }}>{billetera.icono || '💳'}</span>
+            <h2 style={{ fontSize: 'calc(20px * var(--font-scale))', margin: 0 }}>{t(billetera.nombre)}</h2>
           </div>
-          <button type="button" className="text-muted" onClick={onClose} style={{ border: 'none', background: 'none', fontSize: '18px', cursor: 'pointer' }}>✕</button>
+          <button type="button" className="text-muted" onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 'calc(18px * var(--font-scale))', cursor: 'pointer' }}>✕</button>
         </div>
 
         <div className="billetera-detail-saldo card" style={{ background: 'var(--surface)', margin: '0 16px 16px', padding: '16px', textAlign: 'center', borderRadius: '12px' }}>
-          <p style={{ color: 'var(--text-3)', fontSize: '12px', marginBottom: '4px' }}>Saldo Actual</p>
-          <p className="font-display" style={{ fontSize: '24px', color: billetera.saldo_actual >= 0 ? 'var(--mint)' : 'var(--coral)' }}>
+          <p style={{ color: 'var(--text-3)', fontSize: 'calc(12px * var(--font-scale))', marginBottom: '4px' }}>Saldo Actual</p>
+          <p className="font-display" style={{ fontSize: 'calc(24px * var(--font-scale))', color: billetera.saldo_actual >= 0 ? 'var(--mint)' : 'var(--coral)' }}>
             {formatAmount(billetera.saldo_actual, billetera.moneda)}
           </p>
           <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', marginTop: '16px' }}>
@@ -79,7 +79,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
         </div>
 
         <div className="billetera-detail-body" style={{ padding: '0 16px 16px', overflowY: 'auto', maxHeight: '60vh' }}>
-          <h3 style={{ fontSize: '14px', color: 'var(--text-2)', marginBottom: '12px' }}>{t("title_latest_movements")}</h3>
+          <h3 style={{ fontSize: 'calc(14px * var(--font-scale))', color: 'var(--text-2)', marginBottom: '12px' }}>{t("title_latest_movements")}</h3>
           {loading ? (
             <div style={{ textAlign: 'center', padding: '24px' }}><div className="spinner" /></div>
           ) : error ? (
@@ -109,8 +109,8 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
                         {displayType === 'expense' ? '➖' : displayType === 'income' ? '➕' : '↔️'}
                       </div>
                       <div>
-                        <p style={{ margin: 0, fontWeight: 'bold', fontSize: '14px' }}>{m.nombre_cuenta_historico || m.descripcion || m.tipo}</p>
-                        <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-3)' }}>{new Date(m.fecha).toLocaleDateString('es-AR')}</p>
+                        <p style={{ margin: 0, fontWeight: 'bold', fontSize: 'calc(14px * var(--font-scale))' }}>{m.nombre_cuenta_historico || m.descripcion || m.tipo}</p>
+                        <p style={{ margin: 0, fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>{new Date(m.fecha).toLocaleDateString('es-AR')}</p>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>

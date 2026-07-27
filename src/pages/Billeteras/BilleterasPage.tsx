@@ -359,7 +359,7 @@ export function BilleterasPage() {
 
           {/* ── HEADER DE FUENTES DE INGRESO ── */}
           <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 className="font-display" style={{ fontSize: 20 }}>Fuentes de Ingreso</h2>
+            <h2 className="font-display" style={{ fontSize: 'calc(20px * var(--font-scale))' }}>Fuentes de Ingreso</h2>
           </div>
 
           <TabIngresos hideNewBtn={true} />
@@ -376,7 +376,7 @@ export function BilleterasPage() {
             <div className="bottom-sheet-handle" />
             <form onSubmit={handleCreate} style={{ padding: 'var(--space-2) var(--space-2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
-                <h3 className="font-display" style={{ fontSize: '18px', margin: 0 }}>➕ Nueva Cuenta</h3>
+                <h3 className="font-display" style={{ fontSize: 'calc(18px * var(--font-scale))', margin: 0 }}>➕ Nueva Cuenta</h3>
                 <button type="button" className="text-xs text-muted" onClick={() => setShowCreateModal(false)}>Cerrar ✕</button>
               </div>
 
@@ -453,7 +453,7 @@ export function BilleterasPage() {
             <div className="bottom-sheet-handle" />
             <form onSubmit={handleEdit} style={{ padding: 'var(--space-2) var(--space-2)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
-                <h3 className="font-display" style={{ fontSize: '18px', margin: 0 }}>⚙️ Editar {selectedBilletera.nombre}</h3>
+                <h3 className="font-display" style={{ fontSize: 'calc(18px * var(--font-scale))', margin: 0 }}>⚙️ Editar {selectedBilletera.nombre}</h3>
                 <button type="button" className="text-xs text-muted" onClick={() => setShowEditModal(false)}>Cerrar ✕</button>
               </div>
 
