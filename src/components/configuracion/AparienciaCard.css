@@ -126,15 +126,19 @@ article.apariencia-card-wrap.config-hub-card {
   display: flex;
   gap: 6px;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
 }
 
 .apariencia-font-pill {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   gap: 2px;
-  padding: 6px 10px;
+  padding: 6px 8px;
   border-radius: 12px;
   border: 1px solid var(--border);
   background: var(--surface-2);
@@ -143,7 +147,8 @@ article.apariencia-card-wrap.config-hub-card {
   font-size: calc(0.78rem * var(--font-scale));
   cursor: pointer;
   transition: all 180ms ease;
-  min-width: 52px;
+  min-width: 48px;
+  flex: 0 0 auto;
 }
 
 .apariencia-font-pill:hover:not(:disabled) {
@@ -168,6 +173,9 @@ article.apariencia-card-wrap.config-hub-card {
   font-weight: 700;
   line-height: 1;
   color: inherit;
+  /* El preview NO escala con --font-scale: es la previsualizacion visual
+     del tamaño real que tendria el texto. Se mantiene fijo para que el
+     usuario pueda comparar las 4 opciones a simple vista. */
 }
 .apariencia-font-pill__preview[data-size="chico"]    { font-size: 14px; }
 .apariencia-font-pill__preview[data-size="mediano"]  { font-size: 18px; }

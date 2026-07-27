@@ -28,6 +28,26 @@ export function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - clamped, 3)
 }
 
+/**
+ * Easing "velocimetro" para el hero card: arranca con aceleracion fuerte
+ * y frena visiblemente en el ultimo ~50% del timeline (asi el numero no
+ * se "estrella" contra el target final). Pensado para una duration de
+ * ~1000ms donde el freno ocupa ~500ms.
+ *
+ *  - t in [0, 0.5]: easeOutCubic -> cubre ~80% del valor (aceleracion)
+ *  - t in [0.5, 1]: easeOutQuad  -> cubre los ultimos 20% (freno suave)
+ */
+export function speedometerEase(t: number): number {
+  const clamped = Math.max(0, Math.min(1, t))
+  if (clamped < 0.5) {
+    const u = clamped * 2
+    return 0.8 * (1 - Math.pow(1 - u, 3))
+  } else {
+    const u = (clamped - 0.5) * 2
+    return 0.8 + 0.2 * (1 - Math.pow(1 - u, 2))
+  }
+}
+
 function prefersReducedMotion(): boolean {
   if (typeof window === 'undefined' || !window.matchMedia) return false
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -35,7 +55,7 @@ function prefersReducedMotion(): boolean {
 
 export function useCountUp(
   target: number,
-  { duration = 1200, easing = easeOutCubic, reducedMotion }: UseCountUpOptions = {}
+  { duration = 1000, easing = speedometerEase, reducedMotion }: UseCountUpOptions = {}
 ): number {
   const safeTarget = Number.isFinite(target) ? target : 0
   // Estado: arranca en 0 SIEMPRE. La animacion lo lleva al target en el
