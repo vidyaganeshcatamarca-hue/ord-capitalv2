@@ -9,7 +9,7 @@
   padding: var(--space-5) var(--space-4) var(--space-2);
 }
 .cat-page-title {
-  font-size: 26px;
+  font-size: calc(26px * var(--font-scale));
   font-weight: 800;
   margin: 0 0 2px;
   background: linear-gradient(135deg, #fff 0%, var(--text-3) 100%);
@@ -17,7 +17,7 @@
   -webkit-text-fill-color: transparent;
 }
 .cat-page-subtitle {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: var(--text-3);
   margin: 0;
 }
@@ -42,7 +42,7 @@
   border: none;
   background: transparent;
   color: var(--text-3);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -78,7 +78,7 @@
   left: 12px;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   pointer-events: none;
 }
 .cat-search {
@@ -88,7 +88,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   font-family: var(--font-sans);
   box-sizing: border-box;
 }
@@ -100,14 +100,14 @@
   flex: 1;
 }
 .cat-toolbar-text {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: var(--text-3);
 }
 .cat-new-btn {
   white-space: nowrap;
   flex-shrink: 0;
   padding: 10px 16px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
 }
 
 /* ─── Loading / Empty ──────────────────────────────────────────────────── */
@@ -121,17 +121,17 @@
   padding: 48px 24px;
 }
 .cat-empty-icon {
-  font-size: 48px;
+  font-size: calc(48px * var(--font-scale));
   margin-bottom: 12px;
 }
 .cat-empty-title {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   font-weight: 700;
   color: var(--text);
   margin-bottom: 8px;
 }
 .cat-empty-desc {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: var(--text-3);
   max-width: 280px;
   margin: 0 auto;
@@ -178,12 +178,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: calc(22px * var(--font-scale));
   flex-shrink: 0;
 }
 .cat-rubro-name {
   font-weight: 700;
-  font-size: 15px;
+  font-size: calc(15px * var(--font-scale));
   color: var(--text);
   white-space: nowrap;
   overflow: hidden;
@@ -196,11 +196,11 @@
   margin-top: 2px;
 }
 .cat-cupo-badge {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 600;
 }
 .cat-rubro-count {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   color: var(--text-3);
 }
 .cat-rubro-actions {
@@ -212,7 +212,7 @@
   background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   padding: 6px;
   border-radius: 6px;
   opacity: 0.6;
@@ -223,12 +223,12 @@
   background: var(--surface-2);
 }
 .cat-action-sm {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   padding: 4px;
 }
 .cat-chevron {
   color: var(--text-3);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   padding: 4px 6px;
 }
 
@@ -245,7 +245,7 @@
 }
 .cat-hijo-empty {
   padding: 12px 20px;
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--text-3);
   font-style: italic;
 }
@@ -260,14 +260,14 @@
   background: var(--surface);
 }
 .cat-hijo-icon {
-  font-size: 16px;
+  font-size: calc(16px * var(--font-scale));
   width: 24px;
   text-align: center;
   flex-shrink: 0;
 }
 .cat-hijo-name {
   flex: 1;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: var(--text-2);
 }
 .cat-hijo-badges {
@@ -277,7 +277,7 @@
 }
 .cat-badge-hormiga,
 .cat-badge-bcg {
-  font-size: 10px;
+  font-size: calc(10px * var(--font-scale));
   background: var(--surface-2);
   border: 1px solid var(--border);
   padding: 2px 6px;
@@ -309,7 +309,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
+  font-size: calc(22px * var(--font-scale));
   flex-shrink: 0;
 }
 .cat-ingreso-info {
@@ -318,11 +318,11 @@
 }
 .cat-ingreso-name {
   font-weight: 700;
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   color: var(--text);
 }
 .cat-ingreso-desc {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   color: var(--text-3);
   margin-top: 2px;
   white-space: nowrap;
@@ -335,7 +335,7 @@
   gap: 8px;
 }
 .cat-badge-pasivo {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   background: var(--surface-2);
   border: 1px solid var(--border);
   padding: 2px 8px;
@@ -382,7 +382,7 @@
   padding: 20px 20px 0;
 }
 .cat-modal-header h3 {
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   margin: 0;
 }
 .cat-modal-close {
@@ -390,7 +390,7 @@
   border: none;
   cursor: pointer;
   color: var(--text-3);
-  font-size: 14px;
+  font-size: calc(14px * var(--font-scale));
   padding: 6px 10px;
   border-radius: 8px;
   transition: color 0.15s;
@@ -411,7 +411,7 @@
 /* ─── Form helpers ─────────────────────────────────────────────────────── */
 .cat-label {
   display: block;
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -435,7 +435,7 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface-2);
-  font-size: 18px;
+  font-size: calc(18px * var(--font-scale));
   cursor: pointer;
   transition: all 0.15s;
   display: flex;
@@ -495,13 +495,13 @@
   background: rgba(78,205,196,0.1);
 }
 .cat-cupo-label {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 700;
   color: var(--text);
   display: block;
 }
 .cat-cupo-desc {
-  font-size: 10px;
+  font-size: calc(10px * var(--font-scale));
   color: var(--text-3);
   display: block;
 }
@@ -514,7 +514,7 @@
   padding: 14px;
 }
 .bcg-section-title {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 700;
   color: var(--text-3);
   margin-bottom: 12px;
@@ -529,11 +529,11 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   color: var(--text-2);
 }
 .bcg-slider-value {
-  font-size: 12px;
+  font-size: calc(12px * var(--font-scale));
   font-weight: 700;
   color: var(--mint);
   font-family: var(--font-mono);
@@ -555,12 +555,12 @@
   border-top: 1px solid var(--border);
 }
 .cat-toggle-label {
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 700;
   color: var(--text-2);
 }
 .cat-toggle-desc {
-  font-size: 11px;
+  font-size: calc(11px * var(--font-scale));
   color: var(--text-3);
   margin-top: 2px;
 }
@@ -570,7 +570,7 @@
   border: 1px solid var(--border);
   background: var(--surface-2);
   color: var(--text-3);
-  font-size: 13px;
+  font-size: calc(13px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
   transition: all 0.15s;

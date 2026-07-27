@@ -142,7 +142,7 @@ function RubroModal({ rubro, onClose, onSaved }: {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '22px',
+            fontSize: 'calc(22px * var(--font-scale))',
             boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
             flexShrink: 0,
             color: '#000000'
@@ -248,7 +248,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '22px',
+            fontSize: 'calc(22px * var(--font-scale))',
             boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
             flexShrink: 0,
             color: '#000000'
@@ -445,7 +445,7 @@ export function TabEgresos() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontSize: '14px',
+                              fontSize: 'calc(14px * var(--font-scale))',
                               flexShrink: 0
                             }}>
                               <span>{hijo.icono || rubro.icono}</span>
