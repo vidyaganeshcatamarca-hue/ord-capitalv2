@@ -323,6 +323,14 @@ export function HomePage() {
   const homePreferencesDirtyRef = useRef(false)
   const homePreferencesHydratedUserRef = useRef<string | null>(null)
 
+  // Paginación de actividad reciente
+  const ACTIVITY_PAGE_SIZE = 20
+  const [activityOffset, setActivityOffset] = useState(0)
+  const [loadingMoreMovimientos, setLoadingMoreMovimientos] = useState(false)
+  const [hasMoreMovimientos, setHasMoreMovimientos] = useState(false)
+  const [showBackToTop, setShowBackToTop] = useState(false)
+  const pageTopRef = useRef<HTMLDivElement>(null)
+
   // Modal de Conciliación
   const [selectedBilletera, setSelectedBilletera] = useState<any | null>(null)
   const [showAllTopCategories, setShowAllTopCategories] = useState(false)
@@ -454,7 +462,7 @@ export function HomePage() {
           p_billetera_id: filters.billeteraId
         }).catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_movimientos_recientes', {
-          p_limit: 20,
+          p_limit: ACTIVITY_PAGE_SIZE,
           p_offset: 0,
           p_fecha_inicio: filters.fechaInicio,
           p_fecha_fin: filters.fechaFin,
@@ -465,12 +473,37 @@ export function HomePage() {
       setTopCategorias(topCategoriasRes)
       setRankingCategorias(rankingCategoriasRes)
       setMovimientos(movimientosRes)
+      setActivityOffset(0)
+      setHasMoreMovimientos(movimientosRes.length === ACTIVITY_PAGE_SIZE)
     } catch (err: any) {
       showToast(parseError(err), 'error')
     } finally {
       setFilteredDataLoading(false)
     }
   }, [showToast])
+
+  const loadMoreMovimientos = useCallback(async () => {
+    if (loadingMoreMovimientos) return
+    const filters = latestHomeFiltersRef.current
+    const nextOffset = activityOffset + ACTIVITY_PAGE_SIZE
+    try {
+      setLoadingMoreMovimientos(true)
+      const moreRes = await rpc<any[]>('fn_reporte_movimientos_recientes', {
+        p_limit: ACTIVITY_PAGE_SIZE,
+        p_offset: nextOffset,
+        p_fecha_inicio: filters.fechaInicio,
+        p_fecha_fin: filters.fechaFin,
+        p_billetera_id: filters.billeteraId
+      }).catch(() => [] as any[])
+      setMovimientos(prev => [...prev, ...moreRes])
+      setActivityOffset(nextOffset)
+      setHasMoreMovimientos(moreRes.length === ACTIVITY_PAGE_SIZE)
+    } catch (err: any) {
+      showToast(parseError(err), 'error')
+    } finally {
+      setLoadingMoreMovimientos(false)
+    }
+  }, [activityOffset, loadingMoreMovimientos, showToast])
 
   const cacheHomePreferences = useCallback((filters: HomeFilters) => {
     if (!user?.id) return
@@ -612,6 +645,16 @@ export function HomePage() {
     fetchFilteredDashboardData(homeFilters)
   }, [homeFilters, fetchFilteredDashboardData, loading])
 
+  // Mostrar FAB de volver-al-top cuando el usuario ha expandido la actividad y scrolleado
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY || document.documentElement.scrollTop
+      setShowBackToTop(activityOffset > 0 && scrollY > 300)
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [activityOffset])
+
   // Nombre Real para el Saludo (Observación 9)
   const saludoTexto = nombreUsuario ? `${getGreeting()}, ${nombreUsuario} 👋` : `${getGreeting()} 👋`
 
@@ -713,7 +756,7 @@ export function HomePage() {
   }
 
   return (
-    <div className="page">
+    <div className="page" ref={pageTopRef}>
       {/* ── HEADER ── */}
       <div className="home-header">
         <div>
@@ -1256,9 +1299,38 @@ export function HomePage() {
                     )
                   })}
                 </div>
+
+                {/* Botón Ver más */}
+                {hasMoreMovimientos ? (
+                  <button
+                    className="activity-see-more-btn"
+                    onClick={loadMoreMovimientos}
+                    disabled={loadingMoreMovimientos}
+                    aria-label={t('activity_see_more')}
+                  >
+                    {loadingMoreMovimientos ? t('activity_loading_more') : `${t('activity_see_more')} ↓`}
+                  </button>
+                ) : (
+                  activityOffset > 0 && (
+                    <p className="activity-no-more-label">{t('activity_no_more')}</p>
+                  )
+                )}
               </div>
             )}
           </div>
+
+          {/* FAB volver al top (visible solo cuando hay movimientos expandidos) */}
+          <button
+            className={`activity-back-to-top-fab${showBackToTop ? ' visible' : ''}`}
+            onClick={() => {
+              pageTopRef.current?.scrollIntoView({ behavior: 'smooth' })
+              setShowBackToTop(false)
+            }}
+            title={t('activity_back_to_top')}
+            aria-label={t('activity_back_to_top')}
+          >
+            ↑
+          </button>
         </div>
 
       </div>

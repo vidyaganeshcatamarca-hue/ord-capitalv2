@@ -121,15 +121,24 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
                   {billetera.moneda === 'USD' ? 'U$S' : '$'}
                 </span>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  enterKeyHint="done"
                   className="form-control font-mono"
                   style={{ paddingLeft: 45, fontSize: '18px', fontWeight: 'bold' }}
                   value={saldoReal}
-                  onChange={(e) => setSaldoReal(e.target.value)}
+                  onChange={(e) => {
+                    // Allow only digits and decimal separator
+                    const raw = e.target.value
+                    if (raw === '' || /^-?\d*\.?\d*$/.test(raw)) {
+                      setSaldoReal(raw)
+                    }
+                  }}
                   onFocus={handleFocus}
                   onBlur={handleBlur}
-                  enterKeyHint="next"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
                       e.preventDefault()
