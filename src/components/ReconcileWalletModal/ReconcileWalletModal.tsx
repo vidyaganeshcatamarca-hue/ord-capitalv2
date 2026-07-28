@@ -34,9 +34,15 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
       const el = sheetRef.current
       if (!el) return
       const offset = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0))
-      el.style.maxHeight = `${Math.max(240, vv.height - 8)}px`
-      // Subir el modal cuando el teclado está abierto
-      el.style.bottom = offset > 0 ? `${offset}px` : '0'
+      // Reducir altura y subir el modal cuando el teclado está abierto
+      el.style.maxHeight = `${Math.max(200, vv.height - 16)}px`
+      if (offset > 0) {
+        el.style.transform = `translate(-50%, -${offset}px)`
+        el.style.bottom = 'auto'
+      } else {
+        el.style.transform = 'translateX(-50%)'
+        el.style.bottom = '0'
+      }
     }
     vv.addEventListener('resize', handleResize)
     vv.addEventListener('scroll', handleResize)
@@ -121,7 +127,7 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
                   {billetera.moneda === 'USD' ? 'U$S' : '$'}
                 </span>
                 <input
-                  type="text"
+                  type="tel"
                   inputMode="decimal"
                   pattern="[0-9]*"
                   autoComplete="new-password"
