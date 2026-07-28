@@ -1326,7 +1326,13 @@ export function HomePage() {
           <button
             className={`activity-back-to-top-fab${showBackToTop ? ' visible' : ''}`}
             onClick={() => {
-              pageTopRef.current?.scrollIntoView({ behavior: 'smooth' })
+              // 1. Cerrar los detalles extras: resetear a los 20 movimientos iniciales
+              if (activityOffset > 0) {
+                fetchFilteredDashboardData(homeFilters)
+              }
+              // 2. Llevar al top del contenedor scrollable
+              pageTopRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+              // 3. Ocultar la flecha
               setShowBackToTop(false)
             }}
             title={t('activity_back_to_top')}
