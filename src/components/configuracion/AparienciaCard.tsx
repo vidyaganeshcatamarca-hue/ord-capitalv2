@@ -4,6 +4,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { ToggleSwitch } from './ToggleSwitch'
 import { applyFontSize, getCurrentFontSize, useFontSize, type FontSize } from '@/hooks/useFontSize'
+import { useHideAmounts } from '@/hooks/useHideAmounts'
 import './AparienciaCard.css'
 
 interface AparienciaCardProps {
@@ -22,7 +23,7 @@ function applyTheme(theme: AppTheme) {
 export function AparienciaCard({ userId }: AparienciaCardProps) {
   const { showToast } = useToast()
   const [open, setOpen] = useState(false)
-  const [hide, setHide] = useState(false)
+  const { hideAmounts: hide, toggleHideAmounts: toggleHide } = useHideAmounts(userId)
   const [theme, setTheme] = useState<AppTheme>('dark')
   // Misterio: ON = visible, OFF = hidden
   const [misterioVisible, setMisterioVisible] = useState(true)
@@ -45,9 +46,6 @@ export function AparienciaCard({ userId }: AparienciaCardProps) {
 
   useEffect(() => {
     if (!userId) return
-    // Ocultar montos (persistente)
-    const rawHide = window.localStorage.getItem(`ocultar_montos:${userId}`)
-    if (rawHide) setHide(rawHide === 'true')
     // Tema
     const savedTheme = (window.localStorage.getItem(THEME_KEY) as AppTheme) || 'dark'
     setTheme(savedTheme)
@@ -57,16 +55,7 @@ export function AparienciaCard({ userId }: AparienciaCardProps) {
     setMisterioVisible(!oculto)
   }, [userId])
 
-  const toggleHide = async (next: boolean) => {
-    setHide(next)
-    if (userId) window.localStorage.setItem(`ocultar_montos:${userId}`, String(next))
-    try {
-      const { error } = await supabase.rpc('fn_actualizar_preferencia_usuario', { p_ocultar_montos: next })
-      if (error) throw error
-    } catch (err) {
-      showToast(parseError(err), 'error')
-    }
-  }
+
 
   const changeTheme = (nextTheme: AppTheme) => {
     setTheme(nextTheme)

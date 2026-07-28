@@ -9,6 +9,7 @@ import { EditMovementModal } from '@/components/EditMovementModal/EditMovementMo
 import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/ReconcileWalletModal'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { useCountUp } from '@/hooks/useCountUp'
+import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { generateColorShade } from '@/lib/colorUtils'
 import './Home.css'
 
@@ -211,14 +212,17 @@ function generateColorVariation(baseHex: string, position: number, total: number
 interface DonutChartProps {
   data: any[]
   hideAmounts: boolean
+  total?: number
 }
 
-function DonutChart({ data, hideAmounts }: DonutChartProps) {
+function DonutChart({ data, hideAmounts, total: totalOverride }: DonutChartProps) {
   const radius = 38
   const strokeWidth = 10
   const circumference = 2 * Math.PI * radius
 
-  const total = data.reduce((sum, item) => sum + (Number(item.total_consumido) || 0), 0)
+  const total = typeof totalOverride === 'number'
+    ? totalOverride
+    : data.reduce((sum, item) => sum + (Number(item.total_consumido) || 0), 0)
   if (total === 0) return null
 
   let accumulatedPercent = 0
@@ -280,10 +284,7 @@ export function HomePage() {
   const navigate = useNavigate()
   const { user, nombreUsuario } = useAuth()
   const { showToast } = useToast()
-  const [hideAmounts, setHideAmounts] = useState(() => {
-    const globalHide = window.localStorage.getItem(`ocultar_montos:${user?.id}`) === 'true'
-    return globalHide
-  })
+  const { hideAmounts, toggleHideAmounts } = useHideAmounts(user?.id)
   const [alertsOpen, setAlertsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [movementToDelete, setMovementToDelete] = useState<number | null>(null)
@@ -768,7 +769,7 @@ export function HomePage() {
         <div className="home-header-actions">
           <button
             className="home-icon-btn"
-            onClick={() => setHideAmounts(!hideAmounts)}
+            onClick={() => toggleHideAmounts()}
             aria-label={hideAmounts ? 'Mostrar montos' : 'Ocultar montos'}
           >
             {hideAmounts ? '🙈' : '👁️'}
@@ -1141,7 +1142,11 @@ export function HomePage() {
 
                 return (
                   <div className="donut-section-wrapper">
-                    <DonutChart data={sortedCategories} hideAmounts={hideAmounts} />
+                    <DonutChart
+                      data={sortedCategories.slice(0, 7)}
+                      total={totalConsumidoSum}
+                      hideAmounts={hideAmounts}
+                    />
                     <div className="category-breakdown-list" style={{ flex: 1, width: '100%' }}>
                       {(canExpand || showAllTopCategories) && (
                         <div className="category-breakdown-top-action" style={{

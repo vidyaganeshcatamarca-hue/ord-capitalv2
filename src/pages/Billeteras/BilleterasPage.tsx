@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { useBilleteras } from '@/hooks/useBilleteras'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { Billetera } from '@/types/Billetera'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
@@ -21,9 +22,7 @@ export function BilleterasPage() {
   const { user } = useAuth()
   const { showToast } = useToast()
   const { billeteras, healthReport, loading, fetchData } = useBilleteras()
-  const [hideAmounts, setHideAmounts] = useState(() => {
-    return window.localStorage.getItem(`ocultar_montos:${user?.id}`) === 'true'
-  })
+  const { hideAmounts } = useHideAmounts(user?.id)
   const [activeMenuTab, setActiveMenuTabState] = useState<'cuentas_ingreso' | 'categorias_egresos'>(() => {
     const fromUrl = searchParams.get('tab')
     if (fromUrl === 'categorias_egresos' || fromUrl === 'egresos') return 'categorias_egresos'
@@ -64,11 +63,7 @@ export function BilleterasPage() {
   // Estado del Detalle
   const [detailBilletera, setDetailBilletera] = useState<Billetera | null>(null)
 
-  useEffect(() => {
-    // Cargar preferencia de ocultar montos
-    const val = localStorage.getItem('hide_amounts') === 'true'
-    setHideAmounts(val)
-  }, [])
+
 
   useEffect(() => {
     if (selectedBilletera && billeteras.length > 0) {

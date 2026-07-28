@@ -136,8 +136,6 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
                   enterKeyHint="done"
                   data-lpignore="true"
                   data-form-type="other"
-                  data-lpignore="true"
-                  data-form-type="other"
                   className="form-control font-mono"
                   style={{ paddingLeft: 45, fontSize: '18px', fontWeight: 'bold' }}
                   value={saldoReal}
