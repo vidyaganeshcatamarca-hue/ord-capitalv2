@@ -647,12 +647,15 @@ export function HomePage() {
 
   // Mostrar FAB de volver-al-top cuando el usuario ha expandido la actividad y scrolleado
   useEffect(() => {
+    const el = pageTopRef.current
+    if (!el) return
     const handleScroll = () => {
-      const scrollY = window.scrollY || document.documentElement.scrollTop
+      const scrollY = el.scrollTop
       setShowBackToTop(activityOffset > 0 && scrollY > 300)
     }
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    handleScroll()
+    el.addEventListener('scroll', handleScroll, { passive: true })
+    return () => el.removeEventListener('scroll', handleScroll)
   }, [activityOffset])
 
   // Nombre Real para el Saludo (Observación 9)
