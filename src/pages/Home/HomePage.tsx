@@ -723,7 +723,7 @@ export function HomePage() {
   // Animacion tipo velocimetro para el hero card. En el primer mount
   // arranca desde 0 (efecto aceleracion); en renders siguientes con
   // target cambiante, reanuda desde el valor actual.
-  const animatedPatrimonioARS = useCountUp(patrimonioARS, { duration: 1200 })
+  const animatedPatrimonioARS = useCountUp(patrimonioARS, { duration: 700 })
   const tieneFugaMisterio =
     ((misterio?.olvidos_pesos ?? 0) > 0 || (misterio?.olvidos_dolares ?? 0) > 0) &&
     !fugasMisterioOcultado
