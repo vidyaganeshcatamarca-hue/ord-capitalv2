@@ -23,7 +23,7 @@ function applyTheme(theme: AppTheme) {
 export function AparienciaCard({ userId }: AparienciaCardProps) {
   const { showToast } = useToast()
   const [open, setOpen] = useState(false)
-  const { hideAmounts: hide, toggleHideAmounts: toggleHide } = useHideAmounts(userId)
+  const { isPersistentHide, updatePersistentHide } = useHideAmounts(userId)
   const [theme, setTheme] = useState<AppTheme>('dark')
   // Misterio: ON = visible, OFF = hidden
   const [misterioVisible, setMisterioVisible] = useState(true)
@@ -145,7 +145,7 @@ export function AparienciaCard({ userId }: AparienciaCardProps) {
               <span>{t('config_hide_amounts')}</span>
               <p className="apariencia-row-desc">{t('config_apariencia_ocultar_montos_desc')}</p>
             </div>
-            <ToggleSwitch checked={hide} onChange={toggleHide} />
+            <ToggleSwitch checked={isPersistentHide} onChange={updatePersistentHide} />
           </div>
 
           {/* Mostrar/ocultar Misterio en Home */}

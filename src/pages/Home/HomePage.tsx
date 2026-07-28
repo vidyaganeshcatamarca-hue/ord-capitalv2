@@ -284,7 +284,7 @@ export function HomePage() {
   const navigate = useNavigate()
   const { user, nombreUsuario } = useAuth()
   const { showToast } = useToast()
-  const { hideAmounts, toggleHideAmounts } = useHideAmounts(user?.id)
+  const { hideAmounts, toggleEyeHide } = useHideAmounts(user?.id)
   const [alertsOpen, setAlertsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [movementToDelete, setMovementToDelete] = useState<number | null>(null)
@@ -769,7 +769,7 @@ export function HomePage() {
         <div className="home-header-actions">
           <button
             className="home-icon-btn"
-            onClick={() => toggleHideAmounts()}
+            onClick={toggleEyeHide}
             aria-label={hideAmounts ? 'Mostrar montos' : 'Ocultar montos'}
           >
             {hideAmounts ? '🙈' : '👁️'}
@@ -1140,10 +1140,22 @@ export function HomePage() {
                 const displayedCategories = showAllTopCategories ? sortedCategories : sortedCategories.slice(0, 3)
                 const canExpand = sortedCategories.length > 3
 
+                const donutSlice = sortedCategories.slice(0, 7)
+                const donutSliceSum = donutSlice.reduce(
+                  (sum: number, cat: any) => sum + (Number(cat.total_consumido) || 0), 0
+                )
+                const donutData = donutSlice.map((c: any) => {
+                  const consumed = Number(c.total_consumido) || 0
+                  return {
+                    ...c,
+                    porcentaje_del_total: donutSliceSum > 0 ? (consumed / donutSliceSum) * 100 : 0
+                  }
+                })
+
                 return (
                   <div className="donut-section-wrapper">
                     <DonutChart
-                      data={sortedCategories.slice(0, 7)}
+                      data={donutData}
                       total={totalConsumidoSum}
                       hideAmounts={hideAmounts}
                     />
