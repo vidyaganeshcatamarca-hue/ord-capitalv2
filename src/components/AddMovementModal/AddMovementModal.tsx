@@ -356,6 +356,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
     try {
       const rubr = await rpc<Rubro[]>('fn_obtener_arbol_categorias')
       cachedRubros = filterUserEditableCategories(rubr ?? [])
+        .map(r => ({ ...r, hijos: (r.hijos ?? []).filter(h => isUserEditableCategory(h)) }))
       setRubros(cachedRubros)
     } catch (e) {
       console.error('Error reloading categories:', e)
@@ -406,6 +407,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
         if (!alive) return
         cachedBilleteras = bill ?? []
         cachedRubros = filterUserEditableCategories(rubr ?? [])
+          .map(r => ({ ...r, hijos: (r.hijos ?? []).filter(h => isUserEditableCategory(h)) }))
         cachedCatIngresos = ingrCat ?? []
         cachedTarjetas = tarj ?? []
         cachedUsd = resUsd ?? 1
