@@ -24,10 +24,9 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
   }, [billetera.billetera_id])
 
   // Cuando el teclado se abre (visualViewport.height cae por debajo de
-  // window.innerHeight), limitamos la altura del bottom-sheet para que el
-  // footer sticky (Cancelar / Confirmar) siempre quede visible arriba del
-  // teclado. visualViewport funciona en iOS Safari, Android Chrome y web,
-  // incluyendo devtools de virtual keyboard.
+  // window.innerHeight), subimos el bottom-sheet para que el footer sticky
+  // (Cancelar / Confirmar) siempre quede visible arriba del teclado.
+  // visualViewport funciona en iOS Safari, Android Chrome y web.
   useEffect(() => {
     if (typeof window === 'undefined' || !window.visualViewport) return
     const vv = window.visualViewport
@@ -36,7 +35,8 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
       if (!el) return
       const offset = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0))
       el.style.maxHeight = `${Math.max(240, vv.height - 8)}px`
-      el.style.transform = offset > 0 ? `translateY(${offset}px)` : ''
+      // Subir el modal cuando el teclado está abierto
+      el.style.bottom = offset > 0 ? `${offset}px` : '0'
     }
     vv.addEventListener('resize', handleResize)
     vv.addEventListener('scroll', handleResize)
@@ -123,10 +123,15 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
                 <input
                   type="text"
                   inputMode="decimal"
-                  autoComplete="off"
+                  pattern="[0-9]*"
+                  autoComplete="new-password"
                   autoCorrect="off"
                   autoCapitalize="off"
                   enterKeyHint="done"
+                  data-lpignore="true"
+                  data-form-type="other"
+                  data-lpignore="true"
+                  data-form-type="other"
                   className="form-control font-mono"
                   style={{ paddingLeft: 45, fontSize: '18px', fontWeight: 'bold' }}
                   value={saldoReal}

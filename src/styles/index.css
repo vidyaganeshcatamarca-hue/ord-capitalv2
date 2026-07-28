@@ -757,7 +757,7 @@ input::placeholder, textarea::placeholder {
   display: flex !important;
   flex-direction: column !important;
   box-sizing: border-box !important;
-  bottom: 0 !important;
+  bottom: 0;
   top: auto !important;
   /* El sheet ya no scrollea; el body interior lo hace. Asi el footer
      con los botones de accion queda siempre visible. */
