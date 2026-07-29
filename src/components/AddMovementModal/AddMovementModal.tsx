@@ -288,6 +288,16 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
     () => window.matchMedia('(max-width: 767px)').matches
   )
 
+  const isLightTheme = useSyncExternalStore(
+    (cb) => {
+      const observer = new MutationObserver(cb)
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
+      return () => observer.disconnect()
+    },
+    () => document.documentElement.getAttribute('data-theme') === 'warm-light',
+    () => false
+  )
+
   // Auto-scroll the amount input to the rightmost side as user types calculations
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -991,7 +1001,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           monedaOrigen={monedaOrigen}
                           formatMonto={formatMonto}
                         />
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, padding: '12px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 12, padding: '12px 14px', background: isLightTheme ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${isLightTheme ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)'}` }}>
                           <div style={{ display: 'flex', flexDirection: 'column' }}>
                             <span style={{ fontSize: 13, color: 'var(--color-text)', fontWeight: 500 }}>{t('card_usd_purchase')}</span>
                           </div>
@@ -999,7 +1009,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                             <input type="checkbox" checked={esUsd} onChange={e => setEsUsd(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
                             <span style={{
                               position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                              backgroundColor: esUsd ? 'var(--color-mint)' : 'rgba(255,255,255,0.2)',
+                              backgroundColor: esUsd ? 'var(--color-mint)' : (isLightTheme ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'),
                               transition: '.3s', borderRadius: 24
                             }}>
                               <span style={{
@@ -1101,10 +1111,9 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: '#000000',
                             marginRight: '8px'
                           }}>
-                            <span style={{ filter: 'brightness(0)' }}>{categoriaEgreso.icono}</span>
+                            {categoriaEgreso.icono}
                           </span>
                           <span>{categoriaEgreso.nombre}</span>
                           <span className="cat-selected-edit">✏️</span>
@@ -1142,10 +1151,9 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         fontSize: '16px',
-                                        color: '#000000',
                                         margin: '0 auto 4px auto'
                                       }}>
-                                        <span style={{ filter: 'brightness(0)' }}>{cat.icono}</span>
+                                        {cat.icono}
                                       </span>
                                       <span className="cat-tile-name">{cat.nombre.split(' › ').pop()}</span>
                                     </button>
@@ -1177,10 +1185,9 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                           alignItems: 'center',
                                           justifyContent: 'center',
                                           fontSize: '15px',
-                                          color: '#000000',
                                           flexShrink: 0
                                         }}>
-                                          <span style={{ filter: 'brightness(0)' }}>{rubro.icono}</span>
+                                          {rubro.icono}
                                         </div>
                                         <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>{t(rubro.nombre_cuenta)}</span>
                                       </div>
@@ -1226,22 +1233,21 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                         {rubro.hijos.length === 0 ? (
                                           <button type="button" className="cat-acordeon-hijo"
                                             onClick={() => selectCatEgreso({ estructura_id: rubro.estructura_id, nombre: t(rubro.nombre_cuenta), icono: rubro.icono, color: rubro.color, es_padre: true }, rubro, true)}>
-                                            <span style={{
-                                              width: '24px',
-                                              height: '24px',
-                                              borderRadius: '6px',
-                                              backgroundColor: rubro.color,
-                                              display: 'inline-flex',
-                                              alignItems: 'center',
-                                              justifyContent: 'center',
-                                              fontSize: '12px',
-                                              color: '#000000',
-                                              marginRight: '6px',
-                                              flexShrink: 0
-                                            }}>
-                                              <span style={{ filter: 'brightness(0)' }}>{rubro.icono}</span>
-                                            </span> {t(rubro.nombre_cuenta)}
-                                          </button>
+                                              <span style={{
+                                                width: '24px',
+                                                height: '24px',
+                                                borderRadius: '6px',
+                                                backgroundColor: rubro.color,
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                fontSize: '12px',
+                                                marginRight: '6px',
+                                                flexShrink: 0
+                                              }}>
+                                                {rubro.icono}
+                                              </span> {t(rubro.nombre_cuenta)}
+                                            </button>
                                         ) : (
                                           rubro.hijos.map(h => (
                                             <button key={h.estructura_id} type="button" className="cat-acordeon-hijo"
@@ -1255,11 +1261,10 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
                                                 fontSize: '12px',
-                                                color: '#000000',
                                                 marginRight: '6px',
                                                 flexShrink: 0
                                               }}>
-                                                <span style={{ filter: 'brightness(0)' }}>{h.icono}</span>
+                                                {h.icono}
                                               </span> {t(h.nombre_cuenta)}
                                               {h.es_hormiga && <span className="hormiga-badge">🐜</span>}
                                             </button>
@@ -1607,10 +1612,9 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                color: '#000000',
                                 fontWeight: 'bold'
                               }}>
-                                <span style={{ filter: 'brightness(0)' }}>{categoriaEgreso.icono}</span>
+                                {categoriaEgreso.icono}
                               </span>
                               <span>{categoriaEgreso.nombre}</span>
                               <span className="cat-selected-edit" style={{ marginLeft: 'auto' }}>✏️</span>
@@ -1648,7 +1652,6 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     fontSize: '16px',
-                                    color: '#000000',
                                     cursor: 'pointer',
                                     transition: 'transform 0.1s',
                                     boxShadow: categoriaEgreso?.estructura_id === cat.estructura_id ? `0 0 10px ${cat.color}` : 'none'
@@ -1658,7 +1661,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                     setShowCalculator(false)
                                   }}
                                 >
-                                  <span style={{ filter: 'brightness(0)' }}>{cat.icono}</span>
+                                  {cat.icono}
                                 </button>
                               ))}
                               <button
@@ -1743,10 +1746,9 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        fontSize: '15px',
-                                        color: '#000000'
+                                        fontSize: '15px'
                                       }}>
-                                        <span style={{ filter: 'brightness(0)' }}>{rubro.icono}</span>
+                                        {rubro.icono}
                                       </div>
                                       <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>
                                         {t(rubro.nombre_cuenta)}
@@ -1844,11 +1846,10 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             fontSize: '12px',
-                                            color: '#000000',
                                             marginRight: '6px',
                                             flexShrink: 0
                                           }}>
-                                            <span style={{ filter: 'brightness(0)' }}>{hijo.icono || rubro.icono}</span>
+                                            {hijo.icono || rubro.icono}
                                           </span> {t(hijo.nombre_cuenta)}
                                           {hijo.es_hormiga && <span className="hormiga-badge">🐜</span>}
                                         </button>
@@ -1943,7 +1944,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         monedaOrigen={monedaOrigen}
                         formatMonto={formatMonto}
                       />
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, padding: '12px 14px', background: 'rgba(255,255,255,0.03)', borderRadius: 10, border: '1px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 16, padding: '12px 14px', background: isLightTheme ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.03)', borderRadius: 10, border: `1px solid ${isLightTheme ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.05)'}` }}>
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                           <span style={{ fontSize: 14, color: 'var(--color-text)', fontWeight: 500 }}>{t('card_usd_purchase')}</span>
                         </div>
@@ -1951,7 +1952,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           <input type="checkbox" checked={esUsd} onChange={e => setEsUsd(e.target.checked)} style={{ opacity: 0, width: 0, height: 0 }} />
                           <span style={{
                             position: 'absolute', cursor: 'pointer', top: 0, left: 0, right: 0, bottom: 0,
-                            backgroundColor: esUsd ? 'var(--color-mint)' : 'rgba(255,255,255,0.2)',
+                            backgroundColor: esUsd ? 'var(--color-mint)' : (isLightTheme ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'),
                             transition: '.3s', borderRadius: 24
                           }}>
                             <span style={{

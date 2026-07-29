@@ -4,7 +4,6 @@ import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
-import { generateColorShade } from '@/lib/colorUtils'
 import { isUserEditableCategory } from '@/lib/categoryFilters'
 import './Categorias.css'
 
@@ -438,10 +437,8 @@ export function TabEgresos() {
                     {hijos.length === 0 ? (
                       <div className="cat-hijo-empty">{t("cat_child_empty")}</div>
                     ) : (
-                      hijos.map((hijo, idx) => {
-                        const hijoColor = (hijo.color && hijo.color !== rubro.color)
-                          ? hijo.color
-                          : generateColorShade(rubro.color, idx, hijos.length)
+                      hijos.map((hijo) => {
+                        const hijoColor = hijo.color || rubro.color
 
                         return (
                           <div key={hijo.estructura_id} className="cat-hijo-row">

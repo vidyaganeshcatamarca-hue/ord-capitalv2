@@ -336,6 +336,15 @@ export function HomePage() {
   const [selectedBilletera, setSelectedBilletera] = useState<any | null>(null)
   const [showAllTopCategories, setShowAllTopCategories] = useState(false)
 
+  // ── Filter for Recent Activity ──
+  const [filterTarget, setFilterTarget] = useState<{
+    type: 'rubro' | 'subcuenta'
+    name: string
+    ids: number[]
+  } | null>(null)
+  const [showFilterPicker, setShowFilterPicker] = useState(false)
+  const [expandedFilterRubro, setExpandedFilterRubro] = useState<string | null>(null)
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
@@ -429,10 +438,14 @@ export function HomePage() {
       if (c.nombre_rubro_padre) {
         const parentColor = parentColorMap[c.nombre_rubro_padre]
         if (parentColor) {
-          const siblings = siblingGroups[c.nombre_rubro_padre] || [idx]
-          const position = siblings.indexOf(idx)
-          const totalSiblings = siblings.length
-          color = generateColorVariation(parentColor, position, totalSiblings)
+          if (c.nombre_cuenta === t('no_detail')) {
+            color = parentColor
+          } else {
+            const siblings = siblingGroups[c.nombre_rubro_padre] || [idx]
+            const position = siblings.indexOf(idx)
+            const totalSiblings = siblings.length
+            color = generateColorVariation(parentColor, position, totalSiblings)
+          }
         }
       }
 
@@ -732,6 +745,11 @@ export function HomePage() {
     ((misterio?.olvidos_pesos ?? 0) > 0 || (misterio?.olvidos_dolares ?? 0) > 0) &&
     !fugasMisterioOcultado
   const filterRangeInvalid = !homeFilters.fechaInicio || !homeFilters.fechaFin || homeFilters.fechaInicio > homeFilters.fechaFin
+
+  const filteredMovimientos = useMemo(() => {
+    if (!filterTarget) return movimientos
+    return movimientos.filter(m => filterTarget.ids.includes(m.estructura_egreso_id))
+  }, [movimientos, filterTarget])
 
   if (loading && movimientos.length === 0 && billeteras.length === 0) {
     return (
@@ -1042,7 +1060,7 @@ export function HomePage() {
 
               {filteredDataLoading && <div className="home-filter-loading" aria-live="polite" />}
 
-              {activeCategoriasData.length === 0 ? (
+              {activeCategoriasData.length === 0 && !filteredDataLoading ? (
                 <div className="empty-state">
                   <span className="empty-state-icon">📊</span>
                   <h3>{t('donut_empty_title')}</h3>
@@ -1116,9 +1134,11 @@ export function HomePage() {
                     parentGroupIndices[parentKey] = indexInGroup + 1
                     const groupCount = parentGroupCounts[parentKey] || 1
 
-                    const finalColor = isSubaccount
-                      ? generateColorShade(baseColor, indexInGroup, groupCount)
-                      : (cat.color || baseColor)
+                    const finalColor = (nombre === t('no_detail'))
+                      ? baseColor
+                      : isSubaccount
+                        ? generateColorShade(baseColor, indexInGroup, groupCount)
+                        : (cat.color || baseColor)
 
                     const totalConsumido = Number(cat.total_consumido) || 0
                     const porcentaje = (cat.porcentaje_del_total !== undefined && cat.porcentaje_del_total !== null)
@@ -1247,20 +1267,27 @@ export function HomePage() {
           <div className="section home-section-feed" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
             <div className="flex items-center justify-between mb-3">
               <span className="section-title">{t('section_recent_activity')}</span>
+              <button
+                type="button"
+                className="home-filter-btn"
+                onClick={() => setShowFilterPicker(true)}
+              >
+                {t('filter')}{filterTarget ? ` · ${filterTarget.name}` : ''}
+              </button>
             </div>
             
-            {movimientos.length === 0 ? (
+            {filteredMovimientos.length === 0 ? (
               <div className="card">
                 <div className="empty-state" style={{ padding: 'var(--space-8)' }}>
                   <span className="empty-state-icon">💸</span>
-                  <h3>{t('activity_empty_title')}</h3>
-                  <p>{t('activity_empty_desc_prefix')}<strong style={{ color: 'var(--mint)' }}>+</strong>{t('activity_empty_desc_suffix')}</p>
+                  <h3>{filterTarget ? t('filter_all_movements') : t('activity_empty_title')}</h3>
+                  {!filterTarget && <p>{t('activity_empty_desc_prefix')}<strong style={{ color: 'var(--mint)' }}>+</strong>{t('activity_empty_desc_suffix')}</p>}
                 </div>
               </div>
             ) : (
               <div className="card" style={{ padding: 'var(--space-4)' }}>
                 <div className="timeline-feed">
-                  {movimientos.map((m) => {
+                  {filteredMovimientos.map((m) => {
                     const moneda = walletCurrencyMap[m.nombre_billetera] ?? 'ARS'
                     const esEgreso = m.monto < 0
                     return (
@@ -1390,6 +1417,89 @@ export function HomePage() {
             window.dispatchEvent(new CustomEvent('movement-added'))
           }}
         />
+      )}
+
+      {/* ── FILTER PICKER MODAL ── */}
+      {showFilterPicker && (
+        <div className="home-filter-overlay" onClick={() => setShowFilterPicker(false)}>
+          <div className="home-filter-picker" onClick={(e) => e.stopPropagation()}>
+            <div className="home-filter-picker-header">
+              <span className="home-filter-picker-title">{t('filter_select_rubro')}</span>
+              <button className="home-filter-picker-close" onClick={() => setShowFilterPicker(false)}>✕</button>
+            </div>
+
+            {filterTarget && (
+              <button
+                className="home-filter-clear-btn"
+                onClick={() => { setFilterTarget(null); setShowFilterPicker(false) }}
+              >
+                {t('filter_clear')}
+              </button>
+            )}
+
+            <div className="home-filter-picker-list">
+              {topCategorias.map((rubro: any) => {
+                const rubroName = rubro.nombre_categoria
+                const isExpanded = expandedFilterRubro === rubroName
+                const children = rankingCategorias.filter(
+                  (r: any) => r.nombre_rubro_padre === rubroName
+                )
+                const childIds = children.map((c: any) => Number(c.estructura_id))
+
+                return (
+                  <div key={rubroName} className="home-filter-rubro-group">
+                    <div className="home-filter-rubro-row">
+                      <button
+                        className="home-filter-rubro-btn"
+                        onClick={() => {
+                          setFilterTarget({ type: 'rubro', name: t(rubroName), ids: childIds.length > 0 ? childIds : [Number(rubro.estructura_id)] })
+                          setShowFilterPicker(false)
+                        }}
+                      >
+                        <span className="home-filter-rubro-icon">{rubro.icono || '🏷️'}</span>
+                        <span className="home-filter-rubro-name">{t(rubroName)}</span>
+                      </button>
+                      {children.length > 0 && (
+                        <button
+                          className="home-filter-expand-btn"
+                          onClick={() => setExpandedFilterRubro(isExpanded ? null : rubroName)}
+                        >
+                          {isExpanded ? '▲' : '▼'}
+                        </button>
+                      )}
+                    </div>
+                    {isExpanded && children.length > 0 && (
+                      <div className="home-filter-children">
+                        <button
+                          className="home-filter-child-btn"
+                          onClick={() => {
+                            setFilterTarget({ type: 'rubro', name: `${t(rubroName)} (${t('filter_all')})`, ids: childIds })
+                            setShowFilterPicker(false)
+                          }}
+                        >
+                          ↳ {t('filter_all')}
+                        </button>
+                        {children.map((child: any) => (
+                          <button
+                            key={child.estructura_id}
+                            className="home-filter-child-btn"
+                            onClick={() => {
+                              setFilterTarget({ type: 'subcuenta', name: t(child.nombre_cuenta), ids: [Number(child.estructura_id)] })
+                              setShowFilterPicker(false)
+                            }}
+                          >
+                            <span>{child.icono || '  ↳'}</span>
+                            <span>{t(child.nombre_cuenta)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

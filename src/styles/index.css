@@ -752,7 +752,7 @@ input::placeholder, textarea::placeholder {
   width: 95% !important;
   max-width: 460px !important;
   height: auto !important;
-  max-height: 90dvh !important;
+  max-height: 90dvh;
   border-radius: var(--radius-xl) var(--radius-xl) 0 0 !important;
   display: flex !important;
   flex-direction: column !important;
@@ -793,6 +793,28 @@ input::placeholder, textarea::placeholder {
   border-top: 1px solid var(--border) !important;
   /* Asegura que el fondo opaque cualquier contenido que scrollee detras. */
   box-shadow: 0 -2px 8px rgba(0,0,0,0.18) !important;
+}
+
+/* Tighten layout when Android keyboard is up — keeps footer visible */
+.wallet-modal-sheet.kb-open .bottom-sheet-handle {
+  display: none !important;
+}
+.wallet-modal-sheet.kb-open .wallet-modal-body {
+  padding: 4px var(--space-2) 0 !important;
+}
+.wallet-modal-sheet.kb-open .wallet-modal-actions {
+  padding: 8px var(--space-2) !important;
+  padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+}
+.wallet-modal-sheet.kb-open .wallet-modal-body > div:first-child {
+  margin-bottom: 4px !important;
+}
+.wallet-modal-sheet.kb-open .wallet-modal-body .card {
+  padding: var(--space-2) !important;
+  margin-bottom: 6px !important;
+}
+.wallet-modal-sheet.kb-open .form-group {
+  margin-bottom: var(--space-2) !important;
 }
 
 @media (min-width: 768px) {

@@ -23,10 +23,6 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
     setSaldoReal(billetera.saldo_actual.toString())
   }, [billetera.billetera_id])
 
-  // Cuando el teclado se abre (visualViewport.height cae por debajo de
-  // window.innerHeight), subimos el bottom-sheet para que el footer sticky
-  // (Cancelar / Confirmar) siempre quede visible arriba del teclado.
-  // visualViewport funciona en iOS Safari, Android Chrome y web.
   useEffect(() => {
     if (typeof window === 'undefined' || !window.visualViewport) return
     const vv = window.visualViewport
@@ -34,12 +30,14 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
       const el = sheetRef.current
       if (!el) return
       const offset = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0))
-      // Reducir altura y subir el modal cuando el teclado está abierto
-      el.style.maxHeight = `${Math.max(200, vv.height - 16)}px`
+      el.style.maxHeight = `${Math.max(200, vv.height - 32)}px`
+      el.style.minHeight = '0'
       if (offset > 0) {
+        el.classList.add('kb-open')
         el.style.transform = `translate(-50%, -${offset}px)`
         el.style.bottom = 'auto'
       } else {
+        el.classList.remove('kb-open')
         el.style.transform = 'translateX(-50%)'
         el.style.bottom = '0'
       }
@@ -102,7 +100,7 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
       <div className="bottom-sheet-overlay" onClick={onClose} />
       <div ref={sheetRef} className="bottom-sheet wallet-modal-sheet">
         <div className="bottom-sheet-handle" />
-        <form onSubmit={handleSubmit} className="wallet-modal-form">
+        <form onSubmit={handleSubmit} className="wallet-modal-form" autoComplete="off">
           <div className="wallet-modal-body">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
               <h3 className="font-display" style={{ fontSize: '18px', margin: 0 }}>

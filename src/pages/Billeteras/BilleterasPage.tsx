@@ -111,12 +111,16 @@ export function BilleterasPage() {
       return
     }
 
+    const now = new Date()
+    const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
     try {
       await rpc('fn_crear_billetera', {
         p_nombre: newName,
         p_moneda: newMoneda,
         p_saldo_apertura: saldoNum,
-        p_icono: newIcono
+        p_icono: newIcono,
+        p_fecha_apertura: localDate
       })
       showToast(t('wallets.toast_created_success'), 'success')
       setShowCreateModal(false)
