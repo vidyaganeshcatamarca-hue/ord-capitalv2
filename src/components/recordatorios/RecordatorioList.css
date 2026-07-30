@@ -37,7 +37,7 @@
 }
 
 .recordatorio-row button:hover {
-  color: #4ecdc4;
+  color: var(--mint, #00B127);
 }
 
 .recordatorio-empty {
@@ -55,7 +55,7 @@
 }
 
 .recordatorio-add {
-  background: #4ecdc4;
+  background: var(--mint, #00B127);
   color: #042f2e;
   border: 0;
   border-radius: 999px;

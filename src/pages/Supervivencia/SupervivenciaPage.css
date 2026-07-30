@@ -44,7 +44,7 @@
   font-size: calc(11px * var(--font-scale));
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
   font-weight: 700;
   margin-bottom: 6px;
 }
@@ -65,7 +65,7 @@
 .war-info-btn {
   background: transparent;
   border: 1px solid rgba(78, 205, 196, 0.4);
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
   width: 36px;
   height: 36px;
   border-radius: 50%;

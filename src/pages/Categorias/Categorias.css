@@ -445,7 +445,7 @@
 .cat-emoji-btn.active {
   border-color: var(--accent);
   background: var(--accent-soft, var(--surface-3));
-  box-shadow: 0 0 8px var(--accent, #00B4D8);
+  box-shadow: 0 0 8px var(--accent, var(--mint, #00B127));
 }
 .cat-emoji-btn:hover:not(.active) {
   border-color: var(--surface-3);

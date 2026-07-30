@@ -201,7 +201,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
   const [nombre, setNombre] = useState(ingreso?.nombre ?? '')
   const [descripcion, setDescripcion] = useState(ingreso?.descripcion ?? '')
   const [icono, setIcono] = useState(ingreso?.icono ?? '💰')
-  const [color, setColor] = useState(ingreso?.color ?? '#4ECDC4')
+  const [color, setColor] = useState(ingreso?.color ?? 'var(--mint, #00B127)')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

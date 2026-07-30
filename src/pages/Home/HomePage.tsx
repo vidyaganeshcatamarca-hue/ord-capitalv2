@@ -332,6 +332,10 @@ export function HomePage() {
   const [showBackToTop, setShowBackToTop] = useState(false)
   const pageTopRef = useRef<HTMLDivElement>(null)
 
+  // Full dataset for filtered activity (bypasses pagination when filter is active)
+  const [allMovimientos, setAllMovimientos] = useState<any[]>([])
+  const [loadingAllMovimientos, setLoadingAllMovimientos] = useState(false)
+
   // Modal de Conciliación
   const [selectedBilletera, setSelectedBilletera] = useState<any | null>(null)
   const [showAllTopCategories, setShowAllTopCategories] = useState(false)
@@ -666,12 +670,47 @@ export function HomePage() {
     if (!el) return
     const handleScroll = () => {
       const scrollY = el.scrollTop
-      setShowBackToTop(activityOffset > 0 && scrollY > 300)
+      setShowBackToTop(!filterTarget && activityOffset > 0 && scrollY > 300)
     }
     handleScroll()
     el.addEventListener('scroll', handleScroll, { passive: true })
     return () => el.removeEventListener('scroll', handleScroll)
-  }, [activityOffset])
+  }, [activityOffset, filterTarget])
+
+  // Fetch full dataset when category filter is active (bypasses pagination)
+  useEffect(() => {
+    if (!filterTarget) {
+      setAllMovimientos([])
+      return
+    }
+    const filters = latestHomeFiltersRef.current
+    if (!filters.fechaInicio || !filters.fechaFin || filters.fechaInicio > filters.fechaFin) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        setLoadingAllMovimientos(true)
+        const result = await rpc<any[]>('fn_reporte_movimientos_recientes', {
+          p_limit: 1000,
+          p_offset: 0,
+          p_fecha_inicio: filters.fechaInicio,
+          p_fecha_fin: filters.fechaFin,
+          p_billetera_id: filters.billeteraId
+        }).catch(() => [] as any[])
+        if (!cancelled) setAllMovimientos(result)
+      } catch (err) {
+        if (!cancelled) console.error('full movimientos fetch failed:', err)
+      } finally {
+        if (!cancelled) setLoadingAllMovimientos(false)
+      }
+    })()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    filterTarget ? `${filterTarget.type}:${filterTarget.ids.join(',')}` : '',
+    homeFilters.fechaInicio,
+    homeFilters.fechaFin,
+    homeFilters.billeteraId,
+  ])
 
   // Nombre Real para el Saludo (Observación 9)
   const saludoTexto = nombreUsuario ? `${getGreeting()}, ${nombreUsuario} 👋` : `${getGreeting()} 👋`
@@ -749,8 +788,8 @@ export function HomePage() {
 
   const filteredMovimientos = useMemo(() => {
     if (!filterTarget) return movimientos
-    return movimientos.filter(m => filterTarget.ids.includes(m.estructura_egreso_id))
-  }, [movimientos, filterTarget])
+    return allMovimientos.filter(m => filterTarget.ids.includes(m.estructura_egreso_id))
+  }, [movimientos, filterTarget, allMovimientos])
 
   if (loading && movimientos.length === 0 && billeteras.length === 0) {
     return (
@@ -1277,7 +1316,13 @@ export function HomePage() {
               </button>
             </div>
             
-            {filteredMovimientos.length === 0 ? (
+            {loadingAllMovimientos ? (
+              <div className="card">
+                <div className="empty-state" style={{ padding: 'var(--space-8)' }}>
+                  <div className="spinner" />
+                </div>
+              </div>
+            ) : filteredMovimientos.length === 0 ? (
               <div className="card">
                 <div className="empty-state" style={{ padding: 'var(--space-8)' }}>
                   <span className="empty-state-icon">💸</span>
@@ -1348,8 +1393,8 @@ export function HomePage() {
                   })}
                 </div>
 
-                {/* Botón Ver más */}
-                {hasMoreMovimientos && filteredMovimientos.length >= ACTIVITY_PAGE_SIZE ? (
+                {/* Botón Ver más — hidden while a category filter is active (full dataset loaded) */}
+                {!filterTarget && hasMoreMovimientos && filteredMovimientos.length >= ACTIVITY_PAGE_SIZE ? (
                   <button
                     className="activity-see-more-btn"
                     onClick={loadMoreMovimientos}

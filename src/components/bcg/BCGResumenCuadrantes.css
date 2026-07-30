@@ -40,7 +40,7 @@
   pointer-events: none;
 }
 
-.bcg-resumen-star::before    { background: linear-gradient(135deg, #4ECDC4 0%, transparent 80%); }
+.bcg-resumen-star::before    { background: linear-gradient(135deg, var(--mint, #00B127) 0%, transparent 80%); }
 .bcg-resumen-cow::before     { background: linear-gradient(135deg, #6366F1 0%, transparent 80%); }
 .bcg-resumen-dilemma::before { background: linear-gradient(135deg, #FFE66D 0%, transparent 80%); }
 .bcg-resumen-dog::before     { background: linear-gradient(135deg, #FF6B6B 0%, transparent 80%); }

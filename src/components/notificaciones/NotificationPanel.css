@@ -67,7 +67,7 @@
   align-self: flex-start;
   padding: 8px 12px;
   border-radius: 999px;
-  background: #4ecdc4;
+  background: var(--mint, #00B127);
   color: #042f2e;
   border: 0;
   font-weight: 800;
@@ -92,7 +92,7 @@
 .notif-panel-footer button {
   background: transparent;
   border: 1px solid rgba(78, 205, 196, 0.32);
-  color: #4ecdc4;
+  color: var(--mint, #00B127);
   padding: 8px 12px;
   border-radius: 999px;
   cursor: pointer;

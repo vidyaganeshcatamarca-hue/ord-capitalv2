@@ -58,13 +58,13 @@
 }
 
 .track-record-view-tab:focus-visible {
-  outline: 2px solid var(--mint, #00B4D8);
+  outline: 2px solid var(--mint, var(--mint, #00B127));
   outline-offset: 2px;
 }
 
 .track-record-view-tab--active {
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint, #00B4D8);
+  color: var(--mint, var(--mint, #00B127));
 }
 
 .track-record-view-panel {

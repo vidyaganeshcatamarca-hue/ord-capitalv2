@@ -25,7 +25,7 @@
 }
 
 .familia-feed-filter-chip.active {
-  background: #4ecdc4;
+  background: var(--mint, #00B127);
   color: #042f2e;
   border-color: transparent;
   font-weight: 700;

@@ -9,6 +9,8 @@
         "question": "allow",
         "task": {
           "*": "deny",
+          "bug-explorer": "allow",
+          "bug-fixer": "allow",
           "explore": "allow",
           "general": "allow",
           "jd-fix-agent": "allow",

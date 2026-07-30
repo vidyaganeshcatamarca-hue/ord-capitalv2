@@ -136,7 +136,7 @@
 }
 
 .liquidar-inversion-toggle-btn--active {
-  background: var(--mint, #4ECDC4);
+  background: var(--mint, var(--mint, #00B127));
   color: #000;
 }
 
@@ -175,7 +175,7 @@
 }
 
 .liquidar-inversion-ganancia-value--positive {
-  color: var(--mint, #4ECDC4);
+  color: var(--mint, var(--mint, #00B127));
 }
 
 .liquidar-inversion-ganancia-value--negative {

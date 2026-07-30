@@ -43,7 +43,7 @@
   border: 1px solid rgba(78, 205, 196, 0.28);
   border-radius: var(--radius-full, 9999px);
   background: rgba(78, 205, 196, 0.1);
-  color: var(--mint, #4ECDC4);
+  color: var(--mint, var(--mint, #00B127));
   font-size: calc(12px * var(--font-scale));
   font-weight: 800;
   text-align: center;
@@ -84,7 +84,7 @@
 }
 
 .config-inflacion-field select:focus {
-  border-color: var(--mint, #4ECDC4);
+  border-color: var(--mint, var(--mint, #00B127));
   box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.14);
 }
 

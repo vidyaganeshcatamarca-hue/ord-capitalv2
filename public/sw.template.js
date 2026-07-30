@@ -9,7 +9,8 @@ const ASSETS_TO_CACHE = [
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
-  '/icon.svg'
+  '/apple-touch-icon.png',
+  '/icon-shortcut-add.png'
 ];
 
 // Installation: cache core shell + skipWaiting para activar el nuevo SW inmediatamente

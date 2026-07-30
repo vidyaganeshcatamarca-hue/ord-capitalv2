@@ -11,7 +11,7 @@
 }
 
 .war-widget-verde {
-  border-left-color: #4ECDC4;
+  border-left-color: var(--mint, #00B127);
 }
 
 .war-widget-amarillo {
@@ -73,7 +73,7 @@
 }
 
 .war-semaforo-verde {
-  background: #4ECDC4;
+  background: var(--mint, #00B127);
   box-shadow: 0 0 12px rgba(78, 205, 196, 0.5);
 }
 
@@ -104,7 +104,7 @@
 .war-widget-cta {
   background: transparent;
   border: 1px solid rgba(78, 205, 196, 0.4);
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
   padding: 8px 14px;
   border-radius: 8px;
   font-size: calc(13px * var(--font-scale));
@@ -116,5 +116,5 @@
 
 .war-widget-cta:hover {
   background: rgba(78, 205, 196, 0.1);
-  border-color: #4ECDC4;
+  border-color: var(--mint, #00B127);
 }

@@ -55,6 +55,6 @@
 }
 
 .radar-ok {
-  color: #4ECDC4 !important;
+  color: var(--mint, #00B127) !important;
   font-weight: 600;
 }

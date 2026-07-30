@@ -2,14 +2,15 @@
 // Plantilla del Service Worker. El script scripts/build-sw.js genera
 // public/sw.js. No editar public/sw.js a mano: se sobreescribe.
 
-const CACHE_NAME = 'ord-capital-84e4c13';
+const CACHE_NAME = 'ord-capital-0389d84-1785442397970';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
-  '/icon.svg'
+  '/apple-touch-icon.png',
+  '/icon-shortcut-add.png'
 ];
 
 // Installation: cache core shell + skipWaiting para activar el nuevo SW inmediatamente

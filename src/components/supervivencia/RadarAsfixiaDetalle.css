@@ -20,7 +20,7 @@
   font-size: calc(11px * var(--font-scale));
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
   font-weight: 700;
   margin-bottom: 6px;
 }
@@ -89,7 +89,7 @@
 }
 
 .radar-cell.seleccionado {
-  border-color: #4ECDC4;
+  border-color: var(--mint, #00B127);
   box-shadow: 0 0 0 2px rgba(78, 205, 196, 0.3);
 }
 
@@ -125,7 +125,7 @@
 }
 
 .radar-icon-ingreso {
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
 }
 
 .radar-icon-tarjeta {
@@ -242,7 +242,7 @@
 .radar-detalle-sheet h3 {
   margin: 0 0 4px;
   font-size: calc(16px * var(--font-scale));
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
 }
 
 .radar-detalle-fecha {
@@ -275,7 +275,7 @@
 }
 
 .radar-detalle-saldo strong.positivo {
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
 }
 
 .radar-detalle-row {
@@ -307,7 +307,7 @@
 }
 
 .radar-criticos-ok {
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
   font-size: calc(14px * var(--font-scale));
   margin: 0;
   padding: 12px;

@@ -34,7 +34,7 @@
 .cfg-header h2 {
   font-size: calc(18px * var(--font-scale));
   margin: 0;
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
 }
 
 .cfg-close {
@@ -172,7 +172,7 @@
 }
 
 .cfg-toggle input:checked + .cfg-toggle-slider {
-  background: #4ECDC4;
+  background: var(--mint, #00B127);
 }
 
 .cfg-toggle input:checked + .cfg-toggle-slider::before {
@@ -203,7 +203,7 @@
 
 .cfg-item-monto input:focus {
   outline: none;
-  border-color: #4ECDC4;
+  border-color: var(--mint, #00B127);
 }
 
 .cfg-footer {

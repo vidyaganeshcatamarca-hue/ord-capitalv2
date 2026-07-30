@@ -13,7 +13,7 @@
   font-size: calc(11px * var(--font-scale));
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
   font-weight: 700;
   margin-bottom: 6px;
 }
@@ -54,7 +54,7 @@
 
 .safe-semaforo-green {
   background: rgba(78, 205, 196, 0.15);
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
 }
 
 .safe-semaforo-yellow {
@@ -114,7 +114,7 @@
 }
 
 .safe-final {
-  border-top: 2px solid #4ECDC4;
+  border-top: 2px solid var(--mint, #00B127);
 }
 
 .safe-mensaje-sistema {

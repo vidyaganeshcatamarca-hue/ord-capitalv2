@@ -13,7 +13,7 @@
   font-size: calc(11px * var(--font-scale));
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
   font-weight: 700;
   margin-bottom: 6px;
 }
@@ -63,7 +63,7 @@
 }
 
 .lic-tarjeta-valor.positivo {
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
 }
 
 .lic-tarjeta-valor.negativo {
@@ -89,7 +89,7 @@
 }
 
 .lic-real-positivo {
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
 }
 
 .lic-real-negativo {
@@ -138,7 +138,7 @@
 }
 
 .lic-barra-azul {
-  background: linear-gradient(90deg, #0077B6, #00B4D8);
+  background: linear-gradient(90deg, var(--mint, #116014), var(--mint, #00B127));
 }
 
 .lic-barra-rojo {
@@ -155,14 +155,14 @@
 .lic-insight {
   background: linear-gradient(135deg, rgba(78, 205, 196, 0.08), rgba(78, 205, 196, 0.02));
   border: 1px solid rgba(78, 205, 196, 0.2);
-  border-left: 3px solid #4ECDC4;
+  border-left: 3px solid var(--mint, #00B127);
   border-radius: 8px;
   padding: 16px;
 }
 
 .lic-insight h3 {
   font-size: calc(14px * var(--font-scale));
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
   margin: 0 0 8px;
   font-weight: 700;
 }

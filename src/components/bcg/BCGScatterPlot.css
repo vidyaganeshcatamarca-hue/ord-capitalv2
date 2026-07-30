@@ -23,7 +23,7 @@
 }
 
 .bcg-quad-cow     { fill: #6366F1; }
-.bcg-quad-star    { fill: #4ECDC4; }
+.bcg-quad-star    { fill: var(--mint, #00B127); }
 .bcg-quad-dilemma { fill: #FFE66D; }
 .bcg-quad-dog     { fill: #FF6B6B; }
 

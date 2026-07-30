@@ -22,7 +22,7 @@
   width: 40px;
   height: 40px;
   border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--mint, #00B4D8);
+  border-top-color: var(--mint, var(--mint, #00B127));
   border-radius: 50%;
   animation: cartera-spin 0.8s linear infinite;
 }
@@ -45,7 +45,7 @@
 }
 
 .cartera-empty-icon {
-  color: var(--mint, #00B4D8);
+  color: var(--mint, var(--mint, #00B127));
   opacity: 0.85;
   margin-bottom: var(--space-2, 8px);
 }
@@ -68,7 +68,7 @@
 .cartera-empty-cta {
   margin-top: var(--space-4, 16px);
   padding: var(--space-3, 12px) var(--space-6, 24px);
-  background: var(--mint, #00B4D8);
+  background: var(--mint, var(--mint, #00B127));
   color: #0d1117;
   border: none;
   border-radius: var(--radius-md, 12px);
@@ -121,12 +121,12 @@
 
 .cartera-card-placeholder[role="button"]:hover {
   transform: translateY(-2px);
-  border-color: var(--mint, #00B4D8);
+  border-color: var(--mint, var(--mint, #00B127));
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .cartera-card-placeholder[role="button"]:focus-visible {
-  outline: 2px solid var(--mint, #00B4D8);
+  outline: 2px solid var(--mint, var(--mint, #00B127));
   outline-offset: 2px;
 }
 
@@ -163,7 +163,7 @@
 
 .cartera-card-badge--pf {
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint, #00B4D8);
+  color: var(--mint, var(--mint, #00B127));
 }
 
 .cartera-card-badge--var {
@@ -219,7 +219,7 @@
 
 .cartera-card-btn--update {
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint, #00B4D8);
+  color: var(--mint, var(--mint, #00B127));
 }
 
 .cartera-card-btn--liquidate {

@@ -10,7 +10,7 @@
 
 .notif-bell:hover {
   background: rgba(78, 205, 196, 0.08);
-  color: #4ecdc4;
+  color: var(--mint, #00B127);
 }
 
 .notif-bell-badge {

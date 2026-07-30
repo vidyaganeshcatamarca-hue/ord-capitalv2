@@ -105,7 +105,7 @@
 
 .nueva-inversion-tipo-option--active,
 .nueva-inversion-moneda-option--active {
-  border-color: var(--mint, #4ECDC4);
+  border-color: var(--mint, var(--mint, #00B127));
   background: rgba(78, 205, 196, 0.1);
   color: var(--text-primary, #FFFFFF);
 }
@@ -114,7 +114,7 @@
 .nueva-inversion-moneda-option input {
   width: auto;
   margin: 0;
-  accent-color: var(--mint, #4ECDC4);
+  accent-color: var(--mint, var(--mint, #00B127));
 }
 
 .nueva-inversion-modal-disclaimer {

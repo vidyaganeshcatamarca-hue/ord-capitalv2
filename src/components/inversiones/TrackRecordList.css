@@ -103,7 +103,7 @@
 }
 
 .track-record-list-arrow {
-  color: var(--mint, #00B4D8);
+  color: var(--mint, var(--mint, #00B127));
 }
 
 .track-record-list-metrics {
@@ -143,7 +143,7 @@
 }
 
 .track-record-list-gain--positive {
-  color: var(--mint, #00B4D8);
+  color: var(--mint, var(--mint, #00B127));
 }
 
 .track-record-list-gain--negative {

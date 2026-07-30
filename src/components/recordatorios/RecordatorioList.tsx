@@ -42,7 +42,7 @@ export function RecordatorioList({ reminders, onCreate, onUpdate, onDelete, onTo
   return (
     <div>
       <div className="recordatorio-header">
-        <h3 style={{ margin: 0, color: '#4ecdc4', fontSize: '0.95rem' }}>{t('recordatorio_section_title')}</h3>
+        <h3 style={{ margin: 0, color: 'var(--mint, #00B127)', fontSize: '0.95rem' }}>{t('recordatorio_section_title')}</h3>
         <button type="button" className="recordatorio-add" onClick={() => setCreating(true)}>
           + {t('recordatorio_new')}
         </button>

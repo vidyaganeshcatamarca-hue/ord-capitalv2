@@ -33,7 +33,7 @@
 
 /* Colors */
 .toggle-switch--on {
-  background: var(--mint, #4ECDC4);
+  background: var(--mint, var(--mint, #00B127));
 }
 
 .toggle-switch--off {

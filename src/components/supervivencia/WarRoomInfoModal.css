@@ -25,7 +25,7 @@
 .war-info-modal h2 {
   margin: 0 0 12px;
   font-size: calc(20px * var(--font-scale));
-  color: #4ECDC4;
+  color: var(--mint, #00B127);
 }
 
 .war-info-modal p {

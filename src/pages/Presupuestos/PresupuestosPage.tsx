@@ -767,7 +767,7 @@ export function PresupuestosPage() {
             <div className="asignar-sheet-sobre">
               <span style={{
                 width: 32, height: 32, borderRadius: 8,
-                background: sobreSeleccionado.color || '#4ECDC4',
+                background: sobreSeleccionado.color || 'var(--mint, #00B127)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 'calc(16px * var(--font-scale))',
               }}>
@@ -1243,7 +1243,7 @@ function FilaSobre({ sobre, isLast, onAsignar }: FilaSobreProps) {
         <div className="sobre-nombre">
           <span
             className="sobre-icono-circulo"
-            style={{ background: sobre.color || '#4ECDC4' }}
+            style={{ background: sobre.color || 'var(--mint, #00B127)' }}
           >
             {sobre.icono}
           </span>

@@ -24,13 +24,13 @@
 
 .sobre-projection-real {
   fill: none;
-  stroke: #4ecdc4;
+  stroke: var(--mint, #00B127);
   stroke-linecap: round;
   stroke-width: 4;
 }
 
 .sobre-projection-dot {
   fill: #ccfbf1;
-  stroke: #4ecdc4;
+  stroke: var(--mint, #00B127);
   stroke-width: 2;
 }

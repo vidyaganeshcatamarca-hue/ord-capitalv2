@@ -9,7 +9,7 @@
 
 .privacidad-export h2 {
   margin: 0;
-  color: #4ecdc4;
+  color: var(--mint, #00B127);
   font-size: 1.1rem;
 }
 
@@ -41,7 +41,7 @@
   padding: 10px 14px;
   border-radius: 999px;
   border: 1px solid rgba(78, 205, 196, 0.36);
-  background: #4ecdc4;
+  background: var(--mint, #00B127);
   color: #042f2e;
   font-weight: 800;
   cursor: pointer;

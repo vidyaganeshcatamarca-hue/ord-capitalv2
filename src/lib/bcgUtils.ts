@@ -5,7 +5,7 @@
 export type CuadranteKey = 'bcg_star' | 'bcg_cow' | 'bcg_dilemma' | 'bcg_dog'
 
 export const BCG_CUADRANTES: Record<CuadranteKey, { emoji: string; labelKey: string; color: string }> = {
-  bcg_star:    { emoji: '⭐', labelKey: 'bcg_cuadrante_star',    color: '#4ECDC4' },
+  bcg_star:    { emoji: '⭐', labelKey: 'bcg_cuadrante_star',    color: 'var(--mint, #00B127)' },
   bcg_cow:     { emoji: '🐄', labelKey: 'bcg_cuadrante_cow',     color: '#6366F1' },
   bcg_dilemma: { emoji: '🤔', labelKey: 'bcg_cuadrante_dilemma', color: '#FFE66D' },
   bcg_dog:     { emoji: '🐕', labelKey: 'bcg_cuadrante_dog',     color: '#FF6B6B' },

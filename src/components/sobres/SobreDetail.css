@@ -32,7 +32,7 @@
 }
 
 .sobre-detail-header p {
-  color: #4ecdc4;
+  color: var(--mint, #00B127);
   font-weight: 900;
   letter-spacing: 0.08em;
   text-transform: uppercase;

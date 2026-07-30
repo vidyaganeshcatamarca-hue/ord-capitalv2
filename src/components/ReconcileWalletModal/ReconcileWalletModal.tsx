@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
@@ -23,10 +23,11 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
     setSaldoReal(billetera.saldo_actual.toString())
   }, [billetera.billetera_id])
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (typeof window === 'undefined' || !window.visualViewport) return
     const vv = window.visualViewport
-    const handleResize = () => {
+    let rafId = 0
+    const applyPosition = () => {
       const el = sheetRef.current
       if (!el) return
       const offset = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0))
@@ -42,10 +43,15 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
         el.style.bottom = '0'
       }
     }
+    const handleResize = () => {
+      if (rafId) cancelAnimationFrame(rafId)
+      rafId = requestAnimationFrame(applyPosition)
+    }
     vv.addEventListener('resize', handleResize)
     vv.addEventListener('scroll', handleResize)
-    handleResize()
+    applyPosition()
     return () => {
+      if (rafId) cancelAnimationFrame(rafId)
       vv.removeEventListener('resize', handleResize)
       vv.removeEventListener('scroll', handleResize)
     }

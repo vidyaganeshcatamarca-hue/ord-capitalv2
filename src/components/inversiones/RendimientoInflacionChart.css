@@ -60,9 +60,9 @@
   max-width: 520px;
   padding: var(--space-3, 12px) var(--space-4, 16px);
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  border: 1px solid var(--mint, #00B4D8);
+  border: 1px solid var(--mint, var(--mint, #00B127));
   border-radius: var(--radius-md, 12px);
-  color: var(--mint, #00B4D8);
+  color: var(--mint, var(--mint, #00B127));
   font-weight: 600;
 }
 
@@ -146,7 +146,7 @@
 }
 
 .rendimiento-chart-bar--positive {
-  background: linear-gradient(180deg, var(--mint, #00B4D8), var(--green, #52B788));
+  background: linear-gradient(180deg, var(--mint, var(--mint, #00B127)), var(--green, #52B788));
 }
 
 .rendimiento-chart-bar--negative {
