@@ -41,6 +41,34 @@
         "write": true
       }
     },
+    "bug-explorer": {
+      "description": "Research & triage for non-SDD bug fixes and feature investigations",
+      "hidden": true,
+      "mode": "subagent",
+      "model": "open_go_2/deepseek-v4-pro",
+      "prompt": "You are a bug-investigation agent. Read code, localise root cause, return a concise map of files+lines+approach. Do NOT write fixes. Read the project's ord-capital-personal skill first when working in ORD Capital Personal. Project rules: no hard-coded Spanish (use i18n t()), never touch Supabase directly.",
+      "tools": {
+        "bash": false,
+        "edit": false,
+        "read": true,
+        "task": false,
+        "write": false
+      }
+    },
+    "bug-fixer": {
+      "description": "Surgical implementation of non-SDD bug fixes and small features",
+      "hidden": true,
+      "mode": "subagent",
+      "model": "open_go_2/kimi-k2.7-code",
+      "prompt": "You are a bug-fixing agent. Apply the fix described in the task prompt exactly with minimal, surgical changes. Read the project's ord-capital-personal skill first when working in ORD Capital Personal. Project rules: never hard-code Spanish strings (use i18n t() via es.ts), never touch Supabase directly, keep English in code/comments/identifiers. Return exact files and line ranges changed at the end.",
+      "tools": {
+        "bash": true,
+        "edit": true,
+        "read": true,
+        "task": false,
+        "write": true
+      }
+    },
     "jd-fix-agent": {
       "description": "Surgical fix agent for judgment-day protocol",
       "hidden": true,

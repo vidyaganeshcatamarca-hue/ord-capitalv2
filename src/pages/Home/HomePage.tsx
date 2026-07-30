@@ -398,6 +398,7 @@ export function HomePage() {
     } catch (err: any) {
       showToast(parseError(err), 'error')
     } finally {
+      setFilteredDataLoading(true)
       setLoading(false)
     }
   }, [showToast])
@@ -1348,7 +1349,7 @@ export function HomePage() {
                 </div>
 
                 {/* Botón Ver más */}
-                {hasMoreMovimientos ? (
+                {hasMoreMovimientos && filteredMovimientos.length >= ACTIVITY_PAGE_SIZE ? (
                   <button
                     className="activity-see-more-btn"
                     onClick={loadMoreMovimientos}
@@ -1470,15 +1471,6 @@ export function HomePage() {
                     </div>
                     {isExpanded && children.length > 0 && (
                       <div className="home-filter-children">
-                        <button
-                          className="home-filter-child-btn"
-                          onClick={() => {
-                            setFilterTarget({ type: 'rubro', name: `${t(rubroName)} (${t('filter_all')})`, ids: childIds })
-                            setShowFilterPicker(false)
-                          }}
-                        >
-                          ↳ {t('filter_all')}
-                        </button>
                         {children.map((child: any) => (
                           <button
                             key={child.estructura_id}
