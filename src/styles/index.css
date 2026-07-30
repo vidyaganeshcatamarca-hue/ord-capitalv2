@@ -821,6 +821,16 @@ input::placeholder, textarea::placeholder {
   margin-bottom: var(--space-2) !important;
 }
 
+.wallet-modal-sheet.pre-settle {
+  opacity: 0 !important;
+  pointer-events: none;
+}
+
+.wallet-modal-sheet.settled {
+  opacity: 1;
+  transition: opacity 150ms ease-out;
+}
+
 @media (min-width: 768px) {
   .wallet-modal-sheet.bottom-sheet {
     left: calc(50vw + var(--sidebar-width, 240px) / 2) !important;

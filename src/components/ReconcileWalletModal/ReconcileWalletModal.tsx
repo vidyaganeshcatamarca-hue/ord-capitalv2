@@ -15,6 +15,7 @@ interface Props {
 export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSuccess }: Props) {
   const [saldoReal, setSaldoReal] = useState(billetera.saldo_actual.toString())
   const [loading, setLoading] = useState(false)
+  const [isSettled, setIsSettled] = useState(false)
   const confirmBtnRef = useRef<HTMLButtonElement>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
   const { showToast } = useToast()
@@ -24,9 +25,13 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
   }, [billetera.billetera_id])
 
   useLayoutEffect(() => {
-    if (typeof window === 'undefined' || !window.visualViewport) return
     const vv = window.visualViewport
-    let rafId = 0
+    if (!vv) {
+      setIsSettled(true)
+      return
+    }
+    const rafId = { current: 0 }
+    let settleTimer: ReturnType<typeof setTimeout> | null = null
     const applyPosition = () => {
       const el = sheetRef.current
       if (!el) return
@@ -44,16 +49,31 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
       }
     }
     const handleResize = () => {
-      if (rafId) cancelAnimationFrame(rafId)
-      rafId = requestAnimationFrame(applyPosition)
+      if (rafId.current) cancelAnimationFrame(rafId.current)
+      rafId.current = requestAnimationFrame(() => {
+        applyPosition()
+        if (settleTimer) clearTimeout(settleTimer)
+        settleTimer = setTimeout(() => setIsSettled(true), 120)
+      })
     }
     vv.addEventListener('resize', handleResize)
     vv.addEventListener('scroll', handleResize)
     applyPosition()
+    const isDesktop = window.matchMedia('(min-width: 768px)').matches
+    if (isDesktop) {
+      setIsSettled(true)
+    }
+    requestAnimationFrame(() => {
+      const input = sheetRef.current?.querySelector('input') as HTMLInputElement | null
+      input?.focus()
+    })
+    const safetyTimer = setTimeout(() => setIsSettled(true), 400)
     return () => {
-      if (rafId) cancelAnimationFrame(rafId)
+      if (rafId.current) cancelAnimationFrame(rafId.current)
       vv.removeEventListener('resize', handleResize)
       vv.removeEventListener('scroll', handleResize)
+      if (settleTimer) clearTimeout(settleTimer)
+      clearTimeout(safetyTimer)
     }
   }, [])
 
@@ -104,7 +124,7 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
   const modalContent = (
     <>
       <div className="bottom-sheet-overlay" onClick={onClose} />
-      <div ref={sheetRef} className="bottom-sheet wallet-modal-sheet">
+      <div ref={sheetRef} className={`bottom-sheet wallet-modal-sheet ${isSettled ? 'settled' : 'pre-settle'}`}>
         <div className="bottom-sheet-handle" />
         <form onSubmit={handleSubmit} className="wallet-modal-form" autoComplete="off">
           <div className="wallet-modal-body">
@@ -159,7 +179,6 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
                     }
                   }}
                   disabled={loading}
-                  autoFocus
                 />
               </div>
             </div>
