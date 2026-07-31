@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
+import { LUCIDE_RUBRO_ICONS } from '@/constants/emojiToLucide'
 import '@/pages/Categorias/Categorias.css'
 
 // ─── Constantes ────────────────────────────────────────────────────────────
-const EMOJIS = ['🍔','🛒','🚗','🏠','🩺','🎓','💸','✈️','🎮','🏋️','👚','🧼','🍿','👶','🐾','💈','🎁','🔌','🎵','📱','💡','🍷','🎯','📚','🏖️','🐶','🌿','🍕']
+const RUBRO_ICONS = LUCIDE_RUBRO_ICONS
 const COLORS = ['#1F2937','#4B5563','#9CA3AF','#F3F4F6','#EF4444','#F97316','#F59E0B','#10B981','#3B82F6','#8B5CF6']
 
 export interface Hijo {
@@ -28,21 +30,21 @@ export interface Rubro {
 }
 
 // ─── Sub-componentes ─────────────────────────────────────────────────────────
-function EmojiPicker({ value, onChange, selectedColor }: { value: string; onChange: (v: string) => void; selectedColor?: string }) {
+function IconPicker({ value, onChange, selectedColor }: { value: string; onChange: (v: string) => void; selectedColor?: string }) {
   return (
     <div className="cat-emoji-grid">
-      {EMOJIS.map(e => (
-        <button key={e} type="button"
-          className={`cat-emoji-btn ${value === e ? 'active' : ''}`}
-          style={value === e && selectedColor ? {
+      {RUBRO_ICONS.map(icon => (
+        <button key={icon} type="button"
+          className={`cat-emoji-btn ${value === icon ? 'active' : ''}`}
+          style={value === icon && selectedColor ? {
             backgroundColor: selectedColor,
             borderColor: selectedColor,
             color: '#000000',
             textShadow: 'none',
             boxShadow: `0 0 10px ${selectedColor}`
           } : {}}
-          onClick={() => onChange(e)}>
-          <span>{e}</span>
+          onClick={() => onChange(icon)}>
+          <CategoryIcon name={icon} size={24} />
         </button>
       ))}
     </div>
@@ -82,7 +84,7 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
   const parentRubro = rubros.find(r => r.estructura_id === padreId)
   const parentColor = parentRubro?.color ?? COLORS[0]
 
-  const [icono, setIcono] = useState(subcuenta?.icono ?? parentRubro?.icono ?? '▪️')
+  const [icono, setIcono] = useState(subcuenta?.icono ?? parentRubro?.icono ?? 'Tag')
   const [utilidad, setUtilidad] = useState(subcuenta?.utilidad_placer ?? 5)
   const [flexibilidad, setFlexibilidad] = useState(subcuenta?.flexibilidad_recorte ?? 5)
   const [esHormiga, setEsHormiga] = useState(subcuenta?.es_hormiga ?? false)
@@ -150,12 +152,11 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: '22px',
             boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
             flexShrink: 0,
             color: '#000000'
           }}>
-            <span>{icono}</span>
+            <CategoryIcon name={icono} size={22} />
           </div>
           <h3 className="font-display" style={{ margin: 0 }}>{subcuenta ? t('cat_subcuenta_edit_title') : t('cat_subcuenta_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>
@@ -183,7 +184,7 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
             placeholder={t('placeholder_subcuenta_nombre')} required disabled={loading} />
 
           <label className="cat-label">{t("label_icon")}</label>
-          <EmojiPicker value={icono} onChange={setIcono} selectedColor={parentColor} />
+          <IconPicker value={icono} onChange={setIcono} selectedColor={parentColor} />
 
           <div className="bcg-section mt-3">
             <div className="bcg-section-title">{t("bcg_calibration_title")}</div>

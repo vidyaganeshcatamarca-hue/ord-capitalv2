@@ -274,13 +274,8 @@ export function AuthPage() {
         <div className="onboarding-slide slide-active">
           <div className="slide-content">
             <div className="welcome-hero">
-              <div className="welcome-icon-box">
-                <svg viewBox="0 0 40 40" fill="none">
-                  <circle cx="20" cy="20" r="20" fill="var(--mint-dim)" />
-                  <path d="M12 28 L20 12 L28 28" stroke="var(--mint)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M15 23 L25 23" stroke="var(--mint)" strokeWidth="2.5" strokeLinecap="round"/>
-                  <circle cx="20" cy="12" r="2" fill="var(--mint)" />
-                </svg>
+              <div className="welcome-logo-container">
+                <img src="/logo.png" alt="ORD Capital" className="welcome-logo-img" />
               </div>
               <h1 className="welcome-title">{t('auth_welcome_title')}</h1>
               <p className="welcome-subtitle">{t('auth_welcome_subtitle')}</p>

@@ -3,6 +3,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
+import { CategoryIcon } from '@/components/CategoryIcon'
 import './Tarjetas.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -494,7 +495,7 @@ export function TarjetasPage() {
 
         <div className="tarjeta-card-header">
           <div className="tarjeta-card-name-row">
-            <div className="tarjeta-card-icon" style={{ background: `${tc.color || '#FF6B6B'}24` }}>💳</div>
+            <div className="tarjeta-card-icon" style={{ background: `${tc.color || '#FF6B6B'}24` }}><CategoryIcon name="CreditCard" size={16} /></div>
             <div>
               <div className="tarjeta-card-name">{tc.nombre_tarjeta}</div>
               {tc.dia_vencimiento && tc.dia_cierre && (
@@ -517,7 +518,7 @@ export function TarjetasPage() {
 
         {isConfigRequired ? (
           <div className="tarjeta-config-required" onClick={e => { e.stopPropagation(); openEdit(tc) }}>
-            ⚙️ {t("card_configure_limits_analysis")} →
+            <CategoryIcon name="Settings" size={14} /> {t("card_configure_limits_analysis")} →
           </div>
         ) : (
           <>
@@ -531,10 +532,10 @@ export function TarjetasPage() {
 
             <div className="tarjeta-card-footer">
               <div className="tarjeta-footer-item">
-                💰 Disponible: <b>{fmtARS(tc.un_pago_disponible)}</b>
+                <CategoryIcon name="CircleDollarSign" size={14} /> Disponible: <b>{fmtARS(tc.un_pago_disponible)}</b>
               </div>
               <div className="tarjeta-footer-item">
-                📋 Cuotas: <b>{fmtARS(tc.cuotas_disponible)}</b>
+                <CategoryIcon name="ClipboardList" size={14} /> Cuotas: <b>{fmtARS(tc.cuotas_disponible)}</b>
               </div>
             </div>
           </>
@@ -543,14 +544,14 @@ export function TarjetasPage() {
         {/* Menú contextual */}
         {menuOpen === tc.tarjeta_id && (
           <div className="tarjeta-context-menu" onClick={e => e.stopPropagation()}>
-            <button className="tarjeta-context-btn" onClick={() => openEdit(tc)}>✏️ Editar tarjeta</button>
+            <button className="tarjeta-context-btn" onClick={() => openEdit(tc)}><CategoryIcon name="Pencil" size={14} /> Editar tarjeta</button>
             <button className="tarjeta-context-btn" onClick={() => {
               setTargetCard(tc)
               setPagarMonto(venc ? venc.monto_a_pagar.toString() : '')
               setPagarBilleteraId(null)
               setMenuOpen(null)
               setShowPagarModal(true)
-            }}>💳 Pagar resumen</button>
+            }}><CategoryIcon name="CreditCard" size={14} /> Pagar resumen</button>
           </div>
         )}
       </div>
@@ -571,9 +572,9 @@ export function TarjetasPage() {
         {/* Header */}
         <div className="tarjeta-detalle-header">
           <button className="tarjeta-detalle-back" onClick={() => setSelectedCard(null)}>←</button>
-          <span className="tarjeta-detalle-title">💳 {selectedCard.nombre_tarjeta}</span>
+          <span className="tarjeta-detalle-title"><CategoryIcon name="CreditCard" size={18} /> {selectedCard.nombre_tarjeta}</span>
           <div className="tarjeta-detalle-actions">
-            <button className="tarjeta-detalle-action-btn" onClick={() => openEdit(selectedCard)} title="Editar">✏️</button>
+            <button className="tarjeta-detalle-action-btn" onClick={() => openEdit(selectedCard)} title="Editar"><CategoryIcon name="Pencil" size={18} /></button>
           </div>
         </div>
 
@@ -581,7 +582,7 @@ export function TarjetasPage() {
 
           {/* Widget de Límite Disponible */}
           <div className="tarjeta-detalle-section">
-            <div className="tarjeta-detalle-section-title">💰 {t("card_available_limit")}</div>
+            <div className="tarjeta-detalle-section-title"><CategoryIcon name="CircleDollarSign" size={13} /> {t("card_available_limit")}</div>
             <div className="limite-row">
               <div className="limite-disponible">{fmtARS(selectedCard.un_pago_disponible)}</div>
               <div className="limite-total">de {fmtARS(selectedCard.limite_un_pago_total)}</div>
@@ -594,7 +595,7 @@ export function TarjetasPage() {
             {venc && (
               <div className="vencimiento-widget" style={{ marginTop: 14 }}>
                 <div className="vencimiento-info">
-                  <div className="vencimiento-label">📅 {t("card_next_due_date")}</div>
+                    <div className="vencimiento-label"><CategoryIcon name="Calendar" size={13} /> {t("card_next_due_date")}</div>
                   <div className="vencimiento-date">{t("card_due_date_format", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })}</div>
                   <div className="vencimiento-monto">Estimado: {fmtARS(venc.monto_a_pagar)}</div>
                 </div>
@@ -613,7 +614,7 @@ export function TarjetasPage() {
           {/* Termómetro de Estrés */}
           <div className="termometro-widget">
             <div className="termometro-header">
-              <span className="termometro-title">📊 {t("card_stress_thermometer")}</span>
+              <span className="termometro-title"><CategoryIcon name="BarChart3" size={13} /> {t("card_stress_thermometer")}</span>
               {termometro && (
                 <span className={`termometro-badge ${termometro.estado_alerta}`}>
                   {getSemaforoLabel(termometro.estado_alerta)}
@@ -656,7 +657,7 @@ export function TarjetasPage() {
 
           {/* Cuotas Activas */}
           <div className="tarjeta-detalle-section">
-            <div className="tarjeta-detalle-section-title">🛍️ Cuotas Pendientes</div>
+            <div className="tarjeta-detalle-section-title"><CategoryIcon name="ShoppingBag" size={13} /> Cuotas Pendientes</div>
             {loadingDetalle ? (
               <div className="tarjeta-skeleton" style={{ height: 80 }} />
             ) : cuotasActivas.filter(c => !c.pagado).length === 0 ? (
@@ -686,7 +687,7 @@ export function TarjetasPage() {
 
           {/* Historial de Pagos */}
           <div className="tarjeta-detalle-section">
-            <div className="tarjeta-detalle-section-title">📜 Historial de Pagos</div>
+            <div className="tarjeta-detalle-section-title"><CategoryIcon name="ScrollText" size={13} /> Historial de Pagos</div>
             {loadingDetalle ? (
               <div className="tarjeta-skeleton" style={{ height: 80 }} />
             ) : historial.length === 0 ? (
@@ -711,7 +712,7 @@ export function TarjetasPage() {
                           <div className="historial-item-source">desde {h.billetera_origen}</div>
                         )}
                         {h.cuotas_liquidadas > 0 && (
-                          <span className="historial-item-badge">✅ {h.cuotas_liquidadas} cuotas liquidadas</span>
+                          <span className="historial-item-badge"><CategoryIcon name="CheckCircle2" size={11} /> {h.cuotas_liquidadas} cuotas liquidadas</span>
                         )}
                       </div>
                       <div className="historial-item-monto">{fmtARS(h.monto_pagado)}</div>
@@ -790,7 +791,7 @@ export function TarjetasPage() {
     <div className="page tarjetas-view">
       {/* Header */}
       <div className="tarjetas-view-header">
-        <div className="tarjetas-view-title">💳 Mis Tarjetas</div>
+        <div className="tarjetas-view-title"><CategoryIcon name="CreditCard" size={22} /> Mis Tarjetas</div>
         <button className="tarjetas-btn-new" onClick={() => { resetForm(); setShowCreateModal(true) }}>
           + Nueva
         </button>
@@ -808,14 +809,14 @@ export function TarjetasPage() {
               <div className="tarjetas-debt-amount">{fmtARS(totalPasivo)}</div>
               <div className="tarjetas-debt-meta">{tarjetas.length} tarjeta{tarjetas.length !== 1 ? 's' : ''} activa{tarjetas.length !== 1 ? 's' : ''}</div>
             </div>
-            <div className="tarjetas-debt-icon">💳</div>
+            <div className="tarjetas-debt-icon"><CategoryIcon name="CreditCard" size={36} /></div>
           </div>
         )}
 
         {/* Alertas de Vencimiento */}
         {criticalAlerts.length > 0 && (
           <>
-            <div className="tarjetas-section-title">🚨 Alertas de Vencimiento</div>
+            <div className="tarjetas-section-title"><CategoryIcon name="AlertTriangle" size={13} /> Alertas de Vencimiento</div>
             <div className="tarjetas-alerts">
               {criticalAlerts.map(v => (
                 <div
@@ -847,10 +848,10 @@ export function TarjetasPage() {
             Mis Tarjetas
           </button>
           <button className={`tarjetas-tab ${activeTab === 'comparativa' ? 'active' : ''}`} onClick={() => setActiveTab('comparativa')}>
-            📊 Comparativa
+            <CategoryIcon name="BarChart3" size={13} /> Comparativa
           </button>
           <button className={`tarjetas-tab ${activeTab === 'acreedores' ? 'active' : ''}`} onClick={() => setActiveTab('acreedores')}>
-            🗺️ Acreedores
+            <CategoryIcon name="Map" size={13} /> Acreedores
           </button>
         </div>
 
@@ -863,7 +864,7 @@ export function TarjetasPage() {
               </div>
             ) : tarjetas.length === 0 ? (
               <div className="tarjetas-empty">
-                <div className="tarjetas-empty-icon">💳</div>
+                <div className="tarjetas-empty-icon"><CategoryIcon name="CreditCard" size={56} /></div>
                 <h3>{t("card_empty_state_title")}</h3>
                 <p>{t("card_empty_state_desc")}</p>
                 <button className="tarjetas-empty-btn" onClick={() => { resetForm(); setShowCreateModal(true) }}>
@@ -885,7 +886,7 @@ export function TarjetasPage() {
                 className="btn-toggle-archivadas" 
                 onClick={() => setShowArchived(!showArchived)}
               >
-                📁 {showArchived ? 'Ocultar tarjetas archivadas' : `Ver tarjetas archivadas (${archivedCards.length})`}
+                <CategoryIcon name="Archive" size={14} /> {showArchived ? 'Ocultar tarjetas archivadas' : `Ver tarjetas archivadas (${archivedCards.length})`}
               </button>
 
               {showArchived && (
@@ -902,7 +903,7 @@ export function TarjetasPage() {
                           className="btn-reactivar-tarjeta" 
                           onClick={() => handleReactivar(ac.tarjeta_id)}
                         >
-                          🔄 Activar
+                          <CategoryIcon name="RotateCcw" size={12} /> Activar
                         </button>
                       </div>
                     ))
@@ -920,7 +921,7 @@ export function TarjetasPage() {
               <div className="tarjeta-skeleton" style={{ height: 200 }} />
             ) : acreedores.length === 0 ? (
               <div className="tarjetas-empty">
-                <div className="tarjetas-empty-icon">🤝</div>
+                <div className="tarjetas-empty-icon"><CategoryIcon name="Users" size={56} /></div>
                 <h3>Sin acreedores</h3>
                 <p>No tienes deudas activas registradas.</p>
               </div>
@@ -929,7 +930,7 @@ export function TarjetasPage() {
                 {acreedores.map((a: any, i: number) => (
                   <div key={i} className="tarjeta-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ fontSize: 'calc(24px * var(--font-scale))' }}>{a.icono || '💰'}</div>
+                      <div style={{ fontSize: 'calc(24px * var(--font-scale))' }}><CategoryIcon name={a.icono || 'CircleDollarSign'} size={24} /></div>
                       <div>
                         <h4 style={{ margin: 0, fontSize: 'calc(16px * var(--font-scale))' }}>{a.nombre_acreedor}</h4>
                         <p style={{ margin: 0, fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>{a.tipo_deuda === 'tarjeta' ? t('card_type_credit') : t('card_type_loan')}</p>
@@ -953,7 +954,7 @@ export function TarjetasPage() {
               <div className="tarjeta-skeleton" style={{ height: 200 }} />
             ) : comparativa.length === 0 ? (
               <div className="tarjetas-empty">
-                <div className="tarjetas-empty-icon">📊</div>
+                <div className="tarjetas-empty-icon"><CategoryIcon name="BarChart3" size={56} /></div>
                 <h3>Sin datos comparativos</h3>
                 <p>{t("card_need_full_cycle_comparative")}</p>
               </div>
@@ -969,7 +970,7 @@ export function TarjetasPage() {
                   return (
                     <div key={c.tarjeta_id} className="comparativa-item">
                       <div className="comparativa-header">
-                        <div className="comparativa-name">💳 {c.nombre_tarjeta}</div>
+                        <div className="comparativa-name"><CategoryIcon name="CreditCard" size={14} /> {c.nombre_tarjeta}</div>
                         <div className={`comparativa-tendencia ${tendencia === 'trend_up' ? 'tendencia-up' : tendencia === 'trend_down' ? 'tendencia-down' : 'tendencia-stable'}`}>
                           {tendencia === 'trend_up' ? '↑' : tendencia === 'trend_down' ? '↓' : '→'}
                           {' '}{Math.abs(Number(c.variacion_porcentual)).toFixed(1)}%
@@ -1170,7 +1171,7 @@ export function TarjetaFormModal({
     <div className="tarjeta-modal-overlay" onClick={onClose}>
       <div className="tarjeta-modal" onClick={e => e.stopPropagation()}>
         <div className="tarjeta-modal-header">
-          <span className="tarjeta-modal-title">{isEdit ? '✏️ Editar Tarjeta' : '💳 Nueva Tarjeta'}</span>
+          <span className="tarjeta-modal-title">{isEdit ? <><CategoryIcon name="Pencil" size={18} /> Editar Tarjeta</> : <><CategoryIcon name="CreditCard" size={18} /> Nueva Tarjeta</>}</span>
           <button className="tarjeta-modal-close" onClick={onClose}>✕</button>
         </div>
 
@@ -1233,7 +1234,7 @@ export function TarjetaFormModal({
         <div className="tarjeta-modal-actions">
           {isEdit && onArchive && (
             <button type="button" className="btn-modal-archive" onClick={onArchive} title="Archivar tarjeta">
-              🗑️
+              <CategoryIcon name="Trash2" size={20} />
             </button>
           )}
           <button className="btn-modal-cancel" onClick={onClose}>Cancelar</button>
@@ -1316,7 +1317,7 @@ export function PagarModal({
             <label className="tarjeta-form-label">{t('pay_resumen_wallet_label')} *</label>
             {filteredBilleteras.length === 0 && (
               <div className="warning-card" style={{ color: 'var(--coral)', padding: '12px', background: 'rgba(255,107,107,0.08)', borderRadius: 10, fontSize: 'calc(13px * var(--font-scale))', marginBottom: '16px' }}>
-                ⚠️ {t('error_no_sufficient_balance_wallets')}
+                <CategoryIcon name="AlertTriangle" size={14} /> {t('error_no_sufficient_balance_wallets')}
               </div>
             )}
             <select
@@ -1328,7 +1329,7 @@ export function PagarModal({
               <option value="" disabled>{t('pay_resumen_select_wallet_placeholder')}</option>
               {filteredBilleteras.map(b => (
                 <option key={b.billetera_id} value={b.billetera_id}>
-                  {b.icono || '💰'} {t(b.nombre)} ({fmtARS(b.saldo_actual)} {b.moneda})
+                  <CategoryIcon name={b.icono || 'CircleDollarSign'} size={14} /> {t(b.nombre)} ({fmtARS(b.saldo_actual)} {b.moneda})
                 </option>
               ))}
             </select>

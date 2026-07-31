@@ -4,6 +4,7 @@ import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import './Cuarentena.css'
 
 export function CuarentenaPage() {
@@ -96,7 +97,7 @@ export function CuarentenaPage() {
         <div style={{ textAlign: 'center', padding: '48px' }}><div className="spinner" /></div>
       ) : pendientes.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-state-icon">🛡️</span>
+          <span className="empty-state-icon"><CategoryIcon name="Shield" size={56} /></span>
           <h3>{t('quarantine_empty_title')}</h3>
           <p>{t('quarantine_empty_desc')}</p>
         </div>
@@ -121,7 +122,7 @@ export function CuarentenaPage() {
 
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px' }}>
             <button className="btn btn-primary text-sm" onClick={() => setShowConfirmAprobarTodo(true)}>
-              ✅ {t('btn_approve_all')}
+              <CategoryIcon name="Check" size={14} /> {t('btn_approve_all')}
             </button>
           </div>
 
@@ -131,7 +132,7 @@ export function CuarentenaPage() {
                 <div className="cuarentena-item-header">
                   <div>
                     <h4 style={{ margin: 0, fontSize: 'calc(16px * var(--font-scale))', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {p.icono_categoria || '🛒'} {t(p.nombre_categoria)}
+                      <CategoryIcon name={p.icono_categoria || 'ShoppingCart'} size={18} /> {t(p.nombre_categoria)}
                     </h4>
                     <p style={{ margin: '4px 0 0 0', fontSize: 'calc(14px * var(--font-scale))', color: 'var(--text-2)' }}>{p.descripcion || t('quarantine_no_detail')}</p>
                     <p style={{ margin: '4px 0 0 0', fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>
@@ -148,17 +149,17 @@ export function CuarentenaPage() {
                       {formatAmount(p.monto, p.moneda)}
                     </p>
                     <p style={{ margin: '4px 0 0 0', fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>
-                      💳 {p.nombre_billetera}
+                      <CategoryIcon name="CreditCard" size={14} /> {p.nombre_billetera}
                     </p>
                   </div>
                 </div>
 
                 <div className="cuarentena-item-actions">
                   <button className="btn-cuarentena reject" onClick={() => setItemToReject(p)}>
-                    ❌ {t('btn_reject')}
+                    <CategoryIcon name="X" size={14} /> {t('btn_reject')}
                   </button>
                   <button className="btn-cuarentena approve" onClick={() => handleAprobarItem(p.id)}>
-                    ✅ {t('btn_approve')}
+                    <CategoryIcon name="Check" size={14} /> {t('btn_approve')}
                   </button>
                 </div>
               </div>

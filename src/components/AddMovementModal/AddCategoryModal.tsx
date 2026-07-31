@@ -3,13 +3,15 @@ import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { filterUserEditableCategories } from '@/lib/categoryFilters'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
+import { LUCIDE_RUBRO_ICONS } from '@/constants/emojiToLucide'
 
 interface AddCategoryModalProps {
   onClose: () => void
   onSuccess: (newCatId: string, newCatName: string) => void
 }
 
-const CATEGORY_EMOJIS = ['🍔', '🛒', '🚗', '🏠', '🩺', '🎓', '💸', '✈️', '🎮', '🏋️', '👚', '🧼', '🍿', '👶', '🐾', '💈', '🎁', '🔌']
+const CATEGORY_ICONS = LUCIDE_RUBRO_ICONS.slice(0, 18)
 const CATEGORY_COLORS = ['#1F2937','#4B5563','#9CA3AF','#F3F4F6','#EF4444','#F97316','#F59E0B','#10B981','#3B82F6','#8B5CF6']
 
 export function AddCategoryModal({ onClose, onSuccess }: AddCategoryModalProps) {
@@ -20,7 +22,7 @@ export function AddCategoryModal({ onClose, onSuccess }: AddCategoryModalProps) 
 
   // Campos comunes
   const [nombre, setNombre] = useState('')
-  const [icono, setIcono] = useState('🏷️')
+  const [icono, setIcono] = useState('Tag')
 
   // Campos para Categoría Principal (Rubro Padre)
   const [tipoCupo, setTipoCupo] = useState('need') // need, want, Tithe, investment, saving
@@ -194,14 +196,14 @@ export function AddCategoryModal({ onClose, onSuccess }: AddCategoryModalProps) 
           <div className="form-group mb-4">
             <label className="text-xs text-muted mb-2 block font-semibold">Emoji / Icono</label>
             <div className="emojis-picker-grid" style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}>
-              {CATEGORY_EMOJIS.map((emoji) => (
+              {CATEGORY_ICONS.map((icon) => (
                 <button
-                  key={emoji}
+                  key={icon}
                   type="button"
-                  className={`emoji-select-btn ${icono === emoji ? 'active' : ''}`}
-                  onClick={() => setIcono(emoji)}
+                  className={`emoji-select-btn ${icono === icon ? 'active' : ''}`}
+                  onClick={() => setIcono(icon)}
                 >
-                  {emoji}
+                  <CategoryIcon name={icon} size={24} />
                 </button>
               ))}
             </div>

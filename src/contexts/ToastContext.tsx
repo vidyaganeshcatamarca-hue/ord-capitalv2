@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, ReactNode, useCallback } from 'react'
+import { CircleCheck, CircleX, TriangleAlert, Info } from 'lucide-react'
 
 type ToastType = 'success' | 'error' | 'warning' | 'info'
 
@@ -14,11 +15,11 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | null>(null)
 
-const ICONS: Record<ToastType, string> = {
-  success: '✅',
-  error: '❌',
-  warning: '⚠️',
-  info: 'ℹ️',
+const ICONS: Record<ToastType, React.ComponentType<{ size?: number; color?: string }>> = {
+  success: CircleCheck,
+  error: CircleX,
+  warning: TriangleAlert,
+  info: Info,
 }
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -29,7 +30,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts(prev => {
       const next = [...prev, { id, message, type }]
       if (next.length > 3) {
-        return next.slice(1) // Conservar los últimos 3 toasts activos
+        return next.slice(1)
       }
       return next
     })
@@ -42,12 +43,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ showToast }}>
       {children}
       <div className="toast-container">
-        {toasts.map(toast => (
-          <div key={toast.id} className={`toast ${toast.type}`}>
-            <span>{ICONS[toast.type]}</span>
-            <span>{toast.message}</span>
-          </div>
-        ))}
+        {toasts.map(toast => {
+          const Icon = ICONS[toast.type]
+          return (
+            <div key={toast.id} className={`toast ${toast.type}`}>
+              {Icon && <Icon size={20} />}
+              <span>{toast.message}</span>
+            </div>
+          )
+        })}
       </div>
     </ToastContext.Provider>
   )
@@ -55,6 +59,6 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
 export function useToast() {
   const ctx = useContext(ToastContext)
-  if (!ctx) throw new Error('useToast debe usarse dentro de ToastProvider')
+  if (!ctx) throw new Error('useToast must be used within a ToastProvider')
   return ctx
 }

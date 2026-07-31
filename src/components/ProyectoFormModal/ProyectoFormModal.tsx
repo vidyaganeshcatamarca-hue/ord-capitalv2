@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
+import { LUCIDE_PROJECT_ICONS } from '@/constants/emojiToLucide'
 import './ProyectoFormModal.css'
 
 interface ProyectoFormModalProps {
@@ -11,14 +13,14 @@ interface ProyectoFormModalProps {
   onSuccess?: () => void
 }
 
-const ICONOS = ['🎯', '🏠', '✈️', '🚗', '💍', '🎓', '👶', '🏖️', '🎁', '💼']
+const PROJECT_ICONS = LUCIDE_PROJECT_ICONS
 
 export function ProyectoFormModal({ isOpen, onClose, onSuccess }: ProyectoFormModalProps) {
   const { showToast } = useToast()
   const [nombre, setNombre] = useState('')
   const [meta, setMeta] = useState('')
   const [fecha, setFecha] = useState('')
-  const [icono, setIcono] = useState('🎯')
+  const [icono, setIcono] = useState('Target')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -27,7 +29,7 @@ export function ProyectoFormModal({ isOpen, onClose, onSuccess }: ProyectoFormMo
       setNombre('')
       setMeta('')
       setFecha('')
-      setIcono('🎯')
+      setIcono('Target')
       setError(null)
     }
   }, [isOpen])
@@ -114,14 +116,14 @@ export function ProyectoFormModal({ isOpen, onClose, onSuccess }: ProyectoFormMo
           <div className="proyecto-form-group">
             <label>{t('proyecto_form_icono_label')}</label>
             <div className="proyecto-form-iconos">
-              {ICONOS.map((emoji) => (
+              {PROJECT_ICONS.map((icon) => (
                 <button
                   type="button"
-                  key={emoji}
-                  className={`proyecto-form-icono-btn ${icono === emoji ? 'active' : ''}`}
-                  onClick={() => setIcono(emoji)}
+                  key={icon}
+                  className={`proyecto-form-icono-btn ${icono === icon ? 'active' : ''}`}
+                  onClick={() => setIcono(icon)}
                 >
-                  {emoji}
+                  <CategoryIcon name={icon} size={24} />
                 </button>
               ))}
             </div>

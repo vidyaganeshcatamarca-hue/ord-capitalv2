@@ -574,6 +574,11 @@ export const category_keys = {
   cat_kids: "Infantil",
   cat_bazaar: "Bazar/Varios",
   cat_alcohol_drinks: "Bebidas c/Alcohol",
+  cat_cleaning_hygiene: "Limpieza e Higiene",
+  cat_clothing: "Vestimenta",
+  cat_drinks: "Bebidas",
+  cat_fresh_foods: "Frescos",
+  cat_home_pets: "Hogar y Mascotas",
   no_category: "Sin categoría",
 };
 

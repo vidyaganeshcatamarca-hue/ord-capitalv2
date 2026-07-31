@@ -112,23 +112,24 @@
   padding: 0 var(--space-2);
 }
 
-.welcome-icon-box {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-xl);
-  background: var(--surface);
-  border: 1px solid var(--border);
+.welcome-logo-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: var(--space-4);
-  box-shadow: var(--shadow-lg);
-  animation: pulse-glow-welcome 3s infinite;
+  margin-bottom: var(--space-5);
 }
 
-.welcome-icon-box svg {
-  width: 44px;
-  height: 44px;
+.welcome-logo-img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 28px rgba(0, 177, 39, 0.4));
+  animation: logoFloat 4s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
 }
 
 .welcome-title {

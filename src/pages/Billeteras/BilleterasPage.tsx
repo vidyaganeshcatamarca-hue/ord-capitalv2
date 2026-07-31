@@ -13,10 +13,11 @@ import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBal
 import { BilleteraDetailModal } from '@/components/BilleteraDetailModal/BilleteraDetailModal'
 import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/ReconcileWalletModal'
 import { TabEgresos, TabIngresos } from '@/pages/Categorias/CategoriasPage'
+import { CategoryIcon } from '@/components/CategoryIcon'
 import '@/pages/Categorias/Categorias.css'
 import './Billeteras.css'
 
-const FINANCIAL_EMOJIS = ['💵', '💳', '🏦', '🪙', '💸', '💼', '📊', '📈', '📉', '💰', '🛡️', '🐖', '🎯', '🔑', '🏧']
+const FINANCIAL_ICONS = ['Banknote', 'CreditCard', 'Landmark', 'Coins', 'SendHorizontal', 'Briefcase', 'BarChart3', 'TrendingUp', 'TrendingDown', 'CircleDollarSign', 'Shield', 'PiggyBank', 'Target', 'Key', 'Wallet']
 export function BilleterasPage() {
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
@@ -48,12 +49,12 @@ export function BilleterasPage() {
   const [newName, setNewName] = useState('')
   const [newMoneda, setNewMoneda] = useState('ARS')
   const [newSaldoApertura, setNewSaldoApertura] = useState('0')
-  const [newIcono, setNewIcono] = useState('💳')
+  const [newIcono, setNewIcono] = useState('Wallet')
 
   // Estado del Formulario de Edición
   const [selectedBilletera, setSelectedBilletera] = useState<Billetera | null>(null)
   const [editName, setEditName] = useState('')
-  const [editIcono, setEditIcono] = useState('💳')
+  const [editIcono, setEditIcono] = useState('Wallet')
 
   // Estado del Formulario de Conciliación
   const [conciliarBilletera, setConciliarBilletera] = useState<Billetera | null>(null)
@@ -128,7 +129,7 @@ export function BilleterasPage() {
       setNewName('')
       setNewMoneda('ARS')
       setNewSaldoApertura('0')
-      setNewIcono('💳')
+      setNewIcono('Wallet')
       fetchData()
     } catch (err: any) {
       showToast(t('wallets.toast_created_error', { error: err.message || err }), 'error')
@@ -139,7 +140,7 @@ export function BilleterasPage() {
   const openEdit = (billetera: any) => {
     setSelectedBilletera(billetera)
     setEditName(billetera.nombre)
-    setEditIcono(billetera.icono || '💳')
+    setEditIcono(billetera.icono || 'Wallet')
     setShowEditModal(true)
   }
 
@@ -227,13 +228,13 @@ export function BilleterasPage() {
           className={`cat-tab-btn ${activeMenuTab === 'cuentas_ingreso' ? 'active' : ''}`}
           onClick={() => setActiveMenuTab('cuentas_ingreso')}
         >
-          <span>💼</span> {t('wallets.tab_cuentas_ingreso')}
+          <span><CategoryIcon name="Briefcase" size={14} /></span> {t('wallets.tab_cuentas_ingreso')}
         </button>
         <button
           className={`cat-tab-btn ${activeMenuTab === 'categorias_egresos' ? 'active' : ''}`}
           onClick={() => setActiveMenuTab('categorias_egresos')}
         >
-          <span>📤</span> {t('wallets.tab_categorias_egresos')}
+          <span><CategoryIcon name="Upload" size={14} /></span> {t('wallets.tab_categorias_egresos')}
         </button>
       </div>
 
@@ -273,12 +274,12 @@ export function BilleterasPage() {
                       <div className="flex gap-2">
                         {b.alertas_keys.includes('unreconciled') && (
                           <button className="btn btn-xs btn-primary text-xs" onClick={() => openConciliar(b)}>
-                            ⚖️ {t('wallets.btn_conciliar')}
+                            <CategoryIcon name="Scale" size={12} /> {t('wallets.btn_conciliar')}
                           </button>
                         )}
                         {b.alertas_keys.includes('no_movements') && b.saldo_actual === 0 && (
                           <button className="btn btn-xs btn-secondary text-xs" onClick={() => openEdit(b)}>
-                            ⚙️ {t('wallets.btn_archivar')}
+                  <CategoryIcon name="Settings" size={14} /> {t('wallets.btn_archivar')}
                           </button>
                         )}
                       </div>
@@ -291,7 +292,7 @@ export function BilleterasPage() {
             {/* ── LISTADO DE BILLETERAS (Grilla en PC / Lista en móvil) ── */}
             {billeteras.length === 0 ? (
               <div className="empty-state">
-                <span className="empty-state-icon">💳</span>
+                <CategoryIcon name="Wallet" size={48} />
                 <h3>{t('wallets.empty_title')}</h3>
                 <p>{t('wallets.empty_desc')}</p>
                 <button className="btn btn-primary mt-4" onClick={() => setShowCreateModal(true)}>
@@ -307,7 +308,7 @@ export function BilleterasPage() {
                       <div className="billetera-item-top">
                         <div className="billetera-item-left" onClick={() => setDetailBilletera(b)} style={{ cursor: 'pointer' }}>
                           <div className="billetera-item-icon-wrapper">
-                            {b.icono || '💳'}
+                            <CategoryIcon name={b.icono || 'Wallet'} size={24} />
                             <span className={`dot dot-${sem.color} billetera-item-semaforo`} />
                           </div>
                           <div className="billetera-item-info">
@@ -340,10 +341,10 @@ export function BilleterasPage() {
                           </button>
                         )}
                         <button className="btn-billetera-action primary" onClick={() => openConciliar(b)}>
-                          ⚖️ {t('wallets.btn_conciliar')}
+                          <CategoryIcon name="Scale" size={14} /> {t('wallets.btn_conciliar')}
                         </button>
                         <button className="btn-billetera-action" onClick={() => openEdit(b)}>
-                          ⚙️ {t('wallets.btn_editar')}
+                          <CategoryIcon name="Settings" size={14} /> {t('wallets.btn_editar')}
                         </button>
                       </div>
                     </div>
@@ -418,14 +419,14 @@ export function BilleterasPage() {
               <div className="form-group mb-4">
                 <label className="text-xs text-muted mb-2 block font-semibold">{t('wallets.label_icono')}</label>
                 <div className="emojis-picker-grid">
-                  {FINANCIAL_EMOJIS.map((emoji) => (
+                  {FINANCIAL_ICONS.map((icon) => (
                     <button
-                      key={emoji}
+                      key={icon}
                       type="button"
-                      className={`emoji-select-btn ${newIcono === emoji ? 'active' : ''}`}
-                      onClick={() => setNewIcono(emoji)}
+                      className={`emoji-select-btn ${newIcono === icon ? 'active' : ''}`}
+                      onClick={() => setNewIcono(icon)}
                     >
-                      {emoji}
+                      <CategoryIcon name={icon} size={28} />
                     </button>
                   ))}
                 </div>
@@ -472,14 +473,14 @@ export function BilleterasPage() {
               <div className="form-group mb-4">
                 <label className="text-xs text-muted mb-2 block font-semibold">{t('wallets.label_icono')}</label>
                 <div className="emojis-picker-grid">
-                  {FINANCIAL_EMOJIS.map((emoji) => (
+                  {FINANCIAL_ICONS.map((icon) => (
                     <button
-                      key={emoji}
+                      key={icon}
                       type="button"
-                      className={`emoji-select-btn ${editIcono === emoji ? 'active' : ''}`}
-                      onClick={() => setEditIcono(emoji)}
+                      className={`emoji-select-btn ${editIcono === icon ? 'active' : ''}`}
+                      onClick={() => setEditIcono(icon)}
                     >
-                      {emoji}
+                      <CategoryIcon name={icon} size={28} />
                     </button>
                   ))}
                 </div>
@@ -505,7 +506,7 @@ export function BilleterasPage() {
                     marginTop: 'var(--space-1)'
                   }}
                 >
-                  ⚙️ {t('wallets.btn_archivar')}
+                  <CategoryIcon name="Settings" size={14} /> {t('wallets.btn_archivar')}
                 </button>
               </div>
             </form>

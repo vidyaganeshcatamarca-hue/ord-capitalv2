@@ -4,11 +4,13 @@ import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
+import { LUCIDE_RUBRO_ICONS } from '@/constants/emojiToLucide'
 import { isUserEditableCategory } from '@/lib/categoryFilters'
 import './Categorias.css'
 
 // ─── Constantes ────────────────────────────────────────────────────────────
-const EMOJIS = ['🍔','🛒','🚗','🏠','🩺','🎓','💸','✈️','🎮','🏋️','👚','🧼','🍿','👶','🐾','💈','🎁','🔌','🎵','📱','💡','🍷','🎯','📚','🏖️','🐶','🌿','🍕']
+const RUBRO_ICONS = LUCIDE_RUBRO_ICONS
 const COLORS = ['#1F2937','#4B5563','#9CA3AF','#F3F4F6','#EF4444','#F97316','#F59E0B','#10B981','#3B82F6','#8B5CF6']
 const CUPOS = [
   { value: 'need',       label: t('cat_need_label'),      desc: t('cat_need_desc') },
@@ -48,21 +50,21 @@ interface CategoriaIngreso {
 }
 
 // ─── Sub-componentes de formulario ──────────────────────────────────────────
-function EmojiPicker({ value, onChange, selectedColor }: { value: string; onChange: (v: string) => void; selectedColor?: string }) {
+function IconPicker({ value, onChange, selectedColor }: { value: string; onChange: (v: string) => void; selectedColor?: string }) {
   return (
     <div className="cat-emoji-grid">
-      {EMOJIS.map(e => (
-        <button key={e} type="button"
-          className={`cat-emoji-btn ${value === e ? 'active' : ''}`}
-          style={value === e && selectedColor ? {
+      {RUBRO_ICONS.map(icon => (
+        <button key={icon} type="button"
+          className={`cat-emoji-btn ${value === icon ? 'active' : ''}`}
+          style={value === icon && selectedColor ? {
             backgroundColor: selectedColor,
             borderColor: selectedColor,
             color: '#000000',
             textShadow: 'none',
             boxShadow: `0 0 10px ${selectedColor}`
           } : {}}
-          onClick={() => onChange(e)}>
-          <span>{e}</span>
+          onClick={() => onChange(icon)}>
+          <CategoryIcon name={icon} size={24} />
         </button>
       ))}
     </div>
@@ -92,7 +94,7 @@ function RubroModal({ rubro, onClose, onSaved }: {
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [nombre, setNombre] = useState(rubro ? t(rubro.nombre_cuenta) : '')
-  const [icono, setIcono] = useState(rubro?.icono ?? '🏷️')
+  const [icono, setIcono] = useState(rubro?.icono ?? 'Tag')
   const [color, setColor] = useState(rubro?.color ?? COLORS[0])
   const [tipoCupo, setTipoCupo] = useState(rubro?.tipo_cupo ?? 'need')
 
@@ -142,12 +144,11 @@ function RubroModal({ rubro, onClose, onSaved }: {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 'calc(22px * var(--font-scale))',
             boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
             flexShrink: 0,
             color: '#000000'
           }}>
-            <span>{icono}</span>
+            <CategoryIcon name={icono} size={22} />
           </div>
           <h3 className="font-display" style={{ margin: 0 }}>{rubro ? t('cat_rubro_edit_title') : t('cat_rubro_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>
@@ -173,7 +174,7 @@ function RubroModal({ rubro, onClose, onSaved }: {
           </div>
 
           <label className="cat-label">{t("label_icon")}</label>
-          <EmojiPicker value={icono} onChange={setIcono} selectedColor={color} />
+          <IconPicker value={icono} onChange={setIcono} selectedColor={color} />
 
           <label className="cat-label mt-3">{t('cat_label_color')}</label>
           <ColorPicker value={color} onChange={setColor} />
@@ -200,7 +201,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
   const [loading, setLoading] = useState(false)
   const [nombre, setNombre] = useState(ingreso?.nombre ?? '')
   const [descripcion, setDescripcion] = useState(ingreso?.descripcion ?? '')
-  const [icono, setIcono] = useState(ingreso?.icono ?? '💰')
+  const [icono, setIcono] = useState(ingreso?.icono ?? 'Coins')
   const [color, setColor] = useState(ingreso?.color ?? 'var(--mint, #00B127)')
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -248,12 +249,11 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            fontSize: 'calc(22px * var(--font-scale))',
             boxShadow: '0 4px 10px rgba(0,0,0,0.3)',
             flexShrink: 0,
             color: '#000000'
           }}>
-            <span>{icono}</span>
+            <CategoryIcon name={icono} size={22} />
           </div>
           <h3 className="font-display" style={{ margin: 0 }}>{ingreso ? t('cat_fuente_edit_title') : t('cat_fuente_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>
@@ -295,7 +295,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
           />
 
           <label className="cat-label">{t("label_icon")}</label>
-          <EmojiPicker value={icono} onChange={setIcono} selectedColor={color} />
+          <IconPicker value={icono} onChange={setIcono} selectedColor={color} />
 
           <label className="cat-label mt-3">{t('cat_label_color')}</label>
           <ColorPicker value={color} onChange={setColor} />
@@ -375,7 +375,7 @@ export function TabEgresos() {
       {/* Barra búsqueda + botón nuevo */}
       <div className="cat-toolbar">
         <div className="cat-search-wrap">
-          <span className="cat-search-icon">🔍</span>
+          <span className="cat-search-icon"><CategoryIcon name="Search" size={18} /></span>
           <input className="cat-search" placeholder={t("placeholder_search_category")} value={query}
             onChange={e => setQuery(e.target.value)} />
         </div>
@@ -389,7 +389,7 @@ export function TabEgresos() {
         <div className="cat-loading"><div className="spinner" /></div>
       ) : filteredRubros.length === 0 ? (
         <div className="cat-empty">
-          <div className="cat-empty-icon">🏷️</div>
+          <div className="cat-empty-icon"><CategoryIcon name="Tag" size={48} /></div>
           <div className="cat-empty-title">{t("cat_empty_title")}</div>
           <div className="cat-empty-desc">{t('cat_empty_first_rubro_desc')}</div>
           <button className="btn btn-primary mt-3" onClick={() => setRubroModal({ open: true, rubro: null })}>{t('cat_rubro_create_empty')}</button>
@@ -405,7 +405,7 @@ export function TabEgresos() {
                 <div className="cat-rubro-header" onClick={() => toggleExpanded(rubro.estructura_id)}>
                   <div className="cat-rubro-left">
                     <div className="cat-rubro-icon" style={{ background: rubro.color, borderColor: rubro.color, color: '#000000' }}>
-                      <span>{rubro.icono}</span>
+                      <CategoryIcon name={rubro.icono} size={24} />
                     </div>
                     <div>
                       <div className="cat-rubro-name">{t(rubro.nombre_cuenta)}</div>
@@ -421,13 +421,13 @@ export function TabEgresos() {
                   </div>
                   <div className="cat-rubro-actions" onClick={e => e.stopPropagation()}>
                     <button className="cat-action-btn" title={t('cat_tooltip_edit_rubro')}
-                      onClick={() => setRubroModal({ open: true, rubro })}>✏️</button>
+                      onClick={() => setRubroModal({ open: true, rubro })}><CategoryIcon name="Edit" size={18} /></button>
                     {(hijos.length === 0 || isOpen) && (
                       <button className="cat-action-btn" title={t('cat_tooltip_new_subcuenta')}
-                        onClick={() => setSubModal({ open: true, hijo: null, rubroId: rubro.estructura_id })}>➕</button>
+                        onClick={() => setSubModal({ open: true, hijo: null, rubroId: rubro.estructura_id })}><CategoryIcon name="Plus" size={18} /></button>
                     )}
                     <button className="cat-action-btn" title={t('cat_tooltip_delete_rubro')}
-                      onClick={() => setDeleteConfirm({ open: true, id: rubro.estructura_id, nombre: rubro.nombre_cuenta })}>🗑️</button>
+                      onClick={() => setDeleteConfirm({ open: true, id: rubro.estructura_id, nombre: rubro.nombre_cuenta })}><CategoryIcon name="Trash2" size={18} /></button>
                   </div>
                 </div>
 
@@ -452,17 +452,16 @@ export function TabEgresos() {
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
-                              fontSize: 'calc(14px * var(--font-scale))',
                               flexShrink: 0
                             }}>
-                              <span>{hijo.icono || rubro.icono}</span>
+                              <CategoryIcon name={hijo.icono || rubro.icono} size={16} />
                             </div>
                             <span className="cat-hijo-name">{t(hijo.nombre_cuenta)}</span>
-                            {hijo.es_hormiga && <span className="cat-badge-hormiga">🐜</span>}
+                            {hijo.es_hormiga && <span className="cat-badge-hormiga"><CategoryIcon name="Bug" size={14} /></span>}
                             <button className="cat-action-btn cat-action-sm" title={t('cat_tooltip_edit_subcuenta')}
-                              onClick={() => setSubModal({ open: true, hijo, rubroId: rubro.estructura_id })}>✏️</button>
+                              onClick={() => setSubModal({ open: true, hijo, rubroId: rubro.estructura_id })}><CategoryIcon name="Edit" size={16} /></button>
                             <button className="cat-action-btn cat-action-sm" title={t('cat_tooltip_delete_subcuenta')}
-                              onClick={() => setDeleteConfirm({ open: true, id: hijo.estructura_id, nombre: hijo.nombre_cuenta })}>🗑️</button>
+                              onClick={() => setDeleteConfirm({ open: true, id: hijo.estructura_id, nombre: hijo.nombre_cuenta })}><CategoryIcon name="Trash2" size={16} /></button>
                           </div>
                         )
                       })
@@ -551,7 +550,7 @@ export function TabIngresos({ hideNewBtn = false }: { hideNewBtn?: boolean }) {
         <div className="cat-loading"><div className="spinner" /></div>
       ) : ingresos.length === 0 ? (
         <div className="cat-empty">
-          <div className="cat-empty-icon">💰</div>
+          <div className="cat-empty-icon"><CategoryIcon name="Coins" size={48} /></div>
           <div className="cat-empty-title">{t('cat_ingresos_empty_title')}</div>
           <div className="cat-empty-desc">{t("cat_empty_desc")}</div>
           <button className="btn btn-primary mt-3" onClick={() => setModal({ open: true, item: null })}>{t('cat_fuente_create_empty')}</button>
@@ -562,14 +561,14 @@ export function TabIngresos({ hideNewBtn = false }: { hideNewBtn?: boolean }) {
             <div key={ing.producto_id} className="cat-ingreso-card"
               onClick={() => setModal({ open: true, item: ing })}>
               <div className="cat-ingreso-icon" style={{ background: ing.color, borderColor: ing.color, color: '#000000' }}>
-                <span>{ing.icono}</span>
+                <CategoryIcon name={ing.icono} size={24} />
               </div>
               <div className="cat-ingreso-info">
                 <div className="cat-ingreso-name">{ing.nombre}</div>
                 {ing.descripcion && <div className="cat-ingreso-desc">{ing.descripcion}</div>}
               </div>
               <div className="cat-ingreso-right">
-                {ing.es_pasivo && <span className="cat-badge-pasivo">💤 {t('cat_badge_pasivo')}</span>}
+                {ing.es_pasivo && <span className="cat-badge-pasivo"><CategoryIcon name="Moon" size={14} /> {t('cat_badge_pasivo')}</span>}
                 <span className="cat-chevron">›</span>
               </div>
             </div>
@@ -608,13 +607,13 @@ export function CategoriasPage() {
           className={`cat-tab-btn ${activeTab === 'egresos' ? 'active' : ''}`}
           onClick={() => setActiveTab('egresos')}
         >
-          <span>📤</span> {t('cat_tab_egresos')}
+          <CategoryIcon name="ArrowUpFromLine" size={18} /> {t('cat_tab_egresos')}
         </button>
         <button
           className={`cat-tab-btn ${activeTab === 'ingresos' ? 'active' : ''}`}
           onClick={() => setActiveTab('ingresos')}
         >
-          <span>📥</span> {t('cat_tab_ingresos')}
+          <CategoryIcon name="ArrowDownFromLine" size={18} /> {t('cat_tab_ingresos')}
         </button>
       </div>
 
