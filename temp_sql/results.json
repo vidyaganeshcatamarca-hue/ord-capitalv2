@@ -1,0 +1,62 @@
+[
+  {
+    "file": "01_alter_usuarios.sql",
+    "status": 201,
+    "response": "[]",
+    "error": null
+  },
+  {
+    "file": "02_create_p_app_sessions.sql",
+    "status": 201,
+    "response": "[]",
+    "error": null
+  },
+  {
+    "file": "03_idx_user_time.sql",
+    "status": 201,
+    "response": "[]",
+    "error": null
+  },
+  {
+    "file": "04_idx_open.sql",
+    "status": 201,
+    "response": "[]",
+    "error": null
+  },
+  {
+    "file": "05_fn_iniciar_sesion_app.sql",
+    "status": 201,
+    "response": "[]",
+    "error": null
+  },
+  {
+    "file": "06_fn_pausar_sesion_app.sql",
+    "status": 201,
+    "response": "[]",
+    "error": null
+  },
+  {
+    "file": "07_fn_reanudar_sesion_app.sql",
+    "status": 201,
+    "response": "[]",
+    "error": null
+  },
+  {
+    "file": "08_fn_finalizar_sesion_app.sql",
+    "status": 201,
+    "response": "[]",
+    "error": null
+  },
+  {
+    "file": "09_fn_marcar_crash_sesion.sql",
+    "status": 201,
+    "response": "[]",
+    "error": null
+  },
+  {
+    "file": "10_fn_resumen_uso_app.sql",
+    "status": 201,
+    "response": "[]",
+    "error": null
+  }
+]

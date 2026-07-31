@@ -16,6 +16,10 @@ export const errors = {
   error_sum_must_be_100: "La suma de los porcentajes debe ser exactamente 100.",
   error_sum_must_be_zero: "La suma debe ser 100.",
 
+  // Session tracking
+  error_session_not_active: "La sesion no esta activa",
+  error_session_not_paused: "La sesion no esta pausada",
+
   // Billeteras y cuentas
   error_currency_not_supported: "Moneda no soportada.",
   error_no_orphan_savings_funds: "No hay sobres vinculados a esta Cuenta Madre para distribuir rendimientos.",
