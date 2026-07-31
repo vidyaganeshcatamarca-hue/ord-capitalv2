@@ -19,7 +19,7 @@ export const errors = {
   // Billeteras y cuentas
   error_currency_not_supported: "Moneda no soportada.",
   error_no_orphan_savings_funds: "No hay sobres vinculados a esta Cuenta Madre para distribuir rendimientos.",
-  error_opening_balance_negative: "El saldo de apertura no puede ser negativo.",
+  error_opening_balance_negative: "El saldo de apertura no puede ser negativo (-).",
 error_transfer_different_currencies: "Operación inválida: No se permiten transferencias directas entre cuentas de diferentes monedas ({currency_from} a {currency_to}).",
   error_no_sufficient_balance_wallets: "No tienes saldo suficiente en ninguna billetera.",
   error_wallet_not_found: "La cuenta seleccionada ya no está disponible.",
