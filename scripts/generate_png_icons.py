@@ -45,15 +45,16 @@ def create_shortcut_icon():
     base_logo = os.path.join(os.path.dirname(__file__), '../public/icono_logo.png')
     canvas = Image.new('RGBA', (512, 512), (255, 255, 255, 255))
     if os.path.exists(base_logo):
-        logo = Image.open(base_logo).convert('RGBA').resize((300, 300), Image.Resampling.LANCZOS)
-        canvas.paste(logo, (106, 110), logo)
+        # 96% of 512px canvas = 492px
+        logo = Image.open(base_logo).convert('RGBA').resize((492, 492), Image.Resampling.LANCZOS)
+        canvas.paste(logo, (10, 10), logo)
     
     draw = ImageDraw.Draw(canvas)
-    badge_box = [355, 35, 475, 155]
+    badge_box = [405, 17, 495, 107]
     draw.ellipse(badge_box, fill=(245, 176, 65, 255), outline=(26, 26, 26, 255), width=6)
     
     try:
-        font = ImageFont.truetype('arialbd.ttf', 80)
+        font = ImageFont.truetype('arialbd.ttf', 65)
     except Exception:
         font = ImageFont.load_default()
         
@@ -62,9 +63,9 @@ def create_shortcut_icon():
     w_text = bbox[2] - bbox[0]
     h_text = bbox[3] - bbox[1]
     
-    cx, cy = 415, 95
+    cx, cy = 450, 62
     x_text = cx - w_text / 2 - bbox[0]
-    y_text = cy - h_text / 2 - bbox[1] - 4
+    y_text = cy - h_text / 2 - bbox[1] - 3
     
     draw.text((x_text, y_text), text, fill=(26, 26, 26, 255), font=font)
     
@@ -73,7 +74,10 @@ def create_shortcut_icon():
     canvas.save(out_path, 'PNG')
     if os.path.exists(os.path.dirname(dist_path)):
         canvas.save(dist_path, 'PNG')
-    print(f"Generated icon-shortcut-add.png (512x512) with top-right + badge at {out_path}")
+    print(f"Generated icon-shortcut-add.png (512x512) with 96% logo and top-right + badge at {out_path}")
+
+
+
 
 create_shortcut_icon()
 
