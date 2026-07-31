@@ -559,7 +559,7 @@ export const category_keys = {
   cat_finance_taxes: "Finanzas e Impuestos",
   cat_tech_electro: "Tecnología/Electro",
   cat_investments: "Inversiones",
-  cat_dry_goods: "Almacén Seco",
+  cat_dry_goods: "Almacén / Despensa",
   cat_dairy: "Lácteos",
   cat_butcher: "Carnicería",
   cat_greengrocer: "Verdulería",

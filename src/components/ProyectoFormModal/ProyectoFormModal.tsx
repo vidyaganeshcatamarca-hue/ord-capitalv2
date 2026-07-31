@@ -4,7 +4,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
-import { LUCIDE_PROJECT_ICONS } from '@/constants/emojiToLucide'
+import { PROJECT_ICONS } from '@/constants/emojiToLucide'
 import './ProyectoFormModal.css'
 
 interface ProyectoFormModalProps {
@@ -12,8 +12,6 @@ interface ProyectoFormModalProps {
   onClose: () => void
   onSuccess?: () => void
 }
-
-const PROJECT_ICONS = LUCIDE_PROJECT_ICONS
 
 export function ProyectoFormModal({ isOpen, onClose, onSuccess }: ProyectoFormModalProps) {
   const { showToast } = useToast()
@@ -122,6 +120,7 @@ export function ProyectoFormModal({ isOpen, onClose, onSuccess }: ProyectoFormMo
                   key={icon}
                   className={`proyecto-form-icono-btn ${icono === icon ? 'active' : ''}`}
                   onClick={() => setIcono(icon)}
+                  aria-label={icon}
                 >
                   <CategoryIcon name={icon} size={24} />
                 </button>

@@ -5,12 +5,11 @@ import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
-import { LUCIDE_RUBRO_ICONS } from '@/constants/emojiToLucide'
+import { INGRESO_ICONS, RUBRO_ICONS } from '@/constants/emojiToLucide'
 import { isUserEditableCategory } from '@/lib/categoryFilters'
 import './Categorias.css'
 
 // ─── Constantes ────────────────────────────────────────────────────────────
-const RUBRO_ICONS = LUCIDE_RUBRO_ICONS
 const COLORS = ['#1F2937','#4B5563','#9CA3AF','#F3F4F6','#EF4444','#F97316','#F59E0B','#10B981','#3B82F6','#8B5CF6']
 const CUPOS = [
   { value: 'need',       label: t('cat_need_label'),      desc: t('cat_need_desc') },
@@ -50,12 +49,13 @@ interface CategoriaIngreso {
 }
 
 // ─── Sub-componentes de formulario ──────────────────────────────────────────
-function IconPicker({ value, onChange, selectedColor }: { value: string; onChange: (v: string) => void; selectedColor?: string }) {
+function IconPicker({ icons, value, onChange, selectedColor }: { icons: readonly string[]; value: string; onChange: (v: string) => void; selectedColor?: string }) {
   return (
     <div className="cat-emoji-grid">
-      {RUBRO_ICONS.map(icon => (
+      {icons.map(icon => (
         <button key={icon} type="button"
           className={`cat-emoji-btn ${value === icon ? 'active' : ''}`}
+          aria-label={icon}
           style={value === icon && selectedColor ? {
             backgroundColor: selectedColor,
             borderColor: selectedColor,
@@ -148,7 +148,7 @@ function RubroModal({ rubro, onClose, onSaved }: {
             flexShrink: 0,
             color: '#000000'
           }}>
-            <CategoryIcon name={icono} size={22} />
+            <CategoryIcon name={icono || 'Tag'} size={22} />
           </div>
           <h3 className="font-display" style={{ margin: 0 }}>{rubro ? t('cat_rubro_edit_title') : t('cat_rubro_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>
@@ -174,7 +174,7 @@ function RubroModal({ rubro, onClose, onSaved }: {
           </div>
 
           <label className="cat-label">{t("label_icon")}</label>
-          <IconPicker value={icono} onChange={setIcono} selectedColor={color} />
+          <IconPicker icons={RUBRO_ICONS} value={icono} onChange={setIcono} selectedColor={color} />
 
           <label className="cat-label mt-3">{t('cat_label_color')}</label>
           <ColorPicker value={color} onChange={setColor} />
@@ -253,7 +253,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
             flexShrink: 0,
             color: '#000000'
           }}>
-            <CategoryIcon name={icono} size={22} />
+            <CategoryIcon name={icono || 'Banknote'} size={22} />
           </div>
           <h3 className="font-display" style={{ margin: 0 }}>{ingreso ? t('cat_fuente_edit_title') : t('cat_fuente_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>
@@ -295,7 +295,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
           />
 
           <label className="cat-label">{t("label_icon")}</label>
-          <IconPicker value={icono} onChange={setIcono} selectedColor={color} />
+          <IconPicker icons={INGRESO_ICONS} value={icono} onChange={setIcono} selectedColor={color} />
 
           <label className="cat-label mt-3">{t('cat_label_color')}</label>
           <ColorPicker value={color} onChange={setColor} />
@@ -405,7 +405,7 @@ export function TabEgresos() {
                 <div className="cat-rubro-header" onClick={() => toggleExpanded(rubro.estructura_id)}>
                   <div className="cat-rubro-left">
                     <div className="cat-rubro-icon" style={{ background: rubro.color, borderColor: rubro.color, color: '#000000' }}>
-                      <CategoryIcon name={rubro.icono} size={24} />
+                      <CategoryIcon name={rubro.icono || 'Tag'} size={24} />
                     </div>
                     <div>
                       <div className="cat-rubro-name">{t(rubro.nombre_cuenta)}</div>
@@ -454,7 +454,7 @@ export function TabEgresos() {
                               justifyContent: 'center',
                               flexShrink: 0
                             }}>
-                              <CategoryIcon name={hijo.icono || rubro.icono} size={16} />
+                              <CategoryIcon name={hijo.icono || rubro.icono || 'Tag'} size={16} />
                             </div>
                             <span className="cat-hijo-name">{t(hijo.nombre_cuenta)}</span>
                             {hijo.es_hormiga && <span className="cat-badge-hormiga"><CategoryIcon name="Bug" size={14} /></span>}
@@ -550,7 +550,7 @@ export function TabIngresos({ hideNewBtn = false }: { hideNewBtn?: boolean }) {
         <div className="cat-loading"><div className="spinner" /></div>
       ) : ingresos.length === 0 ? (
         <div className="cat-empty">
-          <div className="cat-empty-icon"><CategoryIcon name="Coins" size={48} /></div>
+          <div className="cat-empty-icon"><CategoryIcon name="Banknote" size={48} /></div>
           <div className="cat-empty-title">{t('cat_ingresos_empty_title')}</div>
           <div className="cat-empty-desc">{t("cat_empty_desc")}</div>
           <button className="btn btn-primary mt-3" onClick={() => setModal({ open: true, item: null })}>{t('cat_fuente_create_empty')}</button>
@@ -561,7 +561,7 @@ export function TabIngresos({ hideNewBtn = false }: { hideNewBtn?: boolean }) {
             <div key={ing.producto_id} className="cat-ingreso-card"
               onClick={() => setModal({ open: true, item: ing })}>
               <div className="cat-ingreso-icon" style={{ background: ing.color, borderColor: ing.color, color: '#000000' }}>
-                <CategoryIcon name={ing.icono} size={24} />
+                <CategoryIcon name={ing.icono || 'Banknote'} size={24} />
               </div>
               <div className="cat-ingreso-info">
                 <div className="cat-ingreso-name">{ing.nombre}</div>

@@ -3,11 +3,10 @@ import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
-import { LUCIDE_RUBRO_ICONS } from '@/constants/emojiToLucide'
+import { RUBRO_ICONS } from '@/constants/emojiToLucide'
 import '@/pages/Categorias/Categorias.css'
 
 // ─── Constantes ────────────────────────────────────────────────────────────
-const RUBRO_ICONS = LUCIDE_RUBRO_ICONS
 const COLORS = ['#1F2937','#4B5563','#9CA3AF','#F3F4F6','#EF4444','#F97316','#F59E0B','#10B981','#3B82F6','#8B5CF6']
 
 export interface Hijo {
@@ -36,6 +35,7 @@ function IconPicker({ value, onChange, selectedColor }: { value: string; onChang
       {RUBRO_ICONS.map(icon => (
         <button key={icon} type="button"
           className={`cat-emoji-btn ${value === icon ? 'active' : ''}`}
+          aria-label={icon}
           style={value === icon && selectedColor ? {
             backgroundColor: selectedColor,
             borderColor: selectedColor,
@@ -156,7 +156,7 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
             flexShrink: 0,
             color: '#000000'
           }}>
-            <CategoryIcon name={icono} size={22} />
+            <CategoryIcon name={icono || 'Tag'} size={22} />
           </div>
           <h3 className="font-display" style={{ margin: 0 }}>{subcuenta ? t('cat_subcuenta_edit_title') : t('cat_subcuenta_new_title')}</h3>
           <button className="cat-modal-close" onClick={onClose} style={{ marginLeft: 'auto' }}>✕</button>
@@ -169,7 +169,7 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
                 onChange={e => setPadreId(Number(e.target.value))} disabled={loading}>
                 {rubros.map(r => (
                   <option key={r.estructura_id} value={r.estructura_id}>
-                    {r.icono} {t(r.nombre_cuenta)}
+                    {t(r.nombre_cuenta)}
                   </option>
                 ))}
               </select>

@@ -14,10 +14,10 @@ import { BilleteraDetailModal } from '@/components/BilleteraDetailModal/Billeter
 import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/ReconcileWalletModal'
 import { TabEgresos, TabIngresos } from '@/pages/Categorias/CategoriasPage'
 import { CategoryIcon } from '@/components/CategoryIcon'
+import { WALLET_ICONS } from '@/constants/emojiToLucide'
 import '@/pages/Categorias/Categorias.css'
 import './Billeteras.css'
 
-const FINANCIAL_ICONS = ['Banknote', 'CreditCard', 'Landmark', 'Coins', 'SendHorizontal', 'Briefcase', 'BarChart3', 'TrendingUp', 'TrendingDown', 'CircleDollarSign', 'Shield', 'PiggyBank', 'Target', 'Key', 'Wallet']
 export function BilleterasPage() {
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
@@ -419,12 +419,13 @@ export function BilleterasPage() {
               <div className="form-group mb-4">
                 <label className="text-xs text-muted mb-2 block font-semibold">{t('wallets.label_icono')}</label>
                 <div className="emojis-picker-grid">
-                  {FINANCIAL_ICONS.map((icon) => (
+                  {WALLET_ICONS.map((icon) => (
                     <button
                       key={icon}
                       type="button"
                       className={`emoji-select-btn ${newIcono === icon ? 'active' : ''}`}
                       onClick={() => setNewIcono(icon)}
+                      aria-label={icon}
                     >
                       <CategoryIcon name={icon} size={28} />
                     </button>
@@ -473,12 +474,13 @@ export function BilleterasPage() {
               <div className="form-group mb-4">
                 <label className="text-xs text-muted mb-2 block font-semibold">{t('wallets.label_icono')}</label>
                 <div className="emojis-picker-grid">
-                  {FINANCIAL_ICONS.map((icon) => (
+                  {WALLET_ICONS.map((icon) => (
                     <button
                       key={icon}
                       type="button"
                       className={`emoji-select-btn ${editIcono === icon ? 'active' : ''}`}
                       onClick={() => setEditIcono(icon)}
+                      aria-label={icon}
                     >
                       <CategoryIcon name={icon} size={28} />
                     </button>

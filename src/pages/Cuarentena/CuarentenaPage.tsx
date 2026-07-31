@@ -97,7 +97,7 @@ export function CuarentenaPage() {
         <div style={{ textAlign: 'center', padding: '48px' }}><div className="spinner" /></div>
       ) : pendientes.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-state-icon"><CategoryIcon name="Shield" size={56} /></span>
+          <span className="empty-state-icon"><CategoryIcon name="ShieldCheck" size={56} /></span>
           <h3>{t('quarantine_empty_title')}</h3>
           <p>{t('quarantine_empty_desc')}</p>
         </div>

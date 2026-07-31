@@ -99,9 +99,15 @@ function getSemaforoClass(alerta: string) {
 }
 
 function getSemaforoLabel(alerta: string) {
-  if (alerta === 'green') return '🟢 Saludable'
+  if (alerta === 'green') return 'Saludable'
   if (alerta === 'yellow') return t('card_status_caution')
-  return '🔴 En Riesgo'
+  return 'En Riesgo'
+}
+
+function getSemaforoIcon(alerta: string) {
+  if (alerta === 'green') return 'CircleDollarSign'
+  if (alerta === 'yellow') return 'BarChart3'
+  return 'TriangleAlert'
 }
 
 function getUrgencyMsg(key: string, dias: number): string {
@@ -115,9 +121,9 @@ function getUrgencyMsg(key: string, dias: number): string {
 
 function getTendenciaMsg(key: string): string {
   const map: Record<string, string> = {
-    alert_card_overuse: '🔴 Uso excesivo vs mes anterior',
-    alert_card_savings: '🟢 Redujiste el uso significativamente',
-    alert_card_stable: '⚪ Uso estable respecto al mes anterior',
+    alert_card_overuse: 'Uso excesivo vs mes anterior',
+    alert_card_savings: 'Redujiste el uso significativamente',
+    alert_card_stable: 'Uso estable respecto al mes anterior',
   }
   return map[key] || ''
 }
@@ -482,7 +488,8 @@ export function TarjetasPage() {
 
     // Semáforo simple basado en uso
     const semaforoClass = usoPct >= 90 ? 'semaforo-red' : usoPct >= 70 ? 'semaforo-yellow' : 'semaforo-green'
-    const semaforoLabel = usoPct >= 90 ? '🔴 Alto' : usoPct >= 70 ? '🟡 Moderado' : '🟢 Saludable'
+    const semaforoLabel = usoPct >= 90 ? 'Alto' : usoPct >= 70 ? 'Moderado' : 'Saludable'
+    const semaforoIcon = usoPct >= 90 ? 'TriangleAlert' : usoPct >= 70 ? 'BarChart3' : 'CircleDollarSign'
 
     const isConfigRequired = tc.estado_config === 'requires_configuration'
 
@@ -506,7 +513,7 @@ export function TarjetasPage() {
             </div>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
-            <div className={`tarjeta-semaforo ${semaforoClass}`}>{semaforoLabel}</div>
+            <div className={`tarjeta-semaforo ${semaforoClass}`}><CategoryIcon name={semaforoIcon} size={12} /> {semaforoLabel}</div>
             <button
               className="tarjeta-detalle-action-btn"
               style={{ width: 28, height: 28, fontSize: 'calc(14px * var(--font-scale))' }}
@@ -617,7 +624,7 @@ export function TarjetasPage() {
               <span className="termometro-title"><CategoryIcon name="BarChart3" size={13} /> {t("card_stress_thermometer")}</span>
               {termometro && (
                 <span className={`termometro-badge ${termometro.estado_alerta}`}>
-                  {getSemaforoLabel(termometro.estado_alerta)}
+                  <CategoryIcon name={getSemaforoIcon(termometro.estado_alerta)} size={12} /> {getSemaforoLabel(termometro.estado_alerta)}
                 </span>
               )}
             </div>
@@ -994,10 +1001,10 @@ export function TarjetasPage() {
                         </div>
                       </div>
 
-                      <div className="comparativa-msg">{getTendenciaMsg(c.mensaje_key)}</div>
+                      <div className="comparativa-msg"><CategoryIcon name={isSaving ? 'BarChart3' : 'TriangleAlert'} size={14} /> {getTendenciaMsg(c.mensaje_key)}</div>
                       {isSaving && (
                         <span className="comparativa-badge-great">
-                          🎉 ¡Excelente disciplina! Redujiste tu uso un {Math.abs(Number(c.variacion_porcentual)).toFixed(0)}% este mes.
+                          <CategoryIcon name="BarChart3" size={14} /> ¡Excelente disciplina! Redujiste tu uso un {Math.abs(Number(c.variacion_porcentual)).toFixed(0)}% este mes.
                         </span>
                       )}
                     </div>
