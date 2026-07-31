@@ -40,3 +40,36 @@ def create_icon(size, filename):
 
 create_icon(192, 'icon-192.png')
 create_icon(512, 'icon-512.png')
+
+def create_shortcut_icon():
+    base_path = os.path.join(os.path.dirname(__file__), '../public/icon-512.png')
+    if os.path.exists(base_path):
+        canvas = Image.open(base_path).convert('RGBA')
+    else:
+        canvas = Image.new('RGBA', (512, 512), (26, 26, 26, 255))
+    
+    draw = ImageDraw.Draw(canvas)
+    badge_box = [315, 45, 445, 175]
+    draw.ellipse(badge_box, fill=(78, 205, 196, 255), outline=(255, 255, 255, 255), width=8)
+    
+    try:
+        font = ImageFont.truetype('arialbd.ttf', 90)
+    except Exception:
+        font = ImageFont.load_default()
+        
+    text = '+'
+    bbox = draw.textbbox((0, 0), text, font=font)
+    w_text = bbox[2] - bbox[0]
+    h_text = bbox[3] - bbox[1]
+    
+    cx, cy = 380, 110
+    x_text = cx - w_text / 2 - bbox[0]
+    y_text = cy - h_text / 2 - bbox[1] - 4
+    
+    draw.text((x_text, y_text), text, fill=(26, 26, 26, 255), font=font)
+    out_path = os.path.join(os.path.dirname(__file__), '../public/icon-shortcut-add.png')
+    canvas.save(out_path, 'PNG')
+    print(f"Generated icon-shortcut-add.png (512x512) with top-right + badge at {out_path}")
+
+create_shortcut_icon()
+
