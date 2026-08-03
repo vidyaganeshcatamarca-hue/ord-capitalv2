@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import {
   AlertTriangle,
   Apple,
@@ -79,6 +79,7 @@ import {
   Palette,
   PaperBag,
   PawPrint,
+  Pencil,
   Percent,
   PiggyBank,
   Plane,
@@ -222,6 +223,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Palette,
   PaperBag,
   PawPrint,
+  Pencil,
   Percent,
   PiggyBank,
   Plane,
@@ -352,6 +354,7 @@ export const LUCIDE_ICON_NAMES = [
   'Palette',
   'PaperBag',
   'PawPrint',
+  'Pencil',
   'Percent',
   'PiggyBank',
   'Plane',
@@ -458,3 +461,4 @@ export function CategoryIcon({
   console.warn(`CategoryIcon: no lucide icon or emoji found for "${trimmed}"`)
   return null
 }
+

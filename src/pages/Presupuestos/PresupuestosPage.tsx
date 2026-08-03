@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { t, parseError } from '@/locales/i18n'
+import { SYSTEM_CATEGORY_NAMES } from '@/lib/categoryFilters'
 import './Presupuestos.css'
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
@@ -183,13 +184,8 @@ export function PresupuestosPage() {
       setSaldoAsignar(Number(rSaldo.data ?? 0))
       const sobresFiltrados = ((rSobres.data ?? []) as SobreDetalle[]).filter(
         s => {
-          const nombreLower = (s.nombre_categoria || '').toLowerCase();
-          return nombreLower !== 'cat_misterio' && 
-                 nombreLower !== 'cat_mystery' && 
-                 nombreLower !== 'misterio/olvido' && 
-                 nombreLower !== 'misterio' &&
-                 nombreLower !== 'olvido' &&
-                 !nombreLower.includes('gastos anteriores');
+          const nombreLower = (s.nombre_categoria || '').toLowerCase().trim();
+          return !SYSTEM_CATEGORY_NAMES.includes(nombreLower as (typeof SYSTEM_CATEGORY_NAMES)[number]);
         }
       )
       setSobres(sobresFiltrados)
@@ -562,12 +558,8 @@ export function PresupuestosPage() {
       const d = data as { liquidez_actual: number; sugerencias: SugerenciaActivacion[] }
       setLiquidezActivacion(Number(d.liquidez_actual ?? 0))
       const sugerenciasFiltradas = (d.sugerencias ?? []).filter(s => {
-        const nombreLower = (s.nombre || '').toLowerCase();
-        return nombreLower !== 'cat_misterio' && 
-               nombreLower !== 'cat_mystery' && 
-               nombreLower !== 'misterio/olvido' && 
-               nombreLower !== 'misterio' &&
-               nombreLower !== 'olvido';
+        const nombreLower = (s.nombre || '').toLowerCase().trim();
+        return !SYSTEM_CATEGORY_NAMES.includes(nombreLower as (typeof SYSTEM_CATEGORY_NAMES)[number]);
       })
       setSugerencias(sugerenciasFiltradas)
       const iniciales: Record<number, string> = {}

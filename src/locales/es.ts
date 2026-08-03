@@ -62,7 +62,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   hero_title_total: "Total",
   hero_sync_ok: "Datos sincronizados",
   section_my_wallets: "Mis Billeteras",
-  horizontal_scroll_hint: "<- Desliza para ver más",
+  horizontal_scroll_hint: "<- Desliza para ver más ->",
   wallets_empty: "Aún no tienes billeteras creadas.",
   wallet_adjusted_days_ago: "Ajustado hace {days}d",
   wallet_never_reconciled: "Nunca conciliada",
@@ -538,7 +538,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
 export const category_keys = {
   cat_misterio: "Misterio/Olvido",
   cat_mystery: "Misterio/Olvido",
-  no_detail: "Egresos anteriores",
+  no_detail: "Gastos anteriores",
   type_income: "Ingreso",
   type_opening: "Saldo de apertura",
   type_transfer: "Transferencia",
