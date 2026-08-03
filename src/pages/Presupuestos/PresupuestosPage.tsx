@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { t, parseError } from '@/locales/i18n'
 import { SYSTEM_CATEGORY_NAMES } from '@/lib/categoryFilters'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import './Presupuestos.css'
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
@@ -708,7 +709,7 @@ export function PresupuestosPage() {
                   {sobresExcedidos.map(sobre => (
                     <div key={sobre.estructura_id} className="alerta-sobre-row">
                       <div className="sobre-info">
-                        <span className="sobre-icono">{sobre.icono}</span>
+                        <span className="sobre-icono"><CategoryIcon name={sobre.icono} size={20} /></span>
                         <span className="sobre-nombre">{t(sobre.nombre_categoria)}</span>
                       </div>
                       <div className="sobre-detalles-derecha">
@@ -762,9 +763,8 @@ export function PresupuestosPage() {
                 width: 32, height: 32, borderRadius: 8,
                 background: sobreSeleccionado.color || 'var(--mint, #00B127)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 'calc(16px * var(--font-scale))',
               }}>
-                {sobreSeleccionado.icono}
+                <CategoryIcon name={sobreSeleccionado.icono} size={18} />
               </span>
               <div>
                 <div className="asignar-sheet-sobre-nombre">{t(sobreSeleccionado.nombre_categoria)}</div>
@@ -894,7 +894,7 @@ export function PresupuestosPage() {
                     }}
                   >
                     <span className="transferir-sobre-nombre">
-                      {s.icono} {t(s.nombre_categoria)}
+                      <CategoryIcon name={s.icono} size={18} /> {t(s.nombre_categoria)}
                     </span>
                     <span className="transferir-sobre-disponible">
                       {formatMonto(s.monto_disponible)}
@@ -1238,7 +1238,7 @@ function FilaSobre({ sobre, isLast, onAsignar }: FilaSobreProps) {
             className="sobre-icono-circulo"
             style={{ background: sobre.color || 'var(--mint, #00B127)' }}
           >
-            {sobre.icono}
+            <CategoryIcon name={sobre.icono} size={18} />
           </span>
           <span>{t(sobre.nombre_categoria)}</span>
         </div>

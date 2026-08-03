@@ -65,6 +65,7 @@ import {
   JapaneseYen,
   KeyRound,
   Laptop,
+  Landmark,
   Leaf,
   Lightbulb,
   LockKeyhole,
@@ -209,6 +210,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   JapaneseYen,
   KeyRound,
   Laptop,
+  Landmark,
   Leaf,
   Lightbulb,
   LockKeyhole,
@@ -340,6 +342,8 @@ export const LUCIDE_ICON_NAMES = [
   'JapaneseYen',
   'KeyRound',
   'Laptop',
+
+  'Landmark',
   'Leaf',
   'Lightbulb',
   'LockKeyhole',
@@ -461,4 +465,6 @@ export function CategoryIcon({
   console.warn(`CategoryIcon: no lucide icon or emoji found for "${trimmed}"`)
   return null
 }
+
+
 
