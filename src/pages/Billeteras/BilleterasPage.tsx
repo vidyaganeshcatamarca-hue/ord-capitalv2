@@ -55,6 +55,7 @@ export function BilleterasPage() {
   const [selectedBilletera, setSelectedBilletera] = useState<Billetera | null>(null)
   const [editName, setEditName] = useState('')
   const [editIcono, setEditIcono] = useState('Wallet')
+  const [originalName, setOriginalName] = useState('')
 
   // Estado del Formulario de Conciliación
   const [conciliarBilletera, setConciliarBilletera] = useState<Billetera | null>(null)
@@ -137,9 +138,15 @@ export function BilleterasPage() {
   }
 
   // Edición
+  const getDisplayName = (nombre: string) =>
+    nombre === 'wallet_cash_default_name'
+      ? t('wallet_cash_default_name')
+      : nombre
+
   const openEdit = (billetera: any) => {
     setSelectedBilletera(billetera)
-    setEditName(billetera.nombre)
+    setOriginalName(billetera.nombre)
+    setEditName(getDisplayName(billetera.nombre))
     setEditIcono(billetera.icono || 'Wallet')
     setShowEditModal(true)
   }
@@ -152,10 +159,14 @@ export function BilleterasPage() {
       return
     }
 
+    const nameToSave = (editName === getDisplayName(originalName) && originalName === 'wallet_cash_default_name')
+      ? 'wallet_cash_default_name'
+      : editName
+
     try {
       await rpc('fn_editar_billetera', {
         p_billetera_id: selectedBilletera.billetera_id,
-        p_nombre: editName,
+        p_nombre: nameToSave,
         p_icono: editIcono
       })
       showToast(t('wallets.toast_updated_success'), 'success')

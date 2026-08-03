@@ -349,7 +349,7 @@ export function TabEgresos() {
         // Tambien ocultamos las subcuentas de sistema que pudieran aparecer
         // dentro de un rubro editable (caso borde: estructura con hijos
         // mezcla la categoria de misterio con categorias reales).
-        hijos: r.hijos?.filter(h => isUserEditableCategory(h)) ?? []
+        hijos: r.hijos?.filter(h => isUserEditableCategory(h)).sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es')) ?? []
       }))
       .filter(r =>
         !deferredQuery ||

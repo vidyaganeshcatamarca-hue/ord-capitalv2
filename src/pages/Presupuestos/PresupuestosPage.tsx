@@ -188,7 +188,8 @@ export function PresupuestosPage() {
                  nombreLower !== 'cat_mystery' && 
                  nombreLower !== 'misterio/olvido' && 
                  nombreLower !== 'misterio' &&
-                 nombreLower !== 'olvido';
+                 nombreLower !== 'olvido' &&
+                 !nombreLower.includes('gastos anteriores');
         }
       )
       setSobres(sobresFiltrados)
