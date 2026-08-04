@@ -9,6 +9,7 @@ import { ProyectoFormModal } from '@/components/ProyectoFormModal/ProyectoFormMo
 import { AportarProyectoModal } from '@/components/AportarProyectoModal/AportarProyectoModal'
 import { ConfigHogar } from '@/components/ConfigHogar/ConfigHogar'
 import { FeedView } from '@/components/familia/FeedView'
+import { ProyectoIcon } from '@/components/ProyectoIcon'
 import './FamiliaPage.css'
 
 type FamiliaTab = 'dashboard' | 'actividad' | 'proyectos' | 'config'
@@ -236,9 +237,7 @@ export function FamiliaPage() {
                 return (
                   <div key={proyecto.proyecto_id} className="familia-proyecto-item">
                     <div className="familia-proyecto-head">
-                      <span className="familia-proyecto-icon" aria-hidden="true">
-                        {proyecto.icono}
-                      </span>
+                      <ProyectoIcon name={proyecto.icono} size={18} className="familia-proyecto-icon" aria-hidden="true" />
                       <div className="familia-proyecto-title">
                         <strong>{proyecto.nombre_proyecto}</strong>
                         <p>
