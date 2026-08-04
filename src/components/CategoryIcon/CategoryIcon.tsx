@@ -136,12 +136,12 @@ import {
 // - Bottle   -> Milk
 // - Broom    -> Brush
 export interface CategoryIconProps {
-  name: string
-  size?: number | string
-  color?: string
-  strokeWidth?: number
-  className?: string
-  style?: React.CSSProperties
+  name?: string | null;
+  size?: number | string;
+  color?: string;
+  strokeWidth?: number;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -416,6 +416,13 @@ function isEmoji(value: string): boolean {
   return EMOJI_REGEX.test(value)
 }
 
+export function isLikelyLucideName(s: string | null | undefined): boolean {
+  if (typeof s !== 'string') return false;
+  if (s.trim() === '') return false;
+  if (s.length < 2) return false; // single letter cannot be lucide name
+  return /^[A-Z][A-Za-z0-9]+$/.test(s);
+}
+
 export function CategoryIcon({
   name,
   size = 24,
@@ -424,15 +431,15 @@ export function CategoryIcon({
   className,
   style,
 }: CategoryIconProps) {
-  const trimmed = name.trim()
-
-  if (!trimmed) {
-    console.warn('CategoryIcon received an empty name')
-    return null
+  if (name === null || name === undefined || name.trim() === '') {
+    return <Tag size={size} color={color} strokeWidth={strokeWidth} className={className} style={style} />;
   }
 
-  const Icon = ICON_MAP[trimmed]
-  if (Icon) {
+  // Trim the input for lookup
+  const trimmedName = name.trim();
+
+  if (isLikelyLucideName(trimmedName) && ICON_MAP[trimmedName]) {
+    const Icon = ICON_MAP[trimmedName];
     return (
       <Icon
         size={size}
@@ -441,10 +448,11 @@ export function CategoryIcon({
         className={className}
         style={style}
       />
-    )
+    );
   }
 
-  if (isEmoji(trimmed)) {
+  // Legacy branch: emoji or unrecognized string renders as inline text
+  if (isEmoji(trimmedName) || !isLikelyLucideName(trimmedName)) {
     return (
       <span
         className={className}
@@ -457,13 +465,14 @@ export function CategoryIcon({
           ...style,
         }}
       >
-        {trimmed}
+        {trimmedName}
       </span>
-    )
+    );
   }
 
-  console.warn(`CategoryIcon: no lucide icon or emoji found for "${trimmed}"`)
-  return null
+  // Fallback for unrecognized non-emoji strings (though text branch above catches them)
+  console.warn(`CategoryIcon: no lucide icon or emoji found for "${trimmedName}"`);
+  return null;
 }
 
 
