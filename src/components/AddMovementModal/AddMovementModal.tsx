@@ -16,6 +16,7 @@ import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBal
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/categoryFilters'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
+import { ProyectoIcon } from '@/components/ProyectoIcon'
 import './AddMovementModal.css'
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -179,7 +180,8 @@ function ProyectosSelector({ proyectos, proyectoSeleccionadoId, selectProyecto }
             className={`proyecto-pill ${proyectoSeleccionadoId === p.proyecto_id ? 'active' : ''}`}
             onClick={() => selectProyecto(p.proyecto_id)}
           >
-            <span style={{ marginRight: '6px' }}>{p.icono}</span>{p.nombre_proyecto}
+            {p.icono && <ProyectoIcon name={p.icono} size={16} style={{ marginRight: '6px' }} />}
+            {p.nombre_proyecto}
           </button>
         ))}
       </div>
