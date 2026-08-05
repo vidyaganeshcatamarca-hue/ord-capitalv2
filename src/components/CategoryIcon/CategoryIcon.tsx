@@ -143,6 +143,7 @@ export interface CategoryIconProps {
   strokeWidth?: number;
   className?: string;
   style?: React.CSSProperties;
+  'aria-hidden'?: React.AriaAttributes['aria-hidden'];
 }
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -428,9 +429,10 @@ export function CategoryIcon({
   strokeWidth = 2,
   className,
   style,
+  'aria-hidden': ariaHidden,
 }: CategoryIconProps) {
   if (name === null || name === undefined || name.trim() === '') {
-    return <Tag size={size} color={color} strokeWidth={strokeWidth} className={className} style={style} />;
+    return <Tag size={size} color={color} strokeWidth={strokeWidth} className={className} style={style} aria-hidden={ariaHidden} />;
   }
 
   // Trim the input for lookup
@@ -445,6 +447,7 @@ export function CategoryIcon({
         strokeWidth={strokeWidth}
         className={className}
         style={style}
+        aria-hidden={ariaHidden}
       />
     );
   }
@@ -454,6 +457,7 @@ export function CategoryIcon({
     return (
       <span
         className={className}
+        aria-hidden={ariaHidden}
         style={{
           fontSize: 'inherit',
           lineHeight: 1,
@@ -465,7 +469,7 @@ export function CategoryIcon({
     );
   }
 
-  return <Tag size={size} color={color} strokeWidth={strokeWidth} className={className} style={style} />;
+  return <Tag size={size} color={color} strokeWidth={strokeWidth} className={className} style={style} aria-hidden={ariaHidden} />;
 }
 
 
