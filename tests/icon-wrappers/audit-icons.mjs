@@ -5,6 +5,7 @@ import ts from 'typescript'
 
 const sourceRoot = path.resolve('src')
 const exceptions = new Set(['components/bcg/BCGScatterPlot.tsx'])
+const wrapperComponents = new Set(['CategoryIcon', 'WalletIcon', 'ProyectoIcon'])
 const findings = []
 
 function walk(directory) {
@@ -34,6 +35,12 @@ function containsRenderedIcono(node) {
   return hasPropertyAccess && !hasJsx
 }
 
+function isWrapperComponent(node) {
+  if (ts.isJsxSelfClosingElement(node)) return wrapperComponents.has(node.tagName.getText())
+  if (ts.isJsxElement(node)) return wrapperComponents.has(node.openingElement.tagName.getText())
+  return false
+}
+
 function inspect(filePath) {
   const relativePath = path.relative(sourceRoot, filePath).replaceAll(path.sep, '/')
   if (exceptions.has(relativePath)) return
@@ -41,6 +48,10 @@ function inspect(filePath) {
   const source = fs.readFileSync(filePath, 'utf8')
   const ast = ts.createSourceFile(filePath, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX)
   const visit = (node) => {
+    if (isWrapperComponent(node) && isOptionExpression(node)) {
+      const { line, character } = ast.getLineAndCharacterOfPosition(node.getStart())
+      findings.push(`${relativePath}:${line + 1}:${character + 1} Component wrapper nested inside <option>: ${node.getText(ast)}`)
+    }
     if (ts.isJsxExpression(node) && node.expression && ts.isJsxElement(node.parent) && !isOptionExpression(node) && containsRenderedIcono(node.expression)) {
       const { line, character } = ast.getLineAndCharacterOfPosition(node.getStart())
       findings.push(`${relativePath}:${line + 1}:${character + 1} ${node.getText(ast)}`)
@@ -53,9 +64,9 @@ function inspect(filePath) {
 walk(sourceRoot)
 
 if (findings.length > 0) {
-  console.error('Unapproved raw .icono JSX render sites:')
+  console.error('Unapproved icon JSX render sites:')
   console.error(findings.join('\n'))
   process.exit(1)
 }
 
-console.log('PASS icon audit: no unapproved raw .icono JSX render sites')
+console.log('PASS icon audit: no unapproved icon JSX render sites')

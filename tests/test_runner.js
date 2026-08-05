@@ -91,6 +91,7 @@ async function main() {
     }
   } catch (err) {
     console.error(`\x1b[31mError al cargar o ejecutar la suite de pruebas:\x1b[0m`, err)
+    process.exitCode = 1
   }
 }
 

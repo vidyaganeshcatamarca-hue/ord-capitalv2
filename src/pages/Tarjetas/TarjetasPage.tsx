@@ -1336,7 +1336,7 @@ export function PagarModal({
               <option value="" disabled>{t('pay_resumen_select_wallet_placeholder')}</option>
               {filteredBilleteras.map(b => (
                 <option key={b.billetera_id} value={b.billetera_id}>
-                  <CategoryIcon name={b.icono || 'CircleDollarSign'} size={14} /> {t(b.nombre)} ({fmtARS(b.saldo_actual)} {b.moneda})
+                  {b.icono || '💳'} {t(b.nombre)} ({fmtARS(b.saldo_actual)} {b.moneda})
                 </option>
               ))}
             </select>
