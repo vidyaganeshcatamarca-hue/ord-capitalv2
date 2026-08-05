@@ -49,6 +49,7 @@ import {
   FilePenLine,
   FileText,
   Fish,
+  FolderKanban,
   Gamepad2,
   Gift,
   GraduationCap,
@@ -194,6 +195,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   FilePenLine,
   FileText,
   Fish,
+  FolderKanban,
   Gamepad2,
   Gift,
   GraduationCap,
@@ -412,10 +414,6 @@ export const LUCIDE_ICON_NAMES = [
 
 const EMOJI_REGEX = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u
 
-function isEmoji(value: string): boolean {
-  return EMOJI_REGEX.test(value)
-}
-
 export function isLikelyLucideName(s: string | null | undefined): boolean {
   if (typeof s !== 'string') return false;
   if (s.trim() === '') return false;
@@ -451,17 +449,14 @@ export function CategoryIcon({
     );
   }
 
-  // Legacy branch: emoji or unrecognized string renders as inline text
-  if (isEmoji(trimmedName) || !isLikelyLucideName(trimmedName)) {
+  // Legacy letters and emoji values predate the shared Lucide icon map.
+  if (/^[A-Z]$/.test(trimmedName) || EMOJI_REGEX.test(trimmedName)) {
     return (
       <span
         className={className}
         style={{
-          fontSize: size,
+          fontSize: 'inherit',
           lineHeight: 1,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           ...style,
         }}
       >
@@ -470,9 +465,7 @@ export function CategoryIcon({
     );
   }
 
-  // Fallback for unrecognized non-emoji strings (though text branch above catches them)
-  console.warn(`CategoryIcon: no lucide icon or emoji found for "${trimmedName}"`);
-  return null;
+  return <Tag size={size} color={color} strokeWidth={strokeWidth} className={className} style={style} />;
 }
 
 

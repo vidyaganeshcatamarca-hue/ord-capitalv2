@@ -1,20 +1,10 @@
-import React from 'react';
-import { CategoryIcon } from '../CategoryIcon';
+import React from 'react'
+import { CategoryIcon, type CategoryIconProps } from '../CategoryIcon'
 
-export interface WalletIconProps {
-  name?: string | null;
-  size?: number;
-  className?: string;
-}
+export type WalletIconProps = CategoryIconProps
 
 export const WalletIcon: React.FC<WalletIconProps> = (props) => {
-  let name: string;
+  const name = props.name?.trim() ? props.name : 'Wallet'
 
-  if (!props.name || props.name.trim() === '') {
-    name = 'Wallet';
-  } else {
-    name = props.name;
-  }
-
-  return <CategoryIcon name={name} size={props.size} className={props.className} />;
-};
+  return <CategoryIcon {...props} name={name} />
+}

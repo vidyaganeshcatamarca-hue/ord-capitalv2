@@ -1,20 +1,10 @@
-import React from 'react';
-import { CategoryIcon } from '../CategoryIcon';
+import React from 'react'
+import { CategoryIcon, type CategoryIconProps } from '../CategoryIcon'
 
-export interface ProyectoIconProps {
-  name?: string | null;
-  size?: number;
-  className?: string;
-}
+export type ProyectoIconProps = CategoryIconProps
 
 export const ProyectoIcon: React.FC<ProyectoIconProps> = (props) => {
-  let name: string;
+  const name = props.name?.trim() ? props.name : 'FolderKanban'
 
-  if (!props.name || props.name.trim() === '') {
-    name = 'FolderKanban';
-  } else {
-    name = props.name;
-  }
-
-  return <CategoryIcon name={name} size={props.size} className={props.className} />;
-};
+  return <CategoryIcon {...props} name={name} />
+}
