@@ -16,6 +16,9 @@ funcionesSQL/
 supabase/
 testeo/
 tests/
+!tests/
+tests/*
+!tests/category-translation-sort.test.js
 scratch/
 walkthrough.md
 AGENTS.md

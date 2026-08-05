@@ -7,6 +7,7 @@ import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { INGRESO_ICONS, RUBRO_ICONS } from '@/constants/emojiToLucide'
 import { isUserEditableCategory } from '@/lib/categoryFilters'
+import { sortCategoriesByTranslatedName } from '@/lib/categorySorting'
 import './Categorias.css'
 
 // ─── Constantes ────────────────────────────────────────────────────────────
@@ -342,15 +343,18 @@ export function TabEgresos() {
 
   const deferredQuery = useDeferredValue(query)
   const filteredRubros = useMemo(() =>
-    rubros
-      .filter(r => isUserEditableCategory(r))
-      .map(r => ({
-        ...r,
-        // Tambien ocultamos las subcuentas de sistema que pudieran aparecer
-        // dentro de un rubro editable (caso borde: estructura con hijos
-        // mezcla la categoria de misterio con categorias reales).
-        hijos: r.hijos?.filter(h => isUserEditableCategory(h)).sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es')) ?? []
-      }))
+    sortCategoriesByTranslatedName(
+      rubros
+        .filter(r => isUserEditableCategory(r))
+        .map(r => ({
+          ...r,
+          // Tambien ocultamos las subcuentas de sistema que pudieran aparecer
+          // dentro de un rubro editable (caso borde: estructura con hijos
+          // mezcla la categoria de misterio con categorias reales).
+          hijos: sortCategoriesByTranslatedName(r.hijos?.filter(h => isUserEditableCategory(h)) ?? [], t)
+        })),
+      t
+    )
       .filter(r =>
         !deferredQuery ||
         r.nombre_cuenta.toLowerCase().includes(deferredQuery.toLowerCase()) ||
