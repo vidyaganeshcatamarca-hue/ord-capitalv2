@@ -20,6 +20,8 @@ interface SobreDetalle {
   monto_gastado: number
   monto_disponible: number
   arrastre_mes_anterior: number
+  monto_asignado_anterior: number
+  monto_gastado_anterior: number
   estado_sobre: string
   metodo_sobregasto: string | null
   isVirtualDisponible?: boolean
@@ -325,9 +327,14 @@ export function PresupuestosPage() {
   }
 
   const handleLlenarHueco = async () => {
-    if (!sobreSeleccionado || sobreSeleccionado.monto_disponible >= 0) return
-    let monto = Math.abs(sobreSeleccionado.monto_disponible)
-    
+    if (!sobreSeleccionado) return
+    // En modo anticipado, el "hueco" se mide contra asignado - gastado (sin arrastre).
+    const disponibleEfectivo = config?.modo_presupuesto === 'anticipado'
+      ? Number(sobreSeleccionado.monto_asignado ?? 0) - Number(sobreSeleccionado.monto_gastado ?? 0)
+      : Number(sobreSeleccionado.monto_disponible ?? 0)
+    if (disponibleEfectivo >= 0) return
+    let monto = Math.abs(disponibleEfectivo)
+
     // En base_cero, no podemos asignar más de lo que tenemos disponible globalmente
     if (config?.modo_presupuesto === 'base_cero' && saldoAsignar !== null) {
       monto = Math.min(monto, Math.max(0, saldoAsignar))
@@ -379,6 +386,8 @@ export function PresupuestosPage() {
         monto_gastado: 0,
         monto_disponible: saldoAsignar,
         arrastre_mes_anterior: 0,
+        monto_asignado_anterior: 0,
+        monto_gastado_anterior: 0,
         estado_sobre: '',
         metodo_sobregasto: null,
         isVirtualDisponible: true
@@ -402,7 +411,11 @@ export function PresupuestosPage() {
         return
       }
     } else {
-      if (monto > origenSeleccionado.monto_disponible) {
+      // En modo anticipado, no se arrastra el saldo disponible del mes anterior.
+      const disponibleEfectivo = config?.modo_presupuesto === 'anticipado'
+        ? Number(origenSeleccionado.monto_asignado ?? 0) - Number(origenSeleccionado.monto_gastado ?? 0)
+        : Number(origenSeleccionado.monto_disponible ?? 0)
+      if (monto > disponibleEfectivo) {
         showToast(t('budget_error_transfer_exceeds'), 'error')
         return
       }
@@ -738,6 +751,7 @@ export function PresupuestosPage() {
                 abierto={acordeonesAbiertos.has(tipo)}
                 onToggle={() => toggleAcordeon(tipo)}
                 onAsignar={handleAbrirAsignar}
+                modoPresupuesto={config?.modo_presupuesto}
               />
             ))}
 
@@ -1166,9 +1180,10 @@ interface GrupoProps {
   abierto: boolean
   onToggle: () => void
   onAsignar: (s: SobreDetalle) => void
+  modoPresupuesto?: 'base_cero' | 'anticipado'
 }
 
-function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar }: GrupoProps) {
+function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, modoPresupuesto }: GrupoProps) {
   const meta = TIPO_CUPO_META[tipo] ?? { label: tipo.toUpperCase(), icono: '📦' }
   const totalAsignado = items.reduce((s, i) => s + Number(i.monto_asignado ?? 0), 0)
 
@@ -1195,6 +1210,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar }: GrupoProps
             sobre={sobre}
             isLast={i === items.length - 1}
             onAsignar={() => onAsignar(sobre)}
+            modoPresupuesto={modoPresupuesto}
           />
         ))}
       </div>
@@ -1208,18 +1224,24 @@ interface FilaSobreProps {
   sobre: SobreDetalle
   isLast: boolean
   onAsignar: () => void
+  modoPresupuesto?: 'base_cero' | 'anticipado'
 }
 
-function FilaSobre({ sobre, isLast, onAsignar }: FilaSobreProps) {
+function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto }: FilaSobreProps) {
   const pct = getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
   const colorBarra = getColorBarra(sobre.estado_sobre)
   const sinDatos = sobre.estado_sobre === 'sin_movimiento'
-  const disponible = Number(sobre.monto_disponible ?? 0)
+  // En modo anticipado, el "disponible" del sobre NO arrastra el saldo del mes
+  // anterior: cada mes arranca en 0 y se computa como asignado - gastado.
+  // En base_cero, el arrastre si forma parte del disponible.
+  const disponibleEfectivo = modoPresupuesto === 'anticipado'
+    ? Number(sobre.monto_asignado ?? 0) - Number(sobre.monto_gastado ?? 0)
+    : Number(sobre.monto_disponible ?? 0)
   const arrastre = Number(sobre.arrastre_mes_anterior ?? 0)
 
   const colorDisponible = () => {
-    if (disponible < 0) return 'rojo'
-    if (disponible === 0 && sobre.monto_asignado > 0) return 'neutro'
+    if (disponibleEfectivo < 0) return 'rojo'
+    if (disponibleEfectivo === 0 && sobre.monto_asignado > 0) return 'neutro'
     if (sobre.estado_sobre === 'amarillo_precaucion') return 'amarillo'
     return 'verde'
   }
@@ -1243,7 +1265,7 @@ function FilaSobre({ sobre, isLast, onAsignar }: FilaSobreProps) {
           <span>{t(sobre.nombre_categoria)}</span>
         </div>
         <span className={`sobre-disponible ${colorDisponible()}`} style={{ marginRight: 80 }}>
-          {disponible >= 0 ? `$${Math.round(disponible).toLocaleString('es-AR')}` : `-$${Math.round(Math.abs(disponible)).toLocaleString('es-AR')}`}
+          {disponibleEfectivo >= 0 ? `$${Math.round(disponibleEfectivo).toLocaleString('es-AR')}` : `-$${Math.round(Math.abs(disponibleEfectivo)).toLocaleString('es-AR')}`}
         </span>
       </div>
 
@@ -1275,10 +1297,22 @@ function FilaSobre({ sobre, isLast, onAsignar }: FilaSobreProps) {
         )}
       </div>
 
-      {/* Arrastre badge */}
-      {arrastre > 0 && (
+      {/* Arrastre badge (solo base_cero, donde el arrastre es real) */}
+      {modoPresupuesto !== 'anticipado' && arrastre > 0 && (
         <div className="sobre-arrastre-badge">
           ⚠️ {t('budget_carryover_warning')}: -{`$${Math.round(arrastre).toLocaleString('es-AR')}`}
+        </div>
+      )}
+
+      {/* Bloque informativo modo anticipado: mientras el mes nuevo no tenga
+          asignacion, mostrar el asignado y gastado del mes anterior para que
+          el usuario pueda decidir cuanto asignar este mes. Se oculta en
+          cuanto ya hay asignacion para el mes nuevo. */}
+      {modoPresupuesto === 'anticipado' && Number(sobre.monto_asignado ?? 0) === 0 && (
+        <div className="sobre-prev-month-info">
+          📊 {t('budget_prev_month_assigned')}: <strong>${Math.round(Number(sobre.monto_asignado_anterior ?? 0)).toLocaleString('es-AR')}</strong>
+          {' · '}
+          {t('budget_prev_month_spent')}: <strong>${Math.round(Number(sobre.monto_gastado_anterior ?? 0)).toLocaleString('es-AR')}</strong>
         </div>
       )}
     </div>

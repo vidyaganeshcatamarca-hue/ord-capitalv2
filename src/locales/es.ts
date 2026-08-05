@@ -1602,6 +1602,8 @@ export const inversiones = {
   budget_empty_state_desc2: "en la sección de <strong>Categorías</strong> para empezar a presupuestar.",
   btn_understood: "Entendido",
   budget_carryover_warning: "Arrastre",
+  budget_prev_month_assigned: "Asignado mes anterior",
+  budget_prev_month_spent: "Gastado mes anterior",
 
   // Refactor TarjetasPage
   card_status_caution: "🟡 Precaución",
