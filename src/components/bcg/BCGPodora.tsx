@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import {
   formatMoneyARS,
   mejorEquivalencia,
@@ -98,7 +99,7 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
                   style={{ background: `${c.color}33` }}
                   aria-hidden="true"
                 >
-                  {c.icono}
+                  <CategoryIcon name={c.icono} size={20} />
                 </span>
                 <div className="bcg-podora-cand-body">
                   <strong>{c.nombre}</strong>

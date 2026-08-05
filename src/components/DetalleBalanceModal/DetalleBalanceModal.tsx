@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import './DetalleBalanceModal.css'
 
 interface DesgloseCategoria {
@@ -195,7 +196,7 @@ export function DetalleBalanceModal({ isOpen, onClose }: DetalleBalanceModalProp
                             className="detalle-balance-item-icon"
                             style={{ background: `${cat.color}24` }}
                           >
-                            {cat.icono}
+                            <CategoryIcon name={cat.icono} size={18} />
                           </span>
                           <div className="detalle-balance-item-title">
                             <strong>{cat.nombre_categoria}</strong>

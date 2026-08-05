@@ -5,8 +5,10 @@ import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { EditMovementModal } from '@/components/EditMovementModal/EditMovementModal'
 import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/ReconcileWalletModal'
+import { WalletIcon } from '@/components/WalletIcon'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { useCountUp } from '@/hooks/useCountUp'
 import { useHideAmounts } from '@/hooks/useHideAmounts'
@@ -964,7 +966,7 @@ export function HomePage() {
                   return (
                     <div key={b.billetera_id} className="billetera-card card">
                       <div className="billetera-card-header">
-                        <span className="billetera-emoji-badge">{b.icono || '💵'}</span>
+                        <span className="billetera-emoji-badge"><WalletIcon name={b.icono} size={24} /></span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           {/* Explicación textual sutil al lado del semáforo (Observación 3) */}
                           <span style={{ fontSize: 'calc(10px * var(--font-scale))', fontWeight: 600, color: `var(--text-3)` }}>
@@ -1275,7 +1277,7 @@ export function HomePage() {
                                   fontSize: 'calc(14px * var(--font-scale))',
                                   flexShrink: 0
                                 }}>
-                                  <span>{c.icono || '🏷️'}</span>
+                                  <CategoryIcon name={c.icono} size={14} />
                                 </span>
                                 <span className="category-name">{c.nombre_categoria ? t(c.nombre_categoria) : ''}</span>
                               </div>
@@ -1349,7 +1351,7 @@ export function HomePage() {
                             justifyContent: 'center'
                           }}
                         >
-                          <span>{m.icono_categoria || '💰'}</span>
+                          <CategoryIcon name={m.icono_categoria} size={18} />
                         </div>
                         <div className="timeline-item-details">
                           <div className="timeline-item-title-row">
@@ -1502,7 +1504,7 @@ export function HomePage() {
                           setShowFilterPicker(false)
                         }}
                       >
-                        <span className="home-filter-rubro-icon">{rubro.icono || '🏷️'}</span>
+                        <span className="home-filter-rubro-icon"><CategoryIcon name={rubro.icono} size={18} /></span>
                         <span className="home-filter-rubro-name">{t(rubroName)}</span>
                       </button>
                       {children.length > 0 && (
@@ -1525,7 +1527,7 @@ export function HomePage() {
                               setShowFilterPicker(false)
                             }}
                           >
-                            <span>{child.icono || '  ↳'}</span>
+                            <span><CategoryIcon name={child.icono} size={16} /></span>
                             <span>{t(child.nombre_cuenta)}</span>
                           </button>
                         ))}

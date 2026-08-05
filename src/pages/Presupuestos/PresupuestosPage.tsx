@@ -1117,7 +1117,7 @@ export function PresupuestosPage() {
                     {sugerencias.map(s => (
                       <div key={s.estructura_id} className="sugerencia-item">
                         <span className="sugerencia-nombre">
-                          {TIPO_CUPO_META[s.tipo_cupo]?.icono ?? '📦'} {t(s.nombre)}
+                          <CategoryIcon name={TIPO_CUPO_META[s.tipo_cupo]?.icono ?? '📦'} size={18} /> {t(s.nombre)}
                         </span>
                         <div className="sugerencia-monto">
                           <input
@@ -1176,7 +1176,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar }: GrupoProps
     <div className="acord-grupo">
       <div className="acord-grupo-header" onClick={onToggle}>
         <div className="acord-grupo-left">
-          <span className="acord-grupo-icono">{meta.icono}</span>
+          <span className="acord-grupo-icono"><CategoryIcon name={meta.icono} size={18} /></span>
           <span className="acord-grupo-titulo">{meta.label}</span>
         </div>
         <div className="acord-grupo-right">

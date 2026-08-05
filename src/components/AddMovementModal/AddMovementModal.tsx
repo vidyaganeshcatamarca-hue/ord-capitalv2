@@ -17,6 +17,7 @@ import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/categoryFilters'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { ProyectoIcon } from '@/components/ProyectoIcon'
+import { WalletIcon } from '@/components/WalletIcon'
 import './AddMovementModal.css'
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -882,7 +883,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
             )}
             {categoriaIngreso && (
               <div style={{ fontSize: '12px', color: 'var(--text-3)', marginTop: '8px' }}>
-                {categoriaIngreso.icono} {categoriaIngreso.nombre}
+                <CategoryIcon name={categoriaIngreso.icono} size={14} /> {categoriaIngreso.nombre}
               </div>
             )}
           </div>
@@ -968,7 +969,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           <button key={`b_${b.billetera_id}`} type="button"
                             className={`cuenta-item ${origenTipo === 'billetera' && billeteraOrigenId === b.billetera_id ? 'active' : ''}`}
                             onClick={() => { setOrigenTipo('billetera'); setBilleteraOrigenId(b.billetera_id); setTarjetaId(null); setBilleteraDestinoId(null) }}>
-                            <span className="cuenta-icono">{b.icono || '💳'}</span>
+                            <span className="cuenta-icono"><WalletIcon name={b.icono} size={24} /></span>
                             <div className="cuenta-info">
                               <div className="cuenta-nombre">{t(b.nombre)}</div>
                               <div className="cuenta-moneda">{b.moneda}</div>
@@ -1052,7 +1053,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                               <button key={b.billetera_id} type="button"
                                 className={`cuenta-item ${billeteraDestinoId === b.billetera_id ? 'active' : ''}`}
                                 onClick={() => setBilleteraDestinoId(b.billetera_id)}>
-                                <span className="cuenta-icono">{b.icono || '💳'}</span>
+                                <span className="cuenta-icono"><WalletIcon name={b.icono} size={24} /></span>
                                 <div className="cuenta-info">
                                   <div className="cuenta-nombre">{t(b.nombre)}</div>
                                   <div className="cuenta-moneda">{b.moneda}</div>
@@ -1299,7 +1300,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                             <button key={ci.producto_id} type="button"
                               className={`cuenta-item ${categoriaIngreso?.producto_id === ci.producto_id ? 'active' : ''}`}
                               onClick={() => setCategoriaIngreso(p => p?.producto_id === ci.producto_id ? null : ci)}>
-                              <span className="cuenta-icono">{ci.icono}</span>
+                              <span className="cuenta-icono"><CategoryIcon name={ci.icono} size={24} /></span>
                               <div className="cuenta-nombre">{ci.nombre}</div>
                             </button>
                           ))}
