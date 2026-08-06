@@ -384,19 +384,31 @@
 .presupuestos-footer-tip {
   margin: 8px 16px 16px;
   padding: 12px 16px;
-  background: var(--surface-2);
+  background: var(--surface-1, #262626);
   border: 1px solid var(--border);
   border-left: 4px solid var(--amber);
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: calc(12px * var(--font-scale));
   color: var(--text);
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: flex-start;
   line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 .presupuestos-footer-tip span {
   color: var(--text);
+}
+
+[data-theme='warm-light'] .presupuestos-footer-tip {
+  background: #FFFFFF !important;
+  color: #1A1108 !important;
+  border: 1px solid rgba(60, 40, 20, 0.15) !important;
+  border-left: 4px solid #B46C13 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+}
+[data-theme='warm-light'] .presupuestos-footer-tip span {
+  color: #1A1108 !important;
 }
 .tip-icono { flex-shrink: 0; }
 
