@@ -64,6 +64,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   section_my_wallets: "Mis Billeteras",
   horizontal_scroll_hint: "<- Desliza para ver más ->",
   wallets_empty: "Aún no tienes billeteras creadas.",
+  wallet_adjusted_today: "Ajustado hoy",
   wallet_adjusted_days_ago: "Ajustado hace {days}d",
   wallet_never_reconciled: "Nunca conciliada",
   btn_reconcile: "⚖️ Conciliar",
@@ -1075,6 +1076,7 @@ export const wallets = {
   sem_sincronizado: "Sincronizado",
   sem_desactualizado: "Desactualizado",
   sem_dato_dudoso: "Dato Dudoso",
+  sem_hace_hoy: "(hoy)",
   sem_hace_dias: "(hace {days}d)",
 
   // Etiquetas de moneda

@@ -384,15 +384,19 @@
 .presupuestos-footer-tip {
   margin: 8px 16px 16px;
   padding: 12px 16px;
-  background: rgba(255, 230, 109, 0.08);
-  border: 1px solid rgba(255, 230, 109, 0.2);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--amber);
   border-radius: 10px;
   font-size: calc(12px * var(--font-scale));
-  color: #FFE66D;
+  color: var(--text);
   display: flex;
   gap: 8px;
   align-items: flex-start;
   line-height: 1.5;
+}
+.presupuestos-footer-tip span {
+  color: var(--text);
 }
 .tip-icono { flex-shrink: 0; }
 
@@ -417,7 +421,7 @@
 }
 
 .modal-sheet {
-  background: var(--surface, #2D2D2D);
+  background: var(--surface-1, #2D2D2D);
   border-radius: 20px 20px 0 0;
   padding: 20px 20px 32px;
   width: 100%;
@@ -471,20 +475,32 @@
 .asignar-sheet-sobre {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  background: var(--surface-2, #3D3D3D);
-  border-radius: 10px;
-  margin-bottom: 20px;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--mint);
+  border-radius: 12px;
+  margin-bottom: 18px;
 }
 .asignar-sheet-sobre-nombre {
   font-size: calc(15px * var(--font-scale));
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--text);
 }
 .asignar-sheet-sobre-saldo {
   font-size: calc(12px * var(--font-scale));
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+.asignar-opciones-label {
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 700;
   color: var(--text-3);
-  font-family: 'JetBrains Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
 }
 
 .asignar-opciones {
@@ -498,31 +514,42 @@
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
-  background: var(--surface-2, #3D3D3D);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  background: var(--surface-2);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
-.asignar-opcion:hover {
-  background: var(--border);
-  transform: translateX(4px);
+.asignar-opcion:hover, .asignar-opcion:active {
+  background: var(--surface-3);
+  border-color: var(--mint);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
 .asignar-opcion-icono {
-  font-size: calc(22px * var(--font-scale));
-  width: 36px;
-  text-align: center;
+  font-size: calc(20px * var(--font-scale));
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .asignar-opcion-texto h4 {
   font-size: calc(14px * var(--font-scale));
-  font-weight: 600;
+  font-weight: 700;
+  color: var(--text);
   margin: 0 0 2px;
 }
 .asignar-opcion-texto p {
   font-size: calc(12px * var(--font-scale));
-  color: var(--text-3);
+  color: var(--text-2);
   margin: 0;
 }
 

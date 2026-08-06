@@ -89,7 +89,7 @@ export function BilleterasPage() {
       return { color: 'red', text: t('wallets.sem_sin_conciliar'), days: null }
     }
     const diffTime = Math.abs(new Date().getTime() - new Date(ultimaConciliacionAt).getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
     if (diffDays < 5) {
       return { color: 'green', text: t('wallets.sem_sincronizado'), days: diffDays }
     }
@@ -332,7 +332,7 @@ export function BilleterasPage() {
                               <span>{b.moneda === 'USD' ? t('wallets.moneda_usd') : t('wallets.moneda_ars')}</span>
                               <span>•</span>
                               <span style={{ color: `var(--text-3)`, fontWeight: 600 }}>
-                                {sem.text} {sem.days !== null && t('wallets.sem_hace_dias', { days: sem.days })}
+                                {sem.text} {sem.days !== null && (sem.days === 0 ? t('wallets.sem_hace_hoy') : t('wallets.sem_hace_dias', { days: sem.days }))}
                               </span>
                             </div>
                           </div>

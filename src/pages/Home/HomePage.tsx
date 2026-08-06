@@ -739,7 +739,7 @@ export function HomePage() {
       return { color: 'red', text: 'Sin conciliar', days: null }
     }
     const diffTime = Math.abs(new Date().getTime() - new Date(ultimaConciliacionAt).getTime())
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
     if (diffDays < 5) {
       return { color: 'green', text: 'Sincronizado', days: diffDays }
     }
@@ -979,7 +979,7 @@ export function HomePage() {
                         <p className="billetera-card-name">{t(b.nombre)}</p>
                         <p className="billetera-card-saldo font-mono">{formatAmount(b.saldo_actual, b.moneda)}</p>
                         <span className="billetera-last-conciliated">
-                          {sem.days !== null ? t('wallet_adjusted_days_ago', { days: sem.days }) : t('wallet_never_reconciled')}
+                          {sem.days !== null ? (sem.days === 0 ? t('wallet_adjusted_today') : t('wallet_adjusted_days_ago', { days: sem.days })) : t('wallet_never_reconciled')}
                         </span>
                       </div>
                       <button className="btn-conciliar-action text-xs" onClick={() => openConciliacion(b)}>

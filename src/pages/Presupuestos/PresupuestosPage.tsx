@@ -791,6 +791,7 @@ export function PresupuestosPage() {
 
             {mostrando === 'opciones' ? (
               <div className="asignar-opciones">
+                <div className="asignar-opciones-label">{t('budget_modal_select_action') || 'Opciones de asignación:'}</div>
                 {config?.modo_presupuesto !== 'anticipado' && (
                   <div className="asignar-opcion" onClick={handleLlenarHueco}>
                     <span className="asignar-opcion-icono">💰</span>

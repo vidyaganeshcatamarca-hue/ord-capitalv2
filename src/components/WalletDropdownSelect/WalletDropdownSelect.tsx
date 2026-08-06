@@ -202,7 +202,7 @@ export function WalletDropdownSelect({
             <div style={{ overflowY: 'auto', padding: '10px 12px 14px 12px' }}>
               {/* Section: Billeteras */}
               {wallets.length > 0 && (
-                <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-3)', padding: '6px 10px 6px 10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ fontSize: 'calc(12px * var(--font-scale))', fontWeight: 700, color: 'var(--text-2)', padding: '6px 10px 6px 10px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                   {t('label_source_wallet')}
                 </div>
               )}
@@ -262,7 +262,7 @@ export function WalletDropdownSelect({
               {/* Section: Tarjetas de crédito (si existen) */}
               {tarjetas.length > 0 && (
                 <>
-                  <div style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-3)', padding: '12px 10px 6px 10px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <div style={{ fontSize: 'calc(12px * var(--font-scale))', fontWeight: 700, color: 'var(--text-2)', padding: '12px 10px 6px 10px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                     {t('group_credit_cards')}
                   </div>
                   {tarjetas.map(tc => {
