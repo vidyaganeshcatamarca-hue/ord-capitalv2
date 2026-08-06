@@ -1247,7 +1247,7 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto }: FilaSobreProps
   }
 
   return (
-    <div className={`sobre-fila${sinDatos ? ' sin-datos' : ''}`} style={isLast ? { borderBottom: 'none' } : {}}>
+    <div className="sobre-fila" style={isLast ? { borderBottom: 'none' } : {}}>
       {/* Botón asignar */}
       <button className="sobre-btn-asignar" onClick={e => { e.stopPropagation(); onAsignar() }}>
         + Asignar
@@ -1311,16 +1311,20 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto }: FilaSobreProps
           tamano que los stats de la fila (Asig/Gast/Avance) para que no
           rompa la jerarquia visual de la tarjeta. */}
       {modoPresupuesto === 'anticipado' && Number(sobre.monto_asignado ?? 0) === 0 && (
-        <div className="sobre-stats">
-          <span className="sobre-stat">
-            <span className="sobre-stat-label">📊 {t('budget_prev_month_assigned')}: </span>
-            <span className="sobre-stat-val">${Math.round(Number(sobre.monto_asignado_anterior ?? 0)).toLocaleString('es-AR')}</span>
-          </span>
-          <span className="sobre-stat">
-            <span className="sobre-stat-label">🧾 {t('budget_prev_month_spent')}: </span>
-            <span className="sobre-stat-val">${Math.round(Number(sobre.monto_gastado_anterior ?? 0)).toLocaleString('es-AR')}</span>
-          </span>
-        </div>
+        <>
+          <div className="sobre-stats">
+            <span className="sobre-stat">
+              <span className="sobre-stat-label">📊 {t('budget_prev_month_assigned')}: </span>
+              <span className="sobre-stat-val">${Math.round(Number(sobre.monto_asignado_anterior ?? 0)).toLocaleString('es-AR')}</span>
+            </span>
+          </div>
+          <div className="sobre-stats">
+            <span className="sobre-stat">
+              <span className="sobre-stat-label">🧾 {t('budget_prev_month_spent')}: </span>
+              <span className="sobre-stat-val">${Math.round(Number(sobre.monto_gastado_anterior ?? 0)).toLocaleString('es-AR')}</span>
+            </span>
+          </div>
+        </>
       )}
     </div>
   )
