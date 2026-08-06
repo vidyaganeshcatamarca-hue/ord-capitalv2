@@ -1,4 +1,4 @@
-﻿import React from 'react'
+import React from 'react'
 import {
   AlertTriangle,
   Apple,
@@ -420,6 +420,14 @@ export function isLikelyLucideName(s: string | null | undefined): boolean {
   if (s.trim() === '') return false;
   if (s.length < 2) return false; // single letter cannot be lucide name
   return /^[A-Z][A-Za-z0-9]+$/.test(s);
+}
+
+export function formatWalletIconForOption(icono: string | null | undefined): string {
+  if (!icono || typeof icono !== 'string' || icono.trim() === '') return '💳';
+  if (isLikelyLucideName(icono)) {
+    return '💳';
+  }
+  return icono.trim();
 }
 
 export function CategoryIcon({

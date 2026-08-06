@@ -15,7 +15,7 @@ import { AudioRecorderModal } from '@/components/saneamiento/AudioRecorderModal'
 import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBalanceModal'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/categoryFilters'
-import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
+import { CategoryIcon, formatWalletIconForOption } from '@/components/CategoryIcon/CategoryIcon'
 import { ProyectoIcon } from '@/components/ProyectoIcon'
 import { WalletIcon } from '@/components/WalletIcon'
 import './AddMovementModal.css'
@@ -448,12 +448,26 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
           }
         }
 
-        // Preseleccionar la billetera inicial si se provee
-        if (initialBilleteraId && initialBilleteraId > 0) {
-          setBilleteraOrigenId(initialBilleteraId)
-          if (defaultTipo === 'transfer') {
-            const dest = (bill ?? []).find(b => b.billetera_id !== initialBilleteraId)
-            if (dest) setBilleteraDestinoId(dest.billetera_id)
+        // Preseleccionar la billetera inicial si se provee o buscar en preferencias (egreso vs ingreso)
+        let targetWalletId = initialBilleteraId && initialBilleteraId > 0 ? initialBilleteraId : null
+        if (!targetWalletId) {
+          const defaultKey = defaultTipo === 'income' ? 'billetera_default_ingreso' : 'billetera_default_egreso'
+          const rawDefault = localStorage.getItem(defaultKey)
+          if (rawDefault && Number(rawDefault) > 0) {
+            targetWalletId = Number(rawDefault)
+          }
+        }
+
+        if (targetWalletId) {
+          const validWallet = (bill ?? []).find(b => b.billetera_id === targetWalletId && (defaultTipo === 'income' || defaultTipo === 'transfer' || !b.es_fondo_prevision))
+          if (validWallet) {
+            setBilleteraOrigenId(validWallet.billetera_id)
+            if (defaultTipo === 'transfer') {
+              const dest = (bill ?? []).find(b => b.billetera_id !== validWallet.billetera_id)
+              if (dest) setBilleteraDestinoId(dest.billetera_id)
+            }
+          } else {
+            setBilleteraOrigenId(null)
           }
         } else {
           setBilleteraOrigenId(null)
@@ -572,15 +586,22 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
     // Actualizar billetera por defecto según el tipo seleccionado (egreso vs ingreso)
     const defaultKey = newTipo === 'income' ? 'billetera_default_ingreso' : 'billetera_default_egreso'
     const rawDefault = localStorage.getItem(defaultKey)
-    if (rawDefault && Number(rawDefault) > 0) {
-      setBilleteraOrigenId(Number(rawDefault))
+    const preferredId = rawDefault && Number(rawDefault) > 0 ? Number(rawDefault) : null
+
+    if (preferredId) {
+      const validWallet = (billeteras ?? cachedBilleteras ?? []).find(b => b.billetera_id === preferredId && (newTipo === 'income' || newTipo === 'transfer' || !b.es_fondo_prevision))
+      if (validWallet) {
+        setBilleteraOrigenId(validWallet.billetera_id)
+      } else {
+        setBilleteraOrigenId(null)
+      }
     } else {
       setBilleteraOrigenId(null)
     }
 
     // Transfer e Income saltan la selección de categoría
     setPaso(newTipo === 'expense' ? 'categoria' : 'monto')
-  }, [])
+  }, [billeteras])
 
   // ── Filtros de billeteras ──
   const numericMonto = parseFloat(monto) || 0
@@ -1934,7 +1955,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     <optgroup label={t('label_source_wallet')}>
                       {origenOptions.map(b => (
                         <option key={`b_${b.billetera_id}`} value={`b_${b.billetera_id}`} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
-                          {b.icono || '💳'} {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
+                          {formatWalletIconForOption(b.icono)} {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
                         </option>
                       ))}
                     </optgroup>

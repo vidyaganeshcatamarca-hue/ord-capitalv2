@@ -3,7 +3,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
-import { CategoryIcon } from '@/components/CategoryIcon'
+import { CategoryIcon, formatWalletIconForOption } from '@/components/CategoryIcon'
 import './Tarjetas.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1336,7 +1336,7 @@ export function PagarModal({
               <option value="" disabled>{t('pay_resumen_select_wallet_placeholder')}</option>
               {filteredBilleteras.map(b => (
                 <option key={b.billetera_id} value={b.billetera_id}>
-                  {b.icono || '💳'} {t(b.nombre)} ({fmtARS(b.saldo_actual)} {b.moneda})
+                  {formatWalletIconForOption(b.icono)} {t(b.nombre)} ({fmtARS(b.saldo_actual)} {b.moneda})
                 </option>
               ))}
             </select>

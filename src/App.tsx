@@ -51,10 +51,28 @@ const LoadingSpinner = () => (
   </div>
 )
 
+import { rpc } from '@/lib/supabase'
+
 function AppLayout() {
   const [showAdd, setShowAdd] = useState(false)
   const [addConfig, setAddConfig] = useState<{ defaultTipo?: 'expense' | 'income' | 'transfer', initialBilleteraId?: number } | null>(null)
   
+  useEffect(() => {
+    rpc<any[]>('fn_obtener_preferencias_usuario')
+      .then((data) => {
+        const row = Array.isArray(data) ? data[0] : data
+        if (row) {
+          if (row.billetera_default_egreso && Number(row.billetera_default_egreso) > 0) {
+            localStorage.setItem('billetera_default_egreso', String(row.billetera_default_egreso))
+          }
+          if (row.billetera_default_ingreso && Number(row.billetera_default_ingreso) > 0) {
+            localStorage.setItem('billetera_default_ingreso', String(row.billetera_default_ingreso))
+          }
+        }
+      })
+      .catch(() => {})
+  }, [])
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (params.get('action') === 'add_movement') {
