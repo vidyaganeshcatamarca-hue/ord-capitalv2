@@ -115,8 +115,8 @@ export function AparienciaCard({ userId }: AparienciaCardProps) {
           </div>
 
           {/* Tamaño de fuente */}
-          <div className="apariencia-row">
-            <span>{t('apariencia_font_size')}</span>
+          <div className="apariencia-font-section">
+            <div className="apariencia-row-label">{t('apariencia_font_size')}</div>
             <div className="apariencia-font-pills" role="radiogroup" aria-label={t('apariencia_font_size')}>
               {(['chico', 'mediano', 'grande', 'gigante'] as const).map(v => (
                 <button

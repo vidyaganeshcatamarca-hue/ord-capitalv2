@@ -125,7 +125,7 @@ article.apariencia-card-wrap.config-hub-card {
 .apariencia-font-pills {
   display: flex;
   gap: 6px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
   flex: 1;
@@ -186,5 +186,16 @@ article.apariencia-card-wrap.config-hub-card {
   font-size: calc(0.72rem * var(--font-scale));
   line-height: 1.2;
   white-space: nowrap;
+}
+
+.apariencia-font-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+.apariencia-font-section:last-child {
+  border-bottom: none;
 }
 
