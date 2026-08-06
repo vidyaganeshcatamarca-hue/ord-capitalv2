@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { WalletIcon } from '@/components/WalletIcon'
 import './BilleteraDetailModal.css'
 
 interface BilleteraDetailModalProps {
@@ -45,7 +46,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
         <div className="bottom-sheet-handle" />
         <div className="billetera-detail-header" style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
           <div className="flex items-center gap-2">
-            <span style={{ fontSize: 'calc(24px * var(--font-scale))' }}>{billetera.icono || '💳'}</span>
+            <span style={{ fontSize: 'calc(24px * var(--font-scale))' }}><WalletIcon name={billetera.icono} size={24} /></span>
             <h2 style={{ fontSize: 'calc(20px * var(--font-scale))', margin: 0 }}>{t(billetera.nombre)}</h2>
           </div>
           <button type="button" className="text-muted" onClick={onClose} style={{ border: 'none', background: 'none', fontSize: 'calc(18px * var(--font-scale))', cursor: 'pointer' }}>✕</button>

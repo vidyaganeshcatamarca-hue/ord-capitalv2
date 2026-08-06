@@ -4,6 +4,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { HogarProvider } from '@/contexts/HogarContext'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { ModoAppProvider } from '@/contexts/ModoAppContext'
+import { SessionTrackerProvider } from '@/providers/SessionTrackerProvider'
 import { PrivateRoute, PublicRoute } from '@/router/guards'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
 import { SideNav } from '@/components/SideNav/SideNav'
@@ -147,9 +148,10 @@ export default function App() {
     <BrowserRouter>
       <ErrorBoundary>
         <AuthProvider>
-          <HogarProvider>
-          <ToastProvider>
-            <ModoAppProvider>
+          <SessionTrackerProvider>
+            <HogarProvider>
+            <ToastProvider>
+              <ModoAppProvider>
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
                   {/* Rutas públicas */}
@@ -164,8 +166,9 @@ export default function App() {
                 </Routes>
               </Suspense>
             </ModoAppProvider>
-          </ToastProvider>
-          </HogarProvider>
+            </ToastProvider>
+            </HogarProvider>
+          </SessionTrackerProvider>
         </AuthProvider>
       </ErrorBoundary>
     </BrowserRouter>

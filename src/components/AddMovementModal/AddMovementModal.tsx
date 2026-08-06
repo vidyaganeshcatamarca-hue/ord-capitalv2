@@ -15,6 +15,9 @@ import { AudioRecorderModal } from '@/components/saneamiento/AudioRecorderModal'
 import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBalanceModal'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/categoryFilters'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
+import { ProyectoIcon } from '@/components/ProyectoIcon'
+import { WalletIcon } from '@/components/WalletIcon'
 import './AddMovementModal.css'
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -178,7 +181,8 @@ function ProyectosSelector({ proyectos, proyectoSeleccionadoId, selectProyecto }
             className={`proyecto-pill ${proyectoSeleccionadoId === p.proyecto_id ? 'active' : ''}`}
             onClick={() => selectProyecto(p.proyecto_id)}
           >
-            <span style={{ marginRight: '6px' }}>{p.icono}</span>{p.nombre_proyecto}
+            {p.icono && <ProyectoIcon name={p.icono} size={16} style={{ marginRight: '6px' }} />}
+            {p.nombre_proyecto}
           </button>
         ))}
       </div>
@@ -352,6 +356,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
         return childName.includes(normalizedCategoryQuery) || combinedName.includes(normalizedCategoryQuery)
       })
     })
+    .sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es', { sensitivity: 'base' }))
     .map((rubro) => ({
       ...rubro,
       hijos: [...(rubro.hijos ?? [])].sort((a, b) =>
@@ -367,6 +372,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
       const rubr = await rpc<Rubro[]>('fn_obtener_arbol_categorias')
       cachedRubros = filterUserEditableCategories(rubr ?? [])
         .map(r => ({ ...r, hijos: (r.hijos ?? []).filter(h => isUserEditableCategory(h)) }))
+        .sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es', { sensitivity: 'base' }))
       setRubros(cachedRubros)
     } catch (e) {
       console.error('Error reloading categories:', e)
@@ -418,6 +424,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
         cachedBilleteras = bill ?? []
         cachedRubros = filterUserEditableCategories(rubr ?? [])
           .map(r => ({ ...r, hijos: (r.hijos ?? []).filter(h => isUserEditableCategory(h)) }))
+          .sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es', { sensitivity: 'base' }))
         cachedCatIngresos = ingrCat ?? []
         cachedTarjetas = tarj ?? []
         cachedUsd = resUsd ?? 1
@@ -870,13 +877,13 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
               {formatMonto(monto, monedaOrigen)}
             </div>
             {categoriaEgreso && (
-              <div style={{ fontSize: '12px', color: 'var(--text-3)', marginTop: '8px' }}>
-                {categoriaEgreso.icono} {categoriaEgreso.nombre}
+              <div style={{ fontSize: '12px', color: 'var(--text-3)', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CategoryIcon name={categoriaEgreso.icono} size={14} /> {categoriaEgreso.nombre}
               </div>
             )}
             {categoriaIngreso && (
               <div style={{ fontSize: '12px', color: 'var(--text-3)', marginTop: '8px' }}>
-                {categoriaIngreso.icono} {categoriaIngreso.nombre}
+                <CategoryIcon name={categoriaIngreso.icono} size={14} /> {categoriaIngreso.nombre}
               </div>
             )}
           </div>
@@ -962,7 +969,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           <button key={`b_${b.billetera_id}`} type="button"
                             className={`cuenta-item ${origenTipo === 'billetera' && billeteraOrigenId === b.billetera_id ? 'active' : ''}`}
                             onClick={() => { setOrigenTipo('billetera'); setBilleteraOrigenId(b.billetera_id); setTarjetaId(null); setBilleteraDestinoId(null) }}>
-                            <span className="cuenta-icono">{b.icono || '💳'}</span>
+                            <span className="cuenta-icono"><WalletIcon name={b.icono} size={24} /></span>
                             <div className="cuenta-info">
                               <div className="cuenta-nombre">{t(b.nombre)}</div>
                               <div className="cuenta-moneda">{b.moneda}</div>
@@ -1046,7 +1053,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                               <button key={b.billetera_id} type="button"
                                 className={`cuenta-item ${billeteraDestinoId === b.billetera_id ? 'active' : ''}`}
                                 onClick={() => setBilleteraDestinoId(b.billetera_id)}>
-                                <span className="cuenta-icono">{b.icono || '💳'}</span>
+                                <span className="cuenta-icono"><WalletIcon name={b.icono} size={24} /></span>
                                 <div className="cuenta-info">
                                   <div className="cuenta-nombre">{t(b.nombre)}</div>
                                   <div className="cuenta-moneda">{b.moneda}</div>
@@ -1108,12 +1115,13 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                             height: '28px',
                             borderRadius: '8px',
                             backgroundColor: categoriaEgreso.color,
+                            color: '#000000',
                             display: 'inline-flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             marginRight: '8px'
                           }}>
-                            {categoriaEgreso.icono}
+                            <CategoryIcon name={categoriaEgreso.icono} size={18} />
                           </span>
                           <span>{categoriaEgreso.nombre}</span>
                           <span className="cat-selected-edit">✏️</span>
@@ -1142,19 +1150,20 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                       className="cat-tile"
                                       style={{ '--tile-color': cat.color } as React.CSSProperties}
                                       onClick={() => selectCatEgreso(cat, rubro)}>
-                                      <span className="cat-tile-icon" style={{
-                                        width: '32px',
-                                        height: '32px',
-                                        borderRadius: '50%',
-                                        backgroundColor: cat.color,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '16px',
-                                        margin: '0 auto 4px auto'
-                                      }}>
-                                        {cat.icono}
-                                      </span>
+                                <span className="cat-tile-icon" style={{
+                                  width: '32px',
+                                  height: '32px',
+                                  borderRadius: '50%',
+                                  backgroundColor: cat.color,
+                                  color: '#000000',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  fontSize: '16px',
+                                  margin: '0 auto 4px auto'
+                                }}>
+                                  <CategoryIcon name={cat.icono} size={20} />
+                                </span>
                                       <span className="cat-tile-name">{cat.nombre.split(' › ').pop()}</span>
                                     </button>
                                   )
@@ -1181,13 +1190,14 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                           height: '28px',
                                           borderRadius: '8px',
                                           backgroundColor: rubro.color,
+                                          color: '#000000',
                                           display: 'flex',
                                           alignItems: 'center',
                                           justifyContent: 'center',
                                           fontSize: '15px',
                                           flexShrink: 0
                                         }}>
-                                          {rubro.icono}
+                                          <CategoryIcon name={rubro.icono} size={18} />
                                         </div>
                                         <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>{t(rubro.nombre_cuenta)}</span>
                                       </div>
@@ -1238,6 +1248,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                                 height: '24px',
                                                 borderRadius: '6px',
                                                 backgroundColor: rubro.color,
+                                                color: '#000000',
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -1245,7 +1256,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                                 marginRight: '6px',
                                                 flexShrink: 0
                                               }}>
-                                                {rubro.icono}
+                                                <CategoryIcon name={rubro.icono} size={16} />
                                               </span> {t(rubro.nombre_cuenta)}
                                             </button>
                                         ) : (
@@ -1257,6 +1268,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                                 height: '24px',
                                                 borderRadius: '6px',
                                                 backgroundColor: rubro.color,
+                                                color: '#000000',
                                                 display: 'inline-flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
@@ -1264,7 +1276,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                                 marginRight: '6px',
                                                 flexShrink: 0
                                               }}>
-                                                {h.icono}
+                                                <CategoryIcon name={h.icono} size={16} />
                                               </span> {t(h.nombre_cuenta)}
                                               {h.es_hormiga && <span className="hormiga-badge">🐜</span>}
                                             </button>
@@ -1288,7 +1300,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                             <button key={ci.producto_id} type="button"
                               className={`cuenta-item ${categoriaIngreso?.producto_id === ci.producto_id ? 'active' : ''}`}
                               onClick={() => setCategoriaIngreso(p => p?.producto_id === ci.producto_id ? null : ci)}>
-                              <span className="cuenta-icono">{ci.icono}</span>
+                              <span className="cuenta-icono"><CategoryIcon name={ci.icono} size={24} /></span>
                               <div className="cuenta-nombre">{ci.nombre}</div>
                             </button>
                           ))}
@@ -1381,7 +1393,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       {categoriaEgreso && (
                         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                           <span style={{ color: 'var(--text-3)' }}>{t("label_category")}:</span>
-                          <span>{categoriaEgreso.icono} {categoriaEgreso.nombre}</span>
+                          <span><CategoryIcon name={categoriaEgreso.icono} size={14} /> {categoriaEgreso.nombre}</span>
                         </div>
                       )}
                     </div>
@@ -1603,19 +1615,20 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           )}
 
                           {categoriaEgreso ? (
-                            <div className="cat-selected-pill" onClick={() => { setMobileShowAllCat(true); setShowCalculator(false); }} style={{ border: `1px solid ${categoriaEgreso.color || 'var(--border)'}`, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                              <span style={{
-                                width: '28px',
-                                height: '28px',
-                                borderRadius: '8px',
-                                backgroundColor: categoriaEgreso.color,
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                fontWeight: 'bold'
-                              }}>
-                                {categoriaEgreso.icono}
-                              </span>
+                          <div className="cat-selected-pill" onClick={() => { setMobileShowAllCat(true); setShowCalculator(false); }} style={{ border: `1px solid ${categoriaEgreso.color || 'var(--border)'}`, display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                            <span style={{
+                              width: '28px',
+                              height: '28px',
+                              borderRadius: '8px',
+                              backgroundColor: categoriaEgreso.color,
+                              color: '#000000',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 'bold'
+                            }}>
+                              <CategoryIcon name={categoriaEgreso.icono} size={18} />
+                            </span>
                               <span>{categoriaEgreso.nombre}</span>
                               <span className="cat-selected-edit" style={{ marginLeft: 'auto' }}>✏️</span>
                             </div>
@@ -1638,31 +1651,32 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           <div className="mobile-frecuentes-section" style={{ margin: '12px 0' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                               {frecuentesMobile.map((cat, i) => (
-                                <button
-                                  key={i}
-                                  type="button"
-                                  className="cat-recent-icon-btn"
-                                  style={{
-                                    width: '32px',
-                                    height: '32px',
-                                    borderRadius: '50%',
-                                    backgroundColor: cat.color,
-                                    border: categoriaEgreso?.estructura_id === cat.estructura_id ? '3px solid var(--text)' : '1px solid rgba(255,255,255,0.1)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    fontSize: '16px',
-                                    cursor: 'pointer',
-                                    transition: 'transform 0.1s',
-                                    boxShadow: categoriaEgreso?.estructura_id === cat.estructura_id ? `0 0 10px ${cat.color}` : 'none'
-                                  }}
-                                  onClick={() => {
-                                    setCategoriaEgreso(cat)
-                                    setShowCalculator(false)
-                                  }}
-                                >
-                                  {cat.icono}
-                                </button>
+                                  <button
+                                    key={i}
+                                    type="button"
+                                    className="cat-recent-icon-btn"
+                                    style={{
+                                      width: '32px',
+                                      height: '32px',
+                                      borderRadius: '50%',
+                                      backgroundColor: cat.color,
+                                      color: '#000000',
+                                      border: categoriaEgreso?.estructura_id === cat.estructura_id ? '3px solid var(--text)' : '1px solid rgba(255,255,255,0.1)',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      fontSize: '16px',
+                                      cursor: 'pointer',
+                                      transition: 'transform 0.1s',
+                                      boxShadow: categoriaEgreso?.estructura_id === cat.estructura_id ? `0 0 10px ${cat.color}` : 'none'
+                                    }}
+                                    onClick={() => {
+                                      setCategoriaEgreso(cat)
+                                      setShowCalculator(false)
+                                    }}
+                                  >
+                                    <CategoryIcon name={cat.icono} size={20} />
+                                  </button>
                               ))}
                               <button
                                 type="button"
@@ -1743,12 +1757,13 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                         height: '28px',
                                         borderRadius: '8px',
                                         backgroundColor: rubro.color,
+                                        color: '#000000',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         fontSize: '15px'
                                       }}>
-                                        {rubro.icono}
+                                        <CategoryIcon name={rubro.icono} size={18} />
                                       </div>
                                       <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>
                                         {t(rubro.nombre_cuenta)}
@@ -1842,6 +1857,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                             height: '24px',
                                             borderRadius: '6px',
                                             backgroundColor: rubro.color,
+                                            color: '#000000',
                                             display: 'inline-flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
@@ -1849,7 +1865,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                             marginRight: '6px',
                                             flexShrink: 0
                                           }}>
-                                            {hijo.icono || rubro.icono}
+                                            <CategoryIcon name={hijo.icono || rubro.icono} size={16} />
                                           </span> {t(hijo.nombre_cuenta)}
                                           {hijo.es_hormiga && <span className="hormiga-badge">🐜</span>}
                                         </button>

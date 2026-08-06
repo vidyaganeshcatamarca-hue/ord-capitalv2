@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import './ConfigGastosFijosModal.css'
 
 interface GastoDetectado {
@@ -172,7 +173,7 @@ export function ConfigGastosFijosModal({
                 <li key={item.estructura_id} className="cfg-item">
                   <div className="cfg-item-header">
                     <div className="cfg-item-icon">
-                      {String.fromCodePoint(parseInt(String(original?.icono?.codePointAt?.(0) ?? 0x1F4BC), 16) || 0x1F4BC)}
+                      <CategoryIcon name={original?.icono || 'Briefcase'} size={24} />
                     </div>
                     <div className="cfg-item-titulo">
                       <strong>{String(original?.nombre ?? `Cat #${item.estructura_id}`)}</strong>

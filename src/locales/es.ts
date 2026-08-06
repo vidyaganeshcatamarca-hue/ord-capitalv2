@@ -16,10 +16,14 @@ export const errors = {
   error_sum_must_be_100: "La suma de los porcentajes debe ser exactamente 100.",
   error_sum_must_be_zero: "La suma debe ser 100.",
 
+  // Session tracking
+  error_session_not_active: "La sesion no esta activa",
+  error_session_not_paused: "La sesion no esta pausada",
+
   // Billeteras y cuentas
   error_currency_not_supported: "Moneda no soportada.",
   error_no_orphan_savings_funds: "No hay sobres vinculados a esta Cuenta Madre para distribuir rendimientos.",
-  error_opening_balance_negative: "El saldo de apertura no puede ser negativo.",
+  error_opening_balance_negative: "El saldo de apertura no puede ser negativo (-).",
 error_transfer_different_currencies: "Operación inválida: No se permiten transferencias directas entre cuentas de diferentes monedas ({currency_from} a {currency_to}).",
   error_no_sufficient_balance_wallets: "No tienes saldo suficiente en ninguna billetera.",
   error_wallet_not_found: "La cuenta seleccionada ya no está disponible.",
@@ -58,7 +62,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   hero_title_total: "Total",
   hero_sync_ok: "Datos sincronizados",
   section_my_wallets: "Mis Billeteras",
-  horizontal_scroll_hint: "<- Desliza para ver más",
+  horizontal_scroll_hint: "<- Desliza para ver más ->",
   wallets_empty: "Aún no tienes billeteras creadas.",
   wallet_adjusted_days_ago: "Ajustado hace {days}d",
   wallet_never_reconciled: "Nunca conciliada",
@@ -69,7 +73,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
    fugas_misterio_ocultado_toast: "Fugas de misterio ocultadas",
    fugas_misterio_ocultar_tooltip: "Ocultar fugas de misterio",
    section_expense_distribution: "Distribución del Gasto (Mes)",
-  section_expense_distribution_cycle: "Gastos ({start} al {end})",
+  section_expense_distribution_cycle: "Egresos: ({start} al {end})",
   home_filter_period_today: "Hoy",
   home_filter_period_week: "Semana",
   home_filter_period_month: "Mes",
@@ -268,7 +272,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   hero_base_cero_alcanzado: "¡BASE CERO ALCANZADO! ✅",
   hero_sobre_asignacion: "SOBRE-ASIGNACIÓN",
   hero_disponible_para_asignar: "DISPONIBLE PARA ASIGNAR",
-  hero_libertad_desc: "Modo libertad activo — sin coacción de gastos",
+  hero_libertad_desc: "Modo libertad activo — presupuesta según tu ideal",
   hero_sobre_asignacion_desc: "Estás presupuestando dinero que no tienes",
   hero_base_cero_alcanzado_desc: "Cada peso tiene un destino asignado",
   hero_disponible_desc: "Dinero esperando destino",
@@ -1598,6 +1602,8 @@ export const inversiones = {
   budget_empty_state_desc2: "en la sección de <strong>Categorías</strong> para empezar a presupuestar.",
   btn_understood: "Entendido",
   budget_carryover_warning: "Arrastre",
+  budget_prev_month_assigned: "Asignado mes anterior",
+  budget_prev_month_spent: "Gastado mes anterior",
 
   // Refactor TarjetasPage
   card_status_caution: "🟡 Precaución",

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { t } from '@/locales/i18n'
 import { BCG_CUADRANTES, classifyCuadrante, formatMoneyARS } from '@/lib/bcgUtils'
 import { haptics } from '@/lib/haptics'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import type { BCGPoint } from './BCGScatterPlot'
 import './BCGCuadranteAcordeon.css'
 
@@ -64,7 +65,7 @@ export function BCGCuadranteAcordeon({ cuadranteKey, items, onItemClick, default
                   style={{ background: `${it.color ?? '#6366F1'}33` }}
                   aria-hidden="true"
                 >
-                  {it.icono}
+                  <CategoryIcon name={it.icono} size={20} />
                 </span>
                 <div className="bcg-acordeon-item-body">
                   <strong>{it.nombre}</strong>

@@ -1,6 +1,8 @@
-import React from 'react'
+﻿import React from 'react'
 import {
+  AlertTriangle,
   Apple,
+  Archive,
   Armchair,
   ArrowDownFromLine,
   ArrowRightLeft,
@@ -19,15 +21,19 @@ import {
   BriefcaseBusiness,
   Brush,
   BrushCleaning,
+  Bug,
   Building2,
   CakeSlice,
+  Calendar,
   Car,
   CarTaxiFront,
   ChartNoAxesCombined,
+  Check,
   CheckCircle2,
   Church,
   CircleDollarSign,
   CircleX,
+  ClipboardList,
   Coins,
   Coffee,
   Copyright,
@@ -43,6 +49,7 @@ import {
   FilePenLine,
   FileText,
   Fish,
+  FolderKanban,
   Gamepad2,
   Gift,
   GraduationCap,
@@ -54,15 +61,17 @@ import {
   HousePlus,
   IceCreamCone,
   IndianRupee,
-  Info,
   Inbox,
+  Info,
   JapaneseYen,
   KeyRound,
   Laptop,
+  Landmark,
   Leaf,
   Lightbulb,
   LockKeyhole,
   Mail,
+  Map,
   MessageCircle,
   Milk,
   Monitor,
@@ -72,6 +81,7 @@ import {
   Palette,
   PaperBag,
   PawPrint,
+  Pencil,
   Percent,
   PiggyBank,
   Plane,
@@ -83,13 +93,15 @@ import {
   QrCode,
   Refrigerator,
   Rocket,
+  RotateCcw,
   Scale,
   Scissors,
+  ScrollText,
   Search,
   SendHorizontal,
   Settings,
   ShieldCheck,
-  Shirt,
+  ShoppingBag,
   ShoppingCart,
   Smartphone,
   SoapDispenserDroplet,
@@ -108,6 +120,7 @@ import {
   TriangleAlert,
   Truck,
   Umbrella,
+  Upload,
   Users,
   UsersRound,
   Utensils,
@@ -124,16 +137,19 @@ import {
 // - Bottle   -> Milk
 // - Broom    -> Brush
 export interface CategoryIconProps {
-  name: string
-  size?: number | string
-  color?: string
-  strokeWidth?: number
-  className?: string
-  style?: React.CSSProperties
+  name?: string | null;
+  size?: number | string;
+  color?: string;
+  strokeWidth?: number;
+  className?: string;
+  style?: React.CSSProperties;
+  'aria-hidden'?: React.AriaAttributes['aria-hidden'];
 }
 
 const ICON_MAP: Record<string, React.ElementType> = {
+  AlertTriangle,
   Apple,
+  Archive,
   Armchair,
   ArrowDownFromLine,
   ArrowRightLeft,
@@ -152,15 +168,19 @@ const ICON_MAP: Record<string, React.ElementType> = {
   BriefcaseBusiness,
   Brush,
   BrushCleaning,
+  Bug,
   Building2,
   CakeSlice,
+  Calendar,
   Car,
   CarTaxiFront,
   ChartNoAxesCombined,
+  Check,
   CheckCircle2,
   Church,
   CircleDollarSign,
   CircleX,
+  ClipboardList,
   Coins,
   Coffee,
   Copyright,
@@ -176,6 +196,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   FilePenLine,
   FileText,
   Fish,
+  FolderKanban,
   Gamepad2,
   Gift,
   GraduationCap,
@@ -187,15 +208,17 @@ const ICON_MAP: Record<string, React.ElementType> = {
   HousePlus,
   IceCreamCone,
   IndianRupee,
-  Info,
   Inbox,
+  Info,
   JapaneseYen,
   KeyRound,
   Laptop,
+  Landmark,
   Leaf,
   Lightbulb,
   LockKeyhole,
   Mail,
+  Map,
   MessageCircle,
   Milk,
   Monitor,
@@ -205,6 +228,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Palette,
   PaperBag,
   PawPrint,
+  Pencil,
   Percent,
   PiggyBank,
   Plane,
@@ -216,13 +240,15 @@ const ICON_MAP: Record<string, React.ElementType> = {
   QrCode,
   Refrigerator,
   Rocket,
+  RotateCcw,
   Scale,
   Scissors,
+  ScrollText,
   Search,
   SendHorizontal,
   Settings,
   ShieldCheck,
-  Shirt,
+  ShoppingBag,
   ShoppingCart,
   Smartphone,
   SoapDispenserDroplet,
@@ -241,6 +267,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   TriangleAlert,
   Truck,
   Umbrella,
+  Upload,
   Users,
   UsersRound,
   Utensils,
@@ -253,6 +280,8 @@ const ICON_MAP: Record<string, React.ElementType> = {
 }
 
 export const LUCIDE_ICON_NAMES = [
+  'AlertTriangle',
+  'Archive',
   'Apple',
   'Armchair',
   'ArrowDownFromLine',
@@ -272,15 +301,19 @@ export const LUCIDE_ICON_NAMES = [
   'BriefcaseBusiness',
   'Brush',
   'BrushCleaning',
+  'Bug',
   'Building2',
   'CakeSlice',
+  'Calendar',
   'Car',
   'CarTaxiFront',
   'ChartNoAxesCombined',
+  'Check',
   'CheckCircle2',
   'Church',
   'CircleDollarSign',
   'CircleX',
+  'ClipboardList',
   'Coins',
   'Coffee',
   'Copyright',
@@ -312,10 +345,13 @@ export const LUCIDE_ICON_NAMES = [
   'JapaneseYen',
   'KeyRound',
   'Laptop',
+
+  'Landmark',
   'Leaf',
   'Lightbulb',
   'LockKeyhole',
   'Mail',
+  'Map',
   'MessageCircle',
   'Milk',
   'Monitor',
@@ -325,6 +361,7 @@ export const LUCIDE_ICON_NAMES = [
   'Palette',
   'PaperBag',
   'PawPrint',
+  'Pencil',
   'Percent',
   'PiggyBank',
   'Plane',
@@ -336,13 +373,16 @@ export const LUCIDE_ICON_NAMES = [
   'QrCode',
   'Refrigerator',
   'Rocket',
+  'RotateCcw',
   'Scale',
   'Scissors',
+  'ScrollText',
   'Search',
   'SendHorizontal',
   'Settings',
   'ShieldCheck',
   'Shirt',
+  'ShoppingBag',
   'ShoppingCart',
   'Smartphone',
   'SoapDispenserDroplet',
@@ -361,6 +401,7 @@ export const LUCIDE_ICON_NAMES = [
   'TriangleAlert',
   'Truck',
   'Umbrella',
+  'Upload',
   'Users',
   'UsersRound',
   'Utensils',
@@ -374,8 +415,11 @@ export const LUCIDE_ICON_NAMES = [
 
 const EMOJI_REGEX = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u
 
-function isEmoji(value: string): boolean {
-  return EMOJI_REGEX.test(value)
+export function isLikelyLucideName(s: string | null | undefined): boolean {
+  if (typeof s !== 'string') return false;
+  if (s.trim() === '') return false;
+  if (s.length < 2) return false; // single letter cannot be lucide name
+  return /^[A-Z][A-Za-z0-9]+$/.test(s);
 }
 
 export function CategoryIcon({
@@ -385,16 +429,17 @@ export function CategoryIcon({
   strokeWidth = 2,
   className,
   style,
+  'aria-hidden': ariaHidden,
 }: CategoryIconProps) {
-  const trimmed = name.trim()
-
-  if (!trimmed) {
-    console.warn('CategoryIcon received an empty name')
-    return null
+  if (name === null || name === undefined || name.trim() === '') {
+    return <Tag size={size} color={color} strokeWidth={strokeWidth} className={className} style={style} aria-hidden={ariaHidden} />;
   }
 
-  const Icon = ICON_MAP[trimmed]
-  if (Icon) {
+  // Trim the input for lookup
+  const trimmedName = name.trim();
+
+  if (isLikelyLucideName(trimmedName) && ICON_MAP[trimmedName]) {
+    const Icon = ICON_MAP[trimmedName];
     return (
       <Icon
         size={size}
@@ -402,28 +447,30 @@ export function CategoryIcon({
         strokeWidth={strokeWidth}
         className={className}
         style={style}
+        aria-hidden={ariaHidden}
       />
-    )
+    );
   }
 
-  if (isEmoji(trimmed)) {
+  // Legacy letters and emoji values predate the shared Lucide icon map.
+  if (/^[A-Z]$/.test(trimmedName) || EMOJI_REGEX.test(trimmedName)) {
     return (
       <span
         className={className}
+        aria-hidden={ariaHidden}
         style={{
-          fontSize: size,
+          fontSize: 'inherit',
           lineHeight: 1,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
           ...style,
         }}
       >
-        {trimmed}
+        {trimmedName}
       </span>
-    )
+    );
   }
 
-  console.warn(`CategoryIcon: no lucide icon or emoji found for "${trimmed}"`)
-  return null
+  return <Tag size={size} color={color} strokeWidth={strokeWidth} className={className} style={style} aria-hidden={ariaHidden} />;
 }
+
+
+

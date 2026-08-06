@@ -5,6 +5,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
 import { BCG_CUADRANTES, classifyCuadrante, formatMoneyARS } from '@/lib/bcgUtils'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import type { BCGPoint } from './BCGScatterPlot'
 import './BCGDetalleCategoria.css'
 
@@ -115,7 +116,7 @@ export function BCGDetalleCategoria() {
             style={{ background: `${point.color ?? '#6366F1'}33` }}
             aria-hidden="true"
           >
-            {point.icono}
+            <CategoryIcon name={point.icono} size={24} />
           </span>
           <div>
             <h1 className="font-display">{point.nombre}</h1>

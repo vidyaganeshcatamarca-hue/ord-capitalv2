@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
 import { formatMoneyARS } from '@/lib/bcgUtils'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { BCGBuzonModal } from './BCGBuzonModal'
 import './BCGHormigas.css'
 
@@ -147,7 +148,7 @@ export function BCGHormigas({ hormigas, reto, onCategoriaClick }: BCGHormigasPro
                   style={{ background: `${h.color}33` }}
                   aria-hidden="true"
                 >
-                  {h.icono}
+                  <CategoryIcon name={h.icono} size={20} />
                 </span>
                 <div className="bcg-hormigas-item-body">
                   <strong>{h.nombre_cuenta}</strong>
