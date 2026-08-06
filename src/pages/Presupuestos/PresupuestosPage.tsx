@@ -1307,12 +1307,19 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto }: FilaSobreProps
       {/* Bloque informativo modo anticipado: mientras el mes nuevo no tenga
           asignacion, mostrar el asignado y gastado del mes anterior para que
           el usuario pueda decidir cuanto asignar este mes. Se oculta en
-          cuanto ya hay asignacion para el mes nuevo. */}
+          cuanto ya hay asignacion para el mes nuevo. Misma tipografia y
+          tamano que los stats de la fila (Asig/Gast/Avance) para que no
+          rompa la jerarquia visual de la tarjeta. */}
       {modoPresupuesto === 'anticipado' && Number(sobre.monto_asignado ?? 0) === 0 && (
-        <div className="sobre-prev-month-info">
-          📊 {t('budget_prev_month_assigned')}: <strong>${Math.round(Number(sobre.monto_asignado_anterior ?? 0)).toLocaleString('es-AR')}</strong>
-          {' · '}
-          {t('budget_prev_month_spent')}: <strong>${Math.round(Number(sobre.monto_gastado_anterior ?? 0)).toLocaleString('es-AR')}</strong>
+        <div className="sobre-stats">
+          <span className="sobre-stat">
+            <span className="sobre-stat-label">📊 {t('budget_prev_month_assigned')}: </span>
+            <span className="sobre-stat-val">${Math.round(Number(sobre.monto_asignado_anterior ?? 0)).toLocaleString('es-AR')}</span>
+          </span>
+          <span className="sobre-stat">
+            <span className="sobre-stat-label">🧾 {t('budget_prev_month_spent')}: </span>
+            <span className="sobre-stat-val">${Math.round(Number(sobre.monto_gastado_anterior ?? 0)).toLocaleString('es-AR')}</span>
+          </span>
         </div>
       )}
     </div>
