@@ -3,7 +3,8 @@ import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
-import { CategoryIcon, formatWalletIconForOption } from '@/components/CategoryIcon'
+import { CategoryIcon } from '@/components/CategoryIcon'
+import { WalletIcon } from '@/components/WalletIcon'
 import './Tarjetas.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -1327,19 +1328,51 @@ export function PagarModal({
                 <CategoryIcon name="AlertTriangle" size={14} /> {t('error_no_sufficient_balance_wallets')}
               </div>
             )}
-            <select
-              className="tarjeta-form-input"
-              value={pagarBilleteraId ?? ''}
-              onChange={e => setPagarBilleteraId(e.target.value ? Number(e.target.value) : null)}
-              required
-            >
-              <option value="" disabled>{t('pay_resumen_select_wallet_placeholder')}</option>
-              {filteredBilleteras.map(b => (
-                <option key={b.billetera_id} value={b.billetera_id}>
-                  {formatWalletIconForOption(b.icono)} {t(b.nombre)} ({fmtARS(b.saldo_actual)} {b.moneda})
-                </option>
-              ))}
-            </select>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '220px', overflowY: 'auto', paddingRight: '4px', marginTop: '6px' }}>
+              {filteredBilleteras.map(b => {
+                const active = pagarBilleteraId === b.billetera_id
+                return (
+                  <button
+                    key={b.billetera_id}
+                    type="button"
+                    onClick={() => setPagarBilleteraId(b.billetera_id)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      width: '100%',
+                      padding: '10px 14px',
+                      background: active ? 'rgba(78, 205, 196, 0.12)' : 'var(--surface-2)',
+                      border: active ? '1.5px solid var(--mint)' : '1px solid var(--border)',
+                      borderRadius: '12px',
+                      color: 'var(--text)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      textAlign: 'left'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '34px',
+                        height: '34px',
+                        borderRadius: '8px',
+                        background: 'var(--surface-3)',
+                        color: active ? 'var(--mint)' : 'var(--text)'
+                      }}>
+                        <WalletIcon name={b.icono} size={20} />
+                      </span>
+                      <span style={{ fontWeight: 600, fontSize: 'calc(14px * var(--font-scale))' }}>{t(b.nombre)}</span>
+                    </div>
+                    <span style={{ color: 'var(--mint)', fontWeight: 600, fontSize: 'calc(13px * var(--font-scale))' }}>
+                      {fmtARS(b.saldo_actual)} {b.moneda}
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
           <div>
             <label className="tarjeta-form-label">{t('pay_resumen_amount_label')}</label>

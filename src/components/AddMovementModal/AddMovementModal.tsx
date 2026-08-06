@@ -1916,59 +1916,55 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       ⚠️ {t('error_no_sufficient_balance_wallets')}
                     </div>
                   )}
-                  <select
-                    className="form-control mb-3"
-                    value={origenTipo === 'billetera' ? (billeteraOrigenId ? `b_${billeteraOrigenId}` : '') : (tarjetaId ? `t_${tarjetaId}` : '')}
-                    onFocus={() => setShowCalculator(false)}
-                    onChange={e => {
-                      const val = e.target.value
-                      if (!val) {
-                        setOrigenTipo('billetera')
-                        setBilleteraOrigenId(null)
-                        setTarjetaId(null)
-                      } else if (val.startsWith('b_')) {
-                        setOrigenTipo('billetera')
-                        setBilleteraOrigenId(Number(val.replace('b_', '')))
-                        setTarjetaId(null)
-                      } else if (val.startsWith('t_')) {
-                        setOrigenTipo('tarjeta')
-                        setTarjetaId(Number(val.replace('t_', '')))
-                        setBilleteraOrigenId(null)
-                      }
-                      setBilleteraDestinoId(null)
-                      setShowCalculator(false)
-                    }}
-                    style={{
-                      width: '100%',
-                      padding: '12px',
-                      background: 'var(--surface-2)',
-                      border: '1px solid var(--border)',
-                      borderRadius: '10px',
-                      color: 'var(--text)',
-                      fontSize: '14px',
-                      outline: 'none',
-                      fontFamily: 'var(--font-sans)',
-                      marginBottom: '16px'
-                    }}
-                  >
-                    <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('movement_select_origin_or_card')}</option>
-                    <optgroup label={t('label_source_wallet')}>
-                      {origenOptions.map(b => (
-                        <option key={`b_${b.billetera_id}`} value={`b_${b.billetera_id}`} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
-                          {formatWalletIconForOption(b.icono)} {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
-                        </option>
-                      ))}
-                    </optgroup>
+                  <div className="cuenta-lista" style={{ marginBottom: '16px', maxHeight: '240px', overflowY: 'auto' }}>
+                    {origenOptions.map(b => (
+                      <button key={`b_${b.billetera_id}`} type="button"
+                        className={`cuenta-item ${origenTipo === 'billetera' && billeteraOrigenId === b.billetera_id ? 'active' : ''}`}
+                        onClick={() => {
+                          setOrigenTipo('billetera')
+                          setBilleteraOrigenId(b.billetera_id)
+                          setTarjetaId(null)
+                          setBilleteraDestinoId(null)
+                          setShowCalculator(false)
+                        }}>
+                        <span className="cuenta-icono"><WalletIcon name={b.icono} size={22} /></span>
+                        <div className="cuenta-info">
+                          <div className="cuenta-nombre">{t(b.nombre)}</div>
+                          <div className="cuenta-moneda">{b.moneda}</div>
+                        </div>
+                        <div className="cuenta-saldo" style={{ color: b.saldo_actual >= 0 ? 'var(--mint)' : 'var(--coral)' }}>
+                          {formatMonto(b.saldo_actual.toString(), b.moneda)}
+                        </div>
+                      </button>
+                    ))}
                     {tipo === 'expense' && tarjetas.length > 0 && (
-                      <optgroup label={t("group_credit_cards")}>
-                        {tarjetas.map(t => (
-                          <option key={`t_${t.tarjeta_id}`} value={`t_${t.tarjeta_id}`} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
-                            💳 {t.nombre_tarjeta}
-                          </option>
+                      <>
+                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-2)', margin: '12px 0 6px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          {t("group_credit_cards")}
+                        </div>
+                        {tarjetas.map(tc => (
+                          <button key={`t_${tc.tarjeta_id}`} type="button"
+                            className={`cuenta-item ${origenTipo === 'tarjeta' && tarjetaId === tc.tarjeta_id ? 'active' : ''}`}
+                            onClick={() => {
+                              setOrigenTipo('tarjeta')
+                              setTarjetaId(tc.tarjeta_id)
+                              setBilleteraOrigenId(null)
+                              setBilleteraDestinoId(null)
+                              setShowCalculator(false)
+                            }}>
+                            <span className="cuenta-icono"><CategoryIcon name="CreditCard" size={22} /></span>
+                            <div className="cuenta-info">
+                              <div className="cuenta-nombre">{tc.nombre_tarjeta}</div>
+                              <div className="cuenta-moneda">ARS</div>
+                            </div>
+                            <div className="cuenta-saldo" style={{ color: 'var(--text-3)', fontSize: '11px' }}>
+                              Crédito
+                            </div>
+                          </button>
                         ))}
-                      </optgroup>
+                      </>
                     )}
-                  </select>
+                  </div>
 
                   {/* Cuotas si es tarjeta (Móvil) */}
                   {tipo === 'expense' && origenTipo === 'tarjeta' && (
