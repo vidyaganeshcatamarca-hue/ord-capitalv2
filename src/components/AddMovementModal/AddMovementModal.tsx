@@ -18,6 +18,7 @@ import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/cate
 import { CategoryIcon, formatWalletIconForOption } from '@/components/CategoryIcon/CategoryIcon'
 import { ProyectoIcon } from '@/components/ProyectoIcon'
 import { WalletIcon } from '@/components/WalletIcon'
+import { WalletDropdownSelect } from '@/components/WalletDropdownSelect'
 import './AddMovementModal.css'
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -1916,55 +1917,28 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       ⚠️ {t('error_no_sufficient_balance_wallets')}
                     </div>
                   )}
-                  <div className="cuenta-lista" style={{ marginBottom: '16px', maxHeight: '240px', overflowY: 'auto' }}>
-                    {origenOptions.map(b => (
-                      <button key={`b_${b.billetera_id}`} type="button"
-                        className={`cuenta-item ${origenTipo === 'billetera' && billeteraOrigenId === b.billetera_id ? 'active' : ''}`}
-                        onClick={() => {
-                          setOrigenTipo('billetera')
-                          setBilleteraOrigenId(b.billetera_id)
-                          setTarjetaId(null)
-                          setBilleteraDestinoId(null)
-                          setShowCalculator(false)
-                        }}>
-                        <span className="cuenta-icono"><WalletIcon name={b.icono} size={22} /></span>
-                        <div className="cuenta-info">
-                          <div className="cuenta-nombre">{t(b.nombre)}</div>
-                          <div className="cuenta-moneda">{b.moneda}</div>
-                        </div>
-                        <div className="cuenta-saldo" style={{ color: b.saldo_actual >= 0 ? 'var(--mint)' : 'var(--coral)' }}>
-                          {formatMonto(b.saldo_actual.toString(), b.moneda)}
-                        </div>
-                      </button>
-                    ))}
-                    {tipo === 'expense' && tarjetas.length > 0 && (
-                      <>
-                        <div style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-2)', margin: '12px 0 6px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                          {t("group_credit_cards")}
-                        </div>
-                        {tarjetas.map(tc => (
-                          <button key={`t_${tc.tarjeta_id}`} type="button"
-                            className={`cuenta-item ${origenTipo === 'tarjeta' && tarjetaId === tc.tarjeta_id ? 'active' : ''}`}
-                            onClick={() => {
-                              setOrigenTipo('tarjeta')
-                              setTarjetaId(tc.tarjeta_id)
-                              setBilleteraOrigenId(null)
-                              setBilleteraDestinoId(null)
-                              setShowCalculator(false)
-                            }}>
-                            <span className="cuenta-icono"><CategoryIcon name="CreditCard" size={22} /></span>
-                            <div className="cuenta-info">
-                              <div className="cuenta-nombre">{tc.nombre_tarjeta}</div>
-                              <div className="cuenta-moneda">ARS</div>
-                            </div>
-                            <div className="cuenta-saldo" style={{ color: 'var(--text-3)', fontSize: '11px' }}>
-                              Crédito
-                            </div>
-                          </button>
-                        ))}
-                      </>
-                    )}
-                  </div>
+                  <WalletDropdownSelect
+                    wallets={origenOptions}
+                    selectedWalletId={origenTipo === 'billetera' ? billeteraOrigenId : null}
+                    onSelectWallet={(id) => {
+                      setOrigenTipo('billetera')
+                      setBilleteraOrigenId(id)
+                      setTarjetaId(null)
+                      setBilleteraDestinoId(null)
+                      setShowCalculator(false)
+                    }}
+                    tarjetas={tipo === 'expense' ? tarjetas : []}
+                    selectedTarjetaId={origenTipo === 'tarjeta' ? tarjetaId : null}
+                    onSelectTarjeta={(id) => {
+                      setOrigenTipo('tarjeta')
+                      setTarjetaId(id)
+                      setBilleteraOrigenId(null)
+                      setBilleteraDestinoId(null)
+                      setShowCalculator(false)
+                    }}
+                    formatMonto={formatMonto}
+                    style={{ marginBottom: '16px' }}
+                  />
 
                   {/* Cuotas si es tarjeta (Móvil) */}
                   {tipo === 'expense' && origenTipo === 'tarjeta' && (
