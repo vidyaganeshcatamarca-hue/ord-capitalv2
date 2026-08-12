@@ -17,6 +17,7 @@
 
   /* ─── Acentos Basados en el Logo (Verde Esmeralda #00B127 a Verde Bosque #116014) ─── */
   --mint:                 #00B127;
+  --accent-mint:          #4ECDC4; /* Mint-cyan for high-contrast navigation items, same as global accent */
   --mint-gradient:        linear-gradient(135deg, #00B127 0%, #116014 100%);
   --mint-gradient-hover:  linear-gradient(135deg, #00C82B 0%, #147018 100%);
   --mint-gradient-subtle: linear-gradient(135deg, rgba(0, 177, 39, 0.18) 0%, rgba(17, 96, 20, 0.08) 100%);
@@ -480,14 +481,14 @@ input::placeholder, textarea::placeholder {
   gap: 3px;
   padding: var(--space-2) var(--space-4);
   border-radius: var(--radius-md);
-  color: var(--text-4);
+  color: var(--accent-mint); /* Mint-cyan for high contrast against dark nav background */
   transition: color var(--transition-fast);
   font-size: 10px;
   font-weight: 500;
   min-width: 56px;
 }
 .nav-item.active {
-  color: var(--mint);
+  color: var(--mint); /* Keep active state using primary mint accent */
 }
 .nav-item svg {
   width: 22px;

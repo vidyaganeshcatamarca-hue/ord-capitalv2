@@ -117,14 +117,37 @@
   align-items: center;
   justify-content: center;
   margin-bottom: var(--space-5);
+  position: relative;
+}
+
+.welcome-logo-container::before {
+  content: '';
+  position: absolute;
+  width: 175px;
+  height: 175px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(38, 123, 35, 0.65) 0%, rgba(11, 56, 14, 0.45) 40%, rgba(11, 56, 14, 0.15) 68%, transparent 82%);
+  filter: blur(10px);
+  pointer-events: none;
+  animation: logoGlow 4s ease-in-out infinite;
 }
 
 .welcome-logo-img {
-  width: 150px;
-  height: 150px;
-  object-fit: contain;
-  filter: drop-shadow(0 10px 28px rgba(0, 177, 39, 0.4));
+  width: 145px;
+  height: 145px;
+  object-fit: cover;
+  border-radius: 50%;
+  mask-image: radial-gradient(circle, #000 62%, rgba(0,0,0,0.85) 75%, rgba(0,0,0,0.4) 88%, transparent 100%);
+  -webkit-mask-image: radial-gradient(circle, #000 62%, rgba(0,0,0,0.85) 75%, rgba(0,0,0,0.4) 88%, transparent 100%);
+  box-shadow: 0 0 30px rgba(38, 123, 35, 0.4);
   animation: logoFloat 4s ease-in-out infinite;
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes logoGlow {
+  0%, 100% { transform: scale(1); opacity: 0.85; }
+  50% { transform: scale(1.08); opacity: 1; }
 }
 
 @keyframes logoFloat {
