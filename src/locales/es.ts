@@ -308,6 +308,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   budget_golden_rules_modal_disclaimer_text: "Es normal tardar 2-3 meses en ajustar estos números a tu realidad. No te frustres si las primeras semanas requieres muchos ajustes.",
   budget_golden_rules_modal_no_categories: "No se encontraron gastos fijos ni variables para generar una sugerencia inicial. Podrás configurarlos luego.",
   budget_modal_titulo_asignar: "Asignar presupuesto",
+  budget_modal_select_action: "Opciones de asignación:",
   budget_opcion_llenar_hueco_title: "Llenar Hueco",
   budget_opcion_llenar_hueco_desc: "Cubre el déficit o arrastre de esta categoría",
   budget_opcion_ingresar_monto_title: "Ingresar Monto",
