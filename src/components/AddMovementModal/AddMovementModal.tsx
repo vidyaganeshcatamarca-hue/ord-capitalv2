@@ -1491,7 +1491,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('movement_select_origin_placeholder')}</option>
                     {origenOptions.map(b => (
                       <option key={b.billetera_id} value={b.billetera_id} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
-                        {b.icono || '💳'} {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
+                        {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
                       </option>
                     ))}
                   </select>
@@ -1518,7 +1518,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('movement_select_destination_placeholder')}</option>
                     {destinoOptions.map(b => (
                       <option key={b.billetera_id} value={b.billetera_id} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
-                        {b.icono || '💳'} {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
+                        {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
                       </option>
                     ))}
                   </select>

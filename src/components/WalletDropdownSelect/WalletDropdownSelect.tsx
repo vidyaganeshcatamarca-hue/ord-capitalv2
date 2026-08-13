@@ -156,7 +156,7 @@ export function WalletDropdownSelect({
               width: '100%',
               maxWidth: '420px',
               maxHeight: '80vh',
-              background: 'var(--surface-1)',
+              background: 'var(--surface)',
               border: '1px solid var(--border)',
               borderRadius: '16px',
               boxShadow: '0 20px 40px rgba(0, 0, 0, 0.4)',
