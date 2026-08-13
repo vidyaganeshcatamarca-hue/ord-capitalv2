@@ -30,6 +30,7 @@ type HomeFilters = {
   fechaInicio: string
   fechaFin: string
   billeteraId: number | null
+  tarjetaId: number | null
   nivelCategorias: HomeCategoryLevel
 }
 
@@ -83,20 +84,21 @@ function getPresetRange(preset: HomePeriodPreset, diaAncla: number) {
 
 function getDefaultHomeFilters(diaAncla: number): HomeFilters {
   const range = getPresetRange('month', diaAncla)
-  return { preset: 'month', ...range, billeteraId: null, nivelCategorias: 'parents' }
+  return { preset: 'month', ...range, billeteraId: null, tarjetaId: null, nivelCategorias: 'parents' }
 }
 
 function isValidDateInput(value: unknown): value is string {
   return typeof value === 'string' && DATE_INPUT_PATTERN.test(value) && !Number.isNaN(new Date(`${value}T00:00:00`).getTime())
 }
 
-function parseHomePreferences(value: unknown, diaAncla: number, activeWalletIds: Set<number>): HomeFilters | null {
+function parseHomePreferences(value: unknown, diaAncla: number, activeWalletIds: Set<number>, activeCardIds: Set<number>): HomeFilters | null {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return null
 
   const preferences = value as Record<string, unknown>
   const preset = preferences.periodo
   const categoryLevel = preferences.nivel_categorias
   const walletIdValue = preferences.billetera_id
+  const tarjetaIdValue = preferences.tarjeta_id
 
   if (!['today', 'week', 'month', 'custom'].includes(String(preset))) return null
   if (!['parents', 'all'].includes(String(categoryLevel))) return null
@@ -106,17 +108,23 @@ function parseHomePreferences(value: unknown, diaAncla: number, activeWalletIds:
     : Number(walletIdValue)
   if (billeteraId !== null && (!Number.isInteger(billeteraId) || !activeWalletIds.has(billeteraId))) return null
 
+  const tarjetaId = tarjetaIdValue === null || tarjetaIdValue === undefined
+    ? null
+    : Number(tarjetaIdValue)
+  if (tarjetaId !== null && (!Number.isInteger(tarjetaId) || !activeCardIds.has(tarjetaId))) return null
+
   if (preset === 'custom') {
     const fechaInicio = preferences.fecha_inicio
     const fechaFin = preferences.fecha_fin
     if (!isValidDateInput(fechaInicio) || !isValidDateInput(fechaFin) || fechaInicio > fechaFin) return null
-    return { preset, fechaInicio, fechaFin, billeteraId, nivelCategorias: categoryLevel as HomeCategoryLevel }
+    return { preset, fechaInicio, fechaFin, billeteraId, tarjetaId, nivelCategorias: categoryLevel as HomeCategoryLevel }
   }
 
   return {
     preset: preset as HomePeriodPreset,
     ...getPresetRange(preset as HomePeriodPreset, diaAncla),
     billeteraId,
+    tarjetaId,
     nivelCategorias: categoryLevel as HomeCategoryLevel
   }
 }
@@ -127,6 +135,7 @@ function serializeHomePreferences(filters: HomeFilters) {
     fecha_inicio: filters.fechaInicio,
     fecha_fin: filters.fechaFin,
     billetera_id: filters.billeteraId,
+    tarjeta_id: filters.tarjetaId,
     nivel_categorias: filters.nivelCategorias
   }
 }
@@ -315,6 +324,7 @@ export function HomePage() {
     dias_asfixia_proximos: number
   } | null>(null)
   const [billeteras, setBilleteras] = useState<any[]>([])
+  const [tarjetas, setTarjetas] = useState<any[]>([])
   const [topCategorias, setTopCategorias] = useState<any[]>([])
   const [rankingCategorias, setRankingCategorias] = useState<any[]>([])
   const [movimientos, setMovimientos] = useState<any[]>([])
@@ -358,6 +368,7 @@ export function HomePage() {
         patrimonioRes,
         alertsRes,
         billeterasRes,
+        tarjetasRes,
         topCategoriasRes,
         rankingCategoriasRes,
         movimientosRes,
@@ -368,6 +379,7 @@ export function HomePage() {
         rpc<{ total_pesos: number; total_dolares: number }[]>('fn_reporte_patrimonio_neto').catch(() => [] as any[]),
         rpc<any>('fn_reporte_alertas_home').catch(() => null),
         rpc<any[]>('fn_obtener_billeteras_activas').catch(() => [] as any[]),
+        rpc<any[]>('fn_reporte_mapa_tarjetas').catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_top_categorias_mes').catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_ranking_categorias').catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_movimientos_recientes', { p_limit: 20, p_offset: 0 }).catch(() => [] as any[]),
@@ -381,6 +393,7 @@ export function HomePage() {
       }
       setAlerts(alertsRes)
       setBilleteras(billeterasRes)
+      setTarjetas(tarjetasRes)
       setTopCategorias(topCategoriasRes)
       setRankingCategorias(rankingCategoriasRes)
       setMovimientos(movimientosRes)
@@ -607,6 +620,7 @@ export function HomePage() {
 
     homePreferencesHydratedUserRef.current = user.id
     const activeWalletIds = new Set(billeteras.map((billetera) => Number(billetera.billetera_id)))
+    const activeCardIds = new Set(tarjetas.map((tarjeta) => Number(tarjeta.tarjeta_id)))
     const cacheKey = `${HOME_PREFERENCES_KEY_PREFIX}${user.id}`
     const pendingKey = `${HOME_PREFERENCES_KEY_PREFIX}pending:${user.id}`
     const hasPendingPreferences = localStorage.getItem(pendingKey) === 'true'
@@ -614,7 +628,7 @@ export function HomePage() {
     try {
       const cachedPreferences = localStorage.getItem(cacheKey)
       if (cachedPreferences) {
-        const cachedFilters = parseHomePreferences(JSON.parse(cachedPreferences), diaAncla, activeWalletIds)
+        const cachedFilters = parseHomePreferences(JSON.parse(cachedPreferences), diaAncla, activeWalletIds, activeCardIds)
         if (cachedFilters) {
           latestHomeFiltersRef.current = cachedFilters
           setHomeFilters(cachedFilters)
@@ -632,7 +646,7 @@ export function HomePage() {
     void (async () => {
       try {
         const preferenceResponse = await rpc<{ home_preferencias: unknown }[]>('fn_obtener_preferencias_usuario')
-        const remoteFilters = parseHomePreferences(preferenceResponse?.[0]?.home_preferencias, diaAncla, activeWalletIds)
+        const remoteFilters = parseHomePreferences(preferenceResponse?.[0]?.home_preferencias, diaAncla, activeWalletIds, activeCardIds)
         if (!remoteFilters) return
 
         latestHomeFiltersRef.current = remoteFilters
@@ -642,7 +656,7 @@ export function HomePage() {
         // A local/default selection keeps Home usable when preferences cannot be read.
       }
     })()
-  }, [billeteras, diaAncla, loading, user?.id])
+  }, [billeteras, tarjetas, diaAncla, loading, user?.id])
 
   useEffect(() => {
     const flushWhenHidden = () => {
@@ -787,11 +801,16 @@ export function HomePage() {
     ((misterio?.olvidos_pesos ?? 0) > 0 || (misterio?.olvidos_dolares ?? 0) > 0) &&
     !fugasMisterioOcultado
   const filterRangeInvalid = !homeFilters.fechaInicio || !homeFilters.fechaFin || homeFilters.fechaInicio > homeFilters.fechaFin
-
   const filteredMovimientos = useMemo(() => {
-    if (!filterTarget) return movimientos
-    return allMovimientos.filter(m => filterTarget.ids.includes(m.estructura_egreso_id))
-  }, [movimientos, filterTarget, allMovimientos])
+    const baseList = filterTarget
+      ? allMovimientos.filter(m => filterTarget.ids.includes(m.estructura_egreso_id))
+      : movimientos
+
+    if (homeFilters.tarjetaId !== null) {
+      return baseList.filter(m => Number(m.tarjeta_id) === homeFilters.tarjetaId)
+    }
+    return baseList
+  }, [movimientos, filterTarget, allMovimientos, homeFilters.tarjetaId])
 
   if (loading && movimientos.length === 0 && billeteras.length === 0) {
     return (
@@ -939,16 +958,43 @@ export function HomePage() {
                 <label className="home-wallet-inline-filter">
                   <span className="sr-only">{t('home_filter_wallet_label')}</span>
                   <select
-                    value={homeFilters.billeteraId ?? ''}
+                    value={
+                      homeFilters.tarjetaId !== null
+                        ? `t_${homeFilters.tarjetaId}`
+                        : homeFilters.billeteraId !== null
+                        ? `b_${homeFilters.billeteraId}`
+                        : ''
+                    }
                     onChange={(event) => {
                       const value = event.target.value
-                      updateHomeFilters({ ...homeFilters, billeteraId: value ? Number(value) : null })
+                      if (!value) {
+                        updateHomeFilters({ ...homeFilters, billeteraId: null, tarjetaId: null })
+                      } else if (value.startsWith('b_')) {
+                        updateHomeFilters({ ...homeFilters, billeteraId: Number(value.replace('b_', '')), tarjetaId: null })
+                      } else if (value.startsWith('t_')) {
+                        updateHomeFilters({ ...homeFilters, billeteraId: null, tarjetaId: Number(value.replace('t_', '')) })
+                      }
                     }}
                   >
                     <option value="">{t('home_filter_wallet_all')}</option>
-                    {billeteras.map((b) => (
-                      <option key={b.billetera_id} value={b.billetera_id}>{t(b.nombre)}</option>
-                    ))}
+                    {billeteras.length > 0 && (
+                      <optgroup label={t('group_wallets') || 'Billeteras'}>
+                        {billeteras.map((b) => (
+                          <option key={`b_${b.billetera_id}`} value={`b_${b.billetera_id}`}>
+                            {t(b.nombre)}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {tarjetas.length > 0 && (
+                      <optgroup label={t('group_credit_cards') || 'Tarjetas de crédito'}>
+                        {tarjetas.map((tc) => (
+                          <option key={`t_${tc.tarjeta_id}`} value={`t_${tc.tarjeta_id}`}>
+                            💳 {tc.nombre_tarjeta}
+                          </option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 </label>
               </div>

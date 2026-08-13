@@ -32,6 +32,7 @@ interface VencimientoTarjeta {
   monto_a_pagar: number
   estado_urgencia_key: string
   mensaje_key: string
+  resumen_vencido: boolean
 }
 
 interface Termometro {
@@ -605,7 +606,11 @@ export function TarjetasPage() {
               <div className="vencimiento-widget" style={{ marginTop: 14 }}>
                 <div className="vencimiento-info">
                     <div className="vencimiento-label"><CategoryIcon name="Calendar" size={13} /> {t("card_next_due_date")}</div>
-                  <div className="vencimiento-date">{t("card_due_date_format", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })}</div>
+                  <div className="vencimiento-date">
+                    {venc.resumen_vencido
+                      ? t("card_due_date_overdue", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })
+                      : t("card_due_date_format", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })}
+                  </div>
                   <div className="vencimiento-monto">Estimado: {fmtARS(venc.monto_a_pagar)}</div>
                 </div>
                 <button className="btn-pagar-resumen" onClick={() => {
