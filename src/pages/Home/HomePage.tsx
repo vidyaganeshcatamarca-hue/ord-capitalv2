@@ -372,7 +372,7 @@ export function HomePage() {
         rpc<any[]>('fn_reporte_ranking_categorias').catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_movimientos_recientes', { p_limit: 20, p_offset: 0 }).catch(() => [] as any[]),
         rpc<{ olvidos_pesos: number; olvidos_dolares: number }[]>('fn_reporte_desviacion_misterio').catch(() => [] as any[]),
-        rpc<number>('fn_obtener_saldo_a_asignar', { p_mes_periodo: new Date().toISOString().split('T')[0] }).catch(() => 0),
+        rpc<number>('fn_obtener_saldo_a_asignar', { p_mes_periodo: (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })() }).catch(() => 0),
         rpc<any[]>('fn_obtener_config_presupuesto').catch(() => [] as any[])
       ])
 

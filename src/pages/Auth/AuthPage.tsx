@@ -275,7 +275,7 @@ export function AuthPage() {
           <div className="slide-content">
             <div className="welcome-hero">
               <div className="welcome-logo-container">
-                <img src="/logo.png" alt="ORD Capital" className="welcome-logo-img" />
+                <img src="/logo_login.webp" alt="ORD Capital" className="welcome-logo-img" />
               </div>
               <h1 className="welcome-title">{t('auth_welcome_title')}</h1>
               <p className="welcome-subtitle">{t('auth_welcome_subtitle')}</p>

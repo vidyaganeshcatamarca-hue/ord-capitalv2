@@ -118,35 +118,16 @@
   justify-content: center;
   margin: 0 auto var(--space-5);
   position: relative;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-}
-
-/* Light Theme: Green -> Emerald -> Light Green -> White/Cream (#FDFBF7) */
-[data-theme='warm-light'] .welcome-logo-container,
-.welcome-logo-container {
-  background: radial-gradient(circle, #0B380E 0%, #0B380E 40%, #1A6C1E 60%, #4CAF50 80%, #FDFBF7 100%);
-  box-shadow: 0 0 40px rgba(76, 175, 80, 0.35);
-}
-
-/* Dark Theme: Green -> Dark Emerald -> Deep Forest -> Black (#000000) */
-[data-theme='dark'] .welcome-logo-container {
-  background: radial-gradient(circle, #0B380E 0%, #0B380E 40%, #114B15 60%, #062408 80%, #000000 100%);
-  box-shadow: 0 0 50px rgba(11, 56, 14, 0.85);
+  width: 220px;
+  height: 220px;
 }
 
 .welcome-logo-img {
-  width: 175px;
-  height: 175px;
-  object-fit: cover;
-  border-radius: 50%;
-  mask-image: radial-gradient(circle, #000 60%, rgba(0,0,0,0.9) 75%, rgba(0,0,0,0.3) 90%, transparent 100%);
-  -webkit-mask-image: radial-gradient(circle, #000 60%, rgba(0,0,0,0.9) 75%, rgba(0,0,0,0.3) 90%, transparent 100%);
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
   animation: logoFloat 4s ease-in-out infinite;
-  position: relative;
-  z-index: 1;
+  filter: drop-shadow(0 12px 30px rgba(11, 56, 14, 0.25));
 }
 
 @keyframes logoFloat {
