@@ -19,10 +19,13 @@ export function createTourDriver(
   const driverInstance = new Driver({
     animate: true,
     opacity: 0.7,
-    padding: 8,
+    padding: 6,
     allowClose: true,
     keyboardControl: true,
     overlayClickNext: false,
+    // CRITICAL: transparent stage so the highlighted element is NOT painted white.
+    // The overlay (opacity 0.7 black) is what creates the dimming effect.
+    stageBackground: 'transparent',
     className: 'ord-tour-popover',
     onReset: () => {
       // Called when tour ends (close button OR completed all steps)
@@ -40,8 +43,6 @@ export function createTourDriver(
   // Expose to window so onNext can check hasNextStep
   (window as unknown as { ordDriver?: Driver }).ordDriver = driverInstance;
 
-  // Convert our tour steps to driver.js 0.9.5 format.
-  // Each step already has `element` (HTMLElement from resolveTourElement) and `popover` config.
   // driver.js 0.9.5 supports passing HTMLElement directly as `element`.
   driverInstance.defineSteps(steps);
 
