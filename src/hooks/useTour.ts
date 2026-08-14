@@ -103,6 +103,31 @@ export function useTour(screenId: TourScreenId) {
         offsetParent: (firstEl as HTMLElement & { offsetParent?: HTMLElement | null }).offsetParent?.tagName,
         computedTransform: window.getComputedStyle(firstEl).transform,
         computedPosition: window.getComputedStyle(firstEl).position,
+        rectSerialized: {
+          x: firstEl.getBoundingClientRect().x,
+          y: firstEl.getBoundingClientRect().y,
+          width: firstEl.getBoundingClientRect().width,
+          height: firstEl.getBoundingClientRect().height,
+          top: firstEl.getBoundingClientRect().top,
+          right: firstEl.getBoundingClientRect().right,
+          bottom: firstEl.getBoundingClientRect().bottom,
+          left: firstEl.getBoundingClientRect().left,
+        },
+        parentChain: (() => {
+          const chain = [];
+          let p = firstEl.parentElement;
+          while (p && chain.length < 6) {
+            chain.push({
+              tag: p.tagName,
+              class: p.className.toString().split(' ').slice(0, 3).join('.'),
+              overflowY: window.getComputedStyle(p).overflowY,
+              transform: window.getComputedStyle(p).transform,
+              position: window.getComputedStyle(p).position,
+            });
+            p = p.parentElement;
+          }
+          return chain;
+        })(),
       });
 
       // Small delay to let scroll settle, then start tour
@@ -111,36 +136,46 @@ export function useTour(screenId: TourScreenId) {
           driverInstance.start();
         }
 
-        // driver.js 0.9.5 positions against window scroll, not the app's
-        // internal scroll container (`.page`). After it renders, override
-        // the stage and popover with viewport-relative coords from the
-        // target's actual getBoundingClientRect().
-        window.setTimeout(() => {
+        // driver.js 0.9.5 has ANIMATION_DURATION_MS = 300 and its
+        // computed position math assumes the global scroll is on
+        // window/documentElement, but our app scrolls on `.page`.
+        // Wait for the 3 nodes (overlay, stage, popover) to exist, then
+        // override their inline styles with viewport-relative coords
+        // derived from the target's actual getBoundingClientRect().
+        const deadline = Date.now() + 2500;
+        const tryOverride = () => {
           const stage = document.getElementById('driver-highlighted-element-stage');
           const popover = document.getElementById('driver-popover-item');
           const overlay = document.querySelector('.driver-overlay');
-          if (!stage || !popover || !overlay) return;
+          if (!stage || !popover || !overlay) {
+            if (Date.now() < deadline) {
+              window.requestAnimationFrame(tryOverride);
+            } else {
+              console.warn('[Tour DEBUG] Override timed out waiting for driver.js nodes');
+            }
+            return;
+          }
 
           const padding = 8;
+          // The target may have moved between scrollIntoView and now;
+          // re-read its rect inside the override.
           const targetRect = firstEl.getBoundingClientRect();
           const vw = window.innerWidth;
           const vh = window.innerHeight;
           const popoverWidth = 320;
           const popoverMargin = 12;
 
-          // Stage = match target rect exactly, minus padding on each side.
           stage.style.cssText =
-            `display: block;` +
+            `display: block !important;` +
             `position: fixed !important;` +
             `left: ${Math.max(0, targetRect.left - padding)}px !important;` +
             `top: ${Math.max(0, targetRect.top - padding)}px !important;` +
-            `width: ${Math.min(vw, targetRect.width + padding * 2)}px !important;` +
+            `width: ${Math.min(vw - padding * 2, targetRect.width + padding * 2)}px !important;` +
             `height: ${targetRect.height + padding * 2}px !important;` +
             `background-color: transparent !important;` +
             `z-index: 10000 !important;` +
             `box-shadow: 0 0 0 9999px rgba(0,0,0,0.7) !important;`;
 
-          // Overlay = full viewport, dark, behind the stage.
           overlay.setAttribute(
             'style',
             `display: block !important;` +
@@ -151,7 +186,6 @@ export function useTour(screenId: TourScreenId) {
               `pointer-events: none !important;`
           );
 
-          // Popover = top-center of viewport, fixed, above everything.
           popover.style.cssText =
             `display: block !important;` +
             `position: fixed !important;` +
@@ -164,8 +198,7 @@ export function useTour(screenId: TourScreenId) {
             `background-color: var(--surface, #2D2D2D) !important;` +
             `color: var(--text-primary, #FFFFFF) !important;`;
 
-          // DEBUG: log what we just did so the user can paste it back.
-          console.log('[Tour DEBUG] After override', {
+          console.log('[Tour DEBUG] After override (success)', {
             targetRect,
             vw,
             vh,
@@ -173,7 +206,8 @@ export function useTour(screenId: TourScreenId) {
             popoverRect: popover.getBoundingClientRect(),
             overlayRect: overlay.getBoundingClientRect(),
           });
-        }, 200);
+        };
+        tryOverride();
       }, 250);
     } catch (err) {
       const e = err instanceof Error ? err : new Error(String(err));
