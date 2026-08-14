@@ -846,7 +846,7 @@ export function HomePage() {
         <div>
           <p className="home-greeting">{saludoTexto}</p>
         </div>
-        <div className="home-header-actions">
+        <div className="home-header-actions" data-tour-id="home-header-aux">
           <TourTriggerButton screenId="home" />
           <button
             className="home-icon-btn"
@@ -857,7 +857,7 @@ export function HomePage() {
           </button>
           <button
             className="home-icon-btn home-bell-target"
-            data-tour-id="home-alerts-badge"
+            data-tour-id="home-alertas"
             onClick={() => setAlertsOpen(!alertsOpen)}
             aria-label="Alertas"
             style={{ position: 'relative' }}
@@ -932,7 +932,7 @@ export function HomePage() {
                   </p>
                 </div>
                 {saldoHero && (
-                  <div className="home-patrimonio-extra-info" data-tour-id="home-family-balance">
+                  <div className="home-patrimonio-extra-info">
                     <p className="home-patrimonio-label-right">{t(saldoHero.title)}</p>
                     <p className="home-patrimonio-extra-amount font-mono" style={{ color: saldoHero.isRed ? 'var(--coral)' : 'var(--mint)' }}>
                       {formatAmount(saldoHero.amount, 'ARS')}
@@ -954,7 +954,7 @@ export function HomePage() {
           </div>
 
           {/* ── SECCIÓN DE BILLETERAS ── */}
-          <div className="section home-section-billeteras" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0, paddingBottom: '4px' }}>
+          <div className="section home-section-billeteras" data-tour-id="home-billeteras" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0, paddingBottom: '4px' }}>
             <div className="home-wallets-header mb-3">
               <div className="home-wallet-title-filter">
                 <span className="section-title">{t('section_my_wallets')}</span>
@@ -1075,7 +1075,7 @@ export function HomePage() {
         {/* Columna Derecha: Categorías y Actividad */}
         <div className="home-dashboard-right-col">
           {/* ── ANILLO / TOP CATEGORÍAS ── */}
-          <div className="section home-section-donut" style={{ paddingTop: '4px', paddingLeft: 0, paddingRight: 0, paddingBottom: '4px' }}>
+          <div className="section home-section-donut" data-tour-id="home-expenses-donut" style={{ paddingTop: '4px', paddingLeft: 0, paddingRight: 0, paddingBottom: '4px' }}>
             <div className="flex items-center justify-between mb-3">
               <span className="section-title">
                 {t('section_expense_distribution_cycle', {
@@ -1282,6 +1282,7 @@ export function HomePage() {
                           <button
                             type="button"
                             className="btn-see-all-toggle"
+                            data-tour-id="home-expenses-ver-todos"
                             style={{
                               background: 'rgba(0, 229, 153, 0.12)',
                               color: 'var(--mint)',
@@ -1355,7 +1356,7 @@ export function HomePage() {
           </div>
 
           {/* ── FEED RECIENTE ── */}
-          <div className="section home-section-feed" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }} data-tour-id="home-recent-movements">
+          <div className="section home-section-feed" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }} data-tour-id="home-actividad">
             <div className="flex items-center justify-between mb-3">
               <span className="section-title">{t('section_recent_activity')}</span>
               <button

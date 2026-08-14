@@ -1,43 +1,56 @@
 {
   "id": "home",
-  "version": 1,
+  "version": 2,
   "i18nPrefix": "tour.home",
   "title": "tour.home.title",
   "description": "tour.home.description",
   "steps": [
     {
-      "id": "step1",
+      "id": "heroCard",
       "target": "home-hero-card",
-      "placement": "bottom",
       "i18nKey": "step1",
       "audioUrl": null
     },
     {
-      "id": "step2",
-      "target": "home-family-balance",
-      "placement": "left",
+      "id": "expensesDonut",
+      "target": "home-expenses-donut",
       "i18nKey": "step2",
       "audioUrl": null
     },
     {
-      "id": "step3",
-      "target": "home-alerts-badge",
-      "placement": "bottom",
+      "id": "expensesVerTodos",
+      "target": "home-expenses-ver-todos",
       "i18nKey": "step3",
       "audioUrl": null
     },
     {
-      "id": "step4",
-      "target": "home-recent-movements",
-      "placement": "top",
+      "id": "billeteras",
+      "target": "home-billeteras",
       "i18nKey": "step4",
       "audioUrl": null
     },
     {
-      "id": "step5",
-      "target": "home-fab-registrar",
-      "placement": "top",
+      "id": "alertas",
+      "target": "home-alertas",
       "i18nKey": "step5",
+      "audioUrl": null
+    },
+    {
+      "id": "actividad",
+      "target": "home-actividad",
+      "i18nKey": "step6",
+      "audioUrl": null
+    },
+    {
+      "id": "headerAux",
+      "target": "home-header-aux",
+      "i18nKey": "step7",
+      "audioUrl": null
+    },
+    {
+      "id": "fabRegistrar",
+      "target": "home-fab-registrar",
+      "i18nKey": "step8",
       "audioUrl": null
     }
   ]

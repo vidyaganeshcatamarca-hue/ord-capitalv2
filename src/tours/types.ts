@@ -6,7 +6,7 @@ export interface TourStep {
   /** data-tour-id attribute value — must be a valid TourId */
   target: string;
   /** Tooltip position relative to target */
-  placement: TourPlacement;
+  placement?: TourPlacement;
   /** i18n key suffix: composed as `${tour.i18nPrefix}.${i18nKey}.{title|description|howTo}` */
   i18nKey: string;
   /** v2 placeholder: audio URL or null */

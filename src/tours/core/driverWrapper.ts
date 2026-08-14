@@ -1,5 +1,6 @@
 import { driver, type Driver, type DriveStep, type Config } from 'driver.js';
 import type { Tour } from '../types';
+import '@/components/Tour/TourPopover.css';
 
 export function resolveTourElement(id: string): HTMLElement | null {
   const el = document.querySelector(`[data-tour-id="${id}"]`);
@@ -24,7 +25,8 @@ export function createTourDriver(
     stagePadding: 8,
     stageRadius: 8,
     smoothScroll: true,
-    allowClose: false,
+    allowClose: true,
+    disableActiveInteraction: true,
     allowKeyboardControl: true,
     showProgress: true,
     progressText: '{{current}} / {{total}}',
