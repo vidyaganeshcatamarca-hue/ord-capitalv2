@@ -9,6 +9,7 @@ import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { EditMovementModal } from '@/components/EditMovementModal/EditMovementModal'
 import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/ReconcileWalletModal'
 import { WalletIcon } from '@/components/WalletIcon'
+import { TourTriggerButton } from '@/components/Tour/TourTriggerButton'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { useCountUp } from '@/hooks/useCountUp'
 import { useHideAmounts } from '@/hooks/useHideAmounts'
@@ -846,6 +847,7 @@ export function HomePage() {
           <p className="home-greeting">{saludoTexto}</p>
         </div>
         <div className="home-header-actions">
+          <TourTriggerButton screenId="home" />
           <button
             className="home-icon-btn"
             onClick={toggleEyeHide}
@@ -855,6 +857,7 @@ export function HomePage() {
           </button>
           <button
             className="home-icon-btn home-bell-target"
+            data-tour-id="home-alerts-badge"
             onClick={() => setAlertsOpen(!alertsOpen)}
             aria-label="Alertas"
             style={{ position: 'relative' }}
@@ -920,16 +923,16 @@ export function HomePage() {
         <div className="home-dashboard-left-col">
           {/* ── TOTAL HERO (Observación 2) ── */}
           <div className="section home-section-total" style={{ paddingLeft: 0, paddingRight: 0, paddingTop: '4px', paddingBottom: '4px' }}>
-            <div className="home-patrimonio card gradient-hero">
+            <div className="home-patrimonio card gradient-hero" data-tour-id="home-hero-card">
               <div className="home-patrimonio-top-flex">
-                <div className="home-patrimonio-main-info">
+                <div className="home-patrimonio-main-info" data-tour-id="home-safe-to-spend">
                   <p className="home-patrimonio-label">{t('hero_title_total')}</p>
                   <p className="home-patrimonio-ars font-display animate-count">
                     {formatAmount(animatedPatrimonioARS, 'ARS')}
                   </p>
                 </div>
                 {saldoHero && (
-                  <div className="home-patrimonio-extra-info">
+                  <div className="home-patrimonio-extra-info" data-tour-id="home-family-balance">
                     <p className="home-patrimonio-label-right">{t(saldoHero.title)}</p>
                     <p className="home-patrimonio-extra-amount font-mono" style={{ color: saldoHero.isRed ? 'var(--coral)' : 'var(--mint)' }}>
                       {formatAmount(saldoHero.amount, 'ARS')}
@@ -1352,7 +1355,7 @@ export function HomePage() {
           </div>
 
           {/* ── FEED RECIENTE ── */}
-          <div className="section home-section-feed" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
+          <div className="section home-section-feed" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }} data-tour-id="home-recent-movements">
             <div className="flex items-center justify-between mb-3">
               <span className="section-title">{t('section_recent_activity')}</span>
               <button

@@ -4,5 +4,48 @@
   "i18nPrefix": "tour.home",
   "title": "tour.home.title",
   "description": "tour.home.description",
-  "steps": []
+  "steps": [
+    {
+      "id": "step1",
+      "target": "home-hero-card",
+      "placement": "bottom",
+      "i18nKey": "step1",
+      "audioUrl": null
+    },
+    {
+      "id": "step2",
+      "target": "home-family-balance",
+      "placement": "left",
+      "i18nKey": "step2",
+      "audioUrl": null
+    },
+    {
+      "id": "step3",
+      "target": "home-safe-to-spend",
+      "placement": "left",
+      "i18nKey": "step3",
+      "audioUrl": null
+    },
+    {
+      "id": "step4",
+      "target": "home-alerts-badge",
+      "placement": "bottom",
+      "i18nKey": "step4",
+      "audioUrl": null
+    },
+    {
+      "id": "step5",
+      "target": "home-recent-movements",
+      "placement": "top",
+      "i18nKey": "step5",
+      "audioUrl": null
+    },
+    {
+      "id": "step6",
+      "target": "home-fab-registrar",
+      "placement": "top",
+      "i18nKey": "step6",
+      "audioUrl": null
+    }
+  ]
 }

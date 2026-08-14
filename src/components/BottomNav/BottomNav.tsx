@@ -128,7 +128,8 @@ export function BottomNav({ onAddPress }: BottomNavProps) {
 
         {/* FAB Central para añadir movimiento */}
         <button 
-          className="nav-item" 
+          className="nav-item"
+          data-tour-id="home-fab-registrar"
           onClick={() => {
             setIsMenuOpen(false)
             onAddPress()
