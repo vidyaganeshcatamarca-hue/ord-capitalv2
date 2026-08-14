@@ -1,0 +1,8 @@
+{
+  "id": "home",
+  "version": 1,
+  "i18nPrefix": "tour.home",
+  "title": "tour.home.title",
+  "description": "tour.home.description",
+  "steps": []
+}
