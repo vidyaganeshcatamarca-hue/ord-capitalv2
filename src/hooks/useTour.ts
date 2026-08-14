@@ -34,11 +34,18 @@ export function useTour(screenId: TourScreenId) {
           const i18n = resolveStepI18n(tour, step);
           const element = resolveTourElement(step.target);
           if (!element) return null;
+          // Defensive: only append howTo if it's a real translation (not the raw key fallback)
+          const hasHowTo =
+            i18n.howTo &&
+            !i18n.howTo.startsWith(`${tour.i18nPrefix}.`);
+          const description = hasHowTo
+            ? `${i18n.description}\n\n${i18n.howTo}`
+            : i18n.description;
           return {
             element,
             popover: {
               title: i18n.title,
-              description: `${i18n.description}\n\n${i18n.howTo}`,
+              description,
             },
           };
         })
@@ -64,7 +71,19 @@ export function useTour(screenId: TourScreenId) {
       );
 
       driverRef.current = driverInstance;
-      driverInstance.drive();
+
+      // Scroll first step into view BEFORE drive() so positioning math is correct
+      const firstElement = (steps[0].element as unknown as { element?: HTMLElement })?.element ?? (steps[0] as unknown as { element: HTMLElement }).element;
+      if (firstElement && typeof firstElement.scrollIntoView === 'function') {
+        firstElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+
+      // Small delay to let scroll settle before driver positions itself
+      window.setTimeout(() => {
+        if (driverRef.current === driverInstance) {
+          driverInstance.drive();
+        }
+      }, 250);
     } catch (err) {
       const e = err instanceof Error ? err : new Error(String(err));
       setError(e);
