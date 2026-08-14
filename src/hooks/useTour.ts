@@ -78,11 +78,60 @@ export function useTour(screenId: TourScreenId) {
         firstEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
 
+      // DEBUG: log everything about viewport, scrolling and target.
+      // Goal: figure out why driver.js is positioning both stage and popover
+      // with absolute coords that don't fit the viewport.
+      console.log('[Tour DEBUG] Viewport', {
+        innerWidth: window.innerWidth,
+        innerHeight: window.innerHeight,
+        documentClientWidth: document.documentElement.clientWidth,
+        documentClientHeight: document.documentElement.clientHeight,
+        bodyClientWidth: document.body.clientWidth,
+        bodyClientHeight: document.body.clientHeight,
+      });
+      console.log('[Tour DEBUG] Scrolling element', {
+        scrollingElement: document.scrollingElement?.tagName,
+        scrollingScrollTop: document.scrollingElement?.scrollTop,
+        scrollingScrollHeight: document.scrollingElement?.scrollHeight,
+        documentScrollTop: document.documentElement.scrollTop,
+        bodyScrollTop: document.body.scrollTop,
+      });
+      console.log('[Tour DEBUG] First target rect', {
+        id: tour.steps[0].target,
+        rect: firstEl.getBoundingClientRect(),
+        offsetTop: (firstEl as HTMLElement & { offsetTop?: number }).offsetTop,
+        offsetParent: (firstEl as HTMLElement & { offsetParent?: HTMLElement | null }).offsetParent?.tagName,
+        computedTransform: window.getComputedStyle(firstEl).transform,
+        computedPosition: window.getComputedStyle(firstEl).position,
+      });
+
       // Small delay to let scroll settle, then start tour
       window.setTimeout(() => {
         if (driverRef.current === driverInstance) {
           driverInstance.start();
         }
+        // After start, log final positions of the rendered elements
+        window.setTimeout(() => {
+          const stage = document.getElementById('driver-highlighted-element-stage');
+          const popover = document.getElementById('driver-popover-item');
+          const overlay = document.querySelector('.driver-overlay');
+          console.log('[Tour DEBUG] After start: rendered elements', {
+            stage: stage
+              ? { rect: stage.getBoundingClientRect(), style: stage.getAttribute('style') }
+              : null,
+            popover: popover
+              ? { rect: popover.getBoundingClientRect(), style: popover.getAttribute('style') }
+              : null,
+            overlay: overlay
+              ? {
+                  rect: overlay.getBoundingClientRect(),
+                  style: overlay.getAttribute('style'),
+                  background: window.getComputedStyle(overlay).backgroundColor,
+                  zIndex: window.getComputedStyle(overlay).zIndex,
+                }
+              : null,
+          });
+        }, 200);
       }, 250);
     } catch (err) {
       const e = err instanceof Error ? err : new Error(String(err));

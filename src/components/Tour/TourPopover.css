@@ -1,8 +1,8 @@
 /* driver.js 0.9.5 popover styling - warm dark design system
  *
- * Critical: ensure stacking order so overlay > stage > popover is visible.
- * driver.js 0.9.5's overlay/stage/popover must all show above app content,
- * with popover highest so buttons are clickable.
+ * DEBUG MODE: pin popover to top-center of viewport so we can SEE content
+ * regardless of driver.js positioning math. Keep overlay/stage stacked
+ * correctly. This is a temporary debug layout to diagnose the visible bug.
  */
 
 .ord-tour-popover.driver-popover {
@@ -13,11 +13,13 @@
   font-family: 'Inter', system-ui, sans-serif !important;
   z-index: 10001 !important;
   padding: 14px !important;
-  left: 12px !important;
-  right: auto !important;
-  max-width: calc(100vw - 24px) !important;
-  width: 320px !important;
   position: fixed !important;
+  top: 60px !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  width: calc(100vw - 32px) !important;
+  max-width: 380px !important;
 }
 
 /* Force the driver.js stage (the highlighted element rect) to be visible
