@@ -2,7 +2,7 @@ import type { Tour } from './types';
 import type { TourScreenId } from './ids';
 
 const registry: Record<string, () => Promise<{ default: Tour }>> = {
-  home: () => import('./home.tour.json'),
+  home: () => import('./home.tour.json') as Promise<{ default: Tour }>,
 };
 
 export async function loadTour(screenId: TourScreenId): Promise<Tour> {
