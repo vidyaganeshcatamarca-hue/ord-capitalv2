@@ -925,7 +925,7 @@ export function HomePage() {
           <div className="section home-section-total" style={{ paddingLeft: 0, paddingRight: 0, paddingTop: '4px', paddingBottom: '4px' }}>
             <div className="home-patrimonio card gradient-hero" data-tour-id="home-hero-card">
               <div className="home-patrimonio-top-flex">
-                <div className="home-patrimonio-main-info" data-tour-id="home-safe-to-spend">
+                <div className="home-patrimonio-main-info">
                   <p className="home-patrimonio-label">{t('hero_title_total')}</p>
                   <p className="home-patrimonio-ars font-display animate-count">
                     {formatAmount(animatedPatrimonioARS, 'ARS')}

@@ -21,30 +21,23 @@
     },
     {
       "id": "step3",
-      "target": "home-safe-to-spend",
-      "placement": "left",
+      "target": "home-alerts-badge",
+      "placement": "bottom",
       "i18nKey": "step3",
       "audioUrl": null
     },
     {
       "id": "step4",
-      "target": "home-alerts-badge",
-      "placement": "bottom",
+      "target": "home-recent-movements",
+      "placement": "top",
       "i18nKey": "step4",
       "audioUrl": null
     },
     {
       "id": "step5",
-      "target": "home-recent-movements",
-      "placement": "top",
-      "i18nKey": "step5",
-      "audioUrl": null
-    },
-    {
-      "id": "step6",
       "target": "home-fab-registrar",
       "placement": "top",
-      "i18nKey": "step6",
+      "i18nKey": "step5",
       "audioUrl": null
     }
   ]
