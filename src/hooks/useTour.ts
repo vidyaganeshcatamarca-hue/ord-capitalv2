@@ -110,26 +110,68 @@ export function useTour(screenId: TourScreenId) {
         if (driverRef.current === driverInstance) {
           driverInstance.start();
         }
-        // After start, log final positions of the rendered elements
+
+        // driver.js 0.9.5 positions against window scroll, not the app's
+        // internal scroll container (`.page`). After it renders, override
+        // the stage and popover with viewport-relative coords from the
+        // target's actual getBoundingClientRect().
         window.setTimeout(() => {
           const stage = document.getElementById('driver-highlighted-element-stage');
           const popover = document.getElementById('driver-popover-item');
           const overlay = document.querySelector('.driver-overlay');
-          console.log('[Tour DEBUG] After start: rendered elements', {
-            stage: stage
-              ? { rect: stage.getBoundingClientRect(), style: stage.getAttribute('style') }
-              : null,
-            popover: popover
-              ? { rect: popover.getBoundingClientRect(), style: popover.getAttribute('style') }
-              : null,
-            overlay: overlay
-              ? {
-                  rect: overlay.getBoundingClientRect(),
-                  style: overlay.getAttribute('style'),
-                  background: window.getComputedStyle(overlay).backgroundColor,
-                  zIndex: window.getComputedStyle(overlay).zIndex,
-                }
-              : null,
+          if (!stage || !popover || !overlay) return;
+
+          const padding = 8;
+          const targetRect = firstEl.getBoundingClientRect();
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          const popoverWidth = 320;
+          const popoverMargin = 12;
+
+          // Stage = match target rect exactly, minus padding on each side.
+          stage.style.cssText =
+            `display: block;` +
+            `position: fixed !important;` +
+            `left: ${Math.max(0, targetRect.left - padding)}px !important;` +
+            `top: ${Math.max(0, targetRect.top - padding)}px !important;` +
+            `width: ${Math.min(vw, targetRect.width + padding * 2)}px !important;` +
+            `height: ${targetRect.height + padding * 2}px !important;` +
+            `background-color: transparent !important;` +
+            `z-index: 10000 !important;` +
+            `box-shadow: 0 0 0 9999px rgba(0,0,0,0.7) !important;`;
+
+          // Overlay = full viewport, dark, behind the stage.
+          overlay.setAttribute(
+            'style',
+            `display: block !important;` +
+              `position: fixed !important;` +
+              `inset: 0 !important;` +
+              `background: rgba(0,0,0,0.7) !important;` +
+              `z-index: 9999 !important;` +
+              `pointer-events: none !important;`
+          );
+
+          // Popover = top-center of viewport, fixed, above everything.
+          popover.style.cssText =
+            `display: block !important;` +
+            `position: fixed !important;` +
+            `top: 60px !important;` +
+            `left: 50% !important;` +
+            `transform: translateX(-50%) !important;` +
+            `width: ${popoverWidth}px !important;` +
+            `max-width: calc(100vw - ${popoverMargin * 2}px) !important;` +
+            `z-index: 10001 !important;` +
+            `background-color: var(--surface, #2D2D2D) !important;` +
+            `color: var(--text-primary, #FFFFFF) !important;`;
+
+          // DEBUG: log what we just did so the user can paste it back.
+          console.log('[Tour DEBUG] After override', {
+            targetRect,
+            vw,
+            vh,
+            stageRect: stage.getBoundingClientRect(),
+            popoverRect: popover.getBoundingClientRect(),
+            overlayRect: overlay.getBoundingClientRect(),
           });
         }, 200);
       }, 250);
