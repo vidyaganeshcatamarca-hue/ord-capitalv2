@@ -1,9 +1,12 @@
 /* Tour popover - design system cálido
- * Strategy: driver.js 1.x applies `all: unset` on .driver-popover.
- * Our custom class `ord-tour-popover` is added alongside. We must declare
- * properties that `unset` would have cleared (like pointer-events) so
- * the popover remains interactive, and override positioning only where
- * safe. We use !important sparingly to beat `all: unset` cascade.
+ *
+ * CRITICAL: This CSS works WITH the manual positioning logic in
+ * driverWrapper.ts → positionPopoverManually(). driver.js's internal
+ * positioning math is ignored; we set top/left/right/bottom inline.
+ *
+ * Therefore we DO NOT declare top/left/right/bottom here. We only style
+ * the box, the typography, and ensure pointer-events stays auto despite
+ * driver.js's `all: unset`.
  */
 
 .ord-tour-popover {
@@ -13,10 +16,9 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
   font-family: 'Inter', system-ui, sans-serif !important;
   z-index: 1000000000 !important;
-  max-width: min(380px, calc(100vw - 32px)) !important;
-  min-width: 260px !important;
   padding: 16px !important;
   pointer-events: auto !important;
+  overflow-y: auto !important;
 }
 
 .ord-tour-popover .driver-popover-title {
@@ -94,13 +96,4 @@
 .ord-tour-popover .driver-popover-navigation-btns {
   display: flex !important;
   gap: 4px !important;
-}
-
-/* Mobile tweak: ensure popover fits viewport width with margin */
-@media (max-width: 480px) {
-  .ord-tour-popover {
-    max-width: calc(100vw - 24px) !important;
-    left: 12px !important;
-    right: 12px !important;
-  }
 }
