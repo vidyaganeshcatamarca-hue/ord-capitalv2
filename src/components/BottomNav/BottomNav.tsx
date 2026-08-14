@@ -4,6 +4,7 @@ import { NAV_ITEMS } from '@/constants/navigation'
 import { t } from '@/locales/i18n'
 import { supabase } from '@/lib/supabase'
 import { useModoApp } from '@/contexts/ModoAppContext'
+import { HelpCircle } from 'lucide-react'
 import './BottomNav.css'
 
 interface BottomNavProps {
@@ -54,10 +55,16 @@ export function BottomNav({ onAddPress }: BottomNavProps) {
 
   // Rutas que se agrupan dentro del menú desplegable "Menú"
   const dropdownPaths = isBaseCero
-    ? ['/tarjetas', '/cuarentena', '/familia', '/saneamiento', '/inversiones', '/salud', '/sobres', '/configuracion']
-    : ['/presupuesto', '/cuarentena', '/familia', '/saneamiento', '/inversiones', '/salud', '/sobres', '/configuracion']
+    ? ['/tarjetas', '/cuarentena', '/familia', '/saneamiento', '/inversiones', '/salud', '/sobres', '/configuracion', '/ayuda']
+    : ['/presupuesto', '/cuarentena', '/familia', '/saneamiento', '/inversiones', '/salud', '/sobres', '/configuracion', '/ayuda']
   const dropdownSet = useMemo(() => new Set(dropdownPaths), [isBaseCero])
   const dropdownNavItems = NAV_ITEMS.filter(item => dropdownSet.has(item.path) && hasFeature(item.label))
+
+  const AYUDA_ITEM = {
+    path: '/ayuda',
+    label: 'menu_ayuda',
+    icon: (active: boolean) => <HelpCircle size={22} stroke="currentColor" fill={active ? 'currentColor' : 'none'} strokeWidth={active ? 0 : 1.8} />,
+  } as const
 
   const handleDropdownItemClick = (path: string) => {
     setIsMenuOpen(false)
@@ -88,6 +95,14 @@ export function BottomNav({ onAddPress }: BottomNavProps) {
               </button>
             )
           })}
+          <div className="bottom-nav-menu-divider" />
+          <button
+            className={`bottom-nav-menu-item ${pathname === AYUDA_ITEM.path ? 'active' : ''}`}
+            onClick={() => handleDropdownItemClick(AYUDA_ITEM.path)}
+          >
+            <span className="bottom-nav-menu-item-icon">{AYUDA_ITEM.icon(pathname === AYUDA_ITEM.path)}</span>
+            <span>{t(AYUDA_ITEM.label)}</span>
+          </button>
         </div>
       )}
 

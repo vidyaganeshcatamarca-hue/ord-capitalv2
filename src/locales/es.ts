@@ -48,6 +48,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   menu_registrar: "Registrar",
   menu_conectado: "Conectado",
   menu_more: "Menú",
+  menu_ayuda: "Ayuda",
 
   // HomePage
   greeting_morning: "Buenos días",
