@@ -1,4 +1,4 @@
-import { driver, type Driver, type DriveStep, type Config } from 'driver.js';
+import Driver from 'driver.js';
 import type { Tour } from '../types';
 import '@/components/Tour/TourPopover.css';
 
@@ -10,105 +10,40 @@ export function resolveTourElement(id: string): HTMLElement | null {
   return el as HTMLElement | null;
 }
 
-/**
- * Manually position the popover inside the viewport, overriding driver.js's
- * default positioning math. We compute target rect via getBoundingClientRect,
- * pick a side based on target's vertical position, then clamp horizontally
- * so the popover never overflows the viewport.
- */
-function positionPopoverManually(popover: unknown): void {
-  const el = popover as unknown as HTMLElement;
-  if (!el || typeof el.getBoundingClientRect !== 'function') return;
-
-  const vw = window.innerWidth;
-  const vh = window.innerHeight;
-  const padding = 12;
-
-  // The element currently highlighted is stored by driver.js but easiest path
-  // is to read the active highlight via querySelector.
-  const activeEl = document.querySelector('.driver-active-element') as HTMLElement | null;
-  if (!activeEl) return;
-
-  const targetRect = activeEl.getBoundingClientRect();
-
-  // Decide vertical side: if target is in the top half of viewport, place below;
-  // otherwise place above. Fallback: use bottom 1/3 of viewport.
-  const targetCenterY = targetRect.top + targetRect.height / 2;
-  const placeBelow = targetCenterY < vh / 2;
-
-  // Reset inline positioning from driver.js
-  el.style.top = '';
-  el.style.bottom = '';
-  el.style.left = '';
-  el.style.right = '';
-  el.style.transform = '';
-
-  // Set max width based on viewport
-  const maxWidth = Math.min(360, vw - padding * 2);
-  el.style.maxWidth = `${maxWidth}px`;
-  el.style.width = `${maxWidth}px`;
-
-  // Compute horizontal center, clamped to viewport
-  const desiredCenterX = targetRect.left + targetRect.width / 2;
-  const halfW = maxWidth / 2;
-  let leftPx = desiredCenterX - halfW;
-  if (leftPx < padding) leftPx = padding;
-  if (leftPx + maxWidth > vw - padding) leftPx = vw - maxWidth - padding;
-  el.style.left = `${leftPx}px`;
-
-  // Position vertically
-  if (placeBelow) {
-    const topPx = targetRect.bottom + 12;
-    el.style.top = `${topPx}px`;
-    el.style.maxHeight = `${vh - topPx - padding}px`;
-  } else {
-    const bottomPx = vh - targetRect.top + 12;
-    el.style.bottom = `${bottomPx}px`;
-    el.style.maxHeight = `${targetRect.top - padding - 12}px`;
-  }
-
-  // Hide driver.js built-in arrow since we manage positioning entirely
-  const arrow = el.querySelector('.driver-popover-arrow') as HTMLElement | null;
-  if (arrow) arrow.style.display = 'none';
-}
-
 export function createTourDriver(
-  _tour: Tour,
-  steps: DriveStep[],
-  onDestroyed: () => void,
-  onDoneClick?: () => void
+  tour: Tour,
+  steps: Driver.Step[],
+  onClosed: () => void,
+  onCompleted: () => void
 ): Driver {
-  const config: Config = {
-    steps,
+  const driverInstance = new Driver({
     animate: true,
-    duration: 300,
-    overlayOpacity: 0.7,
-    overlayColor: '#1A1A1A',
-    stagePadding: 8,
-    stageRadius: 8,
-    smoothScroll: true,
+    opacity: 0.7,
+    padding: 8,
     allowClose: true,
-    allowKeyboardControl: true,
-    showProgress: true,
-    progressText: '{{current}} / {{total}}',
-    popoverClass: 'ord-tour-popover',
-    waitForElement: 600,
-    onHighlighted: (element) => {
-      // Force element into view with smooth scroll if it isn't already visible
-      if (element && typeof element.scrollIntoView === 'function') {
-        const rect = element.getBoundingClientRect();
-        const isVisible = rect.top >= 0 && rect.bottom <= window.innerHeight;
-        if (!isVisible) {
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+    keyboardControl: true,
+    overlayClickNext: false,
+    className: 'ord-tour-popover',
+    onReset: () => {
+      // Called when tour ends (close button OR completed all steps)
+      onClosed();
+    },
+    onNext: () => {
+      // Called before moving to next. If no next step exists, tour ends → onReset fires too.
+      const driver = (window as unknown as { ordDriver?: Driver }).ordDriver;
+      if (driver && !driver.hasNextStep()) {
+        onCompleted();
       }
     },
-    onPopoverRender: (popover) => {
-      // Defer to next frame so DOM has measured sizes
-      window.requestAnimationFrame(() => positionPopoverManually(popover));
-    },
-    onDestroyed,
-    onDoneClick,
-  };
-  return driver(config);
+  });
+
+  // Expose to window so onNext can check hasNextStep
+  (window as unknown as { ordDriver?: Driver }).ordDriver = driverInstance;
+
+  // Convert our tour steps to driver.js 0.9.5 format.
+  // Each step already has `element` (HTMLElement from resolveTourElement) and `popover` config.
+  // driver.js 0.9.5 supports passing HTMLElement directly as `element`.
+  driverInstance.defineSteps(steps);
+
+  return driverInstance;
 }
