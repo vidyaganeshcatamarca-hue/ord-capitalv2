@@ -2,6 +2,10 @@
  *
  * driver.js 0.9.5 adds the className `ord-tour-popover` directly to the
  * popover container (which already has class `driver-popover`).
+ *
+ * Strategy: keep the popover compact. Max height with safe viewport
+ * padding so buttons stay visible. Use overflow visible (NOT scroll)
+ * because users don't think to scroll inside a popover.
  */
 
 .ord-tour-popover.driver-popover {
@@ -11,15 +15,16 @@
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
   font-family: 'Inter', system-ui, sans-serif !important;
   z-index: 10000 !important;
-  max-width: min(380px, calc(100vw - 24px)) !important;
-  padding: 16px !important;
-  max-height: calc(100vh - 32px) !important;
-  overflow-y: auto !important;
+  padding: 14px !important;
   left: 12px !important;
+  right: auto !important;
+  max-width: calc(100vw - 24px) !important;
+  width: 320px !important;
 }
 
-/* Force the driver.js stage (which has the white-paint bug we already fixed)
-   to align with the viewport left edge, not negative. */
+/* Force the driver.js stage to align with the viewport left edge.
+ * driver.js 0.9.5 sets it to `left: -8px` by default for the 8px padding;
+ * we override to 0 so it doesn't poke past the viewport edge. */
 #driver-highlighted-element-stage {
   left: 0 !important;
 }
@@ -28,25 +33,27 @@
   font-family: 'Outfit', system-ui, sans-serif !important;
   font-weight: 700 !important;
   color: var(--text-primary, #FFFFFF) !important;
-  font-size: calc(17px * var(--font-scale, 1)) !important;
+  font-size: calc(16px * var(--font-scale, 1)) !important;
   line-height: 1.3 !important;
-  margin: 0 0 8px 0 !important;
+  margin: 0 0 6px 0 !important;
   padding-right: 24px !important;
 }
 
 .ord-tour-popover.driver-popover .driver-popover-description {
   color: var(--text-secondary, #A0A0A0) !important;
-  font-size: calc(14px * var(--font-scale, 1)) !important;
+  font-size: calc(13px * var(--font-scale, 1)) !important;
   line-height: 1.5 !important;
   white-space: pre-wrap !important;
-  margin: 0 0 12px 0 !important;
+  margin: 0 0 10px 0 !important;
 }
 
 .ord-tour-popover.driver-popover .driver-popover-footer {
   display: flex !important;
   justify-content: space-between !important;
   align-items: center !important;
-  margin-top: 12px !important;
+  margin-top: 10px !important;
+  flex-wrap: wrap !important;
+  gap: 8px !important;
 }
 
 .ord-tour-popover.driver-popover .driver-popover-prev-btn,
@@ -54,9 +61,9 @@
   background: var(--accent-mint, #4ECDC4) !important;
   color: #1a1a1a !important;
   border: none !important;
-  border-radius: 8px !important;
-  padding: 8px 14px !important;
-  font-size: calc(13px * var(--font-scale, 1)) !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  font-size: calc(12px * var(--font-scale, 1)) !important;
   font-weight: 600 !important;
   cursor: pointer !important;
 }
@@ -66,21 +73,17 @@
   filter: brightness(1.1);
 }
 
-.ord-tour-popover.driver-popover .driver-popover-close-btn {
+.ord-tour-popover.driver-popover .driver-close-btn {
   color: var(--text-secondary, #A0A0A0) !important;
-  font-size: 22px !important;
+  font-size: 14px !important;
   cursor: pointer !important;
   background: transparent !important;
-  border: none !important;
+  border: 1px solid var(--text-secondary, #A0A0A0) !important;
+  border-radius: 6px !important;
+  padding: 6px 10px !important;
 }
 
-.ord-tour-popover.driver-popover .driver-popover-close-btn:hover {
+.ord-tour-popover.driver-popover .driver-close-btn:hover {
   color: var(--text-primary, #FFFFFF) !important;
-}
-
-/* Responsive: ensure popover fits mobile viewport */
-@media (max-width: 480px) {
-  .ord-tour-popover.driver-popover {
-    max-width: calc(100vw - 24px) !important;
-  }
+  border-color: var(--text-primary, #FFFFFF) !important;
 }
