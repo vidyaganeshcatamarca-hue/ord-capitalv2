@@ -1,11 +1,8 @@
 /* driver.js 0.9.5 popover styling - warm dark design system
  *
- * driver.js 0.9.5 adds the className `ord-tour-popover` directly to the
- * popover container (which already has class `driver-popover`).
- *
- * Strategy: keep the popover compact. Max height with safe viewport
- * padding so buttons stay visible. Use overflow visible (NOT scroll)
- * because users don't think to scroll inside a popover.
+ * Critical: ensure stacking order so overlay > stage > popover is visible.
+ * driver.js 0.9.5's overlay/stage/popover must all show above app content,
+ * with popover highest so buttons are clickable.
  */
 
 .ord-tour-popover.driver-popover {
@@ -14,19 +11,29 @@
   border-radius: 12px !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
   font-family: 'Inter', system-ui, sans-serif !important;
-  z-index: 10000 !important;
+  z-index: 10001 !important;
   padding: 14px !important;
   left: 12px !important;
   right: auto !important;
   max-width: calc(100vw - 24px) !important;
   width: 320px !important;
+  position: fixed !important;
 }
 
-/* Force the driver.js stage to align with the viewport left edge.
- * driver.js 0.9.5 sets it to `left: -8px` by default for the 8px padding;
- * we override to 0 so it doesn't poke past the viewport edge. */
+/* Force the driver.js stage (the highlighted element rect) to be visible
+ * above the backdrop but below the popover. driver.js 0.9.5 sets inline
+ * styles that override our CSS in some cases; use !important aggressively. */
 #driver-highlighted-element-stage {
   left: 0 !important;
+  z-index: 10000 !important;
+}
+
+/* The dark overlay that covers the rest of the screen must be visible.
+ * driver.js 0.9.5 uses a div with class `driver-overlay`. */
+.driver-overlay {
+  z-index: 9999 !important;
+  background-color: rgba(0, 0, 0, 0.7) !important;
+  opacity: 1 !important;
 }
 
 .ord-tour-popover.driver-popover .driver-popover-title {
