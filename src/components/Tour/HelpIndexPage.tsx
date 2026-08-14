@@ -2,6 +2,8 @@ import { t } from '@/locales/i18n';
 import { useTourProgress } from '@/hooks/useTourProgress';
 import { useTour } from '@/hooks/useTour';
 import type { TourScreenId } from '@/tours/ids';
+import { TOUR_SCREEN_PATHS } from '@/tours/paths';
+import { useNavigate, useLocation } from 'react-router-dom';
 import './HelpIndexPage.css';
 
 const TOUR_SCREENS: { screenId: TourScreenId; titleKey: string; descKey: string }[] = [
@@ -46,6 +48,22 @@ function HelpTourCard({
   isSeen: boolean;
 }) {
   const { startTour } = useTour(screenId);
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+
+  const tourPath = TOUR_SCREEN_PATHS[screenId];
+  const isOnTargetScreen = pathname === tourPath;
+
+  const handleStartTour = async () => {
+    if (isOnTargetScreen) {
+      await startTour();
+    } else {
+      navigate(tourPath);
+      setTimeout(() => {
+        void startTour();
+      }, 350);
+    }
+  };
 
   return (
     <div className="help-tour-card">
@@ -57,7 +75,7 @@ function HelpTourCard({
         {isSeen && <span className="help-tour-card-badge">{t('tour.ayuda.seen')}</span>}
         <button
           className="help-tour-card-btn"
-          onClick={() => void startTour()}
+          onClick={() => void handleStartTour()}
         >
           {t('tour.ayuda.view_tour')}
         </button>
