@@ -13,6 +13,15 @@
   z-index: 10000 !important;
   max-width: min(380px, calc(100vw - 24px)) !important;
   padding: 16px !important;
+  max-height: calc(100vh - 32px) !important;
+  overflow-y: auto !important;
+  left: 12px !important;
+}
+
+/* Force the driver.js stage (which has the white-paint bug we already fixed)
+   to align with the viewport left edge, not negative. */
+#driver-highlighted-element-stage {
+  left: 0 !important;
 }
 
 .ord-tour-popover.driver-popover .driver-popover-title {
