@@ -1,0 +1,14 @@
+/* AyudaPage — sidebar-safe layout (regla de oro #11) */
+
+.ayuda-page {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-5);
+}
+
+@media (min-width: 768px) {
+  .ayuda-page {
+    margin-left: var(--sidebar-width);
+    margin-right: auto;
+  }
+}

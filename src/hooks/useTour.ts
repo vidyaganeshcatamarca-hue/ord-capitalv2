@@ -53,15 +53,13 @@ export function useTour(screenId: TourScreenId) {
         tour,
         steps,
         () => {
-          // onDestroyed: check if tour was finished (last step reached)
-          // driver.js 1.x fires onDestroyed with state; we check via the active step index
-          const activeIndex = driverInstance.getActiveIndex();
-          const isFinished = activeIndex !== undefined && activeIndex >= steps.length - 1;
-          if (isFinished) {
-            markSeen(screenId);
-            setStoredVersion(screenId, tour.version);
-          }
+          // onDestroyed: cleanup only (fires for both close and done)
           driverRef.current = null;
+        },
+        () => {
+          // onDoneClick: mark as seen only when user clicks "Done" on the last step
+          markSeen(screenId);
+          setStoredVersion(screenId, tour.version);
         }
       );
 

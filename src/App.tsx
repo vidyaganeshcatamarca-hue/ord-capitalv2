@@ -43,6 +43,7 @@ const RegionFormatoPage = lazy(() => import('@/pages/Configuracion/RegionFormato
 const PresupuestoCicloPage = lazy(() => import('@/pages/Configuracion/PresupuestoCicloPage').then(module => ({ default: module.PresupuestoCicloPage })))
 const PreferenciasOperativasPage = lazy(() => import('@/pages/Configuracion/PreferenciasOperativasPage').then(module => ({ default: module.PreferenciasOperativasPage })))
 const AcercaPage = lazy(() => import('@/pages/Configuracion/AcercaPage').then(module => ({ default: module.AcercaPage })))
+const AyudaPage = lazy(() => import('@/pages/Ayuda/AyudaPage').then(module => ({ default: module.AyudaPage })))
 
 
 const LoadingSpinner = () => (
@@ -133,6 +134,7 @@ function AppLayout() {
           <Route path="/configuracion/acerca" element={<AcercaPage />} />
           <Route path="/configuracion/categorias" element={<CategoriasConfigPage />} />
           <Route path="/configuracion/hogar" element={<HogarConfigPage />} />
+          <Route path="/ayuda" element={<AyudaPage />} />
         </Routes>
       </Suspense>
 

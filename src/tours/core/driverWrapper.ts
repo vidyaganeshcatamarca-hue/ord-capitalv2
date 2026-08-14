@@ -12,7 +12,8 @@ export function resolveTourElement(id: string): HTMLElement | null {
 export function createTourDriver(
   _tour: Tour,
   steps: DriveStep[],
-  onDestroyed: () => void
+  onDestroyed: () => void,
+  onDoneClick?: () => void
 ): Driver {
   const config: Config = {
     steps,
@@ -29,6 +30,7 @@ export function createTourDriver(
     progressText: '{{current}} / {{total}}',
     popoverClass: 'ord-tour-popover',
     onDestroyed,
+    onDoneClick,
   };
   return driver(config);
 }
