@@ -122,6 +122,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   // TarjetasPage
   cards_title: "💳 Mis Tarjetas",
   btn_new_card: "+ Nueva",
+  btn_edit_card: "Editar tarjeta",
   cards_total_debt_label: "Deuda Total en Cuotas",
   cards_active_count_singular: "{count} tarjeta activa",
   cards_active_count_plural: "{count} tarjetas activas",
@@ -1655,6 +1656,7 @@ export const inversiones = {
   card_usd_purchase: "Compra en Dólares (USD)",
   card_usd_quote_current: "Cotización actual: {rate} USD <br/> Recargo impositivo: {pct}%",
   card_usd_quote_simple: "Cotización: {rate} USD <br/> Recargo: {pct}%",
+  card_usd_estimated_total: "Total estimado ARS: {amount}",
   step_category: "Categoría",
   placeholder_search_category: "Buscar categoría...",
   btn_see_all_categories: "Ver todas las categorías",
