@@ -857,7 +857,6 @@ export function HomePage() {
           </button>
           <button
             className="home-icon-btn home-bell-target"
-            data-tour-id="home-alertas"
             onClick={() => setAlertsOpen(!alertsOpen)}
             aria-label="Alertas"
             style={{ position: 'relative' }}
@@ -916,6 +915,15 @@ export function HomePage() {
         </div>
       )}
 
+      {/* TEMPORAL: Sequential session banner to detect caching */}
+      <div style={{
+        position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)',
+        background: 'red', color: 'white', padding: '4px 12px', zIndex: 999999,
+        fontSize: '12px', fontWeight: 'bold', borderRadius: '0 0 8px 8px'
+      }}>
+        Sesión #{(window as any).__SESSION_SEQ__}
+      </div>
+
       {/* Layout Principal de Dos Columnas en PC (Observación 1) */}
       <div className="home-dashboard-layout">
         
@@ -961,6 +969,7 @@ export function HomePage() {
                 <label className="home-wallet-inline-filter">
                   <span className="sr-only">{t('home_filter_wallet_label')}</span>
                   <select
+                    data-tour-id="home-billeteras-filtro"
                     value={
                       homeFilters.tarjetaId !== null
                         ? `t_${homeFilters.tarjetaId}`
@@ -1043,7 +1052,7 @@ export function HomePage() {
 
           {/* ── MISTERIO WARNING ── */}
           {tieneFugaMisterio && (
-            <div className="section home-section-fugas" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
+            <div className="section home-section-fugas" data-tour-id="home-misterio-alerta" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
               <div className="card" style={{ position: 'relative', background: 'rgba(255, 107, 107, 0.08)', borderColor: 'rgba(255, 107, 107, 0.3)', padding: 'var(--space-4)' }}>
                 {/* RECORDATORIO: Mapear preferencia global 'ocultar_fugas_misterio' a base de datos en Fase de Configuración Global */}
                 <button
@@ -1083,7 +1092,7 @@ export function HomePage() {
                   end: formatShortDateValue(homeFilters.fechaFin)
                 })}
               </span>
-              <div className="segmented-control" style={{ maxWidth: '200px' }}>
+              <div className="segmented-control" style={{ maxWidth: '200px' }} data-tour-id="home-expenses-toggle-rubros">
                 <button
                   type="button"
                   className={`segmented-item ${homeFilters.nivelCategorias === 'parents' ? 'active' : ''}`}
@@ -1270,7 +1279,7 @@ export function HomePage() {
                       total={totalConsumidoSum}
                       hideAmounts={hideAmounts}
                     />
-                    <div className="category-breakdown-list" style={{ flex: 1, width: '100%' }}>
+                    <div className="category-breakdown-list" style={{ flex: 1, width: '100%' }} data-tour-id="home-expenses-ver-todos">
                       {(canExpand || showAllTopCategories) && (
                         <div className="category-breakdown-top-action" style={{
                           display: 'flex',
@@ -1282,7 +1291,6 @@ export function HomePage() {
                           <button
                             type="button"
                             className="btn-see-all-toggle"
-                            data-tour-id="home-expenses-ver-todos"
                             style={{
                               background: 'rgba(0, 229, 153, 0.12)',
                               color: 'var(--mint)',
@@ -1362,6 +1370,7 @@ export function HomePage() {
               <button
                 type="button"
                 className="home-filter-btn"
+                data-tour-id="home-actividad-filtro"
                 onClick={() => setShowFilterPicker(true)}
               >
                 {t('filter')}{filterTarget ? ` · ${filterTarget.name}` : ''}

@@ -1,6 +1,6 @@
 {
   "id": "home",
-  "version": 2,
+  "version": 9,
   "i18nPrefix": "tour.home",
   "title": "tour.home.title",
   "description": "tour.home.description",
@@ -8,49 +8,80 @@
     {
       "id": "heroCard",
       "target": "home-hero-card",
+      "placement": "bottom",
       "i18nKey": "step1",
       "audioUrl": null
     },
     {
       "id": "expensesDonut",
       "target": "home-expenses-donut",
+      "placement": "bottom",
       "i18nKey": "step2",
       "audioUrl": null
     },
     {
+      "id": "expensesToggle",
+      "target": "home-expenses-toggle-rubros",
+      "placement": "bottom",
+      "i18nKey": "step3",
+      "audioUrl": null,
+      "intraElement": true
+    },
+    {
       "id": "expensesVerTodos",
       "target": "home-expenses-ver-todos",
-      "i18nKey": "step3",
-      "audioUrl": null
+      "placement": "top",
+      "i18nKey": "step4",
+      "audioUrl": null,
+      "intraElement": true
     },
     {
       "id": "billeteras",
       "target": "home-billeteras",
-      "i18nKey": "step4",
+      "placement": "top",
+      "i18nKey": "step5",
       "audioUrl": null
     },
     {
-      "id": "alertas",
-      "target": "home-alertas",
-      "i18nKey": "step5",
+      "id": "billeterasFiltro",
+      "target": "home-billeteras-filtro",
+      "placement": "bottom",
+      "i18nKey": "step6",
+      "audioUrl": null
+    },
+    {
+      "id": "misterioAlerta",
+      "target": "home-misterio-alerta",
+      "placement": "bottom",
+      "i18nKey": "step7",
       "audioUrl": null
     },
     {
       "id": "actividad",
       "target": "home-actividad",
-      "i18nKey": "step6",
+      "placement": "bottom",
+      "i18nKey": "step8",
+      "audioUrl": null
+    },
+    {
+      "id": "actividadFiltro",
+      "target": "home-actividad-filtro",
+      "placement": "bottom",
+      "i18nKey": "step9",
       "audioUrl": null
     },
     {
       "id": "headerAux",
       "target": "home-header-aux",
-      "i18nKey": "step7",
+      "placement": "bottom",
+      "i18nKey": "step10",
       "audioUrl": null
     },
     {
       "id": "fabRegistrar",
       "target": "home-fab-registrar",
-      "i18nKey": "step8",
+      "placement": "top",
+      "i18nKey": "step11",
       "audioUrl": null
     }
   ]

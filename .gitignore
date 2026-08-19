@@ -33,3 +33,8 @@ skills-lock.json
 evaluacion_complejidad_fases.md
 sesiones/
 bugs/
+# IDE backup files (likely "Filename - copia.ts")
+*- copia.*
+* - copia.*
+*.tmp
+*.swp
