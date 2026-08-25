@@ -1,6 +1,6 @@
 {
   "id": "home",
-  "version": 9,
+  "version": 36,
   "i18nPrefix": "tour.home",
   "title": "tour.home.title",
   "description": "tour.home.description",
@@ -44,10 +44,12 @@
     },
     {
       "id": "billeterasFiltro",
-      "target": "home-billeteras-filtro",
-      "placement": "bottom",
+      "target": "home-billeteras",
+      "placement": "top",
       "i18nKey": "step6",
-      "audioUrl": null
+      "audioUrl": null,
+      "intraElement": true,
+      "arrowSignalTo": "home-billeteras-filtro"
     },
     {
       "id": "misterioAlerta",
@@ -59,29 +61,23 @@
     {
       "id": "actividad",
       "target": "home-actividad",
-      "placement": "bottom",
+      "placement": "top",
       "i18nKey": "step8",
-      "audioUrl": null
-    },
-    {
-      "id": "actividadFiltro",
-      "target": "home-actividad-filtro",
-      "placement": "bottom",
-      "i18nKey": "step9",
-      "audioUrl": null
+      "audioUrl": null,
+      "intraElement": true
     },
     {
       "id": "headerAux",
       "target": "home-header-aux",
       "placement": "bottom",
-      "i18nKey": "step10",
+      "i18nKey": "step9",
       "audioUrl": null
     },
     {
       "id": "fabRegistrar",
       "target": "home-fab-registrar",
       "placement": "top",
-      "i18nKey": "step11",
+      "i18nKey": "step10",
       "audioUrl": null
     }
   ]

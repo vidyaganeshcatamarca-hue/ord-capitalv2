@@ -28,6 +28,11 @@ const CINEMATIC_STEP_TARGETS = [
   'home-expenses-toggle-rubros',
   'home-expenses-ver-todos',
   'home-billeteras',
+  'home-billeteras-filtro',
+  'home-misterio-alerta',
+  'home-actividad',
+  'home-header-aux',
+  'home-fab-registrar',
 ] as const;
 
 function isCinematicTourScreen(screenId: TourScreenId): boolean {
@@ -35,12 +40,20 @@ function isCinematicTourScreen(screenId: TourScreenId): boolean {
 }
 
 export function useTour(screenId: TourScreenId) {
-  const { isSeen, markSeen, markNotSeen, getStoredVersion, setStoredVersion } = useTourProgress();
+  const {
+    isSeen,
+    markSeen,
+    hasStarted,
+    markStarted,
+    getStoredVersion,
+    setStoredVersion,
+  } = useTourProgress();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const tourRef = useRef<ShepherdTour | null>(null);
 
   const hasSeenTour = isSeen(screenId);
+  const hasStartedTour = hasStarted(screenId);
 
   const startTour = useCallback(async () => {
     setIsLoading(true);
@@ -49,21 +62,25 @@ export function useTour(screenId: TourScreenId) {
     try {
       const tour = await loadTour(screenId);
 
-      // Version check: if tour version > stored, invalidate seen state.
-      // Also reset seen state whenever the tour is started so the ? button
-      // reappears during the tour (user might be re-launching from /ayuda).
+      // Mark as started the first time the user launches the tour. The ?
+      // trigger button hides from this point on; the user must go to /ayuda
+      // to re-launch.
+      markStarted(screenId);
+
+      // Version check: if the JSON version is newer than what the user has
+      // stored, persist the new version. We do NOT touch `seen` state here
+      // because the button visibility is driven by `started` now, not `seen`.
       const storedVersion = getStoredVersion(screenId);
       if (tour.version > (storedVersion ?? 0)) {
-        markNotSeen(screenId);
         setStoredVersion(screenId, tour.version);
-      } else {
-        markNotSeen(screenId);
       }
 
       // Build Shepherd steps. Element is HTMLElement directly (not selector).
       const steps: Array<{
         element: HTMLElement;
         popover: { title: string; description: string; position?: string; className?: string };
+        intraElement?: boolean;
+        arrowSignalTo?: string;
       }> = [];
 
       // For the cinematic pilot we filter to ONLY the configured targets.
@@ -92,6 +109,7 @@ export function useTour(screenId: TourScreenId) {
             className: 'ord-tour-popover',
           },
           intraElement: (step as any).intraElement === true,
+          arrowSignalTo: (step as any).arrowSignalTo as string | undefined,
         });
       });
 
@@ -132,7 +150,7 @@ export function useTour(screenId: TourScreenId) {
     } finally {
       setIsLoading(false);
     }
-  }, [screenId, getStoredVersion, markNotSeen, setStoredVersion, markSeen]);
+  }, [screenId, getStoredVersion, setStoredVersion, markStarted, markSeen]);
 
   // Defensive cleanup: if the host component unmounts while the tour is
   // still active, cancel the tour and strip the cinematic body class so
@@ -153,5 +171,5 @@ export function useTour(screenId: TourScreenId) {
     };
   }, []);
 
-  return { startTour, hasSeenTour, isLoading, error };
+  return { startTour, hasSeenTour, hasStartedTour, isLoading, error };
 }

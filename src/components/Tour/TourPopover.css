@@ -191,20 +191,13 @@
   top: -9px !important;
 }
 
+/* For top placement, mirror the bottom-placement arrow exactly so the
+   flecha looks identical: same ::before rotation (45deg), same ::after
+   cover (lower half) — only the arrow's anchor point on the popover
+   changes (bottom instead of top). This avoids any geometry drift. */
 .shepherd-element[data-popper-placement^='top'] > .shepherd-arrow {
   bottom: -9px !important;
-}
-
-/* For top placement flip the arrow 180° AND the cover overlay 180°
-   so the visible triangle points down and the hidden half is up. */
-.shepherd-element[data-popper-placement^='top'] > .shepherd-arrow::before {
-  transform: rotate(225deg) !important;
-}
-
-.shepherd-element[data-popper-placement^='top'] > .shepherd-arrow::after {
-  top: 0 !important;
-  bottom: 50% !important;
-  height: 50% !important;
+  transform: scaleY(-1) !important;
 }
 
 /* ── Modal overlay (SVG with carved hole around target) ──
@@ -215,8 +208,15 @@
   z-index: 99999 !important;
   pointer-events: none !important;
   /* Dim lands immediately when a step starts — the delay belongs to the
-     highlight and popover, not the overlay. */
+      highlight and popover, not the overlay. */
   transition: opacity 0s linear !important;
+}
+
+/* FAB step: drop the modal overlay beneath the app's bottom-nav (100003)
+   so the menu bar can shine through the dim. The full-dark overlay in
+   shepherdWrapper takes over the dimming at the same level. */
+body.ord-tour-fab-step .shepherd-modal-overlay-container {
+  z-index: 10000 !important;
 }
 
 .shepherd-modal-overlay-container.shepherd-modal-is-visible {
@@ -266,6 +266,13 @@
   border-radius: inherit !important;
   /* Slow fade-in so the highlight arrives gradually, not abruptly */
   transition: box-shadow 0.6s ease-out !important;
+}
+
+/* FAB step: suppress the inner box-shadow pulse so the FAB stays clean
+   inside the glow ring. The ring itself is enough spotlight. */
+.ord-tour-highlight.ord-tour-illuminated-target[data-tour-id="home-fab-registrar"] {
+  animation: none !important;
+  box-shadow: none !important;
 }
 
 /* ─────────────────────────────────────────────────────────────────
@@ -407,6 +414,39 @@ body.ord-tour-popover-waiting .shepherd-enabled.shepherd-element {
   border-width: 1.5px;
 }
 
+/* Raised target for theater-dim steps (home-header-aux, home-fab-registrar)
+   so the element content stays visible above the full-dark overlay AND
+   above the glow ring (z-index 100001). Phase 3 requires the interior of
+   the illuminated rectangle to be visible, not dimmed. */
+.ord-tour-highlight.ord-tour-illuminated-target {
+  z-index: 100002 !important;
+}
+
+/* FAB step (home-fab-registrar): lift the whole bottom navigation bar
+   above the tour overlays so the user can see all 4 menu items plus the
+   illuminated FAB. The BottomNav normally sits at z-index:50 and is
+   covered by the modal SVG overlay (z-index:99999) and the full-dark
+   overlay (z-index:99999). The FAB step uses a half-opacity full-dark
+   and drops the modal overlay to z-index:10000 so the lifted bar
+   (z-index:100003) reads clearly. We also force the bar's own dark
+   background and add a subtle top glow so it reads as "lit" rather
+   than dimmed by what's behind it. */
+.ord-tour-show-bottom-nav {
+  z-index: 100003 !important;
+  position: fixed !important;
+  box-shadow: 0 -2px 24px rgba(78, 205, 196, 0.25) !important;
+}
+
+/* FAB ring must sit above the lifted bottom-nav (100003) so it frames the
+   menu bar, while the FAB itself sits above the ring. */
+.ord-tour-fab-step #ord-tour-reveal-overlay {
+  z-index: 100004 !important;
+}
+
+.ord-tour-highlight.ord-tour-illuminated-target[data-tour-id="home-fab-registrar"] {
+  z-index: 100005 !important;
+}
+
 /* VISIBLE POPOVER — JS adds this class to make the popover visible.
    The bounce animation is done in JS (requestAnimationFrame) so it
    always replays on every step, even when Shepherd reuses the DOM. */
@@ -423,3 +463,5 @@ body.ord-tour-popover-waiting .shepherd-enabled.shepherd-element {
 .ord-tour-popover-visible.shepherd-enabled.shepherd-element.ord-tour-popover.ord-tour-step-donut > .shepherd-arrow {
   margin-bottom: -8px !important;
 }
+
+

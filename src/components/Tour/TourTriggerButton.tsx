@@ -10,9 +10,13 @@ interface TourTriggerButtonProps {
 }
 
 export function TourTriggerButton({ screenId, className }: TourTriggerButtonProps) {
-  const { hasSeenTour, startTour } = useTour(screenId);
+  const { hasStartedTour, startTour } = useTour(screenId);
 
-  if (hasSeenTour) return null;
+  // Hide the trigger once the tour has been started at least once. The user
+  // can still re-launch from /ayuda. We intentionally do NOT depend on
+  // `hasSeenTour` here — the button disappears on first run, not on
+  // completion.
+  if (hasStartedTour) return null;
 
   return (
     <button

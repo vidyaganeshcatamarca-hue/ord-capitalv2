@@ -8,7 +8,6 @@ export const TOUR_IDS = {
     billeterasFiltro: 'home-billeteras-filtro',
     misterioAlerta: 'home-misterio-alerta',
     actividad: 'home-actividad',
-    actividadFiltro: 'home-actividad-filtro',
     headerAux: 'home-header-aux',
     fabRegistrar: 'home-fab-registrar',
   },

@@ -6,6 +6,9 @@ import {
   removeCompletedTour,
   getTourVersion,
   setTourVersion,
+  getStartedTours,
+  setStartedTour,
+  removeStartedTour,
 } from '@/tours/core/storage';
 
 export function useTourProgress() {
@@ -22,6 +25,18 @@ export function useTourProgress() {
     removeCompletedTour(screenId);
   }, []);
 
+  const hasStarted = useCallback((screenId: TourScreenId): boolean => {
+    return getStartedTours().includes(screenId);
+  }, []);
+
+  const markStarted = useCallback((screenId: TourScreenId): void => {
+    setStartedTour(screenId);
+  }, []);
+
+  const markNotStarted = useCallback((screenId: TourScreenId): void => {
+    removeStartedTour(screenId);
+  }, []);
+
   const getStoredVersion = useCallback((screenId: TourScreenId): number | null => {
     return getTourVersion(screenId);
   }, []);
@@ -30,5 +45,14 @@ export function useTourProgress() {
     setTourVersion(screenId, version);
   }, []);
 
-  return { isSeen, markSeen, markNotSeen, getStoredVersion, setStoredVersion };
+  return {
+    isSeen,
+    markSeen,
+    markNotSeen,
+    hasStarted,
+    markStarted,
+    markNotStarted,
+    getStoredVersion,
+    setStoredVersion,
+  };
 }

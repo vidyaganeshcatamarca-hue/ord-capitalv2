@@ -11,6 +11,11 @@ export interface TourStep {
   i18nKey: string;
   /** v2 placeholder: audio URL or null */
   audioUrl: string | null;
+  /** Intra-element sub-step: no scroll, popover slides into the same card */
+  intraElement?: boolean;
+  /** data-tour-id of a sibling sub-element to signal with the popover arrow
+   *  (ir-y-volver movement) without moving the popover position. */
+  arrowSignalTo?: string;
 }
 
 export interface Tour {

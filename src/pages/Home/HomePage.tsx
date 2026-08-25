@@ -916,13 +916,15 @@ export function HomePage() {
       )}
 
       {/* TEMPORAL: Sequential session banner to detect caching */}
-      <div style={{
-        position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)',
-        background: 'red', color: 'white', padding: '4px 12px', zIndex: 999999,
-        fontSize: '12px', fontWeight: 'bold', borderRadius: '0 0 8px 8px'
-      }}>
-        Sesión #{(window as any).__SESSION_SEQ__}
-      </div>
+      {false && (
+        <div style={{
+          position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)',
+          background: 'red', color: 'white', padding: '4px 12px', zIndex: 999999,
+          fontSize: '12px', fontWeight: 'bold', borderRadius: '0 0 8px 8px'
+        }}>
+          Sesión #{(window as any).__SESSION_SEQ__}
+        </div>
+      )}
 
       {/* Layout Principal de Dos Columnas en PC (Observación 1) */}
       <div className="home-dashboard-layout">
@@ -1370,7 +1372,6 @@ export function HomePage() {
               <button
                 type="button"
                 className="home-filter-btn"
-                data-tour-id="home-actividad-filtro"
                 onClick={() => setShowFilterPicker(true)}
               >
                 {t('filter')}{filterTarget ? ` · ${filterTarget.name}` : ''}
