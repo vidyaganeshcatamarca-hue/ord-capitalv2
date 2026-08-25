@@ -447,6 +447,7 @@ if (intraMode) {
       const slideStart = performance.now();
       const slideDuration = 700;
       function animateSlide(now: number) {
+        if (!popover) return;
         const elapsed = now - slideStart;
         const progress = Math.min(elapsed / slideDuration, 1);
         const eased = 1 - Math.pow(1 - progress, 3);
@@ -469,6 +470,7 @@ if (intraMode) {
             { at: 1.00, y: finalMarginTop },
           ];
           function animateBounce(bnow: number) {
+            if (!popover) return;
             const belapsed = bnow - bounceStart;
             const bprogress = Math.min(belapsed / bounceDuration, 1);
             let by = finalMarginTop;
@@ -512,6 +514,7 @@ if (intraMode) {
       { at: 1.00, y: popoverYOffset },
     ];
     function animateBounce(now: number) {
+      if (!popover) return;
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       let y = popoverYOffset;
