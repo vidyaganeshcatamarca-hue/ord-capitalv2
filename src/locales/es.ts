@@ -48,6 +48,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   menu_registrar: "Registrar",
   menu_conectado: "Conectado",
   menu_more: "Menú",
+  menu_ayuda: "Ayuda",
 
   // HomePage
   greeting_morning: "Buenos días",
@@ -121,6 +122,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   // TarjetasPage
   cards_title: "💳 Mis Tarjetas",
   btn_new_card: "+ Nueva",
+  btn_edit_card: "Editar tarjeta",
   cards_total_debt_label: "Deuda Total en Cuotas",
   cards_active_count_singular: "{count} tarjeta activa",
   cards_active_count_plural: "{count} tarjetas activas",
@@ -1654,6 +1656,7 @@ export const inversiones = {
   card_usd_purchase: "Compra en Dólares (USD)",
   card_usd_quote_current: "Cotización actual: {rate} USD <br/> Recargo impositivo: {pct}%",
   card_usd_quote_simple: "Cotización: {rate} USD <br/> Recargo: {pct}%",
+  card_usd_estimated_total: "Total estimado ARS: {amount}",
   step_category: "Categoría",
   placeholder_search_category: "Buscar categoría...",
   btn_see_all_categories: "Ver todas las categorías",
@@ -1839,4 +1842,65 @@ export const inversiones = {
   config_maintenance_success: "✅ Caché borrada. Recargando…",
   config_maintenance_error: "❌ No pude borrar la caché. Probá recargando manualmente.",
   config_pwa_updated: "🆕 Nueva versión disponible. Recargando…",
+};
+
+// === TOUR SYSTEM ===
+export const tour = {
+  // Trigger button
+  'trigger.label': 'Ayuda del tour',
+
+  // Ayuda page
+  'ayuda.title': 'Tours disponibles',
+  'ayuda.subtitle': 'Explorá cada pantalla con un recorrido guiado.',
+  'ayuda.view_tour': 'Ver tour',
+  'ayuda.seen': 'Visto',
+
+  // Home tour
+  'home.title': 'Conocé tu pantalla principal',
+  'home.description': 'Te mostramos qué hace cada parte del inicio.',
+  'home.step1.title': 'Tu saldo total',
+  'home.step1.description': 'Acá ves toda tu dinero de todas tus cuentas y billeteras, en pesos y dólares.',
+  'home.step2.title': 'Tus gastos agrupados',
+  'home.step2.description': 'El círculo muestra el porcentaje de gastos agrupados por rubros o subrubros.',
+  'home.step2.howTo': "Selecciona el 'periodo de tiempo' (Ej. Mes) que deseas ver como filtro de tus gastos.",
+  'home.step3.title': 'Por Rubros o Sub-Rubros',
+  'home.step3.description': "Eliges si quieres ver solo Rubros padres o 'todos' los subrubros",
+  'home.step3.howTo': '',
+  'home.step4.title': 'Todos los detalles',
+  'home.step4.description': "Por defecto se muestra el detalle de solo 3 categorías del gráfico. Tocá 'Ver todos' para todo el detalle.",
+  'home.step4.howTo': '',
+  'home.step5.title': 'Tus billeteras',
+  'home.step5.description': 'Acá ves tus cuentas en un carrusel.',
+  'home.step5.howTo': "Deslizá horizontalmente para ver más. Tocá 'Conciliar' para ajustar el saldo informado con el saldo real de tu cuenta.",
+  'home.step6.title': 'Filtrar billeteras',
+  'home.step6.description': "Este selector te deja elegir una billetera puntual.",
+  'home.step6.howTo': "Elegí una billetera para ver solo sus movimientos. Volvé a 'Todas' para ver el conjunto completo.",
+  'home.step7.title': 'Misterio / Olvido',
+  'home.step7.description': 'Te avisa cuanto dinero te ha faltado en las conciliaciones de tus billeteras por egresos no registrados.',
+  'home.step7.howTo': " Disciplinarte en registrar todos tus ingresos y egresos mantendra este monto bajo. Podés tocar el ojito para ocultar este cartel.",
+  'home.step8.title': 'Tus últimos movimientos',
+  'home.step8.description': 'Acá ves los ingresos y gastos más recientes.',
+  'home.step8.howTo': "Cuando te equivoques: tocá un movimiento para editarlo o el tachito para borrarlo. Toca 'Filtrar' y elegí ver solo movimientos del Rubro o Subrubro que te interese",
+  'home.step9.title': 'Botones auxiliares',
+  'home.step9.description': 'tres accesos rápidos',
+  'home.step9.howTo': 'El ícono de pregunta muestra este tour. El ojo oculta los montos (muy importante para mantener tu privacidad ante miradas curiosas mientras tenes la app abierta). La campanita te muestras las notificaciones importantes pendientes',
+  'home.step10.title': 'Cargar datos',
+  'home.step10.description': 'con este boton cargas tus ingresos y tus egresos',
+  'home.step10.howTo': "al hacer click, se abrira una pantalla (por defecto egresos - pero puedes modificarlo desde 'Menu/ajustes/preferencias operativas'. Tambien tienes un acceso directo permanente a cargar movimientos desde las notificaciones de tu movil (visita el tour especifico de la seccion 'Carga de movimientos'",
+
+  // Cuentas tour (placeholder — T7)
+  'cuentas.title': 'Conocé tus cuentas',
+  'cuentas.description': 'Te mostramos cómo gestionar tus billeteras y conciliaciones.',
+
+  // Tarjetas tour (placeholder — T8)
+  'tarjetas.title': 'Conocé tus tarjetas',
+  'tarjetas.description': 'Te mostramos cómo gestionar tus tarjetas de crédito.',
+
+  // Presupuestos tour (placeholder — T9)
+  'presupuestos.title': 'Conocé tus presupuestos',
+  'presupuestos.description': 'Te mostramos cómo planificar tus gastos del mes.',
+
+  // Ajustes tour (placeholder — T10)
+  'ajustes.title': 'Conocé los ajustes',
+  'ajustes.description': 'Te mostramos cómo personalizar tu experiencia.',
 };

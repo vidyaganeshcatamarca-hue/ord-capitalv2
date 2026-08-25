@@ -1,0 +1,18 @@
+/* TourTriggerButton - help icon in page headers */
+
+.tour-trigger-btn {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.tour-trigger-btn:hover {
+  color: var(--accent-mint);
+}

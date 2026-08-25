@@ -1056,7 +1056,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           return (
                             <div style={{ fontSize: 11, color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: 8, marginTop: 8, borderLeft: '3px solid var(--color-mint)' }}>
                               {t('card_usd_quote_current', { rate: formatMonto(cotizacionUsd.toString(), 'ARS'), pct: rPct })}
-                              <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>Total estimado ARS: {formatMonto(mFinal.toString(), 'ARS')}</span>
+                              <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString(), 'ARS') })}</span>
                             </div>
                           )
                         })()}
@@ -1977,7 +1977,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         return (
                           <div style={{ fontSize: 12, color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: 8, marginTop: 10, borderLeft: '3px solid var(--color-mint)' }}>
                             {t('card_usd_quote_simple', { rate: formatMonto(cotizacionUsd.toString(), 'ARS'), pct: rPct })}
-                            <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>Total estimado ARS: {formatMonto(mFinal.toString(), 'ARS')}</span>
+                            <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString(), 'ARS') })}</span>
                           </div>
                         )
                       })()}

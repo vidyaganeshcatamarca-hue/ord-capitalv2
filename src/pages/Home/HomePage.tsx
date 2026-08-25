@@ -9,6 +9,7 @@ import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { EditMovementModal } from '@/components/EditMovementModal/EditMovementModal'
 import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/ReconcileWalletModal'
 import { WalletIcon } from '@/components/WalletIcon'
+import { TourTriggerButton } from '@/components/Tour/TourTriggerButton'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { useCountUp } from '@/hooks/useCountUp'
 import { useHideAmounts } from '@/hooks/useHideAmounts'
@@ -845,7 +846,8 @@ export function HomePage() {
         <div>
           <p className="home-greeting">{saludoTexto}</p>
         </div>
-        <div className="home-header-actions">
+        <div className="home-header-actions" data-tour-id="home-header-aux">
+          <TourTriggerButton screenId="home" />
           <button
             className="home-icon-btn"
             onClick={toggleEyeHide}
@@ -913,6 +915,17 @@ export function HomePage() {
         </div>
       )}
 
+      {/* TEMPORAL: Sequential session banner to detect caching */}
+      {false && (
+        <div style={{
+          position: 'fixed', top: 0, left: '50%', transform: 'translateX(-50%)',
+          background: 'red', color: 'white', padding: '4px 12px', zIndex: 999999,
+          fontSize: '12px', fontWeight: 'bold', borderRadius: '0 0 8px 8px'
+        }}>
+          Sesión #{(window as any).__SESSION_SEQ__}
+        </div>
+      )}
+
       {/* Layout Principal de Dos Columnas en PC (Observación 1) */}
       <div className="home-dashboard-layout">
         
@@ -920,7 +933,7 @@ export function HomePage() {
         <div className="home-dashboard-left-col">
           {/* ── TOTAL HERO (Observación 2) ── */}
           <div className="section home-section-total" style={{ paddingLeft: 0, paddingRight: 0, paddingTop: '4px', paddingBottom: '4px' }}>
-            <div className="home-patrimonio card gradient-hero">
+            <div className="home-patrimonio card gradient-hero" data-tour-id="home-hero-card">
               <div className="home-patrimonio-top-flex">
                 <div className="home-patrimonio-main-info">
                   <p className="home-patrimonio-label">{t('hero_title_total')}</p>
@@ -951,13 +964,14 @@ export function HomePage() {
           </div>
 
           {/* ── SECCIÓN DE BILLETERAS ── */}
-          <div className="section home-section-billeteras" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0, paddingBottom: '4px' }}>
+          <div className="section home-section-billeteras" data-tour-id="home-billeteras" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0, paddingBottom: '4px' }}>
             <div className="home-wallets-header mb-3">
               <div className="home-wallet-title-filter">
                 <span className="section-title">{t('section_my_wallets')}</span>
                 <label className="home-wallet-inline-filter">
                   <span className="sr-only">{t('home_filter_wallet_label')}</span>
                   <select
+                    data-tour-id="home-billeteras-filtro"
                     value={
                       homeFilters.tarjetaId !== null
                         ? `t_${homeFilters.tarjetaId}`
@@ -1040,7 +1054,7 @@ export function HomePage() {
 
           {/* ── MISTERIO WARNING ── */}
           {tieneFugaMisterio && (
-            <div className="section home-section-fugas" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
+            <div className="section home-section-fugas" data-tour-id="home-misterio-alerta" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
               <div className="card" style={{ position: 'relative', background: 'rgba(255, 107, 107, 0.08)', borderColor: 'rgba(255, 107, 107, 0.3)', padding: 'var(--space-4)' }}>
                 {/* RECORDATORIO: Mapear preferencia global 'ocultar_fugas_misterio' a base de datos en Fase de Configuración Global */}
                 <button
@@ -1072,7 +1086,7 @@ export function HomePage() {
         {/* Columna Derecha: Categorías y Actividad */}
         <div className="home-dashboard-right-col">
           {/* ── ANILLO / TOP CATEGORÍAS ── */}
-          <div className="section home-section-donut" style={{ paddingTop: '4px', paddingLeft: 0, paddingRight: 0, paddingBottom: '4px' }}>
+          <div className="section home-section-donut" data-tour-id="home-expenses-donut" style={{ paddingTop: '4px', paddingLeft: 0, paddingRight: 0, paddingBottom: '4px' }}>
             <div className="flex items-center justify-between mb-3">
               <span className="section-title">
                 {t('section_expense_distribution_cycle', {
@@ -1080,7 +1094,7 @@ export function HomePage() {
                   end: formatShortDateValue(homeFilters.fechaFin)
                 })}
               </span>
-              <div className="segmented-control" style={{ maxWidth: '200px' }}>
+              <div className="segmented-control" style={{ maxWidth: '200px' }} data-tour-id="home-expenses-toggle-rubros">
                 <button
                   type="button"
                   className={`segmented-item ${homeFilters.nivelCategorias === 'parents' ? 'active' : ''}`}
@@ -1267,7 +1281,7 @@ export function HomePage() {
                       total={totalConsumidoSum}
                       hideAmounts={hideAmounts}
                     />
-                    <div className="category-breakdown-list" style={{ flex: 1, width: '100%' }}>
+                    <div className="category-breakdown-list" style={{ flex: 1, width: '100%' }} data-tour-id="home-expenses-ver-todos">
                       {(canExpand || showAllTopCategories) && (
                         <div className="category-breakdown-top-action" style={{
                           display: 'flex',
@@ -1352,7 +1366,7 @@ export function HomePage() {
           </div>
 
           {/* ── FEED RECIENTE ── */}
-          <div className="section home-section-feed" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}>
+          <div className="section home-section-feed" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }} data-tour-id="home-actividad">
             <div className="flex items-center justify-between mb-3">
               <span className="section-title">{t('section_recent_activity')}</span>
               <button

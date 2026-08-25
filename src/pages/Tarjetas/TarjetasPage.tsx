@@ -554,7 +554,7 @@ export function TarjetasPage() {
         {/* Menú contextual */}
         {menuOpen === tc.tarjeta_id && (
           <div className="tarjeta-context-menu" onClick={e => e.stopPropagation()}>
-            <button className="tarjeta-context-btn" onClick={() => openEdit(tc)}><CategoryIcon name="Pencil" size={14} /> Editar tarjeta</button>
+            <button className="tarjeta-context-btn" onClick={() => openEdit(tc)}><CategoryIcon name="Pencil" size={14} /> {t('btn_edit_card')}</button>
             <button className="tarjeta-context-btn" onClick={() => {
               setTargetCard(tc)
               setPagarMonto(venc ? venc.monto_a_pagar.toString() : '')
@@ -1251,7 +1251,7 @@ export function TarjetaFormModal({
               <CategoryIcon name="Trash2" size={20} />
             </button>
           )}
-          <button className="btn-modal-cancel" onClick={onClose}>Cancelar</button>
+          <button className="btn-modal-cancel" onClick={onClose}>{t('btn_cancel')}</button>
           <button className="btn-modal-submit" onClick={onSubmit} disabled={formSubmitting}>
             {formSubmitting ? 'Guardando...' : (isEdit ? 'Guardar cambios' : '+ Crear Tarjeta')}
           </button>

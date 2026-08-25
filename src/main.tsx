@@ -2,6 +2,18 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
 
+// Sequential session counter for debugging — increments on every page load.
+;(() => {
+  const KEY = '__session_seq__'
+  let seq = 1
+  try {
+    const prev = parseInt(sessionStorage.getItem(KEY) || '0', 10)
+    seq = (isNaN(prev) ? 0 : prev) + 1
+    sessionStorage.setItem(KEY, String(seq))
+  } catch { /* ignore */ }
+  ;(window as any).__SESSION_SEQ__ = seq
+})()
+
 // Aplica el tamaño de fuente desde localStorage antes de montar React.
 // Default 'mediano' (--font-scale: 1.0) si no hay valor guardado.
 ;(() => {

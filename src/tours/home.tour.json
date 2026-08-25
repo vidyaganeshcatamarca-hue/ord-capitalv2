@@ -1,0 +1,84 @@
+{
+  "id": "home",
+  "version": 36,
+  "i18nPrefix": "tour.home",
+  "title": "tour.home.title",
+  "description": "tour.home.description",
+  "steps": [
+    {
+      "id": "heroCard",
+      "target": "home-hero-card",
+      "placement": "bottom",
+      "i18nKey": "step1",
+      "audioUrl": null
+    },
+    {
+      "id": "expensesDonut",
+      "target": "home-expenses-donut",
+      "placement": "bottom",
+      "i18nKey": "step2",
+      "audioUrl": null
+    },
+    {
+      "id": "expensesToggle",
+      "target": "home-expenses-toggle-rubros",
+      "placement": "bottom",
+      "i18nKey": "step3",
+      "audioUrl": null,
+      "intraElement": true
+    },
+    {
+      "id": "expensesVerTodos",
+      "target": "home-expenses-ver-todos",
+      "placement": "top",
+      "i18nKey": "step4",
+      "audioUrl": null,
+      "intraElement": true
+    },
+    {
+      "id": "billeteras",
+      "target": "home-billeteras",
+      "placement": "top",
+      "i18nKey": "step5",
+      "audioUrl": null
+    },
+    {
+      "id": "billeterasFiltro",
+      "target": "home-billeteras",
+      "placement": "top",
+      "i18nKey": "step6",
+      "audioUrl": null,
+      "intraElement": true,
+      "arrowSignalTo": "home-billeteras-filtro"
+    },
+    {
+      "id": "misterioAlerta",
+      "target": "home-misterio-alerta",
+      "placement": "bottom",
+      "i18nKey": "step7",
+      "audioUrl": null
+    },
+    {
+      "id": "actividad",
+      "target": "home-actividad",
+      "placement": "top",
+      "i18nKey": "step8",
+      "audioUrl": null,
+      "intraElement": true
+    },
+    {
+      "id": "headerAux",
+      "target": "home-header-aux",
+      "placement": "bottom",
+      "i18nKey": "step9",
+      "audioUrl": null
+    },
+    {
+      "id": "fabRegistrar",
+      "target": "home-fab-registrar",
+      "placement": "top",
+      "i18nKey": "step10",
+      "audioUrl": null
+    }
+  ]
+}

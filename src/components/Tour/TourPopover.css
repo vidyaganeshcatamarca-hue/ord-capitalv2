@@ -1,0 +1,467 @@
+/* ============================================================
+   ORD Capital Personal — Shepherd.js v15 tour popover overrides
+   Theme-aware using data-theme on <html> (dark | warm-light)
+   ============================================================ */
+
+/* ── Theme tokens (consumed by overrides below) ── */
+[data-theme='dark'] .shepherd-element,
+[data-theme='dark'] .shepherd-element .shepherd-content {
+  --tour-surface: var(--surface, #161b22);
+  --tour-text: var(--text, #e6edf3);
+  --tour-text-secondary: var(--text-3, #8b949e);
+  --tour-border: #fff;
+}
+
+[data-theme='warm-light'] .shepherd-element,
+[data-theme='warm-light'] .shepherd-element .shepherd-content {
+  --tour-surface: var(--surface, #F5EFEB);
+  --tour-text: var(--text, #1A1108);
+  --tour-text-secondary: var(--text-3, #4A3525);
+  --tour-border: #000;
+}
+
+/* ── Popover root ──
+   Pill shape with very rounded corners. */
+.shepherd-element {
+  background: var(--tour-surface) !important;
+  color: var(--tour-text) !important;
+  border-radius: 28px !important;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65), 0 0 0 2px var(--tour-border) !important;
+  border: 2px solid var(--tour-border) !important;
+  padding: 18px 22px !important;
+  max-width: min(360px, calc(100vw - 32px)) !important;
+  width: calc(100vw - 32px) !important;
+  overflow: visible !important;
+  z-index: 100000 !important;
+}
+
+.shepherd-element .shepherd-content {
+  background: var(--tour-surface) !important;
+  border-radius: 28px !important;
+  overflow: visible !important;
+}
+
+/* ── Header ── */
+.shepherd-element .shepherd-header {
+  align-items: center;
+  background: transparent !important;
+  padding: 0 32px 8px 0 !important;
+  line-height: 1.3 !important;
+}
+
+.shepherd-element .shepherd-title {
+  color: var(--tour-text) !important;
+  font-family: var(--font-display, 'Outfit', system-ui, sans-serif) !important;
+  font-weight: 700 !important;
+  font-size: calc(16px * var(--font-scale, 1)) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex: 1 0 auto;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  hyphens: auto !important;
+}
+
+/* ── Cancel icon ── */
+.shepherd-element .shepherd-cancel-icon {
+  color: var(--tour-text-secondary) !important;
+  font-size: calc(14px * var(--font-scale, 1)) !important;
+  background: transparent !important;
+  border: 1px solid var(--tour-text-secondary) !important;
+  border-radius: 9999px !important;
+  padding: 4px 10px !important;
+  cursor: pointer !important;
+  margin-left: 8px !important;
+}
+
+.shepherd-element .shepherd-cancel-icon:hover {
+  color: var(--tour-text) !important;
+  border-color: var(--tour-text) !important;
+}
+
+/* ── Body text ── */
+.shepherd-element .shepherd-text {
+  color: var(--tour-text-secondary) !important;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif) !important;
+  font-weight: 400 !important;
+  font-size: calc(13px * var(--font-scale, 1)) !important;
+  line-height: 1.5 !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+  padding: 0 !important;
+  margin: 0 0 14px 0 !important;
+}
+
+.shepherd-element .shepherd-text p {
+  color: var(--tour-text-secondary) !important;
+  margin: 0 0 8px 0 !important;
+}
+
+.shepherd-element .shepherd-text p:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* ── Footer / buttons ── */
+.shepherd-element .shepherd-footer {
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: center !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  gap: var(--space-2, 8px);
+  flex-wrap: wrap;
+}
+
+.shepherd-element .shepherd-button {
+  background: var(--accent-mint, #4ECDC4) !important;
+  color: #1a1a1a !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  padding: 8px 16px !important;
+  font-family: var(--font-body, 'Inter', system-ui, sans-serif) !important;
+  font-size: calc(12px * var(--font-scale, 1)) !important;
+  font-weight: 600 !important;
+  cursor: pointer !important;
+  margin: 0 !important;
+  transition: all 0.2s ease !important;
+}
+
+.shepherd-element .shepherd-button:hover {
+  filter: brightness(1.15);
+  transform: translateY(-1px);
+}
+
+.shepherd-element .shepherd-button.ord-tour-btn-secondary {
+  background: transparent !important;
+  color: var(--tour-text-secondary) !important;
+  border: 1px solid var(--tour-text-secondary) !important;
+}
+
+.shepherd-element .shepherd-button.ord-tour-btn-secondary:hover {
+  color: var(--tour-text) !important;
+  border-color: var(--tour-text) !important;
+}
+
+.shepherd-element .shepherd-button.ord-tour-btn-primary {
+  background: var(--accent-mint, #4ECDC4) !important;
+  color: #1a1a1a !important;
+}
+
+/* ── Arrow (diamond: top half is a white triangle pointing at target
+   with themed border; bottom half is hidden behind the popover body
+   so it has no visible border).
+   We render the full rotated diamond as ::before, then use ::after to
+   paint a white rectangle that covers the bottom half of the diamond
+   (hiding the border that would otherwise show on the tucked-under
+   triangle). */
+.shepherd-element .shepherd-arrow,
+.shepherd-element .shepherd-arrow::before,
+.shepherd-element .shepherd-arrow::after {
+  width: 16px !important;
+  height: 16px !important;
+  z-index: 100001 !important;
+}
+
+.shepherd-element .shepherd-arrow::before {
+  background: #fff !important;
+  border: 2px solid var(--tour-border) !important;
+  transform: rotate(45deg) !important;
+}
+
+/* White overlay that hides the bottom half of the diamond border.
+   It sits on top of the rotated ::before, covering its lower triangle.
+   For placement='bottom' the arrow points up so we cover the bottom
+   half of the rotated square. */
+.shepherd-element .shepherd-arrow::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: #fff !important;
+  border: none !important;
+  /* No transform — covers the lower half of the rotated diamond */
+}
+
+/* Shepherd positions the arrow at -8px from the popover edge; we
+   shift it -1px more to keep it flush with our 2px themed border. */
+.shepherd-element[data-popper-placement^='bottom'] > .shepherd-arrow {
+  top: -9px !important;
+}
+
+/* For top placement, mirror the bottom-placement arrow exactly so the
+   flecha looks identical: same ::before rotation (45deg), same ::after
+   cover (lower half) — only the arrow's anchor point on the popover
+   changes (bottom instead of top). This avoids any geometry drift. */
+.shepherd-element[data-popper-placement^='top'] > .shepherd-arrow {
+  bottom: -9px !important;
+  transform: scaleY(-1) !important;
+}
+
+/* ── Modal overlay (SVG with carved hole around target) ──
+   IMPORTANT: do NOT use backdrop-filter here — it would blur the
+   target inside the carved hole too. The SVG path already gives us
+   the "cutout" effect; we only control opacity for the dim level. */
+.shepherd-modal-overlay-container {
+  z-index: 99999 !important;
+  pointer-events: none !important;
+  /* Dim lands immediately when a step starts — the delay belongs to the
+      highlight and popover, not the overlay. */
+  transition: opacity 0s linear !important;
+}
+
+/* FAB step: drop the modal overlay beneath the app's bottom-nav (100003)
+   so the menu bar can shine through the dim. The full-dark overlay in
+   shepherdWrapper takes over the dimming at the same level. */
+body.ord-tour-fab-step .shepherd-modal-overlay-container {
+  z-index: 10000 !important;
+}
+
+.shepherd-modal-overlay-container.shepherd-modal-is-visible {
+  opacity: 0.85 !important;
+}
+
+/* ── Popover appear animation (default — fast) ── */
+@keyframes ord-tour-popover-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.shepherd-enabled.shepherd-element {
+  animation: ord-tour-popover-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+/* ── Target highlight pulse ──
+   Glow halo (no outline to avoid the "horizontal line" artifact on
+   rounded corners seen on the FAB). Uses box-shadow with progressive
+   intensity and a slow fade-in so the highlight "arrives" instead of
+   slamming in. */
+@keyframes ord-tour-pulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 rgba(78, 205, 196, 0),
+      0 0 18px 4px rgba(78, 205, 196, 0.55),
+      0 0 48px 12px rgba(78, 205, 196, 0.25);
+  }
+  50% {
+    box-shadow:
+      0 0 0 0 rgba(78, 205, 196, 0),
+      0 0 28px 8px rgba(78, 205, 196, 0.85),
+      0 0 80px 24px rgba(78, 205, 196, 0.4);
+  }
+}
+
+.ord-tour-highlight {
+  animation: ord-tour-pulse 1.6s ease-in-out infinite !important;
+  position: relative !important;
+  z-index: 99998 !important;
+  border-radius: inherit !important;
+  /* Slow fade-in so the highlight arrives gradually, not abruptly */
+  transition: box-shadow 0.6s ease-out !important;
+}
+
+/* FAB step: suppress the inner box-shadow pulse so the FAB stays clean
+   inside the glow ring. The ring itself is enough spotlight. */
+.ord-tour-highlight.ord-tour-illuminated-target[data-tour-id="home-fab-registrar"] {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+/* ─────────────────────────────────────────────────────────────────
+   CINEMATIC MODE — applied to steps 1 (home-hero-card) and 2
+   (home-expenses-donut) via the `.ord-tour-cinematic` class on
+   <body>. This class is added/removed by shepherdWrapper.ts in the
+   `when.beforeShow` / `when.beforeHide` hooks of those steps.
+
+     3-phase cascade:
+       Phase 1 — screen dims        0s    (overlay opacity 0 → 0.85, instant)
+       Phase 2 — oval illuminates   1.5s  (modest ring fade-in,
+                                           delay = 3.0s after step show)
+       Phase 3 — popover emerges    1.0s  (opacity + scale + translateY,
+                                           delay = 5.5s after step show)
+
+     The oval is a modest ring hugging the target (box-shadow + a thin
+     `::before` ring), not a wide halo.
+     ───────────────────────────────────────────────────────────────── */
+
+/* Phase 2 — oval ring ramp from invisible to a modest mint glow. */
+@keyframes ord-tour-oval-ramp {
+  0% {
+    box-shadow: 0 0 0 0 rgba(78, 205, 196, 0);
+  }
+  100% {
+    /* Modest oval ring — a single tight halo so the glow stays a ring
+        close to the element instead of a huge halo that pushes the
+        popover out of the viewport. */
+    box-shadow:
+      0 0 12px 2px rgba(78, 205, 196, 0.85),
+      0 0 26px 6px rgba(78, 205, 196, 0.35);
+  }
+}
+
+/* Phase 3 — popover emerges from the dark AFTER the oval completes. */
+@keyframes ord-tour-popover-emerge {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* ── Oval ring via pseudo-element ── */
+@keyframes ord-tour-oval-fadein {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* CINEMATIC WAITING STATE — the highlight is hidden while the screen
+   is dimmed and JS counts the 3s delay before illuminating. */
+body.ord-tour-step-waiting .ord-tour-highlight {
+  animation: none !important;
+  box-shadow: 0 0 0 0 rgba(78, 205, 196, 0) !important;
+}
+body.ord-tour-step-waiting .ord-tour-highlight::before {
+  opacity: 0 !important;
+}
+
+/* POPOVER WAITING STATE — the popover stays hidden independently until
+   JS removes this class at t2 (5500ms). This is separate from
+   ord-tour-step-waiting so the highlight can be revealed at t1 (3000ms)
+   without prematurely showing the popover. */
+body.ord-tour-popover-waiting .shepherd-enabled.shepherd-element {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+
+/* ILLUMINATING TARGET — JS adds `ord-tour-illuminating` to start the
+   radial reveal (center → edges). A black overlay sits on top of the
+   element and is masked away from the center outward using an animated
+   radial-gradient mask. The element "lights up" from center to edges. */
+.ord-tour-illuminating {
+  position: relative !important;
+  z-index: 99998 !important;
+  border-radius: inherit !important;
+}
+
+.ord-tour-illuminating::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #000;
+  border-radius: inherit;
+  animation: ord-tour-radial-illuminate 1s ease-out forwards;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+@keyframes ord-tour-radial-illuminate {
+  0% {
+    /* Black covers the whole element (mask hole = 0%) */
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 0%, black 0%);
+    mask-image: radial-gradient(circle at 50% 50%, transparent 0%, black 0%);
+  }
+  100% {
+    /* Mask hole grows to cover the whole element → black overlay gone */
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, transparent 100%, black 100%);
+    mask-image: radial-gradient(circle at 50% 50%, transparent 100%, black 100%);
+  }
+}
+
+/* ILLUMINATED TARGET — JS adds this class after the radial reveal
+   completes, to keep the steady mint glow. */
+.ord-tour-illuminated {
+  position: relative !important;
+  z-index: 99998 !important;
+  border-radius: inherit !important;
+  animation: ord-tour-oval-ramp 1.5s ease-in-out forwards !important;
+}
+.ord-tour-illuminated::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: inherit;
+  border: 2px solid rgba(78, 205, 196, 0.85);
+  background: radial-gradient(
+    ellipse at center,
+    rgba(78, 205, 196, 0) 60%,
+    rgba(78, 205, 196, 0.25) 85%,
+    rgba(78, 205, 196, 0) 100%
+  );
+  z-index: -1;
+  pointer-events: none;
+  animation: ord-tour-oval-fadein 1.5s ease-out both;
+}
+
+.ord-tour-illuminated[data-tour-id="home-expenses-donut"]::before {
+  inset: -6px;
+  border-width: 1.5px;
+}
+
+/* Raised target for theater-dim steps (home-header-aux, home-fab-registrar)
+   so the element content stays visible above the full-dark overlay AND
+   above the glow ring (z-index 100001). Phase 3 requires the interior of
+   the illuminated rectangle to be visible, not dimmed. */
+.ord-tour-highlight.ord-tour-illuminated-target {
+  z-index: 100002 !important;
+}
+
+/* FAB step (home-fab-registrar): lift the whole bottom navigation bar
+   above the tour overlays so the user can see all 4 menu items plus the
+   illuminated FAB. The BottomNav normally sits at z-index:50 and is
+   covered by the modal SVG overlay (z-index:99999) and the full-dark
+   overlay (z-index:99999). The FAB step uses a half-opacity full-dark
+   and drops the modal overlay to z-index:10000 so the lifted bar
+   (z-index:100003) reads clearly. We also force the bar's own dark
+   background and add a subtle top glow so it reads as "lit" rather
+   than dimmed by what's behind it. */
+.ord-tour-show-bottom-nav {
+  z-index: 100003 !important;
+  position: fixed !important;
+  box-shadow: 0 -2px 24px rgba(78, 205, 196, 0.25) !important;
+}
+
+/* FAB ring must sit above the lifted bottom-nav (100003) so it frames the
+   menu bar, while the FAB itself sits above the ring. */
+.ord-tour-fab-step #ord-tour-reveal-overlay {
+  z-index: 100004 !important;
+}
+
+.ord-tour-highlight.ord-tour-illuminated-target[data-tour-id="home-fab-registrar"] {
+  z-index: 100005 !important;
+}
+
+/* VISIBLE POPOVER — JS adds this class to make the popover visible.
+   The bounce animation is done in JS (requestAnimationFrame) so it
+   always replays on every step, even when Shepherd reuses the DOM. */
+.ord-tour-popover-visible.shepherd-enabled.shepherd-element {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Step 2 (donut) — raise the popover closer to the target so the bottom
+   stays on-screen when the donut is in the lower half of the page. */
+.ord-tour-popover-visible.shepherd-enabled.shepherd-element.ord-tour-popover.ord-tour-step-donut {
+  margin-bottom: 8px !important;
+}
+.ord-tour-popover-visible.shepherd-enabled.shepherd-element.ord-tour-popover.ord-tour-step-donut > .shepherd-arrow {
+  margin-bottom: -8px !important;
+}
+
+
