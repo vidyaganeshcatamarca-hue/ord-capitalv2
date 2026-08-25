@@ -489,7 +489,8 @@ export function HomePage() {
         rpc<any[]>('fn_reporte_top_categorias_mes', {
           p_fecha_inicio: filters.fechaInicio,
           p_fecha_fin: filters.fechaFin,
-          p_billetera_id: filters.billeteraId
+          p_billetera_id: filters.billeteraId,
+          p_tarjeta_id: filters.tarjetaId
         }).catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_ranking_categorias', {
           p_fecha_inicio: filters.fechaInicio,
@@ -501,7 +502,8 @@ export function HomePage() {
           p_offset: 0,
           p_fecha_inicio: filters.fechaInicio,
           p_fecha_fin: filters.fechaFin,
-          p_billetera_id: filters.billeteraId
+          p_billetera_id: filters.billeteraId,
+          p_tarjeta_id: filters.tarjetaId
         }).catch(() => [] as any[])
       ])
 
@@ -528,7 +530,8 @@ export function HomePage() {
         p_offset: nextOffset,
         p_fecha_inicio: filters.fechaInicio,
         p_fecha_fin: filters.fechaFin,
-        p_billetera_id: filters.billeteraId
+        p_billetera_id: filters.billeteraId,
+        p_tarjeta_id: filters.tarjetaId
       }).catch(() => [] as any[])
       setMovimientos(prev => [...prev, ...moreRes])
       setActivityOffset(nextOffset)
@@ -711,7 +714,8 @@ export function HomePage() {
           p_offset: 0,
           p_fecha_inicio: filters.fechaInicio,
           p_fecha_fin: filters.fechaFin,
-          p_billetera_id: filters.billeteraId
+          p_billetera_id: filters.billeteraId,
+          p_tarjeta_id: filters.tarjetaId
         }).catch(() => [] as any[])
         if (!cancelled) setAllMovimientos(result)
       } catch (err) {
@@ -727,6 +731,7 @@ export function HomePage() {
     homeFilters.fechaInicio,
     homeFilters.fechaFin,
     homeFilters.billeteraId,
+    homeFilters.tarjetaId,
   ])
 
   // Nombre Real para el Saludo (Observación 9)
@@ -807,11 +812,8 @@ export function HomePage() {
       ? allMovimientos.filter(m => filterTarget.ids.includes(m.estructura_egreso_id))
       : movimientos
 
-    if (homeFilters.tarjetaId !== null) {
-      return baseList.filter(m => Number(m.tarjeta_id) === homeFilters.tarjetaId)
-    }
     return baseList
-  }, [movimientos, filterTarget, allMovimientos, homeFilters.tarjetaId])
+  }, [movimientos, filterTarget, allMovimientos])
 
   if (loading && movimientos.length === 0 && billeteras.length === 0) {
     return (

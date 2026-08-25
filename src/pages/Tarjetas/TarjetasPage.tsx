@@ -895,36 +895,38 @@ export function TarjetasPage() {
             )}
 
             {/* Tarjetas Archivadas Collapsible Section */}
-            <div className="tarjetas-archivadas-section">
-              <button 
-                className="btn-toggle-archivadas" 
-                onClick={() => setShowArchived(!showArchived)}
-              >
-                <CategoryIcon name="Archive" size={14} /> {showArchived ? 'Ocultar tarjetas archivadas' : `Ver tarjetas archivadas (${archivedCards.length})`}
-              </button>
+            {archivedCards.length > 0 && (
+              <div className="tarjetas-archivadas-section">
+                <button
+                  className="btn-toggle-archivadas"
+                  onClick={() => setShowArchived(!showArchived)}
+                >
+                  <CategoryIcon name="Archive" size={14} /> {showArchived ? t('btn_hide_archived_cards') : t('btn_view_archived_cards', { count: archivedCards.length })}
+                </button>
 
-              {showArchived && (
-                <div className="tarjetas-archivadas-list">
-                  {archivedCards.length === 0 ? (
-                    <div className="tarjetas-archivadas-empty">No hay tarjetas archivadas.</div>
-                  ) : (
-                    archivedCards.map(ac => (
-                      <div key={ac.tarjeta_id} className="tarjeta-archivada-item">
-                        <div>
-                          <strong>{ac.nombre_tarjeta}</strong> {ac.banco ? `(${ac.banco})` : ''}
+                {showArchived && (
+                  <div className="tarjetas-archivadas-list">
+                    {archivedCards.length === 0 ? (
+                      <div className="tarjetas-archivadas-empty">{t('cards_archived_empty')}</div>
+                    ) : (
+                      archivedCards.map(ac => (
+                        <div key={ac.tarjeta_id} className="tarjeta-archivada-item">
+                          <div>
+                            <strong>{ac.nombre_tarjeta}</strong> {ac.banco ? `(${ac.banco})` : ''}
+                          </div>
+                          <button
+                            className="btn-reactivar-tarjeta"
+                            onClick={() => handleReactivar(ac.tarjeta_id)}
+                          >
+                            <CategoryIcon name="RotateCcw" size={12} /> Activar
+                          </button>
                         </div>
-                        <button 
-                          className="btn-reactivar-tarjeta" 
-                          onClick={() => handleReactivar(ac.tarjeta_id)}
-                        >
-                          <CategoryIcon name="RotateCcw" size={12} /> Activar
-                        </button>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-            </div>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
 
