@@ -26,6 +26,8 @@ function getGreeting() {
 type HomePeriodPreset = 'today' | 'week' | 'month' | 'custom'
 type HomeCategoryLevel = 'parents' | 'all'
 
+type HomeCustomShortcut = 'yesterday' | 'previous_month' | 'year'
+
 type HomeFilters = {
   preset: HomePeriodPreset
   fechaInicio: string
@@ -33,6 +35,7 @@ type HomeFilters = {
   billeteraId: number | null
   tarjetaId: number | null
   nivelCategorias: HomeCategoryLevel
+  customShortcut: HomeCustomShortcut | null
 }
 
 const HOME_PREFERENCES_KEY_PREFIX = 'home_preferences:'
@@ -85,7 +88,7 @@ function getPresetRange(preset: HomePeriodPreset, diaAncla: number) {
 
 function getDefaultHomeFilters(diaAncla: number): HomeFilters {
   const range = getPresetRange('month', diaAncla)
-  return { preset: 'month', ...range, billeteraId: null, tarjetaId: null, nivelCategorias: 'parents' }
+  return { preset: 'month', ...range, billeteraId: null, tarjetaId: null, nivelCategorias: 'parents', customShortcut: null }
 }
 
 function isValidDateInput(value: unknown): value is string {
@@ -100,6 +103,7 @@ function parseHomePreferences(value: unknown, diaAncla: number, activeWalletIds:
   const categoryLevel = preferences.nivel_categorias
   const walletIdValue = preferences.billetera_id
   const tarjetaIdValue = preferences.tarjeta_id
+  const customShortcutValue = preferences.custom_shortcut
 
   if (!['today', 'week', 'month', 'custom'].includes(String(preset))) return null
   if (!['parents', 'all'].includes(String(categoryLevel))) return null
@@ -114,11 +118,20 @@ function parseHomePreferences(value: unknown, diaAncla: number, activeWalletIds:
     : Number(tarjetaIdValue)
   if (tarjetaId !== null && (!Number.isInteger(tarjetaId) || !activeCardIds.has(tarjetaId))) return null
 
+  const customShortcut: HomeCustomShortcut | null =
+    customShortcutValue === 'yesterday' || customShortcutValue === 'previous_month' || customShortcutValue === 'year'
+      ? customShortcutValue
+      : null
+
   if (preset === 'custom') {
     const fechaInicio = preferences.fecha_inicio
     const fechaFin = preferences.fecha_fin
     if (!isValidDateInput(fechaInicio) || !isValidDateInput(fechaFin) || fechaInicio > fechaFin) return null
-    return { preset, fechaInicio, fechaFin, billeteraId, tarjetaId, nivelCategorias: categoryLevel as HomeCategoryLevel }
+    return {
+      preset, fechaInicio, fechaFin, billeteraId, tarjetaId,
+      nivelCategorias: categoryLevel as HomeCategoryLevel,
+      customShortcut
+    }
   }
 
   return {
@@ -126,7 +139,8 @@ function parseHomePreferences(value: unknown, diaAncla: number, activeWalletIds:
     ...getPresetRange(preset as HomePeriodPreset, diaAncla),
     billeteraId,
     tarjetaId,
-    nivelCategorias: categoryLevel as HomeCategoryLevel
+    nivelCategorias: categoryLevel as HomeCategoryLevel,
+    customShortcut: null
   }
 }
 
@@ -137,7 +151,8 @@ function serializeHomePreferences(filters: HomeFilters) {
     fecha_fin: filters.fechaFin,
     billetera_id: filters.billeteraId,
     tarjeta_id: filters.tarjetaId,
-    nivel_categorias: filters.nivelCategorias
+    nivel_categorias: filters.nivelCategorias,
+    custom_shortcut: filters.customShortcut
   }
 }
 
@@ -333,7 +348,7 @@ export function HomePage() {
   const [diaAncla, setDiaAncla] = useState<number>(1)
   const [homeFilters, setHomeFilters] = useState<HomeFilters>(() => getDefaultHomeFilters(1))
   const [filteredDataLoading, setFilteredDataLoading] = useState(false)
-  const [activeShortcut, setActiveShortcut] = useState<'yesterday' | 'previous_month' | 'year' | null>(null)
+  const activeShortcut = homeFilters.customShortcut
   const latestHomeFiltersRef = useRef(homeFilters)
   const homePreferencesDirtyRef = useRef(false)
   const homePreferencesHydratedUserRef = useRef<string | null>(null)
@@ -871,12 +886,12 @@ export function HomePage() {
       return
     }
     const range = getPresetRange(preset, diaAncla)
-    updateHomeFilters({ ...homeFilters, preset, ...range })
+    updateHomeFilters({ ...homeFilters, preset, ...range, customShortcut: null })
   }
 
   const handleShortcutRange = (shortcut: 'yesterday' | 'year' | 'previous_month') => {
     const range = getShortcutRange(shortcut, diaAncla)
-    updateHomeFilters({ ...homeFilters, preset: 'custom', ...range })
+    updateHomeFilters({ ...homeFilters, preset: 'custom', ...range, customShortcut: shortcut })
   }
 
   return (
@@ -1189,29 +1204,29 @@ export function HomePage() {
                       aria-invalid={filterRangeInvalid}
                     />
                   </label>
-                  <div className="home-range-shortcuts" aria-label={t('home_filter_period_custom')}>
-                    <button
-                      type="button"
-                      className={activeShortcut === 'yesterday' ? 'active' : ''}
-                      onClick={() => { setActiveShortcut('yesterday'); handleShortcutRange('yesterday') }}
-                    >
-                      {t('home_filter_shortcut_yesterday')}
-                    </button>
-                    <button
-                      type="button"
-                      className={activeShortcut === 'previous_month' ? 'active' : ''}
-                      onClick={() => { setActiveShortcut('previous_month'); handleShortcutRange('previous_month') }}
-                    >
-                      {t('home_filter_shortcut_previous_month')}
-                    </button>
-                    <button
-                      type="button"
-                      className={activeShortcut === 'year' ? 'active' : ''}
-                      onClick={() => { setActiveShortcut('year'); handleShortcutRange('year') }}
-                    >
-                      {t('home_filter_shortcut_year')}
-                    </button>
-                  </div>
+                    <div className="home-range-shortcuts" aria-label={t('home_filter_period_custom')}>
+                      <button
+                        type="button"
+                        className={homeFilters.customShortcut === 'yesterday' ? 'active' : ''}
+                        onClick={() => { updateHomeFilters({ ...homeFilters, customShortcut: 'yesterday' }); handleShortcutRange('yesterday') }}
+                      >
+                        {t('home_filter_shortcut_yesterday')}
+                      </button>
+                      <button
+                        type="button"
+                        className={homeFilters.customShortcut === 'previous_month' ? 'active' : ''}
+                        onClick={() => { updateHomeFilters({ ...homeFilters, customShortcut: 'previous_month' }); handleShortcutRange('previous_month') }}
+                      >
+                        {t('home_filter_shortcut_previous_month')}
+                      </button>
+                      <button
+                        type="button"
+                        className={homeFilters.customShortcut === 'year' ? 'active' : ''}
+                        onClick={() => { updateHomeFilters({ ...homeFilters, customShortcut: 'year' }); handleShortcutRange('year') }}
+                      >
+                        {t('home_filter_shortcut_year')}
+                      </button>
+                    </div>
                   {filterRangeInvalid && (
                     <p className="home-filter-error" role="alert">{t('home_filters_invalid_range')}</p>
                   )}
@@ -1425,10 +1440,14 @@ export function HomePage() {
                   {filteredMovimientos.map((m) => {
                     const moneda = walletCurrencyMap[m.nombre_billetera] ?? 'ARS'
                     const esEgreso = m.monto < 0
+                    // Fuente de verdad: el color del rubro padre que viene directo de la RPC.
+                    // Fallback heurístico solo si la RPC no lo expone (movimiento sin estructura_egreso_id).
+                    const parentColorDirect = (m as any).color_rubro_padre as string | undefined | null
                     const nombreKey = (m.nombre_categoria || '').toLowerCase().trim()
                     const baseName = nombreKey.split('-')[0].trim()
                     const parentKey = m.estructura_egreso_id ? `id:${m.estructura_egreso_id}` : ''
-                    const iconBgColor = activityParentColorMap[nombreKey]
+                    const iconBgColor = (parentColorDirect && parentColorDirect !== '')
+                      || activityParentColorMap[nombreKey]
                       || activityParentColorMap[baseName]
                       || (parentKey ? activityParentColorMap[parentKey] : undefined)
                       || m.color_categoria
