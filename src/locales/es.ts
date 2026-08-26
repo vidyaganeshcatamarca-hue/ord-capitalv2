@@ -1757,6 +1757,7 @@ export const inversiones = {
   confirm_migrate_category: "La categoría \"{name}\" tiene movimientos, presupuestos o gastos recurrentes asociados. Para no perder el historial, primero migra esos datos a otra categoría existente. Una vez migrados, la categoría \"{name}\" se eliminará.",
   migrar_category_destino_label: "Categoría destino",
   migrar_category_destino_placeholder: "Elegí la categoría a la que querés migrar",
+  migrar_category_no_children: "Sin subcategorías — tocá para elegir",
   btn_migrate_and_delete: "Migrar y eliminar",
   success_category_migrated_caja: "Migrados {count} movimientos.",
   success_category_migrated_full: "Migrados {movimientos} movimientos, {presupuestos} presupuestos y {recurrentes} recurrentes.",
