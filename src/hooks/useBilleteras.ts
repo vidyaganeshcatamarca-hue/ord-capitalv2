@@ -56,10 +56,26 @@ export function useBilleteras() {
     const handleSuccess = () => {
       fetchData()
     }
+    const handleOrderChanged = async () => {
+      try {
+        const prefs = await rpc<Array<{ orden_billeteras?: WalletOrder | null }>>('fn_obtener_preferencias_usuario')
+          .catch(() => [] as Array<{ orden_billeteras?: WalletOrder | null }>)
+        const row = Array.isArray(prefs) ? prefs[0] : prefs
+        const orden: WalletOrder = (row?.orden_billeteras === 'alfabetico') ? 'alfabetico' : 'valor'
+        if (!cancelled) {
+          setOrdenBilleteras(orden)
+          await fetchData(orden)
+        }
+      } catch {
+        if (!cancelled) await fetchData()
+      }
+    }
     window.addEventListener('movement-added', handleSuccess)
+    window.addEventListener('wallet-order-changed', handleOrderChanged)
     return () => {
       cancelled = true
       window.removeEventListener('movement-added', handleSuccess)
+      window.removeEventListener('wallet-order-changed', handleOrderChanged)
     }
   }, [fetchData])
 

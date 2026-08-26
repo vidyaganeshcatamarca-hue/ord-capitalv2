@@ -378,6 +378,18 @@ export function HomePage() {
   const [showFilterPicker, setShowFilterPicker] = useState(false)
   const [expandedFilterRubro, setExpandedFilterRubro] = useState<string | null>(null)
 
+  const fetchBilleterasFromPreference = useCallback(async () => {
+    try {
+      const prefs = await rpc<Array<{ orden_billeteras?: string | null }>>('fn_obtener_preferencias_usuario')
+        .catch(() => [] as Array<{ orden_billeteras?: string | null }>)
+      const row = Array.isArray(prefs) ? prefs[0] : prefs
+      const orden = (row?.orden_billeteras === 'alfabetico') ? 'alfabetico' : 'valor'
+      return await rpc<any[]>('fn_obtener_billeteras_ordenadas', { p_orden: orden }).catch(() => [] as any[])
+    } catch {
+      return await rpc<any[]>('fn_obtener_billeteras_ordenadas', { p_orden: 'valor' }).catch(() => [] as any[])
+    }
+  }, [])
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
@@ -395,7 +407,7 @@ export function HomePage() {
       ] = await Promise.all([
         rpc<{ total_pesos: number; total_dolares: number }[]>('fn_reporte_patrimonio_neto').catch(() => [] as any[]),
         rpc<any>('fn_reporte_alertas_home').catch(() => null),
-        rpc<any[]>('fn_obtener_billeteras_ordenadas', { p_orden: 'valor' }).catch(() => [] as any[]),
+        fetchBilleterasFromPreference(),
         rpc<any[]>('fn_reporte_mapa_tarjetas').catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_top_categorias_mes').catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_ranking_categorias').catch(() => [] as any[]),
@@ -437,7 +449,7 @@ export function HomePage() {
       setFilteredDataLoading(true)
       setLoading(false)
     }
-  }, [showToast])
+  }, [showToast, fetchBilleterasFromPreference])
 
   const activeCategoriasData = useMemo(() => {
     if (homeFilters.nivelCategorias === 'parents') {
@@ -650,9 +662,11 @@ export function HomePage() {
       setFugasMisterioOcultado(localStorage.getItem('ocultar_fugas_misterio') === 'true')
     }
     window.addEventListener('movement-added', handleSuccess)
+    window.addEventListener('wallet-order-changed', handleSuccess)
     window.addEventListener('fugas-config-changed', handleFugasChanged)
     return () => {
       window.removeEventListener('movement-added', handleSuccess)
+      window.removeEventListener('wallet-order-changed', handleSuccess)
       window.removeEventListener('fugas-config-changed', handleFugasChanged)
     }
   }, [fetchData])

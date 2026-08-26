@@ -85,6 +85,7 @@ export function PreferenciasOperativasPage() {
         p_voz_activada: newPrefs.voz_activada,
         p_orden_billeteras: newPrefs.orden_billeteras ?? 'valor',
       })
+      window.dispatchEvent(new CustomEvent('wallet-order-changed'))
       localStorage.setItem('tipo_movimiento_default', newPrefs.tipo_movimiento_default)
       if (newPrefs.billetera_default_egreso) {
         localStorage.setItem('billetera_default_egreso', String(newPrefs.billetera_default_egreso))
@@ -215,14 +216,14 @@ export function PreferenciasOperativasPage() {
             <div className="config-segmented">
               <button
                 type="button"
-                className={`config-seg-btn ${(prefs.orden_billeteras ?? 'valor') === 'valor' ? 'config-seg-btn--active' : ''}`}
+                className={`config-seg-btn config-seg-btn--wallet-order ${(prefs.orden_billeteras ?? 'valor') === 'valor' ? 'config-seg-btn--active' : ''}`}
                 onClick={() => updatePref('orden_billeteras', 'valor')}
               >
                 {t('config_wallet_order_value')}
               </button>
               <button
                 type="button"
-                className={`config-seg-btn ${prefs.orden_billeteras === 'alfabetico' ? 'config-seg-btn--active' : ''}`}
+                className={`config-seg-btn config-seg-btn--wallet-order ${prefs.orden_billeteras === 'alfabetico' ? 'config-seg-btn--active' : ''}`}
                 onClick={() => updatePref('orden_billeteras', 'alfabetico')}
               >
                 {t('config_wallet_order_alphabetical')}

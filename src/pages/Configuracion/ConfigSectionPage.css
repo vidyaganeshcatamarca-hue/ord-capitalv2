@@ -222,6 +222,13 @@
   color: var(--mint);
 }
 
+.config-seg-btn--wallet-order.config-seg-btn--active {
+  color: #FF6B6B;
+  background: rgba(255, 107, 107, 0.18);
+  border: 2px solid #FF6B6B;
+  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.25);
+}
+
 .config-seg-btn:hover:not(.config-seg-btn--active) {
   background: var(--surface-3);
   color: var(--text);
