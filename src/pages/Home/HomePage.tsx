@@ -1446,7 +1446,10 @@ export function HomePage() {
                     const nombreKey = (m.nombre_categoria || '').toLowerCase().trim()
                     const baseName = nombreKey.split('-')[0].trim()
                     const parentKey = m.estructura_egreso_id ? `id:${m.estructura_egreso_id}` : ''
-                    const iconBgColor = (parentColorDirect && parentColorDirect !== '')
+                    // OJO: NO usar `&&` dentro de una cadena `||` porque devuelve boolean.
+                    // Ternario explícito para garantizar string.
+                    const iconBgColor =
+                      (parentColorDirect && parentColorDirect !== '' ? parentColorDirect : undefined)
                       || activityParentColorMap[nombreKey]
                       || activityParentColorMap[baseName]
                       || (parentKey ? activityParentColorMap[parentKey] : undefined)
