@@ -333,6 +333,7 @@ export function HomePage() {
   const [diaAncla, setDiaAncla] = useState<number>(1)
   const [homeFilters, setHomeFilters] = useState<HomeFilters>(() => getDefaultHomeFilters(1))
   const [filteredDataLoading, setFilteredDataLoading] = useState(false)
+  const [activeShortcut, setActiveShortcut] = useState<'yesterday' | 'previous_month' | 'year' | null>(null)
   const latestHomeFiltersRef = useRef(homeFilters)
   const homePreferencesDirtyRef = useRef(false)
   const homePreferencesHydratedUserRef = useRef<string | null>(null)
@@ -479,6 +480,43 @@ export function HomePage() {
       }
     })
   }, [topCategorias, rankingCategorias, homeFilters.nivelCategorias])
+
+  // Mapa compartido: nombre/ID de rubro padre → color del padre.
+  // Se construye una sola vez por filtro y se reusa tanto en el donut como en
+  // la actividad reciente para que los íconos reflejen siempre el rubro padre.
+  const activityParentColorMap = useMemo(() => {
+    if (!topCategorias.length && !rankingCategorias.length) return {} as Record<string, string>
+    const map: Record<string, string> = {}
+
+    topCategorias.forEach((tc: any) => {
+      if (tc.nombre_categoria && tc.color) {
+        const rawName = tc.nombre_categoria.toLowerCase().trim()
+        map[rawName] = tc.color
+        const baseName = rawName.split('-')[0].trim()
+        if (baseName && !map[baseName]) map[baseName] = tc.color
+        const translated = t(tc.nombre_categoria).toLowerCase().trim()
+        if (translated) {
+          map[translated] = tc.color
+          const baseTrans = translated.split('-')[0].trim()
+          if (baseTrans && !map[baseTrans]) map[baseTrans] = tc.color
+        }
+      }
+    })
+
+    rankingCategorias.forEach((rc: any) => {
+      if (rc.nombre_rubro_padre && rc.color) {
+        const rawName = rc.nombre_rubro_padre.toLowerCase().trim()
+        if (!map[rawName]) map[rawName] = rc.color
+        const baseName = rawName.split('-')[0].trim()
+        if (baseName && !map[baseName]) map[baseName] = rc.color
+      }
+      if (rc.estructura_id && rc.color && rc.es_padre) {
+        map[`id:${rc.estructura_id}`] = rc.color
+      }
+    })
+
+    return map
+  }, [topCategorias, rankingCategorias, t])
 
   const fetchFilteredDashboardData = useCallback(async (filters: HomeFilters) => {
     if (!filters.fechaInicio || !filters.fechaFin || filters.fechaInicio > filters.fechaFin) return
@@ -994,7 +1032,7 @@ export function HomePage() {
                   >
                     <option value="">{t('home_filter_wallet_all')}</option>
                     {billeteras.length > 0 && (
-                      <optgroup label={t('group_wallets') || 'Billeteras'}>
+                      <optgroup label={t('group_wallets')}>
                         {billeteras.map((b) => (
                           <option key={`b_${b.billetera_id}`} value={`b_${b.billetera_id}`}>
                             {t(b.nombre)}
@@ -1003,7 +1041,7 @@ export function HomePage() {
                       </optgroup>
                     )}
                     {tarjetas.length > 0 && (
-                      <optgroup label={t('group_credit_cards') || 'Tarjetas de crédito'}>
+                      <optgroup label={t('group_credit_cards')}>
                         {tarjetas.map((tc) => (
                           <option key={`t_${tc.tarjeta_id}`} value={`t_${tc.tarjeta_id}`}>
                             💳 {tc.nombre_tarjeta}
@@ -1152,9 +1190,27 @@ export function HomePage() {
                     />
                   </label>
                   <div className="home-range-shortcuts" aria-label={t('home_filter_period_custom')}>
-                    <button type="button" onClick={() => handleShortcutRange('yesterday')}>{t('home_filter_shortcut_yesterday')}</button>
-                    <button type="button" onClick={() => handleShortcutRange('previous_month')}>{t('home_filter_shortcut_previous_month')}</button>
-                    <button type="button" onClick={() => handleShortcutRange('year')}>{t('home_filter_shortcut_year')}</button>
+                    <button
+                      type="button"
+                      className={activeShortcut === 'yesterday' ? 'active' : ''}
+                      onClick={() => { setActiveShortcut('yesterday'); handleShortcutRange('yesterday') }}
+                    >
+                      {t('home_filter_shortcut_yesterday')}
+                    </button>
+                    <button
+                      type="button"
+                      className={activeShortcut === 'previous_month' ? 'active' : ''}
+                      onClick={() => { setActiveShortcut('previous_month'); handleShortcutRange('previous_month') }}
+                    >
+                      {t('home_filter_shortcut_previous_month')}
+                    </button>
+                    <button
+                      type="button"
+                      className={activeShortcut === 'year' ? 'active' : ''}
+                      onClick={() => { setActiveShortcut('year'); handleShortcutRange('year') }}
+                    >
+                      {t('home_filter_shortcut_year')}
+                    </button>
                   </div>
                   {filterRangeInvalid && (
                     <p className="home-filter-error" role="alert">{t('home_filters_invalid_range')}</p>
@@ -1177,38 +1233,7 @@ export function HomePage() {
                   (sum: number, cat: any) => sum + (Number(cat.total_consumido) || 0), 0
                 )
 
-                const parentColorMap: Record<string, string> = {}
-
-                topCategorias.forEach((tc: any) => {
-                  if (tc.nombre_categoria && tc.color) {
-                    const rawName = tc.nombre_categoria.toLowerCase().trim()
-                    parentColorMap[rawName] = tc.color
-                    const baseName = rawName.split('-')[0].trim()
-                    if (baseName && !parentColorMap[baseName]) {
-                      parentColorMap[baseName] = tc.color
-                    }
-                    const translated = t(tc.nombre_categoria).toLowerCase().trim()
-                    if (translated) {
-                      parentColorMap[translated] = tc.color
-                      const baseTrans = translated.split('-')[0].trim()
-                      if (baseTrans && !parentColorMap[baseTrans]) {
-                        parentColorMap[baseTrans] = tc.color
-                      }
-                    }
-                  }
-                })
-
-                rankingCategorias.forEach((rc: any) => {
-                  if (rc.nombre_rubro_padre && rc.color) {
-                    const rawName = rc.nombre_rubro_padre.toLowerCase().trim()
-                    if (!parentColorMap[rawName]) parentColorMap[rawName] = rc.color
-                    const baseName = rawName.split('-')[0].trim()
-                    if (baseName && !parentColorMap[baseName]) parentColorMap[baseName] = rc.color
-                  }
-                  if (rc.estructura_id && rc.color && rc.es_padre) {
-                    parentColorMap[`id:${rc.estructura_id}`] = rc.color
-                  }
-                })
+                const parentColorMap: Record<string, string> = activityParentColorMap
 
                 const parentGroupCounts: Record<string, number> = {}
                 const parentGroupIndices: Record<string, number> = {}
@@ -1400,13 +1425,22 @@ export function HomePage() {
                   {filteredMovimientos.map((m) => {
                     const moneda = walletCurrencyMap[m.nombre_billetera] ?? 'ARS'
                     const esEgreso = m.monto < 0
+                    const nombreKey = (m.nombre_categoria || '').toLowerCase().trim()
+                    const baseName = nombreKey.split('-')[0].trim()
+                    const parentKey = m.estructura_egreso_id ? `id:${m.estructura_egreso_id}` : ''
+                    const iconBgColor = activityParentColorMap[nombreKey]
+                      || activityParentColorMap[baseName]
+                      || (parentKey ? activityParentColorMap[parentKey] : undefined)
+                      || m.color_categoria
+                      || 'var(--surface-2)'
+                    const iconBorderColor = iconBgColor === 'var(--surface-2)' ? 'var(--border)' : iconBgColor
                     return (
                       <div key={m.p_caja_id} className="timeline-item" onClick={() => setMovementToEdit(m)} style={{ cursor: 'pointer' }}>
                         <div
                           className="timeline-item-icon"
                           style={{
-                            backgroundColor: m.color_categoria || 'var(--surface-2)',
-                            borderColor: m.color_categoria || 'var(--border)',
+                            backgroundColor: iconBgColor,
+                            borderColor: iconBorderColor,
                             color: '#000000',
                             display: 'flex',
                             alignItems: 'center',

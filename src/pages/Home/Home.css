@@ -291,7 +291,8 @@
   background: rgba(255, 255, 255, 0.075);
 }
 
-.home-period-tab.active {
+.home-period-tab.active,
+.home-range-shortcuts button.active {
   color: #061616;
   background: linear-gradient(135deg, var(--mint), #18a8d8);
   border-color: rgba(78, 205, 196, 0.75);
