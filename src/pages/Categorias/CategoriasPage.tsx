@@ -4,6 +4,7 @@ import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
+import { MigrarCategoriaModal } from '@/components/MigrarCategoriaModal/MigrarCategoriaModal'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { INGRESO_ICONS, RUBRO_ICONS } from '@/constants/emojiToLucide'
 import { isUserEditableCategory } from '@/lib/categoryFilters'
@@ -325,6 +326,10 @@ export function TabEgresos() {
   const [rubroModal, setRubroModal] = useState<{ open: boolean; rubro: Rubro | null }>({ open: false, rubro: null })
   const [subModal, setSubModal] = useState<{ open: boolean; hijo: Hijo | null; rubroId: number }>({ open: false, hijo: null, rubroId: 0 })
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number; nombre: string }>({ open: false, id: 0, nombre: '' })
+  const [migrateModal, setMigrateModal] = useState<{
+    open: boolean
+    origen: { estructura_id: number; nombre_cuenta: string; icono?: string | null; color?: string | null } | null
+  }>({ open: false, origen: null })
 
   const fetchRubros = useCallback(async () => {
     setLoading(true)
@@ -501,13 +506,39 @@ export function TabEgresos() {
             showToast(t('success_category_deleted'), 'success')
             fetchRubros()
           } catch (err: any) {
-            showToast(parseError(err), 'error')
+            const msg = typeof err === 'string' ? err : (err?.message || JSON.stringify(err))
+            if (msg.includes('error_category_in_use')) {
+              // Buscar la categoria origen para abrir el modal de migración
+              const origenEncontrado = rubros.flatMap(r => [
+                { estructura_id: r.estructura_id, nombre_cuenta: r.nombre_cuenta, icono: r.icono, color: r.color, padre_id: null },
+                ...(r.hijos || []).map(h => ({ estructura_id: h.estructura_id, nombre_cuenta: h.nombre_cuenta, icono: h.icono, color: h.color, padre_id: r.estructura_id }))
+              ]).find(c => c.estructura_id === deleteConfirm.id)
+              if (origenEncontrado) {
+                setMigrateModal({ open: true, origen: origenEncontrado })
+              } else {
+                showToast(parseError(err), 'error')
+              }
+            } else {
+              showToast(parseError(err), 'error')
+            }
           } finally {
             setDeleteConfirm({ open: false, id: 0, nombre: '' })
           }
         }}
         onCancel={() => setDeleteConfirm({ open: false, id: 0, nombre: '' })}
       />
+      {migrateModal.open && migrateModal.origen && (
+        <MigrarCategoriaModal
+          isOpen={migrateModal.open}
+          origen={migrateModal.origen}
+          destinos={rubros.flatMap(r => [
+            { estructura_id: r.estructura_id, nombre_cuenta: r.nombre_cuenta, icono: r.icono, color: r.color, padre_id: null },
+            ...(r.hijos || []).map(h => ({ estructura_id: h.estructura_id, nombre_cuenta: h.nombre_cuenta, icono: h.icono, color: h.color, padre_id: r.estructura_id }))
+          ]).filter(c => c.estructura_id !== migrateModal.origen!.estructura_id)}
+          onClose={() => setMigrateModal({ open: false, origen: null })}
+          onMigrated={fetchRubros}
+        />
+      )}
     </div>
   )
 }

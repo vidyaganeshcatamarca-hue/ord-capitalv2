@@ -22,6 +22,7 @@ interface OperationalPrefs {
   ocr_enabled: boolean
   voz_activada: boolean
   tipo_movimiento_default: 'expense' | 'income'
+  orden_billeteras: 'valor' | 'alfabetico' | null
 }
 
 const DEFAULT_PREFS: OperationalPrefs = {
@@ -31,6 +32,7 @@ const DEFAULT_PREFS: OperationalPrefs = {
   ocr_enabled: true,
   voz_activada: true,
   tipo_movimiento_default: 'expense',
+  orden_billeteras: 'valor',
 }
 
 export function PreferenciasOperativasPage() {
@@ -81,6 +83,7 @@ export function PreferenciasOperativasPage() {
         p_billetera_default_ingreso: newPrefs.billetera_default_ingreso ?? -1,
         p_ocr_auto_aprobar: newPrefs.ocr_auto_aprobar,
         p_voz_activada: newPrefs.voz_activada,
+        p_orden_billeteras: newPrefs.orden_billeteras ?? 'valor',
       })
       localStorage.setItem('tipo_movimiento_default', newPrefs.tipo_movimiento_default)
       if (newPrefs.billetera_default_egreso) {
@@ -199,6 +202,30 @@ export function PreferenciasOperativasPage() {
                 onClick={() => updatePref('tipo_movimiento_default', 'income')}
               >
                 {t('config_tipo_movimiento_ingreso')}
+              </button>
+            </div>
+          </div>
+        </article>
+
+        {/* Orden de billeteras */}
+        <article className="config-section-card">
+          <h2>{t('config_wallet_order_section')}</h2>
+          <div className="config-section-field">
+            <label>{t('config_wallet_order_label')}</label>
+            <div className="config-segmented">
+              <button
+                type="button"
+                className={`config-seg-btn ${(prefs.orden_billeteras ?? 'valor') === 'valor' ? 'config-seg-btn--active' : ''}`}
+                onClick={() => updatePref('orden_billeteras', 'valor')}
+              >
+                {t('config_wallet_order_value')}
+              </button>
+              <button
+                type="button"
+                className={`config-seg-btn ${prefs.orden_billeteras === 'alfabetico' ? 'config-seg-btn--active' : ''}`}
+                onClick={() => updatePref('orden_billeteras', 'alfabetico')}
+              >
+                {t('config_wallet_order_alphabetical')}
               </button>
             </div>
           </div>

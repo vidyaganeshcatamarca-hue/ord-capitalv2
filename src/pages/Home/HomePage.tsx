@@ -395,7 +395,7 @@ export function HomePage() {
       ] = await Promise.all([
         rpc<{ total_pesos: number; total_dolares: number }[]>('fn_reporte_patrimonio_neto').catch(() => [] as any[]),
         rpc<any>('fn_reporte_alertas_home').catch(() => null),
-        rpc<any[]>('fn_obtener_billeteras_activas').catch(() => [] as any[]),
+        rpc<any[]>('fn_obtener_billeteras_ordenadas', { p_orden: 'valor' }).catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_mapa_tarjetas').catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_top_categorias_mes').catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_ranking_categorias').catch(() => [] as any[]),

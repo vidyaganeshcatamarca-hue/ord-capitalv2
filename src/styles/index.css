@@ -893,3 +893,56 @@ input::placeholder, textarea::placeholder {
 }
 
 
+
+/* ============================================
+   ORIENTATION LOCK OVERLAY (landscape en movil)
+   Se muestra cuando el dispositivo esta horizontal y es movil.
+   ============================================ */
+
+.orientation-lock-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: var(--bg, #0d1117);
+  color: var(--text, #fff);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  gap: 16px;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.orientation-lock-overlay .orientation-lock-icon {
+  font-size: 64px;
+  animation: orientation-lock-bounce 1.6s ease-in-out infinite;
+  line-height: 1;
+}
+
+.orientation-lock-overlay h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: calc(22px * var(--font-scale, 1));
+  font-weight: 700;
+  margin: 0;
+}
+
+.orientation-lock-overlay p {
+  font-size: calc(14px * var(--font-scale, 1));
+  color: var(--text-2, #a0a0a0);
+  max-width: 320px;
+  margin: 0;
+}
+
+@keyframes orientation-lock-bounce {
+  0%, 100% { transform: rotate(90deg); }
+  50% { transform: rotate(0deg); }
+}
+
+/* Mostrar solo en landscape + dispositivos moviles (ancho limitado). */
+@media (orientation: landscape) and (max-height: 500px) {
+  .orientation-lock-overlay {
+    display: flex;
+  }
+}

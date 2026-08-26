@@ -61,3 +61,75 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
     })
   })
 }
+
+// ============================================
+// Bloqueo de orientacion horizontal en movil
+// Estrategia:
+//   1) JS: intenta screen.orientation.lock('portrait') (funciona en nativo/Capacitor y HTTPS)
+//   2) CSS fallback: overlay full-screen cuando @media (orientation: landscape) + max-height
+// ============================================
+
+function isMobileDevice(): boolean {
+  if (typeof window === 'undefined') return false
+  // Heuristica: dispositivos moviles tienen ancho chico en portrait.
+  // Combinamos userAgent + ancho de ventana.
+  const ua = navigator.userAgent || ''
+  const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(ua)
+  const isSmallScreen = Math.min(window.innerWidth, window.innerHeight) <= 500
+  return isMobileUA || isSmallScreen
+}
+
+function injectOrientationLockOverlay(): void {
+  if (document.getElementById('orientation-lock-overlay')) return
+  const overlay = document.createElement('div')
+  overlay.id = 'orientation-lock-overlay'
+  overlay.className = 'orientation-lock-overlay'
+  overlay.setAttribute('role', 'alertdialog')
+  overlay.setAttribute('aria-modal', 'true')
+  overlay.setAttribute('aria-label', 'Por favor, rota tu dispositivo')
+  overlay.innerHTML = `
+    <div class="orientation-lock-icon" aria-hidden="true">📱</div>
+    <h2>Por favor, rotá tu dispositivo</h2>
+    <p>Esta app está optimizada para vista vertical. Poné tu celular en posición vertical para continuar.</p>
+  `
+  document.body.appendChild(overlay)
+}
+
+async function tryLockPortrait(): Promise<void> {
+  if (!isMobileDevice()) return
+  // Intentar lock nativo (Capacitor, navegadores HTTPS modernos)
+  const orientation = (screen as any).orientation
+  if (orientation && typeof orientation.lock === 'function') {
+    try {
+      await orientation.lock('portrait')
+      console.log('[Orientation] lock portrait OK')
+    } catch (err) {
+      console.warn('[Orientation] lock portrait no soportado, usando CSS fallback:', err)
+      injectOrientationLockOverlay()
+    }
+  } else {
+    injectOrientationLockOverlay()
+  }
+}
+
+// Intentar lock al cargar (puede fallar sin gesto del usuario — los browsers lo requieren).
+// Si falla, el CSS overlay muestra el mensaje.
+// Tambien re-intentar en cualquier interaccion del usuario.
+if (typeof window !== 'undefined') {
+  if (document.readyState === 'complete') {
+    tryLockPortrait()
+  } else {
+    window.addEventListener('load', () => tryLockPortrait())
+  }
+  // Reintentar al primer user gesture (gesture required por spec de Screen Orientation API)
+  const retryOnGesture = () => {
+    tryLockPortrait()
+    if (document.getElementById('orientation-lock-overlay')) {
+      // Si el overlay ya no aparece, removemos los listeners
+      window.removeEventListener('touchstart', retryOnGesture)
+      window.removeEventListener('click', retryOnGesture)
+    }
+  }
+  window.addEventListener('touchstart', retryOnGesture, { passive: true, once: true })
+  window.addEventListener('click', retryOnGesture, { once: true })
+}
