@@ -91,6 +91,49 @@
   margin-top: 4px;
 }
 
+.migrate-modal-subheader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px 10px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
+.migrate-modal-back {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: calc(13px * var(--font-scale, 1));
+  cursor: pointer;
+  transition: background 120ms ease;
+  font: inherit;
+}
+
+.migrate-modal-back:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
+.migrate-modal-back:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.migrate-modal-subheader-label {
+  font-weight: 700;
+  color: var(--text);
+  font-size: calc(14px * var(--font-scale, 1));
+}
+
+.migrate-modal-empty {
+  padding: 14px 12px;
+  color: var(--text-3);
+  font-size: calc(13px * var(--font-scale, 1));
+  text-align: center;
+}
+
 .btn-danger {
   background: var(--coral);
   color: #fff;
