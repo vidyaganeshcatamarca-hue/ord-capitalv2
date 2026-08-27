@@ -222,8 +222,10 @@
   color: var(--mint);
 }
 
+.config-seg-btn--expense.config-seg-btn--active,
+.config-seg-btn--income.config-seg-btn--active,
 .config-seg-btn--wallet-order.config-seg-btn--active {
-  color: var(--text);
+  color: #FF6B6B;
   background: var(--surface);
   border: 2px solid var(--text);
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);

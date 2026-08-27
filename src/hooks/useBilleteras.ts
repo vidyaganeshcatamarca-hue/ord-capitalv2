@@ -57,20 +57,16 @@ export function useBilleteras() {
       fetchData()
     }
     const handleOrderChanged = async () => {
-      console.log('[DEBUG-ORDEN-BILL] 4. useBilleteras RECIBIO evento wallet-order-changed')
       try {
         const prefs = await rpc<Array<{ orden_billeteras?: WalletOrder | null }>>('fn_obtener_preferencias_usuario')
           .catch(() => [] as Array<{ orden_billeteras?: WalletOrder | null }>)
         const row = Array.isArray(prefs) ? prefs[0] : prefs
         const orden: WalletOrder = (row?.orden_billeteras === 'alfabetico') ? 'alfabetico' : 'valor'
-        console.log('[DEBUG-ORDEN-BILL] 5. useBilleteras preferencia leida =', orden, 'llamando fetchData con ese orden')
         if (!cancelled) {
           setOrdenBilleteras(orden)
           await fetchData(orden)
-          console.log('[DEBUG-ORDEN-BILL] 6. useBilleteras fetchData completado, billeteras recargadas')
         }
       } catch {
-        console.log('[DEBUG-ORDEN-BILL] 5b. useBilleteras error leyendo preferencia, fallback a fetchData() sin orden')
         if (!cancelled) await fetchData()
       }
     }
@@ -98,3 +94,4 @@ export function useBilleteras() {
     fetchData
   }
 }
+

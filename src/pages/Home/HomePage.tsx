@@ -378,27 +378,21 @@ export function HomePage() {
   const [showFilterPicker, setShowFilterPicker] = useState(false)
   const [expandedFilterRubro, setExpandedFilterRubro] = useState<string | null>(null)
 
+  const [ordenBilleterasVisibles, setOrdenBilleterasVisibles] = useState<'valor' | 'alfabetico'>('valor')
+
   const fetchBilleterasFromPreference = useCallback(async () => {
     try {
       const prefs = await rpc<Array<{ orden_billeteras?: string | null }>>('fn_obtener_preferencias_usuario')
         .catch(() => [] as Array<{ orden_billeteras?: string | null }>)
       const row = Array.isArray(prefs) ? prefs[0] : prefs
       const orden = (row?.orden_billeteras === 'alfabetico') ? 'alfabetico' : 'valor'
-      console.log('[DEBUG-ORDEN-BILL] 7. HomePage fetchBilleterasFromPreference, orden leida =', orden)
+      setOrdenBilleterasVisibles(orden)
       const res = await rpc<any[]>('fn_obtener_billeteras_ordenadas', { p_orden: orden }).catch(() => [] as any[])
-      const nombres = res.map((b: any) => b.nombre).join(', ')
-      console.log('[DEBUG-ORDEN-BILL] 8. HomePage rpc billeteras_ordenadas (orden=', orden, ') retorno', res.length, 'billeteras:', nombres)
       return res
     } catch {
-      console.log('[DEBUG-ORDEN-BILL] 7b. HomePage error, fallback a p_orden=valor')
       return await rpc<any[]>('fn_obtener_billeteras_ordenadas', { p_orden: 'valor' }).catch(() => [] as any[])
     }
   }, [])
-
-  // Log cuando el estado billeteras cambia (post-setBilleteras)
-  useEffect(() => {
-    console.log('[DEBUG-ORDEN-BILL] 10. HomePage billeteras STATE cambio a =', billeteras.map((b: any) => b.nombre).join(', '))
-  }, [billeteras])
 
   const fetchData = useCallback(async () => {
     try {
@@ -901,7 +895,9 @@ export function HomePage() {
   }
 
   const visibleBilleteras = homeFilters.billeteraId === null
-    ? billeteras
+    ? (ordenBilleterasVisibles === 'alfabetico'
+        ? [...billeteras].sort((a, b) => t(a.nombre).localeCompare(t(b.nombre), 'es', { sensitivity: 'base' }))
+        : billeteras)
     : billeteras.filter((b) => b.billetera_id === homeFilters.billeteraId)
 
   const handlePeriodChange = (preset: HomePeriodPreset) => {
@@ -1069,11 +1065,13 @@ export function HomePage() {
                       }
                     }}
                   >
-                    <option value="">{t('home_filter_wallet_all')}</option>
-                    {billeteras.length > 0 && (
-                      <optgroup label={t('group_wallets')}>
-                        {billeteras.map((b) => (
-                          <option key={`b_${b.billetera_id}`} value={`b_${b.billetera_id}`}>
+<option value="">{t('home_filter_wallet_all')}</option>
+                        {billeteras.length > 0 && (
+                          <optgroup label={t('group_wallets')}>
+                            {[...billeteras]
+                              .sort((a, b) => t(a.nombre).localeCompare(t(b.nombre), 'es', { sensitivity: 'base' }))
+                              .map((b) => (
+                              <option key={`b_${b.billetera_id}`} value={`b_${b.billetera_id}`}>
                             {t(b.nombre)}
                           </option>
                         ))}

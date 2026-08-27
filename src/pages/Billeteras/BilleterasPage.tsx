@@ -22,7 +22,7 @@ export function BilleterasPage() {
   const [searchParams] = useSearchParams()
   const { user } = useAuth()
   const { showToast } = useToast()
-  const { billeteras, healthReport, loading, fetchData } = useBilleteras()
+  const { billeteras, healthReport, loading, fetchData, ordenBilleteras } = useBilleteras()
   const { hideAmounts } = useHideAmounts(user?.id)
   const [activeMenuTab, setActiveMenuTabState] = useState<'cuentas_ingreso' | 'categorias_egresos'>(() => {
     const fromUrl = searchParams.get('tab')
@@ -318,7 +318,10 @@ export function BilleterasPage() {
               </div>
             ) : (
               <div className="billeteras-list">
-                {billeteras.map((b) => {
+                {(ordenBilleteras === 'alfabetico'
+                  ? [...billeteras].sort((a, b) => t(a.nombre).localeCompare(t(b.nombre), 'es', { sensitivity: 'base' }))
+                  : billeteras
+                ).map((b) => {
                   const sem = getSemaforoDetails(b.ultima_conciliacion_at)
                   return (
                     <div key={b.billetera_id} className="billetera-item">
