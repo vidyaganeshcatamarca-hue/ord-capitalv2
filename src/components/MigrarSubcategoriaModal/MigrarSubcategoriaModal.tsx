@@ -1,147 +1,103 @@
-import { useState } from 'react'
-import { useToast } from '@/contexts/ToastContext'
-import { rpc } from '@/lib/supabase'
-import { t, parseError } from '@/locales/i18n'
+import { useState, useMemo } from 'react'
+import { t } from '@/locales/i18n'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import './MigrarSubcategoriaModal.css'
 
-interface SubcategoriaOption {
+export interface CategoriaPickerOption {
   estructura_id: number
   nombre_cuenta: string
   icono?: string | null
   color?: string | null
+  es_padre: boolean
 }
 
 interface MigrarSubcategoriaModalProps {
   isOpen: boolean
-  origenId: number
-  parent: {
-    estructura_id: number
-    nombre_cuenta: string
-    icono?: string | null
-    color?: string | null
-  }
-  subcategorias: SubcategoriaOption[]
-  onBack: () => void
-  onMigrated: () => void
-  onClose: () => void
+  categorias: CategoriaPickerOption[]
+  onSelect: (cat: CategoriaPickerOption) => void
+  onCancel: () => void
 }
 
-interface MigrarResponse {
-  migrados_caja?: number
-  migrados_presupuestos?: number
-  migrados_recurrentes?: number
-}
+export function MigrarSubcategoriaModal({ isOpen, categorias, onSelect, onCancel }: MigrarSubcategoriaModalProps) {
+  const [query, setQuery] = useState('')
+  const [selectedId, setSelectedId] = useState<number | null>(null)
 
-export function MigrarSubcategoriaModal({
-  isOpen,
-  origenId,
-  parent,
-  subcategorias,
-  onBack,
-  onMigrated,
-  onClose
-}: MigrarSubcategoriaModalProps) {
-  const { showToast } = useToast()
-  const [destinoId, setDestinoId] = useState<number | null>(null)
-  const [loading, setLoading] = useState(false)
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (!q) return categorias
+    return categorias.filter(c => t(c.nombre_cuenta).toLowerCase().includes(q))
+  }, [categorias, query])
 
-  const handleConfirm = async () => {
-    if (destinoId === null) return
-    setLoading(true)
-    try {
-      const result = await rpc<MigrarResponse>('fn_migrar_y_eliminar_estructura_egreso', {
-        p_estructura_id_origen: origenId,
-        p_estructura_id_destino: destinoId
-      })
-      const counts = (Array.isArray(result) ? result[0] : result) ?? {}
-      const movs = counts.migrados_caja ?? 0
-      const presup = counts.migrados_presupuestos ?? 0
-      const recurs = counts.migrados_recurrentes ?? 0
-      if (presup === 0 && recurs === 0) {
-        showToast(t('success_category_migrated_caja', { count: movs }), 'success')
-      } else {
-        showToast(t('success_category_migrated_full', {
-          movimientos: movs,
-          presupuestos: presup,
-          recurrentes: recurs
-        }), 'success')
-      }
-      onMigrated()
-      onClose()
-    } catch (err) {
-      showToast(parseError(err), 'error')
-    } finally {
-      setLoading(false)
-    }
+  const handleSelect = (cat: CategoriaPickerOption) => {
+    setSelectedId(cat.estructura_id)
   }
 
-  const handleClose = () => {
-    if (loading) return
-    onClose()
+  const handleConfirm = () => {
+    const cat = categorias.find(c => c.estructura_id === selectedId)
+    if (!cat) return
+    onSelect(cat)
   }
 
   if (!isOpen) return null
 
   return (
-    <div className="migrate-modal-overlay" onClick={handleClose}>
-      <div className="migrate-modal-card" onClick={(e) => e.stopPropagation()}>
-        <h3 className="migrate-modal-title">{t('title_migrate_category')}</h3>
-        <p className="migrate-modal-message">
-          {t('migrar_category_destino_step2', { parent: t(parent.nombre_cuenta) })}
-        </p>
+    <div className="migrate-picker-overlay" onClick={onCancel}>
+      <div className="migrate-picker-sheet" onClick={(e) => e.stopPropagation()}>
+        <div className="migrate-picker-header">
+          <h3 className="migrate-picker-title">{t('migrar_category_destino_step1')}</h3>
+          <button type="button" className="migrate-picker-close" onClick={onCancel}>✕</button>
+        </div>
 
-        <label className="migrate-modal-field">
-          <span>{t('migrar_category_destino_label')}</span>
-        </label>
+        <div className="migrate-picker-search-wrap">
+          <span className="migrate-picker-search-icon"><CategoryIcon name="Search" size={18} /></span>
+          <input
+            className="migrate-picker-search"
+            placeholder={t('placeholder_search_category')}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            autoFocus
+          />
+        </div>
 
-        <div className="migrate-modal-subcat-list">
-          {subcategorias.length === 0 ? (
-            <div className="migrate-modal-empty">{t('migrar_category_no_subcategorias')}</div>
+        <div className="migrate-picker-list">
+          {filtered.length === 0 ? (
+            <div className="migrate-picker-empty">{t('migrar_category_no_destinos')}</div>
           ) : (
-            subcategorias.map(s => {
-              const isSelected = destinoId === s.estructura_id
+            filtered.map(cat => {
+              const isSelected = selectedId === cat.estructura_id
               return (
                 <button
-                  key={s.estructura_id}
+                  key={cat.estructura_id}
                   type="button"
-                  className="migrate-modal-subcat-item"
-                  onClick={() => setDestinoId(s.estructura_id)}
+                  className={`migrate-picker-item ${isSelected ? 'selected' : ''} ${cat.es_padre ? 'is-parent' : 'is-child'}`}
+                  onClick={() => handleSelect(cat)}
                   aria-selected={isSelected}
-                  style={isSelected ? { background: 'rgba(255, 255, 255, 0.10)' } : {}}
                 >
                   <span
-                    className="migrate-modal-subcat-icon"
-                    style={{
-                      backgroundColor: parent.color || 'var(--surface-2)',
-                      color: '#000000'
-                    }}
+                    className="migrate-picker-icon"
+                    style={{ backgroundColor: cat.color || 'var(--surface-2)', color: '#000000' }}
                   >
-                    <CategoryIcon name={s.icono || 'Tag'} size={16} />
+                    <CategoryIcon name={cat.icono || 'Tag'} size={cat.es_padre ? 20 : 18} />
                   </span>
-                  <span className="migrate-modal-subcat-label">{t(s.nombre_cuenta)}</span>
+                  <span className="migrate-picker-label">{t(cat.nombre_cuenta)}</span>
+                  {cat.es_padre && <span className="migrate-picker-badge">{t('cat_rubro_new_btn').replace(/^\+\s*/, '')}</span>}
                 </button>
               )
             })
           )}
         </div>
 
-        <div className="migrate-modal-actions">
-          <button
-            type="button"
-            className="btn btn-ghost font-semibold"
-            onClick={onBack}
-            disabled={loading}
-          >
-            ‹ {t('btn_back')}
+        <div className="migrate-picker-actions">
+          <button type="button" className="btn btn-ghost font-semibold" onClick={onCancel}>
+            {t('btn_cancel')}
           </button>
           <button
             type="button"
-            className="btn btn-danger font-semibold"
+            className="btn btn-primary font-semibold"
             onClick={handleConfirm}
-            disabled={loading || destinoId === null}
+            disabled={selectedId === null}
           >
-            {t('btn_migrate_and_delete')}
+            {t('btn_elegir')}
           </button>
         </div>
       </div>

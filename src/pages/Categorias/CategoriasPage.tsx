@@ -329,13 +329,10 @@ export function TabEgresos() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ open: boolean; id: number; nombre: string }>({ open: false, id: 0, nombre: '' })
   const [migrateModal, setMigrateModal] = useState<{
     open: boolean
-    origen: { estructura_id: number; nombre_cuenta: string; icono?: string | null; color?: string | null } | null
-  }>({ open: false, origen: null })
-  const [migrateSubModal, setMigrateSubModal] = useState<{
-    open: boolean
-    parent: { estructura_id: number; nombre_cuenta: string; icono?: string | null; color?: string | null; hijos?: Array<{ estructura_id: number; nombre_cuenta: string; icono?: string | null; color?: string | null }> } | null
-    origenId: number
-  }>({ open: false, parent: null, origenId: 0 })
+    origen: { estructura_id: number; nombre_cuenta: string; icono?: string | null; color?: string | null; es_padre: boolean } | null
+    destino: { estructura_id: number; nombre_cuenta: string; icono?: string | null; color?: string | null; es_padre: boolean } | null
+    pickerOpen: boolean
+  }>({ open: false, origen: null, destino: null, pickerOpen: false })
 
   const fetchRubros = useCallback(async () => {
     setLoading(true)
@@ -347,9 +344,10 @@ export function TabEgresos() {
     }
   }, [])
 
-  const handleMigrateDirect = async (destinoId: number) => {
+  const handleMigrate = async () => {
     const origenId = migrateModal.origen?.estructura_id
-    if (!origenId) return
+    const destinoId = migrateModal.destino?.estructura_id
+    if (!origenId || !destinoId) return
     try {
       const result = await rpc<{ migrados_caja?: number; migrados_presupuestos?: number; migrados_recurrentes?: number }>(
         'fn_migrar_y_eliminar_estructura_egreso',
@@ -371,7 +369,7 @@ export function TabEgresos() {
     } catch (err) {
       showToast(parseError(err), 'error')
     }
-    setMigrateModal({ open: false, origen: null })
+    setMigrateModal({ open: false, origen: null, destino: null, pickerOpen: false })
     fetchRubros()
   }
 
@@ -541,14 +539,14 @@ export function TabEgresos() {
             fetchRubros()
           } catch (err: any) {
             const msg = typeof err === 'string' ? err : (err?.message || JSON.stringify(err))
-            if (msg.includes('error_category_in_use')) {
+            if (msg.includes('error_category_in_use') || msg.includes('error_category_has_children')) {
               // Buscar la categoria origen para abrir el modal de migración
               const origenEncontrado = rubros.flatMap(r => [
-                { estructura_id: r.estructura_id, nombre_cuenta: r.nombre_cuenta, icono: r.icono, color: r.color, padre_id: null },
-                ...(r.hijos || []).map(h => ({ estructura_id: h.estructura_id, nombre_cuenta: h.nombre_cuenta, icono: h.icono, color: h.color, padre_id: r.estructura_id }))
+                { estructura_id: r.estructura_id, nombre_cuenta: r.nombre_cuenta, icono: r.icono, color: r.color, es_padre: true },
+                ...(r.hijos || []).map(h => ({ estructura_id: h.estructura_id, nombre_cuenta: h.nombre_cuenta, icono: h.icono, color: h.color, es_padre: false }))
               ]).find(c => c.estructura_id === deleteConfirm.id)
               if (origenEncontrado) {
-                setMigrateModal({ open: true, origen: origenEncontrado })
+                setMigrateModal({ open: true, origen: origenEncontrado, destino: null, pickerOpen: false })
               } else {
                 showToast(parseError(err), 'error')
               }
@@ -565,67 +563,52 @@ export function TabEgresos() {
         <MigrarCategoriaModal
           isOpen={migrateModal.open}
           origen={migrateModal.origen}
-          destinos={rubros
-            .filter(r => r.estructura_id !== migrateModal.origen!.estructura_id)
-            .map(r => ({
-              estructura_id: r.estructura_id,
-              nombre_cuenta: r.nombre_cuenta,
-              icono: r.icono,
-              color: r.color,
-              padre_id: null,
-              hijos: (r.hijos ?? [])
-                .filter(h => h.estructura_id !== migrateModal.origen!.estructura_id)
-                .map(h => ({
-                  estructura_id: h.estructura_id,
-                  nombre_cuenta: h.nombre_cuenta,
-                  icono: h.icono,
-                  color: h.color,
-                  padre_id: r.estructura_id
-                }))
-            }))}
-          onSelectParent={(parent) => {
-            const hijos = parent.hijos ?? []
-            if (hijos.length === 0) {
-              // El destino no tiene subcategorías: migrar directo, cerrando el modal
-              handleMigrateDirect(parent.estructura_id)
-            } else {
-              // El destino tiene subcategorías: cerrar modal 2 y abrir modal 3
-              setMigrateModal({ open: false, origen: null })
-              setMigrateSubModal({ open: true, parent, origenId: migrateModal.origen!.estructura_id })
-            }
-          }}
+          destino={migrateModal.destino}
+          onOpenPicker={() => setMigrateModal(prev => ({ ...prev, pickerOpen: true }))}
+          onMigrate={handleMigrate}
           onClose={() => {
-            setMigrateModal({ open: false, origen: null })
+            setMigrateModal({ open: false, origen: null, destino: null, pickerOpen: false })
             fetchRubros()
           }}
         />
       )}
-      {migrateSubModal.open && migrateSubModal.parent && migrateModal.origen && (
+      {migrateModal.pickerOpen && migrateModal.origen && (
         <MigrarSubcategoriaModal
-          isOpen={migrateSubModal.open}
-          origenId={migrateModal.origen.estructura_id}
-          parent={{
-            estructura_id: migrateSubModal.parent.estructura_id,
-            nombre_cuenta: migrateSubModal.parent.nombre_cuenta,
-            icono: migrateSubModal.parent.icono ?? null,
-            color: migrateSubModal.parent.color ?? null
+          isOpen={migrateModal.pickerOpen}
+          categorias={(() => {
+            const origenId = migrateModal.origen!.estructura_id
+            const origenEsPadre = migrateModal.origen!.es_padre
+            const idsExcluir = new Set<number>([origenId])
+            if (origenEsPadre) {
+              const hijosOrigen = rubros.find(r => r.estructura_id === origenId)?.hijos ?? []
+              hijosOrigen.forEach(h => idsExcluir.add(h.estructura_id))
+            }
+            return rubros
+              .filter(r => !idsExcluir.has(r.estructura_id))
+              .flatMap(r => [
+                {
+                  estructura_id: r.estructura_id,
+                  nombre_cuenta: r.nombre_cuenta,
+                  icono: r.icono,
+                  color: r.color,
+                  es_padre: true
+                },
+                ...(r.hijos ?? [])
+                  .filter(h => !idsExcluir.has(h.estructura_id))
+                  .map(h => ({
+                    estructura_id: h.estructura_id,
+                    nombre_cuenta: h.nombre_cuenta,
+                    icono: h.icono,
+                    color: h.color,
+                    es_padre: false
+                  }))
+              ])
+          })()}
+          onSelect={(cat) => {
+            setMigrateModal(prev => ({ ...prev, destino: cat, pickerOpen: false }))
           }}
-          subcategorias={(migrateSubModal.parent.hijos ?? []).map(h => ({
-            estructura_id: h.estructura_id,
-            nombre_cuenta: h.nombre_cuenta,
-            icono: h.icono,
-            color: h.color
-          }))}
-          onBack={() => {
-            // Volver al modal 2 con el origen preservado
-            setMigrateSubModal({ open: false, parent: null, origenId: 0 })
-            setMigrateModal({ open: true, origen: migrateModal.origen })
-          }}
-          onMigrated={fetchRubros}
-          onClose={() => {
-            setMigrateSubModal({ open: false, parent: null, origenId: 0 })
-            setMigrateModal({ open: false, origen: null })
-            fetchRubros()
+          onCancel={() => {
+            setMigrateModal(prev => ({ ...prev, pickerOpen: false }))
           }}
         />
       )}
