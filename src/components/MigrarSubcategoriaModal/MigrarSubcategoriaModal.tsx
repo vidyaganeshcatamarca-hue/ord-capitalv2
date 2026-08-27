@@ -18,18 +18,70 @@ interface MigrarSubcategoriaModalProps {
   onCancel: () => void
 }
 
+interface RubroGroup extends CategoriaPickerOption {
+  hijos: CategoriaPickerOption[]
+}
+
 export function MigrarSubcategoriaModal({ isOpen, categorias, onSelect, onCancel }: MigrarSubcategoriaModalProps) {
   const [query, setQuery] = useState('')
   const [selectedId, setSelectedId] = useState<number | null>(null)
+  const [expandedRubros, setExpandedRubros] = useState<Record<number, boolean>>({})
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return categorias
-    return categorias.filter(c => t(c.nombre_cuenta).toLowerCase().includes(q))
-  }, [categorias, query])
+  const rubros = useMemo<RubroGroup[]>(() => {
+    const result: RubroGroup[] = []
+    let current: RubroGroup | null = null
+    for (const cat of categorias) {
+      if (cat.es_padre) {
+        current = { ...cat, hijos: [] }
+        result.push(current)
+      } else if (current) {
+        current.hijos.push(cat)
+      } else {
+        result.push({ ...cat, es_padre: true, hijos: [] })
+      }
+    }
+    return result
+  }, [categorias])
 
-  const handleSelect = (cat: CategoriaPickerOption) => {
-    setSelectedId(cat.estructura_id)
+  const queryTrimmed = query.trim().toLowerCase()
+  const hasQuery = queryTrimmed.length > 0
+
+  const filteredRubros = useMemo<RubroGroup[]>(() => {
+    if (!hasQuery) return rubros
+    return rubros.reduce<RubroGroup[]>((acc, rubro) => {
+      const rubroName = t(rubro.nombre_cuenta).toLowerCase()
+      const rubroMatch = rubroName.includes(queryTrimmed)
+      const matchedHijos = rubroMatch
+        ? rubro.hijos
+        : rubro.hijos.filter(h => t(h.nombre_cuenta).toLowerCase().includes(queryTrimmed))
+      if (rubroMatch || matchedHijos.length > 0) {
+        acc.push({ ...rubro, hijos: matchedHijos })
+      }
+      return acc
+    }, [])
+  }, [rubros, queryTrimmed, hasQuery])
+
+  const handleToggleExpand = (rubro: RubroGroup) => {
+    if (rubro.hijos.length === 0) return
+    setExpandedRubros(prev => ({ ...prev, [rubro.estructura_id]: !prev[rubro.estructura_id] }))
+  }
+
+  const handleSelectRubro = (rubro: RubroGroup) => {
+    if (rubro.hijos.length > 0) return
+    setSelectedId(rubro.estructura_id)
+    onSelect(rubro)
+  }
+
+  const handleSelectHijo = (rubro: RubroGroup, hijo: CategoriaPickerOption) => {
+    const selected: CategoriaPickerOption = {
+      estructura_id: hijo.estructura_id,
+      nombre_cuenta: `${t(rubro.nombre_cuenta)} › ${t(hijo.nombre_cuenta)}`,
+      icono: hijo.icono || rubro.icono,
+      color: rubro.color,
+      es_padre: false,
+    }
+    setSelectedId(selected.estructura_id)
+    onSelect(selected)
   }
 
   const handleConfirm = () => {
@@ -44,7 +96,7 @@ export function MigrarSubcategoriaModal({ isOpen, categorias, onSelect, onCancel
     <div className="migrate-picker-overlay" onClick={onCancel}>
       <div className="migrate-picker-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="migrate-picker-header">
-          <h3 className="migrate-picker-title">{t('migrar_category_destino_step1')}</h3>
+          <h3 className="migrate-picker-title">{t('title_select_category')}</h3>
           <button type="button" className="migrate-picker-close" onClick={onCancel}>✕</button>
         </div>
 
@@ -59,31 +111,67 @@ export function MigrarSubcategoriaModal({ isOpen, categorias, onSelect, onCancel
           />
         </div>
 
-        <div className="migrate-picker-list">
-          {filtered.length === 0 ? (
+        <div className="migrate-picker-body">
+          {filteredRubros.length === 0 ? (
             <div className="migrate-picker-empty">{t('migrar_category_no_destinos')}</div>
           ) : (
-            filtered.map(cat => {
-              const isSelected = selectedId === cat.estructura_id
-              return (
-                <button
-                  key={cat.estructura_id}
-                  type="button"
-                  className={`migrate-picker-item ${isSelected ? 'selected' : ''} ${cat.es_padre ? 'is-parent' : 'is-child'}`}
-                  onClick={() => handleSelect(cat)}
-                  aria-selected={isSelected}
-                >
-                  <span
-                    className="migrate-picker-icon"
-                    style={{ backgroundColor: cat.color || 'var(--surface-2)', color: '#000000' }}
-                  >
-                    <CategoryIcon name={cat.icono || 'Tag'} size={cat.es_padre ? 20 : 18} />
-                  </span>
-                  <span className="migrate-picker-label">{t(cat.nombre_cuenta)}</span>
-                  {cat.es_padre && <span className="migrate-picker-badge">{t('cat_rubro_new_btn').replace(/^\+\s*/, '')}</span>}
-                </button>
-              )
-            })
+            <div className="migrate-cat-acordeon">
+              {filteredRubros.map(rubro => {
+                const hasChildren = rubro.hijos.length > 0
+                const isExpanded = expandedRubros[rubro.estructura_id] || (hasQuery && hasChildren)
+                return (
+                  <div key={rubro.estructura_id} className="migrate-cat-acordeon-rubro">
+                    <div
+                      className="migrate-cat-acordeon-header"
+                      onClick={() => (hasChildren ? handleToggleExpand(rubro) : handleSelectRubro(rubro))}
+                    >
+                      <div className="migrate-cat-acordeon-title">
+                        <div
+                          className="migrate-cat-acordeon-icon"
+                          style={{ backgroundColor: rubro.color || 'var(--surface-2)', color: '#000000' }}
+                        >
+                          <CategoryIcon name={rubro.icono || 'Tag'} size={18} />
+                        </div>
+                        <span className="migrate-cat-acordeon-name">{t(rubro.nombre_cuenta)}</span>
+                        {hasChildren && (
+                          <span className="migrate-cat-acordeon-count">
+                            {rubro.hijos.length === 1
+                              ? t('cat_subcuentas_count_one', { count: rubro.hijos.length })
+                              : t('cat_subcuentas_count_other', { count: rubro.hijos.length })}
+                          </span>
+                        )}
+                      </div>
+                      {hasChildren && (
+                        <span className="migrate-cat-acordeon-chevron">
+                          {isExpanded ? '▾' : '▸'}
+                        </span>
+                      )}
+                    </div>
+
+                    {hasChildren && isExpanded && (
+                      <div className="migrate-cat-acordeon-hijos">
+                        {rubro.hijos.map(hijo => (
+                          <button
+                            key={hijo.estructura_id}
+                            type="button"
+                            className="migrate-cat-acordeon-hijo"
+                            onClick={() => handleSelectHijo(rubro, hijo)}
+                          >
+                            <span
+                              className="migrate-cat-acordeon-hijo-icon"
+                              style={{ backgroundColor: rubro.color || 'var(--surface-2)', color: '#000000' }}
+                            >
+                              <CategoryIcon name={hijo.icono || rubro.icono || 'Tag'} size={16} />
+                            </span>
+                            <span className="migrate-cat-acordeon-hijo-name">{t(hijo.nombre_cuenta)}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
           )}
         </div>
 
