@@ -5,6 +5,7 @@ import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
 import { MigrarCategoriaModal } from '@/components/MigrarCategoriaModal/MigrarCategoriaModal'
+import { MigrarSubcategoriaModal } from '@/components/MigrarSubcategoriaModal/MigrarSubcategoriaModal'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { INGRESO_ICONS, RUBRO_ICONS } from '@/constants/emojiToLucide'
 import { isUserEditableCategory } from '@/lib/categoryFilters'
@@ -330,6 +331,11 @@ export function TabEgresos() {
     open: boolean
     origen: { estructura_id: number; nombre_cuenta: string; icono?: string | null; color?: string | null } | null
   }>({ open: false, origen: null })
+  const [migrateSubModal, setMigrateSubModal] = useState<{
+    open: boolean
+    parent: { estructura_id: number; nombre_cuenta: string; icono?: string | null; color?: string | null; hijos?: Array<{ estructura_id: number; nombre_cuenta: string; icono?: string | null; color?: string | null }> } | null
+    origenId: number
+  }>({ open: false, parent: null, origenId: 0 })
 
   const fetchRubros = useCallback(async () => {
     setLoading(true)
@@ -340,6 +346,34 @@ export function TabEgresos() {
       setLoading(false)
     }
   }, [])
+
+  const handleMigrateDirect = async (destinoId: number) => {
+    const origenId = migrateModal.origen?.estructura_id
+    if (!origenId) return
+    try {
+      const result = await rpc<{ migrados_caja?: number; migrados_presupuestos?: number; migrados_recurrentes?: number }>(
+        'fn_migrar_y_eliminar_estructura_egreso',
+        { p_estructura_id_origen: origenId, p_estructura_id_destino: destinoId }
+      )
+      const counts = (Array.isArray(result) ? result[0] : result) ?? {}
+      const movs = counts.migrados_caja ?? 0
+      const presup = counts.migrados_presupuestos ?? 0
+      const recurs = counts.migrados_recurrentes ?? 0
+      if (presup === 0 && recurs === 0) {
+        showToast(t('success_category_migrated_caja', { count: movs }), 'success')
+      } else {
+        showToast(t('success_category_migrated_full', {
+          movimientos: movs,
+          presupuestos: presup,
+          recurrentes: recurs
+        }), 'success')
+      }
+    } catch (err) {
+      showToast(parseError(err), 'error')
+    }
+    setMigrateModal({ open: false, origen: null })
+    fetchRubros()
+  }
 
   useEffect(() => { fetchRubros() }, [fetchRubros])
 
@@ -549,8 +583,50 @@ export function TabEgresos() {
                   padre_id: r.estructura_id
                 }))
             }))}
-          onClose={() => setMigrateModal({ open: false, origen: null })}
+          onSelectParent={(parent) => {
+            const hijos = parent.hijos ?? []
+            if (hijos.length === 0) {
+              // El destino no tiene subcategorías: migrar directo, cerrando el modal
+              handleMigrateDirect(parent.estructura_id)
+            } else {
+              // El destino tiene subcategorías: cerrar modal 2 y abrir modal 3
+              setMigrateModal({ open: false, origen: null })
+              setMigrateSubModal({ open: true, parent, origenId: migrateModal.origen!.estructura_id })
+            }
+          }}
+          onClose={() => {
+            setMigrateModal({ open: false, origen: null })
+            fetchRubros()
+          }}
+        />
+      )}
+      {migrateSubModal.open && migrateSubModal.parent && migrateModal.origen && (
+        <MigrarSubcategoriaModal
+          isOpen={migrateSubModal.open}
+          origenId={migrateModal.origen.estructura_id}
+          parent={{
+            estructura_id: migrateSubModal.parent.estructura_id,
+            nombre_cuenta: migrateSubModal.parent.nombre_cuenta,
+            icono: migrateSubModal.parent.icono ?? null,
+            color: migrateSubModal.parent.color ?? null
+          }}
+          subcategorias={(migrateSubModal.parent.hijos ?? []).map(h => ({
+            estructura_id: h.estructura_id,
+            nombre_cuenta: h.nombre_cuenta,
+            icono: h.icono,
+            color: h.color
+          }))}
+          onBack={() => {
+            // Volver al modal 2 con el origen preservado
+            setMigrateSubModal({ open: false, parent: null, origenId: 0 })
+            setMigrateModal({ open: true, origen: migrateModal.origen })
+          }}
           onMigrated={fetchRubros}
+          onClose={() => {
+            setMigrateSubModal({ open: false, parent: null, origenId: 0 })
+            setMigrateModal({ open: false, origen: null })
+            fetchRubros()
+          }}
         />
       )}
     </div>
