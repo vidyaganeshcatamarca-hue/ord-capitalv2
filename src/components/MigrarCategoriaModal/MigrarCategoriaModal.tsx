@@ -11,6 +11,7 @@ interface RubroOption {
   icono?: string | null
   color?: string | null
   padre_id?: number | null
+  hijos?: RubroOption[]
 }
 
 interface MigrarCategoriaModalProps {
@@ -29,26 +30,25 @@ interface MigrarResponse {
 
 export function MigrarCategoriaModal({ isOpen, origen, destinos, onClose, onMigrated }: MigrarCategoriaModalProps) {
   const { showToast } = useToast()
-  const [destinoId, setDestinoId] = useState<number | ''>('')
+  const [destinoId, setDestinoId] = useState<number | null>(null)
+  const [expanded, setExpanded] = useState<Record<number, boolean>>({})
   const [loading, setLoading] = useState(false)
 
-  const destinosOrdenados = useMemo(
-    () => [...destinos].sort((a, b) => a.nombre_cuenta.localeCompare(b.nombre_cuenta, 'es')),
-    [destinos]
-  )
+  const toggleExpanded = (id: number) =>
+    setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
 
   const handleConfirm = async () => {
-    if (destinoId === '' || destinoId === origen.estructura_id) return
+    if (destinoId === null || destinoId === origen.estructura_id) return
     setLoading(true)
     try {
-      const result = await rpc<MigrarResponse[]>('fn_migrar_y_eliminar_estructura_egreso', {
+      const result = await rpc<MigrarResponse>('fn_migrar_y_eliminar_estructura_egreso', {
         p_estructura_id_origen: origen.estructura_id,
         p_estructura_id_destino: destinoId
       })
-      const counts = Array.isArray(result) ? result[0] : result
-      const movs = counts?.migrados_caja ?? 0
-      const presup = counts?.migrados_presupuestos ?? 0
-      const recurs = counts?.migrados_recurrentes ?? 0
+      const counts = (Array.isArray(result) ? result[0] : result) ?? {}
+      const movs = counts.migrados_caja ?? 0
+      const presup = counts.migrados_presupuestos ?? 0
+      const recurs = counts.migrados_recurrentes ?? 0
       if (presup === 0 && recurs === 0) {
         showToast(t('success_category_migrated_caja', { count: movs }), 'success')
       } else {
@@ -67,6 +67,20 @@ export function MigrarCategoriaModal({ isOpen, origen, destinos, onClose, onMigr
     }
   }
 
+  const handleSelectHijo = (hijo: RubroOption) => {
+    if (hijo.estructura_id === origen.estructura_id) return
+    setDestinoId(hijo.estructura_id)
+  }
+
+  const handleSelectRubro = (rubro: RubroOption) => {
+    if (rubro.estructura_id === origen.estructura_id) return
+    if (rubro.hijos && rubro.hijos.length > 0) {
+      toggleExpanded(rubro.estructura_id)
+    } else {
+      setDestinoId(rubro.estructura_id)
+    }
+  }
+
   if (!isOpen) return null
 
   return (
@@ -75,38 +89,96 @@ export function MigrarCategoriaModal({ isOpen, origen, destinos, onClose, onMigr
         <h3 className="migrate-modal-title">{t('title_migrate_category')}</h3>
         <p className="migrate-modal-message">{t('confirm_migrate_category', { name: t(origen.nombre_cuenta) })}</p>
 
-        <label className="migrate-modal-field">
-          <span>{t('migrar_category_destino_label')}</span>
-          <select
-            value={destinoId}
-            onChange={(e) => setDestinoId(e.target.value === '' ? '' : Number(e.target.value))}
-            disabled={loading}
-            aria-label={t('migrar_category_destino_label')}
-          >
-            <option value="">{t('migrar_category_destino_placeholder')}</option>
-            {destinosOrdenados.map((d) => (
-              <option key={d.estructura_id} value={d.estructura_id}>
-                {t(d.nombre_cuenta)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="cat-acordeon" role="listbox" aria-label={t('migrar_category_destino_label')}>
+          {destinos.map(rubro => {
+            const isOpen = !!expanded[rubro.estructura_id]
+            const hijos = rubro.hijos ?? []
+            const isSelectedRubro = destinoId === rubro.estructura_id
+            return (
+              <div key={rubro.estructura_id} className="cat-acordeon-rubro">
+                <div
+                  className="cat-acordeon-header"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '12px 14px',
+                    background: isSelectedRubro ? 'rgba(255, 255, 255, 0.06)' : undefined
+                  }}
+                >
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, cursor: 'pointer' }}
+                    onClick={() => handleSelectRubro(rubro)}
+                    role="option"
+                    aria-selected={isSelectedRubro}
+                  >
+                    <div
+                      style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '8px',
+                        backgroundColor: rubro.color || 'var(--surface-2)',
+                        color: '#000000',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0
+                      }}
+                    >
+                      <CategoryIcon name={rubro.icono || 'Tag'} size={18} />
+                    </div>
+                    <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text)' }}>
+                      {t(rubro.nombre_cuenta)}
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    {hijos.length > 0 && (
+                      <span style={{ color: 'var(--text-3)', fontSize: '14px', marginRight: '6px' }}>
+                        {isOpen ? '▾' : '▸'}
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-        {destinoId !== '' && (
-          <div className="migrate-modal-preview">
-            <div className="migrate-modal-preview-item">
-              <div className="migrate-modal-preview-icon" style={{ background: origen.color || 'var(--surface-2)', borderColor: origen.color || 'var(--border)', color: '#000000' }}>
-                <CategoryIcon name={origen.icono || 'Tag'} size={16} />
+                {(isOpen || (hijos.length === 0 && isSelectedRubro)) && hijos.length > 0 && (
+                  <div className="cat-acordeon-hijos">
+                    {hijos.map(h => {
+                      const isSelectedHijo = destinoId === h.estructura_id
+                      return (
+                        <button
+                          key={h.estructura_id}
+                          type="button"
+                          className="cat-acordeon-hijo"
+                          onClick={() => handleSelectHijo(h)}
+                          aria-selected={isSelectedHijo}
+                          style={isSelectedHijo ? { background: 'rgba(255, 255, 255, 0.10)' } : {}}
+                        >
+                          <span
+                            style={{
+                              width: '24px',
+                              height: '24px',
+                              borderRadius: '6px',
+                              backgroundColor: rubro.color || 'var(--surface-2)',
+                              color: '#000000',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              marginRight: '6px',
+                              flexShrink: 0
+                            }}
+                          >
+                            <CategoryIcon name={h.icono || 'Tag'} size={16} />
+                          </span>
+                          {t(h.nombre_cuenta)}
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </div>
-              <span className="migrate-modal-preview-label">{t(origen.nombre_cuenta)}</span>
-              <span className="migrate-modal-preview-arrow">→</span>
-              <div className="migrate-modal-preview-icon" style={{ background: destinosOrdenados.find(d => d.estructura_id === destinoId)?.color || 'var(--surface-2)', borderColor: destinosOrdenados.find(d => d.estructura_id === destinoId)?.color || 'var(--border)', color: '#000000' }}>
-                <CategoryIcon name={destinosOrdenados.find(d => d.estructura_id === destinoId)?.icono || 'Tag'} size={16} />
-              </div>
-              <span className="migrate-modal-preview-label">{t(destinosOrdenados.find(d => d.estructura_id === destinoId)?.nombre_cuenta || '')}</span>
-            </div>
-          </div>
-        )}
+            )
+          })}
+        </div>
 
         <div className="migrate-modal-actions">
           <button type="button" className="btn btn-ghost font-semibold" onClick={onClose} disabled={loading}>
@@ -116,7 +188,7 @@ export function MigrarCategoriaModal({ isOpen, origen, destinos, onClose, onMigr
             type="button"
             className="btn btn-danger font-semibold"
             onClick={handleConfirm}
-            disabled={loading || destinoId === '' || destinoId === origen.estructura_id}
+            disabled={loading || destinoId === null || destinoId === origen.estructura_id}
           >
             {t('btn_migrate_and_delete')}
           </button>

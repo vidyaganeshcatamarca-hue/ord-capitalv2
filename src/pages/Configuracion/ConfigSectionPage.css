@@ -223,10 +223,11 @@
 }
 
 .config-seg-btn--wallet-order.config-seg-btn--active {
-  color: #FF6B6B;
-  background: rgba(255, 107, 107, 0.18);
-  border: 2px solid #FF6B6B;
-  box-shadow: 0 0 0 2px rgba(255, 107, 107, 0.25);
+  color: var(--text);
+  background: var(--surface);
+  border: 2px solid var(--text);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
+  font-weight: 700;
 }
 
 .config-seg-btn:hover:not(.config-seg-btn--active) {

@@ -531,10 +531,24 @@ export function TabEgresos() {
         <MigrarCategoriaModal
           isOpen={migrateModal.open}
           origen={migrateModal.origen}
-          destinos={rubros.flatMap(r => [
-            { estructura_id: r.estructura_id, nombre_cuenta: r.nombre_cuenta, icono: r.icono, color: r.color, padre_id: null },
-            ...(r.hijos || []).map(h => ({ estructura_id: h.estructura_id, nombre_cuenta: h.nombre_cuenta, icono: h.icono, color: h.color, padre_id: r.estructura_id }))
-          ]).filter(c => c.estructura_id !== migrateModal.origen!.estructura_id)}
+          destinos={rubros
+            .filter(r => r.estructura_id !== migrateModal.origen!.estructura_id)
+            .map(r => ({
+              estructura_id: r.estructura_id,
+              nombre_cuenta: r.nombre_cuenta,
+              icono: r.icono,
+              color: r.color,
+              padre_id: null,
+              hijos: (r.hijos ?? [])
+                .filter(h => h.estructura_id !== migrateModal.origen!.estructura_id)
+                .map(h => ({
+                  estructura_id: h.estructura_id,
+                  nombre_cuenta: h.nombre_cuenta,
+                  icono: h.icono,
+                  color: h.color,
+                  padre_id: r.estructura_id
+                }))
+            }))}
           onClose={() => setMigrateModal({ open: false, origen: null })}
           onMigrated={fetchRubros}
         />

@@ -13,89 +13,82 @@
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 16px;
-  padding: 24px;
-  max-width: 480px;
+  padding: 20px;
+  max-width: 460px;
   width: 100%;
+  max-height: 90vh;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
 }
 
 .migrate-modal-title {
   font-family: var(--font-display, 'Outfit', sans-serif);
-  font-size: calc(18px * var(--font-scale, 1));
+  font-size: calc(17px * var(--font-scale, 1));
   font-weight: 700;
   color: var(--text);
   margin: 0;
 }
 
 .migrate-modal-message {
-  font-size: calc(14px * var(--font-scale, 1));
+  font-size: calc(13px * var(--font-scale, 1));
   color: var(--text-2);
-  line-height: 1.45;
+  line-height: 1.4;
   margin: 0;
 }
 
-.migrate-modal-field {
+/* Lista scrolleable de rubros + subcuentas */
+.migrate-modal-card .cat-acordeon {
+  max-height: 50vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: calc(13px * var(--font-scale, 1));
-  color: var(--text-3);
-  font-weight: 600;
-}
-
-.migrate-modal-field select {
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--bg);
-  color: var(--text);
-  font-size: calc(14px * var(--font-scale, 1));
-}
-
-.migrate-modal-preview {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 12px;
-}
-
-.migrate-modal-preview-item {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  flex-wrap: wrap;
+  padding-right: 4px;
 }
 
-.migrate-modal-preview-icon {
-  width: 32px;
-  height: 32px;
+.migrate-modal-card .cat-acordeon-header {
+  background: var(--surface-2);
+  border-radius: 10px;
+  transition: background 140ms ease;
+}
+
+.migrate-modal-card .cat-acordeon-header:hover {
+  background: var(--surface-3);
+}
+
+.migrate-modal-card .cat-acordeon-hijos {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 4px 4px 12px;
+}
+
+.migrate-modal-card .cat-acordeon-hijo {
+  text-align: left;
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 8px;
+  padding: 9px 12px;
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  font-size: calc(13.5px * var(--font-scale, 1));
+  transition: background 120ms ease;
   display: flex;
   align-items: center;
-  justify-content: center;
-  border: 1px solid;
 }
 
-.migrate-modal-preview-label {
-  font-size: calc(13px * var(--font-scale, 1));
-  color: var(--text);
-  font-weight: 600;
-}
-
-.migrate-modal-preview-arrow {
-  color: var(--mint);
-  font-weight: 700;
-  font-size: calc(16px * var(--font-scale, 1));
+.migrate-modal-card .cat-acordeon-hijo:hover {
+  background: var(--surface-2);
 }
 
 .migrate-modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 8px;
+  margin-top: 4px;
 }
 
 .btn-danger {

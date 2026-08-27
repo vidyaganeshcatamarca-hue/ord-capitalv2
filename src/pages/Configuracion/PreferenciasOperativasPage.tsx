@@ -78,6 +78,7 @@ export function PreferenciasOperativasPage() {
 
   const savePreferences = async (newPrefs: OperationalPrefs) => {
     try {
+      console.log('[DEBUG-ORDEN-BILL] 1. savePreferences INICIO, orden a guardar =', newPrefs.orden_billeteras)
       await rpc('fn_actualizar_preferencia_usuario', {
         p_billetera_default_egreso: newPrefs.billetera_default_egreso ?? -1,
         p_billetera_default_ingreso: newPrefs.billetera_default_ingreso ?? -1,
@@ -85,7 +86,9 @@ export function PreferenciasOperativasPage() {
         p_voz_activada: newPrefs.voz_activada,
         p_orden_billeteras: newPrefs.orden_billeteras ?? 'valor',
       })
+      console.log('[DEBUG-ORDEN-BILL] 2. RPC actualizar_preferencia_usuario OK, disparando evento wallet-order-changed')
       window.dispatchEvent(new CustomEvent('wallet-order-changed'))
+      console.log('[DEBUG-ORDEN-BILL] 3. evento wallet-order-changed DISPARADO')
       localStorage.setItem('tipo_movimiento_default', newPrefs.tipo_movimiento_default)
       if (newPrefs.billetera_default_egreso) {
         localStorage.setItem('billetera_default_egreso', String(newPrefs.billetera_default_egreso))
