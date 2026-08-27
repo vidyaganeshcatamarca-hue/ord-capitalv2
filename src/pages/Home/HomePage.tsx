@@ -386,13 +386,19 @@ export function HomePage() {
       const orden = (row?.orden_billeteras === 'alfabetico') ? 'alfabetico' : 'valor'
       console.log('[DEBUG-ORDEN-BILL] 7. HomePage fetchBilleterasFromPreference, orden leida =', orden)
       const res = await rpc<any[]>('fn_obtener_billeteras_ordenadas', { p_orden: orden }).catch(() => [] as any[])
-      console.log('[DEBUG-ORDEN-BILL] 8. HomePage rpc billeteras_ordenadas retorno', res.length, 'billeteras, primera:', res[0]?.nombre)
+      const nombres = res.map((b: any) => b.nombre).join(', ')
+      console.log('[DEBUG-ORDEN-BILL] 8. HomePage rpc billeteras_ordenadas (orden=', orden, ') retorno', res.length, 'billeteras:', nombres)
       return res
     } catch {
       console.log('[DEBUG-ORDEN-BILL] 7b. HomePage error, fallback a p_orden=valor')
       return await rpc<any[]>('fn_obtener_billeteras_ordenadas', { p_orden: 'valor' }).catch(() => [] as any[])
     }
   }, [])
+
+  // Log cuando el estado billeteras cambia (post-setBilleteras)
+  useEffect(() => {
+    console.log('[DEBUG-ORDEN-BILL] 10. HomePage billeteras STATE cambio a =', billeteras.map((b: any) => b.nombre).join(', '))
+  }, [billeteras])
 
   const fetchData = useCallback(async () => {
     try {
@@ -666,10 +672,7 @@ export function HomePage() {
       setFugasMisterioOcultado(localStorage.getItem('ocultar_fugas_misterio') === 'true')
     }
     window.addEventListener('movement-added', handleSuccess)
-    window.addEventListener('wallet-order-changed', () => {
-      console.log('[DEBUG-ORDEN-BILL] 9. HomePage RECIBIO wallet-order-changed')
-      handleSuccess()
-    })
+    window.addEventListener('wallet-order-changed', handleSuccess)
     window.addEventListener('fugas-config-changed', handleFugasChanged)
     return () => {
       window.removeEventListener('movement-added', handleSuccess)
