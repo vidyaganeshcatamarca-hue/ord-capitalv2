@@ -16,22 +16,18 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
   const [saldoReal, setSaldoReal] = useState(billetera.saldo_actual.toString())
   const [loading, setLoading] = useState(false)
   const confirmBtnRef = useRef<HTMLButtonElement>(null)
-  const sheetRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
 
   useEffect(() => {
     setSaldoReal(billetera.saldo_actual.toString())
   }, [billetera.billetera_id])
 
-  // Auto-focus on mount (desktop only — mobile triggers the keyboard automatically
-  // which causes issues with bottom-anchored sheets; top-anchored layout handles it).
   useEffect(() => {
-    const isDesktop = window.matchMedia('(min-width: 768px)').matches
-    if (!isDesktop) return
-    requestAnimationFrame(() => {
-      const input = sheetRef.current?.querySelector('input') as HTMLInputElement | null
-      input?.focus()
+    const rafId = requestAnimationFrame(() => {
+      inputRef.current?.focus()
     })
+    return () => cancelAnimationFrame(rafId)
   }, [])
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -81,7 +77,7 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
   const modalContent = (
     <>
       <div className="bottom-sheet-overlay" onClick={onClose} />
-      <div ref={sheetRef} className="bottom-sheet wallet-modal-sheet wallet-modal-sheet-top">
+      <div className="bottom-sheet wallet-modal-sheet sheet-top">
         <div className="bottom-sheet-handle" />
         <form onSubmit={handleSubmit} className="wallet-modal-form" autoComplete="off">
           <div className="wallet-modal-body">
@@ -108,6 +104,7 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
                   {billetera.moneda === 'USD' ? 'U$S' : '$'}
                 </span>
                 <input
+                  ref={inputRef}
                   type="tel"
                   inputMode="decimal"
                   pattern="[0-9]*"

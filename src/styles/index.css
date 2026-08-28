@@ -456,6 +456,11 @@ input::placeholder, textarea::placeholder {
   to   { transform: translateX(-50%) translateY(0); }
 }
 
+@keyframes sheet-down {
+  from { transform: translateX(-50%) translateY(-100%); }
+  to   { transform: translateX(-50%) translateY(0); }
+}
+
 /* ─── Bottom Navigation ─── */
 .bottom-nav {
   position: fixed;
@@ -770,23 +775,6 @@ input::placeholder, textarea::placeholder {
   transition: max-height 180ms ease-out, transform 180ms ease-out, bottom 180ms ease-out;
 }
 
-/* Concierge modal: anchored to top so the on-screen keyboard never collides
-   with the sheet on devices where visualViewport reporting is unreliable.
-   El teclado siempre viene de abajo; un sheet anclado arriba es inmune. */
-.wallet-modal-sheet-top {
-  top: 4dvh !important;
-  bottom: auto !important;
-  border-radius: var(--radius-xl) !important;
-  max-height: calc(100dvh - 8dvh) !important;
-  transform: translateX(-50%) !important;
-  animation: walletModalTopIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-}
-
-@keyframes walletModalTopIn {
-  from { opacity: 0; transform: translateX(-50%) translateY(-12px); }
-  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
-
 .wallet-modal-sheet form,
 .wallet-modal-sheet .modal-content-wrap {
   display: flex !important;
@@ -849,8 +837,17 @@ input::placeholder, textarea::placeholder {
   transition: opacity 150ms ease-out;
 }
 
+/* Top-sheet variant for reconcile modal — keyboard comes from below, no visualViewport compensation needed */
+.wallet-modal-sheet.sheet-top {
+  top: env(safe-area-inset-top, 0px) !important;
+  bottom: auto !important;
+  transform: translateX(-50%) !important;
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl) !important;
+  animation: sheet-down 0.3s cubic-bezier(0.32, 0.72, 0, 1) !important;
+}
+
 @media (min-width: 768px) {
-  .wallet-modal-sheet.bottom-sheet:not(.wallet-modal-sheet-top) {
+  .wallet-modal-sheet.bottom-sheet {
     left: calc(50vw + var(--sidebar-width, 240px) / 2) !important;
     top: 50% !important;
     transform: translate(-50%, -50%) !important;
@@ -861,12 +858,12 @@ input::placeholder, textarea::placeholder {
     width: 460px !important;
     animation: walletSpringIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
   }
-  /* Top-anchored modals: center horizontally + respect sidebar offset on desktop. */
-  .wallet-modal-sheet-top {
-    left: calc(50vw + var(--sidebar-width, 240px) / 2) !important;
-    transform: translateX(-50%) !important;
-    width: 460px !important;
-    max-height: calc(100vh - 8vh) !important;
+
+  .wallet-modal-sheet.sheet-top {
+    top: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    border-radius: var(--radius-xl) !important;
+    animation: walletSpringIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
   }
 }
 
