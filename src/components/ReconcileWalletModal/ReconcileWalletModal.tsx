@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
@@ -15,7 +15,6 @@ interface Props {
 export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSuccess }: Props) {
   const [saldoReal, setSaldoReal] = useState(billetera.saldo_actual.toString())
   const [loading, setLoading] = useState(false)
-  const [isSettled, setIsSettled] = useState(false)
   const confirmBtnRef = useRef<HTMLButtonElement>(null)
   const sheetRef = useRef<HTMLDivElement>(null)
   const { showToast } = useToast()
@@ -24,57 +23,15 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
     setSaldoReal(billetera.saldo_actual.toString())
   }, [billetera.billetera_id])
 
-  useLayoutEffect(() => {
-    const vv = window.visualViewport
-    if (!vv) {
-      setIsSettled(true)
-      return
-    }
-    const rafId = { current: 0 }
-    let settleTimer: ReturnType<typeof setTimeout> | null = null
-    const applyPosition = () => {
-      const el = sheetRef.current
-      if (!el) return
-      const offset = Math.max(0, window.innerHeight - vv.height - (vv.offsetTop || 0))
-      el.style.maxHeight = `${Math.max(200, vv.height - 32)}px`
-      el.style.minHeight = '0'
-      if (offset > 0) {
-        el.classList.add('kb-open')
-        el.style.transform = `translate(-50%, -${offset}px)`
-        el.style.bottom = 'auto'
-      } else {
-        el.classList.remove('kb-open')
-        el.style.transform = 'translateX(-50%)'
-        el.style.bottom = '0'
-      }
-    }
-    const handleResize = () => {
-      if (rafId.current) cancelAnimationFrame(rafId.current)
-      rafId.current = requestAnimationFrame(() => {
-        applyPosition()
-        if (settleTimer) clearTimeout(settleTimer)
-        settleTimer = setTimeout(() => setIsSettled(true), 120)
-      })
-    }
-    vv.addEventListener('resize', handleResize)
-    vv.addEventListener('scroll', handleResize)
-    applyPosition()
+  // Auto-focus on mount (desktop only — mobile triggers the keyboard automatically
+  // which causes issues with bottom-anchored sheets; top-anchored layout handles it).
+  useEffect(() => {
     const isDesktop = window.matchMedia('(min-width: 768px)').matches
-    if (isDesktop) {
-      setIsSettled(true)
-    }
+    if (!isDesktop) return
     requestAnimationFrame(() => {
       const input = sheetRef.current?.querySelector('input') as HTMLInputElement | null
       input?.focus()
     })
-    const safetyTimer = setTimeout(() => setIsSettled(true), 400)
-    return () => {
-      if (rafId.current) cancelAnimationFrame(rafId.current)
-      vv.removeEventListener('resize', handleResize)
-      vv.removeEventListener('scroll', handleResize)
-      if (settleTimer) clearTimeout(settleTimer)
-      clearTimeout(safetyTimer)
-    }
   }, [])
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -124,7 +81,7 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
   const modalContent = (
     <>
       <div className="bottom-sheet-overlay" onClick={onClose} />
-      <div ref={sheetRef} className={`bottom-sheet wallet-modal-sheet ${isSettled ? 'settled' : 'pre-settle'}`}>
+      <div ref={sheetRef} className="bottom-sheet wallet-modal-sheet wallet-modal-sheet-top">
         <div className="bottom-sheet-handle" />
         <form onSubmit={handleSubmit} className="wallet-modal-form" autoComplete="off">
           <div className="wallet-modal-body">

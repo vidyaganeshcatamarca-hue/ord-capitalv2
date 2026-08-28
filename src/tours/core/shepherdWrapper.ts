@@ -138,6 +138,17 @@ function clearCinematicSequence() {
   document.getElementById('ord-tour-reveal-overlay')?.remove();
   document.getElementById('ord-tour-parent-dim')?.remove();
   document.getElementById('ord-tour-fab-cap')?.remove();
+  // Strip inline styles from the Shepherd popover so it doesn't stay
+  // hidden (opacity:0 / visibility:hidden) after the tour completes —
+  // we set those via hidePopoverInline during the cinematic cascade and
+  // they survive the 'complete' event otherwise, leaving the popover
+  // visible-but-empty on some devices.
+  document.querySelectorAll('.shepherd-element').forEach((el) => {
+    const h = el as HTMLElement;
+    h.style.removeProperty('opacity');
+    h.style.removeProperty('visibility');
+    h.style.removeProperty('margin-top');
+  });
   // Keep the tag panel across clearCinematicSequence calls so we can see
   // what happened in before-show. The panel is removed on tour cleanup.
   if (cinematicDebugEl) {
@@ -186,8 +197,14 @@ function scheduleCinematicSequence(
     fullDark.id = 'ord-tour-full-dark';
     if (slowDarkIn) {
       slowDarkDuration = 1200;
+      // Header-aux (paso 9): difuminado en lugar de oscurecer. El target
+      // iluminado tiene z-index 100002 > este overlay (99999), asi que
+      // el blur del fondo no toca al ojito / campana. `backdrop-filter`
+      // es seguro aqui (a diferencia del `.shepherd-modal-overlay-container`
+      // que prohibe la skill porque difumina el agujero del SVG).
       fullDark.style.cssText =
-        `position:fixed;inset:0;background:#000;opacity:0;` +
+        `position:fixed;inset:0;background:rgba(0,0,0,0.35);` +
+        `backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;` +
         `z-index:99999;pointer-events:none;transition:opacity ${slowDarkDuration}ms ease-in;`;
     } else if (isFabStepLocal) {
       // FAB: half-opacity so the lifted BottomNav stays clearly readable
