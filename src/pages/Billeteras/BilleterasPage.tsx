@@ -76,12 +76,6 @@ export function BilleterasPage() {
     }
   }, [billeteras, selectedBilletera])
 
-  useEffect(() => {
-    const handleOrderChanged = () => fetchData()
-    window.addEventListener('wallet-order-changed', handleOrderChanged)
-    return () => window.removeEventListener('wallet-order-changed', handleOrderChanged)
-  }, [fetchData])
-
   // Formateo de montos respetando decimales del usuario (useNumberFormat)
   const { formatMonto: formatMontoBase } = useNumberFormat()
   const formatAmount = useCallback((monto: number, moneda: string) => {

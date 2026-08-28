@@ -24,7 +24,6 @@ interface RubroGroup extends CategoriaPickerOption {
 
 export function MigrarSubcategoriaModal({ isOpen, categorias, onSelect, onCancel }: MigrarSubcategoriaModalProps) {
   const [query, setQuery] = useState('')
-  const [selectedId, setSelectedId] = useState<number | null>(null)
   const [expandedRubros, setExpandedRubros] = useState<Record<number, boolean>>({})
 
   const rubros = useMemo<RubroGroup[]>(() => {
@@ -68,7 +67,6 @@ export function MigrarSubcategoriaModal({ isOpen, categorias, onSelect, onCancel
 
   const handleSelectRubro = (rubro: RubroGroup) => {
     if (rubro.hijos.length > 0) return
-    setSelectedId(rubro.estructura_id)
     onSelect(rubro)
   }
 
@@ -80,14 +78,7 @@ export function MigrarSubcategoriaModal({ isOpen, categorias, onSelect, onCancel
       color: rubro.color,
       es_padre: false,
     }
-    setSelectedId(selected.estructura_id)
     onSelect(selected)
-  }
-
-  const handleConfirm = () => {
-    const cat = categorias.find(c => c.estructura_id === selectedId)
-    if (!cat) return
-    onSelect(cat)
   }
 
   if (!isOpen) return null
@@ -177,14 +168,6 @@ export function MigrarSubcategoriaModal({ isOpen, categorias, onSelect, onCancel
         <div className="migrate-picker-actions">
           <button type="button" className="btn btn-ghost font-semibold" onClick={onCancel}>
             {t('btn_cancel')}
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary font-semibold"
-            onClick={handleConfirm}
-            disabled={selectedId === null}
-          >
-            {t('btn_elegir')}
           </button>
         </div>
       </div>

@@ -41,7 +41,6 @@ export function PreferenciasOperativasPage() {
   const [wallets, setWallets] = useState<WalletOption[]>([])
   const [prefs, setPrefs] = useState<OperationalPrefs>(DEFAULT_PREFS)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
 
   useEffect(() => {
     let cancelled = false

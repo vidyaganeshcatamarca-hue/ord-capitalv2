@@ -12,12 +12,6 @@ export function useBilleteras() {
   const [loading, setLoading] = useState(true)
   const [ordenBilleteras, setOrdenBilleteras] = useState<WalletOrder>('valor')
 
-  const fetchBilleteras = useCallback(async (orden: WalletOrder) => {
-    const res = await rpc<Billetera[]>('fn_obtener_billeteras_ordenadas', { p_orden: orden })
-      .catch(() => [] as Billetera[])
-    setBilleteras(res ?? [])
-  }, [])
-
   const fetchData = useCallback(async (orden: WalletOrder = ordenBilleteras) => {
     try {
       setLoading(true)
@@ -79,18 +73,12 @@ export function useBilleteras() {
     }
   }, [fetchData])
 
-  const updateOrdenBilleteras = useCallback(async (nuevo: WalletOrder) => {
-    setOrdenBilleteras(nuevo)
-    await fetchData(nuevo)
-  }, [fetchData])
-
   return {
     billeteras,
     setBilleteras,
     healthReport,
     loading,
     ordenBilleteras,
-    updateOrdenBilleteras,
     fetchData
   }
 }
