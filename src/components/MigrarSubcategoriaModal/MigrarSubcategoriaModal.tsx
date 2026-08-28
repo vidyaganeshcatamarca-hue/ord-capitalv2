@@ -107,7 +107,6 @@ export function MigrarSubcategoriaModal({ isOpen, categorias, onSelect, onCancel
             placeholder={t('placeholder_search_category')}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            autoFocus
           />
         </div>
 
