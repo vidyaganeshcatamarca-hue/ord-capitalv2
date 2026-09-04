@@ -25,6 +25,7 @@ interface MapaTarjeta {
   banco?: string
   color?: string
   cotizacion_usd?: number
+  recargo_dolar_pct?: number
 }
 
 interface VencimientoTarjeta {
@@ -75,6 +76,7 @@ interface ComparativaTarjeta {
   variacion_porcentual: number
   tendencia_key: string
   mensaje_key: string
+  moneda?: 'ARS' | 'USD'
 }
 
 // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -767,7 +769,7 @@ export function TarjetasPage() {
                         <div className="historial-item-source">Cuota {c.posicion_cuota} de {c.total_cuotas} â€¢ Vence el {dueDateStr}</div>
                       </div>
                       <div className="historial-item-monto" style={{ color: 'var(--coral)' }}>
-                        {fmtARS(c.monto_cuota)}
+                        {fmtMoneda(c.monto_cuota, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
                       </div>
                     </div>
                   )
@@ -1084,14 +1086,14 @@ export function TarjetasPage() {
                           <div className="comparativa-bar anterior" style={{ height: heightAnt }} />
                           <div className="comparativa-bar-label">Ant.</div>
                           <div className="comparativa-bar-amount" style={{ color: 'var(--color-text-muted)' }}>
-                            {fmtARS(c.gasto_mes_anterior)}
+                            {fmtMoneda(c.gasto_mes_anterior, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
                           </div>
                         </div>
                         <div className="comparativa-bar-wrap">
                           <div className="comparativa-bar actual" style={{ height: heightAct }} />
                           <div className="comparativa-bar-label">Act.</div>
                           <div className="comparativa-bar-amount" style={{ color: 'var(--color-coral)' }}>
-                            {fmtARS(c.gasto_mes_actual)}
+                            {fmtMoneda(c.gasto_mes_actual, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
                           </div>
                         </div>
                       </div>
@@ -1627,7 +1629,24 @@ export function PagarModal({
             {pagarLineas.map((linea, idx) => {
               const selectedWallet = billeteras.find(b => b.billetera_id === linea.billetera_id)
               const usedWalletIds = pagarLineas.filter((_, i) => i !== idx).map(l => l.billetera_id).filter(id => id != null)
-              const availableWallets = billeteras.filter(b => !usedWalletIds.includes(b.billetera_id))
+              const baseWallets = billeteras.filter(b => !usedWalletIds.includes(b.billetera_id))
+              const isUsdLine = tarjetaTieneUSD && linea.origen !== 'favor'
+              const payInPesos = linea.target_moneda_cuota === 'USD'
+              const availableWallets = isUsdLine
+                ? baseWallets.filter(b => b.moneda === (payInPesos ? 'ARS' : 'USD'))
+                : baseWallets
+              const recargoPct = Number(targetCard?.recargo_dolar_pct ?? 30)
+              const cotizacion = Number(targetCard?.cotizacion_usd ?? 1)
+              const montoNum = parseFloat(linea.monto) || 0
+              const equivalenteUsd = payInPesos && cotizacion > 0 && montoNum > 0
+                ? montoNum / (cotizacion * (1 + recargoPct / 100))
+                : 0
+              const setPayInPesos = (val: boolean) => {
+                const nextTarget = val ? 'USD' : undefined
+                const currentWallet = billeteras.find(b => b.billetera_id === linea.billetera_id)
+                const walletOk = currentWallet && (val ? currentWallet.moneda === 'ARS' : currentWallet.moneda === 'USD')
+                updateLine(idx, { target_moneda_cuota: nextTarget, billetera_id: walletOk ? linea.billetera_id : null })
+              }
               return (
                 <div key={idx} className="pay-multi-line">
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -1637,13 +1656,48 @@ export function PagarModal({
                         <span>{t('pay_multi_saldo_favor_option')}</span>
                       </div>
                     ) : (
-                      <WalletDropdownSelect
-                        wallets={availableWallets}
-                        selectedWalletId={linea.billetera_id}
-                        onSelectWallet={(id) => updateLine(idx, { billetera_id: id })}
-                        placeholder={t('pay_multi_wallet_placeholder')}
-                        formatMonto={(val, moneda) => `${fmtMoneda(Number(val), (moneda ?? 'ARS') as 'ARS'|'USD')} ${moneda}`}
-                      />
+                      <>
+                        <WalletDropdownSelect
+                          wallets={availableWallets}
+                          selectedWalletId={linea.billetera_id}
+                          onSelectWallet={(id) => {
+                            const w = billeteras.find(b => b.billetera_id === id)
+                            if (w?.moneda === 'ARS' && tarjetaTieneUSD) {
+                              updateLine(idx, { billetera_id: id, target_moneda_cuota: 'USD' })
+                            } else {
+                              updateLine(idx, { billetera_id: id, target_moneda_cuota: undefined })
+                            }
+                          }}
+                          placeholder={t('pay_multi_wallet_placeholder')}
+                          formatMonto={(val, moneda) => `${fmtMoneda(Number(val), (moneda ?? 'ARS') as 'ARS'|'USD')} ${moneda}`}
+                        />
+                        {isUsdLine && (
+                          <div className="pay-multi-usd-toggle">
+                            <span className="pay-multi-usd-toggle-label">{t('pay_resumen_usd_pay_in_label')}</span>
+                            <div className="pay-multi-usd-segmented">
+                              <button
+                                type="button"
+                                className={payInPesos ? '' : 'active'}
+                                onClick={() => setPayInPesos(false)}
+                              >
+                                {t('pay_resumen_usd_toggle_dollars')}
+                              </button>
+                              <button
+                                type="button"
+                                className={payInPesos ? 'active' : ''}
+                                onClick={() => setPayInPesos(true)}
+                              >
+                                {t('pay_resumen_usd_toggle_pesos')}
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                        {payInPesos && montoNum > 0 && (
+                          <div className="pay-multi-usd-preview">
+                            {t('pay_resumen_usd_recargo_preview', { monto: fmtUSD.format(equivalenteUsd), pct: recargoPct })}
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                   <div className="pay-multi-monto-col">

@@ -1199,6 +1199,53 @@
   margin-top: 2px;
 }
 
+.pay-multi-usd-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.pay-multi-usd-toggle-label {
+  font-size: calc(12px * var(--font-scale));
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+.pay-multi-usd-segmented {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.pay-multi-usd-segmented button {
+  background: transparent;
+  border: none;
+  padding: 6px 12px;
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 52px;
+}
+
+.pay-multi-usd-segmented button.active {
+  background: var(--mint);
+  color: #1a1a1a;
+}
+
+.pay-multi-usd-preview {
+  width: 100%;
+  font-size: calc(11px * var(--font-scale));
+  color: var(--color-amber);
+  font-weight: 500;
+  margin-top: 4px;
+}
+
 .pay-multi-overpay-warn {
   width: 100%;
   font-size: calc(12px * var(--font-scale));
