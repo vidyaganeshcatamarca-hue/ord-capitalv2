@@ -1199,6 +1199,52 @@
   margin-top: 2px;
 }
 
+.pay-multi-moneda-toggle {
+  display: inline-flex;
+  gap: 0;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.pay-multi-moneda-btn {
+  background: transparent;
+  border: none;
+  padding: 6px 14px;
+  font-size: calc(13px * var(--font-scale));
+  font-weight: 700;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 52px;
+  font-family: var(--font-mono, monospace);
+}
+
+.pay-multi-moneda-btn.active {
+  background: var(--surface-3);
+  color: var(--color-text);
+}
+
+.pay-multi-fallback-hint {
+  width: 100%;
+  font-size: calc(11px * var(--font-scale));
+  color: var(--color-amber);
+  font-weight: 500;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+
+.pay-multi-recargo-preview {
+  width: 100%;
+  font-size: calc(12px * var(--font-scale));
+  color: var(--color-amber);
+  font-weight: 600;
+  margin-top: 6px;
+  line-height: 1.3;
+}
+
 .pay-multi-usd-toggle {
   display: flex;
   align-items: center;
