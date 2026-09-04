@@ -619,7 +619,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
   })
   const monedaOrigen = origenTipo === 'billetera'
     ? (billeteras.find(b => b.billetera_id === billeteraOrigenId)?.moneda ?? 'ARS')
-    : 'ARS'
+    : (esUsd ? 'USD' : 'ARS')
   const destinoOptions = billeteras.filter(b =>
     isWalletActive(b) && b.moneda === monedaOrigen && b.billetera_id !== billeteraOrigenId
   )

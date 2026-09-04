@@ -1507,8 +1507,8 @@ export function HomePage() {
                                 t(m.nombre_billetera)
                               ) : (
                                 <>
-                                  {m.nombre_billetera ? t(m.nombre_billetera) : ''}
-                                  {m.detalle ? ` · ${t(m.detalle)}` : ''}
+{m.nombre_billetera ? (m.nombre_billetera === 'wallet_cash_default_name' ? t('wallet_cash_default_name') : t(m.nombre_billetera)) : ''}
+                                {m.detalle ? ` · ${m.detalle === 'card_summary_payment_split' ? t('card_summary_payment_split') : m.detalle === 'card_summary_payment_favor' ? t('card_summary_payment') : m.detalle.startsWith('card_summary') ? t('card_summary_payment') : t(m.detalle)}` : ''}
                                 </>
                               )}
                             </span>
