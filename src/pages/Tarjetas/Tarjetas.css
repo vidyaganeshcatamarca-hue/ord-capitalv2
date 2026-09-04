@@ -1199,52 +1199,6 @@
   margin-top: 2px;
 }
 
-.pay-multi-moneda-toggle {
-  display: inline-flex;
-  gap: 0;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  overflow: hidden;
-  margin-bottom: 8px;
-}
-
-.pay-multi-moneda-btn {
-  background: transparent;
-  border: none;
-  padding: 6px 14px;
-  font-size: calc(13px * var(--font-scale));
-  font-weight: 700;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  transition: all 0.15s ease;
-  min-width: 52px;
-  font-family: var(--font-mono, monospace);
-}
-
-.pay-multi-moneda-btn.active {
-  background: var(--surface-3);
-  color: var(--color-text);
-}
-
-.pay-multi-fallback-hint {
-  width: 100%;
-  font-size: calc(11px * var(--font-scale));
-  color: var(--color-amber);
-  font-weight: 500;
-  margin-top: 4px;
-  line-height: 1.3;
-}
-
-.pay-multi-recargo-preview {
-  width: 100%;
-  font-size: calc(12px * var(--font-scale));
-  color: var(--color-amber);
-  font-weight: 600;
-  margin-top: 6px;
-  line-height: 1.3;
-}
-
 .pay-multi-usd-toggle {
   display: flex;
   align-items: center;
@@ -1665,4 +1619,69 @@
 }
 .pay-multi-pendiente--usd {
   color: var(--mint, #4ECDC4);
+}
+
+.pay-total-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--border);
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 600;
+}
+
+.pay-total-header-label {
+  color: var(--color-text);
+}
+
+.pay-total-header-montos {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-mono, monospace);
+}
+
+.pay-total-header-sep {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+.pay-total-header-usd.pay-multi-total--usd {
+  color: var(--mint, #4ECDC4);
+}
+
+.pay-section-title {
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.pay-section--usd {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 2px solid var(--surface-2);
+}
+
+.pay-section-title--usd {
+  color: var(--mint, #4ECDC4);
+}
+
+.pay-section-usd-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.pay-section-usd-toggle-label {
+  font-size: calc(12px * var(--font-scale));
+  color: var(--color-text-muted);
+  font-weight: 500;
 }
