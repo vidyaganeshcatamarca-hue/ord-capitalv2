@@ -601,6 +601,8 @@ export const category_keys = {
   adjustment_mystery: "Fuga de Capital (Misterio)",
   type_adjustment_mystery: "Fuga de Capital (Misterio)",
   type_adjustment_surplus: "Superávit de ajuste",
+  cat_card_diff: "Diferencia Tarjeta",
+  type_adjustment_card_diff: "Diferencia Tarjeta",
   type_card_payment: "Pago de Tarjeta",
 card_summary_payment: "Pago de Resumen",
 card_summary_payment_split: "Pago de Resumen (cuenta adicional)",

@@ -514,6 +514,20 @@ export function TarjetasPage() {
         p_cuotas_adelantar: selectedCuotasAdelantar.length > 0 ? selectedCuotasAdelantar : null,
         p_resumen_real: resumenReal !== '' ? parseFloat(resumenReal) : null,
       })
+      // Punto 3: registrar la diferencia banco-vs-tarjeta en la cuenta de sistema
+      // 'Diferencia Tarjeta' (cat_card_diff). Solo si el usuario declaró resumen real
+      // y difiere del ciclo calculado.
+      if (resumenReal !== '' && parseFloat(resumenReal) > 0) {
+        const cicloBrutoAjuste = (vencimientoByCard[targetCard.tarjeta_id]?.monto_ciclo_total_ars ?? 0)
+        const diferencia = parseFloat(resumenReal) - cicloBrutoAjuste
+        if (Math.abs(diferencia) > 0.01) {
+          await rpc('fn_registrar_ajuste_diferencia_tarjeta', {
+            p_tarjeta_id: targetCard.tarjeta_id,
+            p_diferencia: diferencia,
+            p_fecha: pagarFecha,
+          })
+        }
+      }
       showToast(t('card_payment_success'), 'success')
       setShowPagarModal(false)
       setPagarMonto('')

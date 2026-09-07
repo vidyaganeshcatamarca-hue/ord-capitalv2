@@ -21,6 +21,8 @@ export const SYSTEM_CATEGORY_NAMES: readonly string[] = [
   'cat_mystery',
   'no_detail',
   'type_adjustment_mystery',
+  'cat_card_diff',
+  'type_adjustment_card_diff',
 ] as const
 
 /**
