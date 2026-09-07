@@ -119,9 +119,9 @@ function getSemaforoClass(alerta: string) {
 }
 
 function getSemaforoLabel(alerta: string) {
-  if (alerta === 'green') return 'Saludable'
+  if (alerta === 'green') return t('card_status_healthy')
   if (alerta === 'yellow') return t('card_status_caution')
-  return 'En Riesgo'
+  return t('card_status_at_risk')
 }
 
 function getSemaforoIcon(alerta: string) {
@@ -141,9 +141,9 @@ function getUrgencyMsg(key: string, dias: number): string {
 
 function getTendenciaMsg(key: string): string {
   const map: Record<string, string> = {
-    alert_card_overuse: 'Uso excesivo vs mes anterior',
-    alert_card_savings: 'Redujiste el uso significativamente',
-    alert_card_stable: 'Uso estable respecto al mes anterior',
+    alert_card_overuse: t('card_trend_overuse'),
+    alert_card_savings: t('card_trend_savings'),
+    alert_card_stable: t('card_trend_stable'),
   }
   return map[key] || ''
 }
@@ -153,8 +153,8 @@ function getTermMsg(key: string): string {
     msg_learning_data: t('card_learning_data'),
     msg_sufficient_balance_high_expenses: t('card_sufficient_balance_high_expenses'),
     msg_insufficient_balance_deficit: t('card_insufficient_balance_deficit'),
-    msg_sufficient_balance_future_compromise: 'Tienes saldo hoy, pero compromisos futuros preocupantes.',
-    msg_high_quota_insufficient_balance: 'La cuota es alta respecto a tu capacidad de pago habitual.',
+    msg_sufficient_balance_future_compromise: t('card_term_future_compromise'),
+    msg_high_quota_insufficient_balance: t('card_term_high_quota'),
     ok: t('card_status_ok'),
   }
   return map[key] || key
@@ -649,10 +649,10 @@ export function TarjetasPage() {
         {menuOpen === tc.tarjeta_id && (
           <div className="tarjeta-context-menu" onClick={e => e.stopPropagation()}>
             <button className="tarjeta-context-btn" onClick={() => openEdit(tc)}><CategoryIcon name="Pencil" size={14} /> {t('btn_edit_card')}</button>
-<button className="tarjeta-context-btn" onClick={() => {
+            <button className="tarjeta-context-btn" onClick={() => {
               setTargetCard(tc)
-              const neto = venc?.monto_a_pagar ?? 0
-              setPagarLineas([{ id: 1, billetera_id: null, monto: neto > 0 ? neto.toString() : '' }])
+              const prefillMontoARS = venc?.monto_a_pagar_ars ?? 0
+              setPagarLineas([{ id: 1, billetera_id: null, monto: prefillMontoARS > 0 ? prefillMontoARS.toString() : '' }])
               setPagarLineasUsd([{ id: 1, billetera_id: null, monto: '' }])
               nextLineIdArsRef.current = 2
               nextLineIdUsdRef2.current = 2
@@ -714,12 +714,12 @@ export function TarjetasPage() {
                   {Number(venc.saldo_a_favor) > 0 && (
                     <div className="saldo-a-favor-chip">{t('saldo_a_favor_chip', { monto: fmtARS(Number(venc.saldo_a_favor)) })}</div>
                   )}
-                  <div className="vencimiento-monto">Estimado: {fmtARS(venc.monto_ciclo_total ?? venc.monto_a_pagar)}</div>
+                  <div className="vencimiento-monto">{t('card_due_estimated_prefix', { monto: fmtARS(venc.monto_ciclo_total ?? venc.monto_a_pagar) })}</div>
                 </div>
-<button className="btn-pagar-resumen" onClick={() => {
+                <button className="btn-pagar-resumen" onClick={() => {
                   setTargetCard(selectedCard)
-                  const neto = venc.monto_a_pagar
-                  setPagarLineas([{ id: 1, billetera_id: null, monto: neto > 0 ? neto.toString() : '' }])
+                  const prefillMontoARS = venc.monto_a_pagar_ars ?? 0
+                  setPagarLineas([{ id: 1, billetera_id: null, monto: prefillMontoARS > 0 ? prefillMontoARS.toString() : '' }])
                   setPagarLineasUsd([{ id: 1, billetera_id: null, monto: '' }])
                   nextLineIdArsRef.current = 2
                   nextLineIdUsdRef2.current = 2
@@ -766,7 +766,7 @@ export function TarjetasPage() {
                   </div>
                   <div className="termometro-metric">
                     <div className="termometro-metric-value">{fmtARS(termometro.capacidad_pago_promedio)}</div>
-                    <div className="termometro-metric-label">Cap. de pago</div>
+                    <div className="termometro-metric-label">{t('card_capacity_label')}</div>
                   </div>
                 </div>
                 <div style={{ marginTop: 10, fontSize: 'calc(13px * var(--font-scale))', color: 'var(--color-text-muted)', lineHeight: 1.4 }}>
@@ -1610,7 +1610,10 @@ export function PagarModal({
     : (cicloARS + cicloUSD * Number(targetCard?.cotizacion_usd ?? 1))
   const favorCubreTotal = favorEquiv >= totalCicloARS_equiv && totalCicloARS_equiv > 0
 
-  const submitDisabled = formSubmitting || lineasInvalidas || (allLinesEmpty && !favorCubreTotal) || overBudget
+  const seccionARSCompleta = !tarjetaTieneARS || faltaARS <= 0.5
+  const seccionUSDCompleta = !tarjetaTieneUSD || faltaUSD <= 0.5
+  const submitEnabled = favorCubreTotal || (!allLinesEmpty && seccionARSCompleta && seccionUSDCompleta)
+  const submitDisabled = formSubmitting || lineasInvalidas || !submitEnabled || overBudget
 
   const updateLine = (index: number, patch: Partial<{ billetera_id: number | null; monto: string; target_moneda_cuota?: 'ARS' | 'USD'; moneda?: 'ARS' | 'USD'; origen?: 'wallet' | 'favor' }>) => {
     const next = pagarLineas.map((l, i) => i === index ? { ...l, ...patch } : l)
@@ -1789,12 +1792,9 @@ export function PagarModal({
                       step="0.01"
                       value={linea.monto}
                       onChange={e => updateLine(idx, { monto: e.target.value })}
-                      onPointerDown={(e) => {
+                      onPointerDown={() => {
                         if (linea.origen === 'favor') return
-                        const input = e.currentTarget as HTMLInputElement
-                        input.focus()
-                        const len = input.value.length
-                        if (len) input.setSelectionRange(0, len)
+                        if (linea.monto !== '') updateLine(idx, { monto: '' })
                       }}
                       onBlur={() => {
                         if (linea.origen === 'favor') return
@@ -1809,7 +1809,7 @@ export function PagarModal({
                       }}
                       placeholder=""
                       inputMode="decimal"
-                      enterKeyHint="go"
+                      enterKeyHint="done"
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }}
                     />
                     {selectedWallet ? (
@@ -1915,12 +1915,9 @@ export function PagarModal({
                         step="0.01"
                         value={linea.monto}
                         onChange={e => updateLineUsd(idx, { monto: e.target.value })}
-                        onPointerDown={(e) => {
+                        onPointerDown={() => {
                           if (linea.origen === 'favor') return
-                          const input = e.currentTarget as HTMLInputElement
-                          input.focus()
-                          const len = input.value.length
-                          if (len) input.setSelectionRange(0, len)
+                          if (linea.monto !== '') updateLineUsd(idx, { monto: '' })
                         }}
                         onBlur={() => {
                           if (linea.origen === 'favor') return
@@ -1935,7 +1932,7 @@ export function PagarModal({
                         }}
                         placeholder=""
                         inputMode="decimal"
-                        enterKeyHint="go"
+                        enterKeyHint="done"
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }}
                       />
                       {selectedWallet ? (
@@ -2030,15 +2027,12 @@ export function PagarModal({
                   step="0.01"
                   value={resumenReal}
                   onChange={e => setResumenReal(e.target.value)}
-                  onPointerDown={(e) => {
-                    const input = e.currentTarget as HTMLInputElement
-                    input.focus()
-                    const len = input.value.length
-                    if (len) input.setSelectionRange(0, len)
+                  onPointerDown={() => {
+                    if (resumenReal !== '') setResumenReal('')
                   }}
                   placeholder="0"
                   inputMode="decimal"
-                  enterKeyHint="go"
+                  enterKeyHint="done"
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }}
                 />
                 <div className="pay-resumen-real-hint">{t('pay_resumen_real_hint')}</div>
