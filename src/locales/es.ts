@@ -199,7 +199,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
     pay_multi_wallet_placeholder: "Seleccioná la cuenta...",
     pay_resumen_usd_toggle_pesos: "$",
     pay_resumen_usd_toggle_dollars: "US$",
-    pay_resumen_usd_recargo_preview: "Equivale a {monto} USD (incluye {pct}% recargo)",
+    pay_resumen_usd_equiv_preview: "Equivale a {monto} USD",
     pay_resumen_usd_pay_in_label: "Cuotas en USD: pagar en",
     pay_multi_saldo_favor_option: "Saldo a favor",
    pay_multi_saldo_favor_disponible: "Disponible: {monto}",

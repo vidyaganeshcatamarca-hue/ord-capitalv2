@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
@@ -251,14 +251,19 @@ export function TarjetasPage() {
   const [pagarMonto, setPagarMonto] = useState('')
   const [pagarFecha, setPagarFecha] = useState(() => { const d = new Date(); const y = d.getFullYear(); const m = String(d.getMonth() + 1).padStart(2, '0'); const day = String(d.getDate()).padStart(2, '0'); return `${y}-${m}-${day}`; })
   const [pagarBilleteraId, setPagarBilleteraId] = useState<number | null>(null)
-  const [pagarLineas, setPagarLineas] = useState<{
+  type PagarLine = {
+    id: number
     billetera_id: number | null
     monto: string
     target_moneda_cuota?: 'ARS' | 'USD'  // default = wallet moneda o favor moneda
     moneda?: 'ARS' | 'USD'              // solo para favor lines (billetera_id null)
     origen?: 'wallet' | 'favor'
-  }[]>([{ billetera_id: null, monto: '' }])
-  const [pagarLineasUsd, setPagarLineasUsd] = useState<{ billetera_id: number | null; monto: string; target_moneda_cuota?: 'ARS' | 'USD'; moneda?: 'ARS' | 'USD'; origen?: 'wallet' | 'favor' }[]>([{ billetera_id: null, monto: '' }])
+  }
+  const nextLineIdArsRef = useRef(2)
+  const nextLineIdUsdRef2 = useRef(2)
+  const [pagarLineas, setPagarLineas] = useState<PagarLine[]>([{ id: 1, billetera_id: null, monto: '' }])
+  const [pagarLineasUsd, setPagarLineasUsd] = useState<PagarLine[]>([{ id: 1, billetera_id: null, monto: '' }])
+  const [sectionUsdPayIn, setSectionUsdPayIn] = useState<'ARS' | 'USD'>('USD')
   const [resumenReal, setResumenReal] = useState('')
   const [selectedCuotasAdelantar, setSelectedCuotasAdelantar] = useState<number[]>([])
 
@@ -512,8 +517,10 @@ export function TarjetasPage() {
       showToast(t('card_payment_success'), 'success')
       setShowPagarModal(false)
       setPagarMonto('')
-      setPagarLineas([{ billetera_id: null, monto: '' }])
-      setPagarLineasUsd([{ billetera_id: null, monto: '' }])
+      setPagarLineas([{ id: 1, billetera_id: null, monto: '' }])
+      setPagarLineasUsd([{ id: 1, billetera_id: null, monto: '' }])
+      nextLineIdArsRef.current = 2
+      nextLineIdUsdRef2.current = 2
       setResumenReal('')
       setSelectedCuotasAdelantar([])
       fetchData()
@@ -631,8 +638,10 @@ export function TarjetasPage() {
 <button className="tarjeta-context-btn" onClick={() => {
               setTargetCard(tc)
               const neto = venc?.monto_a_pagar ?? 0
-              setPagarLineas([{ billetera_id: null, monto: neto > 0 ? neto.toString() : '' }])
-              setPagarLineasUsd([{ billetera_id: null, monto: '' }])
+              setPagarLineas([{ id: 1, billetera_id: null, monto: neto > 0 ? neto.toString() : '' }])
+              setPagarLineasUsd([{ id: 1, billetera_id: null, monto: '' }])
+              nextLineIdArsRef.current = 2
+              nextLineIdUsdRef2.current = 2
               setPagarBilleteraId(null)
               setResumenReal('')
               setSelectedCuotasAdelantar([])
@@ -696,8 +705,10 @@ export function TarjetasPage() {
 <button className="btn-pagar-resumen" onClick={() => {
                   setTargetCard(selectedCard)
                   const neto = venc.monto_a_pagar
-                  setPagarLineas([{ billetera_id: null, monto: neto > 0 ? neto.toString() : '' }])
-                  setPagarLineasUsd([{ billetera_id: null, monto: '' }])
+                  setPagarLineas([{ id: 1, billetera_id: null, monto: neto > 0 ? neto.toString() : '' }])
+                  setPagarLineasUsd([{ id: 1, billetera_id: null, monto: '' }])
+                  nextLineIdArsRef.current = 2
+                  nextLineIdUsdRef2.current = 2
                   setPagarBilleteraId(null)
                   setResumenReal('')
                   setSelectedCuotasAdelantar([])
@@ -858,6 +869,10 @@ export function TarjetasPage() {
             targetCard={targetCard}
             pagarLineas={pagarLineas}
             setPagarLineas={setPagarLineas}
+            pagarLineasUsd={pagarLineasUsd}
+            setPagarLineasUsd={setPagarLineasUsd}
+            sectionUsdPayIn={sectionUsdPayIn}
+            setSectionUsdPayIn={setSectionUsdPayIn}
             pagarFecha={pagarFecha}
             setPagarFecha={setPagarFecha}
             formSubmitting={formSubmitting}
@@ -1178,6 +1193,10 @@ export function TarjetasPage() {
           targetCard={targetCard}
           pagarLineas={pagarLineas}
           setPagarLineas={setPagarLineas}
+          pagarLineasUsd={pagarLineasUsd}
+          setPagarLineasUsd={setPagarLineasUsd}
+          sectionUsdPayIn={sectionUsdPayIn}
+          setSectionUsdPayIn={setSectionUsdPayIn}
           pagarFecha={pagarFecha}
           setPagarFecha={setPagarFecha}
           formSubmitting={formSubmitting}
@@ -1375,6 +1394,7 @@ interface PagarModalProps {
   onSubmit: () => void
   targetCard: MapaTarjeta | null
   pagarLineas: {
+    id: number
     billetera_id: number | null
     monto: string
     target_moneda_cuota?: 'ARS' | 'USD'
@@ -1382,12 +1402,31 @@ interface PagarModalProps {
     origen?: 'wallet' | 'favor'
   }[]
   setPagarLineas: (lines: {
+    id: number
     billetera_id: number | null
     monto: string
     target_moneda_cuota?: 'ARS' | 'USD'
     moneda?: 'ARS' | 'USD'
     origen?: 'wallet' | 'favor'
   }[]) => void
+  pagarLineasUsd: {
+    id: number
+    billetera_id: number | null
+    monto: string
+    target_moneda_cuota?: 'ARS' | 'USD'
+    moneda?: 'ARS' | 'USD'
+    origen?: 'wallet' | 'favor'
+  }[]
+  setPagarLineasUsd: (lines: {
+    id: number
+    billetera_id: number | null
+    monto: string
+    target_moneda_cuota?: 'ARS' | 'USD'
+    moneda?: 'ARS' | 'USD'
+    origen?: 'wallet' | 'favor'
+  }[]) => void
+  sectionUsdPayIn: 'ARS' | 'USD'
+  setSectionUsdPayIn: (val: 'ARS' | 'USD') => void
   pagarFecha: string
   setPagarFecha: (val: string) => void
   formSubmitting: boolean
@@ -1412,6 +1451,10 @@ export function PagarModal({
   targetCard,
   pagarLineas,
   setPagarLineas,
+  pagarLineasUsd,
+  setPagarLineasUsd,
+  sectionUsdPayIn,
+  setSectionUsdPayIn,
   pagarFecha,
   setPagarFecha,
   formSubmitting,
@@ -1428,10 +1471,12 @@ export function PagarModal({
   necesitoARS,
   necesitoUSD,
 }: PagarModalProps) {
-  const [sectionUsdPayIn, setSectionUsdPayIn] = useState<'ARS' | 'USD'>('USD')
-  const [pagarLineasUsd, setPagarLineasUsd] = useState<{ billetera_id: number | null; monto: string; target_moneda_cuota?: 'ARS' | 'USD'; moneda?: 'ARS' | 'USD'; origen?: 'wallet' | 'favor' }[]>([{ billetera_id: null, monto: '' }])
+  const nextLineIdRef = useRef(2)
   const allLines = useMemo(() => [...pagarLineas, ...pagarLineasUsd], [pagarLineas, pagarLineasUsd])
-  const totalPagar = allLines.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0)
+  // Totales separados por moneda según la vía elegida para las cuotas USD.
+  const totalPagarPesos = pagarLineas.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0) + (sectionUsdPayIn === 'ARS' ? pagarLineasUsd.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0) : 0)
+  const totalPagarUsd = sectionUsdPayIn === 'USD' ? pagarLineasUsd.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0) : 0
+  const totalPagar = totalPagarPesos + totalPagarUsd
   const lineasInvalidas = allLines.some(l => {
     const hasWallet = l.billetera_id != null
     const monto = l.monto !== '' ? parseFloat(l.monto) : NaN
@@ -1440,7 +1485,7 @@ export function PagarModal({
     const ids = allLines.filter(l => l.billetera_id != null).map(l => l.billetera_id!)
     return new Set(ids).size !== ids.length
   })()
-  const allLinesEmpty = pagarLineas.every(l => l.billetera_id == null && l.monto === '')
+  const allLinesEmpty = pagarLineas.every(l => l.billetera_id == null && l.monto === '') && pagarLineasUsd.every(l => l.billetera_id == null && l.monto === '')
   const [resumenRealOn, setResumenRealOn] = useState(false)
   const [overpayMode, setOverpayMode] = useState<'accumulate' | 'cancel'>('accumulate')
   const [futureCuotas, setFutureCuotas] = useState<any[]>([])
@@ -1464,7 +1509,7 @@ export function PagarModal({
     setResumenReal('')
     setSelectedCuotasAdelantar([])
     setSectionUsdPayIn('USD')
-    setPagarLineasUsd([{ billetera_id: null, monto: '' }])
+    setPagarLineasUsd([{ id: 1, billetera_id: null, monto: '' }])
     fetchFutureCuotas()
     return () => { cancelled = true }
   }, [targetCard?.tarjeta_id, pagarFecha, setSelectedCuotasAdelantar, setResumenReal, setResumenRealOn])
@@ -1493,7 +1538,7 @@ export function PagarModal({
   // Pago por moneda según la billetera (o favor) de cada línea.
   let pagoARS = 0
   let pagoUSD = 0
-  allLines.forEach(l => {
+  pagarLineas.forEach(l => {
     const m = parseFloat(l.monto) || 0
     if (m <= 0) return
     if (l.billetera_id === null) {
@@ -1506,6 +1551,28 @@ export function PagarModal({
       else pagoARS += m
     }
   })
+  // Cuando se decide pagar las cuotas USD vía ARS, ese monto ya se contó en
+  // pagarLineasUsd con moneda ARS; lo sumamos a pagoARS.
+  if (sectionUsdPayIn === 'ARS') {
+    pagarLineasUsd.forEach(l => {
+      const m = parseFloat(l.monto) || 0
+      if (m <= 0) return
+      if (l.billetera_id === null) {
+        if ((l.moneda ?? 'ARS') === 'USD') pagoUSD += m
+        else pagoARS += m
+      } else {
+        const w = billeteras.find(b => b.billetera_id === l.billetera_id)
+        if (w?.moneda === 'USD') pagoUSD += m
+        else pagoARS += m
+      }
+    })
+  } else {
+    pagarLineasUsd.forEach(l => {
+      const m = parseFloat(l.monto) || 0
+      if (m <= 0) return
+      pagoUSD += m
+    })
+  }
 
   // Netos per-moneda desde el reporte (VencimientoTarjeta).
   const faltaARS = Math.max(0, necesitoARS - pagoARS)
@@ -1542,11 +1609,11 @@ export function PagarModal({
   }
 
   const addLine = () => {
-    setPagarLineas([...pagarLineas, { billetera_id: null, monto: '' }])
+    setPagarLineas([...pagarLineas, { id: nextLineIdRef.current++, billetera_id: null, monto: '' }])
   }
 
   const addLineUsd = () => {
-    setPagarLineasUsd([...pagarLineasUsd, { billetera_id: null, monto: '' }])
+    setPagarLineasUsd([...pagarLineasUsd, { id: nextLineIdRef.current++, billetera_id: null, monto: '' }])
   }
 
   const addFavorLine = () => {
@@ -1554,6 +1621,7 @@ export function PagarModal({
       ? Math.min(favorEquiv, totalCicloARS_equiv)
       : Math.min(favorNum, Math.max(0, totalCicloARS_equiv - totalPagar))
     const next = {
+      id: nextLineIdRef.current++,
       billetera_id: null,
       monto: monto > 0 ? monto.toFixed(2) : '',
       moneda: 'ARS' as const,
@@ -1561,7 +1629,7 @@ export function PagarModal({
     }
     const emptyFirst = pagarLineas.length === 1 && pagarLineas[0].billetera_id == null && pagarLineas[0].monto === ''
     if (emptyFirst) {
-      setPagarLineas([next])
+      setPagarLineas([{ ...next, id: pagarLineas[0].id }])
     } else {
       setPagarLineas([...pagarLineas, next])
     }
@@ -1643,6 +1711,7 @@ export function PagarModal({
             ;(e.target as HTMLElement).blur()
           }
         }}>
+          {cicloARS > 0 && (
           <div>
             <div className="pay-section-title">{t('pay_section_ars_title')}</div>
             <label className="tarjeta-form-label">{t('pay_resumen_wallet_label')} *</label>
@@ -1677,7 +1746,7 @@ export function PagarModal({
               const cotizacion = Number(targetCard?.cotizacion_usd ?? 1)
               const montoNum = parseFloat(linea.monto) || 0
               return (
-                <div key={idx} className="pay-multi-line">
+                <div key={linea.id} className="pay-multi-line">
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {linea.origen === 'favor' ? (
                       <div className="pay-multi-favor-label">
@@ -1706,7 +1775,13 @@ export function PagarModal({
                       step="0.01"
                       value={linea.monto}
                       onChange={e => updateLine(idx, { monto: e.target.value })}
-                      onFocus={() => { if (linea.origen !== 'favor') updateLine(idx, { monto: '' }) }}
+                      onPointerDown={(e) => {
+                        if (linea.origen === 'favor') return
+                        const input = e.currentTarget as HTMLInputElement
+                        input.focus()
+                        const len = input.value.length
+                        if (len) input.setSelectionRange(0, len)
+                      }}
                       onBlur={() => {
                         if (linea.origen === 'favor') return
                         const w = billeteras.find(b => b.billetera_id === linea.billetera_id)
@@ -1747,8 +1822,9 @@ export function PagarModal({
               {t('pay_multi_add_wallet')}
             </button>
           </div>
+          )}
 
-          {tarjetaTieneUSD && (
+          {cicloUSD > 0 && (
             <div className="pay-section pay-section--usd">
               <div className="pay-section-title pay-section-title--usd">{t('pay_section_usd_title')}</div>
               <div className="pay-section-usd-toggle">
@@ -1759,7 +1835,7 @@ export function PagarModal({
                     className={sectionUsdPayIn === 'USD' ? 'active' : ''}
                     onClick={() => {
                       setSectionUsdPayIn('USD')
-                      setPagarLineasUsd(prev => prev.map(l => ({ ...l, billetera_id: null, target_moneda_cuota: undefined, monto: l.billetera_id != null && billeteras.find(b => b.billetera_id === l.billetera_id)?.moneda !== 'USD' ? '' : l.monto })))
+                      setPagarLineasUsd(pagarLineasUsd.map(l => ({ ...l, billetera_id: null, target_moneda_cuota: undefined, monto: l.billetera_id != null && billeteras.find(b => b.billetera_id === l.billetera_id)?.moneda !== 'USD' ? '' : l.monto })))
                     }}
                   >
                     {t('pay_resumen_usd_toggle_dollars')}
@@ -1769,7 +1845,7 @@ export function PagarModal({
                     className={sectionUsdPayIn === 'ARS' ? 'active' : ''}
                     onClick={() => {
                       setSectionUsdPayIn('ARS')
-                      setPagarLineasUsd(prev => prev.map(l => ({ ...l, billetera_id: null, target_moneda_cuota: undefined, monto: l.billetera_id != null && billeteras.find(b => b.billetera_id === l.billetera_id)?.moneda !== 'ARS' ? '' : l.monto })))
+                      setPagarLineasUsd(pagarLineasUsd.map(l => ({ ...l, billetera_id: null, target_moneda_cuota: 'USD', monto: l.billetera_id != null && billeteras.find(b => b.billetera_id === l.billetera_id)?.moneda !== 'ARS' ? '' : l.monto })))
                     }}
                   >
                     {t('pay_resumen_usd_toggle_pesos')}
@@ -1783,14 +1859,13 @@ export function PagarModal({
                 const baseWallets = billeteras.filter(b => !usedWalletIds.includes(b.billetera_id))
                 const availableWallets = linea.origen === 'favor' ? baseWallets : baseWallets.filter(b => b.moneda === sectionUsdPayIn)
                 const payInPesos = sectionUsdPayIn === 'ARS'
-                const recargoPct = Number(targetCard?.recargo_dolar_pct ?? 30)
                 const cotizacion = Number(targetCard?.cotizacion_usd ?? 1)
                 const montoNum = parseFloat(linea.monto) || 0
                 const equivalenteUsd = payInPesos && cotizacion > 0 && montoNum > 0
-                  ? montoNum / (cotizacion * (1 + recargoPct / 100))
+                  ? montoNum / cotizacion
                   : 0
                 return (
-                  <div key={`usd-${idx}`} className="pay-multi-line">
+                  <div key={linea.id} className="pay-multi-line">
                     <div style={{ flex: 1, minWidth: 0 }}>
                       {linea.origen === 'favor' ? (
                         <div className="pay-multi-favor-label">
@@ -1812,7 +1887,7 @@ export function PagarModal({
                           />
                           {payInPesos && montoNum > 0 && (
                             <div className="pay-multi-usd-preview">
-                              {t('pay_resumen_usd_recargo_preview', { monto: fmtUSD.format(equivalenteUsd), pct: recargoPct })}
+                              {t('pay_resumen_usd_equiv_preview', { monto: fmtUSD.format(equivalenteUsd) })}
                             </div>
                           )}
                         </>
@@ -1826,7 +1901,13 @@ export function PagarModal({
                         step="0.01"
                         value={linea.monto}
                         onChange={e => updateLineUsd(idx, { monto: e.target.value })}
-                        onFocus={() => { if (linea.origen !== 'favor') updateLineUsd(idx, { monto: '' }) }}
+                        onPointerDown={(e) => {
+                          if (linea.origen === 'favor') return
+                          const input = e.currentTarget as HTMLInputElement
+                          input.focus()
+                          const len = input.value.length
+                          if (len) input.setSelectionRange(0, len)
+                        }}
                         onBlur={() => {
                           if (linea.origen === 'favor') return
                           const w = billeteras.find(b => b.billetera_id === linea.billetera_id)
@@ -1935,7 +2016,12 @@ export function PagarModal({
                   step="0.01"
                   value={resumenReal}
                   onChange={e => setResumenReal(e.target.value)}
-                  onFocus={() => setResumenReal('')}
+                  onPointerDown={(e) => {
+                    const input = e.currentTarget as HTMLInputElement
+                    input.focus()
+                    const len = input.value.length
+                    if (len) input.setSelectionRange(0, len)
+                  }}
                   placeholder="0"
                   inputMode="decimal"
                   enterKeyHint="go"

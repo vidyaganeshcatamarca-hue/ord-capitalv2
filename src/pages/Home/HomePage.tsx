@@ -1460,7 +1460,8 @@ export function HomePage() {
               <div className="card" style={{ padding: 'var(--space-4)' }}>
                 <div className="timeline-feed">
                   {filteredMovimientos.map((m) => {
-                    const moneda = walletCurrencyMap[m.nombre_billetera] ?? 'ARS'
+                    const isCardPayment = m.tipo === 'pago_tarjeta' || m.tarjeta_id != null
+                    const moneda = isCardPayment && (m as any).moneda === 'USD' ? 'USD' : (walletCurrencyMap[m.nombre_billetera] ?? 'ARS')
                     const esEgreso = m.monto < 0
                     // Fuente de verdad: el color del rubro padre que viene directo de la RPC.
                     // Fallback heurístico solo si la RPC no lo expone (movimiento sin estructura_egreso_id).
