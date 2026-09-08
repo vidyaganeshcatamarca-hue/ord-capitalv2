@@ -1519,9 +1519,13 @@ export function PagarModal({
   // Falta repartir: efectivo que el usuario todavía debe distribuir (baseline neto; con resumen real: real - favor)
   const faltaBase = realNum !== null ? Math.max(0, realNum - favorNum) : netoRequerido
   const faltaRepartir = faltaBase - totalPagar
-  // Sobrante: pago por encima del tope aplicable — espeja el backend:
-  // con resumen real: pagado - max(real, ciclo); sin resumen real: pagado - ciclo
-  const sobrante = Math.max(0, totalPagar - (realNum !== null ? Math.max(realNum, cicloBruto) : cicloBruto))
+  // Sobrante: pago por encima del ciclo, considerando el saldo a favor previo.
+  // El saldo a favor consume primero el ciclo, por lo que si tenías $75k favor + pagás $150k sobre
+  // un ciclo de $100k, el sobrante REAL es 150 + 75 - 100 = $125k (no $50k).
+  // Con resumen real: el 'pago' del banco ya viene dado, no se aplica el favor previo como input.
+  const sobrante = realNum !== null
+    ? Math.max(0, totalPagar - cicloBruto)  // con resumen real, el banco es el numero del pago
+    : Math.max(0, totalPagar + favorNum - cicloBruto)
 
   // === Fase 4 multi-moneda ===
   // Pago por moneda según la billetera (o favor) de cada línea.
@@ -1575,7 +1579,9 @@ export function PagarModal({
   const tarjetaTieneUSD = cicloUSD > 0 || necesitoUSD > 0 || pagoUSD > 0 || favorNumUsd > 0
   const selectedSumFuture = selectedCuotasAdelantar.reduce((sum, id) => {
     const found = futureCuotas.find(fc => Number(fc.cuota_id) === id)
-    return sum + Number(found?.monto_cuota || 0)
+    if (!found) return sum
+    const monto = Number(found.monto_cuota || 0)
+    return sum + (found.moneda === 'USD' ? monto * cotizacion : monto)
   }, 0)
   const overBudget = overpayMode === 'cancel' && selectedSumFuture > sobrante
 
@@ -1789,6 +1795,10 @@ export function PagarModal({
                       step="0.01"
                       value={linea.monto}
                       onChange={e => updateLine(idx, { monto: e.target.value })}
+                      autoComplete="off"
+                      inputMode="numeric"
+                      enterKeyHint="done"
+                      data-form-type="other"
                       onPointerDown={() => {
                         if (linea.origen === 'favor') return
                         if (linea.monto !== '') updateLine(idx, { monto: '' })
@@ -1803,13 +1813,11 @@ export function PagarModal({
                           updateLine(idx, { monto: '' })
                           showToast(t('error_wallet_saldo_excedido', { nombre: t(w.nombre), saldo: fmtARS(saldo) }), 'error')
                         }
-                      }}
-                      placeholder=""
-                      inputMode="decimal"
-                      enterKeyHint="done"
-                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }}
-                    />
-                    {selectedWallet ? (
+                       }}
+                       placeholder=""
+                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }}
+                     />
+                     {selectedWallet ? (
                       <span className={`pay-multi-moneda pay-multi-moneda--${selectedWallet.moneda.toLowerCase()}`}>{selectedWallet.moneda}</span>
                     ) : linea.origen === 'favor' ? (
                       <span className="pay-multi-moneda pay-multi-moneda--ars">ARS</span>
@@ -1912,6 +1920,10 @@ export function PagarModal({
                         step="0.01"
                         value={linea.monto}
                         onChange={e => updateLineUsd(idx, { monto: e.target.value })}
+                        autoComplete="off"
+                        inputMode="numeric"
+                        enterKeyHint="done"
+                        data-form-type="other"
                         onPointerDown={() => {
                           if (linea.origen === 'favor') return
                           if (linea.monto !== '') updateLineUsd(idx, { monto: '' })
@@ -1928,8 +1940,6 @@ export function PagarModal({
                           }
                         }}
                         placeholder=""
-                        inputMode="decimal"
-                        enterKeyHint="done"
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }}
                       />
                       {selectedWallet ? (
@@ -2024,12 +2034,14 @@ export function PagarModal({
                   step="0.01"
                   value={resumenReal}
                   onChange={e => setResumenReal(e.target.value)}
+                  autoComplete="off"
+                  inputMode="numeric"
+                  enterKeyHint="done"
+                  data-form-type="other"
                   onPointerDown={() => {
                     if (resumenReal !== '') setResumenReal('')
                   }}
                   placeholder="0"
-                  inputMode="decimal"
-                  enterKeyHint="done"
                   onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }}
                 />
                 <div className="pay-resumen-real-hint">{t('pay_resumen_real_hint')}</div>
