@@ -2132,7 +2132,9 @@ export function PagarModal({
                                 {t('error_sobrante_insuficiente_cuota')}
                               </div>
                             )}
-                            {t('pay_overpay_leftover_summary', { monto: fmtARS(sobrante - selectedSumFuture) })}
+                            {!overBudget && (
+                              <span className="overpay-leftover">{t('pay_overpay_leftover_summary', { monto: fmtARS(Math.max(0, sobrante - selectedSumFuture)) })}</span>
+                            )}
                           </div>
                         </>
                       )
