@@ -587,6 +587,17 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   profile_active_user: "Usuario Activo",
   btn_sign_out: "Cerrar Sesión",
   toast_sign_out_success: "Sesión cerrada correctamente",
+
+  // Consentimiento legal (TyC + Privacidad)
+  consent_checkbox_label: "Acepto los Términos y Condiciones de Uso y declaro haber leído la Política de Privacidad.",
+  consent_tyc_link: "Términos y Condiciones de Uso",
+  consent_privacidad_link: "Política de Privacidad",
+  consent_gate_title: "Aceptá los términos para continuar",
+  consent_gate_body: "Para crear tu cuenta necesitamos que aceptes los Términos y Condiciones de Uso y la Política de Privacidad.",
+  consent_gate_accept: "Aceptar y continuar",
+  consent_gate_retry: "Reintentar",
+  toast_consent_error: "No pudimos registrar tu consentimiento. Intentalo de nuevo.",
+  error_consent_required: "Debes aceptar los términos y condiciones para continuar.",
 };
 
 // === CATEGORÍAS (Rubros de Egreso Seed) ===

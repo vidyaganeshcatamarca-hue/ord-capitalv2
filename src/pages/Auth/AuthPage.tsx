@@ -4,6 +4,10 @@ import { useToast } from '@/contexts/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { t, parseError } from '@/locales/i18n'
+import { ConsentCheckbox } from '@/components/ConsentCheckbox/ConsentCheckbox'
+import { ConsentGate } from '@/components/ConsentGate/ConsentGate'
+import { LegalDocModal } from '@/components/LegalDocModal/LegalDocModal'
+import { LEGAL_VERSIONS } from '@/config/legal'
 import './Auth.css'
 
 type Mode = 'login' | 'register'
@@ -32,6 +36,11 @@ export function AuthPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [showEmailForm, setShowEmailForm] = useState(false)
+
+  // Consentimiento legal (TyC + Privacidad)
+  const [consentChecked, setConsentChecked] = useState(false)
+  const [showConsentGate, setShowConsentGate] = useState(false)
+  const [legalDoc, setLegalDoc] = useState<'tyc' | 'privacidad' | null>(null)
 
   // Slide 3: Wallet State
   const [walletName, setWalletName] = useState('')
@@ -86,6 +95,8 @@ export function AuthPage() {
               localStorage.setItem('onboarding_completo', 'true')
               localStorage.removeItem('onboarding_slide')
               navigate('/', { replace: true })
+            } else if (status.consentimiento_aceptado === false) {
+              setShowConsentGate(true)
             } else {
               setSlide(3)
               localStorage.setItem('onboarding_slide', '3')
@@ -134,7 +145,13 @@ export function AuthPage() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { nombre } },
+          options: {
+            data: {
+              nombre,
+              terminos_version: LEGAL_VERSIONS.terminos,
+              privacidad_version: LEGAL_VERSIONS.privacidad,
+            },
+          },
         })
         if (error) throw error
         showToast(t('toast_account_created_check_email'), 'success')
@@ -256,6 +273,32 @@ export function AuthPage() {
     )
   }
 
+  // GATE DE CONSENTIMIENTO LEGAL (OAuth / recuperación): reemplaza todo el onboarding
+  if (showConsentGate) {
+    return (
+      <div className="onboarding-container">
+        <div className="auth-bg">
+          <div className="auth-blob auth-blob-1" />
+          <div className="auth-blob auth-blob-2" />
+        </div>
+        <div className="onboarding-slide slide-active">
+          <ConsentGate
+            onAccepted={() => {
+              setShowConsentGate(false)
+              checkExistingOnboarding()
+            }}
+            onOpenDoc={setLegalDoc}
+          />
+        </div>
+        <LegalDocModal
+          doc={legalDoc ?? 'tyc'}
+          open={legalDoc !== null}
+          onClose={() => setLegalDoc(null)}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="onboarding-container">
       {/* ── Background decorativo ── */}
@@ -268,6 +311,13 @@ export function AuthPage() {
       <div className="onboarding-progress-bar">
         <div className="onboarding-progress-fill" style={{ width: `${slide * 20}%` }} />
       </div>
+
+      {/* MODAL DE DOCUMENTO LEGAL */}
+      <LegalDocModal
+        doc={legalDoc ?? 'tyc'}
+        open={legalDoc !== null}
+        onClose={() => setLegalDoc(null)}
+      />
 
       {/* SLIDE 1: BIENVENIDA */}
       {slide === 1 && (
@@ -387,7 +437,20 @@ export function AuthPage() {
                   )}
                 </div>
 
-                <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={loading}>
+                {authMode === 'register' && (
+                  <ConsentCheckbox
+                    checked={consentChecked}
+                    onChange={setConsentChecked}
+                    disabled={loading}
+                    onOpenDoc={setLegalDoc}
+                  />
+                )}
+
+                <button
+                  type="submit"
+                  className="btn btn-primary btn-full btn-lg"
+                  disabled={loading || (authMode === 'register' && !consentChecked)}
+                >
                   {loading ? t('btn_loading') : authMode === 'login' ? t('btn_login') : t('btn_create_my_space')}
                 </button>
 

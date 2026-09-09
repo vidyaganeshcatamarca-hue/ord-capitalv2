@@ -1,0 +1,55 @@
+.legal-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 1100;
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.legal-modal-card {
+  width: 100%;
+  max-width: 720px;
+  height: 85vh;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.legal-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--border);
+}
+
+.legal-modal-title {
+  color: var(--text);
+  font-size: calc(18px * var(--font-scale));
+  font-weight: 700;
+}
+
+.legal-modal-close {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: calc(18px * var(--font-scale));
+  cursor: pointer;
+  padding: var(--space-1);
+  line-height: 1;
+}
+
+.legal-modal-frame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: var(--bg);
+}

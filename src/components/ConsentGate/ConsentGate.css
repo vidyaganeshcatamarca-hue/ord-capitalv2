@@ -1,0 +1,38 @@
+.consent-gate {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: var(--space-4);
+}
+
+.consent-gate-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.consent-gate-title {
+  color: var(--text);
+  font-size: calc(20px * var(--font-scale));
+  font-weight: 700;
+}
+
+.consent-gate-body {
+  color: var(--text-3);
+  font-size: calc(14px * var(--font-scale));
+  line-height: 1.5;
+}
+
+.consent-gate-error {
+  color: var(--accent-coral);
+  font-size: calc(13px * var(--font-scale));
+  line-height: 1.4;
+}
