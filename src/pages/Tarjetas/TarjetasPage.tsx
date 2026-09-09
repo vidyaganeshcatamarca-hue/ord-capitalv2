@@ -65,6 +65,7 @@ interface PagoHistorial {
   billetera_origen: string
   cuotas_liquidadas: number
   observaciones: string | null
+  moneda?: 'ARS' | 'USD'
 }
 
 interface ComparativaTarjeta {
@@ -605,7 +606,7 @@ export function TarjetasPage() {
               <div className="tarjeta-card-name">{tc.nombre_tarjeta}</div>
               {tc.dia_vencimiento && tc.dia_cierre && (
                 <div className="tarjeta-card-banco">
-                  {t('card_vence_label')}: {tc.dia_vencimiento} Â· {t('card_cierre_label', { day: tc.dia_cierre })} Â· {getDiasParaProximoVencimiento(tc)} {t('card_dias_label')}
+                  {getDiasParaProximoVencimiento(tc)} {t('card_dias_label')} · {t('card_vence_label')} {tc.dia_vencimiento} · {t('card_cierre_label', { day: tc.dia_cierre })}
                 </div>
               )}
             </div>
@@ -797,7 +798,7 @@ export function TarjetasPage() {
                     <div key={c.cuota_id} className="historial-item" style={{ alignItems: 'center' }}>
                       <div className="historial-item-info">
                         <div className="historial-item-card">{!c.caja_id ? t('msg_refinanciacion_pago_minimo') : (c.descripcion || t('msg_compra_en_cuotas_default'))}</div>
-                        <div className="historial-item-source">Cuota {c.posicion_cuota} de {c.total_cuotas} â€¢ Vence el {dueDateStr}</div>
+                        <div className="historial-item-source">Cuota {c.posicion_cuota} de {c.total_cuotas} - Vence el {dueDateStr}</div>
                       </div>
                       <div className="historial-item-monto" style={{ color: 'var(--coral)' }}>
                         {fmtMoneda(c.monto_cuota, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
@@ -839,7 +840,7 @@ export function TarjetasPage() {
                           <span className="historial-item-badge"><CategoryIcon name="CheckCircle2" size={11} /> {h.cuotas_liquidadas} cuotas liquidadas</span>
                         )}
                       </div>
-                      <div className="historial-item-monto">{fmtARS(h.monto_pagado)}</div>
+                      <div className="historial-item-monto">{fmtMoneda(h.monto_pagado, (h.moneda ?? 'ARS') as 'ARS' | 'USD')}</div>
                     </div>
                   )
                 })}
@@ -2112,7 +2113,7 @@ export function PagarModal({
                                       {dueDateStr}
                                       {c.posicion_cuota && c.total_cuotas && Number(c.total_cuotas) > 0 && (
                                         <span className="overpay-cuota-pos">
-                                          {' Â· '}{t('pay_overpay_cuota_position', { pos: c.posicion_cuota, total: c.total_cuotas })}
+                                          {' · '}{t('pay_overpay_cuota_position', { pos: c.posicion_cuota, total: c.total_cuotas })}
                                         </span>
                                       )}
                                     </div>
