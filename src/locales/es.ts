@@ -1691,6 +1691,8 @@ export const inversiones = {
   aria_label_card_menu: "Menú tarjeta",
   card_configure_limits_analysis: "Configura los límites para ver el análisis completo",
   card_monthly_limit_used: "Límite mensual utilizado",
+  card_monthly_limit_spent_ars: "gastado: {monto}",
+  card_monthly_limit_spent_multi: "gastado: {ars} + {usd}",
   card_available_limit: "Límite Disponible",
   card_next_due_date: "Próximo Vencimiento",
   card_due_date_format: "Día {day} ({days} días)",

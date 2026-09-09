@@ -295,6 +295,13 @@
   font-weight: 700;
 }
 
+.tarjeta-progress-pct-detail {
+  font-weight: 400;
+  color: var(--color-text-secondary);
+  font-size: calc(11px * var(--font-scale));
+  margin-left: 4px;
+}
+
 .tarjeta-progress-bar {
   height: 6px;
   background: var(--surface-3);

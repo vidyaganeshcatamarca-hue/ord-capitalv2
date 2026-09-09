@@ -26,6 +26,10 @@ interface MapaTarjeta {
   color?: string
   cotizacion_usd?: number
   recargo_dolar_pct?: number
+  un_pago_consumido_ars?: number
+  un_pago_consumido_usd?: number
+  cuotas_futuras_consumido_ars?: number
+  cuotas_futuras_consumido_usd?: number
 }
 
 interface VencimientoTarjeta {
@@ -630,7 +634,9 @@ export function TarjetasPage() {
           <>
             <div className="tarjeta-progress-row">
               <span className="tarjeta-progress-label">{t("card_monthly_limit_used")}</span>
-              <span className={`tarjeta-progress-pct ${progressClass === 'danger' ? 'text-coral' : ''}`}>{usoPct}%</span>
+              <span className={`tarjeta-progress-pct ${progressClass === 'danger' ? 'text-coral' : ''}`}>
+                {usoPct}% <span className="tarjeta-progress-pct-detail">({(tc.un_pago_consumido_usd ?? 0) > 0 ? t('card_monthly_limit_spent_multi', { ars: fmtMoneda(tc.un_pago_consumido_ars ?? 0, 'ARS'), usd: fmtMoneda(tc.un_pago_consumido_usd ?? 0, 'USD') }) : t('card_monthly_limit_spent_ars', { monto: fmtMoneda(tc.un_pago_consumido_ars ?? 0, 'ARS') })})</span>
+              </span>
             </div>
             <div className="tarjeta-progress-bar">
               <div className={`tarjeta-progress-fill ${progressClass}`} style={{ width: `${usoPct}%` }} />
@@ -654,8 +660,9 @@ export function TarjetasPage() {
             <button className="tarjeta-context-btn" onClick={() => {
               setTargetCard(tc)
               const prefillMontoARS = venc?.monto_a_pagar_ars ?? 0
+              const prefillMontoUSD = venc?.monto_a_pagar_usd ?? 0
               setPagarLineas([{ id: 1, billetera_id: null, monto: prefillMontoARS > 0 ? prefillMontoARS.toString() : '' }])
-              setPagarLineasUsd([{ id: 1, billetera_id: null, monto: '' }])
+              setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillMontoUSD > 0 ? prefillMontoUSD.toString() : '' }])
               nextLineIdArsRef.current = 2
               nextLineIdUsdRef2.current = 2
               setPagarBilleteraId(null)
@@ -721,8 +728,9 @@ export function TarjetasPage() {
                 <button className="btn-pagar-resumen" onClick={() => {
                   setTargetCard(selectedCard)
                   const prefillMontoARS = venc.monto_a_pagar_ars ?? 0
+                  const prefillMontoUSD = venc.monto_a_pagar_usd ?? 0
                   setPagarLineas([{ id: 1, billetera_id: null, monto: prefillMontoARS > 0 ? prefillMontoARS.toString() : '' }])
-                  setPagarLineasUsd([{ id: 1, billetera_id: null, monto: '' }])
+                  setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillMontoUSD > 0 ? prefillMontoUSD.toString() : '' }])
                   nextLineIdArsRef.current = 2
                   nextLineIdUsdRef2.current = 2
                   setPagarBilleteraId(null)
@@ -1499,7 +1507,8 @@ export function PagarModal({
     setResumenReal('')
     setSelectedCuotasAdelantar([])
     setSectionUsdPayIn('USD')
-    setPagarLineasUsd([{ id: 1, billetera_id: null, monto: '' }])
+    const prefillMontoUSDInit = Number(necesitoUSD ?? 0)
+    setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillMontoUSDInit > 0 ? prefillMontoUSDInit.toString() : '' }])
     fetchFutureCuotas()
     return () => { cancelled = true }
   }, [targetCard?.tarjeta_id, pagarFecha, setSelectedCuotasAdelantar, setResumenReal, setResumenRealOn])
