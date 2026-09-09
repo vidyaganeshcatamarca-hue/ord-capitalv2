@@ -1051,11 +1051,10 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         </div>
                         {esUsd && montoNum > 0 && (() => {
                           const tc = tarjetas.find(t => t.tarjeta_id === tarjetaId)
-                          const rPct = tc?.recargo_dolar_pct ? parseFloat(tc.recargo_dolar_pct) : 30
-                          const mFinal = montoNum * cotizacionUsd * (1 + rPct / 100)
+                          const mFinal = montoNum * cotizacionUsd
                           return (
                             <div style={{ fontSize: 11, color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: 8, marginTop: 8, borderLeft: '3px solid var(--color-mint)' }}>
-                              {t('card_usd_quote_current', { rate: formatMonto(cotizacionUsd.toString(), 'ARS'), pct: rPct })}
+                              {t('card_usd_quote_current', { rate: formatMonto(cotizacionUsd.toString(), 'ARS') })}
                               <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString(), 'ARS') })}</span>
                             </div>
                           )
@@ -1972,11 +1971,10 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       </div>
                       {esUsd && montoNum > 0 && (() => {
                         const tc = tarjetas.find(t => t.tarjeta_id === tarjetaId)
-                        const rPct = tc?.recargo_dolar_pct ? parseFloat(tc.recargo_dolar_pct) : 30
-                        const mFinal = montoNum * cotizacionUsd * (1 + rPct / 100)
+                        const mFinal = montoNum * cotizacionUsd
                         return (
                           <div style={{ fontSize: 12, color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: 8, marginTop: 10, borderLeft: '3px solid var(--color-mint)' }}>
-                            {t('card_usd_quote_simple', { rate: formatMonto(cotizacionUsd.toString(), 'ARS'), pct: rPct })}
+                            {t('card_usd_quote_simple', { rate: formatMonto(cotizacionUsd.toString(), 'ARS') })}
                             <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString(), 'ARS') })}</span>
                           </div>
                         )
