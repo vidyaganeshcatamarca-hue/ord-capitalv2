@@ -314,7 +314,7 @@ export function HomePage() {
   const { hideAmounts, toggleEyeHide } = useHideAmounts(user?.id)
   const [alertsOpen, setAlertsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [movementToDelete, setMovementToDelete] = useState<number | null>(null)
+  const [movementToDelete, setMovementToDelete] = useState<any | null>(null)
   const [movementToEdit, setMovementToEdit] = useState<any | null>(null)
 
   const [fugasMisterioOcultado, setFugasMisterioOcultado] = useState(() => {
@@ -844,16 +844,21 @@ export function HomePage() {
     setSelectedBilletera(billetera)
   }
 
-  const handleDeleteMovement = (id: number) => {
-    setMovementToDelete(id)
+  const handleDeleteMovement = (m: any) => {
+    setMovementToDelete(m)
   }
 
   const confirmDeleteMovement = async () => {
     if (movementToDelete === null) return
-    const id = movementToDelete
+    const m = movementToDelete
     setMovementToDelete(null)
     try {
-      await rpc('fn_eliminar_movimiento_caja', { p_caja_id: id })
+      const isCardPayment = m.tipo === 'pago_tarjeta' || m.tarjeta_id != null
+      if (isCardPayment) {
+        await rpc('fn_eliminar_pago_tarjeta_grupo', { p_pago_caja_id: m.p_caja_id })
+      } else {
+        await rpc('fn_eliminar_movimiento_caja', { p_caja_id: m.p_caja_id })
+      }
       showToast(t('success_movement_deleted'), 'success')
       fetchData()
       window.dispatchEvent(new CustomEvent('movement-added'))
@@ -1524,7 +1529,7 @@ export function HomePage() {
                           className="timeline-item-delete-btn"
                           onClick={(e) => {
                             e.stopPropagation()
-                            handleDeleteMovement(m.p_caja_id)
+                            handleDeleteMovement(m)
                           }}
                           title={t('btn_delete_movement')}
                           aria-label={t('btn_delete_movement')}
