@@ -615,10 +615,10 @@ export function TarjetasPage() {
             <div className={`tarjeta-semaforo ${semaforoClass}`}><CategoryIcon name={semaforoIcon} size={12} /> {semaforoLabel}</div>
             <button
               className="tarjeta-detalle-action-btn"
-              style={{ width: 28, height: 28, fontSize: 'calc(14px * var(--font-scale))' }}
+              style={{ width: 28, height: 28, fontSize: 'calc(14px * var(--font-scale))', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               onClick={e => { e.stopPropagation(); setMenuOpen(menuOpen === tc.tarjeta_id ? null : tc.tarjeta_id) }}
               aria-label={t("aria_label_card_menu")}
-            >â‹®</button>
+            ><CategoryIcon name="EllipsisVertical" size={14} /></button>
           </div>
         </div>
 
