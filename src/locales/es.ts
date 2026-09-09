@@ -1723,8 +1723,8 @@ export const inversiones = {
 
   movement_days_ago_2: "Hace 2 días",
   card_usd_purchase: "Compra en Dólares (USD)",
-  card_usd_quote_current: "Cotización actual: {rate} USD <br/> Recargo impositivo: {pct}%",
-  card_usd_quote_simple: "Cotización: {rate} USD <br/> Recargo: {pct}%",
+  card_usd_quote_current: "Cotización actual: {rate} USD <br/> Puede incluir impuestos",
+  card_usd_quote_simple: "Cotización: {rate} USD - puede incluir impuestos",
   card_usd_estimated_total: "Total estimado ARS: {amount}",
   step_category: "Categoría",
   placeholder_search_category: "Buscar categoría...",
