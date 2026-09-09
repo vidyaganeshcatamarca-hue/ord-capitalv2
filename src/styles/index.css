@@ -179,6 +179,26 @@ body {
 }
 .scroll-area::-webkit-scrollbar { display: none; }
 
+/* PC / desktop: mostrar scrollbar para que se sepa que hay scroll.
+   En mobile se oculta porque el swipe lo reemplaza. */
+@media (min-width: 768px), (hover: hover) and (pointer: fine) {
+  .scroll-area {
+    scrollbar-width: thin;
+    scrollbar-color: var(--surface-3) transparent;
+  }
+  .scroll-area::-webkit-scrollbar {
+    display: block;
+    width: 8px;
+  }
+  .scroll-area::-webkit-scrollbar-thumb {
+    background: var(--surface-3);
+    border-radius: 4px;
+  }
+  .scroll-area::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
 /* ─── Typography ─── */
 .font-display { font-family: var(--font-display); }
 .font-mono    { font-family: var(--font-mono); }

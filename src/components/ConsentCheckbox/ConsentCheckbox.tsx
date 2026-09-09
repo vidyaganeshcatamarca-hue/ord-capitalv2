@@ -18,7 +18,24 @@ export function ConsentCheckbox({ checked, onChange, disabled = false, onOpenDoc
           checked={checked}
           disabled={disabled}
           onChange={(e) => onChange(e.target.checked)}
+          aria-label={t('consent_checkbox_label')}
         />
+        <span className="consent-checkbox-box" aria-hidden="true">
+          <svg
+            className="consent-checkbox-tick"
+            viewBox="0 0 16 16"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M3 8.5 L6.5 12 L13 4.5"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </span>
         <span className="consent-checkbox-text">
           {t('consent_checkbox_label')}
         </span>
