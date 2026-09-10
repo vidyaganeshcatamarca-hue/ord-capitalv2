@@ -853,7 +853,7 @@ export function HomePage() {
     const m = movementToDelete
     setMovementToDelete(null)
     try {
-      const isCardPayment = m.tipo === 'pago_tarjeta' || m.tarjeta_id != null
+      const isCardPayment = m.tipo === 'pago_tarjeta'
       if (isCardPayment) {
         await rpc('fn_eliminar_pago_tarjeta_grupo', { p_pago_caja_id: m.p_caja_id })
       } else {

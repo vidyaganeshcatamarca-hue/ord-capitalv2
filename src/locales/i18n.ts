@@ -77,10 +77,24 @@ export function t(key: string, params?: Record<string, any>): string {
 export function parseError(err: any): string {
   if (!err) return '';
   let msg = typeof err === 'string' ? err : err.message || JSON.stringify(err);
-  
-  // Si no parece ser un JSON, verificar si es una frase legible de error
+
+  // 0) Si el mensaje trae un JSON embebido (caso típico de Supabase envolviendo
+  //    RAISE EXCEPTION de Postgres con prefijo tipo "PostgresException: {...}"),
+  //    intentamos extraer el primer {...} antes que nada.
   if (!msg.startsWith('{')) {
-    // Si no contiene espacios y es razonablemente corta, intentamos traducirla
+    const m = msg.match(/(\{[\s\S]*\})/);
+    if (m) {
+      try {
+        const parsed = JSON.parse(m[1]);
+        if (parsed && parsed.key) {
+          return t(parsed.key, parsed.params);
+        }
+      } catch (e) {
+        // No era JSON válido, seguimos con el resto
+      }
+    }
+
+    // Si no parece ser un JSON, verificar si es una frase legible de error
     if (!msg.includes(' ') && msg.length < 50) {
       return t(msg);
     }
