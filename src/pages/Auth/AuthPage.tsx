@@ -7,6 +7,7 @@ import { t, parseError } from '@/locales/i18n'
 import { ConsentCheckbox } from '@/components/ConsentCheckbox/ConsentCheckbox'
 import { ConsentGate } from '@/components/ConsentGate/ConsentGate'
 import { LegalDocModal } from '@/components/LegalDocModal/LegalDocModal'
+import { WelcomeBack } from '@/components/WelcomeBack/WelcomeBack'
 import { LEGAL_VERSIONS } from '@/config/legal'
 import './Auth.css'
 
@@ -41,6 +42,9 @@ export function AuthPage() {
   const [consentChecked, setConsentChecked] = useState(false)
   const [showConsentGate, setShowConsentGate] = useState(false)
   const [legalDoc, setLegalDoc] = useState<'tyc' | 'privacidad' | null>(null)
+
+  // Welcome back (recuperación de onboarding incompleto)
+  const [showWelcomeBack, setShowWelcomeBack] = useState(false)
 
   // Slide 3: Wallet State
   const [walletName, setWalletName] = useState('')
@@ -98,8 +102,7 @@ export function AuthPage() {
             } else if (status.consentimiento_aceptado === false) {
               setShowConsentGate(true)
             } else {
-              setSlide(3)
-              localStorage.setItem('onboarding_slide', '3')
+              setShowWelcomeBack(true)
             }
             return // Éxito
           }
@@ -132,6 +135,26 @@ export function AuthPage() {
     setSlide(nextSlide)
     if (session) {
       localStorage.setItem('onboarding_slide', nextSlide.toString())
+    }
+  }
+
+  // --- WELCOME BACK (recuperación de onboarding incompleto) ---
+  const handleWelcomeBackContinue = () => {
+    setShowWelcomeBack(false)
+    setSlide(3)
+    localStorage.setItem('onboarding_slide', '3')
+  }
+
+  const handleWelcomeBackSwitch = async () => {
+    try {
+      await supabase.auth.signOut()
+      localStorage.removeItem('onboarding_slide')
+      localStorage.removeItem('onboarding_completo')
+      setShowWelcomeBack(false)
+      setSlide(1)
+      // El useEffect que observa `session` disparará el flujo de auth.
+    } catch (err) {
+      console.error('Error al cerrar sesión en welcome-back:', err)
     }
   }
 
@@ -295,6 +318,25 @@ export function AuthPage() {
           open={legalDoc !== null}
           onClose={() => setLegalDoc(null)}
         />
+      </div>
+    )
+  }
+
+  // WELCOME BACK (onboarding incompleto): continuar o cambiar de cuenta
+  if (showWelcomeBack) {
+    return (
+      <div className="onboarding-container">
+        <div className="auth-bg">
+          <div className="auth-blob auth-blob-1" />
+          <div className="auth-blob auth-blob-2" />
+        </div>
+        <div className="onboarding-slide slide-active">
+          <WelcomeBack
+            email={session?.user?.email ?? ''}
+            onContinue={handleWelcomeBackContinue}
+            onSwitchAccount={handleWelcomeBackSwitch}
+          />
+        </div>
       </div>
     )
   }

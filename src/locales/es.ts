@@ -598,6 +598,21 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   consent_gate_retry: "Reintentar",
   toast_consent_error: "No pudimos registrar tu consentimiento. Intentalo de nuevo.",
   error_consent_required: "Debes aceptar los términos y condiciones para continuar.",
+
+  // Versión de app (AppVersionGate)
+  appversion_banner_title: "Hay una nueva versión disponible",
+  appversion_banner_message: "Actualizá para disfrutar las mejoras.",
+  appversion_banner_update: "Actualizar",
+  appversion_banner_later: "Más tarde",
+  appversion_required_title: "Necesitás actualizar la app",
+  appversion_required_message: "Tu versión actual ya no es compatible. Actualizá para seguir usándola.",
+  appversion_required_button: "Actualizar ahora",
+
+  // Welcome back (recuperación de onboarding incompleto)
+  welcomeback_title: "Bienvenido de nuevo",
+  welcomeback_subtitle: "Tenés una cuenta activa. ¿Querés continuar con ella o usar otra?",
+  welcomeback_continue: "Continuar con esta cuenta",
+  welcomeback_switch: "Usar otra cuenta",
 };
 
 // === CATEGORÍAS (Rubros de Egreso Seed) ===
