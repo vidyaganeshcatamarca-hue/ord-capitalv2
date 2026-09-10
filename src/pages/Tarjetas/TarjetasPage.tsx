@@ -514,6 +514,16 @@ export function TarjetasPage() {
       const resumenRealNum = resumenReal !== '' ? parseFloat(resumenReal) : null
       const cicloBrutoAjuste = (vencimientoByCard[targetCard.tarjeta_id]?.monto_ciclo_total_ars ?? 0)
       const diferenciaParaNoFavor = resumenRealNum !== null ? (resumenRealNum - cicloBrutoAjuste) : 0
+      // Pago total = patrimonio: lo que sale de la billetera + el saldo a favor
+      // que se consume automaticamente para cubrir el ciclo.
+      const totalPagarBilletera = validLineas.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0)
+      const favorNumHandle = Math.max(0, Number(vencimientoByCard[targetCard.tarjeta_id]?.saldo_a_favor ?? 0))
+      const pagoTotalHandle = totalPagarBilletera + favorNumHandle
+      // Excedente: pago total por encima del resumen real. La RPC lo acredita
+      // como saldo a favor (en vez de calcular el suyo).
+      const montoFavorExplicito = resumenRealNum !== null
+        ? Math.max(0, pagoTotalHandle - resumenRealNum)
+        : null
       const v_primer_caja_id: number = await rpc<number>('fn_registrar_pago_tarjeta_multi', {
         p_tarjeta_id: targetCard.tarjeta_id,
         p_fecha_pago: pagarFecha,
@@ -526,6 +536,7 @@ export function TarjetasPage() {
         p_cuotas_adelantar: selectedCuotasAdelantar.length > 0 ? selectedCuotasAdelantar : null,
         p_resumen_real: resumenRealNum,
         p_no_acreditar_favor: diferenciaParaNoFavor > 0.01,
+        p_monto_a_favor_explicito: montoFavorExplicito,
       })
       // Punto 3: registrar la diferencia banco-vs-tarjeta en la cuenta de sistema
       // 'Diferencia Tarjeta' (cat_card_diff). Solo si el usuario declaro resumen real
@@ -1538,13 +1549,17 @@ export function PagarModal({
   // Falta repartir: efectivo que el usuario todavía debe distribuir (baseline neto; con resumen real: real - favor)
   const faltaBase = realNum !== null ? Math.max(0, realNum - favorNum) : netoRequerido
   const faltaRepartir = faltaBase - totalPagar
-  // Sobrante: pago por encima del ciclo, considerando el saldo a favor previo.
-  // El saldo a favor consume primero el ciclo, por lo que si tenías $75k favor + pagás $150k sobre
-  // un ciclo de $100k, el sobrante REAL es 150 + 75 - 100 = $125k (no $50k).
-  // Con resumen real: el 'pago' del banco ya viene dado, no se aplica el favor previo como input.
+  // Pago total = patrimonio: lo que sale de la billetera + lo que se consume
+  // del saldo a favor previo. El saldo a favor se consume automatico para
+  // cubrir el ciclo si el pago de bolsillo no alcanza.
+  const pagoTotal = totalPagar + favorNum
+  // Sobrante: pago total por encima de la referencia. La referencia es el
+  // resumen real cuando esta declarado, o el ciclo cuando no.
+  // El modal de overpay se muestra cuando hay excedente para que el user elija
+  // si va a saldo a favor o se asigna a adelantar cuotas futuras.
   const sobrante = realNum !== null
-    ? Math.max(0, totalPagar - cicloBruto)  // con resumen real, el banco es el numero del pago
-    : Math.max(0, totalPagar + favorNum - cicloBruto)
+    ? Math.max(0, pagoTotal - realNum)  // pago total vs resumen real
+    : Math.max(0, pagoTotal - cicloBruto)  // pago total vs ciclo
 
   // === Fase 4 multi-moneda ===
   // Pago por moneda según la billetera (o favor) de cada línea.
