@@ -1465,7 +1465,7 @@ export function HomePage() {
               <div className="card" style={{ padding: 'var(--space-4)' }}>
                 <div className="timeline-feed">
                   {filteredMovimientos.map((m) => {
-                    const isCardPayment = m.tipo === 'pago_tarjeta' || m.tarjeta_id != null
+                    const isCardPayment = m.tipo === 'pago_tarjeta'
                     const moneda = isCardPayment && (m as any).moneda === 'USD' ? 'USD' : (walletCurrencyMap[m.nombre_billetera] ?? 'ARS')
                     const esEgreso = m.monto < 0
                     // Fuente de verdad: el color del rubro padre que viene directo de la RPC.

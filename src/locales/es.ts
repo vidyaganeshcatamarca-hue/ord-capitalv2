@@ -32,6 +32,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   error_transfer_same_wallet: "La cuenta de origen y destino no pueden ser iguales.",
   error_transfer_insufficient_balance: "No tienes saldo suficiente en la cuenta de origen para esta operación.",
   error_invalid_movement_type: "Tipo de movimiento inválido.",
+  error_movement_not_found: "Este movimiento ya no está disponible. La lista se actualizará al recargar.",
   error_category_in_use: "No se puede eliminar: la categoría está siendo usada por movimientos",
   error_category_has_children: "No se puede eliminar: la categoría tiene sub-categorías hijas",
   error_invalid_params: "Parámetros inválidos para la operación.",
