@@ -508,7 +508,13 @@ export function TarjetasPage() {
     const cardSaldoAFavor = Number(vencimientoByCard[targetCard.tarjeta_id]?.saldo_a_favor ?? 0)
     try {
       setFormSubmitting(true)
-      await rpc('fn_registrar_pago_tarjeta_multi', {
+      // Si el usuario declaro resumen real y la diferencia contra el ciclo es
+      // positiva (pago de mas), NO se acredita saldo a favor: la diferencia
+      // se registra como Diferencia Tarjeta (gasto) abajo.
+      const resumenRealNum = resumenReal !== '' ? parseFloat(resumenReal) : null
+      const cicloBrutoAjuste = (vencimientoByCard[targetCard.tarjeta_id]?.monto_ciclo_total_ars ?? 0)
+      const diferenciaParaNoFavor = resumenRealNum !== null ? (resumenRealNum - cicloBrutoAjuste) : 0
+      const v_primer_caja_id: number = await rpc<number>('fn_registrar_pago_tarjeta_multi', {
         p_tarjeta_id: targetCard.tarjeta_id,
         p_fecha_pago: pagarFecha,
         p_pagos: validLineas.map(l => {
@@ -518,19 +524,22 @@ export function TarjetasPage() {
           return obj
         }),
         p_cuotas_adelantar: selectedCuotasAdelantar.length > 0 ? selectedCuotasAdelantar : null,
-        p_resumen_real: resumenReal !== '' ? parseFloat(resumenReal) : null,
+        p_resumen_real: resumenRealNum,
+        p_no_acreditar_favor: diferenciaParaNoFavor > 0.01,
       })
       // Punto 3: registrar la diferencia banco-vs-tarjeta en la cuenta de sistema
-      // 'Diferencia Tarjeta' (cat_card_diff). Solo si el usuario declaró resumen real
-      // y difiere del ciclo calculado.
+      // 'Diferencia Tarjeta' (cat_card_diff). Solo si el usuario declaro resumen real
+      // y difiere del ciclo calculado. Vinculamos el ajuste al pago raiz con
+      // p_parent_pago_caja_id para que borrar el pago tambien borre la Diferencia.
       if (resumenReal !== '' && parseFloat(resumenReal) > 0) {
-        const cicloBrutoAjuste = (vencimientoByCard[targetCard.tarjeta_id]?.monto_ciclo_total_ars ?? 0)
-        const diferencia = parseFloat(resumenReal) - cicloBrutoAjuste
+        const cicloBrutoAjuste2 = (vencimientoByCard[targetCard.tarjeta_id]?.monto_ciclo_total_ars ?? 0)
+        const diferencia = parseFloat(resumenReal) - cicloBrutoAjuste2
         if (Math.abs(diferencia) > 0.01) {
           await rpc('fn_registrar_ajuste_diferencia_tarjeta', {
             p_tarjeta_id: targetCard.tarjeta_id,
             p_diferencia: diferencia,
             p_fecha: pagarFecha,
+            p_parent_pago_caja_id: v_primer_caja_id,
           })
         }
       }
