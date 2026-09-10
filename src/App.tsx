@@ -10,6 +10,7 @@ import { BottomNav } from '@/components/BottomNav/BottomNav'
 import { SideNav } from '@/components/SideNav/SideNav'
 import { PWABanner } from '@/components/PWABanner'
 import { AppVersionGate } from '@/components/AppVersionGate/AppVersionGate'
+import { AppConsentGate } from '@/components/AppConsentGate/AppConsentGate'
 
 
 // Lazy-loaded, but preloaded after app idle because this is the primary quick-capture path.
@@ -169,6 +170,7 @@ export default function App() {
     <BrowserRouter>
       <ErrorBoundary>
         <AppVersionGate>
+        <AppConsentGate>
         <AuthProvider>
           <SessionTrackerProvider>
             <HogarProvider>
@@ -192,6 +194,7 @@ export default function App() {
             </HogarProvider>
           </SessionTrackerProvider>
         </AuthProvider>
+        </AppConsentGate>
         </AppVersionGate>
       </ErrorBoundary>
     </BrowserRouter>
