@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
+import { APP_VERSION } from '@/config/app'
 
 const SESSION_STORAGE_KEY = 'session_tracking_id'
 const IDLE_TIMEOUT_MS = 120_000
@@ -37,7 +38,10 @@ let cachedVersion: string | null = null
 
 function getAppVersion(): string {
   if (cachedVersion !== null) return cachedVersion
-  cachedVersion = import.meta.env.VITE_APP_VERSION ?? 'unknown'
+  // Single source of truth en `src/config/app.ts`. NO se lee de
+  // `import.meta.env.VITE_APP_VERSION` (que venía de package.json via
+  // Vite inject) para evitar drift entre dos fuentes de versión.
+  cachedVersion = APP_VERSION
   return cachedVersion
 }
 
