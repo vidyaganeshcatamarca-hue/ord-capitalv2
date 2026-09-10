@@ -48,7 +48,6 @@ export function ConsentCheckbox({ checked, onChange, disabled = false, onOpenDoc
         >
           {t('consent_tyc_link')}
         </button>
-        <span className="consent-link-sep">·</span>
         <button
           type="button"
           className="consent-link"

@@ -78,9 +78,9 @@
 
 .consent-checkbox-links {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-1);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem; /* ~2 saltos de línea para 13px @ line-height 1.5 */
   padding-left: 34px;
 }
 
@@ -93,9 +93,4 @@
   font-weight: 600;
   text-decoration: underline;
   cursor: pointer;
-}
-
-.consent-link-sep {
-  color: var(--text-4);
-  font-size: calc(13px * var(--font-scale));
 }
