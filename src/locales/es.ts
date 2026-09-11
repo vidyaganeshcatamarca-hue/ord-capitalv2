@@ -1902,7 +1902,7 @@ export const inversiones = {
   edit_movement_destination_required: "Por favor, selecciona una cuenta destino.",
   edit_movement_same_wallet: "Las cuentas de origen y destino no pueden ser iguales.",
   edit_movement_note_placeholder: "Ej: Compra de supermercado mensual",
-  bcg_calibration_title: "Calibración BCG (Fase 6)",
+  bcg_calibration_title: "Informacion que mejora tus reportes",
   title_latest_movements: "Últimos Movimientos",
   invite_home_message: "Te invito a unirte a mi hogar en ORD Capital. Usa este código: {codigo}",
   bcg_no_data: "No hay datos de la categoría seleccionada.",
