@@ -516,7 +516,7 @@ export function TarjetasPage() {
       const diferenciaParaNoFavor = resumenRealNum !== null ? (resumenRealNum - cicloBrutoAjuste) : 0
       // Pago total = patrimonio: lo que sale de la billetera + el saldo a favor
       // que se consume automaticamente para cubrir el ciclo.
-      const totalPagarBilletera = validLineas.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0)
+      const totalPagarBilletera = validLineas.reduce((s, l) => s + (Number(l.monto) || 0), 0)
       const favorNumHandle = Math.max(0, Number(vencimientoByCard[targetCard.tarjeta_id]?.saldo_a_favor ?? 0))
       const pagoTotalHandle = totalPagarBilletera + favorNumHandle
       // Excedente: pago total por encima del resumen real. La RPC lo acredita
