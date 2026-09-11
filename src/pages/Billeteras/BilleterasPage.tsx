@@ -14,6 +14,7 @@ import { BilleteraDetailModal } from '@/components/BilleteraDetailModal/Billeter
 import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/ReconcileWalletModal'
 import { TabEgresos, TabIngresos } from '@/pages/Categorias/CategoriasPage'
 import { CategoryIcon } from '@/components/CategoryIcon'
+import { DonutChart } from '@/components/charts/DonutChart'
 import { WALLET_ICONS } from '@/constants/emojiToLucide'
 import '@/pages/Categorias/Categorias.css'
 import './Billeteras.css'
@@ -377,6 +378,8 @@ export function BilleterasPage() {
           </div>
 
           <TabIngresos hideNewBtn={true} />
+
+     <IncomeSourcesDonut hideAmounts={hideAmounts} />
         </>
       ) : (
         <TabEgresos />
@@ -577,6 +580,103 @@ export function BilleterasPage() {
         onConfirm={confirmArchivar}
         onCancel={() => setShowConfirmArchive(false)}
       />
+    </div>
+  )
+}
+
+// ─── Donut de Fuentes de Ingreso ──────────────────────────────────────────
+type IncomePeriodo = 'mes_actual' | 'semana_actual' | 'mes_anterior' | 'anio_actual'
+
+function IncomeSourcesDonut({ hideAmounts }: { hideAmounts: boolean }) {
+  const [periodo, setPeriodo] = useState<IncomePeriodo>('mes_actual')
+  const [data, setData] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  const fetchData = useCallback(async (p: IncomePeriodo) => {
+    setLoading(true)
+    try {
+      const res = await rpc<any[]>('fn_reporte_top_fuentes_ingreso', { p_periodo: p }).catch(() => [] as any[])
+      setData(res ?? [])
+    } catch (err) {
+      setData([])
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { fetchData(periodo) }, [periodo, fetchData])
+
+  return (
+    <div className="income-donut-block" style={{ marginTop: 'var(--space-4)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+        <h3 className="font-display" style={{ fontSize: 'calc(16px * var(--font-scale))', margin: 0 }}>
+          {t('wallets.income_donut_title')}
+        </h3>
+      </div>
+
+      <div className="cat-tabs-switcher" style={{ marginBottom: 'var(--space-3)' }}>
+        <button
+          className={`cat-tab-btn ${periodo === 'mes_actual' ? 'active' : ''}`}
+          onClick={() => setPeriodo('mes_actual')}
+        >
+          {t('wallets.income_donut_periodo_mes')}
+        </button>
+        <button
+          className={`cat-tab-btn ${periodo === 'semana_actual' ? 'active' : ''}`}
+          onClick={() => setPeriodo('semana_actual')}
+        >
+          {t('wallets.income_donut_periodo_semana')}
+        </button>
+        <button
+          className={`cat-tab-btn ${periodo === 'mes_anterior' ? 'active' : ''}`}
+          onClick={() => setPeriodo('mes_anterior')}
+        >
+          {t('wallets.income_donut_periodo_mes_anterior')}
+        </button>
+        <button
+          className={`cat-tab-btn ${periodo === 'anio_actual' ? 'active' : ''}`}
+          onClick={() => setPeriodo('anio_actual')}
+        >
+          {t('wallets.income_donut_periodo_anio')}
+        </button>
+      </div>
+
+      {loading ? (
+        <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--text-secondary)' }}>
+          {t('wallets.income_donut_loading')}
+        </div>
+      ) : data.length === 0 ? (
+        <div style={{ padding: 'var(--space-4)', textAlign: 'center', color: 'var(--text-secondary)' }}>
+          {t('wallets.income_donut_empty')}
+        </div>
+      ) : (
+        <>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+       <DonutChart
+            data={data}
+            hideAmounts={hideAmounts}
+            centerLabelKey="wallets.income_donut_total_label"
+            totalField="total_ingresado"
+          />
+     </div>
+
+          <div style={{ marginTop: 'var(--space-3)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {data.map((item, idx) => (
+              <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                  <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '3px', background: item.color, flexShrink: 0 }} />
+                  <span style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.nombre}
+                  </span>
+                </div>
+                <span className="font-mono" style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text-secondary)', flexShrink: 0 }}>
+                  {hideAmounts ? '***' : `$${Number(item.total_ingresado).toLocaleString('es-AR', { maximumFractionDigits: 0 })}`} · {Number(item.porcentaje_del_total).toFixed(1)}%
+                </span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   )
 }
