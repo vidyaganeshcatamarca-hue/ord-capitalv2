@@ -235,19 +235,25 @@ export function BilleterasPage() {
   return (
     <div className="page">
       {/* Switcher de menús unificados */}
-      <div className="cat-tabs-switcher mb-4">
-        <button
-          className={`cat-tab-btn ${activeMenuTab === 'cuentas_ingreso' ? 'active' : ''}`}
-          onClick={() => setActiveMenuTab('cuentas_ingreso')}
-        >
-          <span><CategoryIcon name="Briefcase" size={14} /></span> {t('wallets.tab_cuentas_ingreso')}
-        </button>
-        <button
-          className={`cat-tab-btn ${activeMenuTab === 'categorias_egresos' ? 'active' : ''}`}
-          onClick={() => setActiveMenuTab('categorias_egresos')}
-        >
-          <span><CategoryIcon name="Upload" size={14} /></span> {t('wallets.tab_categorias_egresos')}
-        </button>
+      <div className="billeteras-sticky-tabs" role="tablist">
+        <div className="cat-tabs-switcher mb-4">
+          <button
+            role="tab"
+            aria-selected={activeMenuTab === 'cuentas_ingreso'}
+            className={`cat-tab-btn ${activeMenuTab === 'cuentas_ingreso' ? 'active' : ''}`}
+            onClick={() => setActiveMenuTab('cuentas_ingreso')}
+          >
+            <span><CategoryIcon name="Briefcase" size={14} /></span> {t('wallets.tab_cuentas_ingreso')}
+          </button>
+          <button
+            role="tab"
+            aria-selected={activeMenuTab === 'categorias_egresos'}
+            className={`cat-tab-btn ${activeMenuTab === 'categorias_egresos' ? 'active' : ''}`}
+            onClick={() => setActiveMenuTab('categorias_egresos')}
+          >
+            <span><CategoryIcon name="Upload" size={14} /></span> {t('wallets.tab_categorias_egresos')}
+          </button>
+        </div>
       </div>
 
       {activeMenuTab === 'cuentas_ingreso' ? (

@@ -1,3 +1,20 @@
+/* ── Sticky Tab Switcher (Ingreso/Egreso) ── */
+.billeteras-sticky-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg);
+  padding: var(--space-3) var(--space-4) var(--space-4);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  backdrop-filter: saturate(140%) blur(8px);
+  -webkit-backdrop-filter: saturate(140%) blur(8px);
+}
+
+.billeteras-sticky-tabs .cat-tabs-switcher {
+  margin: 0;
+}
+
 .billeteras-list {
   display: flex;
   flex-direction: column;
