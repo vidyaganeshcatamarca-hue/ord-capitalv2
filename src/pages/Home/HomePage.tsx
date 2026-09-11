@@ -858,11 +858,20 @@ export function HomePage() {
     if (loadingAllMovimientos) return
     const node = activitySectionRef.current
     if (!node) return
-    // requestAnimationFrame gives React a frame to commit the new feed
-    // before we measure and scroll. Without it, scrollIntoView can race
-    // the DOM update and land on stale geometry.
     const raf = requestAnimationFrame(() => {
-      node.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      // Solo scrolleamos al feed si esta fuera del viewport o si su parte
+      // inferior queda cortada. block:'start' siempre empujaba el feed al
+      // tope del viewport, dejando el donut/detalle fuera y dando la
+      // sensacion de 'tope al subir'. block:'nearest' deja la pagina donde
+      // esta si el feed ya es visible, y la mueve solo lo justo cuando no.
+      const rect = node.getBoundingClientRect()
+      const viewportH = window.innerHeight || document.documentElement.clientHeight
+      const isAbove = rect.bottom < 0
+      const isBelow = rect.top > viewportH
+      const isPartiallyOut = rect.bottom > viewportH || rect.top < 0
+      if (isAbove || isBelow || isPartiallyOut) {
+        node.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+      }
     })
     return () => cancelAnimationFrame(raf)
   }, [

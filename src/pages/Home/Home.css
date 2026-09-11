@@ -962,18 +962,15 @@
   }
   .home-section-feed {
     order: 5;
-    flex: 1 1 auto;
-    min-height: 0;
-    display: flex;
-    flex-direction: column;
   }
 
-  /* Cuando el feed esta filtrado con pocos items (o vacio), el
-     .empty-state debe quedar centrado en el espacio vertical disponible. */
-  .home-section-feed.is-filtered .empty-state,
-  .home-section-feed.is-filtered .timeline-feed {
-    flex: 1 1 auto;
-    min-height: 0;
+  /* Cuando el feed esta filtrado y el contenido es corto, el card de
+     timeline o el empty-state reciben un min-height generoso para que
+     el 'hueco negro' del body no se vea. NO estiramos .home-section-feed
+     en si (eso crea un sub-scroll container que rompe el scroll del .page). */
+  .home-section-feed.is-filtered .timeline-feed,
+  .home-section-feed.is-filtered .empty-state {
+    min-height: 50vh;
   }
 
   .home-section-feed.is-filtered .empty-state {
@@ -988,13 +985,6 @@
     gap: var(--space-5);
     padding: 0;
     align-items: start;
-  }
-
-  /* En desktop el feed vive en la columna derecha del grid. El flex:1
-     mobile no aplica porque romperia la grilla 1.15fr/0.85fr. */
-  .home-section-feed {
-    flex: 0 0 auto;
-    min-height: 0;
   }
 }
 
