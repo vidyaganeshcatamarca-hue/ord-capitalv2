@@ -384,9 +384,11 @@ export function HomePage() {
         ids: [parentId]
       })
     }
-    requestAnimationFrame(() => {
-      activitySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    })
+    // The actual scrollIntoView is re-scheduled in a useEffect below, so it
+    // fires AFTER allMovimientos has loaded and the feed has re-rendered with
+    // the real list. Without this, the scroll lands on the spinner or the
+    // previous (unfiltered) items, which feels broken when the resulting
+    // feed is short.
   }, [rankingCategorias, t])
 
   const [ordenBilleterasVisibles, setOrdenBilleterasVisibles] = useState<'valor' | 'alfabetico'>('valor')
@@ -845,6 +847,27 @@ export function HomePage() {
     homeFilters.fechaFin,
     homeFilters.billeteraId,
     homeFilters.tarjetaId,
+  ])
+
+  // Scroll to the activity section AFTER the filtered dataset has loaded.
+  // Depends on filterTarget identity + loadingAllMovimientos so the scroll
+  // fires exactly once per click, when the feed is ready (not while the
+  // spinner is showing).
+  useEffect(() => {
+    if (!filterTarget) return
+    if (loadingAllMovimientos) return
+    const node = activitySectionRef.current
+    if (!node) return
+    // requestAnimationFrame gives React a frame to commit the new feed
+    // before we measure and scroll. Without it, scrollIntoView can race
+    // the DOM update and land on stale geometry.
+    const raf = requestAnimationFrame(() => {
+      node.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [
+    filterTarget ? `${filterTarget.type}:${filterTarget.ids.join(',')}` : '',
+    loadingAllMovimientos
   ])
 
   // Nombre Real para el Saludo (Observación 9)
@@ -1483,7 +1506,12 @@ export function HomePage() {
           </div>
 
           {/* ── FEED RECIENTE ── */}
-          <div ref={activitySectionRef} className="section home-section-feed" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }} data-tour-id="home-actividad">
+          <div
+            ref={activitySectionRef}
+            className={`section home-section-feed${filterTarget ? ' is-filtered' : ''}`}
+            style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }}
+            data-tour-id="home-actividad"
+          >
             <div className="flex items-center justify-between mb-3">
               <span className="section-title">{t('section_recent_activity')}</span>
               <button
