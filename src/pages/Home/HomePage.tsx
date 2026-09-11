@@ -318,6 +318,46 @@ export function HomePage() {
   const [showFilterPicker, setShowFilterPicker] = useState(false)
   const [expandedFilterRubro, setExpandedFilterRubro] = useState<string | null>(null)
 
+  // Full category tree for the filter picker (lazy-loaded on first open).
+  // Independent from topCategorias / rankingCategorias (which feed the donut)
+  // because we want every category the user has, including parent rubros with
+  // no spend this cycle, so the filter can target them. Matching parent<->child
+  // is done by estructura_id, not by name, to avoid i18n key drift.
+  interface FilterPickerHijo {
+    estructura_id: number
+    nombre_cuenta: string
+    icono: string | null
+    color: string | null
+  }
+  interface FilterPickerRubro {
+    estructura_id: number
+    nombre_cuenta: string
+    icono: string | null
+    color: string | null
+    hijos: FilterPickerHijo[]
+  }
+  const [treeCategorias, setTreeCategorias] = useState<FilterPickerRubro[]>([])
+  const [loadingTreeCategorias, setLoadingTreeCategorias] = useState(false)
+  const [treeCategoriasLoaded, setTreeCategoriasLoaded] = useState(false)
+
+  const loadTreeCategorias = useCallback(async () => {
+    if (treeCategoriasLoaded || loadingTreeCategorias) return
+    setLoadingTreeCategorias(true)
+    try {
+      const res = await rpc<FilterPickerRubro[]>('fn_obtener_arbol_categorias')
+        .catch(() => [] as FilterPickerRubro[])
+      setTreeCategorias(Array.isArray(res) ? res : [])
+      setTreeCategoriasLoaded(true)
+    } finally {
+      setLoadingTreeCategorias(false)
+    }
+  }, [treeCategoriasLoaded, loadingTreeCategorias])
+
+  const handleOpenFilterPicker = useCallback(() => {
+    setShowFilterPicker(true)
+    void loadTreeCategorias()
+  }, [loadTreeCategorias])
+
   const [ordenBilleterasVisibles, setOrdenBilleterasVisibles] = useState<'valor' | 'alfabetico'>('valor')
 
   const fetchBilleterasFromPreference = useCallback(async () => {
@@ -1381,7 +1421,7 @@ export function HomePage() {
               <button
                 type="button"
                 className="home-filter-btn"
-                onClick={() => setShowFilterPicker(true)}
+                onClick={handleOpenFilterPicker}
               >
                 {t('filter')}{filterTarget ? ` · ${filterTarget.name}` : ''}
               </button>
@@ -1559,7 +1599,13 @@ export function HomePage() {
           <div className="home-filter-picker" onClick={(e) => e.stopPropagation()}>
             <div className="home-filter-picker-header">
               <span className="home-filter-picker-title">{t('filter_select_rubro')}</span>
-              <button className="home-filter-picker-close" onClick={() => setShowFilterPicker(false)}>✕</button>
+              <button
+                className="home-filter-picker-close"
+                onClick={() => setShowFilterPicker(false)}
+                aria-label={t('btn_close')}
+              >
+                ✕
+              </button>
             </div>
 
             {filterTarget && (
@@ -1572,48 +1618,67 @@ export function HomePage() {
             )}
 
             <div className="home-filter-picker-list">
-              {topCategorias.map((rubro: any) => {
-                const rubroName = rubro.nombre_categoria
-                const isExpanded = expandedFilterRubro === rubroName
-                const children = rankingCategorias.filter(
-                  (r: any) => r.nombre_rubro_padre === rubroName
-                )
-                const childIds = children.map((c: any) => Number(c.estructura_id))
+              {loadingTreeCategorias && treeCategorias.length === 0 && (
+                <div className="home-filter-picker-loading">{t('loading')}</div>
+              )}
+              {!loadingTreeCategorias && treeCategorias.length === 0 && (
+                <div className="home-filter-picker-empty">{t('filter_no_categories')}</div>
+              )}
+              {treeCategorias.map((rubro: FilterPickerRubro) => {
+                const rubroId = Number(rubro.estructura_id)
+                const rubroName = rubro.nombre_cuenta
+                const isExpanded = expandedFilterRubro === String(rubroId)
+                const hijos = Array.isArray(rubro.hijos) ? rubro.hijos : []
+                const childIds = hijos
+                  .map((c) => Number(c.estructura_id))
+                  .filter((id) => Number.isFinite(id))
+
+                // Parent's own id is always included so that direct expenses on
+                // a parent-without-children are still selectable.
+                const parentIds = [rubroId].filter((id) => Number.isFinite(id))
+                const allIds = Array.from(new Set([...parentIds, ...childIds]))
 
                 return (
-                  <div key={rubroName} className="home-filter-rubro-group">
+                  <div key={rubroId} className="home-filter-rubro-group">
                     <div className="home-filter-rubro-row">
                       <button
                         className="home-filter-rubro-btn"
                         onClick={() => {
-                          setFilterTarget({ type: 'rubro', name: t(rubroName), ids: childIds.length > 0 ? childIds : [Number(rubro.estructura_id)] })
+                          setFilterTarget({ type: 'rubro', name: t(rubroName), ids: allIds })
                           setShowFilterPicker(false)
                         }}
                       >
-                        <span className="home-filter-rubro-icon"><CategoryIcon name={rubro.icono} size={18} /></span>
+                        <span className="home-filter-rubro-icon">
+                          <CategoryIcon name={rubro.icono ?? ''} size={18} />
+                        </span>
                         <span className="home-filter-rubro-name">{t(rubroName)}</span>
                       </button>
-                      {children.length > 0 && (
+                      {hijos.length > 0 && (
                         <button
                           className="home-filter-expand-btn"
-                          onClick={() => setExpandedFilterRubro(isExpanded ? null : rubroName)}
+                          onClick={() => setExpandedFilterRubro(isExpanded ? null : String(rubroId))}
+                          aria-label={isExpanded ? t('btn_collapse') : t('btn_expand')}
                         >
                           {isExpanded ? '▲' : '▼'}
                         </button>
                       )}
                     </div>
-                    {isExpanded && children.length > 0 && (
+                    {isExpanded && hijos.length > 0 && (
                       <div className="home-filter-children">
-                        {children.map((child: any) => (
+                        {hijos.map((child: FilterPickerHijo) => (
                           <button
                             key={child.estructura_id}
                             className="home-filter-child-btn"
                             onClick={() => {
-                              setFilterTarget({ type: 'subcuenta', name: t(child.nombre_cuenta), ids: [Number(child.estructura_id)] })
+                              setFilterTarget({
+                                type: 'subcuenta',
+                                name: t(child.nombre_cuenta),
+                                ids: [Number(child.estructura_id)]
+                              })
                               setShowFilterPicker(false)
                             }}
                           >
-                            <span><CategoryIcon name={child.icono} size={16} /></span>
+                            <span><CategoryIcon name={child.icono ?? ''} size={16} /></span>
                             <span>{t(child.nombre_cuenta)}</span>
                           </button>
                         ))}
