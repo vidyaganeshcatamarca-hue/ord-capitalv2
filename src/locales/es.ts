@@ -96,6 +96,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   donut_empty_desc: "Registra egresos para activar el análisis por categorías",
   donut_see_all_categories: "Ver todos ({count})",
   donut_show_less_categories: "Ver menos",
+  donut_breakdown_filter_tooltip: "Tocá para ver la actividad reciente de esta categoría",
   section_recent_activity: "Actividad Reciente",
   activity_empty_title: "Sin movimientos recientes",
   activity_empty_desc_prefix: "Toca el botón ",

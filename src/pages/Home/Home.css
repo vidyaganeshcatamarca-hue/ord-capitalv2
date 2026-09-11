@@ -590,6 +590,33 @@
   gap: var(--space-2);
 }
 
+.category-breakdown-item--clickable {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  padding: var(--space-2);
+  margin: calc(-1 * var(--space-2));
+  border-radius: var(--radius-md, 8px);
+  transition: background 0.15s ease, transform 0.1s ease;
+  color: inherit;
+  font: inherit;
+}
+
+.category-breakdown-item--clickable:hover {
+  background: var(--surface-2);
+}
+
+.category-breakdown-item--clickable:active {
+  transform: scale(0.99);
+}
+
+.category-breakdown-item--clickable:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+
 .category-info-row {
   display: flex;
   justify-content: space-between;

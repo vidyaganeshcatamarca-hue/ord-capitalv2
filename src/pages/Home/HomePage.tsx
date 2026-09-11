@@ -300,6 +300,7 @@ export function HomePage() {
   const [hasMoreMovimientos, setHasMoreMovimientos] = useState(false)
   const [showBackToTop, setShowBackToTop] = useState(false)
   const pageTopRef = useRef<HTMLDivElement>(null)
+  const activitySectionRef = useRef<HTMLDivElement>(null)
 
   // Full dataset for filtered activity (bypasses pagination when filter is active)
   const [allMovimientos, setAllMovimientos] = useState<any[]>([])
@@ -357,6 +358,36 @@ export function HomePage() {
     setShowFilterPicker(true)
     void loadTreeCategorias()
   }, [loadTreeCategorias])
+
+  // Click handler for the donut's category breakdown list. Reuses the same
+  // setFilterTarget contract as the modal picker, then scrolls smoothly to
+  // the recent-activity section so the user lands on the filtered result.
+  const handleBreakdownCategoryClick = useCallback((c: ActiveCategoria) => {
+    const parentId = c.estructura_id
+    if (c.es_padre || c.nombre_rubro_padre == null) {
+      // Parent row: include its own id + every child whose padre is the same
+      // categoria name. rankingCategorias carries both padre and children.
+      const parentIds = parentId != null && Number.isFinite(parentId) ? [parentId] : []
+      const childIds = rankingCategorias
+        .filter((r: any) => r.nombre_rubro_padre === c.nombre_categoria)
+        .map((r: any) => Number(r.estructura_id))
+        .filter((id: number) => Number.isFinite(id))
+      const allIds = Array.from(new Set([...parentIds, ...childIds]))
+      if (allIds.length === 0) return
+      setFilterTarget({ type: 'rubro', name: t(c.nombre_categoria), ids: allIds })
+    } else {
+      // Subcuenta row.
+      if (parentId == null || !Number.isFinite(parentId)) return
+      setFilterTarget({
+        type: 'subcuenta',
+        name: t(c.nombre_categoria),
+        ids: [parentId]
+      })
+    }
+    requestAnimationFrame(() => {
+      activitySectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    })
+  }, [rankingCategorias, t])
 
   const [ordenBilleterasVisibles, setOrdenBilleterasVisibles] = useState<'valor' | 'alfabetico'>('valor')
 
@@ -435,13 +466,41 @@ export function HomePage() {
     }
   }, [showToast, fetchBilleterasFromPreference])
 
-  const activeCategoriasData = useMemo(() => {
+  interface ActiveCategoria {
+    estructura_id: number | null
+    es_padre: boolean
+    nombre_rubro_padre: string | null
+    nombre_categoria: string
+    icono: string | null
+    color: string | null
+    total_consumido: number
+    porcentaje_del_total: number
+  }
+
+  const activeCategoriasData = useMemo<ActiveCategoria[]>(() => {
     if (homeFilters.nivelCategorias === 'parents') {
-      return topCategorias.map(c => ({
-        ...c,
-        total_consumido: Number(c.total_consumido) || 0,
-        porcentaje_del_total: Number(c.porcentaje_del_total) || 0
-      }))
+      // Para la vista "Solo Rubros" resolvemos estructura_id desde rankingCategorias
+      // (filas con es_padre === true que matchean por nombre). topCategorias no
+      // expone estructura_id (fn_reporte_top_categorias_mes solo trae totales).
+      const parentIdByName: Record<string, number> = {}
+      rankingCategorias.forEach(r => {
+        if (r.es_padre && r.nombre_cuenta) {
+          parentIdByName[r.nombre_cuenta] = Number(r.estructura_id)
+        }
+      })
+      return topCategorias.map(c => {
+        const id = c.nombre_categoria ? parentIdByName[c.nombre_categoria] : undefined
+        return {
+          estructura_id: id ?? null,
+          es_padre: true,
+          nombre_rubro_padre: null,
+          nombre_categoria: c.nombre_categoria,
+          icono: c.icono,
+          color: c.color,
+          total_consumido: Number(c.total_consumido) || 0,
+          porcentaje_del_total: Number(c.porcentaje_del_total) || 0
+        }
+      })
     }
 
     // Construir mapa de nombre de rubro padre → color del padre (desde topCategorias)
@@ -483,6 +542,9 @@ export function HomePage() {
       }
 
       return {
+        estructura_id: Number(c.estructura_id),
+        es_padre: Boolean(c.es_padre),
+        nombre_rubro_padre: c.nombre_rubro_padre ?? null,
         nombre_categoria: c.nombre_cuenta,
         icono: c.icono,
         color,
@@ -1370,7 +1432,13 @@ export function HomePage() {
                       {displayedCategories.map((c, i) => {
                         const pct = Number(c.porcentaje_del_total) || 0
                         return (
-                          <div key={i} className="category-breakdown-item">
+                          <button
+                            key={i}
+                            type="button"
+                            className="category-breakdown-item category-breakdown-item--clickable"
+                            aria-label={t('donut_breakdown_filter_tooltip')}
+                            onClick={() => handleBreakdownCategoryClick(c)}
+                          >
                             <div className="category-info-row">
                               <div className="category-label-wrap">
                                 <span className="category-icon-badge" style={{
@@ -1404,7 +1472,7 @@ export function HomePage() {
                                 }}
                               />
                             </div>
-                          </div>
+                          </button>
                         )
                       })}
                     </div>
@@ -1415,7 +1483,7 @@ export function HomePage() {
           </div>
 
           {/* ── FEED RECIENTE ── */}
-          <div className="section home-section-feed" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }} data-tour-id="home-actividad">
+          <div ref={activitySectionRef} className="section home-section-feed" style={{ paddingTop: 0, paddingLeft: 0, paddingRight: 0 }} data-tour-id="home-actividad">
             <div className="flex items-center justify-between mb-3">
               <span className="section-title">{t('section_recent_activity')}</span>
               <button
