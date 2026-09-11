@@ -3,7 +3,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
-import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
+import { SliderBCG, SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
 import { MigrarCategoriaModal } from '@/components/MigrarCategoriaModal/MigrarCategoriaModal'
 import { MigrarSubcategoriaModal } from '@/components/MigrarSubcategoriaModal/MigrarSubcategoriaModal'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
@@ -39,6 +39,8 @@ interface Rubro {
   icono: string
   color: string
   tipo_cupo: string
+  utilidad_placer?: number
+  flexibilidad_recorte?: number
   hijos: Hijo[]
 }
 
@@ -100,6 +102,10 @@ function RubroModal({ rubro, onClose, onSaved }: {
   const [icono, setIcono] = useState(rubro?.icono ?? 'Tag')
   const [color, setColor] = useState(rubro?.color ?? COLORS[0])
   const [tipoCupo, setTipoCupo] = useState(rubro?.tipo_cupo ?? 'need')
+  const [utilidad, setUtilidad] = useState(Number(rubro?.utilidad_placer ?? 5))
+  const [flexibilidad, setFlexibilidad] = useState(Number(rubro?.flexibilidad_recorte ?? 5))
+  const [openInfo, setOpenInfo] = useState<'utilidad' | 'flexibilidad' | null>(null)
+  const canEditBcg = !!rubro && rubro.hijos.length === 0
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,6 +121,15 @@ function RubroModal({ rubro, onClose, onSaved }: {
           p_icono: icono,
           p_color: color,
         })
+        const initialUtilidad = Number(rubro.utilidad_placer ?? 5)
+        const initialFlexibilidad = Number(rubro.flexibilidad_recorte ?? 5)
+        if (canEditBcg && (utilidad !== initialUtilidad || flexibilidad !== initialFlexibilidad)) {
+          await rpc('fn_actualizar_calificacion_bcg', {
+            p_estructura_id: rubro.estructura_id,
+            p_placer: utilidad,
+            p_flexibilidad: flexibilidad,
+          })
+        }
         showToast(t('cat_rubro_updated'), 'success')
       } else {
         await rpc('fn_crear_cuenta_egreso', {
@@ -178,6 +193,32 @@ function RubroModal({ rubro, onClose, onSaved }: {
 
           <label className="cat-label">{t("label_icon")}</label>
           <IconPicker icons={RUBRO_ICONS} value={icono} onChange={setIcono} selectedColor={color} />
+
+          {canEditBcg && (
+            <div className="bcg-section mt-3">
+              <div className="bcg-section-title">{t('bcg_calibration_title')}</div>
+              <SliderBCG
+                label={t('cat_label_utilidad')}
+                emoji="🎢"
+                value={utilidad}
+                onChange={setUtilidad}
+                infoId="bcg-rubro-utilidad-info"
+                infoText={t('cat_bcg_utilidad_info')}
+                infoOpen={openInfo === 'utilidad'}
+                onInfoToggle={() => setOpenInfo(current => current === 'utilidad' ? null : 'utilidad')}
+              />
+              <SliderBCG
+                label={t('cat_label_flexibilidad')}
+                emoji="✂️"
+                value={flexibilidad}
+                onChange={setFlexibilidad}
+                infoId="bcg-rubro-flexibilidad-info"
+                infoText={t('cat_bcg_flexibilidad_info')}
+                infoOpen={openInfo === 'flexibilidad'}
+                onInfoToggle={() => setOpenInfo(current => current === 'flexibilidad' ? null : 'flexibilidad')}
+              />
+            </div>
+          )}
 
           <label className="cat-label mt-3">{t('cat_label_color')}</label>
           <ColorPicker value={color} onChange={setColor} />

@@ -51,15 +51,35 @@ function IconPicker({ value, onChange, selectedColor }: { value: string; onChang
   )
 }
 
-function SliderBCG({ label, emoji, value, onChange }: {
-  label: string; emoji: string; value: number; onChange: (v: number) => void
+export function SliderBCG({ label, emoji, value, onChange, infoId, infoText, infoOpen, onInfoToggle }: {
+  label: string
+  emoji: string
+  value: number
+  onChange: (v: number) => void
+  infoId: string
+  infoText: string
+  infoOpen: boolean
+  onInfoToggle: () => void
 }) {
   return (
     <div className="bcg-slider-wrap">
       <div className="bcg-slider-header">
         <span>{emoji} {label}</span>
-        <span className="bcg-slider-value">{value}/10</span>
+        <div className="bcg-slider-actions">
+          <button
+            type="button"
+            className="cat-bcg-info-trigger"
+            aria-label={t('cat_bcg_info_button_label', { label })}
+            aria-controls={infoId}
+            aria-expanded={infoOpen}
+            onClick={onInfoToggle}
+          >
+            i
+          </button>
+          <span className="bcg-slider-value">{value}/10</span>
+        </div>
       </div>
+      {infoOpen && <p id={infoId} className="cat-bcg-info-card" role="status">{infoText}</p>}
       <input type="range" min={1} max={10} value={value}
         className="bcg-slider"
         onChange={e => onChange(Number(e.target.value))}
@@ -88,6 +108,7 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
   const [utilidad, setUtilidad] = useState(subcuenta?.utilidad_placer ?? 5)
   const [flexibilidad, setFlexibilidad] = useState(subcuenta?.flexibilidad_recorte ?? 5)
   const [esHormiga, setEsHormiga] = useState(subcuenta?.es_hormiga ?? false)
+  const [openInfo, setOpenInfo] = useState<'utilidad' | 'flexibilidad' | null>(null)
 
   useEffect(() => {
     if (!subcuenta) {
@@ -188,8 +209,26 @@ export function SubcuentaModal({ subcuenta, rubroId, rubros, onClose, onSaved }:
 
           <div className="bcg-section mt-3">
             <div className="bcg-section-title">{t("bcg_calibration_title")}</div>
-            <SliderBCG label={t('cat_label_utilidad')} emoji="🎢" value={utilidad} onChange={setUtilidad} />
-            <SliderBCG label={t('cat_label_flexibilidad')} emoji="✂️" value={flexibilidad} onChange={setFlexibilidad} />
+            <SliderBCG
+              label={t('cat_label_utilidad')}
+              emoji="🎢"
+              value={utilidad}
+              onChange={setUtilidad}
+              infoId="bcg-utilidad-info"
+              infoText={t('cat_bcg_utilidad_info')}
+              infoOpen={openInfo === 'utilidad'}
+              onInfoToggle={() => setOpenInfo(current => current === 'utilidad' ? null : 'utilidad')}
+            />
+            <SliderBCG
+              label={t('cat_label_flexibilidad')}
+              emoji="✂️"
+              value={flexibilidad}
+              onChange={setFlexibilidad}
+              infoId="bcg-flexibilidad-info"
+              infoText={t('cat_bcg_flexibilidad_info')}
+              infoOpen={openInfo === 'flexibilidad'}
+              onInfoToggle={() => setOpenInfo(current => current === 'flexibilidad' ? null : 'flexibilidad')}
+            />
           </div>
 
           <div className="cat-modal-actions">

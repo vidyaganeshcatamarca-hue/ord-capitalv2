@@ -532,11 +532,45 @@
   font-size: calc(13px * var(--font-scale));
   color: var(--text-2);
 }
+.bcg-slider-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .bcg-slider-value {
   font-size: calc(12px * var(--font-scale));
   font-weight: 700;
   color: var(--mint);
   font-family: var(--font-mono);
+}
+.cat-bcg-info-trigger {
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 700;
+  font-family: var(--font-serif);
+  line-height: 1;
+}
+.cat-bcg-info-trigger:hover,
+.cat-bcg-info-trigger:focus-visible {
+  border-color: var(--mint);
+  color: var(--mint);
+}
+.cat-bcg-info-card {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--mint);
+  border-radius: 0 8px 8px 0;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: calc(12px * var(--font-scale));
+  line-height: 1.5;
 }
 .bcg-slider {
   width: 100%;
