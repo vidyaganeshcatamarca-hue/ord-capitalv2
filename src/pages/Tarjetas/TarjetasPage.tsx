@@ -228,8 +228,7 @@ export function TarjetasPage() {
   const [loading, setLoading] = useState(true)
 
   // â”€â”€ Vista â”€â”€
-  const [activeTab, setActiveTab] = useState<'lista' | 'comparativa' | 'acreedores'>('lista')
-  const [acreedores, setAcreedores] = useState<any[]>([])
+  const [activeTab, setActiveTab] = useState<'lista' | 'comparativa'>('lista')
   const [selectedCard, setSelectedCard] = useState<MapaTarjeta | null>(null)
 
   // â”€â”€ Detalle â”€â”€
@@ -280,14 +279,13 @@ export function TarjetasPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
-      const [resT, resV, resB, resUsd, pasivoRes, comparativaRes, acreedoresRes, archivedRes] = await Promise.all([
+      const [resT, resV, resB, resUsd, pasivoRes, comparativaRes, archivedRes] = await Promise.all([
         rpc<MapaTarjeta[]>('fn_reporte_mapa_tarjetas').catch(() => [] as MapaTarjeta[]),
         rpc<VencimientoTarjeta[]>('fn_reporte_vencimientos_tarjetas').catch(() => [] as VencimientoTarjeta[]),
         rpc<any[]>('fn_obtener_billeteras_activas').catch(() => [] as any[]),
         rpc<number>('fn_obtener_cotizacion_usd').catch(() => 1),
         rpc<number>('fn_obtener_saldo_pasivo_tarjetas').catch(() => 0),
         rpc<ComparativaTarjeta[]>('fn_reporte_comparativa_tarjetas').catch(() => [] as ComparativaTarjeta[]),
-        rpc<any[]>('fn_reporte_mapa_acreedores').catch(() => [] as any[]),
         rpc<any[]>('fn_reporte_tarjetas_archivadas').catch(() => [] as any[]),
       ])
       setTarjetas(resT || [])
@@ -296,7 +294,6 @@ export function TarjetasPage() {
       setCotizacionUsd(resUsd || 1)
       setTotalPasivo(Number(pasivoRes) || 0)
       setComparativa(comparativaRes || [])
-      setAcreedores(acreedoresRes || [])
       setArchivedCards(archivedRes || [])
     } catch (err: any) {
       showToast('Error al cargar tarjetas: ' + parseError(err), 'error')
@@ -979,7 +976,9 @@ export function TarjetasPage() {
                   <div className="tarjetas-alert-dot" />
                   <div className="tarjetas-alert-info">
                     <div className="tarjetas-alert-name">{v.nombre_tarjeta}</div>
-                    <div className="tarjetas-alert-msg">{getUrgencyMsg(v.mensaje_key, v.dias_para_vencimiento)}</div>
+                    <div className="tarjetas-alert-msg">{v.resumen_vencido
+                      ? t('card_resumen_vencido_alert')
+                      : getUrgencyMsg(v.mensaje_key, v.dias_para_vencimiento)}</div>
                   </div>
                   <div className="tarjetas-alert-monto">
                     <div className="tarjetas-alert-monto-value">{fmtARS(v.monto_a_pagar)}</div>
@@ -998,9 +997,6 @@ export function TarjetasPage() {
           </button>
           <button className={`tarjetas-tab ${activeTab === 'comparativa' ? 'active' : ''}`} onClick={() => setActiveTab('comparativa')}>
             <CategoryIcon name="BarChart3" size={13} /> Comparativa
-          </button>
-          <button className={`tarjetas-tab ${activeTab === 'acreedores' ? 'active' : ''}`} onClick={() => setActiveTab('acreedores')}>
-            <CategoryIcon name="Map" size={13} /> Acreedores
           </button>
         </div>
 
@@ -1060,39 +1056,6 @@ export function TarjetasPage() {
                     )}
                   </div>
                 )}
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Tab Acreedores */}
-        {activeTab === 'acreedores' && (
-          <>
-            {loading ? (
-              <div className="tarjeta-skeleton" style={{ height: 200 }} />
-            ) : acreedores.length === 0 ? (
-              <div className="tarjetas-empty">
-                <div className="tarjetas-empty-icon"><CategoryIcon name="Users" size={56} /></div>
-                <h3>Sin acreedores</h3>
-                <p>No tienes deudas activas registradas.</p>
-              </div>
-            ) : (
-              <div className="tarjetas-list">
-                {acreedores.map((a: any, i: number) => (
-                  <div key={i} className="tarjeta-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <div style={{ fontSize: 'calc(24px * var(--font-scale))' }}><CategoryIcon name={a.icono || 'CircleDollarSign'} size={24} /></div>
-                      <div>
-                        <h4 style={{ margin: 0, fontSize: 'calc(16px * var(--font-scale))' }}>{a.nombre_acreedor}</h4>
-                        <p style={{ margin: 0, fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>{a.tipo_deuda === 'tarjeta' ? t('card_type_credit') : t('card_type_loan')}</p>
-                      </div>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <p className="font-mono font-bold" style={{ margin: 0, fontSize: 'calc(16px * var(--font-scale))', color: 'var(--coral)' }}>{fmtARS(a.monto_total)}</p>
-                      <p style={{ margin: 0, fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>{Number(a.porcentaje_total).toFixed(1)}% del total</p>
-                    </div>
-                  </div>
-                ))}
               </div>
             )}
           </>
