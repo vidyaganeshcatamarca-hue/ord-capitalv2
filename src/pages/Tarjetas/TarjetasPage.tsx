@@ -387,11 +387,17 @@ export function TarjetasPage() {
     origen: 'actual' | 'anterior'
   ) => {
     const venc = vencimientoByCard[tc.tarjeta_id]
+    // Bug fix 2026-09-14: prefill del monto a pagar para resumen anterior.
+    // Se usa resumen_anterior_total_ars (total del resumen, sin descontar favor)
+    // para que el modal sepa exactamente cuánto hay que pagar, igual que el
+    // menú del próximo resumen usa monto_a_pagar_ars (neto del favor del ciclo).
+    // La logica interna del modal (addFavorLine, favorCubreTotal, faltaRepartir)
+    // decide si el saldo a favor alcanza para cubrirlo o si hay que agregar billetera.
     const prefillArs = origen === 'anterior'
-      ? Number(venc?.resumen_anterior_a_pagar_ars ?? 0)
+      ? Number(venc?.resumen_anterior_total_ars ?? 0)
       : Number(venc?.monto_a_pagar_ars ?? 0)
     const prefillUsd = origen === 'anterior'
-      ? Number(venc?.resumen_anterior_a_pagar_usd ?? 0)
+      ? Number(venc?.resumen_anterior_total_usd ?? 0)
       : Number(venc?.monto_a_pagar_usd ?? 0)
     setTargetCard(tc)
     setPagarLineas([{ id: 1, billetera_id: null, monto: prefillArs > 0 ? prefillArs.toString() : '' }])
