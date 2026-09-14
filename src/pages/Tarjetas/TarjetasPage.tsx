@@ -383,7 +383,12 @@ export function TarjetasPage() {
   // Bug fix 2026-09-14: alerts separados por resumen anterior vs actual para pagar
   // cada operatoria en forma aislada.
   const resumenAnteriorAlerts = useMemo(
-    () => vencimientos.filter(v => Number(v.resumen_anterior_a_pagar_ars ?? 0) + Number(v.resumen_anterior_a_pagar_usd ?? 0) > 0),
+    // Regla UX: el resumen anterior siempre se muestra si hay cuotas impagas,
+    // independientemente del saldo a favor. La aplicacion del saldo a favor es
+    // una decision del usuario al momento de pagar.
+    () => vencimientos.filter(v =>
+      Number(v.resumen_anterior_total_ars ?? 0) + Number(v.resumen_anterior_total_usd ?? 0) > 0
+      || Number(v.resumen_anterior_a_pagar_ars ?? 0) + Number(v.resumen_anterior_a_pagar_usd ?? 0) > 0),
     [vencimientos]
   )
   const resumenActualAlerts = useMemo(
@@ -999,7 +1004,19 @@ export function TarjetasPage() {
                     <div className="tarjetas-alert-msg">{t('card_resumen_vencido_alert')}</div>
                   </div>
                   <div className="tarjetas-alert-monto">
-                    <div className="tarjetas-alert-monto-value">{fmtARS(Number(v.resumen_anterior_a_pagar_ars ?? 0) + (Number(v.resumen_anterior_a_pagar_usd ?? 0) * cotizacionUsd))}</div>
+                    <div className="tarjetas-alert-monto-stack">
+                      <div className="tarjetas-alert-monto-row">
+                        <span className="tarjetas-alert-monto-label">{t('card_resumen_anterior_total_label')}:</span>
+                        <span className="tarjetas-alert-monto-value">{fmtARS(Number(v.resumen_anterior_total_ars ?? 0) + (Number(v.resumen_anterior_total_usd ?? 0) * cotizacionUsd))}</span>
+                      </div>
+                      <div className="tarjetas-alert-monto-row">
+                        <span className="tarjetas-alert-monto-label">{t('card_resumen_anterior_a_pagar_label')}:</span>
+                        <span className="tarjetas-alert-monto-value">{fmtARS(Number(v.resumen_anterior_a_pagar_ars ?? 0) + (Number(v.resumen_anterior_a_pagar_usd ?? 0) * cotizacionUsd))}</span>
+                      </div>
+                      {Number(v.saldo_a_favor ?? 0) > 0 && Number(v.resumen_anterior_total_ars ?? 0) > Number(v.resumen_anterior_a_pagar_ars ?? 0) && (
+                        <div className="tarjetas-alert-favor-chip">{t('card_resumen_anterior_covered_by_favor')}: {fmtARS(Number(v.saldo_a_favor))}</div>
+                      )}
+                    </div>
                     <button
                       type="button"
                       className="btn-pagar-resumen-anterior"
