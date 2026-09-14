@@ -375,6 +375,36 @@ export function TarjetasPage() {
     return map
   }, [vencimientos])
 
+  // Bug fix 2026-09-14: handler único para abrir el modal de pago de resumen.
+  // El modal SIEMPRE arranca en el mismo estado limpio, garantizando que el
+  // autofill del saldo a favor, el botón "Aplicar saldo" y los totales del ciclo
+  // se comporten idéntico sin importar desde dónde se abra (botón del alert
+  // anterior vs menú contextual de la tarjeta).
+  // origen 'actual' -> usa monto_a_pagar_ars/usd (próximo resumen, menú original)
+  // origen 'anterior' -> usa resumen_anterior_a_pagar_ars/usd (resumen vencido)
+  const abrirPagarResumen = (
+    tc: MapaTarjeta,
+    origen: 'actual' | 'anterior'
+  ) => {
+    const venc = vencimientoByCard[tc.tarjeta_id]
+    const prefillArs = origen === 'anterior'
+      ? Number(venc?.resumen_anterior_a_pagar_ars ?? 0)
+      : Number(venc?.monto_a_pagar_ars ?? 0)
+    const prefillUsd = origen === 'anterior'
+      ? Number(venc?.resumen_anterior_a_pagar_usd ?? 0)
+      : Number(venc?.monto_a_pagar_usd ?? 0)
+    setTargetCard(tc)
+    setPagarLineas([{ id: 1, billetera_id: null, monto: prefillArs > 0 ? prefillArs.toString() : '' }])
+    setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillUsd > 0 ? prefillUsd.toString() : '' }])
+    nextLineIdArsRef.current = 2
+    nextLineIdUsdRef2.current = 2
+    setPagarBilleteraId(null)
+    setResumenReal('')
+    setSelectedCuotasAdelantar([])
+    setMenuOpen(null)
+    setShowPagarModal(true)
+  }
+
   const criticalAlerts = useMemo(
     () => vencimientos.filter(v => (v.estado_urgencia_key === 'critical' || v.estado_urgencia_key === 'urgent') && Number(v.monto_a_pagar) > 0),
     [vencimientos]
@@ -682,20 +712,7 @@ export function TarjetasPage() {
         {menuOpen === tc.tarjeta_id && (
           <div className="tarjeta-context-menu" onClick={e => e.stopPropagation()}>
             <button className="tarjeta-context-btn" onClick={() => openEdit(tc)}><CategoryIcon name="Pencil" size={14} /> {t('btn_edit_card')}</button>
-            <button className="tarjeta-context-btn" onClick={() => {
-              setTargetCard(tc)
-              const prefillMontoARS = venc?.monto_a_pagar_ars ?? 0
-              const prefillMontoUSD = venc?.monto_a_pagar_usd ?? 0
-              setPagarLineas([{ id: 1, billetera_id: null, monto: prefillMontoARS > 0 ? prefillMontoARS.toString() : '' }])
-              setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillMontoUSD > 0 ? prefillMontoUSD.toString() : '' }])
-              nextLineIdArsRef.current = 2
-              nextLineIdUsdRef2.current = 2
-              setPagarBilleteraId(null)
-              setResumenReal('')
-              setSelectedCuotasAdelantar([])
-              setMenuOpen(null)
-              setShowPagarModal(true)
-            }}><CategoryIcon name="CreditCard" size={14} /> {t('btn_pay_resumen')}</button>
+            <button className="tarjeta-context-btn" onClick={() => abrirPagarResumen(tc, 'actual')}><CategoryIcon name="CreditCard" size={14} /> {t('btn_pay_resumen')}</button>
           </div>
         )}
       </div>
@@ -1023,14 +1040,7 @@ export function TarjetasPage() {
                       onClick={(e) => {
                         e.stopPropagation()
                         const card = tarjetas.find(t => t.tarjeta_id === v.tarjeta_id)
-                        if (!card) return
-                        setTargetCard(card)
-                        const prefillArs = Number(v.resumen_anterior_a_pagar_ars ?? 0)
-                        const prefillUsd = Number(v.resumen_anterior_a_pagar_usd ?? 0)
-                        setPagarLineas([{ id: 1, billetera_id: null, monto: prefillArs > 0 ? prefillArs.toString() : '' }])
-                        setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillUsd > 0 ? prefillUsd.toString() : '' }])
-                        nextLineIdArsRef.current = 2
-                        setShowPagarModal(true)
+                        if (card) abrirPagarResumen(card, 'anterior')
                       }}
                     >
                       {t('card_pay_resumen_anterior_btn')}
