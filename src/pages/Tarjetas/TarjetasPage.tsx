@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
@@ -276,6 +276,8 @@ export function TarjetasPage() {
   const nextLineIdArsRef = useRef(2)
   const nextLineIdUsdRef2 = useRef(2)
   const [pagarLineas, setPagarLineas] = useState<PagarLine[]>([{ id: 1, billetera_id: null, monto: '' }])
+  // Bug fix 2026-09-14: monto total del resumen que se esta pagando (null = ciclo entero).
+  const [objetivoPagoARS, setObjetivoPagoARS] = useState<number | null>(null)
   const [pagarLineasUsd, setPagarLineasUsd] = useState<PagarLine[]>([{ id: 1, billetera_id: null, monto: '' }])
   const [sectionUsdPayIn, setSectionUsdPayIn] = useState<'ARS' | 'USD'>('USD')
   const [resumenReal, setResumenReal] = useState('')
@@ -400,6 +402,10 @@ export function TarjetasPage() {
       ? Number(venc?.resumen_anterior_total_usd ?? 0)
       : Number(venc?.monto_a_pagar_usd ?? 0)
     setTargetCard(tc)
+    // objetivoPago: monto total del resumen que se esta pagando (no del ciclo).
+    // Resumen anterior = prefillArs ya calculado (que es el total impago).
+    // Proximo resumen = null (modal usa ciclo entero como referencia).
+    setObjetivoPagoARS(origen === 'anterior' ? prefillArs : null)
     setPagarLineas([{ id: 1, billetera_id: null, monto: prefillArs > 0 ? prefillArs.toString() : '' }])
     setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillUsd > 0 ? prefillUsd.toString() : '' }])
     nextLineIdArsRef.current = 2
@@ -943,6 +949,7 @@ export function TarjetasPage() {
             setPagarLineas={setPagarLineas}
             pagarLineasUsd={pagarLineasUsd}
             setPagarLineasUsd={setPagarLineasUsd}
+            objetivoPago={objetivoPagoARS}
             sectionUsdPayIn={sectionUsdPayIn}
             setSectionUsdPayIn={setSectionUsdPayIn}
             pagarFecha={pagarFecha}
@@ -1282,6 +1289,7 @@ export function TarjetasPage() {
           setPagarLineas={setPagarLineas}
           pagarLineasUsd={pagarLineasUsd}
           setPagarLineasUsd={setPagarLineasUsd}
+          objetivoPago={objetivoPagoARS}
           sectionUsdPayIn={sectionUsdPayIn}
           setSectionUsdPayIn={setSectionUsdPayIn}
           pagarFecha={pagarFecha}
@@ -1497,6 +1505,10 @@ interface PagarModalProps {
   resumenEstimado: number        // LEGACY: ARs-equiv (ciclo o resumen real)
   saldoAFavor: number            // ARS favor
   saldoAFavorUsd: number         // USD favor
+  // Bug fix 2026-09-14: monto total a pagar del resumen que se esta pagando.
+  // Cuando viene del alert de resumen anterior, se pasa el total del resumen anterior.
+  // Cuando viene del menu de proximo resumen, se pasa null (usa ciclo entero).
+  objetivoPago?: number | null
   // Fase 4 multi-moneda
   cicloARS: number               // bruto ciclo ARS
   cicloUSD: number               // bruto ciclo USD
@@ -1525,6 +1537,7 @@ export function PagarModal({
   resumenEstimado,
   saldoAFavor,
   saldoAFavorUsd,
+  objetivoPago,
   cicloARS,
   cicloUSD,
   necesitoARS,
@@ -1572,6 +1585,18 @@ export function PagarModal({
     setSectionUsdPayIn('USD')
     const prefillMontoUSDInit = Number(necesitoUSD ?? 0)
     setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillMontoUSDInit > 0 ? prefillMontoUSDInit.toString() : '' }])
+    // Bug fix 2026-09-14: autofill del saldo a favor cuando entramos desde el
+    // alert del resumen anterior y el saldo alcanza para cubrir el monto objetivo.
+    // Se replica addFavorLine pero usando objetivoPago como base en vez de ciclo entero.
+    if (objetivoPago != null && objetivoPago > 0 && Number(saldoAFavor || 0) >= objetivoPago) {
+      setPagarLineas([{
+        id: 1,
+        billetera_id: null,
+        monto: objetivoPago.toFixed(2),
+        moneda: 'ARS' as const,
+        origen: 'favor' as const,
+      }])
+    }
     fetchFutureCuotas()
     return () => { cancelled = true }
   }, [targetCard?.tarjeta_id, pagarFecha, setSelectedCuotasAdelantar, setResumenReal, setResumenRealOn])
@@ -1583,7 +1608,8 @@ export function PagarModal({
   }, [overpayMode, setSelectedCuotasAdelantar])
 
   // Bruto del ciclo (baseline del sobrante: el backend calcula pagado - liquidado_del_ciclo)
-  const cicloBruto = Number(resumenEstimado || 0)
+  // Si viene objetivoPago (alert resumen anterior), se usa ese monto como referencia.
+  const cicloBruto = objetivoPago != null ? Number(objetivoPago) : Number(resumenEstimado || 0)
   const favorNum = Math.max(0, Number(saldoAFavor || 0))
   const favorNumUsd = Math.max(0, Number(saldoAFavorUsd || 0))
   const realNum = resumenReal !== '' && parseFloat(resumenReal) > 0 ? parseFloat(resumenReal) : null
