@@ -1,4 +1,4 @@
-/* ================================================================
+﻿/* ================================================================
    TARJETAS DE CRÉDITO — Estilos (Fase 3)
    Design: Dark warm mode, coral/mint/amber accent
    ================================================================ */
@@ -753,6 +753,23 @@
   transition: all 0.2s ease;
 }
 .btn-pagar-resumen:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255,107,107,0.4);
+}
+.btn-pagar-resumen-anterior {
+  background: linear-gradient(135deg, var(--color-coral), #c0394b);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 6px;
+  width: 100%;
+  transition: all 0.2s ease;
+}
+.btn-pagar-resumen-anterior:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(255,107,107,0.4);
 }

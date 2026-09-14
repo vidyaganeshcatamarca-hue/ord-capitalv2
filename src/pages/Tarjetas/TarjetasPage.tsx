@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+﻿import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
@@ -49,6 +49,15 @@ interface VencimientoTarjeta {
   monto_ciclo_total_ars?: number
   monto_ciclo_total_usd?: number
   saldo_a_favor_usd?: number
+  // Bug fix 2026-09-14: separar resumen vencido del actual en la UI
+  resumen_anterior_total_ars?: number
+  resumen_anterior_total_usd?: number
+  resumen_anterior_a_pagar_ars?: number
+  resumen_anterior_a_pagar_usd?: number
+  resumen_actual_total_ars?: number
+  resumen_actual_total_usd?: number
+  resumen_actual_a_pagar_ars?: number
+  resumen_actual_a_pagar_usd?: number
 }
 
 interface Termometro {
@@ -368,6 +377,17 @@ export function TarjetasPage() {
 
   const criticalAlerts = useMemo(
     () => vencimientos.filter(v => (v.estado_urgencia_key === 'critical' || v.estado_urgencia_key === 'urgent') && Number(v.monto_a_pagar) > 0),
+    [vencimientos]
+  )
+
+  // Bug fix 2026-09-14: alerts separados por resumen anterior vs actual para pagar
+  // cada operatoria en forma aislada.
+  const resumenAnteriorAlerts = useMemo(
+    () => vencimientos.filter(v => Number(v.resumen_anterior_a_pagar_ars ?? 0) + Number(v.resumen_anterior_a_pagar_usd ?? 0) > 0),
+    [vencimientos]
+  )
+  const resumenActualAlerts = useMemo(
+    () => vencimientos.filter(v => Number(v.resumen_actual_a_pagar_ars ?? 0) + Number(v.resumen_actual_a_pagar_usd ?? 0) > 0),
     [vencimientos]
   )
 
@@ -959,14 +979,60 @@ export function TarjetasPage() {
           </div>
         )}
 
-        {/* Alertas de Vencimiento */}
-        {criticalAlerts.length > 0 && (
+        {/* Alertas de Vencimiento - Resumen anterior impago (prioridad de cobro) */}
+        {resumenAnteriorAlerts.length > 0 && (
           <>
-            <div className="tarjetas-section-title"><CategoryIcon name="AlertTriangle" size={13} /> Alertas de Vencimiento</div>
+            <div className="tarjetas-section-title"><CategoryIcon name="AlertOctagon" size={13} /> {t('card_resumen_anterior_title')}</div>
             <div className="tarjetas-alerts">
-              {criticalAlerts.map(v => (
+              {resumenAnteriorAlerts.map(v => (
                 <div
-                  key={v.tarjeta_id}
+                  key={`anterior-${v.tarjeta_id}`}
+                  className="tarjetas-alert-item critical"
+                  onClick={() => {
+                    const card = tarjetas.find(t => t.tarjeta_id === v.tarjeta_id)
+                    if (card) setSelectedCard(card)
+                  }}
+                >
+                  <div className="tarjetas-alert-dot" />
+                  <div className="tarjetas-alert-info">
+                    <div className="tarjetas-alert-name">{v.nombre_tarjeta}</div>
+                    <div className="tarjetas-alert-msg">{t('card_resumen_vencido_alert')}</div>
+                  </div>
+                  <div className="tarjetas-alert-monto">
+                    <div className="tarjetas-alert-monto-value">{fmtARS(Number(v.resumen_anterior_a_pagar_ars ?? 0) + (Number(v.resumen_anterior_a_pagar_usd ?? 0) * cotizacionUsd))}</div>
+                    <button
+                      type="button"
+                      className="btn-pagar-resumen-anterior"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        const card = tarjetas.find(t => t.tarjeta_id === v.tarjeta_id)
+                        if (!card) return
+                        setTargetCard(card)
+                        const prefillArs = Number(v.resumen_anterior_a_pagar_ars ?? 0)
+                        const prefillUsd = Number(v.resumen_anterior_a_pagar_usd ?? 0)
+                        setPagarLineas([{ id: 1, billetera_id: null, monto: prefillArs > 0 ? prefillArs.toString() : '' }])
+                        setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillUsd > 0 ? prefillUsd.toString() : '' }])
+                        nextLineIdArsRef.current = 2
+                        setShowPagarModal(true)
+                      }}
+                    >
+                      {t('card_pay_resumen_anterior_btn')}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Alertas de Vencimiento - Resumen actual del mes */}
+        {resumenActualAlerts.length > 0 && (
+          <>
+            <div className="tarjetas-section-title"><CategoryIcon name="AlertTriangle" size={13} /> {t('card_resumen_actual_title')}</div>
+            <div className="tarjetas-alerts">
+              {resumenActualAlerts.map(v => (
+                <div
+                  key={`actual-${v.tarjeta_id}`}
                   className={`tarjetas-alert-item ${v.estado_urgencia_key}`}
                   onClick={() => {
                     const card = tarjetas.find(t => t.tarjeta_id === v.tarjeta_id)
@@ -976,12 +1042,10 @@ export function TarjetasPage() {
                   <div className="tarjetas-alert-dot" />
                   <div className="tarjetas-alert-info">
                     <div className="tarjetas-alert-name">{v.nombre_tarjeta}</div>
-                    <div className="tarjetas-alert-msg">{v.resumen_vencido
-                      ? t('card_resumen_vencido_alert')
-                      : getUrgencyMsg(v.mensaje_key, v.dias_para_vencimiento)}</div>
+                    <div className="tarjetas-alert-msg">{v.dias_para_vencimiento <= 0 ? t('card_resumen_vencido_alert') : getUrgencyMsg(v.mensaje_key, v.dias_para_vencimiento)}</div>
                   </div>
                   <div className="tarjetas-alert-monto">
-                    <div className="tarjetas-alert-monto-value">{fmtARS(v.monto_a_pagar)}</div>
+                    <div className="tarjetas-alert-monto-value">{fmtARS(Number(v.resumen_actual_a_pagar_ars ?? 0) + (Number(v.resumen_actual_a_pagar_usd ?? 0) * cotizacionUsd))}</div>
                     <div className="tarjetas-alert-days">{t("card_days_format", { days: v.dias_para_vencimiento })}</div>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-// locales/es.ts
+﻿// locales/es.ts
 // ============================================
 // PROTOCOLO i18n - Mensajes en Español
 // ============================================
@@ -1713,6 +1713,11 @@ export const inversiones = {
   card_status_at_risk: "En Riesgo",
   card_due_critical: "Vence en {dias} días. Acción inmediata requerida.",
   card_resumen_vencido_alert: "Tenés un resumen anterior impago!",
+  card_resumen_anterior_title: "Resumen anterior impago",
+  card_resumen_actual_title: "Próximo resumen",
+  card_pay_resumen_anterior_btn: "Pagar resumen anterior",
+  card_pay_resumen_actual_btn: "Pagar resumen actual",
+  card_no_resumen_anterior: "No hay resumen anterior impago",
   card_due_urgent: "  Vence en {dias} días. Pago urgente.",
   card_due_caution: "¡ Vence en {dias} días.",
   card_due_normal: "Vence en {dias} días",
