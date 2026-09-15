@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+﻿import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
@@ -278,6 +278,10 @@ export function TarjetasPage() {
   const [pagarLineas, setPagarLineas] = useState<PagarLine[]>([{ id: 1, billetera_id: null, monto: '' }])
   // Bug fix 2026-09-14: monto total del resumen que se esta pagando (null = ciclo entero).
   const [objetivoPagoARS, setObjetivoPagoARS] = useState<number | null>(null)
+  const [objetivoPagoUSD, setObjetivoPagoUSD] = useState<number | null>(null)
+  // Objetivo del pago: 'anterior' | 'actual' | null (legacy). Lo consume la RPC
+  // (p_objetivo) para liquidar SOLO las cuotas del resumen elegido.
+  const [pagoObjetivo, setPagoObjetivo] = useState<'anterior' | 'actual' | null>(null)
   const [pagarLineasUsd, setPagarLineasUsd] = useState<PagarLine[]>([{ id: 1, billetera_id: null, monto: '' }])
   const [sectionUsdPayIn, setSectionUsdPayIn] = useState<'ARS' | 'USD'>('USD')
   const [resumenReal, setResumenReal] = useState('')
@@ -395,19 +399,22 @@ export function TarjetasPage() {
     // menú del próximo resumen usa monto_a_pagar_ars (neto del favor del ciclo).
     // La logica interna del modal (addFavorLine, favorCubreTotal, faltaRepartir)
     // decide si el saldo a favor alcanza para cubrirlo o si hay que agregar billetera.
-    const prefillArs = origen === 'anterior'
+    const objetivoArs = origen === 'anterior'
       ? Number(venc?.resumen_anterior_total_ars ?? 0)
-      : Number(venc?.monto_a_pagar_ars ?? 0)
-    const prefillUsd = origen === 'anterior'
+      : Number(venc?.resumen_actual_total_ars ?? 0)
+    const objetivoUsd = origen === 'anterior'
       ? Number(venc?.resumen_anterior_total_usd ?? 0)
-      : Number(venc?.monto_a_pagar_usd ?? 0)
+      : Number(venc?.resumen_actual_total_usd ?? 0)
+    const favorArs = Math.max(0, Number(venc?.saldo_a_favor ?? 0))
+    const favorUsd = Math.max(0, Number(venc?.saldo_a_favor_usd ?? 0))
+    const faltaArs = Math.max(0, objetivoArs - favorArs)
+    const faltaUsd = Math.max(0, objetivoUsd - favorUsd)
     setTargetCard(tc)
-    // objetivoPago: monto total del resumen que se esta pagando (no del ciclo).
-    // Resumen anterior = prefillArs ya calculado (que es el total impago).
-    // Proximo resumen = null (modal usa ciclo entero como referencia).
-    setObjetivoPagoARS(origen === 'anterior' ? prefillArs : null)
-    setPagarLineas([{ id: 1, billetera_id: null, monto: prefillArs > 0 ? prefillArs.toString() : '' }])
-    setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillUsd > 0 ? prefillUsd.toString() : '' }])
+    setPagoObjetivo(origen)
+    setObjetivoPagoARS(objetivoArs > 0 ? objetivoArs : null)
+    setObjetivoPagoUSD(objetivoUsd > 0 ? objetivoUsd : null)
+    setPagarLineas([{ id: 1, billetera_id: null, monto: faltaArs > 0 ? faltaArs.toString() : '' }])
+    setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: faltaUsd > 0 ? faltaUsd.toString() : '' }])
     nextLineIdArsRef.current = 2
     nextLineIdUsdRef2.current = 2
     setPagarBilleteraId(null)
@@ -598,6 +605,8 @@ export function TarjetasPage() {
         p_cuotas_adelantar: selectedCuotasAdelantar.length > 0 ? selectedCuotasAdelantar : null,
         p_resumen_real: resumenRealNum,
         p_monto_a_favor_explicito: montoFavorExplicito,
+        // Liquidar SOLO las cuotas del resumen elegido (NULL = legacy).
+        p_objetivo: pagoObjetivo,
       })
       // La Diferencia Tarjeta la crea automaticamente la RPC
       // (fn_registrar_pago_tarjeta_multi) cuando resumen_real > consumo_real.
@@ -950,6 +959,7 @@ export function TarjetasPage() {
             pagarLineasUsd={pagarLineasUsd}
             setPagarLineasUsd={setPagarLineasUsd}
             objetivoPago={objetivoPagoARS}
+            objetivoPagoUSD={objetivoPagoUSD}
             sectionUsdPayIn={sectionUsdPayIn}
             setSectionUsdPayIn={setSectionUsdPayIn}
             pagarFecha={pagarFecha}
@@ -1290,6 +1300,7 @@ export function TarjetasPage() {
           pagarLineasUsd={pagarLineasUsd}
           setPagarLineasUsd={setPagarLineasUsd}
           objetivoPago={objetivoPagoARS}
+          objetivoPagoUSD={objetivoPagoUSD}
           sectionUsdPayIn={sectionUsdPayIn}
           setSectionUsdPayIn={setSectionUsdPayIn}
           pagarFecha={pagarFecha}
@@ -1509,6 +1520,7 @@ interface PagarModalProps {
   // Cuando viene del alert de resumen anterior, se pasa el total del resumen anterior.
   // Cuando viene del menu de proximo resumen, se pasa null (usa ciclo entero).
   objetivoPago?: number | null
+  objetivoPagoUSD?: number | null
   // Fase 4 multi-moneda
   cicloARS: number               // bruto ciclo ARS
   cicloUSD: number               // bruto ciclo USD
@@ -1538,6 +1550,7 @@ export function PagarModal({
   saldoAFavor,
   saldoAFavorUsd,
   objetivoPago,
+  objetivoPagoUSD,
   cicloARS,
   cicloUSD,
   necesitoARS,
@@ -1608,8 +1621,9 @@ export function PagarModal({
   }, [overpayMode, setSelectedCuotasAdelantar])
 
   // Bruto del ciclo (baseline del sobrante: el backend calcula pagado - liquidado_del_ciclo)
-  // Si viene objetivoPago (alert resumen anterior), se usa ese monto como referencia.
-  const cicloBruto = objetivoPago != null ? Number(objetivoPago) : Number(resumenEstimado || 0)
+  // Si viene objetivoPago (pago por resumen anterior o actual), se usa ese monto como referencia.
+  const enModoObjetivo = objetivoPago != null
+  const cicloBruto = enModoObjetivo ? Number(objetivoPago) : Number(resumenEstimado || 0)
   const favorNum = Math.max(0, Number(saldoAFavor || 0))
   const favorNumUsd = Math.max(0, Number(saldoAFavorUsd || 0))
   const realNum = resumenReal !== '' && parseFloat(resumenReal) > 0 ? parseFloat(resumenReal) : null
@@ -1621,7 +1635,11 @@ export function PagarModal({
   // Pago total = patrimonio: lo que sale de la billetera + lo que se consume
   // del saldo a favor previo. El saldo a favor se consume automatico para
   // cubrir el ciclo si el pago de bolsillo no alcanza.
-  const pagoTotal = totalPagar + favorNum
+  // En modo objetivo, el favor se consume capeado al objetivo (el backend con
+  // p_objetivo solo debita lo que la ventana del resumen necesita).
+  const pagoTotal = enModoObjetivo
+    ? totalPagar + Math.min(favorNum, Number(objetivoPago))
+    : totalPagar + favorNum
   // Sobrante: pago total por encima de la referencia. La referencia es el
   // resumen real cuando esta declarado, o el ciclo cuando no.
   // El modal de overpay se muestra cuando hay excedente para que el user elija
@@ -1672,8 +1690,14 @@ export function PagarModal({
   }
 
   // Netos per-moneda desde el reporte (VencimientoTarjeta).
-  const faltaARS = Math.max(0, necesitoARS - pagoARS)
-  const faltaUSD = Math.max(0, necesitoUSD - pagoUSD)
+  // En modo objetivo, el neto a cubrir con billetera es objetivo - favor
+  // (el favor se consume automatico en el backend, no entra como linea).
+  const faltaARS = enModoObjetivo
+    ? Math.max(0, Math.max(0, Number(objetivoPago) - favorNum) - pagoARS)
+    : Math.max(0, necesitoARS - pagoARS)
+  const faltaUSD = enModoObjetivo
+    ? Math.max(0, Math.max(0, Number(objetivoPagoUSD ?? 0) - favorNumUsd) - pagoUSD)
+    : Math.max(0, necesitoUSD - pagoUSD)
   const sobranteARS = Math.max(0, pagoARS - necesitoARS)
   const sobranteUSD = Math.max(0, pagoUSD - necesitoUSD)
 
@@ -1690,9 +1714,11 @@ export function PagarModal({
 
   // Fase 4 saldo a favor: total equivalente ARS del ciclo a pagar
   const favorEquiv = favorNum + (favorNumUsd * Number(targetCard?.cotizacion_usd ?? 1))
-  const totalCicloARS_equiv = realNum !== null
-    ? realNum
-    : (cicloARS + cicloUSD * Number(targetCard?.cotizacion_usd ?? 1))
+  const totalCicloARS_equiv = enModoObjetivo
+    ? Number(objetivoPago)
+    : (realNum !== null
+      ? realNum
+      : (cicloARS + cicloUSD * Number(targetCard?.cotizacion_usd ?? 1)))
   const favorCubreTotal = favorEquiv >= totalCicloARS_equiv && totalCicloARS_equiv > 0
 
   const seccionARSCompleta = !tarjetaTieneARS || faltaARS <= 0.5
@@ -1808,17 +1834,17 @@ export function PagarModal({
               </div>
             )}
 
-            {(cicloARS > 0 || cicloUSD > 0) && (
+            {(enModoObjetivo || cicloARS > 0 || cicloUSD > 0) && (
               <div className="pay-total-header">
                 <span className="pay-total-header-label">{t('pay_total_a_pagar_label')}</span>
                 <span className="pay-total-header-montos">
-                  {cicloARS > 0 && (
-                    <span className="pay-total-header-ars">{fmtMoneda(cicloARS, 'ARS')}</span>
+                  {(!enModoObjetivo || Number(objetivoPago) > 0) && (
+                    <span className="pay-total-header-ars">{fmtMoneda(enModoObjetivo ? Number(objetivoPago) : cicloARS, 'ARS')}</span>
                   )}
-                  {cicloARS > 0 && cicloUSD > 0 && (
+                  {!enModoObjetivo && cicloARS > 0 && cicloUSD > 0 && (
                     <span className="pay-total-header-sep">·</span>
                   )}
-                  {cicloUSD > 0 && (
+                  {!enModoObjetivo && cicloUSD > 0 && (
                     <span className="pay-total-header-usd pay-multi-total--usd">{fmtMoneda(cicloUSD, 'USD')}</span>
                   )}
                 </span>
@@ -1844,7 +1870,7 @@ export function PagarModal({
               </div>
             )}
 
-            {(favorNum > 0 || favorNumUsd > 0) && (
+            {!enModoObjetivo && (favorNum > 0 || favorNumUsd > 0) && (
               <button
                 type="button"
                 className="pay-multi-favor-toggle"
