@@ -545,9 +545,16 @@ export function TarjetasPage() {
     const favorNumModal = Math.max(0, Number(vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor ?? 0))
     const favorNumUsdModal = Math.max(0, Number(vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor_usd ?? 0))
     const favorEquivModal = favorNumModal + (favorNumUsdModal * Number(targetCard?.cotizacion_usd ?? 1))
-    const totalCicloARS_equivModal = resumenReal !== '' && parseFloat(resumenReal) > 0
-      ? parseFloat(resumenReal)
-      : ((vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_total_ars ?? 0) + (vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_total_usd ?? 0) * Number(targetCard?.cotizacion_usd ?? 1))
+    // En modo objetivo, la referencia es el total del resumen elegido (la RPC
+    // capea el consumo de favor a esa ventana); sin objetivo, el ciclo entero.
+    const vencHandle = vencimientoByCard[targetCard?.tarjeta_id ?? 0]
+    const totalCicloARS_equivModal = pagoObjetivo === 'anterior'
+      ? Number(vencHandle?.resumen_anterior_total_ars ?? 0)
+      : pagoObjetivo === 'actual'
+        ? Number(vencHandle?.resumen_actual_total_ars ?? 0)
+        : (resumenReal !== '' && parseFloat(resumenReal) > 0
+          ? parseFloat(resumenReal)
+          : ((vencHandle?.monto_ciclo_total_ars ?? 0) + (vencHandle?.monto_ciclo_total_usd ?? 0) * Number(targetCard?.cotizacion_usd ?? 1)))
     const favorCubreTotalModal = favorEquivModal >= totalCicloARS_equivModal && totalCicloARS_equivModal > 0
 
     const allPagarLineas = [...pagarLineas, ...pagarLineasUsd]
