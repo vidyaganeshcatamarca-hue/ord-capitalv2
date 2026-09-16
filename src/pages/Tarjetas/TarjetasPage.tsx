@@ -788,19 +788,7 @@ export function TarjetasPage() {
                   )}
                   <div className="vencimiento-monto">{t('card_due_estimated_prefix', { monto: fmtARS(venc.monto_ciclo_total ?? venc.monto_a_pagar) })}</div>
                 </div>
-                <button className="btn-pagar-resumen" onClick={() => {
-                  setTargetCard(selectedCard)
-                  const prefillMontoARS = venc.monto_a_pagar_ars ?? 0
-                  const prefillMontoUSD = venc.monto_a_pagar_usd ?? 0
-                  setPagarLineas([{ id: 1, billetera_id: null, monto: prefillMontoARS > 0 ? prefillMontoARS.toString() : '' }])
-                  setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillMontoUSD > 0 ? prefillMontoUSD.toString() : '' }])
-                  nextLineIdArsRef.current = 2
-                  nextLineIdUsdRef2.current = 2
-                  setPagarBilleteraId(null)
-                  setResumenReal('')
-                  setSelectedCuotasAdelantar([])
-                  setShowPagarModal(true)
-                }}>
+                <button className="btn-pagar-resumen" onClick={() => abrirPagarResumen(selectedCard, 'actual')}>
                   {t('btn_pay_resumen')}
                 </button>
               </div>
