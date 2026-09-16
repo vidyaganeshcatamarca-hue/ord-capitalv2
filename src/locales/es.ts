@@ -186,6 +186,8 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   pay_resumen_amount_label: "Monto a pagar *",
   pay_resumen_date_label: "Fecha de Pago",
   pay_overpay_detected: "Pagas de más {sobrante}.  ¿Qué hacemos con ese excedente?",
+  pay_overpay_favor_sin_consumir: "Tu saldo a favor de {favor} no se consume: queda disponible.",
+  pay_overpay_favor_total_proximo: "Con el excedente, quedan {total} para el próximo resumen.",
   pay_overpay_option_accumulate: "Guardar todo para el próximo resumen",
   pay_overpay_option_cancel_cuotas: "Adelantar cuotas futuras",
   pay_overpay_cuotas_section_title: "Elegí las cuotas a cancelar (se cancelan completas)",

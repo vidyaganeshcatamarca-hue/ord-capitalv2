@@ -1683,6 +1683,10 @@ export function PagarModal({
     // con billetera y la otra cubre el favor).
     ? totalPagarArsEquiv + Math.min(favorNum, Math.max(0, cicloBruto - totalPagarArsEquiv))
     : totalPagarArsEquiv + Math.max(0, favorNum - favorLineasArs)
+  // Fix 2026-09-15: favor que queda sin consumir (el pool de billeteras cubre el
+  // ciclo). Rueda al proximo resumen junto con el sobrante: comunicarlo en el
+  // banner evita la confusion "solo sobra el excedente".
+  const favorNoConsumido = favorNum - Math.min(favorNum, Math.max(0, cicloBruto - totalPagarArsEquiv))
   // Sobrante: pago total por encima de la referencia. La referencia es el
   // resumen real cuando esta declarado, o el ciclo cuando no.
   // El modal de overpay se muestra cuando hay excedente para que el user elija
@@ -2240,6 +2244,13 @@ export function PagarModal({
               <div className="overpay-banner">
                 <CategoryIcon name="Info" size={14} /> {t('pay_overpay_detected', { sobrante: fmtARS(sobrante) })}
               </div>
+              {favorNoConsumido > 0.01 && (
+                <div className="overpay-favor-note">
+                  {overpayMode === 'accumulate'
+                    ? t('pay_overpay_favor_total_proximo', { total: fmtARS(favorNoConsumido + sobrante) })
+                    : t('pay_overpay_favor_sin_consumir', { favor: fmtARS(favorNoConsumido) })}
+                </div>
+              )}
               <div className="overpay-options">
                 <button
                   type="button"
