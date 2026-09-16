@@ -1662,6 +1662,9 @@ export function PagarModal({
   const favorNum = Math.max(0, Number(saldoAFavor || 0))
   const favorNumUsd = Math.max(0, Number(saldoAFavorUsd || 0))
   const realNum = resumenReal !== '' && parseFloat(resumenReal) > 0 ? parseFloat(resumenReal) : null
+  // Fix 2026-09-15: con resumen real declarado, el objetivo de cubrimiento (para
+  // el consumo de favor y el pagoTotal) pasa a ser el resumen real del banco.
+  const targetCiclo = realNum !== null ? Math.max(realNum, cicloBruto) : cicloBruto
   // Neto = lo que falta de bolsillo después del saldo a favor (se consume automático)
   const netoRequerido = Math.max(0, cicloBruto - favorNum)
   // Falta repartir: efectivo que el usuario todavía debe distribuir (baseline neto; con resumen real: real - favor)
@@ -1681,12 +1684,12 @@ export function PagarModal({
     // Gap-fill como el backend: el favor consume solo lo que el pago de billetera
     // no cubre del objetivo (evita excedente fantasma cuando una seccion se paga
     // con billetera y la otra cubre el favor).
-    ? totalPagarArsEquiv + Math.min(favorNum, Math.max(0, cicloBruto - totalPagarArsEquiv))
+    ? totalPagarArsEquiv + Math.min(favorNum, Math.max(0, targetCiclo - totalPagarArsEquiv))
     : totalPagarArsEquiv + Math.max(0, favorNum - favorLineasArs)
   // Fix 2026-09-15: favor que queda sin consumir (el pool de billeteras cubre el
   // ciclo). Rueda al proximo resumen junto con el sobrante: comunicarlo en el
   // banner evita la confusion "solo sobra el excedente".
-  const favorNoConsumido = favorNum - Math.min(favorNum, Math.max(0, cicloBruto - totalPagarArsEquiv))
+  const favorNoConsumido = favorNum - Math.min(favorNum, Math.max(0, targetCiclo - totalPagarArsEquiv))
   // Sobrante: pago total por encima de la referencia. La referencia es el
   // resumen real cuando esta declarado, o el ciclo cuando no.
   // El modal de overpay se muestra cuando hay excedente para que el user elija
@@ -1899,8 +1902,8 @@ export function PagarModal({
               <div className="pay-total-header">
                 <span className="pay-total-header-label">{t('pay_total_a_pagar_label')}</span>
                 <span className="pay-total-header-montos">
-                  {(!enModoObjetivo || Number(objetivoPago) > 0) && (
-                    <span className="pay-total-header-ars">{fmtMoneda(enModoObjetivo ? Number(objetivoPago) : cicloARS, 'ARS')}</span>
+                  {(!enModoObjetivo || Number(objetivoPago) > 0 || realNum !== null) && (
+                    <span className="pay-total-header-ars">{fmtMoneda(realNum ?? (enModoObjetivo ? Number(objetivoPago) : cicloARS), 'ARS')}</span>
                   )}
                   {!enModoObjetivo && cicloARS > 0 && cicloUSD > 0 && (
                     <span className="pay-total-header-sep">·</span>
@@ -2241,6 +2244,9 @@ export function PagarModal({
                 <div className="pay-resumen-real-hint">{t('pay_resumen_real_hint')}</div>
                 {resumenReal !== '' && Math.abs(parseFloat(resumenReal) - cicloBruto) > 0.01 && (
                   <div className="pay-resumen-real-dif">{t('pay_resumen_real_dif', { monto: fmtARS(parseFloat(resumenReal) - cicloBruto) })}</div>
+                )}
+                {realNum !== null && faltaRepartir > 0.01 && (
+                  <div className="pay-resumen-real-falta">{t('pay_resumen_real_falta', { falta: fmtARS(faltaRepartir) })}</div>
                 )}
               </>
             )}

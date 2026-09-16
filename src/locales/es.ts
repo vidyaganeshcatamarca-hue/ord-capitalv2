@@ -220,6 +220,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
    pay_resumen_real_toggle: "¿El resumen real del banco es distinto?",
    pay_resumen_real_label: "Resumen real del banco",
    pay_resumen_real_hint: "Se registra un ajuste por la diferencia, sin tocar tus cuotas.",
+  pay_resumen_real_falta: "Te faltan pagar {falta} del resumen real. Si no los pagás ahora, quedan imputados como Diferencia Tarjeta.",
    pay_resumen_real_dif: "Ajuste: {monto}",
    pay_resumen_real_no: "No",
    pay_resumen_real_yes: "Sí",
