@@ -14,6 +14,7 @@ import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { useCountUp } from '@/hooks/useCountUp'
 import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { generateColorShade } from '@/lib/colorUtils'
+import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { DonutChart as DonutChartComponent } from '@/components/charts/DonutChart'
 import './Home.css'
 
@@ -363,6 +364,7 @@ export function HomePage() {
   // setFilterTarget contract as the modal picker, then scrolls smoothly to
   // the recent-activity section so the user lands on the filtered result.
   const handleBreakdownCategoryClick = useCallback((c: ActiveCategoria) => {
+    telemetry.track('home_interaction', { interaction_type: 'donut_detail' }, TELEMETRY_PRIORITY.LOW)
     const parentId = c.estructura_id
     if (c.es_padre || c.nombre_rubro_padre == null) {
       // Parent row: include its own id + every child whose padre is the same
@@ -934,6 +936,7 @@ export function HomePage() {
         await rpc('fn_eliminar_movimiento_caja', { p_caja_id: m.p_caja_id })
       }
       showToast(t('success_movement_deleted'), 'success')
+      telemetry.track('home_movement_deleted', {}, TELEMETRY_PRIORITY.MEDIUM)
       fetchData()
       window.dispatchEvent(new CustomEvent('movement-added'))
     } catch (err: any) {
@@ -980,6 +983,7 @@ export function HomePage() {
     : billeteras.filter((b) => b.billetera_id === homeFilters.billeteraId)
 
   const handlePeriodChange = (preset: HomePeriodPreset) => {
+    telemetry.track('home_interaction', { interaction_type: 'filter_date' }, TELEMETRY_PRIORITY.LOW)
     if (preset === 'custom') {
       updateHomeFilters({ ...homeFilters, preset: 'custom' })
       return
@@ -989,6 +993,7 @@ export function HomePage() {
   }
 
   const handleShortcutRange = (shortcut: 'yesterday' | 'year' | 'previous_month') => {
+    telemetry.track('home_interaction', { interaction_type: 'filter_date' }, TELEMETRY_PRIORITY.LOW)
     const range = getShortcutRange(shortcut, diaAncla)
     updateHomeFilters({ ...homeFilters, preset: 'custom', ...range, customShortcut: shortcut })
   }
@@ -1134,6 +1139,7 @@ export function HomePage() {
                         : ''
                     }
                     onChange={(event) => {
+                      telemetry.track('home_interaction', { interaction_type: 'filter_wallet' }, TELEMETRY_PRIORITY.LOW)
                       const value = event.target.value
                       if (!value) {
                         updateHomeFilters({ ...homeFilters, billeteraId: null, tarjetaId: null })
@@ -1570,7 +1576,10 @@ export function HomePage() {
                       || 'var(--surface-2)'
                     const iconBorderColor = iconBgColor === 'var(--surface-2)' ? 'var(--border)' : iconBgColor
                     return (
-                      <div key={m.p_caja_id} className="timeline-item" onClick={() => setMovementToEdit(m)} style={{ cursor: 'pointer' }}>
+                      <div key={m.p_caja_id} className="timeline-item" onClick={() => {
+                        telemetry.track('home_interaction', { interaction_type: 'recent_movement_open' }, TELEMETRY_PRIORITY.LOW)
+                        setMovementToEdit(m)
+                      }} style={{ cursor: 'pointer' }}>
                         <div
                           className="timeline-item-icon"
                           style={{
@@ -1692,6 +1701,7 @@ export function HomePage() {
           movement={movementToEdit}
           onClose={() => setMovementToEdit(null)}
           onSuccess={() => {
+            telemetry.track('home_movement_edited', {}, TELEMETRY_PRIORITY.MEDIUM)
             fetchData()
             window.dispatchEvent(new CustomEvent('movement-added'))
           }}
@@ -1749,6 +1759,7 @@ export function HomePage() {
                       <button
                         className="home-filter-rubro-btn"
                         onClick={() => {
+                          telemetry.track('home_interaction', { interaction_type: 'filter_category' }, TELEMETRY_PRIORITY.LOW)
                           setFilterTarget({ type: 'rubro', name: t(rubroName), ids: allIds })
                           setShowFilterPicker(false)
                         }}
@@ -1775,6 +1786,7 @@ export function HomePage() {
                             key={child.estructura_id}
                             className="home-filter-child-btn"
                             onClick={() => {
+                              telemetry.track('home_interaction', { interaction_type: 'filter_category' }, TELEMETRY_PRIORITY.LOW)
                               setFilterTarget({
                                 type: 'subcuenta',
                                 name: t(child.nombre_cuenta),
