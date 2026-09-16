@@ -1589,18 +1589,9 @@ export function PagarModal({
     setSectionUsdPayIn('USD')
     const prefillMontoUSDInit = Number(necesitoUSD ?? 0)
     setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillMontoUSDInit > 0 ? prefillMontoUSDInit.toString() : '' }])
-    // Bug fix 2026-09-14: autofill del saldo a favor cuando entramos desde el
-    // alert del resumen anterior y el saldo alcanza para cubrir el monto objetivo.
-    // Se replica addFavorLine pero usando objetivoPago como base en vez de ciclo entero.
-    if (objetivoPago != null && objetivoPago > 0 && Number(saldoAFavor || 0) >= objetivoPago) {
-      setPagarLineas([{
-        id: 1,
-        billetera_id: null,
-        monto: objetivoPago.toFixed(2),
-        moneda: 'ARS' as const,
-        origen: 'favor' as const,
-      }])
-    }
+    // Nota: en modo objetivo NO se crean lineas de saldo a favor. El backend
+    // (p_objetivo) consume el favor automaticamente capeado a la ventana del
+    // resumen; las lineas de billetera cubren solo la diferencia.
     fetchFutureCuotas()
     return () => { cancelled = true }
   }, [targetCard?.tarjeta_id, pagarFecha, setSelectedCuotasAdelantar, setResumenReal, setResumenRealOn])
@@ -1634,7 +1625,7 @@ export function PagarModal({
     .filter(l => l.origen === 'favor')
     .reduce((s, l) => s + (parseFloat(l.monto) || 0), 0)
   const pagoTotal = enModoObjetivo
-    ? totalPagar + Math.min(favorNum, Number(objetivoPago))
+    ? (totalPagar - favorLineasArs) + Math.min(favorNum, Number(objetivoPago))
     : totalPagar + Math.max(0, favorNum - favorLineasArs)
   // Sobrante: pago total por encima de la referencia. La referencia es el
   // resumen real cuando esta declarado, o el ciclo cuando no.
