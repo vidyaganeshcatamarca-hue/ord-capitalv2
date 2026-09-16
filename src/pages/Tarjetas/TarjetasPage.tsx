@@ -1553,6 +1553,9 @@ export function PagarModal({
   const totalPagarUsd = sectionUsdPayIn === 'USD' ? pagarLineasUsd.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0) : 0
   const totalPagar = totalPagarPesos + totalPagarUsd
   const lineasInvalidas = allLines.some(l => {
+    // Linea de saldo a favor: siempre valida (no requiere billetera). Cuando
+    // el total esta cubierto por favor, el pago se confirma sin elegir cuenta.
+    if (l.origen === 'favor') return false
     const hasWallet = l.billetera_id != null
     const monto = l.monto !== '' ? parseFloat(l.monto) : NaN
     return (hasWallet && isNaN(monto)) || (!hasWallet && !isNaN(monto) && l.monto !== '')
@@ -1625,9 +1628,14 @@ export function PagarModal({
   // cubrir el ciclo si el pago de bolsillo no alcanza.
   // En modo objetivo, el favor se consume capeado al objetivo (el backend con
   // p_objetivo solo debita lo que la ventana del resumen necesita).
+  // En modo legacy, si ya existe una linea favor explicita, esa linea ES el favor
+  // consumido: no volver a sumar el saldo completo (doble conteo -> excedente fantasma).
+  const favorLineasArs = pagarLineas
+    .filter(l => l.origen === 'favor')
+    .reduce((s, l) => s + (parseFloat(l.monto) || 0), 0)
   const pagoTotal = enModoObjetivo
     ? totalPagar + Math.min(favorNum, Number(objetivoPago))
-    : totalPagar + favorNum
+    : totalPagar + Math.max(0, favorNum - favorLineasArs)
   // Sobrante: pago total por encima de la referencia. La referencia es el
   // resumen real cuando esta declarado, o el ciclo cuando no.
   // El modal de overpay se muestra cuando hay excedente para que el user elija
