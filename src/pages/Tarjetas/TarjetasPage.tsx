@@ -1742,11 +1742,19 @@ export function PagarModal({
   // Netos per-moneda desde el reporte (VencimientoTarjeta).
   // En modo objetivo, el neto a cubrir con billetera es objetivo - favor
   // (el favor se consume automatico en el backend, no entra como linea).
+  // Fix 2026-09-15: con resumen real declarado, la obligacion es el resumen del
+  // banco (min(real, ciclo)): lo que el banco cobra manda. El faltante global se
+  // muestra en la seccion ARS; la USD no exige reparto propio.
+  const pagoCubiertoEquiv = pagoARS + favorNum + pagoUSD * cotizacion
   const faltaARS = enModoObjetivo
-    ? Math.max(0, Math.max(0, Number(objetivoPago) - favorNum) - pagoARS)
+    ? (realNum !== null
+      ? Math.max(0, Math.min(realNum, cicloBruto) - favorNum - pagoARS - pagoUSD * cotizacion)
+      : Math.max(0, Math.max(0, Number(objetivoPago) - favorNum) - pagoARS))
     : Math.max(0, necesitoARS - pagoARS)
   const faltaUSD = enModoObjetivo
-    ? Math.max(0, Math.max(0, Number(objetivoPagoUSD ?? 0) - favorNumUsd) - pagoUSD)
+    ? (realNum !== null
+      ? 0
+      : Math.max(0, Math.max(0, Number(objetivoPagoUSD ?? 0) - favorNumUsd) - pagoUSD))
     : Math.max(0, necesitoUSD - pagoUSD)
   const sobranteARS = Math.max(0, pagoARS - necesitoARS)
   const sobranteUSD = Math.max(0, pagoUSD - necesitoUSD)
@@ -1778,8 +1786,13 @@ export function PagarModal({
       : (cicloARS + cicloUSD * Number(targetCard?.cotizacion_usd ?? 1)))
   const favorCubreTotal = favorEquiv >= totalCicloARS_equiv && totalCicloARS_equiv > 0
 
-  const seccionARSCompleta = !tarjetaTieneARS || faltaARS <= 0.5
-  const seccionUSDCompleta = !tarjetaTieneUSD || faltaUSD <= 0.5
+  // Fix 2026-09-15: con resumen real declarado, cubrir el resumen real habilita
+  // el envio aunque la ventana estimada no este cubierta por billeteras (el
+  // backend refinancia la diferencia de cuotas y el resumen real manda).
+  const resumenRealCubierto = realNum !== null
+    && pagoCubiertoEquiv >= Math.min(realNum, cicloBruto) - 0.5
+  const seccionARSCompleta = (realNum !== null && resumenRealCubierto) || !tarjetaTieneARS || faltaARS <= 0.5
+  const seccionUSDCompleta = (realNum !== null && resumenRealCubierto) || !tarjetaTieneUSD || faltaUSD <= 0.5
   const submitEnabled = favorCubreTotal || (!allLinesEmpty && seccionARSCompleta && seccionUSDCompleta)
   const submitDisabled = formSubmitting || lineasInvalidas || !submitEnabled || overBudget
 
