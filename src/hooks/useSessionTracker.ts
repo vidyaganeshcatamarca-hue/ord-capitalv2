@@ -15,17 +15,12 @@ let cachedPlatform: 'web' | 'ios' | 'android' | null = null
 function getPlatform(): 'web' | 'ios' | 'android' {
   if (cachedPlatform !== null) return cachedPlatform
   try {
-    const { Capacitor } = require('@capacitor/core')
-    if (Capacitor.isNativePlatform()) {
-      const platform = Capacitor.getPlatform()
-      if (platform === 'ios') {
-        cachedPlatform = 'ios'
-        return 'ios'
-      }
-      if (platform === 'android') {
-        cachedPlatform = 'android'
-        return 'android'
-      }
+    // window.Capacitor is the ESM-safe accessor (same pattern as haptics.ts);
+    // `require()` does not exist in the bundled ESM output.
+    const nativePlatform = (window as any).Capacitor?.getPlatform?.()
+    if (nativePlatform === 'ios' || nativePlatform === 'android') {
+      cachedPlatform = nativePlatform
+      return nativePlatform
     }
   } catch {
     // Capacitor core not available, treat as web
