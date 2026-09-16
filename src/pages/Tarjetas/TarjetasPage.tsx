@@ -1757,7 +1757,14 @@ export function PagarModal({
     const monto = Number(found.monto_cuota || 0)
     return sum + (found.moneda === 'USD' ? monto * cotizacion : monto)
   }, 0)
-  const overBudget = overpayMode === 'cancel' && selectedSumFuture > sobrante
+  // Fix 2026-09-15: pozo unico para adelantar cuotas. El backend (bloque de
+  // deficit del registrar) consume saldo a favor cuando el sobrante no alcanza,
+  // asi que el presupuesto disponible es sobrante + favor sin consumir (ARS y
+  // USD cotizada), no solo el excedente nuevo.
+  const refUsdCicloAdel = enModoObjetivo ? Number(objetivoPagoUSD ?? 0) : necesitoUSD
+  const favorNoConsumidoUsd = Math.max(0, favorNumUsd - Math.max(0, refUsdCicloAdel - pagoUSD))
+  const presupuestoAdelantar = Math.max(0, sobrante) + favorNoConsumido + favorNoConsumidoUsd * cotizacion
+  const overBudget = overpayMode === 'cancel' && selectedSumFuture > presupuestoAdelantar + 0.01
 
   // Fase 4 saldo a favor: total equivalente ARS del ciclo a pagar
   const favorEquiv = favorNum + (favorNumUsd * Number(targetCard?.cotizacion_usd ?? 1))
@@ -2244,11 +2251,11 @@ export function PagarModal({
               <div className="overpay-banner">
                 <CategoryIcon name="Info" size={14} /> {t('pay_overpay_detected', { sobrante: fmtARS(sobrante) })}
               </div>
-              {favorNoConsumido > 0.01 && (
+              {favorNoConsumido + favorNoConsumidoUsd * cotizacion > 0.01 && (
                 <div className="overpay-favor-note">
                   {overpayMode === 'accumulate'
-                    ? t('pay_overpay_favor_total_proximo', { total: fmtARS(favorNoConsumido + sobrante) })
-                    : t('pay_overpay_favor_sin_consumir', { favor: fmtARS(favorNoConsumido) })}
+                    ? t('pay_overpay_favor_total_proximo', { total: fmtARS(favorNoConsumido + favorNoConsumidoUsd * cotizacion + sobrante) })
+                    : t('pay_overpay_favor_restante', { total: fmtARS(Math.max(0, favorNoConsumido + favorNoConsumidoUsd * cotizacion - Math.max(0, selectedSumFuture - sobrante))) })}
                 </div>
               )}
               <div className="overpay-options">
