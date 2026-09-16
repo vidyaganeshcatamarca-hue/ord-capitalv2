@@ -441,7 +441,11 @@ export function TarjetasPage() {
     [vencimientos]
   )
   const resumenActualAlerts = useMemo(
-    () => vencimientos.filter(v => Number(v.resumen_actual_a_pagar_ars ?? 0) + Number(v.resumen_actual_a_pagar_usd ?? 0) > 0),
+    // Fix 2026-09-15: mostrar el TOTAL bruto del proximo resumen (cuotas impagas de
+    // la ventana del ciclo actual). El neto post-favor asumia aplicacion automatica
+    // del saldo a favor y confundia; la aplicacion del favor es decision del usuario
+    // al pagar (mismo principio que el resumen anterior).
+    () => vencimientos.filter(v => Number(v.resumen_actual_total_ars ?? 0) + Number(v.resumen_actual_total_usd ?? 0) > 0),
     [vencimientos]
   )
 
@@ -549,13 +553,30 @@ export function TarjetasPage() {
     // capea el consumo de favor a esa ventana); sin objetivo, el ciclo entero.
     const vencHandle = vencimientoByCard[targetCard?.tarjeta_id ?? 0]
     const totalCicloARS_equivModal = pagoObjetivo === 'anterior'
-      ? Number(vencHandle?.resumen_anterior_total_ars ?? 0)
+      ? Number(vencHandle?.resumen_anterior_total_ars ?? 0) + Number(vencHandle?.resumen_anterior_total_usd ?? 0) * Number(targetCard?.cotizacion_usd ?? 1)
       : pagoObjetivo === 'actual'
-        ? Number(vencHandle?.resumen_actual_total_ars ?? 0)
+        ? Number(vencHandle?.resumen_actual_total_ars ?? 0) + Number(vencHandle?.resumen_actual_total_usd ?? 0) * Number(targetCard?.cotizacion_usd ?? 1)
         : (resumenReal !== '' && parseFloat(resumenReal) > 0
           ? parseFloat(resumenReal)
           : ((vencHandle?.monto_ciclo_total_ars ?? 0) + (vencHandle?.monto_ciclo_total_usd ?? 0) * Number(targetCard?.cotizacion_usd ?? 1)))
-    const favorCubreTotalModal = favorEquivModal >= totalCicloARS_equivModal && totalCicloARS_equivModal > 0
+    // Fix 2026-09-15: el favor es por moneda (ARS cubre cuotas ARS, USD cubre
+    // USD). Exigir cobertura por moneda evita enviar pago vacio cuando el favor
+    // ARS sobra pero faltan dolares.
+    const objArsModal = pagoObjetivo === 'anterior'
+      ? Number(vencHandle?.resumen_anterior_total_ars ?? 0)
+      : pagoObjetivo === 'actual'
+        ? Number(vencHandle?.resumen_actual_total_ars ?? 0)
+        : null
+    const objUsdModal = pagoObjetivo === 'anterior'
+      ? Number(vencHandle?.resumen_anterior_total_usd ?? 0)
+      : pagoObjetivo === 'actual'
+        ? Number(vencHandle?.resumen_actual_total_usd ?? 0)
+        : null
+    const favorCubreTotalModal = objArsModal !== null
+      ? (objArsModal + (objUsdModal ?? 0) > 0.01)
+        && (objArsModal <= 0.01 || favorNumModal + 0.01 >= objArsModal)
+        && ((objUsdModal ?? 0) <= 0.01 || favorNumUsdModal + 0.01 >= (objUsdModal ?? 0))
+      : favorEquivModal >= totalCicloARS_equivModal && totalCicloARS_equivModal > 0
 
     const allPagarLineas = [...pagarLineas, ...pagarLineasUsd]
     const favorLineas = allPagarLineas.filter(l => l.origen === 'favor' && parseFloat(l.monto) > 0)
@@ -592,7 +613,16 @@ export function TarjetasPage() {
       const resumenRealNum = resumenReal !== '' ? parseFloat(resumenReal) : null
       // Pago total = patrimonio: lo que sale de la billetera + el saldo a favor
       // que se consume automaticamente para cubrir el ciclo.
-      const totalPagarBilletera = validLineas.reduce((s, l) => s + (Number(l.monto) || 0), 0)
+      // Fix 2026-09-15: convertir a ARS-equiv las lineas en USD (billetera USD o
+          // linea favor en USD) para que el excedente vs resumen real no mezcle
+          // monedas.
+          const cotHandle = Number(targetCard?.cotizacion_usd ?? 1)
+          const totalPagarBilletera = validLineas.reduce((s, l) => {
+            const m = Number(l.monto) || 0
+            const w = l.billetera_id != null ? billeteras.find(b => b.billetera_id === l.billetera_id) : null
+            const esUSD = (w != null && w.moneda === 'USD') || (w == null && l.moneda === 'USD')
+            return s + (esUSD ? m * cotHandle : m)
+          }, 0)
       const favorNumHandle = Math.max(0, Number(vencimientoByCard[targetCard.tarjeta_id]?.saldo_a_favor ?? 0))
       const pagoTotalHandle = totalPagarBilletera + favorNumHandle
       // Excedente: pago total por encima del resumen real. La RPC lo acredita
@@ -1090,7 +1120,7 @@ export function TarjetasPage() {
                     <div className="tarjetas-alert-msg">{v.dias_para_vencimiento <= 0 ? t('card_resumen_vencido_alert') : getUrgencyMsg(v.mensaje_key, v.dias_para_vencimiento)}</div>
                   </div>
                   <div className="tarjetas-alert-monto">
-                    <div className="tarjetas-alert-monto-value">{fmtARS(Number(v.resumen_actual_a_pagar_ars ?? 0) + (Number(v.resumen_actual_a_pagar_usd ?? 0) * cotizacionUsd))}</div>
+                    <div className="tarjetas-alert-monto-value">{fmtARS(Number(v.resumen_actual_total_ars ?? 0) + (Number(v.resumen_actual_total_usd ?? 0) * cotizacionUsd))}</div>
                     <div className="tarjetas-alert-days">{t("card_days_format", { days: v.dias_para_vencimiento })}</div>
                   </div>
                 </div>
@@ -1559,6 +1589,12 @@ export function PagarModal({
   const totalPagarPesos = pagarLineas.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0) + (sectionUsdPayIn === 'ARS' ? pagarLineasUsd.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0) : 0)
   const totalPagarUsd = sectionUsdPayIn === 'USD' ? pagarLineasUsd.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0) : 0
   const totalPagar = totalPagarPesos + totalPagarUsd
+  // Fix 2026-09-15: equivalente ARS de lo pagado. totalPagar mezcla lineas ARS
+  // y USD crudas; toda comparacion contra el ciclo (ARS-equiv) usa esto.
+  const cotizacionUsdModal = Number(targetCard?.cotizacion_usd ?? 1)
+  const totalPagarArsEquiv = sectionUsdPayIn === 'USD'
+    ? totalPagarPesos + totalPagarUsd * cotizacionUsdModal
+    : totalPagarPesos
   const lineasInvalidas = allLines.some(l => {
     // Linea de saldo a favor: siempre valida (no requiere billetera). Cuando
     // el total esta cubierto por favor, el pago se confirma sin elegir cuenta.
@@ -1594,7 +1630,12 @@ export function PagarModal({
     setResumenReal('')
     setSelectedCuotasAdelantar([])
     setSectionUsdPayIn('USD')
-    const prefillMontoUSDInit = Number(necesitoUSD ?? 0)
+    // Fix 2026-09-15: en modo objetivo el prefill es el neto USD del objetivo
+    // (objetivo - favor USD), no el neto legacy del ciclo completo.
+    const isObjetivoInit = objetivoPago != null || (objetivoPagoUSD ?? 0) > 0
+    const prefillMontoUSDInit = isObjetivoInit
+      ? Math.max(0, Number(objetivoPagoUSD ?? 0) - Math.max(0, Number(saldoAFavorUsd || 0)))
+      : Number(necesitoUSD ?? 0)
     setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillMontoUSDInit > 0 ? prefillMontoUSDInit.toString() : '' }])
     // Nota: en modo objetivo NO se crean lineas de saldo a favor. El backend
     // (p_objetivo) consume el favor automaticamente capeado a la ventana del
@@ -1611,8 +1652,13 @@ export function PagarModal({
 
   // Bruto del ciclo (baseline del sobrante: el backend calcula pagado - liquidado_del_ciclo)
   // Si viene objetivoPago (pago por resumen anterior o actual), se usa ese monto como referencia.
-  const enModoObjetivo = objetivoPago != null
-  const cicloBruto = enModoObjetivo ? Number(objetivoPago) : Number(resumenEstimado || 0)
+  const enModoObjetivo = objetivoPago != null || (objetivoPagoUSD ?? 0) > 0
+  // Fix 2026-09-15: objetivo en equivalente ARS completo (parte ARS + parte USD
+  // cotizada). Antes solo la parte ARS entraba al ciclo y el sobrante daba
+  // falso positivo cuando la parte USD se pagaba con billetera.
+  const cicloBruto = enModoObjetivo
+    ? Number(objetivoPago ?? 0) + Number(objetivoPagoUSD ?? 0) * cotizacionUsdModal
+    : Number(resumenEstimado || 0)
   const favorNum = Math.max(0, Number(saldoAFavor || 0))
   const favorNumUsd = Math.max(0, Number(saldoAFavorUsd || 0))
   const realNum = resumenReal !== '' && parseFloat(resumenReal) > 0 ? parseFloat(resumenReal) : null
@@ -1620,7 +1666,7 @@ export function PagarModal({
   const netoRequerido = Math.max(0, cicloBruto - favorNum)
   // Falta repartir: efectivo que el usuario todavía debe distribuir (baseline neto; con resumen real: real - favor)
   const faltaBase = realNum !== null ? Math.max(0, realNum - favorNum) : netoRequerido
-  const faltaRepartir = faltaBase - totalPagar
+  const faltaRepartir = faltaBase - totalPagarArsEquiv
   // Pago total = patrimonio: lo que sale de la billetera + lo que se consume
   // del saldo a favor previo. El saldo a favor se consume automatico para
   // cubrir el ciclo si el pago de bolsillo no alcanza.
@@ -1632,8 +1678,11 @@ export function PagarModal({
     .filter(l => l.origen === 'favor')
     .reduce((s, l) => s + (parseFloat(l.monto) || 0), 0)
   const pagoTotal = enModoObjetivo
-    ? (totalPagar - favorLineasArs) + Math.min(favorNum, Number(objetivoPago))
-    : totalPagar + Math.max(0, favorNum - favorLineasArs)
+    // Gap-fill como el backend: el favor consume solo lo que el pago de billetera
+    // no cubre del objetivo (evita excedente fantasma cuando una seccion se paga
+    // con billetera y la otra cubre el favor).
+    ? totalPagarArsEquiv + Math.min(favorNum, Math.max(0, cicloBruto - totalPagarArsEquiv))
+    : totalPagarArsEquiv + Math.max(0, favorNum - favorLineasArs)
   // Sobrante: pago total por encima de la referencia. La referencia es el
   // resumen real cuando esta declarado, o el ciclo cuando no.
   // El modal de overpay se muestra cuando hay excedente para que el user elija
@@ -1709,7 +1758,7 @@ export function PagarModal({
   // Fase 4 saldo a favor: total equivalente ARS del ciclo a pagar
   const favorEquiv = favorNum + (favorNumUsd * Number(targetCard?.cotizacion_usd ?? 1))
   const totalCicloARS_equiv = enModoObjetivo
-    ? Number(objetivoPago)
+    ? Number(objetivoPago ?? 0) + Number(objetivoPagoUSD ?? 0) * cotizacion
     : (realNum !== null
       ? realNum
       : (cicloARS + cicloUSD * Number(targetCard?.cotizacion_usd ?? 1)))
@@ -1745,8 +1794,15 @@ export function PagarModal({
         const isEmpty = l.billetera_id == null && l.monto === ''
         const w = l.billetera_id != null ? billeteras.find(b => b.billetera_id === l.billetera_id) : undefined
         const shouldResetMonto = l.billetera_id != null && w?.moneda !== 'ARS'
-        if (i === 0 && isEmpty && cotizacion > 0 && necesitoUSD > 0) {
-          return { ...l, billetera_id: null, target_moneda_cuota: 'USD', monto: (necesitoUSD * cotizacion).toFixed(2) }
+        // Fix 2026-09-15: al pasar a pagar en pesos, convertir el prefill USD
+        // existente (o vacio) al equivalente ARS exacto. Antes el prefill USD del
+        // mount hacia que isEmpty sea false y el monto quedaba reinterpretado.
+        const refNecesitoUSD = enModoObjetivo
+          ? Math.max(0, Number(objetivoPagoUSD ?? 0) - Math.max(0, Number(saldoAFavorUsd || 0)))
+          : necesitoUSD
+        const esPrefillUSD = isEmpty || (l.billetera_id == null && Math.abs((parseFloat(l.monto) || 0) - refNecesitoUSD) < 0.005)
+        if (i === 0 && esPrefillUSD && cotizacion > 0 && refNecesitoUSD > 0) {
+          return { ...l, billetera_id: null, target_moneda_cuota: 'USD', monto: (refNecesitoUSD * cotizacion).toFixed(2) }
         }
         return { ...l, billetera_id: null, target_moneda_cuota: 'USD', monto: shouldResetMonto ? '' : l.monto }
       }))
@@ -2000,7 +2056,11 @@ export function PagarModal({
                 const equivalenteUsd = payInPesos && cotizacion > 0 && montoNum > 0
                   ? montoNum / cotizacion
                   : 0
-                const emptyPrefillSuggestion = payInPesos && idx === 0 && linea.billetera_id == null && linea.monto === '' && necesitoUSD > 0 && cotizacion > 0
+                // Fix 2026-09-15: referencia USD objetivo-aware para la sugerencia.
+                const refNecesitoUSDSug = enModoObjetivo
+                  ? Math.max(0, Number(objetivoPagoUSD ?? 0) - Math.max(0, Number(saldoAFavorUsd || 0)))
+                  : necesitoUSD
+                const emptyPrefillSuggestion = payInPesos && idx === 0 && linea.billetera_id == null && linea.monto === '' && refNecesitoUSDSug > 0 && cotizacion > 0
                 return (
                   <div key={linea.id} className="pay-multi-line">
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -2029,7 +2089,7 @@ export function PagarModal({
                           )}
                           {emptyPrefillSuggestion && (
                             <div className="pay-multi-usd-preview pay-multi-usd-preview--suggested">
-                              {t('pay_resumen_usd_equiv_suggested', { ars: (necesitoUSD * cotizacion).toFixed(2), usd: fmtUSD.format(necesitoUSD) })}
+                              {t('pay_resumen_usd_equiv_suggested', { ars: (refNecesitoUSDSug * cotizacion).toFixed(2), usd: fmtUSD.format(refNecesitoUSDSug) })}
                             </div>
                           )}
                         </>
