@@ -231,8 +231,10 @@ class TelemetryService {
         this.queue = this.queue.filter(e => !batchIds.has(e.event_id))
         this.persistQueue()
       })
-      .catch(() => {
-        // Keep queue; next flush attempt after the backoff window (PRD §21.4)
+      .catch((err) => {
+        // Keep queue; next flush attempt after the backoff window (PRD §21.4).
+        // Surface in console: telemetry failures must be diagnosable (PRD §23).
+        console.warn('[telemetry] flush failed, backing off:', err?.message ?? err)
         this.nextFlushAt = Date.now() + FLUSH_BACKOFF_MS
       })
       .finally(() => {
