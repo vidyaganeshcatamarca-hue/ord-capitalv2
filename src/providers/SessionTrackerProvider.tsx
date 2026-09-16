@@ -5,18 +5,21 @@ import { telemetry } from '@/lib/telemetry'
 
 function SessionTrackerInner({ children }: { children: ReactNode }) {
   const { sessionId } = useSessionTracker()
+  const { user } = useAuth()
 
-  // Bind telemetry events to the current app session; flush pending events
-  // when the session ends (component unmounts on logout).
+  // Telemetry runs only for authenticated users; events are namespaced and
+  // attributed to the logged-in user (privacy: PRD §4.2).
   useEffect(() => {
-    telemetry.setSession(sessionId)
-  }, [sessionId])
-
-  useEffect(() => {
+    telemetry.setEnabled(true)
+    telemetry.setIdentity(user?.id ?? null, sessionId)
     return () => {
+      // Logout / unmount: flush, persist to the user's namespace, reset
+      // session-scoped dedup so a second session reports correctly.
       telemetry.flush()
+      telemetry.endSession()
+      telemetry.setEnabled(false)
     }
-  }, [])
+  }, [sessionId, user?.id])
 
   return <>{children}</>
 }

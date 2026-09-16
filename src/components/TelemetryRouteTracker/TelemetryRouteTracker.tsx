@@ -14,19 +14,19 @@ import { telemetry } from '@/lib/telemetry'
 // Canonical module names for telemetry (PRD §10.2 values + extra ORD modules).
 const ROUTE_MODULE_MAP: Array<[RegExp, string]> = [
   [/^\/$/, 'home'],
-  [/^\/billeteras/, 'wallets'],
-  [/^\/tarjetas/, 'cards'],
-  [/^\/presupuesto/, 'budget'],
-  [/^\/configuracion/, 'settings'],
-  [/^\/cuarentena/, 'cuarentena'],
-  [/^\/familia/, 'familia'],
-  [/^\/analisis-emocional/, 'bcg'],
-  [/^\/supervivencia/, 'supervivencia'],
-  [/^\/saneamiento/, 'saneamiento'],
-  [/^\/inversiones/, 'inversiones'],
-  [/^\/salud/, 'salud'],
-  [/^\/sobres/, 'sobres'],
-  [/^\/privacidad/, 'privacidad']
+  [/^\/billeteras(\/|$)/, 'wallets'],
+  [/^\/tarjetas(\/|$)/, 'cards'],
+  [/^\/presupuesto(\/|$)/, 'budget'],
+  [/^\/configuracion(\/|$)/, 'settings'],
+  [/^\/cuarentena(\/|$)/, 'cuarentena'],
+  [/^\/familia(\/|$)/, 'familia'],
+  [/^\/analisis-emocional(\/|$)/, 'bcg'],
+  [/^\/supervivencia(\/|$)/, 'supervivencia'],
+  [/^\/saneamiento(\/|$)/, 'saneamiento'],
+  [/^\/inversiones(\/|$)/, 'inversiones'],
+  [/^\/salud(\/|$)/, 'salud'],
+  [/^\/sobres(\/|$)/, 'sobres'],
+  [/^\/privacidad(\/|$)/, 'privacidad']
 ]
 
 // Modules whose first visit per session is a dedicated *_session_viewed event.
@@ -36,9 +36,8 @@ function pathToModule(pathname: string): string {
   for (const [pattern, module] of ROUTE_MODULE_MAP) {
     if (pattern.test(pathname)) return module
   }
-  // Fallback: first path segment (or 'other' for unknown roots)
-  const segment = pathname.split('/')[1]
-  return segment ? segment : 'other'
+  // Closed catalog: anything outside the known modules is 'other'
+  return 'other'
 }
 
 export function TelemetryRouteTracker() {
