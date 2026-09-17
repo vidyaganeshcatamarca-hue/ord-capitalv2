@@ -356,6 +356,7 @@ export function HomePage() {
   }, [treeCategoriasLoaded, loadingTreeCategorias])
 
   const handleOpenFilterPicker = useCallback(() => {
+    telemetry.track('home_interaction', { interaction_type: 'filter_category' }, TELEMETRY_PRIORITY.LOW)
     setShowFilterPicker(true)
     void loadTreeCategorias()
   }, [loadTreeCategorias])
@@ -1260,7 +1261,10 @@ export function HomePage() {
                 <button
                   type="button"
                   className={`segmented-item ${homeFilters.nivelCategorias === 'parents' ? 'active' : ''}`}
-                  onClick={() => updateHomeFilters({ ...homeFilters, nivelCategorias: 'parents' })}
+                  onClick={() => {
+                    telemetry.track('home_interaction', { interaction_type: 'filter_level', level: 'parents' }, TELEMETRY_PRIORITY.LOW)
+                    updateHomeFilters({ ...homeFilters, nivelCategorias: 'parents' })
+                  }}
                   style={{ fontSize: 'calc(11px * var(--font-scale))', padding: '4px 8px' }}
                 >
                   {t('segmented_only_parents')}
@@ -1268,7 +1272,10 @@ export function HomePage() {
                 <button
                   type="button"
                   className={`segmented-item ${homeFilters.nivelCategorias === 'all' ? 'active' : ''}`}
-                  onClick={() => updateHomeFilters({ ...homeFilters, nivelCategorias: 'all' })}
+                  onClick={() => {
+                    telemetry.track('home_interaction', { interaction_type: 'filter_level', level: 'all' }, TELEMETRY_PRIORITY.LOW)
+                    updateHomeFilters({ ...homeFilters, nivelCategorias: 'all' })
+                  }}
                   style={{ fontSize: 'calc(11px * var(--font-scale))', padding: '4px 8px' }}
                 >
                   {t('segmented_all')}
