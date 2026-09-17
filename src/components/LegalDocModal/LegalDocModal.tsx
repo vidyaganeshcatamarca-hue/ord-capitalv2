@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { t } from '@/locales/i18n'
+import { registrarAperturaLegal } from '@/hooks/useConsentimientoLegal'
 import './LegalDocModal.css'
 
 interface LegalDocModalProps {
@@ -18,6 +20,11 @@ const DOC_TITLE_KEY: Record<'tyc' | 'privacidad', string> = {
 }
 
 export function LegalDocModal({ doc, open, onClose }: LegalDocModalProps) {
+  // Telemetría Tanda 2: marcar apertura del documento legal (best-effort)
+  useEffect(() => {
+    if (open) void registrarAperturaLegal(doc)
+  }, [open, doc])
+
   if (!open) return null
 
   return (
