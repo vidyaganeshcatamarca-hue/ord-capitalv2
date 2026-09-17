@@ -1463,7 +1463,10 @@ export function HomePage() {
                               gap: '6px',
                               transition: 'all 0.2s ease'
                             }}
-                            onClick={() => setShowAllTopCategories(!showAllTopCategories)}
+                            onClick={() => {
+                              telemetry.track('home_interaction', { interaction_type: 'donut_expand' }, TELEMETRY_PRIORITY.LOW)
+                              setShowAllTopCategories(!showAllTopCategories)
+                            }}
                           >
                             <span>{showAllTopCategories ? '▲' : '▼'}</span>
                             <span>
