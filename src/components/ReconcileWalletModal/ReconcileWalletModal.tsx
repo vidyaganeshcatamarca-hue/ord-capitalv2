@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { t, parseError } from '@/locales/i18n'
 import { Billetera } from '@/types/Billetera'
 
@@ -18,6 +19,7 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
   const confirmBtnRef = useRef<HTMLButtonElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
+  const { prefs } = useNumberFormat()
 
   useEffect(() => {
     setSaldoReal(billetera.saldo_actual.toString())
@@ -38,15 +40,17 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
     if (e.target.value.trim() === '') setSaldoReal('0')
   }
 
-  // Thousands separators (es-AR: dots) for display; state stays raw so
-  // parseFloat keeps working. Matches the Presupuestos page pattern.
-  const formatThousands = (raw: string): string => {
+  // Display formatting honors the user's number-format preferences
+  // (separador_miles / separador_decimal) and the wallet currency's
+  // decimal count, exactly like formatMonto does. State stays raw
+  // (dot-decimal) so parseFloat keeps working.
+  const formatDisplay = (raw: string): string => {
     if (raw === '' || raw === '-') return raw
     const neg = raw.startsWith('-')
     const body = neg ? raw.slice(1) : raw
     const [intPart, decPart] = body.split('.')
-    const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
-    return (neg ? '-' : '') + grouped + (decPart !== undefined ? ',' + decPart : '')
+    const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, prefs.separador_miles)
+    return (neg ? '-' : '') + grouped + (decPart !== undefined ? prefs.separador_decimal + decPart : '')
   }
 
   const handleConfirm = async () => {
@@ -126,11 +130,14 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
                   data-form-type="other"
                   className="form-control font-mono"
                   style={{ paddingLeft: 45, fontSize: '18px', fontWeight: 'bold' }}
-                  value={formatThousands(saldoReal)}
+                  value={formatDisplay(saldoReal)}
                   onChange={(e) => {
-                    // Display may contain group dots / comma decimals; normalize
-                    // back to raw digits+dot-decimal before validating and storing
-                    const normalized = e.target.value.replace(/\./g, '').replace(',', '.')
+                    // Display may contain user-configured group/decimal
+                    // separators; normalize back to raw dot-decimal before
+                    // validating and storing
+                    const normalized = e.target.value
+                      .split(prefs.separador_miles).join('')
+                      .replace(prefs.separador_decimal, '.')
                     if (normalized === '' || /^-?\d*\.?\d*$/.test(normalized)) {
                       setSaldoReal(normalized)
                     }
