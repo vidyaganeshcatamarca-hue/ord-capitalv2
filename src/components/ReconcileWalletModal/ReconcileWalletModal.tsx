@@ -38,6 +38,17 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
     if (e.target.value.trim() === '') setSaldoReal('0')
   }
 
+  // Thousands separators (es-AR: dots) for display; state stays raw so
+  // parseFloat keeps working. Matches the Presupuestos page pattern.
+  const formatThousands = (raw: string): string => {
+    if (raw === '' || raw === '-') return raw
+    const neg = raw.startsWith('-')
+    const body = neg ? raw.slice(1) : raw
+    const [intPart, decPart] = body.split('.')
+    const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+    return (neg ? '-' : '') + grouped + (decPart !== undefined ? ',' + decPart : '')
+  }
+
   const handleConfirm = async () => {
     if (loading) return
     const saldoNum = parseFloat(saldoReal)
@@ -116,7 +127,7 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
                   data-form-type="other"
                   className="form-control font-mono"
                   style={{ paddingLeft: 45, fontSize: '18px', fontWeight: 'bold' }}
-                  value={saldoReal}
+                  value={formatThousands(saldoReal)}
                   onChange={(e) => {
                     // Allow only digits and decimal separator
                     const raw = e.target.value
