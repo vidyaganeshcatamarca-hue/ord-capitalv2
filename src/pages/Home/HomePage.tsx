@@ -410,6 +410,39 @@ export function HomePage() {
     }
   }, [])
 
+  // Full filtered-activity fetch. Extracted as a callback so both the
+  // category-filter effect below and the `movement-added` refresh signal
+  // can re-run it: with a category filter active, ACTIVIDAD RECIENTE
+  // renders from `allMovimientos`, so create/edit/delete must re-fetch
+  // this dataset too, not just the paginated `movimientos` list. Reads
+  // filters from latestHomeFiltersRef, so it always uses current values.
+  const fetchAllMovimientos = useCallback(() => {
+    if (!filterTarget) return
+    const filters = latestHomeFiltersRef.current
+    if (!filters.fechaInicio || !filters.fechaFin || filters.fechaInicio > filters.fechaFin) return
+    let cancelled = false
+    ;(async () => {
+      try {
+        setLoadingAllMovimientos(true)
+        const result = await rpc<any[]>('fn_reporte_movimientos_recientes', {
+          p_limit: 1000,
+          p_offset: 0,
+          p_fecha_inicio: filters.fechaInicio,
+          p_fecha_fin: filters.fechaFin,
+          p_billetera_id: filters.billeteraId,
+          p_tarjeta_id: filters.tarjetaId
+        }).catch(() => [] as any[])
+        if (!cancelled) setAllMovimientos(result)
+      } catch (err) {
+        if (!cancelled) console.error('full movimientos fetch failed:', err)
+      } finally {
+        if (!cancelled) setLoadingAllMovimientos(false)
+      }
+    })()
+    return () => { cancelled = true }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterTarget ? `${filterTarget.type}:${filterTarget.ids.join(',')}` : ''])
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
@@ -466,7 +499,7 @@ export function HomePage() {
     } catch (err: any) {
       showToast(parseError(err), 'error')
     } finally {
-      setFilteredDataLoading(true)
+      setFilteredDataLoading(false)
       setLoading(false)
     }
   }, [showToast, fetchBilleterasFromPreference])
@@ -708,6 +741,10 @@ export function HomePage() {
 
     const handleSuccess = () => {
       fetchData()
+      // With a category filter active the activity feed renders from the
+      // full filtered dataset; refresh it too so create/edit/delete are
+      // reflected without re-applying the filter.
+      fetchAllMovimientos()
     }
     const handleFugasChanged = () => {
       setFugasMisterioOcultado(localStorage.getItem('ocultar_fugas_misterio') === 'true')
@@ -720,7 +757,7 @@ export function HomePage() {
       window.removeEventListener('wallet-order-changed', handleSuccess)
       window.removeEventListener('fugas-config-changed', handleFugasChanged)
     }
-  }, [fetchData])
+  }, [fetchData, fetchAllMovimientos])
 
   useEffect(() => {
     setHomeFilters((current) => {
@@ -816,36 +853,17 @@ export function HomePage() {
   }, [activityOffset, filterTarget])
 
   // Fetch full dataset when category filter is active (bypasses pagination)
+  // or when the date/wallet filters change while the category filter is set.
   useEffect(() => {
     if (!filterTarget) {
       setAllMovimientos([])
       return
     }
-    const filters = latestHomeFiltersRef.current
-    if (!filters.fechaInicio || !filters.fechaFin || filters.fechaInicio > filters.fechaFin) return
-    let cancelled = false
-    ;(async () => {
-      try {
-        setLoadingAllMovimientos(true)
-        const result = await rpc<any[]>('fn_reporte_movimientos_recientes', {
-          p_limit: 1000,
-          p_offset: 0,
-          p_fecha_inicio: filters.fechaInicio,
-          p_fecha_fin: filters.fechaFin,
-          p_billetera_id: filters.billeteraId,
-          p_tarjeta_id: filters.tarjetaId
-        }).catch(() => [] as any[])
-        if (!cancelled) setAllMovimientos(result)
-      } catch (err) {
-        if (!cancelled) console.error('full movimientos fetch failed:', err)
-      } finally {
-        if (!cancelled) setLoadingAllMovimientos(false)
-      }
-    })()
-    return () => { cancelled = true }
+    const cleanup = fetchAllMovimientos()
+    return cleanup
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-    filterTarget ? `${filterTarget.type}:${filterTarget.ids.join(',')}` : '',
+    fetchAllMovimientos,
     homeFilters.fechaInicio,
     homeFilters.fechaFin,
     homeFilters.billeteraId,
