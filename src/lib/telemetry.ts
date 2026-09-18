@@ -179,11 +179,11 @@ class TelemetryService {
    * Emit an event at most once per app session (e.g. home_session_viewed).
    * Discards silently in memory — not even enqueued.
    */
-  trackOncePerSession(eventName: string, properties?: Record<string, unknown>): void {
+  trackOncePerSession(eventName: string, properties?: Record<string, unknown>, priority: number = TELEMETRY_PRIORITY.LOW): void {
     if (!this.enabled) return
     if (this.sessionOnce.has(eventName)) return
     this.sessionOnce.add(eventName)
-    this.track(eventName, properties, TELEMETRY_PRIORITY.LOW)
+    this.track(eventName, properties, priority)
   }
 
   /**

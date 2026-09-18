@@ -2,6 +2,7 @@
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
+import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { CategoryIcon } from '@/components/CategoryIcon'
 import { WalletIcon } from '@/components/WalletIcon'
@@ -346,6 +347,8 @@ export function TarjetasPage() {
   useEffect(() => {
     if (selectedCard) {
       fetchDetalle(selectedCard.tarjeta_id)
+      // Tanda 4: each statement consultation, no dedup (plan §3 Fase 7)
+      telemetry.track('card_statement_viewed', {}, TELEMETRY_PRIORITY.MEDIUM)
     }
   }, [selectedCard]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -645,6 +648,21 @@ export function TarjetasPage() {
         // Liquidar SOLO las cuotas del resumen elegido (NULL = legacy).
         p_objetivo: pagoObjetivo,
       })
+      // Tanda 4 telemetry: payment intent only (no amounts, plan §3 Fase 7).
+      // PRD deviation: 'minimum' is not computable — the app has no
+      // minimum-payment data, so the enum is full|partial.
+      const isUsdLinea = (l: { billetera_id: number | null; moneda?: string | null }) => {
+        const w = l.billetera_id != null ? billeteras.find(b => b.billetera_id === l.billetera_id) : null
+        return (w != null && w.moneda === 'USD') || (w == null && l.moneda === 'USD')
+      }
+      const hasUsd = validLineas.some(isUsdLinea)
+      const hasArs = validLineas.some(l => !isUsdLinea(l))
+      telemetry.track('card_payment_completed', {
+        payment_type: totalCicloARS_equivModal > 0.01 && pagoTotalHandle + 0.01 >= totalCicloARS_equivModal ? 'full' : 'partial',
+        excess_positive_balance: montoFavorExplicito !== null && montoFavorExplicito > 0,
+        excess_prepay_installments: selectedCuotasAdelantar.length > 0,
+        mixed_currency: hasArs && hasUsd,
+      }, TELEMETRY_PRIORITY.MEDIUM)
       // La Diferencia Tarjeta la crea automaticamente la RPC
       // (fn_registrar_pago_tarjeta_multi) cuando resumen_real > consumo_real.
       showToast(t('card_payment_success'), 'success')

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { t, parseError } from '@/locales/i18n'
+import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { SYSTEM_CATEGORY_NAMES } from '@/lib/categoryFilters'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import './Presupuestos.css'
@@ -314,6 +315,9 @@ export function PresupuestosPage() {
         p_mes_periodo: mesPeriodoStr,
       })
       if (error) throw error
+      // Tanda 4 telemetry: only explicit user saves count (plan §3 Fase 8 —
+      // avoids false positives from system UPDATEs)
+      telemetry.track('budget_adjusted', {}, TELEMETRY_PRIORITY.MEDIUM)
       showToast(`$${Math.round(monto).toLocaleString('es-AR')} ${t('toast_assigned_to')} ${t(sobreSeleccionado.nombre_categoria)}`, 'success')
       setShowAsignarSheet(false)
       setSobreSeleccionado(null)
@@ -372,6 +376,14 @@ export function PresupuestosPage() {
     s.estructura_id !== sobreSeleccionado?.estructura_id &&
     s.monto_disponible > 0
   )
+
+  // Tanda 4 telemetry: an overspent budget is on screen (no amounts;
+  // once per app session, plan §3 Fase 8)
+  useEffect(() => {
+    if (sobres.some(s => s.estado_sobre === 'rojo_excedido')) {
+      telemetry.trackOncePerSession('budget_overspend_viewed', {}, TELEMETRY_PRIORITY.MEDIUM)
+    }
+  }, [sobres])
 
   const fuentesDisponibles = useMemo(() => {
     return [

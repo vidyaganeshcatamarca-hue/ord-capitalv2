@@ -1,4 +1,23 @@
 import * as es from './es.js';
+import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry';
+
+// Tanda 4 telemetry (app_error): throttle ~10 tracks per error_code per
+// page session; the counter keeps incrementing and is sent as `attempt`.
+// Page load = session boundary on web (matches plan §3 Fase 9).
+const appErrorCounts = new Map<string, number>();
+
+/** Telemetry for a normalized error code; never blocks or throws. */
+function trackAppError(errorCode: string) {
+  try {
+    const attempt = (appErrorCounts.get(errorCode) ?? 0) + 1;
+    appErrorCounts.set(errorCode, attempt);
+    if (attempt <= 10) {
+      telemetry.track('app_error', { error_code: errorCode, attempt }, TELEMETRY_PRIORITY.HIGH);
+    }
+  } catch {
+    // Telemetry must never break error handling
+  }
+}
 
 const locales: Record<string, any> = {
   es
@@ -87,6 +106,7 @@ export function parseError(err: any): string {
       try {
         const parsed = JSON.parse(m[1]);
         if (parsed && parsed.key) {
+          trackAppError(parsed.key);
           return t(parsed.key, parsed.params);
         }
       } catch (e) {
@@ -104,6 +124,7 @@ export function parseError(err: any): string {
   try {
     const parsed = JSON.parse(msg);
     if (parsed && parsed.key) {
+      trackAppError(parsed.key);
       return t(parsed.key, parsed.params);
     }
   } catch (e) {
