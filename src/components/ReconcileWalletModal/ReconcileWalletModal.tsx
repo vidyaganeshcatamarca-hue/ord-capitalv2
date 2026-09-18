@@ -118,7 +118,6 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
                   ref={inputRef}
                   type="tel"
                   inputMode="decimal"
-                  pattern="[0-9]*"
                   autoComplete="new-password"
                   autoCorrect="off"
                   autoCapitalize="off"
@@ -129,10 +128,11 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
                   style={{ paddingLeft: 45, fontSize: '18px', fontWeight: 'bold' }}
                   value={formatThousands(saldoReal)}
                   onChange={(e) => {
-                    // Allow only digits and decimal separator
-                    const raw = e.target.value
-                    if (raw === '' || /^-?\d*\.?\d*$/.test(raw)) {
-                      setSaldoReal(raw)
+                    // Display may contain group dots / comma decimals; normalize
+                    // back to raw digits+dot-decimal before validating and storing
+                    const normalized = e.target.value.replace(/\./g, '').replace(',', '.')
+                    if (normalized === '' || /^-?\d*\.?\d*$/.test(normalized)) {
+                      setSaldoReal(normalized)
                     }
                   }}
                   onFocus={handleFocus}
