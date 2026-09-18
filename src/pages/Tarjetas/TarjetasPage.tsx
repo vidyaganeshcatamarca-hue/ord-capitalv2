@@ -1804,14 +1804,13 @@ export function PagarModal({
       : (cicloARS + cicloUSD * Number(targetCard?.cotizacion_usd ?? 1)))
   const favorCubreTotal = favorEquiv >= totalCicloARS_equiv && totalCicloARS_equiv > 0
 
-  // Fix 2026-09-15: con resumen real declarado, cubrir el resumen real habilita
-  // el envio aunque la ventana estimada no este cubierta por billeteras (el
-  // backend refinancia la diferencia de cuotas y el resumen real manda).
-  const resumenRealCubierto = realNum !== null
-    && pagoCubiertoEquiv >= Math.min(realNum, cicloBruto) - 0.5
-  const seccionARSCompleta = (realNum !== null && resumenRealCubierto) || !tarjetaTieneARS || faltaARS <= 0.5
-  const seccionUSDCompleta = (realNum !== null && resumenRealCubierto) || !tarjetaTieneUSD || faltaUSD <= 0.5
-  const submitEnabled = favorCubreTotal || (!allLinesEmpty && seccionARSCompleta && seccionUSDCompleta)
+  // Fix 2026-09-18: los pagos parciales (pago minimo) vuelven a poder enviarse
+  // desde la UI. El backend los soporta: marca las cuotas de la ventana y
+  // refinancia el faltante como cuota del proximo ciclo (saldo refinanciado).
+  // Se conservan las guardas de lineas invalidas y de presupuesto de adelanto.
+  const faltaVentanaEquiv = Math.max(0, Math.max(0, cicloBruto - favorNum) - pagoCubiertoEquiv)
+  const pagoParcial = totalPagarArsEquiv > 0 && faltaVentanaEquiv > 0.5
+  const submitEnabled = favorCubreTotal || !allLinesEmpty
   const submitDisabled = formSubmitting || lineasInvalidas || !submitEnabled || overBudget
 
   const updateLine = (index: number, patch: Partial<PagarLine>) => {
@@ -2216,6 +2215,11 @@ export function PagarModal({
               )}
             </div>
           </div>
+          {pagoParcial && (
+            <div className="pay-multi-overpay-warn">
+              {t('pay_partial_refinancia', { monto: fmtARS(faltaVentanaEquiv) })}
+            </div>
+          )}
           {totalPagar > faltaBase + 0.5 && sobrante <= 0.5 && (
             <div className="pay-multi-overpay-warn">
               {t('pay_overpay_warning_line', { monto: fmtARS(totalPagar - faltaBase) })}

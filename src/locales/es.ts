@@ -203,6 +203,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
     pay_multi_total_pagado_ars: "Pagado ARS: {monto}",
     pay_multi_total_pagado_usd: "Pagado USD: {monto}",
     pay_multi_total_pendiente: "Falta repartir: {monto}",
+    pay_partial_refinancia: "Estás pagando menos que el resumen: {monto} se refinancian al próximo resumen.",
     pay_multi_wallet_placeholder: "Seleccioná la cuenta...",
     pay_resumen_usd_toggle_pesos: "$",
     pay_resumen_usd_toggle_dollars: "US$",
