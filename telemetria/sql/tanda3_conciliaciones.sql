@@ -19,8 +19,8 @@ BEGIN
     
     -- Telemetria Tanda 3: registro SIEMPRE en p_conciliaciones (incluida
     -- diferencia = 0). Sin backfill historico: arranca desde el despliegue.
-    INSERT INTO public.p_conciliaciones (user_id, billetera_id, fecha, saldo_teorico, saldo_real, diferencia)
-    VALUES (v_user_id, p_billetera_id, now(), v_saldo_teorico, p_saldo_real, v_diferencia);
+    INSERT INTO public.p_conciliaciones (user_id, billetera_id, fecha, saldo_teorico, saldo_real)
+    VALUES (v_user_id, p_billetera_id, now(), v_saldo_teorico, p_saldo_real);
     
     -- Actualizar semáforo (fecha de conciliación) incluso si no hay diferencias
     IF v_diferencia = 0 THEN 
