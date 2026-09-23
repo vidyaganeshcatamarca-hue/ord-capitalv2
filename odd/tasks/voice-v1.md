@@ -78,9 +78,9 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] Respetar feature flag `menu_cuarentena` (hasFeature + guard loading, sin RPC si apagado)
 - [x] Navegación al tap: `/cuarentena?origen=voz`
 
-## Tanda 6 — Integración con cuarentena existente — COMMIT (Tanda 6)
+## Tanda 6 — Integración con cuarentena existente — COMMIT 8052b6f
 
-(Prerrequisito Supabase RESUELTO el 2026-09-23 por el orquestador: p_caja_cuarentena extendida (7 columnas) + fn_reporte_cuarentena_pendientes v2 + fn_cargar_movimientos_voz + fn_aprobar_cuarentena_v2 + fn_aprobar_cuarentena_lote_v2 + fn_editar_cuarentena_v2, con espejos en funcionesSQL/ y DEPRECATED en fn_disparar_procesamiento_voz. Tests parciales 7/9 PASS. Valores en espanol: estado=pendiente/procesado, origen=api_banco.)
+(Prerrequisito Supabase RESUELTO el 2026-09-23 por el orquestador: p_caja_cuarentena extendida (7 columnas) + fn_reporte_cuarentena_pendientes v2 + fn_cargar_movimientos_voz + fn_aprobar_cuarentena_v2 + fn_aprobar_cuarentena_lote_v2 + fn_editar_cuarentena_v2, con espejos en funcionesSQL/ y DEPRECATED en fn_disparar_procesamiento_voz. Tests parciales 7/9 PASS. Valores en espanol: estado=pendiente/procesado, origen=api_banco. FIX 2026-09-23 (autorizado): fn_reporte_cuarentena_pendients + fn_rechazar_cuarentena filtraban estado=pending (ingles, invisible contra el CHECK en espanol) -> pendiente; fn_cargar_movimientos_voz ahora persiste ambiguous_matches en metadata.)
 
 - [ ] `src/voice/useVoiceQuarantine.ts` hook que mapea movements[] → filas cuarentena
 - [x] Extender `BandejaCuarentena` (cards por tipo, filtro cliente, RPC sin params)
