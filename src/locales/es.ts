@@ -115,7 +115,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
    btn_collapse: "Contraer",
    btn_expand: "Expandir",
   reconcile_wallet_title: "Conciliar {nombre}",
-  btn_close: "Cerrar",
+  btn_close: "Cerrar",
   reconcile_theoretical_balance: "Saldo Teórico (App)",
   reconcile_real_balance: "Saldo Real",
   btn_cancel: "Cancelar",
