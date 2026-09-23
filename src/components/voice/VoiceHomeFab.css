@@ -1,0 +1,85 @@
+/* ─── VoiceHomeFab.css — Voice v1 (Home quarantine FAB) ─────────────────── */
+
+/* Floating entry point into the voice quarantine. Fixed to the viewport so it
+   survives Home's own scroll container; the offset lifts it above the
+   back-to-top FAB (bottom-right as well) so the two never overlap. */
+.voice-fab {
+  position: fixed;
+  right: var(--space-5);
+  bottom: calc(var(--nav-height) + var(--safe-bottom) + var(--space-4) + 56px);
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border-light);
+  background: var(--surface-3);
+  color: var(--mint);
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  /* Above the bottom nav (z-index 50) and the back-to-top FAB (z-index 120);
+     below the add-movement modal (1000/1010) and the voice recorder (1100/1110). */
+  z-index: 130;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+  animation: voice-fab-in var(--transition-normal);
+}
+
+.voice-fab:hover {
+  filter: brightness(1.12);
+}
+
+.voice-fab:active {
+  transform: scale(0.92);
+  box-shadow: var(--shadow-md);
+}
+
+.voice-fab:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+
+.voice-fab-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  background: var(--red);
+  color: #fff;
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 700;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
+}
+
+@keyframes voice-fab-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Desktop hides the bottom nav, so the FAB drops back to the bottom corner. */
+@media (min-width: 768px) {
+  .voice-fab {
+    bottom: var(--space-6);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .voice-fab {
+    animation: none;
+    transition: none;
+  }
+}

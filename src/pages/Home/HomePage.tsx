@@ -16,6 +16,7 @@ import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { generateColorShade } from '@/lib/colorUtils'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { DonutChart as DonutChartComponent } from '@/components/charts/DonutChart'
+import { VoiceHomeFab } from '@/components/voice/VoiceHomeFab'
 import './Home.css'
 
 function getGreeting() {
@@ -1703,6 +1704,9 @@ export function HomePage() {
         </div>
 
       </div>
+
+      {/* ── VOICE QUARANTINE FAB ── */}
+      <VoiceHomeFab />
 
       {/* ── MODAL CONCILIACIÓN RÁPIDA ── */}
       {selectedBilletera && (

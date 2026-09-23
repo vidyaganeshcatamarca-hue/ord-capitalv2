@@ -65,18 +65,18 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] Distinguir tap vs long-press sin romper tap normal (flag consumido en handleAddClick; onAddPress intacto)
 - [x] Montar `VoiceRecorderModal` global en `App.tsx` (lazy + requestIdle preload, instancia única, cerrar solo desmonta)
 
-## Tanda 4 — Integración con AddMovementModal — COMMIT (Tanda 4)
+## Tanda 4 — Integración con AddMovementModal — COMMIT 0e499ae
 
 - [x] Agregar micrófono visible (icono + label) como tab/segmented "Manual | Voz" (tablist A11y, CTA mic que abre el modal global)
 - [x] Estado del tab persiste mientras el modal está abierto (paneles alternados con hidden, form nunca desmontado)
 - [x] Tap en tab Voz abre `VoiceRecorderModal` (onOpenVoice → isVoiceRecorderOpen; recorder overlay 1100/1110 encima del add-modal 1000/1010)
 
-## Tanda 5 — FAB Home + contador cuarentena voz
+## Tanda 5 — FAB Home + contador cuarentena voz — COMMIT (Tanda 5)
 
-- [ ] `src/components/voice/VoiceHomeFab.tsx` con conteo de items voz pendientes
-- [ ] Polling del conteo cada X segundos mientras Home está montado
-- [ ] Respetar feature flag `menu_cuarentena` (no mostrar si el feature está apagado)
-- [ ] Navegación al tap: `/cuarentena?origen=voz`
+- [x] `src/components/voice/VoiceHomeFab.tsx` con conteo (discriminador: metadata.job_id, NO origen)
+- [x] Polling cada 15s (VOICE_QUARANTINE_POLL_MS) con cancel guard y errores silenciosos
+- [x] Respetar feature flag `menu_cuarentena` (hasFeature + guard loading, sin RPC si apagado)
+- [x] Navegación al tap: `/cuarentena?origen=voz`
 
 ## Tanda 6 — Integración con cuarentena existente
 

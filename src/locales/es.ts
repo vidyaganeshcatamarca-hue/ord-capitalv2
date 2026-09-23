@@ -663,6 +663,8 @@ export const voice = {
   not_sent_hint: "El audio no se envió.",
   seconds_left: "{seconds} s restantes",
   close: "Cerrar",
+  // Home FAB — pending voice movements awaiting quarantine review
+  fab_a11y: "{count} movimientos por voz pendientes de revisar",
 };
 
 // === CATEGORÍAS (Rubros de Egreso Seed) ===
