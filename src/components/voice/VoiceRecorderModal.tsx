@@ -22,7 +22,9 @@ import { MAX_AUDIO_DURATION_MS } from '@/voice/contract'
 import { mapVoiceErrorToI18nKey } from '@/voice/errors'
 import { useVoiceJobs } from '@/voice/useVoiceJobs'
 import type { VoiceJobState } from '@/voice/useVoiceJobs'
+import { useVoiceQuarantine } from '@/voice/useVoiceQuarantine'
 import { useVoiceRecorder } from '@/voice/useVoiceRecorder'
+import type { VoiceMovement } from '@/voice/types'
 import { VoiceCountdown } from './VoiceCountdown'
 import { VoiceRecorderButton } from './VoiceRecorderButton'
 import './VoiceRecorderModal.css'
@@ -91,8 +93,13 @@ interface VoiceJobBridgeProps {
 function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
   const { showToast } = useToast()
   const { jobs, submit, retryLastSubmit } = useVoiceJobs()
+  const { loading: loadSaving, loadQuarantine, refresh } = useVoiceQuarantine()
 
   const [failedJob, setFailedJob] = useState<VoiceJobState | null>(null)
+  // Set when the completed job could not be handed to the quarantine, so the
+  // modal offers a retry instead of closing and losing the movements.
+  const [loadFailed, setLoadFailed] = useState(false)
+  const loadFailedRef = useRef<{ jobId: string; movements: VoiceMovement[] } | null>(null)
   // Key of the last outcome already reported to the user, so a re-render never
   // toasts twice.
   const handledRef = useRef<string | null>(null)
@@ -113,9 +120,21 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
       if (handledRef.current === key) return
       handledRef.current = key
       setFailedJob(null)
-      showToast(t('voice.sent'), 'success')
-      // The result consumer (quarantine) is a later stage: the modal only reports.
-      if (open) onCloseRef.current()
+      const jobId = activeJob.jobId
+      const movements = activeJob.result?.movements ?? []
+      // The movements reach the quarantine before the success toast: a failed
+      // hand-off must never look like a successful load.
+      void (async () => {
+        const ok = await loadQuarantine(jobId, movements)
+        if (!ok) {
+          loadFailedRef.current = { jobId, movements }
+          setLoadFailed(true)
+          showToast(t('voice_load_failed'), 'error')
+          return
+        }
+        showToast(t('voice.sent'), 'success')
+        if (open) onCloseRef.current()
+      })()
       return
     }
 
@@ -129,10 +148,12 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
       showToast(t(mapVoiceErrorToI18nKey(activeJob.errorCode ?? 'UNKNOWN')), 'error')
       setFailedJob(activeJob)
     }
-  }, [activeJob, open, showToast])
+  }, [activeJob, open, showToast, loadQuarantine])
 
   const clearFailure = useCallback((): void => {
     setFailedJob(null)
+    setLoadFailed(false)
+    loadFailedRef.current = null
   }, [])
 
   const retry = useCallback((): void => {
@@ -142,12 +163,29 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
     void retryLastSubmit()
   }, [retryLastSubmit])
 
+  const retryLoad = useCallback(async (): Promise<void> => {
+    const pending = loadFailedRef.current
+    if (!pending) return
+    const ok = await refresh(pending.jobId, pending.movements)
+    if (!ok) {
+      showToast(t('voice_load_failed'), 'error')
+      return
+    }
+    loadFailedRef.current = null
+    setLoadFailed(false)
+    showToast(t('voice.sent'), 'success')
+    if (open) onCloseRef.current()
+  }, [refresh, showToast, open])
+
   if (!open) return null
 
   return (
     <VoiceRecorderSession
       inFlightJob={inFlightJob}
       failedJob={failedJob}
+      loadFailed={loadFailed}
+      loadSaving={loadSaving}
+      onRetryLoad={retryLoad}
       submit={submit}
       retry={retry}
       clearFailure={clearFailure}
@@ -159,6 +197,9 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
 interface VoiceRecorderSessionProps {
   inFlightJob: VoiceJobState | null
   failedJob: VoiceJobState | null
+  loadFailed: boolean
+  loadSaving: boolean
+  onRetryLoad: () => void
   submit: (blob: Blob) => Promise<void>
   retry: () => void
   clearFailure: () => void
@@ -169,6 +210,9 @@ interface VoiceRecorderSessionProps {
 function VoiceRecorderSession({
   inFlightJob,
   failedJob,
+  loadFailed,
+  loadSaving,
+  onRetryLoad,
   submit,
   retry,
   clearFailure,
@@ -229,19 +273,21 @@ function VoiceRecorderSession({
   const recording = state === 'recording'
   const ownSubmit = submitted || state === 'recorded'
 
-  const view: 'error' | 'too_long' | 'send_error' | 'sending' | 'recording' | 'idle' = error
+  const view: 'error' | 'too_long' | 'load_error' | 'send_error' | 'sending' | 'recording' | 'idle' = error
     ? 'error'
     : tooLong
       ? 'too_long'
-      : failedJob
-        ? 'send_error'
-        : ownSubmit
-          ? 'sending'
-          : recording || requestingPermission
-            ? 'recording'
-            : inFlightJob
-              ? 'sending'
-              : 'idle'
+      : loadFailed
+        ? 'load_error'
+        : failedJob
+          ? 'send_error'
+          : ownSubmit
+            ? 'sending'
+            : recording || requestingPermission
+              ? 'recording'
+              : inFlightJob
+                ? 'sending'
+                : 'idle'
 
   const canCloseFromOverlay =
     view === 'idle' || view === 'too_long' || view === 'send_error' || view === 'error'
@@ -327,6 +373,27 @@ function VoiceRecorderSession({
                   {t('btn_retry')}
                 </button>
               ) : null}
+              <button
+                type="button"
+                className="voice-recorder-action is-secondary"
+                onClick={handleRecordAgain}
+              >
+                {t('voice.record_again')}
+              </button>
+            </div>
+          )}
+
+          {view === 'load_error' && (
+            <div className="voice-recorder-block">
+              <p className="voice-recorder-alert">{t('voice_load_failed')}</p>
+              <button
+                type="button"
+                className="voice-recorder-action"
+                onClick={onRetryLoad}
+                disabled={loadSaving}
+              >
+                {t('btn_retry')}
+              </button>
               <button
                 type="button"
                 className="voice-recorder-action is-secondary"

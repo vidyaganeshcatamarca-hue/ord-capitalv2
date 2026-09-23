@@ -71,25 +71,25 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] Estado del tab persiste mientras el modal está abierto (paneles alternados con hidden, form nunca desmontado)
 - [x] Tap en tab Voz abre `VoiceRecorderModal` (onOpenVoice → isVoiceRecorderOpen; recorder overlay 1100/1110 encima del add-modal 1000/1010)
 
-## Tanda 5 — FAB Home + contador cuarentena voz — COMMIT (Tanda 5)
+## Tanda 5 — FAB Home + contador cuarentena voz — COMMIT f01694d
 
 - [x] `src/components/voice/VoiceHomeFab.tsx` con conteo (discriminador: metadata.job_id, NO origen)
 - [x] Polling cada 15s (VOICE_QUARANTINE_POLL_MS) con cancel guard y errores silenciosos
 - [x] Respetar feature flag `menu_cuarentena` (hasFeature + guard loading, sin RPC si apagado)
 - [x] Navegación al tap: `/cuarentena?origen=voz`
 
-## Tanda 6 — Integración con cuarentena existente
+## Tanda 6 — Integración con cuarentena existente — COMMIT (Tanda 6)
 
 (Prerrequisito Supabase RESUELTO el 2026-09-23 por el orquestador: p_caja_cuarentena extendida (7 columnas) + fn_reporte_cuarentena_pendientes v2 + fn_cargar_movimientos_voz + fn_aprobar_cuarentena_v2 + fn_aprobar_cuarentena_lote_v2 + fn_editar_cuarentena_v2, con espejos en funcionesSQL/ y DEPRECATED en fn_disparar_procesamiento_voz. Tests parciales 7/9 PASS. Valores en espanol: estado=pendiente/procesado, origen=api_banco.)
 
 - [ ] `src/voice/useVoiceQuarantine.ts` hook que mapea movements[] → filas cuarentena
-- [ ] Extender `BandejaCuarentena` para mostrar cards de voz con edición de campos
-- [ ] Si el movement tiene `*_id` null, mostrar UI para elegir billetera/categoría/tarjeta
-- [ ] Botón "Aprobar 1" / "Aprobar lote (marcados)" / "Aprobar todos" respetando la regla de incompletos
-- [ ] Llamar `fn_aprobar_cuarentena_v2` por tipo
-- [ ] Llamar `fn_cargar_movimientos_voz(p_job_id, p_movements)` al insertar desde voz
-- [ ] Cancelar AudioRecorderModal viejo (`AudioRecorderModal.tsx` en `src/components/saneamiento/`)
-- [ ] Marcar `fn_disparar_procesamiento_voz` como deprecada en el espejo (NO se borra, se documenta)
+- [x] Extender `BandejaCuarentena` (cards por tipo, filtro cliente, RPC sin params)
+- [x] Si el movement tiene `*_id` null: selector de candidatas (ambiguous_matches) → fn_editar_cuarentena_v2
+- [x] Botones Aprobar 1/lote/todos (incompletos excluidos con motivo; isApprovable por tipo)
+- [x] Llamar `fn_aprobar_cuarentena_v2` + lote_v2 (rechazo via fn_rechazar_cuarentena legacy)
+- [x] Llamar `fn_cargar_movimientos_voz` desde el Bridge al completar (una vez por job, guard)
+- [x] Cancelar AudioRecorderModal viejo (borrado; botón Dictar gasto removido de AddMovementModal)
+- [x] Marcar `fn_disparar_procesamiento_voz` deprecada en el espejo (hecho en Tanda 6 Supabase)
 
 ## Tanda 7 — Manejo de errores + i18n completo
 

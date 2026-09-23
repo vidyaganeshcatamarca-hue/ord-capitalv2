@@ -635,6 +635,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   voice_service_unavailable: "El servicio de voz no está disponible. Intentá más tarde.",
   voice_unauthorized: "Tu sesión expiró. Volvé a iniciar sesión.",
   voice_generic_error: "Ocurrió un error al procesar tu audio.",
+  voice_load_failed: "No se pudieron guardar los movimientos en la cuarentena.",
 };
 
 // === VOZ (carga por audio) ===
@@ -1203,6 +1204,40 @@ export const saneamiento = {
   add_movement_mode_voice: "Voz",
   add_movement_voice_cta: "Grabar por voz",
   add_movement_voice_hint: "Contá lo que querés registrar y lo interpretamos por vos.",
+
+  // Cuarentena — bandeja de voz (tipos, checklist de completitud, ambiguos)
+  saneamiento_origen_banco: "Banco",
+  cuarentena_tipo_label: "Tipo",
+  cuarentena_tipo_expense: "Gasto",
+  cuarentena_tipo_income: "Ingreso",
+  cuarentena_tipo_transfer: "Transferencia",
+  cuarentena_tipo_card_expense: "Gasto con tarjeta",
+  cuarentena_campo_billetera_destino: "billetera destino",
+  cuarentena_campo_cuenta_ingreso: "fuente de ingreso",
+  cuarentena_campo_tarjeta: "tarjeta",
+  cuarentena_campo_destination_amount: "monto de destino",
+  cuarentena_seleccionar_tarjeta: "Seleccionar tarjeta",
+  cuarentena_seleccionar_cuenta_ingreso: "Seleccionar fuente de ingreso",
+  cuarentena_moneda: "Moneda",
+  cuarentena_cuotas: "{count} cuotas",
+  cuarentena_destino_monto: "Llega {monto}",
+  cuarentena_incompleto_falta: "Falta {campos} — no se puede aprobar",
+  cuarentena_aprobar_todos: "Aprobar todos ({count})",
+  cuarentena_todos_titulo: "Aprobar todos los movimientos",
+  cuarentena_lote_excluidos: "{count} quedaron fuera por estar incompletos.",
+  cuarentena_toast_lote_parcial: "{ok} aprobados, {failed} con error.",
+  cuarentena_ambig_categoria: "Elegí la categoría correcta",
+  cuarentena_ambig_billetera_origen: "Elegí la billetera de origen",
+  cuarentena_ambig_billetera_destino: "Elegí la billetera destino",
+  cuarentena_ambig_tarjeta: "Elegí la tarjeta",
+  cuarentena_ambig_fuente_ingreso: "Elegí la fuente de ingreso",
+  cuarentena_destination_requerido: "Requerido para transferencias entre monedas distintas",
+  cuarentena_error_destination_amount: "El monto de destino es obligatorio cuando las billeteras tienen distinta moneda.",
+  cuarentena_filtro_voz_activo: "Mostrando solo movimientos por voz",
+  cuarentena_filtro_quitar: "Quitar filtro",
+  saneamiento_error_billetera_destino_requerida: "Seleccioná una billetera destino.",
+  saneamiento_error_tarjeta_requerida: "Seleccioná una tarjeta.",
+  saneamiento_error_cuenta_ingreso_requerida: "Seleccioná una fuente de ingreso.",
 };
 
 // ============================================

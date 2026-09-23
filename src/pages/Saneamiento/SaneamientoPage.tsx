@@ -16,19 +16,43 @@ export type VistaSaneamiento = 'dashboard' | 'bandeja' | 'ataque' | 'calendario'
 
 export interface CuarentenaItem {
   pendiente_id: number
-  origen: 'ocr' | 'recurrente' | 'voz' | string
+  origen: string
+  tipo: 'expense' | 'income' | 'transfer' | 'card_expense' | null
+  estado: string
   monto: number
   fecha: string
   detalle: string | null
+  metadata: Record<string, any> | null
+  creado_at: string
   estructura_egreso_id: number | null
   categoria_nombre: string | null
   categoria_icono: string | null
   categoria_color: string | null
   billetera_id: number | null
   billetera_nombre: string | null
+  billetera_moneda: string | null
+  billetera_destino_id: number | null
+  billetera_destino_nombre: string | null
+  billetera_destino_moneda: string | null
+  tarjeta_id: number | null
+  tarjeta_nombre: string | null
+  cuenta_ingreso_id: number | null
+  cuenta_ingreso_nombre: string | null
+  moneda: string | null
+  cuotas: number | null
+  destination_amount: number | null
   recurrente_id: number | null
-  metadata: Record<string, any>
-  creado_at: string
+}
+
+/**
+ * The dashboard widgets group by `origen`, but voice rows are stored with
+ * `origen = 'api_banco'` and are only identifiable through `metadata.job_id`.
+ * Normalizing here keeps the widgets dumb and their counts correct.
+ */
+function normalizeForWidgets(rows: CuarentenaItem[]): CuarentenaItem[] {
+  return rows.map((row) =>
+    row.metadata && row.metadata.job_id != null ? { ...row, origen: 'voz' } : row
+  )
 }
 
 export interface BolaNieveEstado {
@@ -80,11 +104,11 @@ export function SaneamientoPage() {
     setError(null)
     try {
       const [rCuarentena, rBola, rCalendario] = await Promise.all([
-        rpc<CuarentenaItem[]>('fn_reporte_cuarentena_pendientes', { p_filtro_origen: 'todos' }),
+        rpc<CuarentenaItem[]>('fn_reporte_cuarentena_pendientes'),
         rpc<BolaNieveEstado>('fn_reporte_bola_nieve_estado'),
         rpc<CalendarioEvento[]>('fn_reporte_calendario_financiero', { p_dias_adelante: 30 }),
       ])
-      setCuarentena(rCuarentena || [])
+      setCuarentena(normalizeForWidgets(rCuarentena || []))
       setBolaNieve(rBola)
       setCalendario(rCalendario || [])
     } catch (err: any) {

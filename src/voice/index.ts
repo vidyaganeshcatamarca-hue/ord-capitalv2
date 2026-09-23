@@ -15,3 +15,4 @@ export * from './contextBuilder';
 export * from './useVoicePolling';
 export * from './useVoiceRecorder';
 export * from './useVoiceJobs';
+export * from './useVoiceQuarantine';

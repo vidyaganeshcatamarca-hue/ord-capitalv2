@@ -1,0 +1,135 @@
+/* =========================================================
+   Bandeja de cuarentena — voice movements, completion
+   checklist and ambiguous-match selectors.
+   Loaded after SaneamientoPage.css, so it only adds to the
+   classes declared there.
+   ========================================================= */
+
+.cuarentena-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.cuarentena-toolbar-aviso {
+  font-size: calc(12px * var(--font-scale));
+  color: var(--text-3, #8b949e);
+}
+
+.cuarentena-filtro-voz {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--border, #30363d);
+  border-radius: var(--radius-md, 12px);
+  background: rgba(0, 150, 33, 0.12);
+  font-size: calc(13px * var(--font-scale));
+  color: var(--text-2, #d1d7de);
+}
+
+.cuarentena-badge-tipo {
+  background: rgba(0, 150, 33, 0.15);
+  color: var(--accent-mint, #4ecdc4);
+}
+
+.cuarentena-item-meta-detalle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.cuarentena-meta-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-full, 9999px);
+  background: var(--surface-2, #21262d);
+  color: var(--text-2, #d1d7de);
+  font-size: calc(11px * var(--font-scale));
+}
+
+.cuarentena-incompleto {
+  margin: 8px 0 0;
+  padding: 6px 10px;
+  border-radius: var(--radius-sm, 8px);
+  background: var(--amber-dim, rgba(255, 183, 3, 0.12));
+  color: var(--amber, #ffb703);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+}
+
+.saneamiento-btn-aprobar:disabled,
+.saneamiento-item-actions button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── Ambiguous match selector ───────────────────────────── */
+
+.cuarentena-ambig {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border-light, #3d444d);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface-2, #21262d);
+}
+
+.cuarentena-ambig-titulo {
+  margin: 0 0 8px;
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 700;
+  color: var(--text-2, #d1d7de);
+}
+
+.cuarentena-ambig-opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cuarentena-ambig-opcion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm, 8px);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.cuarentena-ambig-opcion:hover {
+  background: var(--surface-3, #30363d);
+}
+
+.cuarentena-ambig-opcion input[type="radio"] {
+  accent-color: var(--mint, #00b127);
+  flex-shrink: 0;
+}
+
+.cuarentena-ambig-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.cuarentena-ambig-nombre {
+  font-size: calc(13px * var(--font-scale));
+  color: var(--text, #e6edf3);
+}
+
+.cuarentena-ambig-padre {
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-3, #8b949e);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cuarentena-ambig-opcion {
+    transition: none;
+  }
+}

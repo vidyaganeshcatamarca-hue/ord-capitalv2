@@ -12,7 +12,6 @@ import { CalculatorKeypad } from '@/components/CalculatorKeypad/CalculatorKeypad
 import { safeEval } from '@/utils/math'
 import { t, parseError } from '@/locales/i18n'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
-import { AudioRecorderModal } from '@/components/saneamiento/AudioRecorderModal'
 import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBalanceModal'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/categoryFilters'
@@ -267,7 +266,6 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   const [nota, setNota] = useState('')
   const [detallesAbiertos, setDetallesAbiertos] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [showAudioRecorder, setShowAudioRecorder] = useState(false)
   const [showInitialBalanceModal, setShowInitialBalanceModal] = useState(false)
   const [initialBalanceBilletera, setInitialBalanceBilletera] = useState<Billetera | null>(null)
 
@@ -1434,15 +1432,6 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       }}
                       placeholder="Ej: Almuerzo de negocios..." />
 
-                    <button
-                      type="button"
-                      className="btn btn-secondary btn-sm w-100 mb-3"
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
-                      onClick={() => setShowAudioRecorder(true)}
-                    >
-                      🎙️ {t('add_movement_voice_button')}
-                    </button>
-
                     {/* Toggle compartido (Fase 4) — sólo gastos, sólo si tiene pareja */}
                     {tipo === 'expense' && (
                       <CompartidoToggle
@@ -2218,13 +2207,6 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                           }}
                                         />
                                       )}
-
-      {showAudioRecorder && (
-        <AudioRecorderModal
-          isOpen={showAudioRecorder}
-          onClose={() => setShowAudioRecorder(false)}
-        />
-      )}
 
       {showInitialBalanceModal && initialBalanceBilletera && (
         <InitialBalanceModal
