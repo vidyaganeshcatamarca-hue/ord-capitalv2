@@ -623,6 +623,29 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   welcomeback_subtitle: "Tenés una cuenta activa.  ¿Querés continuar con ella o usar otra?",
   welcomeback_continue: "Continuar con esta cuenta",
   welcomeback_switch: "Usar otra cuenta",
+
+  // Voz (carga por audio)
+  voice_audio_too_long: "El audio supera el límite de 30 segundos.",
+  voice_audio_too_big: "El audio es demasiado pesado (máx 2 MB).",
+  voice_unsupported_audio: "El formato de audio no es compatible.",
+  voice_too_many_jobs: "Tenés varias cargas pendientes. Esperá a que terminen.",
+  voice_context_too_large: "La cantidad de categorías y billeteras es demasiado grande.",
+  voice_rate_limited: "Estás enviando cargas demasiado rápido. Esperá unos segundos.",
+  voice_service_unavailable: "El servicio de voz no está disponible. Intentá más tarde.",
+  voice_unauthorized: "Tu sesión expiró. Volvé a iniciar sesión.",
+  voice_generic_error: "Ocurrió un error al procesar tu audio.",
+};
+
+// === VOZ (carga por audio) ===
+export const voice = {
+  codec_unsupported: "Tu navegador no soporta grabación de audio. Probá con Chrome, Edge o Safari actualizado.",
+  mic_denied: "Necesitamos permiso para usar el micrófono.",
+  recording: "Grabando...",
+  recording_max: "Tiempo máximo alcanzado",
+  uploading: "Enviando audio...",
+  processing: "Procesando tu carga...",
+  empty_result: "No detectamos contenido financiero en el audio.",
+  terminal_failed: "No pudimos procesar tu audio. Probá de nuevo.",
 };
 
 // === CATEGORÍAS (Rubros de Egreso Seed) ===
