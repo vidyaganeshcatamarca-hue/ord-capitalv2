@@ -648,6 +648,20 @@ export const voice = {
   terminal_failed: "No pudimos procesar tu audio. Probá de nuevo.",
   voice_job_timeout: "El procesamiento tardó demasiado. Intentá grabar de nuevo.",
   voice_send_failed: "No pudimos enviar el audio. Intentá de nuevo.",
+  // Recorder modal (Voice v1)
+  title: "Registrar por voz",
+  mic_request: "Esperando permiso del micrófono...",
+  record_hint: "Mantené presionado para grabar. Soltá para enviar.",
+  hold_to_send: "Soltá para enviar",
+  record_again: "Grabar de nuevo",
+  queued: "En cola para procesar...",
+  transcribing: "Transcribiendo el audio...",
+  interpreting: "Interpretando el movimiento...",
+  finalizing: "Finalizando...",
+  sent: "Listo. El movimiento quedó en revisión.",
+  not_sent_hint: "El audio no se envió.",
+  seconds_left: "{seconds} s restantes",
+  close: "Cerrar",
 };
 
 // === CATEGORÍAS (Rubros de Egreso Seed) ===

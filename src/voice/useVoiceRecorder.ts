@@ -28,8 +28,17 @@ export interface UseVoiceRecorderResult {
   blob: Blob | null;
   mimeType: string | null;
   error: VoiceRecorderError | null;
+  /**
+   * True only when the 30s hard cut stopped the recorder on its own.
+   * The UI must never upload that blob: it only offers a fresh recording.
+   */
+  autoStopped: boolean;
   start(): Promise<void>;
-  stop(): void;
+  /**
+   * Stops the recorder. Pass `true` from the internal 30s cut so the caller can
+   * tell an automatic stop from the user releasing the button.
+   */
+  stop(autoStopped?: boolean): void;
   cancel(): void;
 }
 
@@ -71,6 +80,7 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
   const [blob, setBlob] = useState<Blob | null>(null);
   const [mimeType, setMimeType] = useState<string | null>(null);
   const [error, setError] = useState<VoiceRecorderError | null>(null);
+  const [autoStopped, setAutoStopped] = useState(false);
 
   const mountedRef = useRef(true);
   const stateRef = useRef<VoiceRecorderState>('idle');
@@ -80,7 +90,9 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
   const startedAtRef = useRef<number | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const discardRef = useRef(false);
-  const stopRef = useRef<() => void>(() => undefined);
+  // Read by `onstop`, which fires asynchronously after the stop request.
+  const autoStoppedRef = useRef(false);
+  const stopRef = useRef<(autoStopped?: boolean) => void>(() => undefined);
 
   const commitState = useCallback((next: VoiceRecorderState): void => {
     stateRef.current = next;
@@ -127,7 +139,7 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
     startedAtRef.current = null;
   }, [clearTicker, releaseStream]);
 
-  const stop = useCallback((): void => {
+  const stop = useCallback((stoppedAutomatically = false): void => {
     const recorder = recorderRef.current;
     if (!recorder || recorder.state === 'inactive') {
       clearTicker();
@@ -135,6 +147,7 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
     }
     clearTicker();
     discardRef.current = false;
+    autoStoppedRef.current = stoppedAutomatically;
     try {
       recorder.stop();
     } catch {
@@ -150,12 +163,14 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
 
   const cancel = useCallback((): void => {
     discardRef.current = true;
+    autoStoppedRef.current = false;
     chunksRef.current = [];
     stopTracksAndRecorder();
     if (mountedRef.current) {
       setBlob(null);
       setSeconds(0);
       setError(null);
+      setAutoStopped(false);
     }
     commitState('idle');
   }, [commitState, stopTracksAndRecorder]);
@@ -181,7 +196,9 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
       setError(null);
       setBlob(null);
       setSeconds(0);
+      setAutoStopped(false);
     }
+    autoStoppedRef.current = false;
 
     let stream: MediaStream;
     try {
@@ -223,6 +240,7 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
     };
     recorder.onerror = () => {
       discardRef.current = true;
+      autoStoppedRef.current = false;
       stopTracksAndRecorder();
       commitState('error');
       if (mountedRef.current) setError({ i18nKey: GENERIC_ERROR_KEY });
@@ -240,8 +258,14 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
 
       if (discarded || !mountedRef.current) return;
 
+      // The automatic flag is published together with `state: 'recorded'` so the
+      // UI never sees a cut blob without knowing where it came from.
+      const stoppedAutomatically = autoStoppedRef.current;
+      autoStoppedRef.current = false;
+
       setBlob(new Blob(capturedChunks, { type: capturedType }));
       setMimeType(capturedType);
+      setAutoStopped(stoppedAutomatically);
       commitState('recorded');
     };
 
@@ -274,7 +298,8 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
       if (mountedRef.current) setSeconds(Math.floor(elapsedMs / 1000));
       if (elapsedMs >= MAX_AUDIO_DURATION_MS) {
         // Hard cut at 30s: the recorder is stopped without user interaction.
-        stopRef.current();
+        // Flagged as automatic so the UI discards the blob instead of sending it.
+        stopRef.current(true);
       }
     }, 1000);
   }, [clearTicker, commitState, releaseStream, stopTracksAndRecorder]);
@@ -298,6 +323,7 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
     blob,
     mimeType,
     error,
+    autoStopped,
     start,
     stop,
     cancel,

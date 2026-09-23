@@ -42,7 +42,7 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] Agregar claves i18n base en `src/locales/es.ts` (aplanadas voice_* por el resolver t() de 1 nivel) sección `errors.voice` (vacías por ahora)
 - [x] Verificar `npx tsc --noEmit` — 0 errores
 
-## Tanda 1 — API client + hooks de estado + storage — COMMIT d013e21
+## Tanda 1 — API client + hooks de estado + storage — COMMIT 07aa4ce
 
 - [x] `src/voice/apiClient.ts` con POST job, GET job, normalización de errores
 - [x] `src/voice/useVoiceRecorder.ts` hook con MediaRecorder + timer 30s + countdown
@@ -51,13 +51,13 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] `src/voice/storage.ts` con `voice_active_jobs` en localStorage (job_id, created_at, idempotency_key)
 - [x] Tests unitarios con `node --test` (4 archivos, 26 aserciones PASS) whitelisted en .gitignore
 
-## Tanda 2 — Componente recorder + UI mínima
+## Tanda 2 — Componente recorder + UI mínima — COMMIT (Tanda 2)
 
-- [ ] `src/components/voice/VoiceRecorderModal.tsx` (modal overlay global)
-- [ ] `src/components/voice/VoiceRecorderButton.tsx` (botón redondo estilo WhatsApp)
-- [ ] `src/components/voice/VoiceCountdown.tsx` (visor 30s)
-- [ ] CSS atómico (módulo CSS con tokens del design system)
-- [ ] Story / mock visual (opcional, si la skill ui-ux-pro-max ayuda)
+- [x] `src/components/voice/VoiceRecorderModal.tsx` (368 l; Bridge/Session split, 6 vistas derivadas)
+- [x] `src/components/voice/VoiceRecorderButton.tsx` (95 l; pointer capture, guard anti doble release)
+- [x] `src/components/voice/VoiceCountdown.tsx` (61 l; anillo SVG con stroke-dashoffset, role=timer)
+- [x] CSS atómico `VoiceRecorderModal.css` (236 l, tokens con calc(*var(--font-scale)))
+- [x] Story / mock visual — omitido por decisión del orquestador (referencia legacy suficiente; polish post-integración)
 
 ## Tanda 3 — Integración con BottomNav long-press
 
