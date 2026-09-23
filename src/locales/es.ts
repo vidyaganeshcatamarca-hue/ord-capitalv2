@@ -657,6 +657,7 @@ export const voice = {
   hold_to_send: "Soltá para enviar",
   record_again: "Grabar de nuevo",
   queued: "En cola para procesar...",
+  retry_wait: "El servicio está reintentando. Esperá un momento.",
   transcribing: "Transcribiendo el audio...",
   interpreting: "Interpretando el movimiento...",
   finalizing: "Finalizando...",

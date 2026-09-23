@@ -67,6 +67,9 @@ function progressLabel(job: VoiceJobState | null): string {
   if (!job) return t('voice.uploading')
   if (job.phase === 'queued') return t('voice.queued')
   if (job.phase === 'processing') {
+    // The backend can park a job in `retry_wait` for up to ~60s: a distinct
+    // label tells the user the service is retrying instead of looking stuck.
+    if (job.status === 'retry_wait') return t('voice.retry_wait')
     switch (job.stage) {
       case 'transcribing':
         return t('voice.transcribing')
@@ -122,6 +125,13 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
       setFailedJob(null)
       const jobId = activeJob.jobId
       const movements = activeJob.result?.movements ?? []
+      // An empty result is a valid outcome, but nothing reaches the quarantine:
+      // a success toast would promise a movement that does not exist.
+      if (movements.length === 0) {
+        showToast(t('voice.empty_result'), 'info')
+        if (open) onCloseRef.current()
+        return
+      }
       // The movements reach the quarantine before the success toast: a failed
       // hand-off must never look like a successful load.
       void (async () => {

@@ -91,15 +91,15 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] Cancelar AudioRecorderModal viejo (borrado; botón Dictar gasto removido de AddMovementModal)
 - [x] Marcar `fn_disparar_procesamiento_voz` deprecada en el espejo (hecho en Tanda 6 Supabase)
 
-## Tanda 7 — Manejo de errores + i18n completo
+## Tanda 7 — Manejo de errores + i18n completo — COMMIT (Tanda 7)
 
-- [ ] Sección completa `errors.voice.*` en `src/locales/es.ts`
-- [ ] `voice_recorder_recording`, `voice_recorder_uploading`, `voice_recorder_processing`, etc.
-- [ ] `voice_quarantine_incomplete_*`, `voice_quarantine_approve_*`
-- [ ] `voice_job_terminal_failed`, `voice_job_retry_wait`
-- [ ] `voice_access_denied`, `voice_mic_denied`, `voice_codec_unsupported`
-- [ ] Mapeo de códigos FastAPI (`UNSUPPORTED_AUDIO`, `AUDIO_LIMIT_EXCEEDED`, `TOO_MANY_ACTIVE_JOBS`, `RATE_LIMITED`, etc.) → claves i18n
-- [ ] Verificar `node scripts/check-i18n.mjs`
+- [x] Cobertura i18n completa (auditoria): 25 claves usadas resuelven — voice_* aplanadas en errors + export voice (claves de estado en voz.*)
+- [x] Textos de estado via export voice: recording/uploading/queued/transcribing/interpreting/finalizing + NUEVO retry_wait (label propio para la espera de reintento)
+- [x] Cubiertos en Tanda 6 via cuarentena_incompleto_falta, cuarentena_lote_excluidos, cuarentena_aprobar_todos, etc.
+- [x] voice.terminal_failed definida (consumo decidido en Tanda 8 con endurecimiento) + retry_wait NUEVA y consumida en progressLabel
+- [x] mic_denied/codec_unsupported ya consumidas via constantes de useVoiceRecorder; acceso denegado cubierto por voice_unauthorized
+- [x] 13/13 códigos del contrato mapeados en errors.ts (auditoria: sin cambios necesarios)
+- [x] check-i18n: 0 flags de voz (exit 1 = deuda preexistente de otros componentes)
 
 ## Tanda 8 — Endurecimiento
 
