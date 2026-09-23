@@ -4,6 +4,7 @@
  * Refactor del formulario plano original a un Bottom Sheet por pasos.
  */
 import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
+import { Mic } from 'lucide-react'
 import { useToast } from '@/contexts/ToastContext'
 import { useHogar } from '@/contexts/HogarContext'
 import { rpc } from '@/lib/supabase'
@@ -80,6 +81,9 @@ interface ProyectoHogar {
 }
 
 type Paso = 'tipo' | 'categoria' | 'monto' | 'cuenta' | 'fecha' | 'detalles'
+
+/** Entry surface of the sheet: the manual form or the voice capture entry point. */
+type EntryMode = 'manual' | 'voice'
 
 const TIPO_CONFIG = {
   expense:  { label: t('type_expense', { defaultValue: 'Gasto' }),         emoji: '➖', color: 'var(--coral)' },
@@ -239,9 +243,11 @@ interface AddMovementModalProps {
   onSuccess: () => void
   defaultTipo?: TipoMovimiento
   initialBilleteraId?: number
+  /** Opens the global full-screen voice recorder on top of this sheet. */
+  onOpenVoice: () => void
 }
 
-export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', initialBilleteraId }: AddMovementModalProps) {
+export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', initialBilleteraId, onOpenVoice }: AddMovementModalProps) {
   const { showToast } = useToast()
   const { formatMonto } = useNumberFormat()
 
@@ -276,6 +282,11 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   const [frecuentesRecientes, setFrecuentesRecientes] = useState<CategoriaSeleccionada[]>([])
   const [showCalculator, setShowCalculator] = useState(true)
   const [mobileShowAllCat, setMobileShowAllCat] = useState(false)
+
+  // ── Superficie de entrada: formulario manual vs acceso a voz (Voice v1) ──
+  // Vive en este componente: cambiar de tab NO desmonta el sheet, asi que el
+  // estado del formulario sobrevive al ir y volver de la pestaña de voz.
+  const [entryMode, setEntryMode] = useState<EntryMode>('manual')
 
   // ── Datos remotos ──
   const [billeteras, setBilleteras] = useState<Billetera[]>([])
@@ -930,7 +941,46 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
             <button className="modal-close-btn" onClick={onClose}>✕</button>
           </div>
 
-          <div className="modal-steps-body">
+          {/* ── SEGMENTED: Manual | Voz ── */}
+          <div
+            className="add-movement-mode-tabs"
+            role="tablist"
+            aria-label={t('add_movement_mode_tabs_label')}
+          >
+            <button
+              type="button"
+              role="tab"
+              id="add-movement-mode-tab-manual"
+              aria-selected={entryMode === 'manual'}
+              aria-controls="add-movement-mode-panel-manual"
+              className={`add-movement-mode-tab ${entryMode === 'manual' ? 'active' : ''}`}
+              onClick={() => setEntryMode('manual')}
+            >
+              {t('add_movement_mode_manual')}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              id="add-movement-mode-tab-voice"
+              aria-selected={entryMode === 'voice'}
+              aria-controls="add-movement-mode-panel-voice"
+              className={`add-movement-mode-tab ${entryMode === 'voice' ? 'active' : ''}`}
+              onClick={() => setEntryMode('voice')}
+            >
+              <Mic size={14} aria-hidden="true" />
+              {t('add_movement_mode_voice')}
+            </button>
+          </div>
+
+          {/* Panel manual: se oculta con `hidden` en vez de desmontarse, para
+              no perder ni el estado del formulario ni el DOM ya construido. */}
+          <div
+            className="modal-steps-body add-movement-mode-panel"
+            role="tabpanel"
+            id="add-movement-mode-panel-manual"
+            aria-labelledby="add-movement-mode-tab-manual"
+            hidden={entryMode !== 'manual'}
+          >
               {!isMobile ? (
                 /* ─── VISTA UNIFICADA EN PC (TODAS LAS PANTALLAS EN UNA) ─── */
                 <div className="pc-unified-form">
@@ -2091,6 +2141,24 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                 </div>
               )}
             </div>
+
+          {/* Panel de voz: abre el recorder full-screen global que ya maneja
+              permiso, countdown, corte, auto-send y polling. */}
+          <div
+            className="modal-steps-body add-movement-mode-panel add-movement-voice-panel"
+            role="tabpanel"
+            id="add-movement-mode-panel-voice"
+            aria-labelledby="add-movement-mode-tab-voice"
+            hidden={entryMode !== 'voice'}
+          >
+            <button type="button" className="add-movement-voice-cta" onClick={onOpenVoice}>
+              <span className="add-movement-voice-cta-icon" aria-hidden="true">
+                <Mic size={28} />
+              </span>
+              <span className="add-movement-voice-cta-label">{t('add_movement_voice_cta')}</span>
+            </button>
+            <p className="add-movement-voice-hint">{t('add_movement_voice_hint')}</p>
+          </div>
 
           {/* ── BOTÓN STICKY DE CONFIRMACIÓN ── */}
           {!loadingData && (

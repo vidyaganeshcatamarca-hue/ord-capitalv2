@@ -59,17 +59,17 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] CSS atómico `VoiceRecorderModal.css` (236 l, tokens con calc(*var(--font-scale)))
 - [x] Story / mock visual — omitido por decisión del orquestador (referencia legacy suficiente; polish post-integración)
 
-## Tanda 3 — Integración con BottomNav long-press — COMMIT (Tanda 3)
+## Tanda 3 — Integración con BottomNav long-press — COMMIT 17991c3
 
 - [x] Detectar long-press 2s sobre tab "+" en BottomNav (pointer events, supresión del click sintético, contextmenu prevenido)
 - [x] Distinguir tap vs long-press sin romper tap normal (flag consumido en handleAddClick; onAddPress intacto)
 - [x] Montar `VoiceRecorderModal` global en `App.tsx` (lazy + requestIdle preload, instancia única, cerrar solo desmonta)
 
-## Tanda 4 — Integración con AddMovementModal
+## Tanda 4 — Integración con AddMovementModal — COMMIT (Tanda 4)
 
-- [ ] Agregar micrófono visible (icono + label) como tab/segmented "Manual | Voz"
-- [ ] Estado del tab persiste mientras el modal está abierto
-- [ ] Tap en tab Voz abre `VoiceRecorderModal` (mismo componente global)
+- [x] Agregar micrófono visible (icono + label) como tab/segmented "Manual | Voz" (tablist A11y, CTA mic que abre el modal global)
+- [x] Estado del tab persiste mientras el modal está abierto (paneles alternados con hidden, form nunca desmontado)
+- [x] Tap en tab Voz abre `VoiceRecorderModal` (onOpenVoice → isVoiceRecorderOpen; recorder overlay 1100/1110 encima del add-modal 1000/1010)
 
 ## Tanda 5 — FAB Home + contador cuarentena voz
 

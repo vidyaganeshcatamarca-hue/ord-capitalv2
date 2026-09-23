@@ -1194,6 +1194,13 @@ export const saneamiento = {
 
   // Add movement voice button
   add_movement_voice_button: "Dictar gasto",
+
+  // AddMovementModal: Manual | Voice entry segmented (Voice v1 — Tanda 4)
+  add_movement_mode_tabs_label: "Método de registro",
+  add_movement_mode_manual: "Manual",
+  add_movement_mode_voice: "Voz",
+  add_movement_voice_cta: "Grabar por voz",
+  add_movement_voice_hint: "Contá lo que querés registrar y lo interpretamos por vos.",
 };
 
 // ============================================

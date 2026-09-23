@@ -170,6 +170,10 @@ function AppLayout() {
                 ? Number(localStorage.getItem('billetera_default_ingreso')) 
                 : Number(localStorage.getItem('billetera_default_egreso'))
             ) || undefined}
+            // The sheet stays mounted while the recorder opens on top of it
+            // (overlay z-index 1100/1110 vs the sheet's 1000/1010), so the
+            // form state and the selected tab survive the recording round-trip.
+            onOpenVoice={() => setIsVoiceRecorderOpen(true)}
           />
         </Suspense>
       )}
