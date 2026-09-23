@@ -19,6 +19,10 @@ tests/
 !tests/
 tests/*
 !tests/category-translation-sort.test.js
+!tests/voice_contract.test.js
+!tests/voice_errors.test.js
+!tests/voice_codec.test.js
+!tests/voice_storage.test.js
 scratch/
 walkthrough.md
 AGENTS.md

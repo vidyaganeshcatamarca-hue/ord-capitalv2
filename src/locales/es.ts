@@ -646,6 +646,8 @@ export const voice = {
   processing: "Procesando tu carga...",
   empty_result: "No detectamos contenido financiero en el audio.",
   terminal_failed: "No pudimos procesar tu audio. Probá de nuevo.",
+  voice_job_timeout: "El procesamiento tardó demasiado. Intentá grabar de nuevo.",
+  voice_send_failed: "No pudimos enviar el audio. Intentá de nuevo.",
 };
 
 // === CATEGORÍAS (Rubros de Egreso Seed) ===
