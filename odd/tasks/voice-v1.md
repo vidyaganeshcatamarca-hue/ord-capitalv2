@@ -51,7 +51,7 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] `src/voice/storage.ts` con `voice_active_jobs` en localStorage (job_id, created_at, idempotency_key)
 - [x] Tests unitarios con `node --test` (4 archivos, 26 aserciones PASS) whitelisted en .gitignore
 
-## Tanda 2 — Componente recorder + UI mínima — COMMIT (Tanda 2)
+## Tanda 2 — Componente recorder + UI mínima — COMMIT bc0fd93
 
 - [x] `src/components/voice/VoiceRecorderModal.tsx` (368 l; Bridge/Session split, 6 vistas derivadas)
 - [x] `src/components/voice/VoiceRecorderButton.tsx` (95 l; pointer capture, guard anti doble release)
@@ -59,11 +59,11 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] CSS atómico `VoiceRecorderModal.css` (236 l, tokens con calc(*var(--font-scale)))
 - [x] Story / mock visual — omitido por decisión del orquestador (referencia legacy suficiente; polish post-integración)
 
-## Tanda 3 — Integración con BottomNav long-press
+## Tanda 3 — Integración con BottomNav long-press — COMMIT (Tanda 3)
 
-- [ ] Detectar long-press 2s sobre tab "+" en BottomNav
-- [ ] Distinguir tap vs long-press sin romper tap normal (abrir AddMovementModal)
-- [ ] Montar `VoiceRecorderModal` global en `App.tsx` para que abra desde cualquier pantalla
+- [x] Detectar long-press 2s sobre tab "+" en BottomNav (pointer events, supresión del click sintético, contextmenu prevenido)
+- [x] Distinguir tap vs long-press sin romper tap normal (flag consumido en handleAddClick; onAddPress intacto)
+- [x] Montar `VoiceRecorderModal` global en `App.tsx` (lazy + requestIdle preload, instancia única, cerrar solo desmonta)
 
 ## Tanda 4 — Integración con AddMovementModal
 

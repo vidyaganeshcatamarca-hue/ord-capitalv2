@@ -47,6 +47,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   menu_inversiones: "Inversiones",
   menu_perfil: "Perfil",
   menu_registrar_movimiento: "Registrar movimiento",
+  menu_add_voice_hint: "Mantener presionado para grabar por voz",
   menu_registrar: "Registrar",
   menu_conectado: "Conectado",
   menu_more: "Menú",

@@ -86,3 +86,30 @@
   background: var(--surface-3);
   margin: 4px 0;
 }
+
+/* ─── FAB long-press (voice recorder) ─── */
+
+/* The central "+" is shared: a tap adds a movement, holding it for 2s arms the
+   voice recorder. This feedback tells the user the hold gesture is registered.
+   Specificity beats the base `.fab` / `.fab:active` rules in styles/index.css. */
+.bottom-nav .fab.is-voice-press {
+  transform: scale(0.9);
+  animation: fab-voice-press 1s ease-in-out infinite;
+}
+
+@keyframes fab-voice-press {
+  0%,
+  100% {
+    box-shadow: 0 0 0 4px rgba(0, 180, 216, 0.14), 0 4px 16px rgba(0, 180, 216, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(0, 180, 216, 0.22), 0 6px 22px rgba(0, 180, 216, 0.5);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bottom-nav .fab.is-voice-press {
+    animation: none;
+    box-shadow: 0 0 0 6px rgba(0, 180, 216, 0.18), 0 4px 18px rgba(0, 180, 216, 0.45);
+  }
+}

@@ -17,6 +17,10 @@ import { TelemetryRouteTracker } from '@/components/TelemetryRouteTracker/Teleme
 // Lazy-loaded, but preloaded after app idle because this is the primary quick-capture path.
 const loadAddMovementModal = () => import('@/components/AddMovementModal/AddMovementModal').then(m => ({ default: m.AddMovementModal }))
 const AddMovementModal = lazy(loadAddMovementModal)
+// Voice recorder: same pattern as the quick-capture modal above, but only opened
+// from the BottomNav "+" long-press, so it stays out of the critical path.
+const loadVoiceRecorderModal = () => import('@/components/voice/VoiceRecorderModal').then(m => ({ default: m.VoiceRecorderModal }))
+const VoiceRecorderModal = lazy(loadVoiceRecorderModal)
 const PerfilPage = lazy(() => import('@/pages/Perfil/PerfilPage').then(m => ({ default: m.PerfilPage })))
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary'
 import '@/styles/index.css'
@@ -59,6 +63,7 @@ import { rpc } from '@/lib/supabase'
 
 function AppLayout() {
   const [showAdd, setShowAdd] = useState(false)
+  const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false)
   const [addConfig, setAddConfig] = useState<{ defaultTipo?: 'expense' | 'income' | 'transfer', initialBilleteraId?: number } | null>(null)
   
   useEffect(() => {
@@ -97,7 +102,10 @@ function AppLayout() {
   useEffect(() => {
     const requestIdle = window.requestIdleCallback ?? ((cb: IdleRequestCallback) => window.setTimeout(() => cb({ didTimeout: false, timeRemaining: () => 0 } as IdleDeadline), 1200))
     const cancelIdle = window.cancelIdleCallback ?? window.clearTimeout
-    const idleId = requestIdle(() => { void loadAddMovementModal() })
+    const idleId = requestIdle(() => {
+      void loadAddMovementModal()
+      void loadVoiceRecorderModal()
+    })
     return () => cancelIdle(idleId as number)
   }, [])
 
@@ -107,7 +115,10 @@ function AppLayout() {
       <SideNav onAddPress={() => setShowAdd(!showAdd)} />
 
       {/* Navegación inferior para mobile (<768px) */}
-      <BottomNav onAddPress={() => setShowAdd(!showAdd)} />
+      <BottomNav
+        onAddPress={() => setShowAdd(!showAdd)}
+        onVoiceLongPress={() => setIsVoiceRecorderOpen(true)}
+      />
 
       {/* Banner de instalación PWA persistente */}
       <PWABanner />
@@ -160,6 +171,11 @@ function AppLayout() {
                 : Number(localStorage.getItem('billetera_default_egreso'))
             ) || undefined}
           />
+        </Suspense>
+      )}
+      {isVoiceRecorderOpen && (
+        <Suspense fallback={null}>
+          <VoiceRecorderModal open onClose={() => setIsVoiceRecorderOpen(false)} />
         </Suspense>
       )}
     </>

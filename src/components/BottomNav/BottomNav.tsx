@@ -1,4 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
+import type { PointerEvent as ReactPointerEvent, MouseEvent as ReactMouseEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { NAV_ITEMS } from '@/constants/navigation'
 import { t } from '@/locales/i18n'
@@ -9,14 +10,30 @@ import './BottomNav.css'
 
 interface BottomNavProps {
   onAddPress: () => void
+  /** Fired once when the central "+" is held for {@link VOICE_LONG_PRESS_MS} ms. */
+  onVoiceLongPress: () => void
 }
 
-export function BottomNav({ onAddPress }: BottomNavProps) {
+/** How long the "+" must stay held before the voice recorder takes over. */
+const VOICE_LONG_PRESS_MS = 2000
+
+export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { hasFeature } = useModoApp()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [modoPresupuesto, setModoPresupuesto] = useState<'base_cero' | 'anticipado'>('anticipado')
+  // True while the "+" is held and the long-press timer is still running.
+  const [isVoicePressing, setIsVoicePressing] = useState(false)
+
+  const longPressTimerRef = useRef<number | null>(null)
+  // Set when the long-press already fired, so the trailing click is swallowed.
+  const longPressFiredRef = useRef(false)
+  // Keep the latest callback without restarting the press lifecycle.
+  const onVoiceLongPressRef = useRef(onVoiceLongPress)
+  useEffect(() => {
+    onVoiceLongPressRef.current = onVoiceLongPress
+  }, [onVoiceLongPress])
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -42,6 +59,56 @@ export function BottomNav({ onAddPress }: BottomNavProps) {
     return () => {
       window.removeEventListener('budget-mode-changed', handleBudgetChange)
     }
+  }, [])
+
+  const clearLongPressTimer = useCallback((): void => {
+    if (longPressTimerRef.current !== null) {
+      window.clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }, [])
+
+  // Never leave a timer running after unmount.
+  useEffect(() => clearLongPressTimer, [clearLongPressTimer])
+
+  const handleAddPointerDown = useCallback(
+    (event: ReactPointerEvent<HTMLButtonElement>): void => {
+      // Primary button / touch only: a right or middle click is not a gesture.
+      if (event.button !== 0) return
+      clearLongPressTimer()
+      longPressFiredRef.current = false
+      setIsVoicePressing(true)
+      longPressTimerRef.current = window.setTimeout(() => {
+        longPressTimerRef.current = null
+        longPressFiredRef.current = true
+        setIsVoicePressing(false)
+        setIsMenuOpen(false)
+        onVoiceLongPressRef.current()
+      }, VOICE_LONG_PRESS_MS)
+    },
+    [clearLongPressTimer]
+  )
+
+  // Release or drift away before the threshold: it was a tap, keep the timer off.
+  const handleAddPointerEnd = useCallback((): void => {
+    clearLongPressTimer()
+    setIsVoicePressing(false)
+  }, [clearLongPressTimer])
+
+  const handleAddClick = useCallback((): void => {
+    // A long-press already opened the recorder: swallow the synthetic click so
+    // the manual movement modal does not open on top of it.
+    if (longPressFiredRef.current) {
+      longPressFiredRef.current = false
+      return
+    }
+    setIsMenuOpen(false)
+    onAddPress()
+  }, [onAddPress])
+
+  // Mobile long-press opens the OS context menu; the "+" owns that gesture.
+  const handleAddContextMenu = useCallback((event: ReactMouseEvent<HTMLButtonElement>): void => {
+    event.preventDefault()
   }, [])
 
   const isBaseCero = modoPresupuesto === 'base_cero'
@@ -126,17 +193,20 @@ export function BottomNav({ onAddPress }: BottomNavProps) {
           )
         })}
 
-        {/* FAB Central para añadir movimiento */}
-        <button 
+        {/* FAB Central: tap adds a movement, press-and-hold opens the voice recorder */}
+        <button
           className="nav-item"
           data-tour-id="home-fab-registrar"
-          onClick={() => {
-            setIsMenuOpen(false)
-            onAddPress()
-          }} 
-          aria-label={t('menu_registrar_movimiento')}
+          onPointerDown={handleAddPointerDown}
+          onPointerUp={handleAddPointerEnd}
+          onPointerCancel={handleAddPointerEnd}
+          onPointerLeave={handleAddPointerEnd}
+          onContextMenu={handleAddContextMenu}
+          onClick={handleAddClick}
+          aria-label={`${t('menu_registrar_movimiento')}. ${t('menu_add_voice_hint')}`}
+          title={t('menu_add_voice_hint')}
         >
-          <div className="fab">
+          <div className={`fab ${isVoicePressing ? 'is-voice-press' : ''}`}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
               <line x1="12" y1="5" x2="12" y2="19" strokeLinecap="round" />
               <line x1="5" y1="12" x2="19" y2="12" strokeLinecap="round" />
