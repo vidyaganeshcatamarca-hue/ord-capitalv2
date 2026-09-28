@@ -179,10 +179,13 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
   // insufficient balance for the edited amount), clear it so the submit
   // validation asks for a valid one instead of sending a stale id.
   useEffect(() => {
-    if (!requiereSaldoSuficiente || !billeteraId) return
+    // The wallet lists load on open: the reset must wait for them, or the
+    // first pass runs against an empty list and drops a valid prefilled
+    // wallet before the data even arrives.
+    if (loadingLists || !requiereSaldoSuficiente || !billeteraId) return
     const sel = billeterasOrigen.find((b) => String(b.billetera_id) === billeteraId)
     if (!sel) setBilleteraId('')
-  }, [requiereSaldoSuficiente, billeteraId, billeterasOrigen])
+  }, [loadingLists, requiereSaldoSuficiente, billeteraId, billeterasOrigen])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
