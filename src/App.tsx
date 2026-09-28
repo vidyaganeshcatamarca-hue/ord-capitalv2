@@ -170,18 +170,23 @@ function AppLayout() {
                 ? Number(localStorage.getItem('billetera_default_ingreso')) 
                 : Number(localStorage.getItem('billetera_default_egreso'))
             ) || undefined}
-            // The sheet stays mounted while the recorder opens on top of it
-            // (overlay z-index 1100/1110 vs the sheet's 1000/1010), so the
-            // form state and the selected tab survive the recording round-trip.
-            onOpenVoice={() => setIsVoiceRecorderOpen(true)}
+            // Close the sheet before opening the recorder so that dismissing the
+            // recorder returns the user to the screen that opened it (no dead-end
+            // trapped behind the sheet).
+            onOpenVoice={() => {
+              setShowAdd(false)
+              setIsVoiceRecorderOpen(true)
+            }}
           />
         </Suspense>
       )}
-      {isVoiceRecorderOpen && (
-        <Suspense fallback={null}>
-          <VoiceRecorderModal open onClose={() => setIsVoiceRecorderOpen(false)} />
-        </Suspense>
-      )}
+      {/* Always mounted: the component arms itself on first open and keeps
+       * the job bridge (polling + outcome toasts + quarantine hand-off) alive
+       * after the early close. A conditional render would unmount the bridge
+       * with the modal and orphan in-flight jobs. */}
+      <Suspense fallback={null}>
+        <VoiceRecorderModal open={isVoiceRecorderOpen} onClose={() => setIsVoiceRecorderOpen(false)} />
+      </Suspense>
     </>
   )
 }
