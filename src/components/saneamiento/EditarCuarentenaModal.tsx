@@ -128,7 +128,10 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
             if (!n.es_padre) {
               flat.push({
                 estructura_id: n.estructura_id,
-                nombre_cuenta: n.nombre_cuenta,
+                // Seed categories store an i18n key as the name (same as
+                // AddMovementModal): translate on display, pass user names
+                // through unchanged.
+                nombre_cuenta: t(n.nombre_cuenta),
                 icono,
                 es_padre: false,
               })
@@ -159,6 +162,27 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
     [billeteras, billeteraDestinoId]
   )
   const crossCurrency = !!billeteraMoneda && !!billeteraDestinoMoneda && billeteraMoneda !== billeteraDestinoMoneda
+
+  // Same balance rule as AddMovementModal: a wallet cannot end up negative,
+  // so expense and transfer origin wallets must cover the amount.
+  const montoFormNum = parseFloat(monto) || 0
+  const requiereSaldoSuficiente = tipo === 'expense' || tipo === 'transfer'
+  const billeterasOrigen = useMemo(
+    () =>
+      billeteras.filter(
+        (b) => !(requiereSaldoSuficiente && montoFormNum > 0 && b.saldo_actual < montoFormNum)
+      ),
+    [billeteras, requiereSaldoSuficiente, montoFormNum]
+  )
+
+  // Defensive reset: if the prefilled wallet is no longer valid (deleted or
+  // insufficient balance for the edited amount), clear it so the submit
+  // validation asks for a valid one instead of sending a stale id.
+  useEffect(() => {
+    if (!requiereSaldoSuficiente || !billeteraId) return
+    const sel = billeterasOrigen.find((b) => String(b.billetera_id) === billeteraId)
+    if (!sel) setBilleteraId('')
+  }, [requiereSaldoSuficiente, billeteraId, billeterasOrigen])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -280,7 +304,7 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
               ) : (
                 <select value={billeteraId} onChange={(e) => setBilleteraId(e.target.value)}>
                   <option value="">{t('saneamiento_seleccionar_billetera')}</option>
-                  {billeteras.map((b) => (
+                  {billeterasOrigen.map((b) => (
                     <option key={b.billetera_id} value={b.billetera_id}>
                       {t(b.nombre)} ({b.moneda}) — {formatCurrency(b.saldo_actual, b.moneda)}
                     </option>
