@@ -15,7 +15,7 @@ interface BottomNavProps {
 }
 
 /** How long the "+" must stay held before the voice recorder takes over. */
-const VOICE_LONG_PRESS_MS = 2000
+const VOICE_LONG_PRESS_MS = 1000
 
 export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
   const navigate = useNavigate()
