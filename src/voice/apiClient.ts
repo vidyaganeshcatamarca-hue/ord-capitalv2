@@ -210,6 +210,13 @@ function detailFromError(error: unknown): string {
 export async function createVoiceJob(input: CreateVoiceJobInput): Promise<VoiceJobCreate> {
   const { audioBlob, idempotencyKey, language, context, accessToken, signal } = input;
 
+  // Backend-requested diagnostic: the exact final context that goes into the
+  // multipart, logged only in dev builds (npm run dev). Remove once the
+  // categorization matching is validated.
+  if (import.meta.env.DEV) {
+    console.log('VOICE_CONTEXT expense_categories', JSON.stringify(context.expense_categories, null, 2));
+  }
+
   let response: Response;
   try {
     response = await fetch(`${VOICE_API_BASE_URL}${VOICE_JOB_CREATE_PATH}`, {
