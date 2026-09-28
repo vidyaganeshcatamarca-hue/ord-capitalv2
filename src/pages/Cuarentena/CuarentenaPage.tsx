@@ -12,6 +12,8 @@ import {
   missingRequiredFields,
   isApprovable,
 } from '@/components/saneamiento/BandejaCuarentena'
+import { EditarCuarentenaModal } from '@/components/saneamiento/EditarCuarentenaModal'
+import type { EditarCuarentenaPayload } from '@/components/saneamiento/EditarCuarentenaModal'
 import type { CuarentenaItem } from '@/pages/Saneamiento/SaneamientoPage'
 import './Cuarentena.css'
 
@@ -39,6 +41,7 @@ export function CuarentenaPage() {
 
   const [showConfirmAprobarTodo, setShowConfirmAprobarTodo] = useState(false)
   const [itemToReject, setItemToReject] = useState<CuarentenaItem | null>(null)
+  const [itemEditar, setItemEditar] = useState<CuarentenaItem | null>(null)
 
   // `?origen=voz` is the entry point used by the home FAB: it narrows the tray
   // to voice movements (the only ones with a `metadata.job_id`).
@@ -91,6 +94,37 @@ export function CuarentenaPage() {
       setItemToReject(null)
       fetchData()
       window.dispatchEvent(new CustomEvent('movement-added'))
+    } catch (err: any) {
+      showToast(parseError(err), 'error')
+    }
+  }
+
+  /**
+   * Same flow as BandejaCuarentena: the modal owns validation and field
+   * visibility per movement type, this handler only persists. Editing is what
+   * unblocks rows that are not approvable yet, so it stays enabled in every row.
+   */
+  const handleGuardarEdicion = async (payload: EditarCuarentenaPayload) => {
+    if (!itemEditar) return
+    try {
+      await rpc('fn_editar_cuarentena_v2', {
+        p_pendiente_id: itemEditar.pendiente_id,
+        p_tipo: payload.tipo,
+        p_monto: payload.monto,
+        p_destination_amount: payload.destination_amount,
+        p_billetera_id: payload.billetera_id,
+        p_billetera_destino_id: payload.billetera_destino_id,
+        p_tarjeta_id: payload.tarjeta_id,
+        p_estructura_egreso_id: payload.estructura_egreso_id,
+        p_cuenta_ingreso_id: payload.cuenta_ingreso_id,
+        p_moneda: payload.moneda,
+        p_cuotas: payload.cuotas,
+        p_fecha: payload.fecha,
+        p_detalle: payload.detalle,
+      })
+      showToast(t('saneamiento_toast_editado'), 'success')
+      setItemEditar(null)
+      fetchData()
     } catch (err: any) {
       showToast(parseError(err), 'error')
     }
@@ -241,7 +275,10 @@ export function CuarentenaPage() {
                     </div>
                   </div>
 
-                  <div className="cuarentena-item-actions">
+                  <div className="cuarentena-item-actions" style={{ flexWrap: 'wrap' }}>
+                    <button className="btn-cuarentena edit" onClick={() => setItemEditar(p)}>
+                      <CategoryIcon name="Pencil" size={14} /> {t('saneamiento_editar')}
+                    </button>
                     <button className="btn-cuarentena reject" onClick={() => setItemToReject(p)}>
                       <CategoryIcon name="X" size={14} /> {t('btn_reject')}
                     </button>
@@ -290,6 +327,15 @@ export function CuarentenaPage() {
           onConfirm={handleRechazarItem}
           onCancel={() => setItemToReject(null)}
           type="danger"
+        />
+      )}
+
+      {itemEditar && (
+        <EditarCuarentenaModal
+          item={itemEditar}
+          isOpen={true}
+          onClose={() => setItemEditar(null)}
+          onGuardar={handleGuardarEdicion}
         />
       )}
     </div>

@@ -5,6 +5,7 @@ import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
 import type { CuarentenaItem } from '@/pages/Saneamiento/SaneamientoPage'
 import type { CuarentenaMovementType } from './BandejaCuarentena'
+import './EditarCuarentenaModal.css'
 
 const MOVEMENT_TYPE_KEYS: CuarentenaMovementType[] = ['expense', 'income', 'transfer', 'card_expense']
 

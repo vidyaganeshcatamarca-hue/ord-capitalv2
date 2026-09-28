@@ -1,0 +1,136 @@
+/* =========================================================
+   Quarantine editor modal — styles owned by the component.
+
+   This modal renders in two places: SaneamientoPage (through
+   BandejaCuarentena) and CuarentenaPage. They are separate lazy
+   chunks, so the modal cannot rely on SaneamientoPage.css being
+   loaded. Values below are copied verbatim from
+   src/pages/Saneamiento/SaneamientoPage.css (modal block 424-519 and
+   spinner block 704-717) so both views render identically.
+
+   Only the classes this modal actually uses are declared here.
+   ========================================================= */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 100;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .modal-overlay {
+    align-items: center;
+    padding: 24px;
+  }
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: var(--surface, #2D2D2D);
+  border-radius: 20px 20px 0 0;
+  border: 1px solid var(--border, #3D3D3D);
+  padding: 20px;
+}
+
+@media (min-width: 640px) {
+  .modal-content {
+    border-radius: 20px;
+  }
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: calc(18px * var(--font-scale));
+}
+
+.modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-primary, #FFFFFF);
+  font-size: calc(20px * var(--font-scale));
+  cursor: pointer;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.modal-actions .btn {
+  flex: 1;
+}
+
+/* Base `.form-group` lives in src/styles/index.css, so only the
+   form-scoped spacing override is declared here. */
+.saneamiento-form .form-group {
+  margin-bottom: 16px;
+}
+
+.saneamiento-form label {
+  display: block;
+  font-size: calc(13px * var(--font-scale));
+  font-weight: 600;
+  color: var(--text-secondary, #A0A0A0);
+  margin-bottom: 6px;
+}
+
+.saneamiento-form input,
+.saneamiento-form select {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border, #3D3D3D);
+  background: var(--bg, #1A1A1A);
+  color: var(--text-primary, #FFFFFF);
+  font-size: calc(15px * var(--font-scale));
+}
+
+.saneamiento-form input:focus,
+.saneamiento-form select:focus {
+  outline: none;
+  border-color: var(--mint, var(--mint, #00B127));
+}
+
+.spinner-sm {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: var(--mint, var(--mint, #00B127));
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* The loading spinner is the only motion in this modal. Following the
+   existing project convention (VoiceRecorderModal.css), reduced motion
+   slows it instead of freezing a loading indicator. Values above stay
+   identical to SaneamientoPage's rendering. */
+@media (prefers-reduced-motion: reduce) {
+  .spinner-sm {
+    animation-duration: 2.4s;
+  }
+}
