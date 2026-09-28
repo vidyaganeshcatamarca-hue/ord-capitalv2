@@ -107,6 +107,11 @@ export function parseError(err: any): string {
         const parsed = JSON.parse(m[1]);
         if (parsed && parsed.key) {
           trackAppError(parsed.key);
+          // The {nombre} param can hold a DB catalog key (the wallet name in
+          // insufficient-balance errors): resolve it like every catalog name.
+          if (parsed.params && typeof parsed.params.nombre === 'string') {
+            parsed.params.nombre = t(parsed.params.nombre)
+          }
           return t(parsed.key, parsed.params);
         }
       } catch (e) {
@@ -125,6 +130,10 @@ export function parseError(err: any): string {
     const parsed = JSON.parse(msg);
     if (parsed && parsed.key) {
       trackAppError(parsed.key);
+      // Same resolution for the outer parsed message.
+      if (parsed.params && typeof parsed.params.nombre === 'string') {
+        parsed.params.nombre = t(parsed.params.nombre)
+      }
       return t(parsed.key, parsed.params);
     }
   } catch (e) {
