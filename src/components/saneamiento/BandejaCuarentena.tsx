@@ -13,7 +13,7 @@ import { ImageModal } from './ImageModal'
 import type { CuarentenaItem } from '@/pages/Saneamiento/SaneamientoPage'
 import './BandejaCuarentena.css'
 
-type FiltroOrigen = 'todos' | 'api_banco' | 'ocr' | 'recurrente' | 'voz'
+type FiltroOrigen = 'todos' | 'ocr' | 'recurrente' | 'voz'
 
 export type CuarentenaMovementType = 'expense' | 'income' | 'transfer' | 'card_expense'
 
@@ -42,9 +42,9 @@ interface LoteResultRow {
 // ── Row helpers (exported so CuarentenaPage shares one source of truth) ─────
 
 /**
- * Voice rows are the only quarantine rows carrying a non-null `metadata.job_id`.
- * `origen` is not a valid discriminator: voice inserts use `origen = 'api_banco'`
- * like imported bank statements.
+ * `origen = 'voz'` marks voice rows in the DB (the quarantine constraint
+ * allows recurrente/ocr/voz). `metadata.job_id` stays as the first-class
+ * discriminator so legacy rows inserted as 'api_banco' keep working.
  */
 export function isVoiceItem(item: CuarentenaItem): boolean {
   return !!item.metadata && item.metadata.job_id != null
@@ -204,7 +204,6 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
   const conteos = useMemo(
     () => ({
       todos: items.length,
-      api_banco: items.filter((i) => i.origen === 'api_banco').length,
       ocr: items.filter((i) => i.origen === 'ocr').length,
       recurrente: items.filter((i) => i.origen === 'recurrente').length,
       voz: items.filter(isVoiceItem).length,
@@ -355,7 +354,6 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
 
   const filtros: { key: FiltroOrigen; label: string }[] = [
     { key: 'todos', label: t('saneamiento_filtro_todos') },
-    { key: 'api_banco', label: `${t('saneamiento_origen_banco')} (${conteos.api_banco})` },
     { key: 'ocr', label: `📷 OCR (${conteos.ocr})` },
     { key: 'recurrente', label: `🔄 ${t('saneamiento_recurrentes')} (${conteos.recurrente})` },
     { key: 'voz', label: `🎙️ ${t('saneamiento_voz')} (${conteos.voz})` },
@@ -641,6 +639,5 @@ function OrigenBadge({ origen, isVoice }: { origen: string; isVoice: boolean }) 
   if (isVoice) return <span className="saneamiento-badge saneamiento-badge-voz">{t('saneamiento_voz')}</span>
   if (origen === 'ocr') return <span className="saneamiento-badge saneamiento-badge-ocr">OCR</span>
   if (origen === 'recurrente') return <span className="saneamiento-badge saneamiento-badge-recurrente">{t('saneamiento_recurrente')}</span>
-  if (origen === 'api_banco') return <span className="saneamiento-badge">{t('saneamiento_origen_banco')}</span>
   return <span className="saneamiento-badge">{origen}</span>
 }

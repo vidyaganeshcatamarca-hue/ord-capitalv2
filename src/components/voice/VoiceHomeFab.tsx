@@ -23,9 +23,8 @@ export const VOICE_QUARANTINE_POLL_MS = 15000
 /**
  * Minimal slice of a `fn_reporte_cuarentena_pendientes` row that this FAB reads.
  *
- * `origen` alone is not a valid discriminator: imported bank statements also
- * use `origen = 'api_banco'`. Voice-originated rows are the only ones carrying a
- * non-null `metadata.job_id`, so that field is the discriminator.
+ * `metadata.job_id` is the discriminator for voice rows. `origen = 'voz'`
+ * is authoritative in new data; job_id keeps legacy rows identifiable.
  */
 interface VoiceQuarantineRow {
   metadata: { job_id?: string | null } | null

@@ -45,9 +45,9 @@ export interface CuarentenaItem {
 }
 
 /**
- * The dashboard widgets group by `origen`, but voice rows are stored with
- * `origen = 'api_banco'` and are only identifiable through `metadata.job_id`.
- * Normalizing here keeps the widgets dumb and their counts correct.
+ * The dashboard widgets group by `origen`; voice rows carry
+ * `origen = 'voz'` (and `metadata.job_id`). Normalizing here keeps the
+ * widgets dumb and their counts correct.
  */
 function normalizeForWidgets(rows: CuarentenaItem[]): CuarentenaItem[] {
   return rows.map((row) =>

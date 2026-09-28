@@ -1209,7 +1209,6 @@ export const saneamiento = {
   add_movement_voice_hint: "Contá lo que querés registrar y lo interpretamos por vos.",
 
   // Cuarentena — bandeja de voz (tipos, checklist de completitud, ambiguos)
-  saneamiento_origen_banco: "Banco",
   cuarentena_tipo_label: "Tipo",
   cuarentena_tipo_expense: "Gasto",
   cuarentena_tipo_income: "Ingreso",
