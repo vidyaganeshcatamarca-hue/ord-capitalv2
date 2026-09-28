@@ -654,7 +654,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
     // Si es padre con hijos y no se fuerza la categoría padre, buscar el "[Sin Detalle]" hijo o usar el primero
     let finalCat = cat
     if (!forceParent && cat.es_padre && rubro && rubro.hijos.length > 0) {
-      const sinDetalle = rubro.hijos.find(h => h.nombre_cuenta.toLowerCase().includes('sin detalle') || h.nombre_cuenta.toLowerCase().includes('[sin'))
+      const sinDetalle = rubro.hijos.find(h => h.nombre_cuenta === 'no_detail' || h.nombre_cuenta.toLowerCase().includes('sin detalle') || h.nombre_cuenta.toLowerCase().includes('[sin'))
       const hijo = sinDetalle ?? rubro.hijos[0]
       finalCat = { estructura_id: hijo.estructura_id, nombre: `${t(rubro.nombre_cuenta)} › ${t(hijo.nombre_cuenta)}`, icono: hijo.icono, color: rubro.color, es_padre: false }
     }

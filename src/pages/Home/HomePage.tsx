@@ -569,7 +569,7 @@ export function HomePage() {
       if (c.nombre_rubro_padre) {
         const parentColor = parentColorMap[c.nombre_rubro_padre]
         if (parentColor) {
-          if (c.nombre_cuenta === t('no_detail')) {
+          if (c.nombre_cuenta === 'no_detail') {
             color = parentColor
           } else {
             const siblings = siblingGroups[c.nombre_rubro_padre] || [idx]

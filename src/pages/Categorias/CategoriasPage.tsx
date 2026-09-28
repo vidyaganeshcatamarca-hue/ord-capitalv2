@@ -436,8 +436,8 @@ export function TabEgresos() {
     )
       .filter(r =>
         !deferredQuery ||
-        r.nombre_cuenta.toLowerCase().includes(deferredQuery.toLowerCase()) ||
-        r.hijos?.some(h => h.nombre_cuenta.toLowerCase().includes(deferredQuery.toLowerCase()))
+        catalogDisplayName(r.nombre_cuenta).toLowerCase().includes(deferredQuery.toLowerCase()) ||
+        r.hijos?.some(h => catalogDisplayName(h.nombre_cuenta).toLowerCase().includes(deferredQuery.toLowerCase()))
       ),
     [rubros, deferredQuery]
   )
