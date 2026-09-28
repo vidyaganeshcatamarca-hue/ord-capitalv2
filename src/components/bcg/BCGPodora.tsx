@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { t } from '@/locales/i18n'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { haptics } from '@/lib/haptics'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import {
@@ -102,7 +103,7 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
                   <CategoryIcon name={c.icono} size={20} />
                 </span>
                 <div className="bcg-podora-cand-body">
-                  <strong>{c.nombre}</strong>
+                  <strong>{catalogDisplayName(c.nombre)}</strong>
                   <div className="bcg-podora-cand-stats">
                     <span>Placer: <strong>{c.utilidad_placer}/10</strong></span>
                     <span>Flex: <strong>{c.flexibilidad_recorte}/10</strong></span>

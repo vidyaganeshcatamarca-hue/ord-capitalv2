@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { t } from '@/locales/i18n'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { BCG_CUADRANTES, classifyCuadrante, formatMoneyARS } from '@/lib/bcgUtils'
 import { haptics } from '@/lib/haptics'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
@@ -68,8 +69,8 @@ export function BCGCuadranteAcordeon({ cuadranteKey, items, onItemClick, default
                   <CategoryIcon name={it.icono} size={20} />
                 </span>
                 <div className="bcg-acordeon-item-body">
-                  <strong>{it.nombre}</strong>
-                  {it.rubro_padre && <span className="bcg-acordeon-item-padre">{it.rubro_padre}</span>}
+                  <strong>{catalogDisplayName(it.nombre)}</strong>
+                  {it.rubro_padre && <span className="bcg-acordeon-item-padre">{catalogDisplayName(it.rubro_padre)}</span>}
                 </div>
                 <div className="bcg-acordeon-item-meta">
                   <span>Placer: <strong>{it.coordenada_y}/10</strong></span>

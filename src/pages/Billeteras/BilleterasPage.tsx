@@ -8,6 +8,7 @@ import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { Billetera } from '@/types/Billetera'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBalanceModal'
 import { BilleteraDetailModal } from '@/components/BilleteraDetailModal/BilleteraDetailModal'
@@ -579,7 +580,7 @@ export function BilleterasPage() {
       <ConfirmModal
         isOpen={showConfirmArchive}
         title={t('wallets.btn_archivar')}
-        message={t('confirm_archive_wallet', { name: selectedBilletera?.nombre })}
+        message={t('confirm_archive_wallet', { name: catalogDisplayName(selectedBilletera?.nombre) })}
         confirmText={t('wallets.btn_archivar')}
         cancelText={t('wallets.btn_cancelar')}
         type="danger"

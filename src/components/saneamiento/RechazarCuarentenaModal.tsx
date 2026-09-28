@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { t } from '@/locales/i18n'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { formatCurrency } from '@/lib/format'
 import type { CuarentenaItem } from '@/pages/Saneamiento/SaneamientoPage'
 
@@ -33,7 +34,7 @@ export function RechazarCuarentenaModal({ item, isOpen, onClose, onConfirmar }: 
 
         <div className="saneamiento-rechazar-body">
           <p className="text-muted" style={{ marginBottom: '16px' }}>
-            {item.detalle || item.categoria_nombre || ''} — {formatCurrency(item.monto, 'ARS')}
+            {item.detalle || catalogDisplayName(item.categoria_nombre)} — {formatCurrency(item.monto, 'ARS')}
           </p>
 
           <div className="form-group">

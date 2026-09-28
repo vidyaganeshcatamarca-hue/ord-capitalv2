@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { WalletIcon } from '@/components/WalletIcon'
 import './BilleteraDetailModal.css'
@@ -110,7 +111,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
                         {displayType === 'expense' ? '➖' : displayType === 'income' ? '➕' : '↔️'}
                       </div>
                       <div>
-                        <p style={{ margin: 0, fontWeight: 'bold', fontSize: 'calc(14px * var(--font-scale))' }}>{m.nombre_cuenta_historico || m.descripcion || m.tipo}</p>
+                        <p style={{ margin: 0, fontWeight: 'bold', fontSize: 'calc(14px * var(--font-scale))' }}>{catalogDisplayName(m.nombre_cuenta_historico) || m.descripcion || m.tipo}</p>
                         <p style={{ margin: 0, fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>{new Date(m.fecha).toLocaleDateString('es-AR')}</p>
                       </div>
                     </div>

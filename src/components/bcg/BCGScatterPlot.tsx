@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import { t } from '@/locales/i18n'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { BCG_FRECUENCIA_ALTA, BCG_PLACER_ALTO, BCG_CUADRANTES, classifyCuadrante, dominioX, radiusFromMonto } from '@/lib/bcgUtils'
 import { haptics } from '@/lib/haptics'
 import './BCGScatterPlot.css'
@@ -94,11 +95,11 @@ export function BCGScatterPlot({ points, onPointClick, emptyMessage }: BCGScatte
               }}
               tabIndex={0}
               role="button"
-              aria-label={`${p.icono} ${p.nombre} - ${t('btn_view_detail')}`}
+              aria-label={`${p.icono} ${catalogDisplayName(p.nombre)} - ${t('btn_view_detail')}`}
             >
               <circle cx={cx} cy={cy} r={r} fill={fill} className="bcg-point-circle" />
               <text x={cx} y={cy + 3} className="bcg-point-icon" textAnchor="middle">{p.icono}</text>
-              <title>{`${p.icono} ${p.nombre} · Placer ${p.coordenada_y}/10 · Frec ${p.coordenada_x}/mes`}</title>
+              <title>{`${p.icono} ${catalogDisplayName(p.nombre)} · Placer ${p.coordenada_y}/10 · Frec ${p.coordenada_x}/mes`}</title>
             </g>
           )
         })}

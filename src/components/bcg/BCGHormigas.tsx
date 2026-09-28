@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { t } from '@/locales/i18n'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { haptics } from '@/lib/haptics'
 import { formatMoneyARS } from '@/lib/bcgUtils'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
@@ -151,7 +152,7 @@ export function BCGHormigas({ hormigas, reto, onCategoriaClick }: BCGHormigasPro
                   <CategoryIcon name={h.icono} size={20} />
                 </span>
                 <div className="bcg-hormigas-item-body">
-                  <strong>{h.nombre_cuenta}</strong>
+                  <strong>{catalogDisplayName(h.nombre_cuenta)}</strong>
                   <span>
                     {t('bcg_hormiga_frecuencia_label', { count: h.frecuencia_mensual })} ·{' '}
                     {t('bcg_hormiga_promedio_label', { monto: formatMoneyARS(h.gasto_mensual_estimado / Math.max(h.frecuencia_mensual, 1)) })}

@@ -3,7 +3,7 @@
 // Voice v1 - User catalog snapshot sent with every job
 // ============================================
 import { useCallback, useEffect, useState } from 'react';
-import { t } from '../locales/i18n';
+import { catalogDisplayName } from '@/lib/catalogRegistry';
 import { filterUserEditableCategories, isUserEditableCategory } from '../lib/categoryFilters';
 import { rpc } from '../lib/supabase';
 import { validateContextSize } from './contract';
@@ -123,15 +123,15 @@ export function buildVoiceContext(input: BuildVoiceContextInput): VoiceContext {
   for (const parent of filterUserEditableCategories(catalog.categories)) {
     expenseCategories.push({
       id: String(parent.estructura_id),
-      name: t(parent.nombre_cuenta),
+      name: catalogDisplayName(parent.nombre_cuenta),
       parent_name: null,
     });
     for (const child of parent.hijos ?? []) {
       if (!isUserEditableCategory(child)) continue;
       expenseCategories.push({
         id: String(child.estructura_id),
-        name: t(child.nombre_cuenta),
-        parent_name: t(parent.nombre_cuenta),
+        name: catalogDisplayName(child.nombre_cuenta),
+        parent_name: catalogDisplayName(parent.nombre_cuenta),
       });
     }
   }
@@ -143,7 +143,7 @@ export function buildVoiceContext(input: BuildVoiceContextInput): VoiceContext {
       id: String(wallet.billetera_id),
       // Seed wallets store an i18n key as the name: the LLM matches the
       // display name the user actually says ("efectivo").
-      name: t(wallet.nombre),
+      name: catalogDisplayName(wallet.nombre),
       currency: wallet.moneda,
     }));
 
@@ -165,7 +165,7 @@ export function buildVoiceContext(input: BuildVoiceContextInput): VoiceContext {
     // Passive income sources are kept: the backend decides how to use them.
     income_sources: catalog.incomeSources.map((source) => ({
       id: String(source.producto_id),
-      name: t(source.nombre),
+      name: catalogDisplayName(source.nombre),
     })),
     wallets,
     cards,

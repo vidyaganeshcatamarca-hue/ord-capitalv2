@@ -9,6 +9,7 @@ import { MigrarSubcategoriaModal } from '@/components/MigrarSubcategoriaModal/Mi
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { INGRESO_ICONS, RUBRO_ICONS } from '@/constants/emojiToLucide'
 import { isUserEditableCategory } from '@/lib/categoryFilters'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { sortCategoriesByTranslatedName } from '@/lib/categorySorting'
 import './Categorias.css'
 
@@ -569,7 +570,7 @@ export function TabEgresos() {
       <ConfirmModal
         isOpen={deleteConfirm.open}
         title={t("title_delete_category")}
-        message={t('confirm_delete_category', { name: deleteConfirm.nombre })}
+        message={t('confirm_delete_category', { name: catalogDisplayName(deleteConfirm.nombre) })}
         confirmText={t('btn_delete')}
         cancelText={t('btn_cancel')}
         type="danger"

@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { haptics } from '@/lib/haptics'
 import { BCG_CUADRANTES, classifyCuadrante, formatMoneyARS } from '@/lib/bcgUtils'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
@@ -119,8 +120,8 @@ export function BCGDetalleCategoria() {
             <CategoryIcon name={point.icono} size={24} />
           </span>
           <div>
-            <h1 className="font-display">{point.nombre}</h1>
-            {point.rubro_padre && <p className="bcg-detalle-padre">{point.rubro_padre}</p>}
+            <h1 className="font-display">{catalogDisplayName(point.nombre)}</h1>
+            {point.rubro_padre && <p className="bcg-detalle-padre">{catalogDisplayName(point.rubro_padre)}</p>}
           </div>
         </div>
         {saving && <span className="bcg-detalle-saving" aria-live="polite">…</span>}
