@@ -2150,7 +2150,9 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
           </div>
 
           {/* ── BOTÓN STICKY DE CONFIRMACIÓN ── */}
-          {!loadingData && (
+          {/* Solo en el formulario manual: en el tab de voz no hay nada que
+              guardar ni cancelar (la X del header es el único cierre). */}
+          {!loadingData && entryMode === 'manual' && (
             <div className="modal-sticky-footer" style={{ display: 'flex', gap: '10px' }}>
               {isMobile && (
                 <button
