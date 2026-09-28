@@ -5,6 +5,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isBrowserSupported, pickSupportedMime, type SupportedMime } from './codec';
 import { MAX_AUDIO_DURATION_MS } from './contract';
+import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry';
 
 /** Lifecycle of the recorder. */
 export type VoiceRecorderState =
@@ -65,6 +66,7 @@ function errorNameOf(error: unknown): string {
 function classifyMicrophoneError(error: unknown): VoiceRecorderError {
   const detail = error instanceof Error ? error.message : String(error);
   if (MIC_DENIED_ERROR_NAMES.includes(errorNameOf(error))) {
+    telemetry.track('voice_mic_denied', { detail }, TELEMETRY_PRIORITY.LOW);
     return { i18nKey: MIC_DENIED_KEY, detail };
   }
   return { i18nKey: GENERIC_ERROR_KEY, detail };
@@ -181,6 +183,7 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
     if (!isBrowserSupported()) {
       commitState('error');
       if (mountedRef.current) setError({ i18nKey: CODEC_UNSUPPORTED_KEY });
+      telemetry.track('voice_codec_unsupported', { reason: 'no_media_recorder' }, TELEMETRY_PRIORITY.LOW);
       return;
     }
 
@@ -188,6 +191,7 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
     if (!supportedMime) {
       commitState('error');
       if (mountedRef.current) setError({ i18nKey: CODEC_UNSUPPORTED_KEY });
+      telemetry.track('voice_codec_unsupported', { reason: 'no_supported_mime' }, TELEMETRY_PRIORITY.LOW);
       return;
     }
 
