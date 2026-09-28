@@ -191,11 +191,12 @@ async function safeRpcRows<T>(name: string): Promise<T[]> {
 
 /**
  * Wallet listing uses the same fallback chain as AddMovementModal:
- * `fn_obtener_billeteras_ordenadas_por_uso` first, `fn_obtener_billeteras_activas` on failure.
+ * `fn_obtener_billeteras_ordenadas` (p_orden: 'valor', el default del app) first,
+ * `fn_obtener_billeteras_activas` on failure.
  */
 async function loadWalletRows(): Promise<VoiceCatalogWalletRow[]> {
   try {
-    const data = await rpc<VoiceCatalogWalletRow[]>('fn_obtener_billeteras_ordenadas_por_uso');
+    const data = await rpc<VoiceCatalogWalletRow[]>('fn_obtener_billeteras_ordenadas', { p_orden: 'valor' });
     return Array.isArray(data) ? data : [];
   } catch {
     return safeRpcRows<VoiceCatalogWalletRow>('fn_obtener_billeteras_activas');
