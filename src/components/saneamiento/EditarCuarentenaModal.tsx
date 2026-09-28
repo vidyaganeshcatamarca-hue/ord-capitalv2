@@ -33,11 +33,17 @@ interface EditarCuarentenaModalProps {
   onGuardar: (payload: EditarCuarentenaPayload) => void
 }
 
-interface CategoriaOption {
+interface CategoriaHijoOption {
+  estructura_id: number
+  nombre: string
+  icono: string
+}
+
+interface CategoriaGrupoOption {
   estructura_id: number
   nombre_cuenta: string
   icono: string
-  es_padre: boolean
+  hijos: CategoriaHijoOption[]
 }
 
 interface BilleteraOption {
@@ -94,7 +100,7 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
   const [moneda, setMoneda] = useState<string>(item.moneda || 'ARS')
   const [cuotas, setCuotas] = useState<string>(numberValue(item.cuotas ?? 1))
 
-  const [categorias, setCategorias] = useState<CategoriaOption[]>([])
+  const [categorias, setCategorias] = useState<CategoriaGrupoOption[]>([])
   const [billeteras, setBilleteras] = useState<BilleteraOption[]>([])
   const [tarjetas, setTarjetas] = useState<TarjetaOption[]>([])
   const [ingresos, setIngresos] = useState<IngresoOption[]>([])
@@ -118,29 +124,30 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
           ...r,
           hijos: (r.hijos ?? []).filter((h: any) => isUserEditableCategory(h)),
         }))
-        const flat: CategoriaOption[] = []
-        const walk = (nodes: any[], parentIcono: string | null) => {
-          nodes.forEach((n) => {
-            const rawIcono = typeof n.icono === 'string' ? n.icono.trim() : ''
-            const icono = rawIcono !== '' && !isLikelyLucideName(rawIcono)
-              ? rawIcono
-              : (parentIcono ?? '📁')
-            if (!n.es_padre) {
-              flat.push({
-                estructura_id: n.estructura_id,
-                // Seed categories store an i18n key as the name (same as
-                // AddMovementModal): translate on display, pass user names
-                // through unchanged.
-                nombre_cuenta: t(n.nombre_cuenta),
-                icono,
-                es_padre: false,
-              })
-            }
-            if (n.hijos && n.hijos.length) walk(n.hijos, icono)
-          })
+        const resolveIcono = (raw: unknown, fallback: string): string => {
+          const value = typeof raw === 'string' ? raw.trim() : ''
+          return value !== '' && !isLikelyLucideName(value) ? value : fallback
         }
-        walk(editable, null)
-        setCategorias(flat)
+        // Hierarchical groups: a parent with children becomes a native
+        // <optgroup> (its label, not selectable), children are the options
+        // and childless parents stay selectable on their own.
+        const grupos: CategoriaGrupoOption[] = editable.map((r) => {
+          const parentIcono = resolveIcono(r.icono, '📁')
+          return {
+            estructura_id: r.estructura_id,
+            // Seed categories store an i18n key as the name (same as
+            // AddMovementModal): translate on display, pass user names
+            // through unchanged.
+            nombre_cuenta: t(r.nombre_cuenta),
+            icono: parentIcono,
+            hijos: (r.hijos ?? []).map((h: any) => ({
+              estructura_id: h.estructura_id,
+              nombre: t(h.nombre_cuenta),
+              icono: resolveIcono(h.icono, parentIcono),
+            })),
+          }
+        })
+        setCategorias(grupos)
         setBilleteras(bilRes || [])
         setTarjetas(tarRes || [])
         setIngresos(ingRes || [])
@@ -289,11 +296,21 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
               ) : (
                 <select value={estructuraId} onChange={(e) => setEstructuraId(e.target.value)}>
                   <option value="">{t('saneamiento_seleccionar_categoria')}</option>
-                  {categorias.map((c) => (
-                    <option key={c.estructura_id} value={c.estructura_id}>
-                      {c.icono} {c.nombre_cuenta}
-                    </option>
-                  ))}
+                  {categorias.map((g) =>
+                    g.hijos.length > 0 ? (
+                      <optgroup key={g.estructura_id} label={`${g.icono} ${g.nombre_cuenta}`}>
+                        {g.hijos.map((h) => (
+                          <option key={h.estructura_id} value={h.estructura_id}>
+                            {h.icono} {h.nombre}
+                          </option>
+                        ))}
+                      </optgroup>
+                    ) : (
+                      <option key={g.estructura_id} value={g.estructura_id}>
+                        {g.icono} {g.nombre_cuenta}
+                      </option>
+                    )
+                  )}
                 </select>
               )}
             </div>
