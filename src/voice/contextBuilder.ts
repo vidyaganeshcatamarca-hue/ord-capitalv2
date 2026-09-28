@@ -141,7 +141,9 @@ export function buildVoiceContext(input: BuildVoiceContextInput): VoiceContext {
     .filter((wallet) => wallet.activa !== false)
     .map((wallet) => ({
       id: String(wallet.billetera_id),
-      name: wallet.nombre,
+      // Seed wallets store an i18n key as the name: the LLM matches the
+      // display name the user actually says ("efectivo").
+      name: t(wallet.nombre),
       currency: wallet.moneda,
     }));
 

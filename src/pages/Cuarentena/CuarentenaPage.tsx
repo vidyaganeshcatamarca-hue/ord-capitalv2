@@ -275,7 +275,7 @@ export function CuarentenaPage() {
                         {formatAmount(p.monto, itemCurrency(p))}
                       </p>
                       <p style={{ margin: '4px 0 0 0', fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>
-                        <CategoryIcon name="WalletCards" size={14} /> {p.billetera_nombre || p.billetera_destino_nombre || '-'}
+                        <CategoryIcon name="WalletCards" size={14} /> {t(p.billetera_nombre || p.billetera_destino_nombre || '-')}
                       </p>
                     </div>
                   </div>

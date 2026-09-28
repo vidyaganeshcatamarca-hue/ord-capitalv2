@@ -577,13 +577,13 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
 function itemMetaParts(item: CuarentenaItem, tipo: CuarentenaMovementType): string[] {
   const parts: string[] = []
   if (tipo === 'income' || tipo === 'transfer') {
-    if (item.billetera_nombre) parts.push(item.billetera_nombre)
-    if (item.billetera_destino_nombre) parts.push(item.billetera_destino_nombre)
+    if (item.billetera_nombre) parts.push(t(item.billetera_nombre))
+    if (item.billetera_destino_nombre) parts.push(t(item.billetera_destino_nombre))
   } else if (item.billetera_nombre) {
-    parts.push(item.billetera_nombre)
+    parts.push(t(item.billetera_nombre))
   }
-  if (tipo === 'card_expense' && item.tarjeta_nombre) parts.push(item.tarjeta_nombre)
-  if (tipo === 'income' && item.cuenta_ingreso_nombre) parts.push(item.cuenta_ingreso_nombre)
+  if (tipo === 'card_expense' && item.tarjeta_nombre) parts.push(t(item.tarjeta_nombre))
+  if (tipo === 'income' && item.cuenta_ingreso_nombre) parts.push(t(item.cuenta_ingreso_nombre))
   if (tipo === 'transfer' && item.destination_amount != null) {
     parts.push(
       t('cuarentena_destino_monto', {
