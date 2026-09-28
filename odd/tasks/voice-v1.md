@@ -101,7 +101,7 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] 13/13 códigos del contrato mapeados en errors.ts (auditoria: sin cambios necesarios)
 - [x] check-i18n: 0 flags de voz (exit 1 = deuda preexistente de otros componentes)
 
-## Tanda 8 — Endurecimiento — COMMIT (Tanda 8)
+## Tanda 8 — Endurecimiento — COMMIT 5c045f6
 
 - [x] Manejo de jobs abandonados: useVoiceJobs.abandonInFlightJobs() (phase abandoned + status terminal_failed + TIMEOUT + canRetry false; poller cancelado + storage limpiado; entrada en reducer queda para reportar) + Bridge: toast voice_job_timeout solo con modal abierto + telemetry voice_job_abandoned
 - [x] Cancelación limpia al desmontar: auditoria Tanda 8 confirmo que ya estaba completo desde Tanda 2 (Session unmount -> useVoiceRecorder cleanup: recorder.stop + releaseStream + clearTicker); sin hardening extra
