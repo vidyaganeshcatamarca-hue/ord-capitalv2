@@ -91,7 +91,7 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] Cancelar AudioRecorderModal viejo (borrado; botón Dictar gasto removido de AddMovementModal)
 - [x] Marcar `fn_disparar_procesamiento_voz` deprecada en el espejo (hecho en Tanda 6 Supabase)
 
-## Tanda 7 — Manejo de errores + i18n completo — COMMIT (Tanda 7)
+## Tanda 7 — Manejo de errores + i18n completo — COMMIT 1d3f5f5
 
 - [x] Cobertura i18n completa (auditoria): 25 claves usadas resuelven — voice_* aplanadas en errors + export voice (claves de estado en voz.*)
 - [x] Textos de estado via export voice: recording/uploading/queued/transcribing/interpreting/finalizing + NUEVO retry_wait (label propio para la espera de reintento)
@@ -101,12 +101,12 @@ Esta es la primera tanda. NO toca componentes vivos. Solo archivos nuevos en `sr
 - [x] 13/13 códigos del contrato mapeados en errors.ts (auditoria: sin cambios necesarios)
 - [x] check-i18n: 0 flags de voz (exit 1 = deuda preexistente de otros componentes)
 
-## Tanda 8 — Endurecimiento
+## Tanda 8 — Endurecimiento — COMMIT (Tanda 8)
 
-- [ ] Manejo de jobs abandonados tras >10 min background
-- [ ] Cancelación limpia al desmontar el recorder (cerrar stream + parar MediaRecorder)
-- [ ] Manejo de página hidden/visible (`document.visibilitychange`)
-- [ ] Telemetría básica: `voice_recorded`, `voice_sent`, `voice_polling_started`, `voice_quarantine_approved_lote`, etc.
+- [x] Manejo de jobs abandonados: useVoiceJobs.abandonInFlightJobs() (phase abandoned + status terminal_failed + TIMEOUT + canRetry false; poller cancelado + storage limpiado; entrada en reducer queda para reportar) + Bridge: toast voice_job_timeout solo con modal abierto + telemetry voice_job_abandoned
+- [x] Cancelación limpia al desmontar: auditoria Tanda 8 confirmo que ya estaba completo desde Tanda 2 (Session unmount -> useVoiceRecorder cleanup: recorder.stop + releaseStream + clearTicker); sin hardening extra
+- [x] visibilitychange en el Bridge: hidden->marca hiddenAt; visible->resumePending() (cableado por primera vez: nunca se invocaba) y si background > RESUME_WINDOW_MS (10 min) -> abandonInFlightJobs. Pollers siguen en background (telemetry flush por su cuenta)
+- [x] Telemetría: 11 eventos via telemetry.track existente — voice_recorder_opened(LOW), voice_recorded(M), voice_sent(M), voice_send_failed(L, solo VoiceApiError), voice_polling_started(L), voice_completed(M), voice_empty_result(M), voice_load_quarantine_failed(H), voice_job_abandoned(L), voice_quarantine_approved(M, {origen}), voice_quarantine_approved_lote(M, {count, excluidos})
 
 ## Tandas siguientes (post v1)
 

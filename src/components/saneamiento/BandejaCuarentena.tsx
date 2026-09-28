@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
+import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
@@ -235,6 +236,13 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
     if (!isApprovable(item)) return
     try {
       await rpc('fn_aprobar_cuarentena_v2', { p_pendiente_id: item.pendiente_id })
+      // The tray approves rows from every origin: `origen` separates voice jobs
+      // from the rest without a second event name.
+      telemetry.track(
+        'voice_quarantine_approved',
+        { origen: isVoiceItem(item) ? 'voz' : 'otro' },
+        TELEMETRY_PRIORITY.MEDIUM
+      )
       showToast(t('saneamiento_toast_aprobado'), 'success')
       onChange()
       fetchItems()
@@ -265,6 +273,13 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
       const rows = Array.isArray(res) ? res : []
       const failed = rows.filter((r) => !r.ok).length
       const okCount = rows.filter((r) => r.ok).length
+      // `count` is what actually got approved; `excluidos` mirrors the notice the
+      // toolbar shows for rows missing required fields.
+      telemetry.track(
+        'voice_quarantine_approved_lote',
+        { count: okCount, excluidos: excludedCount },
+        TELEMETRY_PRIORITY.MEDIUM
+      )
       if (failed === 0) {
         showToast(t('saneamiento_toast_aprobados_lote', { count: String(okCount) }), 'success')
       } else {

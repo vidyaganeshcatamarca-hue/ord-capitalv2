@@ -4,6 +4,7 @@
 // ============================================
 import { useCallback, useEffect, useReducer, useRef } from 'react';
 import { supabase } from '../lib/supabase';
+import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry';
 import { DEFAULT_VOICE_LANGUAGE, VoiceApiError, createVoiceJob, isAbortError } from './apiClient';
 import { validateAudioBlob, validateContextSize } from './contract';
 import { useVoiceContext } from './contextBuilder';
@@ -48,6 +49,13 @@ export interface UseVoiceJobsResult {
   retryLastSubmit(): Promise<void>;
   resumePending(): { resumed: number; abandoned: number };
   clearJob(jobId: string): void;
+  /**
+   * Gives up on every job the backend still owns and reports the abandoned ids.
+   * Used when the app stayed backgrounded past the resume window: the job is
+   * dead for the user even though the backend (and the quarantine) may keep its
+   * own copy. Storage entries and pollers are released so nothing is left armed.
+   */
+  abandonInFlightJobs(): string[];
 }
 
 type VoiceJobsState = Record<string, VoiceJobState>;
@@ -76,6 +84,9 @@ function voiceJobsReducer(state: VoiceJobsState, action: VoiceJobsAction): Voice
       return state;
   }
 }
+
+/** Phases where the backend still owns the job and a local timeout can fire. */
+const IN_FLIGHT_PHASES: readonly VoiceJobPhase[] = ['uploading', 'queued', 'processing'];
 
 function phaseFromStatus(status: VoiceJobStatus): VoiceJobPhase {
   switch (status) {
@@ -115,10 +126,17 @@ export function useVoiceJobs(): UseVoiceJobsResult {
   const lastSubmitRef = useRef<{ blob: Blob; idempotencyKey: string } | null>(null);
   const pollersRef = useRef<Map<string, VoicePollingController>>(new Map());
   const mountedRef = useRef(true);
+  // Mirror of the reducer state: `abandonInFlightJobs` reads it synchronously
+  // without pulling `jobs` into the identity of every callback.
+  const jobsRef = useRef<VoiceJobsState>({});
 
   useEffect(() => {
     contextRef.current = context;
   }, [context]);
+
+  useEffect(() => {
+    jobsRef.current = jobs;
+  }, [jobs]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -152,6 +170,7 @@ export function useVoiceJobs(): UseVoiceJobsResult {
 
   const startPolling = useCallback((jobId: string, accessToken: string): void => {
     pollersRef.current.get(jobId)?.cancel();
+    telemetry.track('voice_polling_started', { job_id: jobId }, TELEMETRY_PRIORITY.LOW);
 
     const controller = runVoicePollingLoop({
       jobId,
@@ -172,6 +191,14 @@ export function useVoiceJobs(): UseVoiceJobsResult {
       onCompleted: (result) => {
         pollersRef.current.delete(jobId);
         removeStoredVoiceJob(jobId);
+        const movements = result?.movements ?? [];
+        // The two outcomes are distinct products events: movements waiting in
+        // the quarantine vs. nothing to review at all.
+        if (movements.length > 0) {
+          telemetry.track('voice_completed', { count: movements.length }, TELEMETRY_PRIORITY.MEDIUM);
+        } else {
+          telemetry.track('voice_empty_result', {}, TELEMETRY_PRIORITY.MEDIUM);
+        }
         if (!mountedRef.current) return;
         dispatch({
           type: 'patch',
@@ -261,6 +288,7 @@ export function useVoiceJobs(): UseVoiceJobsResult {
         }
         // The key is intentionally kept so a retry stays idempotent.
         const code = error instanceof VoiceApiError ? error.code : 'UNKNOWN';
+        telemetry.track('voice_send_failed', { error_code: code }, TELEMETRY_PRIORITY.LOW);
         dispatch({
           type: 'patch',
           jobId: idempotencyKey,
@@ -276,6 +304,8 @@ export function useVoiceJobs(): UseVoiceJobsResult {
         created_at: createdAt,
         idempotency_key: idempotencyKey,
       });
+
+      telemetry.track('voice_sent', { job_id: created.job_id }, TELEMETRY_PRIORITY.MEDIUM);
 
       dispatch({ type: 'remove', jobId: idempotencyKey });
       dispatch({
@@ -384,5 +414,34 @@ export function useVoiceJobs(): UseVoiceJobsResult {
     dispatch({ type: 'remove', jobId });
   }, []);
 
-  return { jobs, submit, retryLastSubmit, resumePending, clearJob };
+  /**
+   * Marks every in-flight job as `abandoned` after the background window
+   * expired. The job is kept in the reducer so the UI can report the timeout,
+   * but the poller is cancelled and the storage entry removed, so returning to
+   * the app never restarts a job the user already lost.
+   */
+  const abandonInFlightJobs = useCallback((): string[] => {
+    const abandoned: string[] = [];
+    for (const job of Object.values(jobsRef.current)) {
+      if (!IN_FLIGHT_PHASES.includes(job.phase)) continue;
+      pollersRef.current.get(job.jobId)?.cancel();
+      pollersRef.current.delete(job.jobId);
+      removeStoredVoiceJob(job.jobId);
+      dispatch({
+        type: 'patch',
+        jobId: job.jobId,
+        patch: {
+          phase: 'abandoned',
+          status: 'terminal_failed',
+          stage: null,
+          errorCode: 'TIMEOUT',
+          canRetry: false,
+        },
+      });
+      abandoned.push(job.jobId);
+    }
+    return abandoned;
+  }, []);
+
+  return { jobs, submit, retryLastSubmit, resumePending, clearJob, abandonInFlightJobs };
 }

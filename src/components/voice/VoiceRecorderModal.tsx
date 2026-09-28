@@ -18,8 +18,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { t } from '@/locales/i18n'
+import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { MAX_AUDIO_DURATION_MS } from '@/voice/contract'
 import { mapVoiceErrorToI18nKey } from '@/voice/errors'
+import { RESUME_WINDOW_MS } from '@/voice/storage'
 import { useVoiceJobs } from '@/voice/useVoiceJobs'
 import type { VoiceJobState } from '@/voice/useVoiceJobs'
 import { useVoiceQuarantine } from '@/voice/useVoiceQuarantine'
@@ -95,7 +97,7 @@ interface VoiceJobBridgeProps {
  */
 function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
   const { showToast } = useToast()
-  const { jobs, submit, retryLastSubmit } = useVoiceJobs()
+  const { jobs, submit, retryLastSubmit, resumePending, abandonInFlightJobs } = useVoiceJobs()
   const { loading: loadSaving, loadQuarantine, refresh } = useVoiceQuarantine()
 
   const [failedJob, setFailedJob] = useState<VoiceJobState | null>(null)
@@ -106,6 +108,9 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
   // Key of the last outcome already reported to the user, so a re-render never
   // toasts twice.
   const handledRef = useRef<string | null>(null)
+  // Timestamp of the last transition to `hidden`: measures how long the app
+  // stayed backgrounded before deciding resume vs. abandon on return.
+  const hiddenAtRef = useRef<number | null>(null)
 
   const onCloseRef = useRef(onClose)
   useEffect(() => {
@@ -114,6 +119,29 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
 
   const activeJob = useMemo(() => latestJob(jobs), [jobs])
   const inFlightJob = useMemo(() => latestInFlightJob(jobs), [jobs])
+
+  // Coming back to the foreground: jobs still inside the resume window restart
+  // their polling; jobs that stayed hidden longer than that are dead for the
+  // user and are closed locally. Going hidden needs no action: the pollers keep
+  // running and the telemetry layer flushes its own queue on the same event.
+  useEffect(() => {
+    const handleVisibilityChange = (): void => {
+      if (document.visibilityState === 'hidden') {
+        hiddenAtRef.current = Date.now()
+        return
+      }
+      const hiddenAt = hiddenAtRef.current
+      hiddenAtRef.current = null
+      resumePending()
+      if (hiddenAt === null || Date.now() - hiddenAt <= RESUME_WINDOW_MS) return
+      for (const jobId of abandonInFlightJobs()) {
+        telemetry.track('voice_job_abandoned', { job_id: jobId }, TELEMETRY_PRIORITY.LOW)
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [resumePending, abandonInFlightJobs])
 
   useEffect(() => {
     if (!activeJob) return
@@ -137,6 +165,7 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
       void (async () => {
         const ok = await loadQuarantine(jobId, movements)
         if (!ok) {
+          telemetry.track('voice_load_quarantine_failed', { job_id: jobId }, TELEMETRY_PRIORITY.HIGH)
           loadFailedRef.current = { jobId, movements }
           setLoadFailed(true)
           showToast(t('voice_load_failed'), 'error')
@@ -157,6 +186,17 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
       if (activeJob.errorCode === 'NETWORK') return
       showToast(t(mapVoiceErrorToI18nKey(activeJob.errorCode ?? 'UNKNOWN')), 'error')
       setFailedJob(activeJob)
+      return
+    }
+
+    if (activeJob.phase === 'abandoned') {
+      const key = `abandoned:${activeJob.jobId}`
+      if (handledRef.current === key) return
+      handledRef.current = key
+      // The job died while the app was backgrounded past the resume window. The
+      // quarantine may or may not have received the movements (the FAB polling
+      // is the source of truth), so only bother the user when the modal is up.
+      if (open) showToast(t('voice.voice_job_timeout'), 'error')
     }
   }, [activeJob, open, showToast, loadQuarantine])
 
@@ -178,6 +218,7 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
     if (!pending) return
     const ok = await refresh(pending.jobId, pending.movements)
     if (!ok) {
+      telemetry.track('voice_load_quarantine_failed', { job_id: pending.jobId }, TELEMETRY_PRIORITY.HIGH)
       showToast(t('voice_load_failed'), 'error')
       return
     }
@@ -240,6 +281,11 @@ function VoiceRecorderSession({
     void start()
   }, [start])
 
+  // The Session only exists while the modal is open, so mounting it is one open.
+  useEffect(() => {
+    telemetry.track('voice_recorder_opened', {}, TELEMETRY_PRIORITY.LOW)
+  }, [])
+
   // Release before 30s: send. Hard cut at 30s: never send (owner decision).
   useEffect(() => {
     if (state !== 'recorded' || !blob) return
@@ -249,6 +295,7 @@ function VoiceRecorderSession({
     }
     if (lastSubmittedBlobRef.current === blob) return
     lastSubmittedBlobRef.current = blob
+    telemetry.track('voice_recorded', {}, TELEMETRY_PRIORITY.MEDIUM)
     setSubmitted(true)
     void submit(blob)
   }, [state, blob, autoStopped, submit])
