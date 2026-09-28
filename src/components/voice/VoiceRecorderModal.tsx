@@ -46,15 +46,6 @@ function isInFlight(job: VoiceJobState): boolean {
   return IN_FLIGHT_PHASES.includes(job.phase)
 }
 
-/** Newest job by creation time; the store keys jobs by id, so insertion order is not enough. */
-function latestJob(jobs: Record<string, VoiceJobState>): VoiceJobState | null {
-  let latest: VoiceJobState | null = null
-  for (const job of Object.values(jobs)) {
-    if (!latest || job.createdAt > latest.createdAt) latest = job
-  }
-  return latest
-}
-
 function latestInFlightJob(jobs: Record<string, VoiceJobState>): VoiceJobState | null {
   let latest: VoiceJobState | null = null
   for (const job of Object.values(jobs)) {
@@ -105,9 +96,10 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
   // modal offers a retry instead of closing and losing the movements.
   const [loadFailed, setLoadFailed] = useState(false)
   const loadFailedRef = useRef<{ jobId: string; movements: VoiceMovement[] } | null>(null)
-  // Key of the last outcome already reported to the user, so a re-render never
-  // toasts twice.
-  const handledRef = useRef<string | null>(null)
+  // Outcome keys already reported to the user, so a re-render never toasts
+  // twice. Now a Set: sending several audios back to back is the normal flow,
+  // so several jobs can be in flight (and complete) at once.
+  const handledRef = useRef<Set<string>>(new Set())
   // Timestamp of the last transition to `hidden`: measures how long the app
   // stayed backgrounded before deciding resume vs. abandon on return.
   const hiddenAtRef = useRef<number | null>(null)
@@ -117,7 +109,6 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
     onCloseRef.current = onClose
   }, [onClose])
 
-  const activeJob = useMemo(() => latestJob(jobs), [jobs])
   const inFlightJob = useMemo(() => latestInFlightJob(jobs), [jobs])
 
   // Coming back to the foreground: jobs still inside the resume window restart
@@ -144,64 +135,80 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
   }, [resumePending, abandonInFlightJobs])
 
   useEffect(() => {
-    if (!activeJob) return
-
-    if (activeJob.phase === 'completed') {
-      const key = `completed:${activeJob.jobId}`
-      if (handledRef.current === key) return
-      handledRef.current = key
-      setFailedJob(null)
-      const jobId = activeJob.jobId
-      const movements = activeJob.result?.movements ?? []
-      // An empty result is a valid outcome, but nothing reaches the quarantine:
-      // a success toast would promise a movement that does not exist.
-      if (movements.length === 0) {
-        showToast(t('voice.empty_result'), 'info')
-        if (open) onCloseRef.current()
-        return
-      }
-      // The movements reach the quarantine before the success toast: a failed
-      // hand-off must never look like a successful load.
-      void (async () => {
-        const ok = await loadQuarantine(jobId, movements)
-        if (!ok) {
-          telemetry.track('voice_load_quarantine_failed', { job_id: jobId }, TELEMETRY_PRIORITY.HIGH)
-          loadFailedRef.current = { jobId, movements }
-          setLoadFailed(true)
-          showToast(t('voice_load_failed'), 'error')
-          return
+    // Every job is swept on each store change: with the modal closing on send,
+    // an older job can complete after a newer one and must still be reported
+    // exactly once (the `handledRef` key is per job and per outcome).
+    for (const job of Object.values(jobs)) {
+      if (job.phase === 'completed') {
+        const key = `completed:${job.jobId}`
+        if (handledRef.current.has(key)) continue
+        handledRef.current.add(key)
+        setFailedJob(null)
+        const jobId = job.jobId
+        const movements = job.result?.movements ?? []
+        // An empty result is a valid outcome, but nothing reaches the quarantine:
+        // a success toast would promise a movement that does not exist.
+        if (movements.length === 0) {
+          // The modal is usually already closed by now (early close on accept);
+          // if the user reopened it to record a new note, a completion must not
+          // rip it away mid-recording. The toast is the whole notification.
+          showToast(t('voice.empty_result'), 'info')
+          continue
         }
-        showToast(t('voice.sent'), 'success')
-        if (open) onCloseRef.current()
-      })()
-      return
-    }
-
-    if (activeJob.phase === 'failed') {
-      const key = `failed:${activeJob.jobId}:${activeJob.errorCode ?? 'UNKNOWN'}`
-      if (handledRef.current === key) return
-      handledRef.current = key
-      // A transport drop is silent (no toast), but the user still gets the
-      // send_error view with Retry / Record again instead of an endless spinner.
-      if (activeJob.errorCode === 'NETWORK') {
-        setFailedJob(activeJob)
-        return
+        // The movements reach the quarantine before the success toast: a failed
+        // hand-off must never look like a successful load.
+        void (async () => {
+          const ok = await loadQuarantine(jobId, movements)
+          if (!ok) {
+            telemetry.track('voice_load_quarantine_failed', { job_id: jobId }, TELEMETRY_PRIORITY.HIGH)
+            loadFailedRef.current = { jobId, movements }
+            setLoadFailed(true)
+            showToast(t('voice_load_failed'), 'error')
+            return
+          }
+          showToast(t('voice.sent'), 'success')
+          // No auto-close: with the modal closed the guard is a no-op, and if
+          // the user reopened it to record, completion must not close it
+          // mid-recording. Toast + FAB are the notification.
+        })()
+        continue
       }
-      showToast(t(mapVoiceErrorToI18nKey(activeJob.errorCode ?? 'UNKNOWN')), 'error')
-      setFailedJob(activeJob)
-      return
-    }
 
-    if (activeJob.phase === 'abandoned') {
-      const key = `abandoned:${activeJob.jobId}`
-      if (handledRef.current === key) return
-      handledRef.current = key
-      // The job died while the app was backgrounded past the resume window. The
-      // quarantine may or may not have received the movements (the FAB polling
-      // is the source of truth), so only bother the user when the modal is up.
-      if (open) showToast(t('voice.voice_job_timeout'), 'error')
+      if (job.phase === 'failed') {
+        const errorCode = job.errorCode ?? 'UNKNOWN'
+        const key = `failed:${job.jobId}:${errorCode}`
+        if (handledRef.current.has(key)) continue
+        handledRef.current.add(key)
+        if (errorCode === 'TIMEOUT') {
+          // Local processing deadline: retrying would only reuse the same job,
+          // so the user is pushed back to the recorder instead.
+          showToast(t('voice.voice_job_timeout'), 'error')
+        } else if (errorCode !== 'NETWORK') {
+          showToast(t(mapVoiceErrorToI18nKey(errorCode)), 'error')
+        } else if (!open) {
+          // Transport drop with the modal closed would otherwise be invisible:
+          // the user believes the audio is still processing. With the modal
+          // open it stays silent on purpose (the send_error view is the feedback).
+          showToast(t(mapVoiceErrorToI18nKey(errorCode)), 'error')
+        }
+        // Only the mounted modal can render the error view; when it is closed
+        // the toast above is the notification, and setting it here would hijack
+        // the next open (the user reopening to record would see a stale error).
+        if (open) setFailedJob(job)
+        continue
+      }
+
+      if (job.phase === 'abandoned') {
+        const key = `abandoned:${job.jobId}`
+        if (handledRef.current.has(key)) continue
+        handledRef.current.add(key)
+        // The job died while the app was backgrounded past the resume window. The
+        // quarantine may or may not have received the movements (the FAB polling
+        // is the source of truth), so only bother the user when the modal is up.
+        if (open) showToast(t('voice.voice_job_timeout'), 'error')
+      }
     }
-  }, [activeJob, open, showToast, loadQuarantine])
+  }, [jobs, open, showToast, loadQuarantine])
 
   const clearFailure = useCallback((): void => {
     setFailedJob(null)
@@ -209,12 +216,26 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
     loadFailedRef.current = null
   }, [])
 
+  // The backend accepted the upload: the user does not wait for the result. The
+  // bridge keeps polling (it outlives the modal) and reports the outcome, so the
+  // modal can close as soon as the job exists. `voice_sent` is tracked by the
+  // store itself, right before this callback runs.
+  const handleAccepted = useCallback((): void => {
+    showToast(t('voice.processing_bg'), 'info')
+    if (open) onCloseRef.current()
+  }, [showToast, open])
+
   const retry = useCallback((): void => {
-    // Re-arms the reporting key so a second failure is reported again.
-    handledRef.current = null
+    // Re-arms the reporting key for this job so a second failure is reported again.
+    const jobId = failedJob?.jobId
+    const errorCode = failedJob?.errorCode ?? 'UNKNOWN'
+    if (jobId) handledRef.current.delete(`failed:${jobId}:${errorCode}`)
     setFailedJob(null)
-    void retryLastSubmit()
-  }, [retryLastSubmit])
+    void (async () => {
+      const acceptedJobId = await retryLastSubmit()
+      if (acceptedJobId) handleAccepted()
+    })()
+  }, [retryLastSubmit, failedJob, handleAccepted])
 
   const retryLoad = useCallback(async (): Promise<void> => {
     const pending = loadFailedRef.current
@@ -243,6 +264,7 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
       submit={submit}
       retry={retry}
       clearFailure={clearFailure}
+      onAccepted={handleAccepted}
       onClose={onClose}
     />
   )
@@ -254,9 +276,11 @@ interface VoiceRecorderSessionProps {
   loadFailed: boolean
   loadSaving: boolean
   onRetryLoad: () => void
-  submit: (blob: Blob) => Promise<void>
+  /** Resolves to the accepted job id, or null when nothing was accepted. */
+  submit: (blob: Blob, signal: AbortSignal) => Promise<string | null>
   retry: () => void
   clearFailure: () => void
+  onAccepted: () => void
   onClose: () => void
 }
 
@@ -270,6 +294,7 @@ function VoiceRecorderSession({
   submit,
   retry,
   clearFailure,
+  onAccepted,
   onClose,
 }: VoiceRecorderSessionProps) {
   const { state, remainingSeconds, blob, autoStopped, error, start, stop, cancel } =
@@ -278,6 +303,8 @@ function VoiceRecorderSession({
   const [tooLong, setTooLong] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const lastSubmittedBlobRef = useRef<Blob | null>(null)
+  // Lets the X abort the upload instead of leaving it running in the dark.
+  const uploadAbortRef = useRef<AbortController | null>(null)
 
   // Auto-start on open, same as the legacy recorder.
   useEffect(() => {
@@ -300,8 +327,16 @@ function VoiceRecorderSession({
     lastSubmittedBlobRef.current = blob
     telemetry.track('voice_recorded', {}, TELEMETRY_PRIORITY.MEDIUM)
     setSubmitted(true)
-    void submit(blob)
-  }, [state, blob, autoStopped, submit])
+    // The modal only waits for the upload. Once the backend accepts the job it
+    // closes and the bridge takes over the result reporting.
+    const controller = new AbortController()
+    uploadAbortRef.current = controller
+    void (async () => {
+      const jobId = await submit(blob, controller.signal)
+      if (uploadAbortRef.current === controller) uploadAbortRef.current = null
+      if (jobId) onAccepted()
+    })()
+  }, [state, blob, autoStopped, submit, onAccepted])
 
   const handlePressStart = useCallback(() => {
     // The modal auto-starts on open: this only matters after a reset.
@@ -315,6 +350,9 @@ function VoiceRecorderSession({
   }, [state, stop])
 
   const handleClose = useCallback(() => {
+    // Closing during the upload cancels it: the store drops the local job and
+    // nothing is reported for an upload the user gave up on.
+    uploadAbortRef.current?.abort()
     cancel()
     onClose()
   }, [cancel, onClose])

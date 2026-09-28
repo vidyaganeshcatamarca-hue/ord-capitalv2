@@ -662,6 +662,7 @@ export const voice = {
   interpreting: "Interpretando el movimiento...",
   finalizing: "Finalizando...",
   sent: "Listo. El movimiento quedó en revisión.",
+  processing_bg: "Lo estamos procesando. Te avisamos cuando esté en la cuarentena.",
   not_sent_hint: "El audio no se envió.",
   seconds_left: "{seconds} s restantes",
   close: "Cerrar",

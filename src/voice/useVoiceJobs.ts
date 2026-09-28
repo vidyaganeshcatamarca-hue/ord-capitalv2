@@ -15,6 +15,7 @@ import {
   loadStoredVoiceJobs,
   removeStoredVoiceJob,
 } from './storage';
+import type { StoredVoiceJob } from './storage';
 import { runVoicePollingLoop, type VoicePollingController } from './useVoicePolling';
 import type { VoiceContext, VoiceJobCreate, VoiceJobStage, VoiceJobStatus, VoiceMovement } from './types';
 
@@ -45,8 +46,14 @@ export interface VoiceJobState {
 /** Public surface of `useVoiceJobs`. */
 export interface UseVoiceJobsResult {
   jobs: Record<string, VoiceJobState>;
-  submit(blob: Blob): Promise<void>;
-  retryLastSubmit(): Promise<void>;
+  /**
+   * Uploads the blob. Resolves to the backend job id once the job was accepted,
+   * or `null` when nothing was accepted (local validation failure, transport
+   * error, or an aborted upload).
+   */
+  submit(blob: Blob, signal?: AbortSignal): Promise<string | null>;
+  /** Re-uploads the last blob with the same idempotency key. Same result shape as `submit`. */
+  retryLastSubmit(): Promise<string | null>;
   resumePending(): { resumed: number; abandoned: number };
   clearJob(jobId: string): void;
   /**
@@ -168,89 +175,96 @@ export function useVoiceJobs(): UseVoiceJobsResult {
     []
   );
 
-  const startPolling = useCallback((jobId: string, accessToken: string): void => {
-    pollersRef.current.get(jobId)?.cancel();
-    telemetry.track('voice_polling_started', { job_id: jobId }, TELEMETRY_PRIORITY.LOW);
+  const startPolling = useCallback(
+    (jobId: string, accessToken: string, createdAt?: string): void => {
+      pollersRef.current.get(jobId)?.cancel();
+      telemetry.track('voice_polling_started', { job_id: jobId }, TELEMETRY_PRIORITY.LOW);
 
-    const controller = runVoicePollingLoop({
-      jobId,
-      accessToken,
-      onUpdate: (job) => {
-        if (!mountedRef.current) return;
-        dispatch({
-          type: 'patch',
-          jobId,
-          patch: {
-            phase: phaseFromStatus(job.status),
-            status: job.status,
-            stage: job.stage,
-            errorCode: null,
-          },
-        });
-      },
-      onCompleted: (result) => {
-        pollersRef.current.delete(jobId);
-        removeStoredVoiceJob(jobId);
-        const movements = result?.movements ?? [];
-        // The two outcomes are distinct products events: movements waiting in
-        // the quarantine vs. nothing to review at all.
-        if (movements.length > 0) {
-          telemetry.track('voice_completed', { count: movements.length }, TELEMETRY_PRIORITY.MEDIUM);
-        } else {
-          telemetry.track('voice_empty_result', {}, TELEMETRY_PRIORITY.MEDIUM);
-        }
-        if (!mountedRef.current) return;
-        dispatch({
-          type: 'patch',
-          jobId,
-          patch: {
-            phase: 'completed',
-            status: 'completed',
-            stage: 'done',
-            result,
-            errorCode: null,
-            canRetry: false,
-          },
-        });
-      },
-      onFailed: ({ code }) => {
-        pollersRef.current.delete(jobId);
-        removeStoredVoiceJob(jobId);
-        if (!mountedRef.current) return;
-        dispatch({
-          type: 'patch',
-          jobId,
-          patch: {
-            phase: 'failed',
-            status: 'terminal_failed',
-            stage: null,
-            errorCode: code,
-            canRetry: false,
-          },
-        });
-      },
-    });
+      const controller = runVoicePollingLoop({
+        jobId,
+        accessToken,
+        createdAt,
+        onUpdate: (job) => {
+          if (!mountedRef.current) return;
+          dispatch({
+            type: 'patch',
+            jobId,
+            patch: {
+              phase: phaseFromStatus(job.status),
+              status: job.status,
+              stage: job.stage,
+              errorCode: null,
+            },
+          });
+        },
+        onCompleted: (result) => {
+          pollersRef.current.delete(jobId);
+          removeStoredVoiceJob(jobId);
+          const movements = result?.movements ?? [];
+          // The two outcomes are distinct products events: movements waiting in
+          // the quarantine vs. nothing to review at all.
+          if (movements.length > 0) {
+            telemetry.track('voice_completed', { count: movements.length }, TELEMETRY_PRIORITY.MEDIUM);
+          } else {
+            telemetry.track('voice_empty_result', {}, TELEMETRY_PRIORITY.MEDIUM);
+          }
+          if (!mountedRef.current) return;
+          dispatch({
+            type: 'patch',
+            jobId,
+            patch: {
+              phase: 'completed',
+              status: 'completed',
+              stage: 'done',
+              result,
+              errorCode: null,
+              canRetry: false,
+            },
+          });
+        },
+        onFailed: ({ code }) => {
+          // Covers the local deadline (`TIMEOUT`) and every backend failure: the
+          // poller is released and the job is no longer resumable.
+          pollersRef.current.get(jobId)?.cancel();
+          pollersRef.current.delete(jobId);
+          removeStoredVoiceJob(jobId);
+          if (!mountedRef.current) return;
+          dispatch({
+            type: 'patch',
+            jobId,
+            patch: {
+              phase: 'failed',
+              status: 'terminal_failed',
+              stage: null,
+              errorCode: code,
+              canRetry: false,
+            },
+          });
+        },
+      });
 
-    pollersRef.current.set(jobId, controller);
-  }, []);
+      pollersRef.current.set(jobId, controller);
+    },
+    []
+  );
 
   const runUpload = useCallback(
-    async (blob: Blob, idempotencyKey: string): Promise<void> => {
+    async (blob: Blob, idempotencyKey: string, signal?: AbortSignal): Promise<string | null> => {
       const currentContext = contextRef.current;
       if (!currentContext) {
         dispatchLocalFailure(idempotencyKey, 'CONTEXT_UNAVAILABLE', false);
-        return;
+        return null;
       }
       if (!validateContextSize(currentContext)) {
         dispatchLocalFailure(idempotencyKey, 'CONTEXT_TOO_LARGE', false);
-        return;
+        return null;
       }
 
       const accessToken = await readAccessToken();
-      if (!mountedRef.current) return;
+      if (!mountedRef.current) return null;
       if (!accessToken) {
         dispatchLocalFailure(idempotencyKey, 'UNAUTHORIZED', false);
-        return;
+        return null;
       }
 
       // Kept so `retryLastSubmit` can reuse the exact blob and key.
@@ -280,11 +294,13 @@ export function useVoiceJobs(): UseVoiceJobsResult {
           language: DEFAULT_VOICE_LANGUAGE,
           context: currentContext,
           accessToken,
+          signal,
         });
       } catch (error) {
         if (isAbortError(error)) {
+          // The user closed the modal mid-upload: drop the local job silently.
           dispatch({ type: 'remove', jobId: idempotencyKey });
-          return;
+          return null;
         }
         // The key is intentionally kept so a retry stays idempotent.
         const code = error instanceof VoiceApiError ? error.code : 'UNKNOWN';
@@ -294,10 +310,10 @@ export function useVoiceJobs(): UseVoiceJobsResult {
           jobId: idempotencyKey,
           patch: { phase: 'failed', errorCode: code, canRetry: true },
         });
-        return;
+        return null;
       }
 
-      if (!mountedRef.current) return;
+      if (!mountedRef.current) return null;
 
       addStoredVoiceJob({
         job_id: created.job_id,
@@ -323,52 +339,56 @@ export function useVoiceJobs(): UseVoiceJobsResult {
         },
       });
 
-      startPolling(created.job_id, accessToken);
+      startPolling(created.job_id, accessToken, createdAt);
+      return created.job_id;
     },
     [dispatchLocalFailure, startPolling]
   );
 
   const submit = useCallback(
-    async (blob: Blob): Promise<void> => {
+    async (blob: Blob, signal?: AbortSignal): Promise<string | null> => {
+      // A fresh key per submit: each send is an independent job, never a reuse
+      // of the previous one (only `retryLastSubmit` reuses its own key).
       const idempotencyKey = crypto.randomUUID();
 
       const audioCheck = validateAudioBlob(blob);
       if (!audioCheck.ok) {
         const reason = audioCheck.reason === 'too_big' ? 'AUDIO_TOO_BIG' : 'EMPTY';
         dispatchLocalFailure(idempotencyKey, reason, false);
-        return;
+        return null;
       }
 
-      await runUpload(blob, idempotencyKey);
+      return runUpload(blob, idempotencyKey, signal);
     },
     [dispatchLocalFailure, runUpload]
   );
 
-  const retryLastSubmit = useCallback(async (): Promise<void> => {
+  const retryLastSubmit = useCallback(async (): Promise<string | null> => {
     const pending = lastSubmitRef.current;
-    if (!pending) return;
-    await runUpload(pending.blob, pending.idempotencyKey);
+    if (!pending) return null;
+    return runUpload(pending.blob, pending.idempotencyKey);
   }, [runUpload]);
 
   const resumePolling = useCallback(
-    async (jobIds: string[]): Promise<void> => {
+    async (storedJobs: StoredVoiceJob[]): Promise<void> => {
       const accessToken = await readAccessToken();
       if (!mountedRef.current) return;
       if (!accessToken) {
         // No session means there is nothing to poll: surface it instead of
         // leaving the jobs stuck in `processing` forever.
-        for (const jobId of jobIds) {
-          removeStoredVoiceJob(jobId);
+        for (const storedJob of storedJobs) {
+          removeStoredVoiceJob(storedJob.job_id);
           dispatch({
             type: 'patch',
-            jobId,
+            jobId: storedJob.job_id,
             patch: { phase: 'failed', errorCode: 'UNAUTHORIZED', canRetry: false },
           });
         }
         return;
       }
-      for (const jobId of jobIds) {
-        startPolling(jobId, accessToken);
+      for (const storedJob of storedJobs) {
+        // The stored `created_at` anchors the deadline across resumes.
+        startPolling(storedJob.job_id, accessToken, storedJob.created_at);
       }
     },
     [startPolling]
@@ -402,7 +422,7 @@ export function useVoiceJobs(): UseVoiceJobsResult {
     }
 
     // Polling startup needs the session token, which is resolved asynchronously.
-    void resumePolling(stored.map((storedJob) => storedJob.job_id));
+    void resumePolling(stored);
 
     return { resumed: stored.length, abandoned };
   }, [resumePolling]);

@@ -15,6 +15,15 @@ export const POLL_DELAYS_MS = [1000, 3000, 7000, 15000, 30000] as const;
 /** Steady-state polling interval. */
 export const POLL_INTERVAL_MAX_MS = 30000;
 
+/**
+ * Hard ceiling for a single job's processing, in milliseconds.
+ *
+ * Measured from the job's `created_at` (not from the moment the loop starts), so
+ * a job resumed later inherits the remaining time instead of restarting it: a
+ * job resumed after the ceiling already passed fails without a single request.
+ */
+export const MAX_POLLING_DURATION_MS = 180_000;
+
 /** Consecutive tolerated failures before the loop gives up. */
 export const MAX_CONSECUTIVE_FAILURES = 3;
 
@@ -30,6 +39,11 @@ export interface VoicePollingController {
 export interface RunVoicePollingLoopInput {
   jobId: string;
   accessToken: string;
+  /**
+   * Job creation time (ISO). Anchors the processing deadline so resumes keep the
+   * original clock. When absent or unparseable, the loop's own start is used.
+   */
+  createdAt?: string;
   onUpdate?: (job: VoiceJob) => void;
   onCompleted: (result: { movements: VoiceMovement[] }) => void;
   onFailed: (info: { code: string }) => void;
@@ -46,12 +60,19 @@ function isRetryable(error: VoiceApiError): boolean {
  * Terminates exactly once, either through `onCompleted` or `onFailed`.
  */
 export function runVoicePollingLoop(input: RunVoicePollingLoopInput): VoicePollingController {
-  const { jobId, accessToken, onUpdate, onCompleted, onFailed, signal } = input;
+  const { jobId, accessToken, createdAt, onUpdate, onCompleted, onFailed, signal } = input;
 
   let cancelled = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let attempt = 0;
   let consecutiveFailures = 0;
+
+  // Deadline base: the persisted job creation time when it is usable, otherwise
+  // the moment this loop started.
+  const startAt = Date.now();
+  const parsedCreatedAt = createdAt ? Date.parse(createdAt) : Number.NaN;
+  const deadlineBase = Number.isFinite(parsedCreatedAt) ? parsedCreatedAt : startAt;
+  const deadlineExceeded = (): boolean => Date.now() - deadlineBase > MAX_POLLING_DURATION_MS;
 
   const clearTimer = (): void => {
     if (timer !== null) {
@@ -89,6 +110,11 @@ export function runVoicePollingLoop(input: RunVoicePollingLoopInput): VoicePolli
 
   const tick = async (): Promise<void> => {
     if (cancelled) return;
+    // Checked before the request so an expired job never hits the network.
+    if (deadlineExceeded()) {
+      fail('TIMEOUT');
+      return;
+    }
 
     let job: VoiceJob;
     try {
@@ -143,6 +169,9 @@ export function runVoicePollingLoop(input: RunVoicePollingLoopInput): VoicePolli
 
   if (signal?.aborted) {
     cancelled = true;
+  } else if (deadlineExceeded()) {
+    // Resumed past the ceiling: fail immediately instead of polling once.
+    fail('TIMEOUT');
   } else {
     signal?.addEventListener('abort', cancel);
     scheduleNext();
@@ -155,6 +184,7 @@ export function runVoicePollingLoop(input: RunVoicePollingLoopInput): VoicePolli
 export interface UseVoicePollingInput {
   jobId: string | null;
   accessToken: string | null;
+  createdAt?: string;
   enabled?: boolean;
   onUpdate?: (job: VoiceJob) => void;
   onCompleted: (result: { movements: VoiceMovement[] }) => void;
@@ -166,7 +196,7 @@ export interface UseVoicePollingInput {
  * The loop is cancelled on unmount and whenever `jobId` / `accessToken` / `enabled` change.
  */
 export function useVoicePolling(input: UseVoicePollingInput): void {
-  const { jobId, accessToken, enabled = true, onUpdate, onCompleted, onFailed } = input;
+  const { jobId, accessToken, createdAt, enabled = true, onUpdate, onCompleted, onFailed } = input;
 
   const onUpdateRef = useRef(onUpdate);
   const onCompletedRef = useRef(onCompleted);
@@ -184,11 +214,12 @@ export function useVoicePolling(input: UseVoicePollingInput): void {
     const controller = runVoicePollingLoop({
       jobId,
       accessToken,
+      createdAt,
       onUpdate: (job) => onUpdateRef.current?.(job),
       onCompleted: (result) => onCompletedRef.current(result),
       onFailed: (info) => onFailedRef.current(info),
     });
 
     return () => controller.cancel();
-  }, [enabled, jobId, accessToken]);
+  }, [enabled, jobId, accessToken, createdAt]);
 }
