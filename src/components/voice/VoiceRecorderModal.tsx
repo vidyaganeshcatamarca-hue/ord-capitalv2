@@ -181,9 +181,12 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
       const key = `failed:${activeJob.jobId}:${activeJob.errorCode ?? 'UNKNOWN'}`
       if (handledRef.current === key) return
       handledRef.current = key
-      // A transport drop is not worth a toast: the store already rolled the flow
-      // back and the user can simply record again.
-      if (activeJob.errorCode === 'NETWORK') return
+      // A transport drop is silent (no toast), but the user still gets the
+      // send_error view with Retry / Record again instead of an endless spinner.
+      if (activeJob.errorCode === 'NETWORK') {
+        setFailedJob(activeJob)
+        return
+      }
       showToast(t(mapVoiceErrorToI18nKey(activeJob.errorCode ?? 'UNKNOWN')), 'error')
       setFailedJob(activeJob)
       return
