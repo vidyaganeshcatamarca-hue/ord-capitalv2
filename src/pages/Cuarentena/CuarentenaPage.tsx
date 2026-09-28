@@ -251,7 +251,7 @@ export function CuarentenaPage() {
                   <div className="cuarentena-item-header">
                     <div>
                       <h4 style={{ margin: 0, fontSize: 'calc(16px * var(--font-scale))', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <CategoryIcon name={TYPE_ICON[tipo]} size={18} /> {p.categoria_nombre || t('quarantine_no_detail')}
+                        <CategoryIcon name={TYPE_ICON[tipo]} size={18} /> {p.categoria_nombre ? t(p.categoria_nombre) : t('quarantine_no_detail')}
                       </h4>
                       <p style={{ margin: '4px 0 0 0', fontSize: 'calc(14px * var(--font-scale))', color: 'var(--text-2)' }}>
                         {p.detalle || t('quarantine_no_detail')}
@@ -324,7 +324,7 @@ export function CuarentenaPage() {
           isOpen={!!itemToReject}
           title={t('confirm_reject_item_title')}
           message={t('confirm_reject_item_msg', {
-            desc: itemToReject.detalle || itemToReject.categoria_nombre || '',
+            desc: itemToReject.detalle || (itemToReject.categoria_nombre ? t(itemToReject.categoria_nombre) : ''),
             monto: formatAmount(itemToReject.monto, itemCurrency(itemToReject)),
           })}
           confirmText={t('btn_reject_and_delete')}

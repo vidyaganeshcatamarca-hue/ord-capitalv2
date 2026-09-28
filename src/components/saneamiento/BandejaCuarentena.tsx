@@ -449,7 +449,7 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
                       ) : (
                         <CategoryIcon name={MOVEMENT_TYPE_ICON[tipo]} size={18} />
                       )}
-                      <span>{item.categoria_nombre || t('saneamiento_sin_categoria')}</span>
+                      <span>{item.categoria_nombre ? t(item.categoria_nombre) : t('saneamiento_sin_categoria')}</span>
                       {isVoice && (
                         <span className="saneamiento-badge cuarentena-badge-tipo">
                           {t(`cuarentena_tipo_${tipo}`)}
@@ -627,7 +627,7 @@ function AmbiguitySelector({ name, titleKey, candidates, disabled, onSelect }: A
               onChange={() => onSelect(candidate)}
             />
             <span className="cuarentena-ambig-texto">
-              <span className="cuarentena-ambig-nombre">{candidate.name}</span>
+              <span className="cuarentena-ambig-nombre">{t(candidate.name)}</span>
               {candidate.parent_name ? (
                 <span className="cuarentena-ambig-padre">{candidate.parent_name}</span>
               ) : null}
