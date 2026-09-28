@@ -61,6 +61,11 @@ export function CuarentenaPage() {
 
   useEffect(() => {
     fetchData()
+    // A voice job landing in the quarantine refreshes the list without
+    // requiring the user to leave and come back.
+    const onVoiceLanded = () => fetchData()
+    window.addEventListener('voice-quarantine-landed', onVoiceLanded)
+    return () => window.removeEventListener('voice-quarantine-landed', onVoiceLanded)
   }, [fetchData])
 
   const visibles = useMemo(

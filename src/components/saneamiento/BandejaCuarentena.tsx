@@ -193,6 +193,10 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
 
   useEffect(() => {
     fetchItems()
+    // A voice job landing in the quarantine refreshes the tray.
+    const onVoiceLanded = () => fetchItems()
+    window.addEventListener('voice-quarantine-landed', onVoiceLanded)
+    return () => window.removeEventListener('voice-quarantine-landed', onVoiceLanded)
   }, [fetchItems])
 
   // Changing the filter changes what is visible: a selection made under the

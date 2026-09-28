@@ -205,6 +205,10 @@ export function useVoiceJobs(): UseVoiceJobsResult {
           // the quarantine vs. nothing to review at all.
           if (movements.length > 0) {
             telemetry.track('voice_completed', { count: movements.length }, TELEMETRY_PRIORITY.MEDIUM);
+            // Quarantine views (CuarentenaPage, BandejaCuarentena) reload when
+            // rows land: they load once on mount and only refresh on their own
+            // actions, so an external landing would stay invisible.
+            window.dispatchEvent(new CustomEvent('voice-quarantine-landed'));
           } else {
             telemetry.track('voice_empty_result', {}, TELEMETRY_PRIORITY.MEDIUM);
           }
