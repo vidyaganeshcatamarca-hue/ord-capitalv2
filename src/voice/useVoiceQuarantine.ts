@@ -59,10 +59,24 @@ export function useVoiceQuarantine(): UseVoiceQuarantineResult {
       setErrorI18nKey(null);
 
       try {
-        await rpc<VoiceQuarantineLoadRow[]>('fn_cargar_movimientos_voz', {
+        const rows = await rpc<VoiceQuarantineLoadRow[]>('fn_cargar_movimientos_voz', {
           p_job_id: jobId,
           p_movements: movements,
         });
+        // The RPC succeeds even when every movement was rejected per-movement
+        // (ok=false rows: CHECK violations or hard rejections never inserted).
+        // A row counts as landed by its pendiente_id, not by ok: invalid-type
+        // movements DO insert (parse_error in metadata) with ok=false.
+        const result = Array.isArray(rows) ? rows : []
+        const landed = result.filter((row) => row && row.pendiente_id != null).length
+        if (result.length > 0 && landed === 0) {
+          console.warn('voice quarantine load rejected every movement:', result)
+          setErrorI18nKey('voice_load_failed');
+          return false;
+        }
+        if (landed < result.length) {
+          console.warn('voice quarantine load partial:', { landed, total: result.length, rows: result })
+        }
         return true;
       } catch (err) {
         // Per-movement problems surface through the row metadata in the tray;
