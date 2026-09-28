@@ -24,10 +24,10 @@ const CUADRANTE_TO_BCG: Record<ResumenCuadrante['cuadrante_key'], keyof typeof B
 const CUADRANTE_ORDER: ResumenCuadrante['cuadrante_key'][] = ['dog', 'star', 'dilemma', 'cow']
 
 const MESSAGES: Record<ResumenCuadrante['cuadrante_key'], (monto: string) => string> = {
-  dog: (m) => `${t('bcg_dog_desc', { m })}`,
-  star: (m) => `Aportan valor y suman ${m}`,
-  dilemma: (m) => `Compras impulsivas por ${m}`,
-  cow: (m) => `Inversiones puntuales por ${m}`,
+  dog: (m) => t('bcg_resumen_dog_desc', { m }),
+  star: (m) => t('bcg_resumen_star_desc', { m }),
+  dilemma: (m) => t('bcg_resumen_dilemma_desc', { m }),
+  cow: (m) => t('bcg_resumen_cow_desc', { m }),
 }
 
 export function BCGResumenCuadrantes({ resumen, onCardClick }: BCGResumenCuadrantesProps) {

@@ -760,11 +760,21 @@ export const bcg = {
   bcg_cuadrante_dog: "Perros",
   bcg_cuadrante_sin_clasificar: "Sin clasificar",
   bcg_tooltip_toca: "Toca para calificar",
+  bcg_punto_tooltip: "{icono} {nombre} · Placer {placer}/10 · Frec {frec}/mes",
+
+  // Resumen por cuadrante (tarjetas de la matriz)
+  bcg_resumen_star_desc: "Aportan valor y suman {m}",
+  bcg_resumen_cow_desc: "Inversiones puntuales por {m}",
+  bcg_resumen_dilemma_desc: "Compras impulsivas por {m}",
+  bcg_resumen_dog_desc: "{m}/mes te están drenando",
 
   // Lista por cuadrante
   bcg_lista_titulo: "📋 Detalle por Cuadrante",
   bcg_lista_count: "({count} categorías)",
   bcg_lista_monto_total: "Total: {monto}",
+  bcg_acordeon_placer_label: "Placer",
+  bcg_acordeon_frec_label: "Frec",
+  bcg_acordeon_frec_valor: "{frec}/mes",
 
   // Detalle de categoría
   bcg_detalle_stats_titulo: "📊 Estadísticas del Mes",
@@ -802,6 +812,9 @@ export const bcg = {
   bcg_podora_placer_label: "Placer",
   bcg_podora_flex_label: "Flexibilidad",
   bcg_podora_gasto_mensual: "Gasto mensual",
+  bcg_podora_gasto_por_mes: "{monto} / mes",
+  bcg_podora_ahorro_por_mes: "−{monto} / mes",
+  bcg_podora_ahorras_label: "Ahorras",
   bcg_podora_impacto_titulo: "📊 Impacto Total",
   bcg_podora_impacto_leyenda: "Si eliminaras estos {count} gastos:",
   bcg_podora_impacto_mensual: "Ahorras {monto}/mes",

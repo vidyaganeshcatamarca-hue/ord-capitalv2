@@ -105,9 +105,9 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
                 <div className="bcg-podora-cand-body">
                   <strong>{catalogDisplayName(c.nombre)}</strong>
                   <div className="bcg-podora-cand-stats">
-                    <span>Placer: <strong>{c.utilidad_placer}/10</strong></span>
-                    <span>Flex: <strong>{c.flexibilidad_recorte}/10</strong></span>
-                    <span className="bcg-podora-cand-mensual">{formatMoneyARS(c.gasto_prom_90d)} / mes</span>
+                    <span>{t('bcg_podora_placer_label')}: <strong>{c.utilidad_placer}/10</strong></span>
+                    <span>{t('bcg_podora_flex_label')}: <strong>{c.flexibilidad_recorte}/10</strong></span>
+                    <span className="bcg-podora-cand-mensual">{t('bcg_podora_gasto_por_mes', { monto: formatMoneyARS(c.gasto_prom_90d) })}</span>
                   </div>
                 </div>
                 <button
@@ -135,7 +135,7 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
                 />
                 <strong className="bcg-podora-cand-pct">{pct}%</strong>
                 <span className="bcg-podora-cand-ahorro">
-                  {ahorro > 0 ? `−${formatMoneyARS(ahorro)} / mes` : '—'}
+                  {ahorro > 0 ? t('bcg_podora_ahorro_por_mes', { monto: formatMoneyARS(ahorro) }) : '—'}
                 </span>
               </div>
             </article>
@@ -148,7 +148,7 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
         <p>{t('bcg_podora_impacto_leyenda', { count: candidatos.length })}</p>
         <div className="bcg-podora-impacto-grid">
           <div>
-            <span>{t('bcg_podora_impacto_mensual', { monto: '' }).replace('Ahorras ', 'Ahorras')}</span>
+            <span>{t('bcg_podora_ahorras_label')}</span>
             <strong>{formatMoneyARS(totalMensual)}</strong>
           </div>
           <div>

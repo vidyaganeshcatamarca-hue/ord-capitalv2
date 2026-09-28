@@ -136,7 +136,7 @@ export function BCGDetalleCategoria() {
           </div>
           <div>
             <span>{t('bcg_detalle_frecuencia_label')}</span>
-            <strong>{point.coordenada_x} / mes</strong>
+            <strong>{t('bcg_podora_gasto_por_mes', { monto: point.coordenada_x })}</strong>
           </div>
           <div>
             <span>{t('bcg_detalle_promedio_label')}</span>

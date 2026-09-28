@@ -73,8 +73,8 @@ export function BCGCuadranteAcordeon({ cuadranteKey, items, onItemClick, default
                   {it.rubro_padre && <span className="bcg-acordeon-item-padre">{catalogDisplayName(it.rubro_padre)}</span>}
                 </div>
                 <div className="bcg-acordeon-item-meta">
-                  <span>Placer: <strong>{it.coordenada_y}/10</strong></span>
-                  <span>Frec: <strong>{it.coordenada_x}/mes</strong></span>
+                  <span>{t('bcg_acordeon_placer_label')}: <strong>{it.coordenada_y}/10</strong></span>
+                  <span>{t('bcg_acordeon_frec_label')}: <strong>{t('bcg_acordeon_frec_valor', { frec: it.coordenada_x })}</strong></span>
                 </div>
                 <span className="bcg-acordeon-item-monto">{formatMoneyARS(it.monto_total)}</span>
               </li>

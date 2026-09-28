@@ -99,7 +99,7 @@ export function BCGScatterPlot({ points, onPointClick, emptyMessage }: BCGScatte
             >
               <circle cx={cx} cy={cy} r={r} fill={fill} className="bcg-point-circle" />
               <text x={cx} y={cy + 3} className="bcg-point-icon" textAnchor="middle">{p.icono}</text>
-              <title>{`${p.icono} ${catalogDisplayName(p.nombre)} · Placer ${p.coordenada_y}/10 · Frec ${p.coordenada_x}/mes`}</title>
+              <title>{t('bcg_punto_tooltip', { icono: p.icono, nombre: catalogDisplayName(p.nombre), placer: p.coordenada_y, frec: p.coordenada_x })}</title>
             </g>
           )
         })}
