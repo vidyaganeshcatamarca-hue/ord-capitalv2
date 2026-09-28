@@ -167,6 +167,9 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
             return
           }
           showToast(t('voice.sent'), 'success')
+          // The rows are in the DB now (loadQuarantine verified): quarantine
+          // views reload so the item shows up without re-navigating.
+          window.dispatchEvent(new CustomEvent('voice-quarantine-landed'))
           // No auto-close: with the modal closed the guard is a no-op, and if
           // the user reopened it to record, completion must not close it
           // mid-recording. Toast + FAB are the notification.
@@ -249,6 +252,7 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
     loadFailedRef.current = null
     setLoadFailed(false)
     showToast(t('voice.sent'), 'success')
+    window.dispatchEvent(new CustomEvent('voice-quarantine-landed'))
     if (open) onCloseRef.current()
   }, [refresh, showToast, open])
 
