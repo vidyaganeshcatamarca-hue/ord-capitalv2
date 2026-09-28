@@ -195,7 +195,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   pay_overpay_cuota_already_selected: "Ya seleccionada",
   pay_overpay_cuota_insufficient: "No alcanza para esta cuota",
   pay_overpay_cuota_position: "Cuota {pos} de {total}",
-   pay_overpay_leftover_summary: "Sobrante restante: {monto}   va al próximo resumen",
+   pay_overpay_leftover_summary: "Sobrante restante: {monto}  → va al próximo resumen",
    pay_overpay_assign_button: "Asignar excedente",
    pay_multi_add_wallet: "+ Agregar otra cuenta",
    pay_multi_remove_wallet: "Quitar",
@@ -241,7 +241,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
     pay_overpay_warning_line: "Estás pagando {monto} de más",
    toast_select_source_wallet: "Por favor, selecciona una billetera de origen para realizar el pago.",
    btn_registering: "Registrando...",
-   btn_confirm_payment: " Confirmar Pago",
+   btn_confirm_payment: "✅ Confirmar Pago",
    card_payment_success: "Pago registrado. Las cuotas del ciclo fueron liquidadas.",
   installment_purchase_title: "Compra en Cuotas",
   installment_purchase_amount_label: "Monto Total de la Compra *",
@@ -252,28 +252,28 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   installment_purchase_estimated_quota: "Cuota mensual estimada",
   installment_purchase_months_duration_singular: "durante {count} mes",
   installment_purchase_months_duration_plural: "durante {count} meses",
-  btn_register_purchase: " Registrar Compra",
-  card_detail_limit_available: "° Límite Disponible",
+  btn_register_purchase: "✅ Registrar Compra",
+  card_detail_limit_available: "💰 Límite Disponible",
   card_detail_limit_of_total: "de {total}",
-  card_detail_next_due: " Próximo Vencimiento",
+  card_detail_next_due: "📅 Próximo Vencimiento",
   card_detail_due_day_in: "Día {day} ({days} días)",
   card_detail_due_estimated: "Estimado: {amount}",
   msg_refinanciacion_pago_minimo: "Saldo refinanciado (pago mínimo)",
   msg_compra_en_cuotas_default: "Compra en cuotas",
   btn_pay_resumen: "Pagar Resumen",
   btn_register_installments: "Registrar Compra en Cuotas",
-  card_detail_stress_thermometer: " Termómetro de Estrés",
+  card_detail_stress_thermometer: "📊 Termómetro de Estrés",
   card_detail_stress_index: "Índice estrés",
   card_detail_next_installment: "Próxima cuota",
   card_detail_payment_capacity: "Cap. de pago",
   card_detail_no_data: "Sin datos suficientes para el análisis.",
-  card_detail_pending_installments: "ï¸ Cuotas Pendientes",
+  card_detail_pending_installments: "🛍️ Cuotas Pendientes",
   card_detail_no_installments: "No tienes compras en cuotas pendientes para esta tarjeta.",
   card_detail_installment_info: "Cuota {pos} de {total} - Vence el {date}",
-  card_detail_payment_history: " Historial de Pagos",
+  card_detail_payment_history: "📜 Historial de Pagos",
   card_detail_no_payments: "Sin pagos registrados para esta tarjeta",
   card_detail_payment_source: "desde {billetera}",
-  card_detail_liquidated_installments: " {count} cuotas liquidadas",
+  card_detail_liquidated_installments: "✅ {count} cuotas liquidadas",
   card_cierre_label: "cierre: día {day}",
   card_vence_label: "Vence",
   card_dias_label: "días",
@@ -306,17 +306,17 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   btn_all_deficit: "Todo el déficit",
   btn_confirm: "Confirmar",
   btn_transferring: "Transfiriendo...",
-  golden_rules_settings_title: "ï¸ % de Distribución de Ingresos",
+  golden_rules_settings_title: "⚙️ % de Distribución de Ingresos",
   golden_rules_settings_subtitle: "Distribución ideal de tu ingreso",
-  budget_mode_libertad_short: "ï¸ Anticipado",
+  budget_mode_libertad_short: "🕊️ Anticipado",
   budget_mode_base_cero_short: "Base Cero",
   cupo_needs: "Necesidades",
   cupo_wants: "Deseos",
   cupo_savings_investments: "Ahorro/Inversión",
   cupo_tithe: "Diezmo",
-  golden_rules_sum_ok: " Total: 100%    ¡Perfecto!",
-  golden_rules_sum_error: " ï¸ Total: {suma}%   Debe ser exactamente 100%",
-  golden_rules_cycle_start_day: " Día de inicio del ciclo",
+  golden_rules_sum_ok: "✅ Total: 100%  —  ¡Perfecto!",
+  golden_rules_sum_error: "⚠️ Total: {suma}%  — Debe ser exactamente 100%",
+  golden_rules_cycle_start_day: "📅 Día de inicio del ciclo",
   btn_save_rules: "Guardar Reglas",
   activate_base_cero_title: "Activar Modo Disciplina de Hierro",
   activate_base_cero_subtitle: "Estás por activar un compromiso serio",
@@ -325,7 +325,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   activate_base_cero_terms_3: "El sistema te confrontará visualmente con las consecuencias (sin bloquear).",
   activate_base_cero_confirm_prompt: "Para confirmar, escribe: ACEPTO. Importante: No podrás cambiar este modo hasta el mes siguiente.",
   btn_activate_discipline_confirm: "Activar Disciplina",
-  suggested_distribution_title: "¡ Sugerencia Inicial",
+  suggested_distribution_title: "💡 Sugerencia Inicial",
   suggested_distribution_desc: "Tienes {monto} de liquidez real. Distribución sugerida según tus Reglas de Oro:",
   suggested_distribution_tip: "Es normal tardar 2-3 meses en ajustar estos números a tu realidad. No te frustres si las primeras semanas requieres muchos ajustes.",
   suggested_distribution_empty: "Aún no tienes categorías configuradas. Configura tus rubros y subcuentas para generar una sugerencia automática.",
@@ -333,10 +333,10 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   btn_activating: "Activando...",
   btn_confirm_and_assign: "Confirmar y Asignar",
   hero_proyeccion_mes: "PROYECCIÓN DEL MES",
-  hero_base_cero_alcanzado: "¡BASE CERO ALCANZADO!  ",
+  hero_base_cero_alcanzado: "¡BASE CERO ALCANZADO!  ✅",
   hero_sobre_asignacion: "SOBRE-ASIGNACIÓN",
   hero_disponible_para_asignar: "DISPONIBLE PARA ASIGNAR",
-  hero_libertad_desc: "Modo libertad activo   presupuesta según tu ideal",
+  hero_libertad_desc: "Modo libertad activo  — presupuesta según tu ideal",
   hero_sobre_asignacion_desc: "Estás presupuestando dinero que no tienes",
   hero_base_cero_alcanzado_desc: "Cada peso tiene un destino asignado",
   hero_disponible_desc: "Dinero esperando destino",
@@ -352,7 +352,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   toast_insufficient_base_zero: "No puedes asignar más. Disponible: {monto}",
   toast_assign_budget_error: "Error al asignar presupuesto",
   toast_assigned_to: "asignado a",
-  toast_transfer_envelope_success: " Transferencia realizada entre sobres",
+  toast_transfer_envelope_success: "✅ Transferencia realizada entre sobres",
   toast_insufficient_funds_source_envelope: "Fondos insuficientes en el sobre de origen",
   toast_transfer_envelope_error: "Error al transferir entre sobres",
   toast_golden_rules_sum_100: "Los porcentajes deben sumar 100%",
@@ -366,7 +366,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
 
   // PresupuestosPage UI Elements
   budget_footer_tip_text: "Es normal ajustar los números en los primeros 2-3 meses. No te frustres si al principio requieres muchos cambios.",
-  budget_golden_rules_modal_sug_title: "¡ Sugerencia Inicial",
+  budget_golden_rules_modal_sug_title: "💡 Sugerencia Inicial",
   budget_golden_rules_modal_liquidity_info: "Tienes {monto} de liquidez real. Distribución sugerida según tus % de Distribución de Ingresos:",
   budget_golden_rules_modal_disclaimer_text: "Es normal tardar 2-3 meses en ajustar estos números a tu realidad. No te frustres si las primeras semanas requieres muchos ajustes.",
   budget_golden_rules_modal_no_categories: "No se encontraron gastos fijos ni variables para generar una sugerencia inicial. Podrás configurarlos luego.",
@@ -396,7 +396,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   budget_info_modo_anticipado: "Este modo de presupuesto te permite asignar un presupuesto para cada cuenta egreso libremente, es el recomendado para comenzar ya que no te exige asignar presupuesto en base a tu dinero real sino a tu previsión.",
   budget_info_modo_base_cero: "Este modo te disciplina. Recomendado si quieres ajustar tu gasto por cada cuenta egreso a tu disponibilidad real, ayudándote realmente a hacer un cambio de hábitos importante en tu administración personal.",
   budget_modal_title_golden_rules: "% Distribución ideal de tu ingreso",
-  budget_subtexto_anticipado: "Modo libertad activo   según tu dinero ideal",
+  budget_subtexto_anticipado: "Modo libertad activo  — según tu dinero ideal",
   budget_mode_anticipado: "Modo Libertad (Anticipado)",
   budget_rule_necesidades: "Necesidades",
   budget_rule_deseos: "Deseos",
@@ -419,7 +419,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   label_destination_account: "Cuenta Destino",
   placeholder_select_destination: "Selecciona destino...",
   label_when: "¿Cuándo?",
-  placeholder_select_category: " Selecciona una categoría...",
+  placeholder_select_category: "🔍 Selecciona una categoría...",
   unit_subaccounts_singular: "{count} sub-categoría",
   unit_subaccounts_plural: "{count} sub-categorías",
   btn_add_subcategory: "Agregar sub-categoría",
@@ -437,7 +437,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   toast_same_accounts: "Las cuentas de origen y destino no pueden ser iguales.",
 
   // BilleterasPage / BilleteraDetailModal
-  wallets_maintenance_required: " ï¸ Mantenimiento Requerido ({count})",
+  wallets_maintenance_required: "⚠️ Mantenimiento Requerido ({count})",
   wallet_alert_negative_balance: "Saldo en descubierto / negativo. ",
   wallet_alert_unreconciled: "Lleva más de 10 días sin conciliar. ",
   wallet_alert_no_movements: "Sin movimientos en 60 días (candidata a archivar).",
@@ -466,26 +466,26 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   income_sources_toolbar_desc: "Fuentes que generan tus ingresos",
   btn_add_source: "+ Fuente",
   income_sources_empty_title: "Sin fuentes de ingreso",
-  income_sources_empty_desc: "Crea las categorías de donde proviene tu dinero (Salario, Freelance, Alquiler ¦)",
+  income_sources_empty_desc: "Crea las categorías de donde proviene tu dinero (Salario, Freelance, Alquiler …)",
   btn_create_source: "+ Crear Fuente",
   categories_title_page: "Categorías",
   categories_subtitle_page: "Organiza tus movimientos financieros",
   tab_expenses: "Egresos",
   tab_incomes: "Ingresos",
   rubro_form_title_edit: "Editar Rubro",
-  rubro_form_title_new: " Nuevo Rubro",
+  rubro_form_title_new: "➕ Nuevo Rubro",
   rubro_form_name_placeholder: "Ej: Alimentación",
   rubro_form_classification_label: "Clasificación Presupuestaria",
   btn_create_rubro_submit: "Crear Rubro",
   toast_income_source_updated_success: "Fuente de ingreso actualizada",
   toast_income_source_created_success: "Fuente de ingreso creada",
   source_form_title_edit: "Editar Fuente",
-  source_form_title_new: " Nueva Fuente",
+  source_form_title_new: "➕ Nueva Fuente",
   source_form_name_placeholder: "Ej: Salario, Freelance, Alquiler",
   source_form_desc_placeholder: "Ej: Ingreso mensual fijo",
   btn_create_source_submit: "Crear Fuente",
   subcat_form_title_edit: "Editar Subcuenta",
-  subcat_form_title_new: " Nueva Subcuenta",
+  subcat_form_title_new: "➕ Nueva Subcuenta",
   subcat_form_name_placeholder: "Ej: Supermercado",
   btn_create_subcat_submit: "Crear Subcuenta",
   tooltip_edit_rubro: "Editar rubro",
@@ -502,12 +502,12 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   quarantine_stat_pending: "Pendientes",
   quarantine_stat_total_ars: "Total ARS Retenido",
   quarantine_stat_total_usd: "Total USD Retenido",
-  btn_approve_all: " Aprobar Todos",
+  btn_approve_all: "✅ Aprobar Todos",
   quarantine_item_received_date: "Ingresó: ",
   quarantine_reason_out_of_budget: "Fuera de Presupuesto",
   quarantine_reason_impulsive_ant: "Gasto Impulsivo/Hormiga",
-  btn_reject: " Rechazar",
-  btn_approve: " Aprobar",
+  btn_reject: "❌ Rechazar",
+  btn_approve: "✅ Aprobar",
   quarantine_no_detail: "Sin detalle",
   confirm_approve_all_title: "Aprobar todos los gastos",
   confirm_approve_all_msg: "¿Estás seguro que deseas aprobar los {count} gastos en cuarentena? Impactarán inmediatamente en tu presupuesto.",
@@ -536,7 +536,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   strength_medium: "Media",
   strength_strong: "Fuerte",
   btn_create_my_space: "Crear mi espacio",
-  btn_back_to_social: " Volver a Redes Sociales",
+  btn_back_to_social: "← Volver a Redes Sociales",
   btn_skip: "Saltar",
   btn_loading: "Cargando...",
   divider_or: "o",
@@ -761,23 +761,23 @@ export const bcg = {
   bcg_tooltip_toca: "Toca para calificar",
 
   // Lista por cuadrante
-  bcg_lista_titulo: " Detalle por Cuadrante",
+  bcg_lista_titulo: "📋 Detalle por Cuadrante",
   bcg_lista_count: "({count} categorías)",
   bcg_lista_monto_total: "Total: {monto}",
 
   // Detalle de categoría
-  bcg_detalle_stats_titulo: " Estadísticas del Mes",
+  bcg_detalle_stats_titulo: "📊 Estadísticas del Mes",
   bcg_detalle_total_label: "Total gastado",
   bcg_detalle_frecuencia_label: "Frecuencia",
   bcg_detalle_promedio_label: "Promedio por gasto",
   bcg_detalle_cuadrante_label: "Cuadrante BCG",
   bcg_detalle_calificacion_titulo: "Tu Calificación Emocional",
-  bcg_detalle_placer_label: " Placer / Utilidad",
+  bcg_detalle_placer_label: "😊 Placer / Utilidad",
   bcg_detalle_placer_help: "¿Qué tanto disfrutas o te sirve este gasto?",
-  bcg_detalle_flex_label: "ï¸ Flexibilidad de Recorte",
+  bcg_detalle_flex_label: "✂️ Flexibilidad de Recorte",
   bcg_detalle_flex_help: "¿Qué tan fácil sería reducirlo o eliminarlo?",
-  bcg_detalle_clasif_titulo: "·ï¸ Clasificación Automática",
-  bcg_detalle_ultimos_movs: " Últimos Movimientos",
+  bcg_detalle_clasif_titulo: "🏷️ Clasificación Automática",
+  bcg_detalle_ultimos_movs: "📜 Últimos Movimientos",
   bcg_detalle_sin_movs: "Sin movimientos registrados en este mes.",
   bcg_detalle_sin_calificar: "Toca los sliders para personalizar tu calificación.",
   bcg_detalle_undo_warning: "Tus cambios no guardados se perderán.",
@@ -794,26 +794,26 @@ export const bcg = {
   bcg_error_guardar: "Error al guardar. Intenta nuevamente.",
 
   // Podora (Vista 3)
-  bcg_podora_titulo: "ï¸ La Podora BCG",
-  bcg_podora_intro: "¡ Estos gastos no te aportan valor según tu calificación.",
-  bcg_podora_vacio_titulo: "  ¡Felicitaciones!",
+  bcg_podora_titulo: "✂️ La Podora BCG",
+  bcg_podora_intro: "💡 Estos gastos no te aportan valor según tu calificación.",
+  bcg_podora_vacio_titulo: "🏆  ¡Felicitaciones!",
   bcg_podora_vacio_desc: "No tienes gastos Perro este mes. Todo lo que gastas te aporta valor.",
   bcg_podora_placer_label: "Placer",
   bcg_podora_flex_label: "Flexibilidad",
   bcg_podora_gasto_mensual: "Gasto mensual",
-  bcg_podora_impacto_titulo: " Impacto Total",
+  bcg_podora_impacto_titulo: "📊 Impacto Total",
   bcg_podora_impacto_leyenda: "Si eliminaras estos {count} gastos:",
   bcg_podora_impacto_mensual: "Ahorras {monto}/mes",
   bcg_podora_impacto_anual: "{monto}/año",
   bcg_podora_equivalencia_titulo: "Equivalente a:",
-  bcg_podora_simulador_titulo: "ï¸ Simulador de recorte",
+  bcg_podora_simulador_titulo: "🎚️ Simulador de recorte",
   bcg_podora_simulador_help: "Mueve el slider para simular cuánto recortarías de cada gasto.",
   bcg_podora_destino_supervivencia: "Sumar a Supervivencia",
   bcg_podora_destino_meta: "Sumar a Meta",
   bcg_podora_dias_escudo: "+{dias} días de Escudo de Tiempo",
   bcg_podora_dias_meta: "Llegas {dias} días antes a tu meta",
-  bcg_podora_decision_tuya: "¡ La decisión es tuya. Estos son solo datos para que reflexiones.",
-  bcg_podora_capturar: "· Capturar mi Compromiso",
+  bcg_podora_decision_tuya: "💡 La decisión es tuya. Estos son solo datos para que reflexiones.",
+  bcg_podora_capturar: "📷 Capturar mi Compromiso",
   bcg_podora_sin_metas: "No tienes metas configuradas. Crea un Sobre de Previsión para activar esta simulación.",
   bcg_podora_equiv_iphone: "{count} iPhones nuevos",
   bcg_podora_equiv_miami: "{count} pasajes a Miami",
@@ -822,29 +822,29 @@ export const bcg = {
   bcg_podora_equiv_cenas: "{count} cenas en restaurante",
 
   // Hormigas (Vista 4)
-  bcg_hormiga_resumen_titulo: " Resumen del Mes",
+  bcg_hormiga_resumen_titulo: "📊 Resumen del Mes",
   bcg_hormiga_total_label: "Total en hormigas",
   bcg_hormiga_cantidad_label: "Cantidad",
-  bcg_hormiga_comparativa_titulo: " Comparativa",
+  bcg_hormiga_comparativa_titulo: "📈 Comparativa",
   bcg_hormiga_mes_actual: "Este mes",
   bcg_hormiga_mes_anterior: "Mes anterior",
   bcg_hormiga_mes_antepasado: "Mes antepasado",
-  bcg_hormiga_tendencia_improving: " Mejorando ({pct}%)",
-  bcg_hormiga_tendencia_worsening: "  ¸ Empeorando (+{pct}%)",
+  bcg_hormiga_tendencia_improving: "✅ Mejorando ({pct}%)",
+  bcg_hormiga_tendencia_worsening: "⚠️ Empeorando (+{pct}%)",
   bcg_hormiga_tendencia_stable: "Sin cambios",
-  bcg_hormiga_top_titulo: " Top Hormigas del Mes",
+  bcg_hormiga_top_titulo: "🐜 Top Hormigas del Mes",
   bcg_hormiga_frecuencia_label: "{count} veces",
   bcg_hormiga_promedio_label: "Promedio: {monto} por gasto",
   bcg_hormiga_impacto_anual: "Impacto anual: {monto}",
   bcg_hormiga_reto_titulo: "Reto del Buzón de Deseos",
   bcg_hormiga_proyeccion_label: "Proyección a 6 meses",
   bcg_hormiga_proyeccion_monto: "{monto}",
-  bcg_hormiga_estado_zero_titulo: "  ¡Increíble!",
+  bcg_hormiga_estado_zero_titulo: "🏆  ¡Increíble!",
   bcg_hormiga_estado_zero_desc: "No registraste gastos hormiga este mes.",
-  bcg_hormiga_estado_no_buzon_titulo: " Tus hormigas suman {monto}",
+  bcg_hormiga_estado_no_buzon_titulo: "🐜 Tus hormigas suman {monto}",
   bcg_hormiga_estado_no_buzon_desc: "Crea un Sobre de Ahorro llamado \"Buzón de Deseos\"para atraparlas.",
   bcg_hormiga_estado_no_buzon_cta: "Crear Buzón de Deseos",
-  bcg_hormiga_estado_transfer_titulo: " Atrapamos {monto} en hormigas",
+  bcg_hormiga_estado_transfer_titulo: "🐜 Atrapamos {monto} en hormigas",
   bcg_hormiga_estado_transfer_desc: "¿Las transferimos a \"{buzon}\"? Saldo actual del buzón: {saldo}",
   bcg_hormiga_estado_transfer_cta: "Transferir al Buzón",
   bcg_hormiga_vacio: "No hay gastos hormiga este mes.  ¡Buen trabajo!",
@@ -861,15 +861,15 @@ export const bcg = {
   bcg_buzon_modal_error: "No se pudo transferir al buzón.",
 
   // Empty states
-  bcg_empty_sin_gastos: " Aún no hay gastos este mes para analizar.",
+  bcg_empty_sin_gastos: "📊 Aún no hay gastos este mes para analizar.",
   bcg_empty_sin_historico: "Califica tus primeras categorías para ver tu Matriz BCG.",
   bcg_empty_sin_historico_cta: "Comenzar a Calificar",
-  bcg_empty_sin_podora: " No tienes candidatos a recortar este mes.",
-  bcg_empty_sin_hormigas: " No registraste gastos hormiga este mes.",
+  bcg_empty_sin_podora: "🏆 No tienes candidatos a recortar este mes.",
+  bcg_empty_sin_hormigas: "🏆 No registraste gastos hormiga este mes.",
 };
 
 // ============================================
-// FASE 7: PANTALLA 9   WAR ROOM
+// FASE 7: PANTALLA 9  — WAR ROOM
 // ============================================
 export const war_room = {
   // Header
@@ -893,20 +893,20 @@ export const war_room = {
   war_escudo_label_deuda: "Deuda total",
   war_escudo_label_quemado: "Burn rate",
   war_escudo_label_autonomia: "Días de autonomía",
-  war_escudo_label_meses: " {meses} meses",
-  war_escudo_cta_detalle: "Ver Detalle  ",
-  war_escudo_cta_fondo: "Crear Fondo de Emergencia  ",
+  war_escudo_label_meses: "≈ {meses} meses",
+  war_escudo_cta_detalle: "Ver Detalle  →",
+  war_escudo_cta_fondo: "Crear Fondo de Emergencia  →",
   war_escudo_recomendacion: "Tu escudo es menor a 6 meses. Prioriza construir un fondo de emergencia de al menos {monto}.",
-  war_escudo_recomendacion_ok: " Tu escudo supera los 6 meses. Mantenete así y considerá invertir el excedente.",
+  war_escudo_recomendacion_ok: "✅ Tu escudo supera los 6 meses. Mantenete así y considerá invertir el excedente.",
 
   // === WIDGET 2: SAFE-TO-SPEND ===
-  war_safe_titulo: " Safe-to-Spend Diario",
+  war_safe_titulo: "☕ Safe-to-Spend Diario",
   war_safe_subtitulo: "Lo que podés gastar hoy sin culpa",
-  war_safe_luz_verde: "¢ Luz Verde",
-  war_safe_luz_amarilla: "¡ Precaución",
-  war_safe_luz_roja: "´ Detente",
+  war_safe_luz_verde: "🟢 Luz Verde",
+  war_safe_luz_amarilla: "🟡 Precaución",
+  war_safe_luz_roja: "🔴 Detente",
   war_safe_label: "Hoy podés gastar",
-  war_safe_desglose_titulo: " Desglose del Cálculo",
+  war_safe_desglose_titulo: "📊 Desglose del Cálculo",
   war_safe_label_saldo: "Saldo en billeteras",
   war_safe_label_fijos: "Apartado fijos (7 días)",
   war_safe_label_deudas: "Apartado deudas (7 días)",
@@ -914,12 +914,12 @@ export const war_room = {
   war_safe_label_disponible: "Disponible real",
   war_safe_label_dias: "Días restantes del mes",
   war_safe_label_diario: "Safe-to-Spend diario",
-  war_safe_evolucion_titulo: " Evolución últimos 7 días",
+  war_safe_evolucion_titulo: "📅 Evolución últimos 7 días",
   war_safe_sin_billeteras: "Crea tu primera billetera para activar tu Saldo Libre de Culpa.",
   war_safe_sin_ingresos: "Registra tus ingresos para calcular tu Safe-to-Spend diario.",
 
   // === WIDGET 3: LICUADORA ===
-  war_licuadora_titulo: " Licuadora de Inflación",
+  war_licuadora_titulo: "📉 Licuadora de Inflación",
   war_licuadora_subtitulo: "Tu poder adquisitivo real",
   war_licuadora_label_patrimonio: "Patrimonio actual",
   war_licuadora_label_patrimonio_pasado: "Patrimonio hace 6 meses",
@@ -928,12 +928,12 @@ export const war_room = {
   war_licuadora_label_real: "Variación REAL",
   war_licuadora_label_real_corto: "Poder adquisitivo",
   war_licuadora_label_periodo: "vs hace 6 meses",
-  war_licuadora_insight_titulo: "¡ Insight",
+  war_licuadora_insight_titulo: "💡 Insight",
   war_licuadora_insight_negativo: "Tu patrimonio creció en pesos, pero la inflación fue mayor. En términos reales, perdiste {pct}% de poder adquisitivo en 6 meses. Considerá invertir en activos que le ganen al IPC.",
-  war_licuadora_insight_positivo: " Tu patrimonio le ganó a la inflación: ganaste {pct}% de poder adquisitivo real en 6 meses. Excelente disciplina.",
+  war_licuadora_insight_positivo: "🎉 Tu patrimonio le ganó a la inflación: ganaste {pct}% de poder adquisitivo real en 6 meses. Excelente disciplina.",
   war_licuadora_insight_neutro: "Tu variación patrimonial acompañó a la inflación. Estás manteniendo tu poder adquisitivo sin ganarle ni perderle.",
   war_licuadora_sin_inflacion: "Sin datos de inflación disponibles para tu región.",
-  war_licuadora_cta_inversiones: "Ver Inversiones  ",
+  war_licuadora_cta_inversiones: "Ver Inversiones  →",
 
   // === WIDGET 4: RADAR DE ASFIXIA ===
   war_radar_titulo: "Radar de Asfixia",
@@ -942,7 +942,7 @@ export const war_room = {
   war_radar_label_seguro: "Sin días críticos",
   war_radar_mensaje_criticos: "El día {fecha} podrías quedar en negativo si no tomás acción.",
   war_radar_mensaje_ok: "No hay vencimientos problemáticos en los próximos 30 días.",
-  war_radar_cta_heatmap: "Ver Heatmap  ",
+  war_radar_cta_heatmap: "Ver Heatmap  →",
   war_radar_detalle_titulo: "Autopsia del Día",
   war_radar_detalle_saldo: "Saldo proyectado",
   war_radar_detalle_motivo: "El Motivo",
@@ -950,10 +950,10 @@ export const war_room = {
   war_radar_leyenda_verde: "Verde: Día seguro",
   war_radar_leyenda_amarillo: "Amarillo: Precaución",
   war_radar_leyenda_rojo: "Rojo: Asfixia (gastos > ingresos)",
-  war_radar_detalle_gasto_diario: "¥ Gasto diario supervivencia",
-  war_radar_leyenda_ingreso: "° Ingreso esperado",
+  war_radar_detalle_gasto_diario: "🔥 Gasto diario supervivencia",
+  war_radar_leyenda_ingreso: "💰 Ingreso esperado",
   war_radar_leyenda_tarjeta: "Vencimiento de tarjeta",
-  war_radar_sin_vencimientos: " No hay vencimientos programados en los próximos 30 días.  ¡Excelente!",
+  war_radar_sin_vencimientos: "📅 No hay vencimientos programados en los próximos 30 días.  ¡Excelente!",
   war_radar_sin_billeteras: "Crea tu primera billetera operativa para activar el Radar de Asfixia.",
 
   // === WIDGET 5: PODORA (Resumen) ===
@@ -962,54 +962,54 @@ export const war_room = {
   war_podora_label_potencial: "Si recortas tus Perros BCG",
   war_podora_label_mes: "/mes",
   war_podora_mensaje_con: "Tenés {count} gastos Perro que no te aportan valor y podrías eliminar.",
-  war_podora_mensaje_sin: " No tenés gastos Perro. Todo lo que gastás te aporta valor.",
-  war_podora_cta: "Ver Análisis BCG  ",
+  war_podora_mensaje_sin: "🏆 No tenés gastos Perro. Todo lo que gastás te aporta valor.",
+  war_podora_cta: "Ver Análisis BCG  →",
 
   // === VISTA 2: ESCUDO DETALLE + SIMULADOR ===
   war_escudo_detalle_titulo: "Escudo de Tiempo",
   war_escudo_detalle_kicker: "Tu Runway Financiero",
-  war_escudo_detalle_burn_fijo: " Burn rate (gastos fijos)",
-  war_escudo_detalle_burn_supervivencia: "¥ Burn rate (supervivencia)",
-  war_escudo_detalle_ventana: " Basado en {dias} días de historial",
+  war_escudo_detalle_burn_fijo: "📉 Burn rate (gastos fijos)",
+  war_escudo_detalle_burn_supervivencia: "🔥 Burn rate (supervivencia)",
+  war_escudo_detalle_ventana: "📅 Basado en {dias} días de historial",
 
   war_escudo_config_titulo: "Configurar Gastos Fijos",
-  war_escudo_config_cta: "Editar lista de gastos fijos  ",
+  war_escudo_config_cta: "Editar lista de gastos fijos  →",
   war_escudo_config_subtitulo: "Detectamos estos gastos recurrentes en los últimos 6 meses. Confirmá cuáles son realmente fijos.",
   war_escudo_config_label_promedio: "Promedio: {monto}/mes",
   war_escudo_config_toggle_label: "¿Es gasto fijo?",
   war_escudo_config_monto_label: "Monto mensual",
   war_escudo_config_cancelar: "Cancelar",
   war_escudo_config_guardar: "Guardar",
-  war_escudo_config_exito: " Gastos fijos guardados. Escudo recalculado.",
-  war_escudo_config_error: " No se pudieron guardar los gastos fijos.",
+  war_escudo_config_exito: "✅ Gastos fijos guardados. Escudo recalculado.",
+  war_escudo_config_error: "❌ No se pudieron guardar los gastos fijos.",
   war_escudo_config_vacio: "Aún no configuraste tus gastos fijos. El sistema puede detectarlos automáticamente.",
   war_escudo_config_detectar_cta: "Detectar Automáticamente",
 
   war_escudo_simulador_titulo: "Simulador de Escenarios",
-  war_escudo_simulador_intro: "¿Qué pasaría si ¦?",
+  war_escudo_simulador_intro: "¿Qué pasaría si …?",
   war_escudo_simulador_situacion_actual: "Situación actual",
   war_escudo_simulador_impacto: "Impacto",
   war_escudo_simulador_nuevo_escudo: "Nuevo escudo",
 
-  sim_scenario_current_state: " Situación Actual",
+  sim_scenario_current_state: "📊 Situación Actual",
   sim_scenario_current_state_desc: "Tu escudo con tu estilo de vida actual",
-  sim_scenario_loss_main_income: "¼ Pierdo mi ingreso principal",
+  sim_scenario_loss_main_income: "💼 Pierdo mi ingreso principal",
   sim_scenario_loss_main_income_desc: "Si dejás de percibir tu ingreso principal,  ¿cuánto tiempo te queda?",
-  sim_scenario_fixed_costs_up_20: " Mis gastos suben 20%",
+  sim_scenario_fixed_costs_up_20: "📈 Mis gastos suben 20%",
   sim_scenario_fixed_costs_up_20_desc: "Si la inflación te obliga a gastar 20% más en fijos",
-  sim_scenario_emergency: "¨ Emergencia de $100.000",
+  sim_scenario_emergency: "🚨 Emergencia de $100.000",
   sim_scenario_emergency_desc: "Si tenés un imprevisto que te cuesta $100.000 hoy",
   sim_scenario_dias: "{dias} días",
   sim_scenario_impacto_cero: "0 días (sin cambio)",
-  sim_scenario_impacto_negativo: "{dias} días",
+  sim_scenario_impacto_negativo: "−{dias} días",
   sim_scenario_impacto_positivo: "+{dias} días",
 
   // === VISTA 3: SAFE-TO-SPEND DETALLE ===
-  war_safe_detalle_titulo: " Safe-to-Spend Diario",
+  war_safe_detalle_titulo: "☕ Safe-to-Spend Diario",
   war_safe_detalle_kicker: "Hoy podés gastar",
 
   // === VISTA 4: LICUADORA DETALLE ===
-  war_licuadora_detalle_titulo: " Licuadora de Inflación",
+  war_licuadora_detalle_titulo: "📉 Licuadora de Inflación",
   war_licuadora_detalle_kicker: "Tu Patrimonio vs Inflación",
   war_licuadora_detalle_periodo: "Últimos 6 meses",
 
@@ -1019,37 +1019,37 @@ export const war_room = {
   war_radar_detalle_leyenda_titulo: "Leyenda",
   war_radar_detalle_criticos_titulo: "Días Críticos Detectados",
   war_radar_detalle_vencimiento_label: "Vencimiento: {nombre}",
-  war_radar_detalle_sugerencia_titulo: "¡ Sugerencia",
-  war_radar_detalle_sin_criticos: " No hay días críticos en los próximos 30 días.  ¡Buen trabajo!",
+  war_radar_detalle_sugerencia_titulo: "💡 Sugerencia",
+  war_radar_detalle_sin_criticos: "✅ No hay días críticos en los próximos 30 días.  ¡Buen trabajo!",
 
   // === EDGE CASES GLOBALES ===
-  war_room_loading: "Cargando tu Centro de Supervivencia ¦",
+  war_room_loading: "Cargando tu Centro de Supervivencia …",
   war_room_error: "No pudimos cargar los indicadores. Reintentá.",
   war_room_btn_retry: "Reintentar",
   war_room_sin_liquidez: "Tus gastos fijos superan tu liquidez. Estás en zona de peligro.",
   war_room_sin_historial: "Sin historial suficiente. Registrá tus primeros movimientos para activar los indicadores.",
-  war_room_btn_ir_inversiones: "Ir a Inversiones  ",
+  war_room_btn_ir_inversiones: "Ir a Inversiones  →",
 
   // Navegación entre vistas
-  war_room_volver: " Volver al War Room",
-  war_room_nav_anterior: "",
-  war_room_nav_siguiente: "",
+  war_room_volver: "← Volver al War Room",
+  war_room_nav_anterior: "←",
+  war_room_nav_siguiente: "→",
 };
 
 // ============================================
-// FASE 8: PANTALLA 10   SANEAMIENTO
+// FASE 8: PANTALLA 10  — SANEAMIENTO
 // ============================================
 export const saneamiento = {
   // Header
   saneamiento_kicker: "Centro Operativo",
-  saneamiento_title: "§¹ Saneamiento",
+  saneamiento_title: "🧹 Saneamiento",
   saneamiento_subtitle: "Limpiá tu contabilidad y atacá tus deudas",
-  saneamiento_volver: " Volver",
-  saneamiento_loading: "Cargando tu Centro de Saneamiento ¦",
+  saneamiento_volver: "← Volver",
+  saneamiento_loading: "Cargando tu Centro de Saneamiento …",
   saneamiento_btn_retry: "Reintentar",
 
   // Widgets del dashboard
-  saneamiento_bandejawidget_titulo: "¥ Bandeja de Entrada",
+  saneamiento_bandejawidget_titulo: "📥 Bandeja de Entrada",
   saneamiento_bandejawidget_pendientes: "pendientes",
   saneamiento_bandejawidget_cta: "Revisar Ahora",
   saneamiento_bandejawidget_vacio: "No tenés gastos pendientes por aprobar.",
@@ -1064,7 +1064,7 @@ export const saneamiento = {
   saneamiento_ataquewidget_vacio: "No tenés deudas activas registradas.",
   saneamiento_ataquewidget_fin_estimada: "Fin estimado",
 
-  saneamiento_calendariowidget_titulo: " Calendario Financiero",
+  saneamiento_calendariowidget_titulo: "📅 Calendario Financiero",
   saneamiento_calendariowidget_vencimientos: "vencimientos",
   saneamiento_calendariowidget_criticos: "críticos",
   saneamiento_calendariowidget_normales: "normales",
@@ -1091,7 +1091,7 @@ export const saneamiento = {
   saneamiento_sin_detalle: "Sin detalle",
 
   // Editar modal
-  saneamiento_editar_titulo: "¸ Editar Gasto",
+  saneamiento_editar_titulo: "✏️ Editar Gasto",
   saneamiento_monto: "Monto",
   saneamiento_categoria: "Categoría",
   saneamiento_seleccionar_categoria: "Seleccionar categoría",
@@ -1099,12 +1099,12 @@ export const saneamiento = {
   saneamiento_billetera: "Billetera",
   saneamiento_seleccionar_billetera: "Seleccionar billetera",
   saneamiento_nota: "Nota",
-  saneamiento_nota_placeholder: "Ej: Almuerzo de negocios ¦",
+  saneamiento_nota_placeholder: "Ej: Almuerzo de negocios …",
   saneamiento_guardar_cambios: "Guardar Cambios",
   saneamiento_cancelar: "Cancelar",
 
   // Rechazar modal
-  saneamiento_rechazar_titulo: " Rechazar Gasto",
+  saneamiento_rechazar_titulo: "❌ Rechazar Gasto",
   saneamiento_rechazar_motivo: "¿Por qué rechazás este gasto?",
   saneamiento_rechazo_ya_cargado: "Ya lo cargué manualmente",
   saneamiento_rechazo_duplicado: "Es un gasto duplicado",
@@ -1114,14 +1114,14 @@ export const saneamiento = {
   saneamiento_confirmar_rechazo: "Confirmar Rechazo",
 
   // Lote
-  saneamiento_lote_titulo: " Aprobar {count} gastos",
+  saneamiento_lote_titulo: "✅ Aprobar {count} gastos",
   saneamiento_lote_mensaje: "Se aprobarán los gastos seleccionados con los datos sugeridos.",
   saneamiento_aprobar_todos: "Aprobar Todos",
 
   // Ataque detalle
-  saneamiento_estrategia_math: "§® Matemático",
-  saneamiento_estrategia_emotional: "¥ Emocional",
-  saneamiento_estrategia_relationships: "¤ Vínculos",
+  saneamiento_estrategia_math: "🧮 Matemático",
+  saneamiento_estrategia_emotional: "🔥 Emocional",
+  saneamiento_estrategia_relationships: "🤝 Vínculos",
   saneamiento_estrategia_math_desc: "Pagá primero las deudas con mayor tasa.",
   saneamiento_estrategia_emotional_desc: "Pagá primero las deudas más chicas para motivarte.",
   saneamiento_estrategia_relationships_desc: "Priorizá deudas con personas cercanas.",
@@ -1129,13 +1129,13 @@ export const saneamiento = {
   saneamiento_saldo: "Saldo",
   saneamiento_cuota_mensual: "Cuota mensual",
   saneamiento_vencimiento: "Próximo vencimiento",
-  saneamiento_input_extra_placeholder: "Extra ¦",
+  saneamiento_input_extra_placeholder: "Extra …",
   saneamiento_simular: "Simular",
   saneamiento_ataque_sin_deudas_titulo: "¡Sin deudas!",
   saneamiento_ataque_sin_deudas_desc: "No tenés deudas activas. Excelente trabajo.",
 
   // Simular modal
-  saneamiento_simular_titulo: " Simulación de Pago Extra",
+  saneamiento_simular_titulo: "📊 Simulación de Pago Extra",
   saneamiento_simular_pago_extra: "Pago extra propuesto",
   saneamiento_simular_meses_actuales: "Meses restantes actuales",
   saneamiento_simular_meses_con_extra: "Meses con pago extra",
@@ -1155,7 +1155,7 @@ export const saneamiento = {
   // Calendario
   saneamiento_dias: "días",
   saneamiento_leyenda_critico: "> $50.000",
-  saneamiento_leyenda_normal: "$10.000   $50.000",
+  saneamiento_leyenda_normal: "$10.000  — $50.000",
   saneamiento_leyenda_libre: "Sin vencimientos",
   saneamiento_proximos_vencimientos: "Próximos Vencimientos",
   saneamiento_marcar_pagado: "Marcar Pagado",
@@ -1175,12 +1175,12 @@ export const saneamiento = {
   saneamiento_audio_detener: "Detener",
   saneamiento_audio_regrabar: "Regrabar",
   saneamiento_audio_enviar: "Enviar Audio",
-  saneamiento_audio_enviando: "Enviando ¦",
+  saneamiento_audio_enviando: "Enviando …",
   saneamiento_audio_enviado: "Audio enviado. Aparecerá en cuarentena cuando se procese.",
   saneamiento_audio_error_permiso: "Necesitamos permiso para usar el micrófono.",
   saneamiento_audio_error_webhook: "No está configurado el webhook de procesamiento de voz.",
   saneamiento_audio_no_soportado: "Tu navegador no soporta audio.",
-  saneamiento_foto_titulo: "· Foto del Ticket",
+  saneamiento_foto_titulo: "📷 Foto del Ticket",
   saneamiento_foto_alt: "Ticket escaneado",
 
   // Toasts
@@ -1243,7 +1243,7 @@ export const saneamiento = {
 };
 
 // ============================================
-// FASE 1: PANTALLA 3   BILLETERAS / CUENTAS
+// FASE 1: PANTALLA 3  — BILLETERAS / CUENTAS
 // ============================================
 export const wallets = {
   // Tab switcher (en /billeteras)
@@ -1304,9 +1304,9 @@ export const wallets = {
   toast_archived_error: "Error al archivar la cuenta: {error}",
 
   // Modal crear / editar
-  modal_nueva_title: " Nueva Cuenta",
+  modal_nueva_title: "➕ Nueva Cuenta",
   modal_editar_title: "Editar {nombre}",
-  btn_cerrar_x: "Cerrar  ",
+  btn_cerrar_x: "Cerrar  ✕",
   btn_cancelar: "Cancelar",
   btn_crear: "Crear Cuenta",
   btn_guardar_cambios: "Guardar Cambios",
@@ -1328,7 +1328,7 @@ export const wallets = {
 };
 
 // ============================================
-// FASE 9: PANTALLA 11   INVERSIONES
+// FASE 9: PANTALLA 11  — INVERSIONES
 // ============================================
 export const inversiones = {
   // Header / navigation
@@ -1416,7 +1416,7 @@ export const inversiones = {
   modal_liquidate_capital_helper: "Ingresá el monto total que vas a recibir al liquidar.",
   modal_config_inflation_title: "Configurar Inflación",
 
-  // Modals   labels & placeholders (Task 6)
+  // Modals  — labels & placeholders (Task 6)
   label_active_name: "Nombre del activo",
   label_type: "Tipo de activo",
   label_new_value: "Nuevo valor",
@@ -1680,7 +1680,7 @@ export const inversiones = {
   config_tipo_movimiento_ingreso: "Ingreso",
   config_mostrar_misterio: "Mostrar Misterio/Olvido en Inicio",
   config_mostrar_misterio_desc: "Activa o desactiva el análisis de fugas de capital en la pantalla de inicio.",
-  config_ocr_enabled: "OCR   Lectura inteligente de ticket",
+  config_ocr_enabled: "OCR  – Lectura inteligente de ticket",
   config_ocr_enabled_desc: "Analizá tus tickets automáticamente con cámara.",
   config_voice_enabled_desc: "Registrá movimientos con tu voz.",
   config_automation_section: "Automatización",
@@ -1772,19 +1772,19 @@ export const inversiones = {
   // Refactor PresupuestosPage
   budget_label_saving_investment: "AHORRO E INVERSIÓN",
   budget_projection_month: "PROYECCIÓN DEL MES",
-  budget_zero_base_reached: "¡BASE CERO ALCANZADO!",
+  budget_zero_base_reached: "¡BASE CERO ALCANZADO!✅",
   budget_over_allocation: "SOBRE-ASIGNACIÓN",
   budget_over_allocation_desc: "Estás presupuestando dinero que no tienes",
   error_invalid_amount: "Ingresa un monto válido",
   budget_error_exceeds_available: "No puedes asignar más. Disponible: {amount}",
   budget_error_exceeds_available_simple: "No puedes asignar más del saldo disponible",
   budget_error_transfer_exceeds: "No puedes transferir más de lo disponible en el sobre origen",
-  budget_success_deficit_covered: " Se cubrió el déficit con disponible para asignar",
+  budget_success_deficit_covered: "✅ Se cubrió el déficit con disponible para asignar",
   budget_error_invalid_anchor_day: "El día ancla debe estar entre 1 y 31",
   budget_success_base_cero_activated: "Modo Base Cero activado.  ¡A presupuestar!",
   budget_projection_info: "Proyección calculada en base a ingresos, porcentajes de distribución y gastos comprometidos de tarjetas.",
-  budget_rules_total_perfect: " Total: 100%    ¡Perfecto!",
-  budget_golden_rules_anchor_day: " Día de inicio del ciclo",
+  budget_rules_total_perfect: "✅ Total: 100%  —  ¡Perfecto!",
+  budget_golden_rules_anchor_day: "📅 Día de inicio del ciclo",
   budget_golden_rules_modal_subtitle: "Estás por activar un compromiso serio",
   budget_golden_rules_modal_point1: "Cada peso deberá tener un destino asignado antes de gastarlo.",
   budget_golden_rules_modal_point2: "Si gastas de más en una categoría, deberás quitarle a otra.",
@@ -1800,9 +1800,9 @@ export const inversiones = {
 
   // Refactor TarjetasPage
   card_status_healthy: "Saludable",
-  card_status_caution: "¡ Precaución",
+  card_status_caution: "🟡 Precaución",
   card_status_at_risk: "En Riesgo",
-  card_due_critical: "Vence en {dias} días. Acción inmediata requerida.",
+  card_due_critical: "🚨Vence en {dias} días. Acción inmediata requerida.",
   card_resumen_vencido_alert: "Tenés un resumen anterior impago!",
   card_resumen_anterior_title: "Resumen anterior impago",
   card_resumen_actual_title: "Próximo resumen",
@@ -1812,8 +1812,8 @@ export const inversiones = {
   card_resumen_anterior_covered_by_favor: "Cubierto por saldo a favor",
   card_resumen_anterior_total_label: "Total resumen anterior",
   card_resumen_anterior_a_pagar_label: "A pagar",
-  card_due_urgent: "  Vence en {dias} días. Pago urgente.",
-  card_due_caution: "¡ Vence en {dias} días.",
+  card_due_urgent: "🟠 Vence en {dias} días. Pago urgente.",
+  card_due_caution: "🟡 Vence en {dias} días.",
   card_due_normal: "Vence en {dias} días",
   card_learning_data: "El sistema necesita más datos (mínimo 30 días) para analizar tu capacidad de pago.",
   card_sufficient_balance_high_expenses: "Tienes saldo hoy, pero tus gastos fijos son altos. Mantén reservas.",
@@ -1835,7 +1835,7 @@ export const inversiones = {
   card_available_limit: "Límite Disponible",
   card_next_due_date: "Próximo Vencimiento",
   card_due_date_format: "Día {day} ({days} días)",
-  card_due_date_overdue: "Día {day}   vencida hace {days} día(s)",
+  card_due_date_overdue: "Día {day}  — vencida hace {days} día(s)",
   card_stress_thermometer: "Termómetro de Estrés",
   card_stress_index: "Índice estrés",
   card_next_installment: "Próxima cuota",
@@ -1935,12 +1935,12 @@ export const inversiones = {
   cat_rubro_create_empty: "+ Crear Rubro",
   cat_fuente_new_btn: "+ Fuente",
   cat_fuente_create_empty: "+ Crear Fuente",
-  cat_rubro_edit_title: "¸ Editar Rubro",
-  cat_rubro_new_title: " Nuevo Rubro",
-  cat_fuente_edit_title: "¸ Editar Fuente",
-  cat_fuente_new_title: " Nueva Fuente",
-  cat_subcuenta_edit_title: "¸ Editar Subcuenta",
-  cat_subcuenta_new_title: " Nueva Subcuenta",
+  cat_rubro_edit_title: "✏️ Editar Rubro",
+  cat_rubro_new_title: "➕ Nuevo Rubro",
+  cat_fuente_edit_title: "✏️ Editar Fuente",
+  cat_fuente_new_title: "➕ Nueva Fuente",
+  cat_subcuenta_edit_title: "✏️ Editar Subcuenta",
+  cat_subcuenta_new_title: "➕ Nueva Subcuenta",
   cat_btn_actualizar: "Actualizar",
   cat_btn_crear_rubro: "Crear Rubro",
   cat_btn_crear_fuente: "Crear Fuente",
@@ -1972,7 +1972,7 @@ export const inversiones = {
   success_category_migrated_full: "Migrados {movimientos} movimientos, {presupuestos} presupuestos y {recurrentes} recurrentes.",
   success_movement_deleted: "Movimiento eliminado",
   confirm_delete_movement: "¿Estás seguro de que deseas eliminar este movimiento? No se podrá recuperar.",
-  cat_empty_desc: "Crea las categorías de donde proviene tu dinero (Salario, Freelance, Alquiler ¦)",
+  cat_empty_desc: "Crea las categorías de donde proviene tu dinero (Salario, Freelance, Alquiler …)",
   title_categories: "Categorías",
 
   // Refactor AuthPage
@@ -2008,15 +2008,15 @@ export const inversiones = {
   bcg_no_data: "No hay datos de la categoría seleccionada.",
   bcg_per_year: "/ año",
   bcg_current_shield: "Escudo actual: {dias} días",
-  error_html2canvas_unavailable: "· html2canvas no disponible. Próximamente.",
+  error_html2canvas_unavailable: "📷 html2canvas no disponible. Próximamente.",
   mailbox: "Buzón",
   bcg_dog_desc: "${m}/mes te están drenando",
   shield_per_day: "/día",
   shield_days: "{dias} días",
-  inflation_badge: " Inflación",
+  inflation_badge: "📈 Inflación",
   radar_heatmap_aria: "Mapa de calor 30 días",
   error_advanced_mode_disabled: "El modo avanzado no está habilitado globalmente",
-  emotional_analysis_advanced_tip: "¡ Algunas funciones avanzadas requieren pareja vinculada (se completan en próximas etapas).",
+  emotional_analysis_advanced_tip: "💡 Algunas funciones avanzadas requieren pareja vinculada (se completan en próximas etapas).",
   home_alert_asfixia: "Días de Asfixia Financiera próximos",
 
   // Remaining 6 fixes
@@ -2062,9 +2062,9 @@ export const inversiones = {
   config_maintenance_confirm_title: "¿Borrar caché de la app?",
   config_maintenance_confirm_msg: "Vas a perder los filtros guardados, flags de onboarding y datos locales. Tu sesión de Supabase se preserva.",
   config_maintenance_confirm_btn: "Borrar y reinstalar",
-  config_maintenance_success: " Caché borrada. Recargando ¦",
-  config_maintenance_error: " No pude borrar la caché. Probá recargando manualmente.",
-  config_pwa_updated: " Nueva versión disponible. Recargando ¦",
+  config_maintenance_success: "✅ Caché borrada. Recargando …",
+  config_maintenance_error: "❌ No pude borrar la caché. Probá recargando manualmente.",
+  config_pwa_updated: "🆕 Nueva versión disponible. Recargando …",
 };
 
 // === TOUR SYSTEM ===
@@ -2111,19 +2111,19 @@ export const tour = {
   'home.step10.description': 'con este boton cargas tus ingresos y tus egresos',
   'home.step10.howTo': "al hacer click, se abrira una pantalla (por defecto egresos - pero puedes modificarlo desde 'Menu/ajustes/preferencias operativas'. Tambien tienes un acceso directo permanente a cargar movimientos desde las notificaciones de tu movil (visita el tour especifico de la seccion 'Carga de movimientos'",
 
-  // Cuentas tour (placeholder   T7)
+  // Cuentas tour (placeholder  — T7)
   'cuentas.title': 'Conocé tus cuentas',
   'cuentas.description': 'Te mostramos cómo gestionar tus billeteras y conciliaciones.',
 
-  // Tarjetas tour (placeholder   T8)
+  // Tarjetas tour (placeholder  — T8)
   'tarjetas.title': 'Conocé tus tarjetas',
   'tarjetas.description': 'Te mostramos cómo gestionar tus tarjetas de crédito.',
 
-  // Presupuestos tour (placeholder   T9)
+  // Presupuestos tour (placeholder  — T9)
   'presupuestos.title': 'Conocé tus presupuestos',
   'presupuestos.description': 'Te mostramos cómo planificar tus gastos del mes.',
 
-  // Ajustes tour (placeholder   T10)
+  // Ajustes tour (placeholder  — T10)
   'ajustes.title': 'Conocé los ajustes',
   'ajustes.description': 'Te mostramos cómo personalizar tu experiencia.',
 };

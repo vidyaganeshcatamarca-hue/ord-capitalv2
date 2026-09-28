@@ -3,6 +3,8 @@ import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
+import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/categoryFilters'
+import { isLikelyLucideName } from '@/components/CategoryIcon/CategoryIcon'
 import type { CuarentenaItem } from '@/pages/Saneamiento/SaneamientoPage'
 import type { CuarentenaMovementType } from './BandejaCuarentena'
 import './EditarCuarentenaModal.css'
@@ -109,21 +111,32 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
           rpc<TarjetaOption[]>('fn_reporte_mapa_tarjetas').catch(() => []),
           rpc<IngresoOption[]>('fn_listar_categorias_ingreso').catch(() => []),
         ])
+        // Same category rules as AddMovementModal: system categories are never
+        // user-editable, and icon names from the icon library are not valid
+        // text for a native <option>, so they fall back to the parent's icon.
+        const editable = filterUserEditableCategories(catRes ?? []).map((r) => ({
+          ...r,
+          hijos: (r.hijos ?? []).filter((h: any) => isUserEditableCategory(h)),
+        }))
         const flat: CategoriaOption[] = []
-        const walk = (nodes: any[]) => {
+        const walk = (nodes: any[], parentIcono: string | null) => {
           nodes.forEach((n) => {
+            const rawIcono = typeof n.icono === 'string' ? n.icono.trim() : ''
+            const icono = rawIcono !== '' && !isLikelyLucideName(rawIcono)
+              ? rawIcono
+              : (parentIcono ?? '📁')
             if (!n.es_padre) {
               flat.push({
                 estructura_id: n.estructura_id,
                 nombre_cuenta: n.nombre_cuenta,
-                icono: n.icono,
+                icono,
                 es_padre: false,
               })
             }
-            if (n.hijos && n.hijos.length) walk(n.hijos)
+            if (n.hijos && n.hijos.length) walk(n.hijos, icono)
           })
         }
-        walk(catRes || [])
+        walk(editable, null)
         setCategorias(flat)
         setBilleteras(bilRes || [])
         setTarjetas(tarRes || [])
