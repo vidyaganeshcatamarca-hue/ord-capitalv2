@@ -391,7 +391,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
 
   const reloadBilleteras = async () => {
     try {
-      const bill = await rpc<Billetera[]>('fn_obtener_billeteras_ordenadas_por_uso').catch(
+      const bill = await rpc<Billetera[]>('fn_obtener_billeteras_ordenadas', { p_orden: 'valor' }).catch(
         () => rpc<Billetera[]>('fn_obtener_billeteras_activas').catch(() => [])
       )
       cachedBilleteras = bill ?? []
@@ -422,7 +422,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
       
       try {
         const [bill, rubr, ingrCat, tarj, resUsd] = await Promise.all([
-          rpc<Billetera[]>('fn_obtener_billeteras_ordenadas_por_uso').catch(
+          rpc<Billetera[]>('fn_obtener_billeteras_ordenadas', { p_orden: 'valor' }).catch(
             () => rpc<Billetera[]>('fn_obtener_billeteras_activas').catch(() => [])
           ),
           rpc<Rubro[]>('fn_obtener_arbol_categorias').catch(() => []),

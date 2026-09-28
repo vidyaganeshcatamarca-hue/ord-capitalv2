@@ -148,7 +148,7 @@ export function InversionesPage() {
     try {
       let data: WalletRpcRow[]
       try {
-        data = await rpc<WalletRpcRow[]>('fn_obtener_billeteras_ordenadas_por_uso')
+        data = await rpc<WalletRpcRow[]>('fn_obtener_billeteras_ordenadas', { p_orden: 'valor' })
       } catch {
         data = await rpc<WalletRpcRow[]>('fn_obtener_billeteras_activas')
       }
