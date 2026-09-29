@@ -39,15 +39,19 @@ const BCGDetalleCategoria = lazy(() => import('@/components/bcg/BCGDetalleCatego
 const SupervivenciaPage = lazy(() => import('@/pages/Supervivencia/SupervivenciaPage').then(module => ({ default: module.SupervivenciaPage })))
 const SaneamientoPage = lazy(() => import('@/pages/Saneamiento/SaneamientoPage').then(module => ({ default: module.SaneamientoPage })))
 
-/** /cuarentena lands on the unified Bandeja de Entrada. Back = history;
- * tray changes announce the global event so Home refreshes its widgets. */
+/** /cuarentena lands on the unified Bandeja de Entrada. The page wrapper
+ * class is what gives the route its scroll space under the bottom nav
+ * (same container as /saneamiento). Back = history; tray changes announce
+ * the global event so Home refreshes its widgets. */
 function CuarentenaBandejaRoute() {
   const navigate = useNavigate()
   return (
-    <CuarentenaBandeja
-      onVolver={() => navigate(-1)}
-      onChange={() => window.dispatchEvent(new CustomEvent('movement-added'))}
-    />
+    <div className="page saneamiento-page">
+      <CuarentenaBandeja
+        onVolver={() => navigate(-1)}
+        onChange={() => window.dispatchEvent(new CustomEvent('movement-added'))}
+      />
+    </div>
   )
 }
 const InversionesPage = lazy(() => import('@/pages/Inversiones/InversionesPage').then(module => ({ default: module.InversionesPage })))
