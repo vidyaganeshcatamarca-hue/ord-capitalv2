@@ -462,7 +462,10 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
                 <div className="spinner-sm" />
               ) : (
                 <select value={cuentaIngresoId} onChange={(e) => setCuentaIngresoId(e.target.value)}>
-                  <option value="">{t('cuarentena_seleccionar_cuenta_ingreso')}</option>
+                  {/* The placeholder is the field's title, not one more source:
+                      hidden keeps it out of the open dropdown while it stays
+                      the select's display until the user picks one. */}
+                  <option value="" disabled hidden>{t('cuarentena_seleccionar_cuenta_ingreso')}</option>
                   {ingresos.map((ingreso) => (
                     <option key={ingreso.producto_id} value={ingreso.producto_id}>
                       {ingreso.nombre}
