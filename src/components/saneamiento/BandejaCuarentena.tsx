@@ -453,7 +453,16 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
                       ) : (
                         <CategoryIcon name={MOVEMENT_TYPE_ICON[tipo]} size={18} />
                       )}
-                      <span>{item.categoria_nombre ? t(item.categoria_nombre) : t('saneamiento_sin_categoria')}</span>
+                      <span>{
+                        // Income and transfer rows receive money at the
+                        // destination wallet: that account is the meaningful
+                        // title; a category does not exist for them.
+                        (tipo === 'income' || tipo === 'transfer') && item.billetera_destino_nombre
+                          ? t(item.billetera_destino_nombre)
+                          : item.categoria_nombre
+                            ? t(item.categoria_nombre)
+                            : t('saneamiento_sin_categoria')
+                      }</span>
                       {isVoice && (
                         <span className="saneamiento-badge cuarentena-badge-tipo">
                           {t(`cuarentena_tipo_${tipo}`)}
@@ -498,7 +507,19 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
                     ))}
                   </div>
                   <div className="saneamiento-item-monto">
-                    <span className="font-mono font-bold">{formatCurrency(item.monto, itemCurrency(item))}</span>
+                    <span
+                      className="font-mono font-bold"
+                      style={{
+                        color: tipo === 'income'
+                          ? 'var(--mint, var(--mint, #00B127))'
+                          : tipo === 'transfer'
+                            ? 'var(--text, #FFFFFF)'
+                            : undefined,
+                      }}
+                    >
+                      {tipo === 'income' ? '+' : ''}
+                      {formatCurrency(item.monto, itemCurrency(item))}
+                    </span>
                   </div>
                 </div>
 
