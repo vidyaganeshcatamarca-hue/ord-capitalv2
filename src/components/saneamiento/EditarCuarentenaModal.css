@@ -125,35 +125,156 @@
   }
 }
 
-/* ── Category tree selector (mirrors the Home filter picker tree) ── */
-/* Reuses the global home-filter-* row classes; the wrapper bounds the tree
-   inside the edit modal and marks the current selection. */
-.ec-categorias-tree {
-  max-height: 260px;
+/* ── Category picker: compact trigger + its own overlay sheet ── */
+.ec-categoria-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border, #3D3D3D);
+  background: transparent;
+  color: var(--text, #FFFFFF);
+  font-size: calc(14px * var(--font-scale));
+  cursor: pointer;
+  text-align: left;
+}
+
+.ec-categoria-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ec-categoria-trigger-chevron {
+  color: var(--text-3, #9E9E9E);
+  font-size: calc(11px * var(--font-scale));
+}
+
+.ec-picker-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+}
+
+@media (min-width: 640px) {
+  .ec-picker-overlay {
+    align-items: center;
+    padding: 24px;
+  }
+}
+
+.ec-picker-sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
   overflow-y: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg, 12px);
-  background: var(--surface);
-  padding: var(--space-1);
+  background: var(--surface, #2D2D2D);
+  border: 1px solid var(--border, #3D3D3D);
+  border-radius: 20px 20px 0 0;
+  padding: 16px 16px 24px;
 }
 
-.ec-categorias-tree .home-filter-rubro-group {
-  overflow: visible;
+@media (min-width: 640px) {
+  .ec-picker-sheet {
+    border-radius: 20px;
+  }
 }
 
-.ec-categorias-tree .home-filter-rubro-btn.is-heading {
-  cursor: default;
-  color: var(--text);
+.ec-picker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
 }
 
-.ec-categorias-tree .home-filter-rubro-btn.is-heading:hover {
+.ec-picker-title {
+  font-size: calc(16px * var(--font-scale));
+  font-weight: 700;
+  color: var(--text, #FFFFFF);
+}
+
+.ec-picker-close {
   background: none;
+  border: none;
+  color: var(--text-3, #9E9E9E);
+  font-size: calc(16px * var(--font-scale));
+  cursor: pointer;
+  padding: 4px;
 }
 
-.ec-categorias-tree .home-filter-rubro-btn.is-selected,
-.ec-categorias-tree .home-filter-child-btn.is-selected {
+.ec-categorias-tree {
+  max-height: 55vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.ec-rubro-group {
+  border-radius: 10px;
+}
+
+.ec-rubro-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ec-rubro-heading,
+.ec-opcion {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  color: var(--text, #FFFFFF);
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 500;
+  padding: 10px 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.ec-rubro-heading {
+  cursor: default;
+}
+
+.ec-opcion:hover {
+  background: var(--surface-2, #3D3D3D);
+}
+
+.ec-opcion.is-selected {
   background: rgba(0, 178, 39, 0.14);
-  color: var(--text);
+}
+
+.ec-expand-btn {
+  background: none;
+  border: none;
+  color: var(--text-3, #9E9E9E);
+  font-size: calc(11px * var(--font-scale));
+  cursor: pointer;
+  padding: 10px 6px;
+}
+
+.ec-children {
+  padding-left: 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.ec-opcion-hijo {
+  font-size: calc(13px * var(--font-scale));
+  color: var(--text-2, #E0E0E0);
+  padding: 8px 10px;
 }
 
 .ec-tree-empty {
