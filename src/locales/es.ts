@@ -1104,6 +1104,9 @@ export const saneamiento = {
   saneamiento_ver_foto: "Ver Foto",
   saneamiento_escuchar_audio: "Escuchar Audio",
   saneamiento_sin_categoria: "Sin categoría",
+  transfer_compra_dolares: "Compra de dólares",
+  transfer_venta_dolares: "Venta de dólares",
+  transfer_entre_cuentas: "Transferencia entre cuentas",
   saneamiento_sin_detalle: "Sin detalle",
 
   // Editar modal
