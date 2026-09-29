@@ -205,6 +205,37 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
     if (!sel) setBilleteraId('')
   }, [loadingLists, requiereSaldoSuficiente, billeteraId, billeterasOrigen])
 
+  // Suggest the destination amount from the day's USD rate when editing a
+  // cross-currency transfer leaves it empty (buying or selling USD).
+  // It is only a hint: the user can (and may need to) override the value.
+  useEffect(() => {
+    if (!crossCurrency || !montoFormNum) return
+    if ((parseFloat(destinationAmount) || 0) > 0) return
+    let cancelled = false
+    rpc<number>('fn_obtener_cotizacion_usd')
+      .catch(() => null)
+      .then((cotizacion) => {
+        if (cancelled || !cotizacion || cotizacion <= 0) return
+        // Rate is stored per the user's default currency: it converts
+        // between that currency and USD. Pass through other pairs unchanged.
+        const baseAUsd =
+          billeteraMoneda === 'USD'
+            ? montoFormNum
+            : billeteraMoneda === 'ARS'
+              ? montoFormNum / cotizacion
+              : null
+        if (baseAUsd === null) return
+        let sugerencia: number
+        if (billeteraDestinoMoneda === 'USD') sugerencia = baseAUsd
+        else if (billeteraDestinoMoneda === 'ARS') sugerencia = baseAUsd * cotizacion
+        else return
+        setDestinationAmount(sugerencia.toFixed(2))
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [crossCurrency, montoFormNum, destinationAmount, billeteraMoneda, billeteraDestinoMoneda])
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
