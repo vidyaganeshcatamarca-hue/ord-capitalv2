@@ -101,6 +101,7 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
   const [cuotas, setCuotas] = useState<string>(numberValue(item.cuotas ?? 1))
 
   const [categorias, setCategorias] = useState<CategoriaGrupoOption[]>([])
+  const [expandedRubro, setExpandedRubro] = useState<string | null>(null)
   const [billeteras, setBilleteras] = useState<BilleteraOption[]>([])
   const [tarjetas, setTarjetas] = useState<TarjetaOption[]>([])
   const [ingresos, setIngresos] = useState<IngresoOption[]>([])
@@ -159,6 +160,16 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
     }
     load()
   }, [isOpen, showToast])
+
+  // When the edited movement points at a child, open its group so the
+  // current selection is visible without an extra tap.
+  useEffect(() => {
+    if (!isOpen || !estructuraId) return
+    const parent = categorias.find((g) =>
+      (g.hijos ?? []).some((h) => String(h.estructura_id) === estructuraId)
+    )
+    if (parent) setExpandedRubro(String(parent.estructura_id))
+  }, [isOpen, estructuraId, categorias])
 
   const billeteraMoneda = useMemo(
     () => billeteras.find((b) => String(b.billetera_id) === billeteraId)?.moneda ?? null,
@@ -294,24 +305,64 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
               {loadingLists ? (
                 <div className="spinner-sm" />
               ) : (
-                <select value={estructuraId} onChange={(e) => setEstructuraId(e.target.value)}>
-                  <option value="">{t('saneamiento_seleccionar_categoria')}</option>
-                  {categorias.map((g) =>
-                    g.hijos.length > 0 ? (
-                      <optgroup key={g.estructura_id} label={`${g.icono} ${g.nombre_cuenta}`}>
-                        {g.hijos.map((h) => (
-                          <option key={h.estructura_id} value={h.estructura_id}>
-                            {h.icono} {h.nombre}
-                          </option>
-                        ))}
-                      </optgroup>
-                    ) : (
-                      <option key={g.estructura_id} value={g.estructura_id}>
-                        {g.icono} {g.nombre_cuenta}
-                      </option>
-                    )
+                <div className="ec-categorias-tree">
+                  {categorias.length === 0 && (
+                    <div className="ec-tree-empty">{t('saneamiento_seleccionar_categoria')}</div>
                   )}
-                </select>
+                  {categorias.map((g) => {
+                    const isGroup = g.hijos.length > 0
+                    const isExpanded = expandedRubro === String(g.estructura_id)
+                    return (
+                      <div key={g.estructura_id} className="home-filter-rubro-group">
+                        <div className="home-filter-rubro-row">
+                          {isGroup ? (
+                            // A parent with children is a heading, never a
+                            // selectable leaf: expenses must point at a real
+                            // subaccount (its own selection is the child).
+                            <div className="home-filter-rubro-btn is-heading">
+                              <span className="home-filter-rubro-icon">{g.icono}</span>
+                              <span className="home-filter-rubro-name">{g.nombre_cuenta}</span>
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              className={`home-filter-rubro-btn${Number(estructuraId) === g.estructura_id ? ' is-selected' : ''}`}
+                              onClick={() => setEstructuraId(String(g.estructura_id))}
+                            >
+                              <span className="home-filter-rubro-icon">{g.icono}</span>
+                              <span className="home-filter-rubro-name">{g.nombre_cuenta}</span>
+                            </button>
+                          )}
+                          {isGroup && (
+                            <button
+                              type="button"
+                              className="home-filter-expand-btn"
+                              onClick={() => setExpandedRubro(isExpanded ? null : String(g.estructura_id))}
+                              aria-label={isExpanded ? t('btn_collapse') : t('btn_expand')}
+                            >
+                              {isExpanded ? '▲' : '▼'}
+                            </button>
+                          )}
+                        </div>
+                        {isGroup && isExpanded && (
+                          <div className="home-filter-children">
+                            {g.hijos.map((h) => (
+                              <button
+                                key={h.estructura_id}
+                                type="button"
+                                className={`home-filter-child-btn${Number(estructuraId) === h.estructura_id ? ' is-selected' : ''}`}
+                                onClick={() => setEstructuraId(String(h.estructura_id))}
+                              >
+                                <span className="home-filter-rubro-icon">{h.icono}</span>
+                                <span>{h.nombre}</span>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
               )}
             </div>
           )}

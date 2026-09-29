@@ -125,6 +125,43 @@
   }
 }
 
+/* ── Category tree selector (mirrors the Home filter picker tree) ── */
+/* Reuses the global home-filter-* row classes; the wrapper bounds the tree
+   inside the edit modal and marks the current selection. */
+.ec-categorias-tree {
+  max-height: 260px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg, 12px);
+  background: var(--surface);
+  padding: var(--space-1);
+}
+
+.ec-categorias-tree .home-filter-rubro-group {
+  overflow: visible;
+}
+
+.ec-categorias-tree .home-filter-rubro-btn.is-heading {
+  cursor: default;
+  color: var(--text);
+}
+
+.ec-categorias-tree .home-filter-rubro-btn.is-heading:hover {
+  background: none;
+}
+
+.ec-categorias-tree .home-filter-rubro-btn.is-selected,
+.ec-categorias-tree .home-filter-child-btn.is-selected {
+  background: rgba(0, 178, 39, 0.14);
+  color: var(--text);
+}
+
+.ec-tree-empty {
+  padding: var(--space-3);
+  color: var(--text-3);
+  font-size: calc(13px * var(--font-scale));
+}
+
 /* The loading spinner is the only motion in this modal. Following the
    existing project convention (VoiceRecorderModal.css), reduced motion
    slows it instead of freezing a loading indicator. Values above stay
