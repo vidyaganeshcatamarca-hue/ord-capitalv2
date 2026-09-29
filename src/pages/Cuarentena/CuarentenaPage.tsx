@@ -247,7 +247,7 @@ export function CuarentenaPage() {
               const isVoice = isVoiceItem(p)
 
               return (
-                <div key={p.pendiente_id} className="cuarentena-item">
+                <div key={p.pendiente_id} className="cuarentena-item" onClick={() => setItemEditar(p)}>
                   <div className="cuarentena-item-header">
                     <div>
                       <h4 style={{ margin: 0, fontSize: 'calc(16px * var(--font-scale))', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -281,15 +281,15 @@ export function CuarentenaPage() {
                   </div>
 
                   <div className="cuarentena-item-actions" style={{ flexWrap: 'wrap' }}>
-                    <button className="btn-cuarentena edit" onClick={() => setItemEditar(p)}>
+                    <button className="btn-cuarentena edit" onClick={(e) => { e.stopPropagation(); setItemEditar(p) }}>
                       <CategoryIcon name="Pencil" size={14} /> {t('saneamiento_editar')}
                     </button>
-                    <button className="btn-cuarentena reject" onClick={() => setItemToReject(p)}>
+                    <button className="btn-cuarentena reject" onClick={(e) => { e.stopPropagation(); setItemToReject(p) }}>
                       <CategoryIcon name="X" size={14} /> {t('btn_reject')}
                     </button>
                     <button
                       className="btn-cuarentena approve"
-                      onClick={() => handleAprobarItem(p)}
+                      onClick={(e) => { e.stopPropagation(); handleAprobarItem(p) }}
                       disabled={!approvable}
                       title={approvable ? undefined : t('cuarentena_incompleto_falta', { campos: missingLabels })}
                     >

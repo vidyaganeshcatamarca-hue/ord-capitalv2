@@ -61,6 +61,8 @@
 }
 
 .btn-cuarentena {
+  flex: 1;
+  justify-content: center;
   padding: 6px 12px;
   border-radius: 8px;
   font-size: calc(12px * var(--font-scale));
@@ -70,6 +72,11 @@
   display: flex;
   align-items: center;
   gap: 4px;
+}
+
+/* The whole card opens the edit modal; the action buttons opt out. */
+.cuarentena-item {
+  cursor: pointer;
 }
 
 .btn-cuarentena.approve {

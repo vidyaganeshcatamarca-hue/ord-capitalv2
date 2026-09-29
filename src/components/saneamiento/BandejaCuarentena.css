@@ -70,6 +70,12 @@
   cursor: not-allowed;
 }
 
+/* The whole card opens the edit modal; the checkbox, links and the
+   ambiguity selector opt out with their own stopPropagation. */
+.saneamiento-item {
+  cursor: pointer;
+}
+
 /* ── Ambiguous match selector ───────────────────────────── */
 
 .cuarentena-ambig {

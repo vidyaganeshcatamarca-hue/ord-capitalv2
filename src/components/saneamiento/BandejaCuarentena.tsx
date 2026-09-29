@@ -432,6 +432,7 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
               <div
                 key={item.pendiente_id}
                 className={`saneamiento-item ${seleccionados.has(item.pendiente_id) ? 'seleccionado' : ''}`}
+                onClick={() => setItemEditar(item)}
               >
                 <div className="saneamiento-item-main">
                   <input
@@ -466,12 +467,12 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
                     </p>
 
                     {item.origen === 'ocr' && (
-                      <button className="saneamiento-item-link" onClick={() => verFoto(item.metadata)}>
+                      <button className="saneamiento-item-link" onClick={(e) => { e.stopPropagation(); verFoto(item.metadata) }}>
                         📷 {t('saneamiento_ver_foto')}
                       </button>
                     )}
                     {(item.origen === 'voz' || isVoice) && item.metadata?.audio_url && (
-                      <button className="saneamiento-item-link" onClick={() => escucharAudio(item.metadata)}>
+                      <button className="saneamiento-item-link" onClick={(e) => { e.stopPropagation(); escucharAudio(item.metadata) }}>
                         🎧 {t('saneamiento_escuchar_audio')}
                       </button>
                     )}
@@ -614,7 +615,7 @@ interface AmbiguitySelectorProps {
 
 function AmbiguitySelector({ name, titleKey, candidates, disabled, onSelect }: AmbiguitySelectorProps) {
   return (
-    <div className="cuarentena-ambig">
+    <div className="cuarentena-ambig" onClick={(e) => e.stopPropagation()}>
       <p className="cuarentena-ambig-titulo">{t(titleKey)}</p>
       <div className="cuarentena-ambig-opciones" role="radiogroup" aria-label={t(titleKey)}>
         {candidates.map((candidate) => (
