@@ -969,7 +969,54 @@ export function HomePage() {
   // cantidad en cada render. Si los movemos despues del return temprano
   // del spinner, la primera render (loading=true) llama N hooks y la
   // segunda (datos cargados) llama N+K → React error #310.
-  const totalAlertas = alerts?.total_alertas ?? 0
+  interface AlertaFila {
+    key: string
+    texto: string
+    conteo: number
+    navegar?: string
+  }
+
+  const ALERTAS_DESCARTADAS_KEY = 'home_alertas_descartadas'
+  const [descartadas, setDescartadas] = useState<Record<string, number>>({})
+
+  // Dismissals persist per alert type: tapping the row records the count it
+  // was seen at; the row re-appears whenever that count changes again (a new
+  // pending item, or a partial approval that leaves a different number).
+  useEffect(() => {
+    try {
+      setDescartadas(JSON.parse(localStorage.getItem(ALERTAS_DESCARTADAS_KEY) || '{}') as Record<string, number>)
+    } catch {
+      // Corrupted storage falls back to nothing dismissed.
+    }
+  }, [])
+
+  const descartarAlertas = (fila: AlertaFila) => {
+    try {
+      const data = { ...descartadas, [fila.key]: fila.conteo }
+      localStorage.setItem(ALERTAS_DESCARTADAS_KEY, JSON.stringify(data))
+      setDescartadas(data)
+    } catch {
+      // Without storage the dismissal just lasts for this mount.
+    }
+  }
+
+  const alertasFilas = useMemo((): AlertaFila[] => {
+    if (!alerts) return []
+    const filas: AlertaFila[] = []
+    if (alerts.egresos_cuarentena > 0) {
+      filas.push({ key: 'cuarentena', texto: '📥 Transacciones en Cuarentena', conteo: alerts.egresos_cuarentena, navegar: '/cuarentena' })
+    }
+    if (alerts.billeteras_rojas > 0) {
+      filas.push({ key: 'rojas', texto: '🔴 Cuentas desconciliadas / en rojo', conteo: alerts.billeteras_rojas })
+    }
+    if (alerts.dias_asfixia_proximos > 0) {
+      filas.push({ key: 'asfixia', texto: t('home_alert_asfixia'), conteo: alerts.dias_asfixia_proximos })
+    }
+    return filas
+  }, [alerts, t])
+
+  // A row stays hidden only while its count has not changed since dismissal.
+  const filasVisibles = alertasFilas.filter((fila) => descartadas[fila.key] !== fila.conteo)
   const patrimonioARS = patrimonio?.total_pesos ?? 0
   const patrimonioUSD = patrimonio?.total_dolares ?? 0
   // Animacion tipo velocimetro para el hero card. En el primer mount
@@ -1041,9 +1088,9 @@ export function HomePage() {
             style={{ position: 'relative' }}
           >
             🔔
-            {totalAlertas > 0 && (
+            {filasVisibles.length > 0 && (
               <span className="badge badge-red animate-pulse" style={{ position: 'absolute', top: -4, right: -4, fontSize: 'calc(10px * var(--font-scale))' }}>
-                {totalAlertas}
+                {filasVisibles.length}
               </span>
             )}
           </button>
@@ -1055,27 +1102,23 @@ export function HomePage() {
         <div className="section" style={{ paddingTop: 0 }}>
           <div className="home-alerts-panel">
             <div className="home-alerts-header">
-              <span className="home-alerts-title">Alertas Activas ({totalAlertas})</span>
+              <span className="home-alerts-title">Alertas Activas ({filasVisibles.length})</span>
               <button className="text-xs text-muted" onClick={() => setAlertsOpen(false)}>Cerrar ✕</button>
             </div>
-            {alerts.egresos_cuarentena > 0 && (
-              <div className="alert-item-row" style={{ cursor: 'pointer' }} onClick={() => navigate('/cuarentena')}>
-                <span className="alert-item-label">📥 Transacciones en Cuarentena</span>
-                <span className="alert-item-badge">{alerts.egresos_cuarentena}</span>
+            {filasVisibles.map((fila) => (
+              <div
+                key={fila.key}
+                className="alert-item-row"
+                style={{ cursor: 'pointer', borderLeftColor: fila.key === 'cuarentena' ? undefined : 'var(--coral)' }}
+                onClick={() => {
+                  descartarAlertas(fila)
+                  if (fila.navegar) navigate(fila.navegar)
+                }}
+              >
+                <span className="alert-item-label">{fila.texto}</span>
+                <span className="alert-item-badge">{fila.conteo}</span>
               </div>
-            )}
-            {alerts.billeteras_rojas > 0 && (
-              <div className="alert-item-row" style={{ borderLeftColor: 'var(--coral)' }}>
-                <span className="alert-item-label">🔴 Cuentas desconciliadas / en rojo</span>
-                <span className="alert-item-badge">{alerts.billeteras_rojas}</span>
-              </div>
-            )}
-            {alerts.dias_asfixia_proximos > 0 && (
-              <div className="alert-item-row" style={{ borderLeftColor: 'var(--coral)' }}>
-                <span className="alert-item-label">{t("home_alert_asfixia")}</span>
-                <span className="alert-item-badge">{alerts.dias_asfixia_proximos}</span>
-              </div>
-            )}
+            ))}
             {alerts.vencimientos_3_dias && alerts.vencimientos_3_dias.length > 0 && (
               <div className="alert-vencimientos-list">
                 <p className="text-xs text-muted font-semibold mt-1">{t('alert_upcoming_card_dues')}</p>
@@ -1087,7 +1130,7 @@ export function HomePage() {
                 ))}
               </div>
             )}
-            {totalAlertas === 0 && (
+            {filasVisibles.length === 0 && (
               <p className="text-xs text-muted text-center py-2">{t('alert_all_ok_no_alerts')}</p>
             )}
           </div>
