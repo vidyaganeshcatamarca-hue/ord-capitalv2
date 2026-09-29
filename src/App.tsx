@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { HogarProvider } from '@/contexts/HogarContext'
 import { ToastProvider } from '@/contexts/ToastContext'
@@ -31,13 +31,25 @@ const AuthPage = lazy(() => import('@/pages/Auth/AuthPage').then(module => ({ de
 const HomePage = lazy(() => import('@/pages/Home/HomePage').then(module => ({ default: module.HomePage })))
 const BilleterasPage = lazy(() => import('@/pages/Billeteras/BilleterasPage').then(module => ({ default: module.BilleterasPage })))
 const TarjetasPage = lazy(() => import('@/pages/Tarjetas/TarjetasPage').then(module => ({ default: module.TarjetasPage })))
-const CuarentenaPage = lazy(() => import('@/pages/Cuarentena/CuarentenaPage').then(module => ({ default: module.CuarentenaPage })))
+const CuarentenaBandeja = lazy(() => import('@/components/saneamiento/BandejaCuarentena').then(module => ({ default: module.BandejaCuarentena })))
 const PresupuestosPage = lazy(() => import('@/pages/Presupuestos/PresupuestosPage').then(module => ({ default: module.PresupuestosPage })))
 const FamiliaPage = lazy(() => import('@/pages/Familia/FamiliaPage').then(module => ({ default: module.FamiliaPage })))
 const AnalisisEmocionalPage = lazy(() => import('@/pages/AnalisisEmocional/AnalisisEmocionalPage').then(module => ({ default: module.AnalisisEmocionalPage })))
 const BCGDetalleCategoria = lazy(() => import('@/components/bcg/BCGDetalleCategoria').then(module => ({ default: module.BCGDetalleCategoria })))
 const SupervivenciaPage = lazy(() => import('@/pages/Supervivencia/SupervivenciaPage').then(module => ({ default: module.SupervivenciaPage })))
 const SaneamientoPage = lazy(() => import('@/pages/Saneamiento/SaneamientoPage').then(module => ({ default: module.SaneamientoPage })))
+
+/** /cuarentena lands on the unified Bandeja de Entrada. Back = history;
+ * tray changes announce the global event so Home refreshes its widgets. */
+function CuarentenaBandejaRoute() {
+  const navigate = useNavigate()
+  return (
+    <CuarentenaBandeja
+      onVolver={() => navigate(-1)}
+      onChange={() => window.dispatchEvent(new CustomEvent('movement-added'))}
+    />
+  )
+}
 const InversionesPage = lazy(() => import('@/pages/Inversiones/InversionesPage').then(module => ({ default: module.InversionesPage })))
 const SaludPage = lazy(() => import('@/pages/Salud/SaludPage').then(module => ({ default: module.SaludPage })))
 const SobresPage = lazy(() => import('@/pages/Sobres/SobresPage').then(module => ({ default: module.SobresPage })))
@@ -128,7 +140,7 @@ function AppLayout() {
           <Route path="/" element={<HomePage />} />
           <Route path="/billeteras" element={<BilleterasPage />} />
           <Route path="/tarjetas" element={<TarjetasPage />} />
-          <Route path="/cuarentena" element={<CuarentenaPage />} />
+          <Route path="/cuarentena" element={<CuarentenaBandejaRoute />} />
           <Route path="/categorias" element={<Navigate to="/billeteras" replace />} />
           <Route path="/presupuesto" element={<PresupuestosPage />} />
           <Route path="/familia" element={<FamiliaPage />} />

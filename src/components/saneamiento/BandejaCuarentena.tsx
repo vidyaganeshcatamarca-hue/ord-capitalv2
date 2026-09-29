@@ -11,6 +11,9 @@ import type { EditarCuarentenaPayload } from './EditarCuarentenaModal'
 import { RechazarCuarentenaModal } from './RechazarCuarentenaModal'
 import { ImageModal } from './ImageModal'
 import type { CuarentenaItem } from '@/pages/Saneamiento/SaneamientoPage'
+// Shared saneamiento item styles (item layout, checkbox, flex actions) live in
+// SaneamientoPage.css; import it first so the local sheet can override.
+import '@/pages/Saneamiento/SaneamientoPage.css'
 import './BandejaCuarentena.css'
 
 type FiltroOrigen = 'todos' | 'ocr' | 'recurrente' | 'voz'
