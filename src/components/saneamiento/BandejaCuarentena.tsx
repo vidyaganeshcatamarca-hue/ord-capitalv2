@@ -8,7 +8,6 @@ import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { EditarCuarentenaModal } from './EditarCuarentenaModal'
 import type { EditarCuarentenaPayload } from './EditarCuarentenaModal'
-import { RechazarCuarentenaModal } from './RechazarCuarentenaModal'
 import { ImageModal } from './ImageModal'
 import type { CuarentenaItem } from '@/pages/Saneamiento/SaneamientoPage'
 // Shared saneamiento item styles (item layout, checkbox, flex actions) live in
@@ -257,10 +256,11 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
     }
   }
 
-  const handleRechazarItem = async (_motivo: string, _nota: string) => {
-    if (!itemRechazar) return
+  const handleRechazarItem = async (item?: CuarentenaItem) => {
+    const target = item ?? itemRechazar
+    if (!target) return
     try {
-      await rpc('fn_rechazar_cuarentena', { p_pendiente_id: itemRechazar.pendiente_id })
+      await rpc('fn_rechazar_cuarentena', { p_pendiente_id: target.pendiente_id })
       showToast(t('saneamiento_toast_rechazado'), 'success')
       setItemRechazar(null)
       onChange()
@@ -454,14 +454,16 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
                         <CategoryIcon name={MOVEMENT_TYPE_ICON[tipo]} size={18} />
                       )}
                       <span>{
-                        // Income and transfer rows receive money at the
-                        // destination wallet: that account is the meaningful
-                        // title; a category does not exist for them.
-                        (tipo === 'income' || tipo === 'transfer') && item.billetera_destino_nombre
-                          ? t(item.billetera_destino_nombre)
-                          : item.categoria_nombre
-                            ? t(item.categoria_nombre)
-                            : t('saneamiento_sin_categoria')
+                        // Transfers show the ORIGIN account as the main title
+                        // (where the money leaves from); the destination stays
+                        // visible in the wallet chips below.
+                        tipo === 'transfer' && item.billetera_nombre
+                          ? t(item.billetera_nombre)
+                          : tipo === 'income' && item.billetera_destino_nombre
+                            ? t(item.billetera_destino_nombre)
+                            : item.categoria_nombre
+                              ? t(item.categoria_nombre)
+                              : t('saneamiento_sin_categoria')
                       }</span>
                       {isVoice && (
                         <span className="saneamiento-badge cuarentena-badge-tipo">
@@ -527,7 +529,7 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
                   <button className="saneamiento-btn-editar" onClick={(e) => { e.stopPropagation(); setItemEditar(item) }}>
                     {t('saneamiento_editar')}
                   </button>
-                  <button className="saneamiento-btn-rechazar" onClick={(e) => { e.stopPropagation(); setItemRechazar(item) }}>
+                  <button className="saneamiento-btn-rechazar" onClick={(e) => { e.stopPropagation(); handleRechazarItem() }}>
                     {t('saneamiento_rechazar')}
                   </button>
                   <button
@@ -551,15 +553,6 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
           isOpen={true}
           onClose={() => setItemEditar(null)}
           onGuardar={handleGuardarEdicion}
-        />
-      )}
-
-      {itemRechazar && (
-        <RechazarCuarentenaModal
-          item={itemRechazar}
-          isOpen={true}
-          onClose={() => setItemRechazar(null)}
-          onConfirmar={handleRechazarItem}
         />
       )}
 
