@@ -427,7 +427,22 @@ function VoiceRecorderSession({
           {view === 'error' && error && (
             <div className="voice-recorder-block">
               <p className="voice-recorder-alert">{t(error.i18nKey)}</p>
-              <button type="button" className="voice-recorder-action" onClick={handleClose}>
+              {error.retryable && (
+                <button
+                  type="button"
+                  className="voice-recorder-action"
+                  onClick={() => {
+                    void start();
+                  }}
+                >
+                  {t('btn_retry')}
+                </button>
+              )}
+              <button
+                type="button"
+                className={`voice-recorder-action${error.retryable ? ' is-secondary' : ''}`}
+                onClick={handleClose}
+              >
                 {t('voice.close')}
               </button>
             </div>

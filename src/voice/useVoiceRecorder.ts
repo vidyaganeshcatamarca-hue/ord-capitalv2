@@ -19,6 +19,8 @@ export type VoiceRecorderState =
 export interface VoiceRecorderError {
   i18nKey: string;
   detail?: string;
+  /** True when retrying makes sense (for example the permission was re-enabled from browser settings). */
+  retryable?: boolean;
 }
 
 /** Public surface of `useVoiceRecorder`. */
@@ -45,7 +47,15 @@ export interface UseVoiceRecorderResult {
 
 const CODEC_UNSUPPORTED_KEY = 'voice.codec_unsupported';
 const MIC_DENIED_KEY = 'voice.mic_denied';
+const MIC_BUSY_KEY = 'voice.mic_busy';
+const MIC_UNAVAILABLE_KEY = 'voice.mic_unavailable';
 const GENERIC_ERROR_KEY = 'voice_generic_error';
+
+/** The microphone is locked by another app (or the OS lost the device). */
+const MIC_BUSY_ERROR_NAMES: readonly string[] = [
+  'NotReadableError',
+  'TrackStartError',
+];
 
 /** Permission-family rejections mean the user has to grant access. */
 const MIC_DENIED_ERROR_NAMES: readonly string[] = [
@@ -65,9 +75,16 @@ function errorNameOf(error: unknown): string {
 /** Classifies a getUserMedia rejection into an i18n key. */
 function classifyMicrophoneError(error: unknown): VoiceRecorderError {
   const detail = error instanceof Error ? error.message : String(error);
-  if (MIC_DENIED_ERROR_NAMES.includes(errorNameOf(error))) {
+  const name = errorNameOf(error);
+  if (MIC_DENIED_ERROR_NAMES.includes(name)) {
     telemetry.track('voice_mic_denied', { detail }, TELEMETRY_PRIORITY.LOW);
-    return { i18nKey: MIC_DENIED_KEY, detail };
+    // Retrying matters: the user can re-enable access from browser settings
+    // and come back to this same modal.
+    return { i18nKey: MIC_DENIED_KEY, detail, retryable: true };
+  }
+  if (MIC_BUSY_ERROR_NAMES.includes(name)) {
+    telemetry.track('voice_mic_busy', { detail }, TELEMETRY_PRIORITY.LOW);
+    return { i18nKey: MIC_BUSY_KEY, detail, retryable: true };
   }
   return { i18nKey: GENERIC_ERROR_KEY, detail };
 }
@@ -181,9 +198,20 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
     if (stateRef.current === 'recording' || stateRef.current === 'requesting_permission') return;
 
     if (!isBrowserSupported()) {
-      commitState('error');
-      if (mountedRef.current) setError({ i18nKey: CODEC_UNSUPPORTED_KEY });
-      telemetry.track('voice_codec_unsupported', { reason: 'no_media_recorder' }, TELEMETRY_PRIORITY.LOW);
+      // Insecure contexts (plain http) and embedded browsers expose no
+      // mediaDevices at all: the permission prompt can never appear there,
+      // so these get their own explanation instead of the codec message.
+      const micApiAvailable =
+        typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia;
+      if (micApiAvailable) {
+        commitState('error');
+        if (mountedRef.current) setError({ i18nKey: CODEC_UNSUPPORTED_KEY });
+        telemetry.track('voice_codec_unsupported', { reason: 'no_media_recorder' }, TELEMETRY_PRIORITY.LOW);
+      } else {
+        commitState('error');
+        if (mountedRef.current) setError({ i18nKey: MIC_UNAVAILABLE_KEY });
+        telemetry.track('voice_mic_unavailable', { reason: 'no_media_devices' }, TELEMETRY_PRIORITY.LOW);
+      }
       return;
     }
 

@@ -642,7 +642,9 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
 // === VOZ (carga por audio) ===
 export const voice = {
   codec_unsupported: "Tu navegador no soporta grabación de audio. Probá con Chrome, Edge o Safari actualizado.",
-  mic_denied: "Necesitamos permiso para usar el micrófono.",
+  mic_denied: "El navegador bloqueó el micrófono. Tocá el candado o el ícono de información junto a la dirección del sitio, poné Micrófono en Permitir y volvé a intentar. En iPhone (Safari): tocá Aa → Configuración del sitio web → Micrófono.",
+  mic_busy: "El micrófono lo está usando otra aplicación. Cerrala y volvé a intentar.",
+  mic_unavailable: "Acá el navegador no permite usar el micrófono. Si estás dentro de otra app (por ejemplo el visor de un enlace), abrí el sitio con el Chrome o el Safari del teléfono.",
   recording: "Grabando...",
   recording_max: "Tiempo máximo alcanzado",
   uploading: "Enviando audio...",
