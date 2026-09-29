@@ -524,15 +524,15 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
                 </div>
 
                 <div className="saneamiento-item-actions">
-                  <button className="saneamiento-btn-editar" onClick={() => setItemEditar(item)}>
+                  <button className="saneamiento-btn-editar" onClick={(e) => { e.stopPropagation(); setItemEditar(item) }}>
                     {t('saneamiento_editar')}
                   </button>
-                  <button className="saneamiento-btn-rechazar" onClick={() => setItemRechazar(item)}>
+                  <button className="saneamiento-btn-rechazar" onClick={(e) => { e.stopPropagation(); setItemRechazar(item) }}>
                     {t('saneamiento_rechazar')}
                   </button>
                   <button
                     className="saneamiento-btn-aprobar"
-                    onClick={() => handleAprobarItem(item)}
+                    onClick={(e) => { e.stopPropagation(); handleAprobarItem(item) }}
                     disabled={!approvable}
                     title={approvable ? undefined : t('cuarentena_incompleto_falta', { campos: missingLabels })}
                   >
