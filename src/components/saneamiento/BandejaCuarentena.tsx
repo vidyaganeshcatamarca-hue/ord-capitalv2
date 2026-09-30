@@ -385,7 +385,7 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
       {approvableItems.length > 0 && (
         <div className="cuarentena-toolbar">
           <button
-            className="btn btn-secondary btn-sm"
+            className="btn btn-outline"
             onClick={() => setShowConfirmTodos(true)}
           >
             {t('cuarentena_aprobar_todos', { count: String(approvableItems.length) })}
@@ -449,7 +449,7 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
                   <div className="saneamiento-item-info">
                     <div className="saneamiento-item-titulo">
                       {item.categoria_icono ? (
-                        <span>{item.categoria_icono}</span>
+                        <CategoryIcon name={item.categoria_icono} size={18} />
                       ) : (
                         <CategoryIcon name={MOVEMENT_TYPE_ICON[tipo]} size={18} />
                       )}
@@ -465,11 +465,14 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
                               ? t(item.categoria_nombre)
                               : t('saneamiento_sin_categoria')
                       }</span>
-                      {isVoice && (
-                        <span className="saneamiento-badge cuarentena-badge-tipo">
-                          {t(`cuarentena_tipo_${tipo}`)}
-                        </span>
-                      )}
+                    </div>
+                    {/* Standardized row: operation type + capture origin
+                        (voz/OCR/recurrente), always BELOW the title and
+                        never mixed with it. */}
+                    <div className="cuarentena-badges-fila">
+                      <span className="saneamiento-badge cuarentena-badge-tipo">
+                        {t(`cuarentena_tipo_${tipo}`)}
+                      </span>
                       <OrigenBadge origen={item.origen} isVoice={isVoice} />
                     </div>
                     <p className="saneamiento-item-detalle">{item.detalle || t('saneamiento_sin_detalle')}</p>
@@ -594,7 +597,12 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
 /** Human-readable chips for the type-specific columns of a row. */
 function itemMetaParts(item: CuarentenaItem, tipo: CuarentenaMovementType): string[] {
   const parts: string[] = []
-  if (tipo === 'income' || tipo === 'transfer') {
+  if (tipo === 'transfer') {
+    // The origin is already the card title: never repeat it. Show a small
+    // arrow pointing at the destination account (owner: "una flechita y la
+    // cuenta destino").
+    if (item.billetera_destino_nombre) parts.push(`→ ${t(item.billetera_destino_nombre)}`)
+  } else if (tipo === 'income') {
     if (item.billetera_nombre) parts.push(t(item.billetera_nombre))
     if (item.billetera_destino_nombre) parts.push(t(item.billetera_destino_nombre))
   } else if (item.billetera_nombre) {

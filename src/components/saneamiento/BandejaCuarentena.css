@@ -18,6 +18,16 @@
   color: var(--text-3);
 }
 
+/* Standardized card badge row: operation type + capture origin (voz/OCR),
+   always its own line below the title (never next to it). */
+.cuarentena-badges-fila {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+}
+
 .cuarentena-filtro-voz {
   display: flex;
   align-items: center;
