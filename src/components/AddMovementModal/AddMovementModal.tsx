@@ -82,9 +82,6 @@ interface ProyectoHogar {
 
 type Paso = 'tipo' | 'categoria' | 'monto' | 'cuenta' | 'fecha' | 'detalles'
 
-/** Entry surface of the sheet: the manual form or the voice capture entry point. */
-type EntryMode = 'manual' | 'voice'
-
 const TIPO_CONFIG = {
   expense:  { label: t('type_expense', { defaultValue: 'Gasto' }),         emoji: '➖', color: 'var(--coral)' },
   income:   { label: t('type_income', { defaultValue: 'Ingreso' }),        emoji: '➕', color: 'var(--mint)' },
@@ -282,24 +279,26 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   const [showCalculator, setShowCalculator] = useState(true)
   const [mobileShowAllCat, setMobileShowAllCat] = useState(false)
 
-  // ── Superficie de entrada: formulario manual vs acceso a voz (Voice v1) ──
-  // Vive en este componente: cambiar de tab NO desmonta el sheet, asi que el
-  // estado del formulario sobrevive al ir y volver de la pestaña de voz.
-  const [entryMode, setEntryMode] = useState<EntryMode>('manual')
-
-  // Voice entry tab is gated by the backend feature flag 'menu_carga_voz'
-  // (simple mode + voz_activada, or advanced mode). Aliased to avoid the
-  // local `loading` state already declared below.
+  // ── Superficie de entrada: formulario manual + botón de micrófono (Voice v1) ──
+  // Voice capture is feature-gated by the backend flag 'menu_carga_voz'
+  // (voz_activada preference in simple mode, always in advanced mode). No
+  // entry tab anymore: a visible mic button replaces the old Manual|Voice
+  // segmented control. Same behavior as the old nav long-press: the mic
+  // opens the global full-screen recorder, which auto-starts the 30s
+  // countdown on open.
   const { hasFeature, loading: modoAppLoading } = useModoApp()
-  const voiceTabVisible = !modoAppLoading && hasFeature('menu_carga_voz')
-
-  // Never leave a hidden tab selected: if the voice tab disappears while the
-  // user is on it, coalesce the entry mode back to 'manual'.
-  useEffect(() => {
-    if (!voiceTabVisible && entryMode === 'voice') {
-      setEntryMode('manual')
-    }
-  }, [voiceTabVisible, entryMode])
+  const voiceAvailable = !modoAppLoading && hasFeature('menu_carga_voz')
+  const voiceMicButton = voiceAvailable ? (
+    <button
+      type="button"
+      className="add-movement-mic-btn"
+      onClick={onOpenVoice}
+      aria-label={t('add_movement_voice_cta')}
+      title={t('add_movement_voice_hint')}
+    >
+      <Mic size={20} aria-hidden="true" />
+    </button>
+  ) : null
 
   // ── Datos remotos ──
   const [billeteras, setBilleteras] = useState<Billetera[]>([])
@@ -954,55 +953,18 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
             <button className="modal-close-btn" onClick={onClose}>✕</button>
           </div>
 
-          {/* ── SEGMENTED: Manual | Voz ── */}
-          <div
-            className="add-movement-mode-tabs"
-            role="tablist"
-            aria-label={t('add_movement_mode_tabs_label')}
-          >
-            <button
-              type="button"
-              role="tab"
-              id="add-movement-mode-tab-manual"
-              aria-selected={entryMode === 'manual'}
-              aria-controls="add-movement-mode-panel-manual"
-              className={`add-movement-mode-tab ${entryMode === 'manual' ? 'active' : ''}`}
-              onClick={() => setEntryMode('manual')}
-            >
-              {t('add_movement_mode_manual')}
-            </button>
-            {voiceTabVisible && (
-              <button
-                type="button"
-                role="tab"
-                id="add-movement-mode-tab-voice"
-                aria-selected={entryMode === 'voice'}
-                aria-controls="add-movement-mode-panel-voice"
-                className={`add-movement-mode-tab ${entryMode === 'voice' ? 'active' : ''}`}
-                onClick={() => setEntryMode('voice')}
-              >
-                <Mic size={14} aria-hidden="true" />
-                {t('add_movement_mode_voice')}
-              </button>
-            )}
-          </div>
-
-          {/* Panel manual: se oculta con `hidden` en vez de desmontarse, para
-              no perder ni el estado del formulario ni el DOM ya construido. */}
-          <div
-            className="modal-steps-body add-movement-mode-panel"
-            role="tabpanel"
-            id="add-movement-mode-panel-manual"
-            aria-labelledby="add-movement-mode-tab-manual"
-            hidden={entryMode !== 'manual'}
-          >
+          <div className="modal-steps-body add-movement-mode-panel">
               {!isMobile ? (
                 /* ─── VISTA UNIFICADA EN PC (TODAS LAS PANTALLAS EN UNA) ─── */
                 <div className="pc-unified-form">
                   
                   {/* COLUMNA 1: IMPORTE & CUENTAS */}
                   <div className="pc-form-col billing-col">
-                    <div className="step-title">1. Importe y Cuentas</div>
+                    {/* Importe & Cuentas: title row carries the voice mic */}
+                    <div className="step-title-row">
+                      <div className="step-title">1. Importe y Cuentas</div>
+                      {voiceMicButton}
+                    </div>
                     
                     {/* Importe Input */}
                     <div className="monto-display-wrap" style={{ padding: '0 0 16px 0' }}>
@@ -1480,7 +1442,10 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
               ) : tipo === 'transfer' ? (
                 /* ─── VISTA UNIFICADA DE TRANSFERENCIA EN MÓVIL ─── */
                 <div className="mobile-unified-transfer" style={{ width: '100%' }}>
-                  <div className="step-title">Transferencia</div>
+                  <div className="step-title-row">
+                    <div className="step-title">Transferencia</div>
+                    {voiceMicButton}
+                  </div>
 
                   {/* Importe */}
                   <label className="step-label">Importe</label>
@@ -1637,8 +1602,11 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
               ) : (
                 /* ─── VISTA UNIFICADA DE GASTO / INGRESO EN MÓVIL ─── */
                 <div className="mobile-unified-movement" style={{ width: '100%' }}>
-                  <div className="step-title">
-                    {tipo === 'expense' ? 'Gasto' : 'Ingreso'}
+                  <div className="step-title-row">
+                    <div className="step-title">
+                      {tipo === 'expense' ? 'Gasto' : 'Ingreso'}
+                    </div>
+                    {voiceMicButton}
                   </div>
 
                   {/* Importe */}
@@ -2148,28 +2116,9 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
               )}
             </div>
 
-          {/* Panel de voz: abre el recorder full-screen global que ya maneja
-              permiso, countdown, corte, auto-send y polling. */}
-          <div
-            className="modal-steps-body add-movement-mode-panel add-movement-voice-panel"
-            role="tabpanel"
-            id="add-movement-mode-panel-voice"
-            aria-labelledby="add-movement-mode-tab-voice"
-            hidden={entryMode !== 'voice'}
-          >
-            <button type="button" className="add-movement-voice-cta" onClick={onOpenVoice}>
-              <span className="add-movement-voice-cta-icon" aria-hidden="true">
-                <Mic size={28} />
-              </span>
-              <span className="add-movement-voice-cta-label">{t('add_movement_voice_cta')}</span>
-            </button>
-            <p className="add-movement-voice-hint">{t('add_movement_voice_hint')}</p>
-          </div>
 
           {/* ── BOTÓN STICKY DE CONFIRMACIÓN ── */}
-          {/* Solo en el formulario manual: en el tab de voz no hay nada que
-              guardar ni cancelar (la X del header es el único cierre). */}
-          {!loadingData && entryMode === 'manual' && (
+          {!loadingData && (
             <div className="modal-sticky-footer" style={{ display: 'flex', gap: '10px' }}>
               {isMobile && (
                 <button

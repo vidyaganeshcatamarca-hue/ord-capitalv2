@@ -224,6 +224,49 @@
   margin-bottom: 12px;
 }
 
+/* Title row with the voice mic (feature menu_carga_voz): the mic replaces
+   the old Manual|Voice segmented tab and opens the 30s-countdown recorder. */
+.step-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.step-title-row .step-title {
+  margin-bottom: 12px;
+}
+
+.add-movement-mic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--mint);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-bottom: 12px;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.add-movement-mic-btn:hover {
+  background: var(--surface-3);
+}
+
+.add-movement-mic-btn:active {
+  transform: scale(0.96);
+}
+
+.add-movement-mic-btn:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+
 .step-label {
   font-size: 11px;
   font-weight: 700;
@@ -1084,132 +1127,6 @@
   transform: translateX(18px);
 }
 
-/* === VOICE V1: SEGMENTED MANUAL | VOZ === */
-
-/* Mismo lenguaje visual que el segmented del design system (index.css
-   `.segmented`): superficie 2, radio full y activo sobre superficie 3. */
-.add-movement-mode-tabs {
-  display: flex;
-  gap: 2px;
-  margin: 0 var(--space-4) var(--space-3);
-  padding: 3px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-full);
-  flex-shrink: 0;
-}
-
-.add-movement-mode-tab {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: var(--space-2) var(--space-3);
-  border: none;
-  border-radius: var(--radius-full);
-  background: transparent;
-  color: var(--text-3);
-  font-family: var(--font-sans);
-  font-size: calc(13px * var(--font-scale));
-  font-weight: 600;
-  cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
-}
-
-.add-movement-mode-tab:hover { color: var(--text-2); }
-
-.add-movement-mode-tab.active {
-  background: var(--surface-3);
-  color: var(--text);
-}
-
-.add-movement-mode-tab:focus-visible {
-  outline: 2px solid var(--mint);
-  outline-offset: 2px;
-}
-
-@media (min-width: 768px) {
-  .add-movement-mode-tabs { max-width: 280px; }
-}
-
-/* Los paneles usan `hidden` para alternarse sin desmontar el formulario.
-   La regla necesita ganarle al `display: flex` desktop de .modal-steps-body. */
-.add-movement-mode-panel[hidden] { display: none; }
-
-/* ─── Panel de voz: CTA que abre el recorder global ─────────────────────── */
-.add-movement-voice-panel {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-4);
-  padding: var(--space-6) var(--space-4);
-  text-align: center;
-}
-
-.add-movement-voice-cta {
-  display: inline-flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  width: 100%;
-  max-width: 320px;
-  padding: var(--space-6) var(--space-5);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  background: color-mix(in srgb, var(--mint) 10%, var(--surface-2));
-  color: var(--text);
-  font-family: var(--font-sans);
-  cursor: pointer;
-  transition: transform var(--transition-fast), border-color var(--transition-fast);
-}
-
-.add-movement-voice-cta:hover {
-  border-color: var(--mint);
-  transform: translateY(-1px);
-}
-
-.add-movement-voice-cta:active { transform: scale(0.98); }
-
-.add-movement-voice-cta:focus-visible {
-  outline: 2px solid var(--mint);
-  outline-offset: 2px;
-}
-
-.add-movement-voice-cta-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: var(--mint);
-  color: var(--bg);
-}
-
-.add-movement-voice-cta-label {
-  font-size: calc(15px * var(--font-scale));
-  font-weight: 700;
-}
-
-.add-movement-voice-hint {
-  max-width: 320px;
-  font-size: calc(12px * var(--font-scale));
-  color: var(--text-3);
-  line-height: 1.4;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .add-movement-mode-tab,
-  .add-movement-voice-cta {
-    transition: none;
-  }
-  .add-movement-voice-cta:hover,
-  .add-movement-voice-cta:active {
-    transform: none;
-  }
-}
 
 
 
