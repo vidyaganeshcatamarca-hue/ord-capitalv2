@@ -30,7 +30,7 @@ const DEFAULT_PREFS: OperationalPrefs = {
   billetera_default_ingreso: null,
   ocr_auto_aprobar: false,
   ocr_enabled: true,
-  voz_activada: false,
+  voz_activada: true,
   tipo_movimiento_default: 'expense',
   orden_billeteras: 'valor',
 }
