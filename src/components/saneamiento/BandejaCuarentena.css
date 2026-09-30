@@ -114,8 +114,16 @@
 }
 
 .cuarentena-ambig-opcion input[type="radio"] {
-  accent-color: var(--mint, #00b127);
+  /* The global input rule (index.css) sets width: 100% + appearance: none,
+   * which flattens radio inputs into a wide empty pill and pushes the option
+   * text out of the row. Restore the native radio visual and intrinsic size. */
+  appearance: auto;
+  -webkit-appearance: auto;
+  width: 18px;
+  height: 18px;
+  margin: 0;
   flex-shrink: 0;
+  accent-color: var(--mint, #00b127);
 }
 
 .cuarentena-ambig-texto {
