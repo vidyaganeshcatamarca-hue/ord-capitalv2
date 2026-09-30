@@ -34,6 +34,10 @@ OCR futuro (`ocr_enabled`), que hoy no persiste — deuda aparte.
 
 - Checks (orquestador): `npx tsc --noEmit` PASS · `node scripts/check-i18n.mjs` FAIL preexistente (249 used-not-defined, llamadas ya presentes en HEAD; cero nuevas de este feature) · `node --test` FAIL preexistente (expectativas viejas `wallets.*` en tests i18n + runner SQL ausente).
 - `ad0e2b5` `feat(flags): gate voice tab and quarantine route behind the voice switch` (4 archivos src).
+- Bugfixes post-feature (implementados inline por el orquestador; bug-fixer caído):
+  - `d30f8c4` `fix(voice)` gate de los openers globales del recorder (App.tsx + long-press/hint de BottomNav).
+  - `f64798f` `fix(cuarentena)` rechazo directo pasaba sin item (regresión del 0aa1eaa del agente paralelo; `itemRechazar` queda como dead code).
+  - `50b67fe` `fix(theme)` tokens de tema: `SaneamientoPage.css` tenía `#1A1A1A/#FFFFFF` hardcodeado y 19 usos de tokens inexistentes (`--text-primary`/`--text-secondary`) repartidos entre Saneamiento y `EditarCuarentenaModal`.
 - `funcionesSQL/` está giignoreado (los espejos no se versionan) y los scripts de migración tampoco: `temp_sql/modo_intermedio_upr.sql` queda sin trackear (convención del repo).
 - Branch: `feat/intermedio-gate-front` (desde `0aa1eaa`, base `feat/modo-intermedio-voz` del otro agente).
 - Supabase: migración aplicada y verificada en vivo (SELECT de `app_feature_flags` post-migración).
