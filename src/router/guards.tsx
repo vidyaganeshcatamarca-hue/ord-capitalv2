@@ -1,5 +1,7 @@
+import type { ReactNode } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { useModoApp } from '@/contexts/ModoAppContext'
 
 export function PrivateRoute() {
   const { session, loading, onboardingCompleto } = useAuth()
@@ -30,5 +32,22 @@ export function PublicRoute() {
   }
 
   return !session ? <Outlet /> : <Navigate to="/" replace />
+}
+
+/**
+ * Gates a route on a backend feature flag returned by fn_obtener_modo_app.
+ * Renders nothing while the mode is loading, redirects home when the feature
+ * is not enabled for the current app mode, otherwise renders children.
+ */
+export function FeatureRoute({ feature, children }: { feature: string; children: ReactNode }) {
+  const { hasFeature, loading } = useModoApp()
+
+  if (loading) return null
+
+  if (!hasFeature(feature)) {
+    return <Navigate to="/" replace />
+  }
+
+  return <>{children}</>
 }
 

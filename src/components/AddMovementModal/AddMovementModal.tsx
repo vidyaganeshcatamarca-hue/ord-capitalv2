@@ -7,6 +7,7 @@ import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from '
 import { Mic } from 'lucide-react'
 import { useToast } from '@/contexts/ToastContext'
 import { useHogar } from '@/contexts/HogarContext'
+import { useModoApp } from '@/contexts/ModoAppContext'
 import { rpc } from '@/lib/supabase'
 import { CalculatorKeypad } from '@/components/CalculatorKeypad/CalculatorKeypad'
 import { safeEval } from '@/utils/math'
@@ -285,6 +286,20 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   // Vive en este componente: cambiar de tab NO desmonta el sheet, asi que el
   // estado del formulario sobrevive al ir y volver de la pestaña de voz.
   const [entryMode, setEntryMode] = useState<EntryMode>('manual')
+
+  // Voice entry tab is gated by the backend feature flag 'menu_carga_voz'
+  // (simple mode + voz_activada, or advanced mode). Aliased to avoid the
+  // local `loading` state already declared below.
+  const { hasFeature, loading: modoAppLoading } = useModoApp()
+  const voiceTabVisible = !modoAppLoading && hasFeature('menu_carga_voz')
+
+  // Never leave a hidden tab selected: if the voice tab disappears while the
+  // user is on it, coalesce the entry mode back to 'manual'.
+  useEffect(() => {
+    if (!voiceTabVisible && entryMode === 'voice') {
+      setEntryMode('manual')
+    }
+  }, [voiceTabVisible, entryMode])
 
   // ── Datos remotos ──
   const [billeteras, setBilleteras] = useState<Billetera[]>([])
@@ -956,18 +971,20 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
             >
               {t('add_movement_mode_manual')}
             </button>
-            <button
-              type="button"
-              role="tab"
-              id="add-movement-mode-tab-voice"
-              aria-selected={entryMode === 'voice'}
-              aria-controls="add-movement-mode-panel-voice"
-              className={`add-movement-mode-tab ${entryMode === 'voice' ? 'active' : ''}`}
-              onClick={() => setEntryMode('voice')}
-            >
-              <Mic size={14} aria-hidden="true" />
-              {t('add_movement_mode_voice')}
-            </button>
+            {voiceTabVisible && (
+              <button
+                type="button"
+                role="tab"
+                id="add-movement-mode-tab-voice"
+                aria-selected={entryMode === 'voice'}
+                aria-controls="add-movement-mode-panel-voice"
+                className={`add-movement-mode-tab ${entryMode === 'voice' ? 'active' : ''}`}
+                onClick={() => setEntryMode('voice')}
+              >
+                <Mic size={14} aria-hidden="true" />
+                {t('add_movement_mode_voice')}
+              </button>
+            )}
           </div>
 
           {/* Panel manual: se oculta con `hidden` en vez de desmontarse, para

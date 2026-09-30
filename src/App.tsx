@@ -5,7 +5,7 @@ import { HogarProvider } from '@/contexts/HogarContext'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { ModoAppProvider } from '@/contexts/ModoAppContext'
 import { SessionTrackerProvider } from '@/providers/SessionTrackerProvider'
-import { PrivateRoute, PublicRoute } from '@/router/guards'
+import { PrivateRoute, PublicRoute, FeatureRoute } from '@/router/guards'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
 import { SideNav } from '@/components/SideNav/SideNav'
 import { PWABanner } from '@/components/PWABanner'
@@ -144,7 +144,14 @@ function AppLayout() {
           <Route path="/" element={<HomePage />} />
           <Route path="/billeteras" element={<BilleterasPage />} />
           <Route path="/tarjetas" element={<TarjetasPage />} />
-          <Route path="/cuarentena" element={<CuarentenaBandejaRoute />} />
+          <Route
+            path="/cuarentena"
+            element={
+              <FeatureRoute feature="menu_cuarentena">
+                <CuarentenaBandejaRoute />
+              </FeatureRoute>
+            }
+          />
           <Route path="/categorias" element={<Navigate to="/billeteras" replace />} />
           <Route path="/presupuesto" element={<PresupuestosPage />} />
           <Route path="/familia" element={<FamiliaPage />} />

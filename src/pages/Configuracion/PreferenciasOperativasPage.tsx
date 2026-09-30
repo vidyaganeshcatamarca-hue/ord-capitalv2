@@ -30,7 +30,7 @@ const DEFAULT_PREFS: OperationalPrefs = {
   billetera_default_ingreso: null,
   ocr_auto_aprobar: false,
   ocr_enabled: true,
-  voz_activada: true,
+  voz_activada: false,
   tipo_movimiento_default: 'expense',
   orden_billeteras: 'valor',
 }
@@ -96,15 +96,22 @@ export function PreferenciasOperativasPage() {
       } else {
         localStorage.removeItem('billetera_default_ingreso')
       }
+      return true
     } catch (err) {
       showToast(parseError(err), 'error')
+      return false
     }
   }
 
-  const updatePref = <K extends keyof OperationalPrefs>(key: K, value: OperationalPrefs[K]) => {
+  const updatePref = async <K extends keyof OperationalPrefs>(key: K, value: OperationalPrefs[K]) => {
     const nextPrefs = { ...prefs, [key]: value }
     setPrefs(nextPrefs)
-    savePreferences(nextPrefs)
+    const saved = await savePreferences(nextPrefs)
+    // Re-gate nav/menu features immediately after a successful voice toggle,
+    // without requiring a re-login (ModoAppContext listens for this event).
+    if (key === 'voz_activada' && saved) {
+      window.dispatchEvent(new CustomEvent('refresh-modo-app'))
+    }
   }
 
   return (
