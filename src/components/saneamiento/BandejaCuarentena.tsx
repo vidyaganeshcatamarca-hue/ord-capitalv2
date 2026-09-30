@@ -529,7 +529,7 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
                   <button className="saneamiento-btn-editar" onClick={(e) => { e.stopPropagation(); setItemEditar(item) }}>
                     {t('saneamiento_editar')}
                   </button>
-                  <button className="saneamiento-btn-rechazar" onClick={(e) => { e.stopPropagation(); handleRechazarItem() }}>
+                  <button className="saneamiento-btn-rechazar" onClick={(e) => { e.stopPropagation(); handleRechazarItem(item) }}>
                     {t('saneamiento_rechazar')}
                   </button>
                   <button
