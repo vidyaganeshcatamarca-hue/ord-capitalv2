@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { AuthProvider } from '@/contexts/AuthContext'
 import { HogarProvider } from '@/contexts/HogarContext'
 import { ToastProvider } from '@/contexts/ToastContext'
-import { ModoAppProvider } from '@/contexts/ModoAppContext'
+import { ModoAppProvider, useModoApp } from '@/contexts/ModoAppContext'
 import { SessionTrackerProvider } from '@/providers/SessionTrackerProvider'
 import { PrivateRoute, PublicRoute, FeatureRoute } from '@/router/guards'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
@@ -81,6 +81,12 @@ function AppLayout() {
   const [showAdd, setShowAdd] = useState(false)
   const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false)
   const [addConfig, setAddConfig] = useState<{ defaultTipo?: 'expense' | 'income' | 'transfer', initialBilleteraId?: number } | null>(null)
+
+  // Voice capture is behind the voz_activada preference (fn_obtener_modo_app):
+  // both global recorder openers (nav long-press + modal voice CTA) respect the
+  // feature gate, so the recorder is unreachable while the switch is OFF.
+  const { hasFeature, loading: modoAppLoading } = useModoApp()
+  const voiceEnabled = !modoAppLoading && hasFeature('menu_carga_voz')
   
   useEffect(() => {
     rpc<any[]>('fn_obtener_preferencias_usuario')
@@ -133,7 +139,10 @@ function AppLayout() {
       {/* Navegación inferior para mobile (<768px) */}
       <BottomNav
         onAddPress={() => setShowAdd(!showAdd)}
-        onVoiceLongPress={() => setIsVoiceRecorderOpen(true)}
+        onVoiceLongPress={() => {
+          if (!voiceEnabled) return
+          setIsVoiceRecorderOpen(true)
+        }}
       />
 
       {/* Banner de instalación PWA persistente */}
@@ -197,6 +206,9 @@ function AppLayout() {
             // recorder returns the user to the screen that opened it (no dead-end
             // trapped behind the sheet).
             onOpenVoice={() => {
+              // Defense in depth: the voice tab is already gated; never open
+              // the recorder if the feature is unavailable.
+              if (!voiceEnabled) return
               setShowAdd(false)
               setIsVoiceRecorderOpen(true)
             }}

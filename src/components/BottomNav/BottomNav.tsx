@@ -20,11 +20,16 @@ const VOICE_LONG_PRESS_MS = 1000
 export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
-  const { hasFeature } = useModoApp()
+  const { hasFeature, loading: modoAppLoading } = useModoApp()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [modoPresupuesto, setModoPresupuesto] = useState<'base_cero' | 'anticipado'>('anticipado')
   // True while the "+" is held and the long-press timer is still running.
   const [isVoicePressing, setIsVoicePressing] = useState(false)
+
+  // Voice capture is feature-gated (menu_carga_voz: voice enabled or advanced
+  // mode). While disabled, holding the "+" never opens the recorder and the
+  // hint is not advertised.
+  const voiceEnabled = !modoAppLoading && hasFeature('menu_carga_voz')
 
   const longPressTimerRef = useRef<number | null>(null)
   // Set when the long-press already fired, so the trailing click is swallowed.
@@ -34,6 +39,12 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
   useEffect(() => {
     onVoiceLongPressRef.current = onVoiceLongPress
   }, [onVoiceLongPress])
+
+  // Voice gate mirror for the timer callback (avoids stale closure).
+  const voiceEnabledRef = useRef(voiceEnabled)
+  useEffect(() => {
+    voiceEnabledRef.current = voiceEnabled
+  }, [voiceEnabled])
 
   useEffect(() => {
     const fetchConfig = async () => {
@@ -77,6 +88,8 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
       if (event.button !== 0) return
       clearLongPressTimer()
       longPressFiredRef.current = false
+      // Feature-gated: with voice disabled the hold stays a regular tap.
+      if (!voiceEnabledRef.current) return
       setIsVoicePressing(true)
       longPressTimerRef.current = window.setTimeout(() => {
         longPressTimerRef.current = null
@@ -203,8 +216,8 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
           onPointerLeave={handleAddPointerEnd}
           onContextMenu={handleAddContextMenu}
           onClick={handleAddClick}
-          aria-label={`${t('menu_registrar_movimiento')}. ${t('menu_add_voice_hint')}`}
-          title={t('menu_add_voice_hint')}
+          aria-label={voiceEnabled ? `${t('menu_registrar_movimiento')}. ${t('menu_add_voice_hint')}` : t('menu_registrar_movimiento')}
+          title={voiceEnabled ? t('menu_add_voice_hint') : undefined}
         >
           <div className={`fab ${isVoicePressing ? 'is-voice-press' : ''}`}>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5}>
