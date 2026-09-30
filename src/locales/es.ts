@@ -2082,6 +2082,52 @@ export const inversiones = {
   config_pwa_updated: "🆕 Nueva versión disponible. Recargando …",
 };
 
+// Reports (bug reports)
+export const reports = {
+  reportes_pagina_titulo: "Reportar un problema",
+  reportes_pagina_mis: "Mis reportes",
+  reporte_titulo_label: "Título",
+  reporte_titulo_placeholder: "Resumen corto del problema",
+  reporte_descripcion_label: "¿Qué pasó?",
+  reporte_descripcion_placeholder: "Qué pasó / qué esperabas / cómo lo reproduces (ayudanos con una captura si podés)",
+  reporte_tipo_label: "¿Qué nos contás?",
+  reporte_tipo_bug: "Es un problema",
+  reporte_tipo_sugerencia: "Sugerencia de mejora",
+  reporte_descripcion_placeholder_sugerencia: "¿Qué funcionalidad te gustaría y por qué?",
+  reporte_aviso_privacidad: "No incluyas contraseñas ni datos de tus cuentas en el texto ni en las capturas",
+  reporte_enviar: "Enviar reporte",
+  reporte_enviando: "Enviando...",
+  reporte_enviado_ok: "¡Listo! Tu reporte quedó registrado",
+  reporte_enviado_ok_sub: "Referencia: N° {id}",
+  reportes_vacio: "Todavía no tenés reportes",
+  reportes_vacio_sub: "Cuando escribas un reporte lo vas a ver acá con su estado.",
+  reporte_estado_nuevo: "Recibido",
+  reporte_estado_en_revision: "En revisión",
+  reporte_estado_resuelto: "Resuelto",
+  reporte_tipo_problema_tag: "Problema",
+  reporte_tipo_sugerencia_tag: "Sugerencia",
+  reporte_respuesta_admin: "Respuesta del equipo",
+  reporte_eliminar: "Eliminar reporte",
+  reporte_confirmar_eliminar: "¿Seguro que querés eliminar este reporte? Solo podés eliminarlo mientras esté sin revisar.",
+  reporte_borrado_ok: "Reporte eliminado",
+  reporte_error_generico: "No se pudo enviar el reporte. Probá de nuevo.",
+  error_reporte_limite_diario: "Alcanzaste el límite de 5 reportes por día. Mañana podés mandar más.",
+  error_reporte_titulo: "El título necesita al menos 5 caracteres.",
+  error_reporte_cuerpo: "Escribí lo que pasó o contalo en una nota de voz.",
+  error_reporte_descripcion: "La descripción necesita entre 10 y 4000 caracteres.",
+  error_reporte_borrar: "Solo podés eliminar un reporte que todavía no fue revisado.",
+  reporte_capturas_label: "Capturas (opcional, hasta 3)",
+  reporte_capturar_mas: "Agregar captura",
+  reporte_max_3_capturas: "Máximo 3 capturas por reporte",
+  reporte_error_media: "No se pudo subir una captura. Probá de nuevo.",
+  reporte_ver_imagen: "Ver captura",
+  // Settings entry rows
+  ajustes_reportar_problema: "Reportar un problema",
+  ajustes_reportar_problema_desc: "Contanos un error o algo que no funcionó como esperabas.",
+  ajustes_mis_reportes: "Mis reportes",
+  ajustes_mis_reportes_desc: "Seguí el estado de los reportes que enviaste.",
+};
+
 // === TOUR SYSTEM ===
 export const tour = {
   // Trigger button

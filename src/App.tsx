@@ -67,6 +67,8 @@ const PresupuestoCicloPage = lazy(() => import('@/pages/Configuracion/Presupuest
 const PreferenciasOperativasPage = lazy(() => import('@/pages/Configuracion/PreferenciasOperativasPage').then(module => ({ default: module.PreferenciasOperativasPage })))
 const AcercaPage = lazy(() => import('@/pages/Configuracion/AcercaPage').then(module => ({ default: module.AcercaPage })))
 const AyudaPage = lazy(() => import('@/pages/Ayuda/AyudaPage').then(module => ({ default: module.AyudaPage })))
+const ReportarProblemaPage = lazy(() => import('@/pages/Reportes/ReportarProblemaPage').then(module => ({ default: module.ReportarProblemaPage })))
+const MisReportesPage = lazy(() => import('@/pages/Reportes/MisReportesPage').then(module => ({ default: module.MisReportesPage })))
 
 
 const LoadingSpinner = () => (
@@ -180,6 +182,8 @@ function AppLayout() {
           <Route path="/configuracion/acerca" element={<AcercaPage />} />
           <Route path="/configuracion/categorias" element={<CategoriasConfigPage />} />
           <Route path="/configuracion/hogar" element={<HogarConfigPage />} />
+          <Route path="/reportar-problema" element={<ReportarProblemaPage />} />
+          <Route path="/mis-reportes" element={<MisReportesPage />} />
           <Route path="/ayuda" element={<AyudaPage />} />
         </Routes>
       </Suspense>
