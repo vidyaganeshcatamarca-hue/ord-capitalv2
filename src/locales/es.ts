@@ -94,7 +94,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   home_filters_invalid_range: "Revisá el rango de fechas",
   segmented_only_parents: "Solo Rubros",
   segmented_all: "Todo",
-  donut_empty_title: "Sin consumos este mes",
+  donut_empty_title: "Sin consumos en este período",
   donut_empty_desc: "Registra egresos para activar el análisis por categorías",
   donut_see_all_categories: "Ver todos ({count})",
   donut_show_less_categories: "Ver menos",
