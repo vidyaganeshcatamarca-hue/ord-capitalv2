@@ -913,6 +913,15 @@ export function HomePage() {
     return map
   }, [billeteras])
 
+  // Destination wallet name per id, for transfer rows in recent activity
+  // (fn_reporte_movimientos_recientes exposes billetera_destino_id only, so
+  // "origen -> destino" resolves the label from the wallet list).
+  const walletNameById = useMemo(() => {
+    const map = new Map<number, string>()
+    billeteras.forEach((b) => map.set(Number(b.billetera_id), b.nombre))
+    return map
+  }, [billeteras])
+
   // Formateo de montos respetando decimales del usuario (useNumberFormat)
   const { formatMonto: formatMontoBase } = useNumberFormat()
   const formatAmount = useCallback((monto: number, moneda: string) => {
@@ -1684,6 +1693,15 @@ export function HomePage() {
                               ) : (
                                 <>
 {m.nombre_billetera ? (m.nombre_billetera === 'wallet_cash_default_name' ? t('wallet_cash_default_name') : t(m.nombre_billetera)) : ''}
+                                {(() => {
+                                  // Transfers: append the destination wallet
+                                  // (owner: literal "->" arrow; origin is
+                                  // nombre_billetera).
+                                  const destId = (m as any).billetera_destino_id
+                                  if (m.tipo !== 'transfer' || destId == null) return null
+                                  const destName = walletNameById.get(Number(destId))
+                                  return destName ? ` -> ${t(destName)}` : ''
+                                })()}
                                 {m.detalle ? ` · ${m.detalle === 'card_summary_payment_split' ? t('card_summary_payment_split') : m.detalle === 'card_summary_payment_favor' ? t('card_summary_payment') : m.detalle.startsWith('card_summary') ? t('card_summary_payment') : t(m.detalle)}` : ''}
                                 </>
                               )}
