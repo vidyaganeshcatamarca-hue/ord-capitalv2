@@ -224,15 +224,16 @@
   margin-bottom: 12px;
 }
 
-/* Importe row with the voice mic (feature menu_carga_voz): keeping the
-   INPUT+MIC PAIR centered means the input itself sits a bit left of the old
-   centered position, without going flush. The mic stretches to exactly the
-   input box height (same visual weight) and is clearly detached by the gap. */
+/* Importe row with the voice mic (feature menu_carga_voz): the input sits
+   left (small inset) and the mic control hugs the right edge of the modal.
+   Fixed sizes match the monto input box height per breakpoint (PC ≈ 58px,
+   mobile ≈ 44px) so the mic reads as a sibling control of the input. */
 .importe-mic-row {
   display: flex;
-  align-items: stretch;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
   gap: 14px;
+  padding: 0 2px 0 12px;
 }
 
 .importe-mic-row .monto-input-container {
@@ -243,15 +244,20 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: auto;
-  aspect-ratio: 1;
-  border: 1px solid var(--border);
+  width: 58px;
+  height: 58px;
+  border: 2px solid var(--border);
   border-radius: 50%;
   background: var(--surface-2);
   color: var(--mint);
   cursor: pointer;
   flex-shrink: 0;
   transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.add-movement-mic-btn svg {
+  width: 28px;
+  height: 28px;
 }
 
 .add-movement-mic-btn:hover {
@@ -267,10 +273,16 @@
   outline-offset: 2px;
 }
 
-/* Icon scales with the circle: the button tracks the input box height. */
-.add-movement-mic-btn svg {
-  width: 42%;
-  height: 42%;
+@media (max-width: 767px) {
+  .add-movement-mic-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .add-movement-mic-btn svg {
+    width: 22px;
+    height: 22px;
+  }
 }
 
 .step-label {
