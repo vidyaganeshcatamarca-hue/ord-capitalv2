@@ -367,9 +367,10 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
                 <div className="spinner-sm" />
               ) : (
                 <select value={billeteraId} onChange={(e) => setBilleteraId(e.target.value)}>
-                  {/* Once a wallet is selected the placeholder is hidden: the
-                      prompt is a field title, never a selectable option. */}
-                  <option value="" hidden={billeteraId != null && billeteraId !== ''}>{t('saneamiento_seleccionar_billetera')}</option>
+                  {/* Always visible as the list title, never selectable: a
+                      disabled option does not expose a radio target, and an
+                      empty select still shows it as the field placeholder. */}
+                  <option value="" disabled>{t('saneamiento_seleccionar_billetera')}</option>
                   {billeterasOrigen.map((b) => (
                     <option key={b.billetera_id} value={b.billetera_id}>
                       {t(b.nombre)} ({b.moneda}) — {formatCurrency(b.saldo_actual, b.moneda)}
@@ -387,7 +388,7 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
                 <div className="spinner-sm" />
               ) : (
                 <select value={billeteraDestinoId} onChange={(e) => setBilleteraDestinoId(e.target.value)}>
-                  <option value="" hidden={billeteraDestinoId != null && billeteraDestinoId !== ''}>{t('saneamiento_seleccionar_billetera')}</option>
+                  <option value="" disabled>{t('saneamiento_seleccionar_billetera')}</option>
                   {billeteras.map((b) => (
                     <option key={b.billetera_id} value={b.billetera_id}>
                       {t(b.nombre)} ({b.moneda}) — {formatCurrency(b.saldo_actual, b.moneda)}
