@@ -960,15 +960,15 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                   
                   {/* COLUMNA 1: IMPORTE & CUENTAS */}
                   <div className="pc-form-col billing-col">
-                    {/* Importe & Cuentas: title row carries the voice mic */}
-                    <div className="step-title-row">
-                      <div className="step-title">1. Importe y Cuentas</div>
-                      {voiceMicButton}
-                    </div>
+                    {/* Importe & Cuentas (title row without mic) */}
+                    <div className="step-title">1. Importe y Cuentas</div>
                     
                     {/* Importe Input */}
                     <div className="monto-display-wrap" style={{ padding: '0 0 16px 0' }}>
-                      <div className="monto-input-container">
+                      {/* Importe + mic: the pair stays centered, so the input
+                          itself shifts a bit left without going flush. */}
+                      <div className="importe-mic-row">
+                        <div className="monto-input-container">
                         <span className="monto-currency-symbol">
                           {monedaOrigen === 'USD' ? 'U$S' : '$'}
                         </span>
@@ -995,6 +995,8 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                             }
                           }}
                         />
+                        </div>
+                        {voiceMicButton}
                       </div>
                     </div>
 
@@ -1442,15 +1444,15 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
               ) : tipo === 'transfer' ? (
                 /* ─── VISTA UNIFICADA DE TRANSFERENCIA EN MÓVIL ─── */
                 <div className="mobile-unified-transfer" style={{ width: '100%' }}>
-                  <div className="step-title-row">
-                    <div className="step-title">Transferencia</div>
-                    {voiceMicButton}
-                  </div>
+                  <div className="step-title">Transferencia</div>
 
                   {/* Importe */}
                   <label className="step-label">Importe</label>
                   <div className="monto-display-wrap" style={{ padding: '0 0 16px 0' }}>
-                    <div className="monto-input-container" style={{ width: '100%', maxWidth: 'none' }}>
+                    {/* Importe + mic: the pair stays centered, so the input
+                        shifts a bit left without going flush. */}
+                    <div className="importe-mic-row">
+                      <div className="monto-input-container" style={{ maxWidth: 320 }}>
                       <span className="monto-currency-symbol">
                         {monedaOrigen === 'USD' ? 'U$S' : '$'}
                       </span>
@@ -1474,6 +1476,8 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           }
                         }}
                       />
+                      </div>
+                      {voiceMicButton}
                     </div>
                   </div>
 
@@ -1602,28 +1606,30 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
               ) : (
                 /* ─── VISTA UNIFICADA DE GASTO / INGRESO EN MÓVIL ─── */
                 <div className="mobile-unified-movement" style={{ width: '100%' }}>
-                  <div className="step-title-row">
-                    <div className="step-title">
-                      {tipo === 'expense' ? 'Gasto' : 'Ingreso'}
-                    </div>
-                    {voiceMicButton}
+                  <div className="step-title">
+                    {tipo === 'expense' ? 'Gasto' : 'Ingreso'}
                   </div>
 
                   {/* Importe */}
                   <label className="step-label">Importe</label>
                   <div className="monto-display-wrap" style={{ padding: '0 0 16px 0' }}>
-                    <div className="monto-input-container" style={{ width: '100%', maxWidth: 'none', cursor: 'pointer' }} onClick={() => setShowCalculator(true)}>
-                      <span className="monto-currency-symbol">
-                        {monedaOrigen === 'USD' ? 'U$S' : '$'}
-                      </span>
-                      <input
-                        type="text"
-                        className="monto-input-box-field"
-                        placeholder="0"
-                        value={monto === '0' ? '' : monto}
-                        readOnly={true}
-                        style={{ cursor: 'pointer' }}
-                      />
+                    {/* Importe + mic: the pair stays centered, so the input
+                        shifts a bit left without going flush. */}
+                    <div className="importe-mic-row">
+                      <div className="monto-input-container" style={{ maxWidth: 260, cursor: 'pointer' }} onClick={() => setShowCalculator(true)}>
+                        <span className="monto-currency-symbol">
+                          {monedaOrigen === 'USD' ? 'U$S' : '$'}
+                        </span>
+                        <input
+                          type="text"
+                          className="monto-input-box-field"
+                          placeholder="0"
+                          value={monto === '0' ? '' : monto}
+                          readOnly={true}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </div>
+                      {voiceMicButton}
                     </div>
 
                     {/* Desplegar la calculadora en pantalla */}

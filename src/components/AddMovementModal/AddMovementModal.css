@@ -224,33 +224,33 @@
   margin-bottom: 12px;
 }
 
-/* Title row with the voice mic (feature menu_carga_voz): the mic replaces
-   the old Manual|Voice segmented tab and opens the 30s-countdown recorder. */
-.step-title-row {
+/* Importe row with the voice mic (feature menu_carga_voz): keeping the
+   INPUT+MIC PAIR centered means the input itself sits a bit left of the old
+   centered position, without going flush. The mic stretches to exactly the
+   input box height (same visual weight) and is clearly detached by the gap. */
+.importe-mic-row {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  width: 100%;
+  align-items: stretch;
+  justify-content: center;
+  gap: 14px;
 }
 
-.step-title-row .step-title {
-  margin-bottom: 12px;
+.importe-mic-row .monto-input-container {
+  margin: 0;
 }
 
 .add-movement-mic-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: auto;
+  aspect-ratio: 1;
   border: 1px solid var(--border);
   border-radius: 50%;
   background: var(--surface-2);
   color: var(--mint);
   cursor: pointer;
   flex-shrink: 0;
-  margin-bottom: 12px;
   transition: background-color var(--transition-fast), transform var(--transition-fast);
 }
 
@@ -265,6 +265,12 @@
 .add-movement-mic-btn:focus-visible {
   outline: 2px solid var(--mint);
   outline-offset: 2px;
+}
+
+/* Icon scales with the circle: the button tracks the input box height. */
+.add-movement-mic-btn svg {
+  width: 42%;
+  height: 42%;
 }
 
 .step-label {
@@ -645,7 +651,6 @@
   padding: 8px var(--space-4);
   gap: 8px;
   max-width: 320px;
-  margin: 0 auto;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
 }
