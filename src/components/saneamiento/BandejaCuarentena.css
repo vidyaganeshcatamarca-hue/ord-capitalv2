@@ -15,7 +15,7 @@
 
 .cuarentena-toolbar-aviso {
   font-size: calc(12px * var(--font-scale));
-  color: var(--text-3, #8b949e);
+  color: var(--text-3);
 }
 
 .cuarentena-filtro-voz {
@@ -131,7 +131,7 @@
 
 .cuarentena-ambig-padre {
   font-size: calc(11px * var(--font-scale));
-  color: var(--text-3, #8b949e);
+  color: var(--text-3);
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -63,8 +63,8 @@
   height: 32px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary, #FFFFFF);
+  background: rgba(127, 127, 127, 0.12);
+  color: var(--text);
   font-size: calc(20px * var(--font-scale));
   cursor: pointer;
 }
@@ -89,7 +89,7 @@
   display: block;
   font-size: calc(13px * var(--font-scale));
   font-weight: 600;
-  color: var(--text-secondary, #A0A0A0);
+  color: var(--text-3);
   margin-bottom: 6px;
 }
 
@@ -99,8 +99,8 @@
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid var(--border, #3D3D3D);
-  background: var(--bg, #1A1A1A);
-  color: var(--text-primary, #FFFFFF);
+  background: var(--surface-2);
+  color: var(--text);
   font-size: calc(15px * var(--font-scale));
 }
 
@@ -149,7 +149,7 @@
 }
 
 .ec-categoria-trigger-chevron {
-  color: var(--text-3, #9E9E9E);
+  color: var(--text-3);
   font-size: calc(11px * var(--font-scale));
 }
 
@@ -203,7 +203,7 @@
 .ec-picker-close {
   background: none;
   border: none;
-  color: var(--text-3, #9E9E9E);
+  color: var(--text-3);
   font-size: calc(16px * var(--font-scale));
   cursor: pointer;
   padding: 4px;
@@ -259,7 +259,7 @@
 .ec-expand-btn {
   background: none;
   border: none;
-  color: var(--text-3, #9E9E9E);
+  color: var(--text-3);
   font-size: calc(11px * var(--font-scale));
   cursor: pointer;
   padding: 10px 6px;
