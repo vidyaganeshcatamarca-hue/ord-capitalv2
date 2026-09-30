@@ -665,7 +665,7 @@ export const voice = {
   interpreting: "Interpretando el movimiento...",
   finalizing: "Finalizando...",
   sent: "Listo. El movimiento quedó en revisión.",
-  processing_bg: "Lo estamos procesando. Te avisamos cuando esté en la cuarentena.",
+  processing_bg: "Lo estamos procesando. Te avisaremos cuando esté listo para aprobación.",
   not_sent_hint: "El audio no se envió.",
   seconds_left: "{seconds} s restantes",
   close: "Cerrar",
@@ -1236,7 +1236,8 @@ export const saneamiento = {
   cuarentena_seleccionar_cuenta_ingreso: "Seleccionar fuente de ingreso",
   cuarentena_moneda: "Moneda",
   cuarentena_cuotas: "{count} cuotas",
-  cuarentena_destino_monto: "Llega {monto}",
+  // cuarentena_destino_monto removed: the "Llega {monto}" chip was dropped
+  // by owner decision (the transfer amount is already the card header).
   cuarentena_incompleto_falta: "Falta {campos} — no se puede aprobar",
   cuarentena_aprobar_todos: "Aprobar todos ({count})",
   cuarentena_todos_titulo: "Aprobar todos los movimientos",

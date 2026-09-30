@@ -385,7 +385,7 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
       {approvableItems.length > 0 && (
         <div className="cuarentena-toolbar">
           <button
-            className="btn btn-outline"
+            className="btn btn-primary"
             onClick={() => setShowConfirmTodos(true)}
           >
             {t('cuarentena_aprobar_todos', { count: String(approvableItems.length) })}
@@ -610,13 +610,8 @@ function itemMetaParts(item: CuarentenaItem, tipo: CuarentenaMovementType): stri
   }
   if (tipo === 'card_expense' && item.tarjeta_nombre) parts.push(t(item.tarjeta_nombre))
   if (tipo === 'income' && item.cuenta_ingreso_nombre) parts.push(t(item.cuenta_ingreso_nombre))
-  if (tipo === 'transfer' && item.destination_amount != null) {
-    parts.push(
-      t('cuarentena_destino_monto', {
-        monto: formatCurrency(item.destination_amount, item.billetera_destino_moneda || 'ARS'),
-      })
-    )
-  }
+  // Destination-amount chip removed by owner: the amount is already the card
+  // header, origin/destination are visible, so "Llega $X" carried no info.
   if (tipo === 'card_expense' && (item.cuotas ?? 1) > 1) {
     parts.push(t('cuarentena_cuotas', { count: String(item.cuotas) }))
   }
