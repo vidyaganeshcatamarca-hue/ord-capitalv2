@@ -244,8 +244,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 58px;
-  height: 58px;
+  width: 70px;
+  height: 70px;
   border: 2px solid var(--border);
   border-radius: 50%;
   background: var(--surface-2);
@@ -256,8 +256,8 @@
 }
 
 .add-movement-mic-btn svg {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
 }
 
 .add-movement-mic-btn:hover {
@@ -275,13 +275,13 @@
 
 @media (max-width: 767px) {
   .add-movement-mic-btn {
-    width: 44px;
-    height: 44px;
+    width: 53px;
+    height: 53px;
   }
 
   .add-movement-mic-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
   }
 }
 
