@@ -6,6 +6,7 @@ import '@/components/voice/VoiceRecorderModal.css'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc, supabase } from '@/lib/supabase'
+import { trackPendingReporte, type ReporteOutcome } from '@/lib/reportesPending'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { t } from '@/locales/i18n'
 import {
@@ -209,6 +210,9 @@ function pantallaPathOf(code: string): string[] {
 // whole bug-report flow (audio job `language` AND translate `language`).
 // The selector renders only in dev builds (import.meta.env.DEV) so production
 // builds never show or use it; remove together with this block later.
+// Owner: 15s ceiling for the final RPC; past it the send keeps running and
+// the app-level watcher announces the outcome from any screen.
+const REPORT_SEND_TIMEOUT_MS = 15000
 const DEV_LANG_OPTIONS: string[] = ['es-AR', 'en-US', 'pt-BR', 'fr-FR', 'it-IT', 'de-DE']
 const MAX_DESC = 4000
 const DESC_COUNTER_THRESHOLD = 3600
@@ -496,10 +500,35 @@ export function ReportarProblemaPage() {
   /** Sends fn_crear_reporte; owns the success bookkeeping and the error toast. */
   const finishReporte = async (payload: SubmitPayload, paths: string[]): Promise<boolean> => {
     try {
-      const res = await rpc<CrearReporteResult>(
+      // Owner: 15s waiting ceiling. Past it the user is freed and the
+      // submission outcome is announced by the app-level watcher, from any
+      // screen (same pattern as the voice jobs).
+      const pendingRpc: Promise<CrearReporteResult> = rpc<CrearReporteResult>(
         'fn_crear_reporte',
         payload as unknown as Record<string, unknown>
       )
+      let res: CrearReporteResult | 'timeout' = 'timeout'
+      try {
+        res = (await Promise.race([
+          pendingRpc,
+          new Promise<'timeout'>((resolve) => setTimeout(() => resolve('timeout'), REPORT_SEND_TIMEOUT_MS)),
+        ])) as CrearReporteResult | 'timeout'
+      } catch (rpcError) {
+        showToast(t('reporte_error_generico'), 'error')
+        return false
+      }
+      if (res === 'timeout') {
+        trackPendingReporte(
+          pendingRpc.then((r) => ({
+            ok: !!r?.ok && typeof r.reporte_id === 'number',
+            reporteId: r?.ok ? (r.reporte_id ?? null) : null,
+          }))
+        )
+        showToast(t('reporte_envio_demora'))
+        navigate('/configuracion')
+        window.location.hash = ''
+        return false
+      }
       if (res?.ok && typeof res.reporte_id === 'number') {
         // The report owns the media now: stop the unmount cleanup for those paths.
         submittedRef.current = true
@@ -860,6 +889,9 @@ export function ReportarProblemaPage() {
               <div className="reporte-audio-block reporte-audio-ringblock">
                 <VoiceCountdown secondsRemaining={recorder.remainingSeconds} total={Math.round(BUG_REPORT_MAX_AUDIO_MS / 1000)} />
                 <p className="reporte-audio-status">{t('voice.recording')}</p>
+                <button type="button" className="btn btn-outline" onClick={() => recorder.stop()}>
+                  {t('reporte_audio_finalizar')}
+                </button>
               </div>
             )}
           </div>

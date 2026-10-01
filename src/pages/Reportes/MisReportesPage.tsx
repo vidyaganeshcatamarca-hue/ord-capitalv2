@@ -95,6 +95,13 @@ export function MisReportesPage() {
       if (!mountedRef.current) return
       if (res?.ok) {
         setReportes(res.reportes ?? [])
+        // Lazy media cleanup (owner): resolved reports lose their captures
+        // (direct SQL deletion of storage objects is blocked by Supabase's
+        // protect_delete, so the app does it via the allowed Storage API).
+        const resueltos = (res.reportes ?? []).filter((r) => r.estado === 'resuelto' && (r.media?.length ?? 0) > 0)
+        for (const r of resueltos) {
+          void supabase.storage.from(BUCKET).remove(r.media as string[]).catch(() => {})
+        }
       } else {
         showToast(res?.error_key ? t(res.error_key) : t('reporte_error_generico'), 'error')
       }

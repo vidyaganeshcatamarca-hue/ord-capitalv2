@@ -5,6 +5,9 @@ import { HogarProvider } from '@/contexts/HogarContext'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { ModoAppProvider, useModoApp } from '@/contexts/ModoAppContext'
 import { SessionTrackerProvider } from '@/providers/SessionTrackerProvider'
+import { t } from '@/locales/i18n'
+import { useToast } from '@/contexts/ToastContext'
+import { onPendingReporte, type ReporteOutcome } from '@/lib/reportesPending'
 import { PrivateRoute, PublicRoute, FeatureRoute } from '@/router/guards'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
 import { SideNav } from '@/components/SideNav/SideNav'
@@ -228,6 +231,28 @@ function AppLayout() {
       </Suspense>
     </>
   )
+}
+
+/**
+ * Watches bug-report submissions that outlived their page (15s timeout
+ * pattern): announces the eventual outcome from ANY screen.
+ */
+function ReportesPendingWatcher() {
+  const { showToast } = useToast()
+  useEffect(() => {
+    return onPendingReporte((promise: Promise<ReporteOutcome>) => {
+      void promise
+        .then((res) => {
+          if (res.ok && res.reporteId != null) {
+            showToast(t('reporte_enviado_ok_sub', { id: res.reporteId }))
+          } else {
+            showToast(t('reporte_error_generico'), 'error')
+          }
+        })
+        .catch(() => showToast(t('reporte_error_generico'), 'error'))
+    })
+  }, [])
+  return null
 }
 
 export default function App() {
