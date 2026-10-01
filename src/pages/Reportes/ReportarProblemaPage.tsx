@@ -18,8 +18,10 @@ import {
 } from '@/voice/apiClient'
 import {
   ArrowLeftRight,
+  AudioLines,
   BarChart3,
   Bug,
+  Card,
   ChevronDown,
   Coins,
   Feather,
@@ -74,6 +76,7 @@ const PANTALLA_TREE: PantallaNode[] = [
     ] },
     { code: 'pantalla_egresos', iconKey: 'trending-down' },
   ] },
+  { code: 'pantalla_tarjetas', iconKey: 'card' },
   { code: 'pantalla_carga', iconKey: 'arrow-left-right', children: [
     { code: 'pantalla_carga_egreso', iconKey: 'minus-circle' },
     { code: 'pantalla_carga_ingreso', iconKey: 'plus-circle' },
@@ -110,6 +113,8 @@ const PANTALLA_TREE: PantallaNode[] = [
    the row button SELECTS (any depth), the chevron expands children. */
 const PANTALLA_ICONS: Record<string, ReactNode> = {
   wallet: <Wallet size={16} />,
+  'audio-lines': <AudioLines size={16} />,
+  card: <Card size={16} />,
   coins: <Coins size={16} />,
   home: <Home size={16} />,
   'piggy-bank': <PiggyBank size={16} />,
@@ -796,21 +801,15 @@ export function ReportarProblemaPage() {
                   </button>
                 </div>
               ) : audioReady ? (
+                /* Pending take: just the audio badge + Eliminar. The generic
+                  Enviar reporte button below is the ONLY submission path —
+                  it includes the take when present (owner). */
                 <div className="reporte-audio-block reporte-audio-confirm">
+                  <AudioLines size={16} aria-hidden="true" />
                   <p className="reporte-audio-status">{t('reporte_audio_grabada')}</p>
-                  <div className="reporte-audio-actions">
-                    <button
-                      type="button"
-                      className="btn btn-primary"
-                      disabled={!canSendAudio}
-                      onClick={() => void handleSendAudio()}
-                    >
-                      {t('reporte_enviar')}
-                    </button>
-                    <button type="button" className="btn btn-ghost" onClick={discardAudio}>
-                      {t('reporte_audio_rechazar')}
-                    </button>
-                  </div>
+                  <button type="button" className="btn btn-ghost" onClick={discardAudio}>
+                    {t('reporte_eliminar_nota')}
+                  </button>
                 </div>
               ) : recorder.state === 'recorded' && recorder.autoStopped ? (
                 <div className="reporte-audio-block">
