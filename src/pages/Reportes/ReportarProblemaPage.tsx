@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
 import { VoiceRecorderButton } from '@/components/voice/VoiceRecorderButton'
@@ -16,6 +16,33 @@ import {
   isAbortError,
   translateBugReportText,
 } from '@/voice/apiClient'
+import {
+  ArrowLeftRight,
+  BarChart3,
+  Bug,
+  ChevronDown,
+  Coins,
+  Feather,
+  HeartPulse,
+  HelpCircle,
+  Inbox,
+  LifeBuoy,
+  Mail,
+  MapPin,
+  Mic,
+  MinusCircle,
+  PieChart,
+  PlusCircle,
+  Receipt,
+  RotateCcw,
+  Settings,
+  Sparkles,
+  TrendingDown,
+  TrendingUp,
+  Users,
+  Wallet,
+  X,
+} from 'lucide-react'
 import { BUG_REPORT_MAX_AUDIO_MS } from '@/voice/contract'
 import { VoiceCountdown } from '@/components/voice/VoiceCountdown'
 import { useVoiceRecorder } from '@/voice/useVoiceRecorder'
@@ -25,6 +52,146 @@ import './ReportarProblemaPage.css'
 
 const BUCKET = 'reportes'
 const MAX_MEDIA = 3
+
+// Screen picker tree (owner-defined): a static hierarchy of app areas where
+// the bug may have happened. Every node is selectable (broad pick = parent,
+// specific pick = deepest node), mirroring the home-filter rubro accordion:
+// row tap selects, chevron expands. Values stored = stable key codes.
+interface PantallaNode {
+  code: string
+  iconKey: string
+  children?: PantallaNode[]
+}
+
+const PANTALLA_TREE: PantallaNode[] = [
+  { code: 'pantalla_cuentas', iconKey: 'wallet', children: [
+    { code: 'pantalla_ingresos', iconKey: 'wallet', children: [
+      { code: 'pantalla_billeteras', iconKey: 'wallet' },
+      { code: 'pantalla_fuentes', iconKey: 'coins' },
+    ] },
+    { code: 'pantalla_egresos', iconKey: 'trending-down' },
+  ] },
+  { code: 'pantalla_carga', iconKey: 'arrow-left-right', children: [
+    { code: 'pantalla_carga_egreso', iconKey: 'minus-circle' },
+    { code: 'pantalla_carga_ingreso', iconKey: 'plus-circle' },
+    { code: 'pantalla_carga_transferencia', iconKey: 'arrow-left-right' },
+    { code: 'pantalla_carga_voz', iconKey: 'mic' },
+    { code: 'pantalla_tickets', iconKey: 'receipt' },
+  ] },
+  { code: 'pantalla_presupuestos', iconKey: 'pie-chart', children: [
+    { code: 'pantalla_presupuesto_libertad', iconKey: 'feather' },
+    { code: 'pantalla_presupuesto_base_cero', iconKey: 'rotate-ccw' },
+  ] },
+  { code: 'pantalla_saneamiento', iconKey: 'sparkles', children: [
+    { code: 'pantalla_para_aprobar', iconKey: 'inbox' },
+  ] },
+  { code: 'pantalla_analisis', iconKey: 'bar-chart-3' },
+  { code: 'pantalla_salud', iconKey: 'heart-pulse' },
+  { code: 'pantalla_supervivencia', iconKey: 'life-buoy' },
+  { code: 'pantalla_sobres', iconKey: 'mail' },
+  { code: 'pantalla_inversiones', iconKey: 'trending-up' },
+  { code: 'pantalla_familia', iconKey: 'users' },
+  { code: 'pantalla_ajustes', iconKey: 'settings', children: [
+    { code: 'pantalla_ayuda', iconKey: 'help-circle' },
+    { code: 'pantalla_reportes', iconKey: 'bug' },
+  ] },
+  { code: 'pantalla_otra', iconKey: 'map-pin' },
+]
+
+// Breadcrumb: ancestor codes leading to `code` (joined with " › " at render).
+
+/* Recursive node rows, same interaction as the home-filter rubro accordion:
+   the row button SELECTS (any depth), the chevron expands children. */
+const PANTALLA_ICONS: Record<string, ReactNode> = {
+  wallet: <Wallet size={16} />,
+  coins: <Coins size={16} />,
+  'trending-down': <TrendingDown size={16} />,
+  'arrow-left-right': <ArrowLeftRight size={16} />,
+  'minus-circle': <MinusCircle size={16} />,
+  'plus-circle': <PlusCircle size={16} />,
+  mic: <Mic size={16} />,
+  receipt: <Receipt size={16} />,
+  'pie-chart': <PieChart size={16} />,
+  feather: <Feather size={16} />,
+  'rotate-ccw': <RotateCcw size={16} />,
+  sparkles: <Sparkles size={16} />,
+  inbox: <Inbox size={16} />,
+  'bar-chart-3': <BarChart3 size={16} />,
+  'heart-pulse': <HeartPulse size={16} />,
+  'life-buoy': <LifeBuoy size={16} />,
+  mail: <Mail size={16} />,
+  'trending-up': <TrendingUp size={16} />,
+  users: <Users size={16} />,
+  settings: <Settings size={16} />,
+  'help-circle': <HelpCircle size={16} />,
+  bug: <Bug size={16} />,
+  'map-pin': <MapPin size={16} />,
+}
+
+function PantallaNodeRow({ node, depth, expanded, onToggle, onSelect }: {
+  node: PantallaNode
+  depth: number
+  expanded: Set<string>
+  onToggle: (code: string) => void
+  onSelect: (code: string) => void
+}) {
+  const isOpen = expanded.has(node.code)
+  const hijos = node.children ?? []
+  return (
+    <>
+      <div className="home-filter-rubro-row reporte-tree-row" style={{ paddingLeft: depth * 14 }}>
+        <button
+          className="home-filter-rubro-btn"
+          onClick={() => onSelect(node.code)}
+        >
+          <span className="home-filter-rubro-icon">{PANTALLA_ICONS[node.iconKey] ?? null}</span>
+          <span className="home-filter-rubro-name">{t(node.code)}</span>
+        </button>
+        {hijos.length > 0 && (
+          <button
+            type="button"
+            className="home-filter-expand-btn"
+            onClick={() => onToggle(node.code)}
+            aria-label={t(isOpen ? 'btn_collapse' : 'btn_expand')}
+          >
+            {isOpen ? '▲' : '▼'}
+          </button>
+        )}
+      </div>
+      {isOpen && hijos.map((child) => (
+        <PantallaNodeRow key={child.code} node={child} depth={depth + 1} expanded={expanded} onToggle={onToggle} onSelect={onSelect} />
+      ))}
+    </>
+  )
+}
+
+function PantallaTree({ nodes, expanded, onToggle, onSelect }: {
+  nodes: PantallaNode[]
+  expanded: Set<string>
+  onToggle: (code: string) => void
+  onSelect: (code: string) => void
+}) {
+  return (
+    <>
+      {nodes.map((node) => (
+        <PantallaNodeRow key={node.code} node={node} depth={0} expanded={expanded} onToggle={onToggle} onSelect={onSelect} />
+      ))}
+    </>
+  )
+}
+
+function pantallaPathOf(code: string): string[] {
+  const walk = (nodes: PantallaNode[], acc: string[]): string[] | null => {
+    for (const n of nodes) {
+      if (n.code === code) return [...acc, n.code]
+      const found = n.children ? walk(n.children, [...acc, n.code]) : null
+      if (found) return found
+    }
+    return null
+  }
+  return walk(PANTALLA_TREE, []) ?? [code]
+}
+
 // TEMP (E2E flag, owner 2026-10-02): dev-only source-language override for the
 // whole bug-report flow (audio job `language` AND translate `language`).
 // The selector renders only in dev builds (import.meta.env.DEV) so production
@@ -231,6 +398,9 @@ export function ReportarProblemaPage() {
   // Owner decision: the affected screen/menu is USER-SELECTED (required),
   // grouped by app area; value stored = the stable key code. No auto-pick.
   const [pantallaElegida, setPantallaElegida] = useState('')
+  const [showScreenPicker, setShowScreenPicker] = useState(false)
+  const [expandedPantalla, setExpandedPantalla] = useState<Set<string>>(new Set())
+  const [pantallaPath, setPantallaPath] = useState<string[]>([])
   useEffect(() => {
     return () => {
       // An audio send still in flight dies with the page: abort fetch + polling.
@@ -395,25 +565,25 @@ export function ReportarProblemaPage() {
     audioKeyRef.current = null
   }
 
-  const handleAudioPressStart = () => {
-    // Press-and-hold, same interaction as the voice feature recorder. One idempotency
-    // key per take: a fresh recording always carries a fresh key (contract).
-    if (recorder.state === 'recording' || recorder.state === 'requesting_permission') return
-    audioKeyRef.current = newId()
-    void recorder.start()
-  }
-
-  const handleAudioPressEnd = () => {
-    if (recorder.state !== 'recording') return
-    // Release-to-send (same flow as the voz data capture): a short title
-    // cannot carry the take, so the recording is discarded cleanly.
-    if (!titleValid) {
-      recorder.cancel()
-      audioKeyRef.current = null
-      showToast(t('error_reporte_titulo'), 'error')
+  // Owner round-2: TAP toggle, no hold. First tap starts recording and the
+  // visible ring counts 60->0; a second tap stops the take - and stopping
+  // sends (voz recorder closure: take ends => transcript flows).
+  const handleMicTap = () => {
+    if (recorder.state === 'recording') {
+      // Second tap: stop the take - and stopping SENDS (voz closure:
+      // take ends => transcript flows). A short title cannot carry it.
+      if (!titleValid) {
+        recorder.cancel()
+        audioKeyRef.current = null
+        showToast(t('error_reporte_titulo'), 'error')
+        return
+      }
+      recorder.stop()
       return
     }
-    recorder.stop()
+    if (recorder.state === 'requesting_permission' || audioProcessing || submitting || !!sentId) return
+    audioKeyRef.current = newId()
+    void recorder.start()
   }
 
   // Once a valid take exists, the audio path fires exactly once — the
@@ -539,53 +709,6 @@ export function ReportarProblemaPage() {
           </div>
         </div>
 
-        <div className="reporte-field">
-          <span className="reporte-field-label">{t('pantalla_label')}</span>
-          <select
-            value={pantallaElegida}
-            onChange={(e) => setPantallaElegida(e.target.value)}
-          >
-            <option value="">{t('pantalla_placeholder')}</option>
-            <optgroup label={t('pantalla_grupo_nucleo')}>
-              <option value="pantalla_inicio">{t('pantalla_inicio')}</option>
-              <option value="pantalla_cuentas_ingresos">{t('pantalla_cuentas_ingresos')}</option>
-              <option value="pantalla_cuentas_egresos">{t('pantalla_cuentas_egresos')}</option>
-              <option value="pantalla_tarjetas">{t('pantalla_tarjetas')}</option>
-            </optgroup>
-            <optgroup label={t('pantalla_grupo_carga')}>
-              <option value="pantalla_carga_egreso">{t('pantalla_carga_egreso')}</option>
-              <option value="pantalla_carga_ingreso">{t('pantalla_carga_ingreso')}</option>
-              <option value="pantalla_carga_transferencia">{t('pantalla_carga_transferencia')}</option>
-              <option value="pantalla_tickets">{t('pantalla_tickets')}</option>
-            </optgroup>
-            <optgroup label={t('pantalla_grupo_presupuesto')}>
-              <option value="pantalla_presupuesto_libertad">{t('pantalla_presupuesto_libertad')}</option>
-              <option value="pantalla_presupuesto_base_cero">{t('pantalla_presupuesto_base_cero')}</option>
-            </optgroup>
-            <optgroup label={t('pantalla_grupo_aprobar')}>
-              <option value="pantalla_para_aprobar">{t('pantalla_para_aprobar')}</option>
-              <option value="pantalla_saneamiento">{t('pantalla_saneamiento')}</option>
-            </optgroup>
-            <optgroup label={t('pantalla_grupo_analisis')}>
-              <option value="pantalla_analisis">{t('pantalla_analisis')}</option>
-              <option value="pantalla_salud">{t('pantalla_salud')}</option>
-              <option value="pantalla_supervivencia">{t('pantalla_supervivencia')}</option>
-            </optgroup>
-            <optgroup label={t('pantalla_grupo_ahorro')}>
-              <option value="pantalla_sobres">{t('pantalla_sobres')}</option>
-              <option value="pantalla_inversiones">{t('pantalla_inversiones')}</option>
-              <option value="pantalla_familia">{t('pantalla_familia')}</option>
-            </optgroup>
-            <optgroup label={t('pantalla_grupo_sistema')}>
-              <option value="pantalla_ajustes">{t('pantalla_ajustes')}</option>
-              <option value="pantalla_ayuda">{t('pantalla_ayuda')}</option>
-              <option value="pantalla_carga_voz">{t('pantalla_carga_voz')}</option>
-              <option value="pantalla_reportes">{t('pantalla_reportes')}</option>
-              <option value="pantalla_otra">{t('pantalla_otra')}</option>
-            </optgroup>
-          </select>
-        </div>
-
         {import.meta.env.DEV && (
           <div className="reporte-field">
             <span className="reporte-field-label">{t('reportes_dev_idioma_origen')}</span>
@@ -626,14 +749,34 @@ export function ReportarProblemaPage() {
         </div>
 
         <div className="reporte-field">
+          <span className="reporte-field-label">{t('pantalla_label')}</span>
+          <button
+            type="button"
+            className="reporte-picker-trigger"
+            onClick={() => setShowScreenPicker(true)}
+            aria-haspopup="dialog"
+          >
+            <span className={pantallaElegida ? '' : 'reporte-picker-placeholder'}>
+              {pantallaElegida
+                ? pantallaPath.map((c) => t(c)).join(' › ')
+                : t('pantalla_placeholder')}
+            </span>
+            <ChevronDown size={18} aria-hidden="true" />
+          </button>
+          {!pantallaElegida && (
+            <p className="reporte-field-error" aria-live="polite">{t('pantalla_required')}</p>
+          )}
+        </div>
+
+        <div className="reporte-field">
           <div className="reporte-desc-top">
             <label htmlFor="reporte-descripcion">{t('reporte_descripcion_label')}</label>
             <div className="reporte-mic-wrap">
               <p className="reporte-audio-hint">{t('reporte_audio_hint_titulo')}</p>
               <VoiceRecorderButton
                 label={t('reporte_audio_hint_titulo')}
-                onPressStart={handleAudioPressStart}
-                onPressEnd={handleAudioPressEnd}
+                onPressStart={handleMicTap}
+                onPressEnd={() => {}}
                 disabled={audioProcessing || submitting || !!sentId}
               />
             </div>
@@ -676,7 +819,7 @@ export function ReportarProblemaPage() {
             ) : (
               <div className="reporte-audio-block reporte-audio-ringblock">
                 <VoiceCountdown secondsRemaining={recorder.remainingSeconds} total={Math.round(BUG_REPORT_MAX_AUDIO_MS / 1000)} />
-                <p className="reporte-audio-status">{t('voice.record_hint')}</p>
+                <p className="reporte-audio-status">{t('reporte_audio_parar')}</p>
               </div>
             )}
           </div>
@@ -743,6 +886,37 @@ export function ReportarProblemaPage() {
           </button>
         }
     </section>
+
+      {showScreenPicker && (
+        <div className="reporte-modal-overlay" role="dialog" aria-modal="true" aria-label={t('pantalla_picker_titulo')} onClick={() => setShowScreenPicker(false)}>
+          <div className="reporte-modal-panel" onClick={(e) => e.stopPropagation()}>
+            <div className="reporte-modal-head">
+              <span className="reporte-modal-title">{t('pantalla_picker_titulo')}</span>
+              <button type="button" className="modal-close" aria-label={t('btn_close')} onClick={() => setShowScreenPicker(false)}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className="home-filter-picker-list reporte-tree-list">
+              <PantallaTree
+                nodes={PANTALLA_TREE}
+                expanded={expandedPantalla}
+                onToggle={(code) => setExpandedPantalla((prev) => {
+                  const next = new Set(prev)
+                  if (next.has(code)) next.delete(code); else next.add(code)
+                  return next
+                })}
+                onSelect={(code) => {
+                  const path = pantallaPathOf(code)
+                  setPantallaElegida(code)
+                  setPantallaPath(path)
+                  setShowScreenPicker(false)
+                  telemetry.track('home_interaction', { interaction_type: 'report_screen_pick' }, TELEMETRY_PRIORITY.LOW)
+                }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   )
 }

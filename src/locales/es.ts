@@ -2088,7 +2088,7 @@ export const reports = {
   reportes_pagina_mis: "Mis reportes",
   reporte_titulo_label: "Título",
   reporte_titulo_placeholder: "Resumen corto del problema",
-  reporte_descripcion_label: "¿Qué pasó?",
+  reporte_descripcion_label: "detalle del error: (⬇) ",
   reporte_descripcion_placeholder: "Qué pasó / qué esperabas / cómo lo reproduces (ayudanos con una captura si podés)",
   reporte_tipo_label: "¿Qué nos contás?",
   reporte_tipo_bug: "Es un problema",
@@ -2124,7 +2124,8 @@ export const reports = {
   // Voice-note body (audio bug reports): the mic sits beside the question
   // label with a title hint (owner: no tab, release-to-send like voz capture).
   reporte_descartar_audio: "Descartar",
-  reporte_audio_hint_titulo: "Si querés, podés contar tu problema con una nota de voz",
+  reporte_audio_hint_titulo: "contanos con una nota de voz",
+  reporte_audio_parar: "Tocá de nuevo el micrófono para terminar y enviar",
   pantalla_label: "¿Dónde te pasó? (pantalla)",
   pantalla_placeholder: "Elegí la pantalla o el menú",
   pantalla_grupo_nucleo: "Núcleo de la app",

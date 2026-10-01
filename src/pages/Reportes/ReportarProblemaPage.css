@@ -321,18 +321,19 @@
 
 .reporte-mic-wrap {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 4px;
-  max-width: 46%;
+  gap: 8px;
+  flex: none;
 }
 
+/* One muted line so the label stays snug against the textarea (owner) */
 .reporte-mic-wrap .reporte-audio-hint {
   margin: 0;
   font-size: 0.78rem;
-  text-align: center;
   color: var(--text-3);
-  line-height: 1.25;
+  line-height: 1.2;
+  max-width: 200px;
 }
 
 .reporte-mic-wrap .voice-recorder-button {
