@@ -2087,6 +2087,7 @@ export const reports = {
   reportes_pagina_titulo: "Reportar un problema",
   reportes_pagina_mis: "Mis reportes",
   reporte_titulo_label: "Título",
+  reporte_titulo_sugerencia: "Tu sugerencia",
   reporte_titulo_placeholder: "Resumen corto del problema",
   reporte_descripcion_label: "detalle del error: (⬇) ",
   reporte_descripcion_placeholder: "Qué pasó / qué esperabas / cómo lo reproduces (ayudanos con una captura si podés)",

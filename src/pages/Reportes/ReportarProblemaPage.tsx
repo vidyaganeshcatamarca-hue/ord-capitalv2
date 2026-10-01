@@ -343,7 +343,7 @@ interface SubmitPayload {
   p_transcripcion_audio: string | null
   p_tiene_audio: boolean
   p_media: string[]
-  p_pantalla: string
+  p_pantalla: string | null
   p_version_app: string
   p_plataforma: string
   p_idioma_origen: string
@@ -439,7 +439,8 @@ export function ReportarProblemaPage() {
   const audioReady = recorder.state === 'recorded' && recorder.blob !== null && !recorder.autoStopped
   const audioTaken = audioReady || audioProcessing
   const clientValid = titleValid && (audioTaken || descValid)
-  const canSubmit = clientValid && pantallaElegida !== '' && pendingUploads === 0 && !submitting && !audioProcessing && sentId === null
+  const pantallaRequired = tipo === 'bug'
+  const canSubmit = clientValid && (!pantallaRequired || pantallaElegida !== '') && pendingUploads === 0 && !submitting && !audioProcessing && sentId === null
   const canSendAudio =
     titleValid && audioReady && pendingUploads === 0 && !audioProcessing && sentId === null
 
@@ -598,7 +599,7 @@ export function ReportarProblemaPage() {
         p_transcripcion_audio: null,
         p_tiene_audio: false,
         p_media: paths,
-        p_pantalla: pantallaElegida,
+        p_pantalla: pantallaRequired ? pantallaElegida : null,
         p_version_app: APP_VERSION,
         p_plataforma: detectPlatform(),
         p_idioma_origen: sourceLanguage,
@@ -706,7 +707,7 @@ export function ReportarProblemaPage() {
         p_transcripcion_audio: transcript,
         p_tiene_audio: true,
         p_media: paths,
-        p_pantalla: pantallaElegida,
+        p_pantalla: pantallaRequired ? pantallaElegida : null,
         p_version_app: APP_VERSION,
         p_plataforma: detectPlatform(),
         p_idioma_origen: sourceLanguage,
@@ -796,7 +797,7 @@ export function ReportarProblemaPage() {
         )}
 
         <div className="reporte-field">
-          <label htmlFor="reporte-titulo">{t('reporte_titulo_label')}</label>
+          <label htmlFor="reporte-titulo">{tipo === 'sugerencia' ? t('reporte_titulo_sugerencia') : t('reporte_titulo_label')}</label>
           <input
             id="reporte-titulo"
             type="text"
@@ -811,6 +812,7 @@ export function ReportarProblemaPage() {
           )}
         </div>
 
+        {pantallaRequired && (
         <div className="reporte-field">
           <span className="reporte-field-label">{t('pantalla_label')}</span>
           <button
@@ -830,6 +832,8 @@ export function ReportarProblemaPage() {
             <p className="reporte-field-error" aria-live="polite">{t('pantalla_required')}</p>
           )}
         </div>
+        )}
+
 
         <div className="reporte-field">
           <div className="reporte-desc-top">
@@ -905,6 +909,7 @@ export function ReportarProblemaPage() {
           </div>
         )}
 
+        {tipo === 'bug' && (
         <div className="reporte-field">
           <span className="reporte-field-label">{t('reporte_capturas_label')}</span>
           <div className="reporte-thumbs">
@@ -929,6 +934,7 @@ export function ReportarProblemaPage() {
                   ×
                 </button>
               </div>
+
             ))}
             {media.length < MAX_MEDIA && (
               <button
@@ -954,6 +960,7 @@ export function ReportarProblemaPage() {
             }}
           />
         </div>
+        )}
 
         <div className="reporte-actions">
           <button
