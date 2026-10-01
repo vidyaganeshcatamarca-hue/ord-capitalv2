@@ -9,7 +9,6 @@ import { rpc, supabase } from '@/lib/supabase'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { t } from '@/locales/i18n'
 import {
-  DEFAULT_VOICE_LANGUAGE,
   VoiceApiError,
   createBugReportJob,
   getBugReportTranscript,
@@ -25,6 +24,11 @@ import './ReportarProblemaPage.css'
 
 const BUCKET = 'reportes'
 const MAX_MEDIA = 3
+// TEMP (E2E flag, owner 2026-10-02): dev-only source-language override for the
+// whole bug-report flow (audio job `language` AND translate `language`).
+// The selector renders only in dev builds (import.meta.env.DEV) so production
+// builds never show or use it; remove together with this block later.
+const DEV_LANG_OPTIONS: string[] = ['es-AR', 'en-US', 'pt-BR', 'fr-FR', 'it-IT', 'de-DE']
 const MAX_DESC = 4000
 const DESC_COUNTER_THRESHOLD = 3600
 const MAX_IMAGE_WIDTH = 1080
@@ -201,6 +205,9 @@ export function ReportarProblemaPage() {
   const [titulo, setTitulo] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [tipo, setTipo] = useState<ReporteTipo>('bug')
+  // TEMP (E2E flag): '' = auto (device locale); one of DEV_LANG_OPTIONS overrides.
+  const [devLang, setDevLang] = useState('')
+  const sourceLanguage = devLang || navigator.language || 'es-AR'
   const [modo, setModo] = useState<ReporteModo>('texto')
   const [audioProcessing, setAudioProcessing] = useState(false)
   const [media, setMedia] = useState<MediaItem[]>([])
@@ -346,7 +353,7 @@ export function ReportarProblemaPage() {
       }
       const translation = await translateBugReportText({
         text: descripcion.trim(),
-        language: navigator.language || 'es-AR',
+        language: sourceLanguage,
         accessToken,
       })
       if (translation.errorCode) {
@@ -433,7 +440,7 @@ export function ReportarProblemaPage() {
       const created = await createBugReportJob({
         audioBlob: blob,
         idempotencyKey: audioKeyRef.current,
-        language: DEFAULT_VOICE_LANGUAGE,
+        language: sourceLanguage,
         accessToken,
         signal: controller.signal,
       })
@@ -519,6 +526,29 @@ export function ReportarProblemaPage() {
             </button>
           </div>
         </div>
+
+        {import.meta.env.DEV && (
+          <div className="reporte-field">
+            <span className="reporte-field-label">{t('reportes_dev_idioma_origen')}</span>
+            <select
+              value={devLang}
+              onChange={(e) => setDevLang(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: '10px',
+                border: '1px solid var(--border)',
+                background: 'var(--surface-2)',
+                color: 'var(--text)',
+              }}
+            >
+              <option value="">{navigator.language || 'es-AR'} — {t('reportes_dev_auto')}</option>
+              {DEV_LANG_OPTIONS.map((l) => (
+                <option key={l} value={l}>{l}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="reporte-field">
           <label htmlFor="reporte-titulo">{t('reporte_titulo_label')}</label>

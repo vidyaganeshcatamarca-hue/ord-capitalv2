@@ -2135,6 +2135,8 @@ export const reports = {
   reporte_audio_invalido: "No pudimos leer tu nota de voz. Probá grabarla de nuevo.",
   reporte_audio_error_generico: "No pudimos convertir tu nota de voz. Reintentá o escribinos el mensaje con el botón de texto.",
   reporte_audio_max: "Alcanzaste los 60 segundos de grabación",
+  reportes_dev_idioma_origen: "Idioma de origen (SOLO PRUEBA)",
+  reportes_dev_auto: "auto · equipo",
   // Written-text translation step (text bug reports)
   reporte_translate_error: "No pudimos procesar tu mensaje. Probá de nuevo o mandá una nota de voz.",
   reporte_translate_limite: "Hay muchas consultas en este momento. Esperá un par de minutos y volvé a intentar.",
