@@ -21,7 +21,7 @@ import {
   AudioLines,
   BarChart3,
   Bug,
-  Card,
+  CreditCard,
   ChevronDown,
   Coins,
   Feather,
@@ -114,7 +114,7 @@ const PANTALLA_TREE: PantallaNode[] = [
 const PANTALLA_ICONS: Record<string, ReactNode> = {
   wallet: <Wallet size={16} />,
   'audio-lines': <AudioLines size={16} />,
-  card: <Card size={16} />,
+  card: <CreditCard size={16} />,
   coins: <Coins size={16} />,
   home: <Home size={16} />,
   'piggy-bank': <PiggyBank size={16} />,
