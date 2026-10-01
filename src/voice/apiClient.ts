@@ -6,6 +6,7 @@ import {
   VOICE_API_BASE_URL,
   VOICE_JOB_CREATE_PATH,
   VOICE_JOB_POLL_PATH,
+  BUG_REPORT_TRANSLATE_PATH,
   buildVoiceJobFormData,
   parseVoiceErrorResponse,
 } from './contract';
@@ -419,4 +420,90 @@ export async function getBugReportTranscript(
     );
   }
   return transcript;
+}
+
+/** Stable fallback code when the translate endpoint fails without a usable envelope. */
+const BUG_REPORT_TRANSLATION_FAILED = 'BUG_REPORT_TRANSLATION_FAILED';
+
+/** Input required to translate a written bug-report description. */
+export interface TranslateBugReportTextInput {
+  /** Written description only: never the title, manifests or media. */
+  text: string;
+  /** BCP-47 tag of the user locale (e.g. 'es-AR'). */
+  language: string;
+  accessToken: string;
+  signal?: AbortSignal;
+}
+
+/**
+ * Result of the written-text translation step. On failure the endpoint never
+ * reaches `fn_crear_reporte`: `errorCode` carries the stable backend code and
+ * `text` stays empty, so callers can branch all-or-nothing without exceptions.
+ */
+export interface TranslateBugReportTextResult {
+  /** Final Spanish text, only meaningful when `errorCode` is undefined. */
+  text: string;
+  /** Backend decided a translation was actually needed. */
+  translated: boolean;
+  errorCode?: string;
+}
+
+/** Extracts the stable { error: { code } } code from a translate error body. */
+function parseBugReportTranslationErrorCode(body: unknown): string {
+  if (typeof body === 'object' && body !== null) {
+    const error = (body as Record<string, unknown>).error;
+    if (typeof error === 'object' && error !== null) {
+      const code = (error as Record<string, unknown>).code;
+      if (typeof code === 'string' && code.length > 0) return code;
+    }
+  }
+  return BUG_REPORT_TRANSLATION_FAILED;
+}
+
+/**
+ * Translates a written bug-report description into Spanish.
+ * The frontend always routes written text through this endpoint; the backend
+ * decides whether a translation is needed (`translated: false` when the text
+ * is already Spanish). Aborts are rethrown unchanged and network failures use
+ * the shared `VoiceApiError` transport error, like the other calls here; every
+ * non-2xx response is reported as a result with its stable `errorCode`.
+ */
+export async function translateBugReportText(
+  input: TranslateBugReportTextInput
+): Promise<TranslateBugReportTextResult> {
+  const { text, language, accessToken, signal } = input;
+
+  let response: Response;
+  try {
+    response = await fetch(`${VOICE_API_BASE_URL}${BUG_REPORT_TRANSLATE_PATH}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ text, language }),
+      signal,
+    });
+  } catch (error) {
+    if (isAbortError(error)) throw error;
+    throw createNetworkError(SEND_FAILED_I18N_KEY, detailFromError(error));
+  }
+
+  if (response.status !== 200) {
+    const body = await readJsonBody(response);
+    return {
+      text: '',
+      translated: false,
+      errorCode: parseBugReportTranslationErrorCode(body),
+    };
+  }
+
+  const body = await readJsonBody(response);
+  const record = typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : null;
+  const finalText = typeof record?.text === 'string' ? record.text : '';
+  if (finalText.trim().length === 0) {
+    // 200 without a usable text is a failed translation, never a pass-through.
+    return { text: '', translated: false, errorCode: BUG_REPORT_TRANSLATION_FAILED };
+  }
+  return { text: finalText, translated: record?.translated === true };
 }

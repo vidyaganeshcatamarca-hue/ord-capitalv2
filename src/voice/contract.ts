@@ -13,6 +13,12 @@ export const VOICE_JOB_CREATE_PATH = '/v1/voice/jobs' as const;
 /** Builds the polling path for a previously created voice job. */
 export const VOICE_JOB_POLL_PATH = (jobId: string): string => `/v1/voice/jobs/${jobId}`;
 
+/**
+ * Path for bug-report written-text translation (JSON POST).
+ * Bug-report written-text translation addendum, see docs/bug_report.md §10.
+ */
+export const BUG_REPORT_TRANSLATE_PATH = '/v1/bug-reports/translate' as const;
+
 /** Default maximum accepted audio duration, in milliseconds (movement jobs). */
 export const MAX_AUDIO_DURATION_MS = 30000;
 

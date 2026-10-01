@@ -15,6 +15,7 @@ import {
   getBugReportTranscript,
   getVoiceJob,
   isAbortError,
+  translateBugReportText,
 } from '@/voice/apiClient'
 import { BUG_REPORT_MAX_AUDIO_MS } from '@/voice/contract'
 import { useVoiceRecorder } from '@/voice/useVoiceRecorder'
@@ -335,9 +336,33 @@ export function ReportarProblemaPage() {
     setSubmitting(true)
     try {
       const paths = doneMediaPaths()
+      // All-or-nothing: fn_crear_reporte only receives the final Spanish text
+      // confirmed by the translate endpoint; without it nothing is sent.
+      const { data } = await supabase.auth.getSession()
+      const accessToken = data.session?.access_token
+      if (!accessToken) {
+        showToast(t('reporte_translate_error'), 'error')
+        return
+      }
+      const translation = await translateBugReportText({
+        text: descripcion.trim(),
+        language: navigator.language || 'es-AR',
+        accessToken,
+      })
+      if (translation.errorCode) {
+        showToast(
+          t(
+            translation.errorCode === 'RATE_LIMITED'
+              ? 'reporte_translate_limite'
+              : 'reporte_translate_error'
+          ),
+          'error'
+        )
+        return
+      }
       const payload: SubmitPayload = {
         p_titulo: titulo.trim(),
-        p_descripcion: descripcion.trim(),
+        p_descripcion: translation.text,
         p_tipo: tipo,
         p_transcripcion_audio: null,
         p_tiene_audio: false,
@@ -347,6 +372,11 @@ export function ReportarProblemaPage() {
         p_plataforma: detectPlatform(),
       }
       await finishReporte(payload, paths)
+    } catch (error) {
+      // Transport failure reaching the translate step: the form stays filled
+      // and no report is created, so a plain retry is always safe.
+      if (isAbortError(error)) return
+      showToast(t('reporte_translate_error'), 'error')
     } finally {
       setSubmitting(false)
     }
