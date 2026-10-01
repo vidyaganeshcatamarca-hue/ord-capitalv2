@@ -39,6 +39,8 @@ import {
   Sparkles,
   TrendingDown,
   TrendingUp,
+  Home,
+  PiggyBank,
   Users,
   Wallet,
   X,
@@ -64,6 +66,7 @@ interface PantallaNode {
 }
 
 const PANTALLA_TREE: PantallaNode[] = [
+  { code: 'pantalla_inicio', iconKey: 'home' },
   { code: 'pantalla_cuentas', iconKey: 'wallet', children: [
     { code: 'pantalla_ingresos', iconKey: 'wallet', children: [
       { code: 'pantalla_billeteras', iconKey: 'wallet' },
@@ -85,11 +88,14 @@ const PANTALLA_TREE: PantallaNode[] = [
   { code: 'pantalla_saneamiento', iconKey: 'sparkles', children: [
     { code: 'pantalla_para_aprobar', iconKey: 'inbox' },
   ] },
-  { code: 'pantalla_analisis', iconKey: 'bar-chart-3' },
-  { code: 'pantalla_salud', iconKey: 'heart-pulse' },
-  { code: 'pantalla_supervivencia', iconKey: 'life-buoy' },
-  { code: 'pantalla_sobres', iconKey: 'mail' },
-  { code: 'pantalla_inversiones', iconKey: 'trending-up' },
+  { code: 'pantalla_analisis', iconKey: 'bar-chart-3', children: [
+    { code: 'pantalla_salud', iconKey: 'heart-pulse' },
+    { code: 'pantalla_supervivencia', iconKey: 'life-buoy' },
+  ] },
+  { code: 'pantalla_ahorros', iconKey: 'piggy-bank', children: [
+    { code: 'pantalla_sobres', iconKey: 'mail' },
+    { code: 'pantalla_inversiones', iconKey: 'trending-up' },
+  ] },
   { code: 'pantalla_familia', iconKey: 'users' },
   { code: 'pantalla_ajustes', iconKey: 'settings', children: [
     { code: 'pantalla_ayuda', iconKey: 'help-circle' },
@@ -105,6 +111,8 @@ const PANTALLA_TREE: PantallaNode[] = [
 const PANTALLA_ICONS: Record<string, ReactNode> = {
   wallet: <Wallet size={16} />,
   coins: <Coins size={16} />,
+  home: <Home size={16} />,
+  'piggy-bank': <PiggyBank size={16} />,
   'trending-down': <TrendingDown size={16} />,
   'arrow-left-right': <ArrowLeftRight size={16} />,
   'minus-circle': <MinusCircle size={16} />,
