@@ -1,11 +1,24 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
+import { VoiceRecorderButton } from '@/components/voice/VoiceRecorderButton'
+import '@/components/voice/VoiceRecorderModal.css'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc, supabase } from '@/lib/supabase'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { t } from '@/locales/i18n'
+import {
+  DEFAULT_VOICE_LANGUAGE,
+  VoiceApiError,
+  createBugReportJob,
+  getBugReportTranscript,
+  getVoiceJob,
+  isAbortError,
+} from '@/voice/apiClient'
+import { BUG_REPORT_MAX_AUDIO_MS } from '@/voice/contract'
+import { useVoiceRecorder } from '@/voice/useVoiceRecorder'
+import { POLL_DELAYS_MS, POLL_INTERVAL_MAX_MS } from '@/voice/useVoicePolling'
 import { APP_VERSION } from '@/config/app'
 import './ReportarProblemaPage.css'
 
@@ -15,6 +28,97 @@ const MAX_DESC = 4000
 const DESC_COUNTER_THRESHOLD = 3600
 const MAX_IMAGE_WIDTH = 1080
 const WEBP_QUALITY = 0.75
+
+// Backend backoff while a job sits in retry_wait reaches 600s: the total wait
+// stays generous instead of reusing the 180s movement deadline.
+const BUG_AUDIO_POLL_MAX_MS = 900_000
+
+/** Backend codes meaning the recording itself was rejected. */
+const AUDIO_INVALID_CODES: readonly string[] = [
+  'EMPTY_AUDIO',
+  'UNSUPPORTED_AUDIO',
+  'INVALID_AUDIO',
+  'AUDIO_TOO_LARGE',
+  'AUDIO_TOO_LONG',
+  'AUDIO_CODEC_MISMATCH',
+]
+
+/** Maps a voice-backend error code to the report-specific i18n key. */
+function audioErrorI18nKey(code: string): string {
+  if (
+    (code.startsWith('BUG_REPORT_') && code.endsWith('_LIMIT')) ||
+    code === 'TOO_MANY_ACTIVE_JOBS'
+  ) {
+    return 'reporte_audio_limite'
+  }
+  if (AUDIO_INVALID_CODES.includes(code)) return 'reporte_audio_invalido'
+  // WHISPER_* / TRANSLATION_*, UNKNOWN, NETWORK, TIMEOUT: generic retry hint.
+  return 'reporte_audio_error_generico'
+}
+
+function newAbortError(): Error {
+  const error = new Error('Aborted')
+  error.name = 'AbortError'
+  return error
+}
+
+/** Abortable sleep so a user cancel breaks the polling loop instantly. */
+function sleep(ms: number, signal: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(newAbortError())
+      return
+    }
+    const onAbort = (): void => {
+      clearTimeout(timer)
+      reject(newAbortError())
+    }
+    const timer = setTimeout(() => {
+      signal.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+    signal.addEventListener('abort', onAbort, { once: true })
+  })
+}
+
+/** Same backoff the movement polling flow uses. */
+function delayForBugAudioPoll(attempt: number): number {
+  return POLL_DELAYS_MS[attempt] ?? POLL_INTERVAL_MAX_MS
+}
+
+/**
+ * Polls a bug-report job until it completes. `retry_wait` is not an error:
+ * the backend is retrying, so the loop keeps waiting and never creates a
+ * second job. Resolves on `completed`; throws `VoiceApiError` otherwise.
+ */
+async function pollBugReportJob(
+  jobId: string,
+  accessToken: string,
+  signal: AbortSignal
+): Promise<void> {
+  const deadlineAt = Date.now() + BUG_AUDIO_POLL_MAX_MS
+  let attempt = 0
+  for (;;) {
+    if (signal.aborted) throw newAbortError()
+    if (Date.now() > deadlineAt) {
+      throw new VoiceApiError(
+        'TIMEOUT',
+        'reporte_audio_error_generico',
+        null,
+        'Bug report voice job timed out'
+      )
+    }
+    await sleep(delayForBugAudioPoll(attempt), signal)
+    attempt += 1
+    const job = await getVoiceJob({ jobId, accessToken, signal })
+    if (job.status === 'completed') return
+    if (job.status === 'terminal_failed') {
+      const code = job.error_code ?? 'UNKNOWN'
+      throw new VoiceApiError(code, audioErrorI18nKey(code), null, code)
+    }
+    // queued / processing / retry_wait: the backend still owns the job.
+  }
+}
 
 interface CrearReporteResult {
   ok: boolean
@@ -27,6 +131,9 @@ type MediaStatus = 'uploading' | 'done' | 'error'
 
 /** Owner decision: every report is either a bug or a feature suggestion. */
 type ReporteTipo = 'bug' | 'sugerencia'
+
+/** Body mode: typed description or a voice note the backend transcribes. */
+type ReporteModo = 'texto' | 'audio'
 
 interface MediaItem {
   localId: string
@@ -41,10 +148,10 @@ interface MediaItem {
 
 interface SubmitPayload {
   p_titulo: string
-  p_descripcion: string
+  p_descripcion: string | null
   p_tipo: ReporteTipo
-  p_transcripcion_audio: null
-  p_tiene_audio: false
+  p_transcripcion_audio: string | null
+  p_tiene_audio: boolean
   p_media: string[]
   p_pantalla: string
   p_version_app: string
@@ -93,12 +200,19 @@ export function ReportarProblemaPage() {
   const [titulo, setTitulo] = useState('')
   const [descripcion, setDescripcion] = useState('')
   const [tipo, setTipo] = useState<ReporteTipo>('bug')
+  const [modo, setModo] = useState<ReporteModo>('texto')
+  const [audioProcessing, setAudioProcessing] = useState(false)
   const [media, setMedia] = useState<MediaItem[]>([])
   const [mediaLimitMsg, setMediaLimitMsg] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [sentId, setSentId] = useState<number | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  // Aborts the create/poll fetch chain when the user cancels or leaves.
+  const audioAbortRef = useRef<AbortController | null>(null)
+  // Idempotency key of the current take: one crypto UUID per new recording.
+  const audioKeyRef = useRef<string | null>(null)
+  const recorder = useVoiceRecorder({ maxDurationMs: BUG_REPORT_MAX_AUDIO_MS })
   // Paths uploaded to storage that were never submitted: best-effort cleanup on unmount.
   const orphanPathsRef = useRef<Set<string>>(new Set())
   const submittedRef = useRef(false)
@@ -115,6 +229,8 @@ export function ReportarProblemaPage() {
 
   useEffect(() => {
     return () => {
+      // An audio send still in flight dies with the page: abort fetch + polling.
+      audioAbortRef.current?.abort()
       // Abandoned (never submitted): remove every uploaded object, silent.
       if (submittedRef.current) return
       const paths = Array.from(orphanPathsRef.current)
@@ -126,8 +242,13 @@ export function ReportarProblemaPage() {
   const pendingUploads = media.filter((m) => m.status === 'uploading').length
   const titleValid = titulo.trim().length >= 5
   const descValid = descripcion.trim().length >= 10 && descripcion.trim().length <= MAX_DESC
-  const clientValid = titleValid && descValid
+  // XOR body validation: text mode requires the description, audio mode does not.
+  const clientValid = titleValid && (modo === 'audio' || descValid)
   const canSubmit = clientValid && pendingUploads === 0 && !submitting && sentId === null
+  // A recorded take the backend has not accepted yet (the 60s hard cut is never sent).
+  const audioReady = recorder.state === 'recorded' && recorder.blob !== null && !recorder.autoStopped
+  const canSendAudio =
+    titleValid && audioReady && pendingUploads === 0 && !audioProcessing && sentId === null
 
   const updateMediaItem = (localId: string, patch: Partial<MediaItem>) => {
     setMedia((prev) => prev.map((m) => (m.localId === localId ? { ...m, ...patch } : m)))
@@ -183,11 +304,37 @@ export function ReportarProblemaPage() {
     }
   }
 
+  /** Sends fn_crear_reporte; owns the success bookkeeping and the error toast. */
+  const finishReporte = async (payload: SubmitPayload, paths: string[]): Promise<boolean> => {
+    try {
+      const res = await rpc<CrearReporteResult>(
+        'fn_crear_reporte',
+        payload as unknown as Record<string, unknown>
+      )
+      if (res?.ok && typeof res.reporte_id === 'number') {
+        // The report owns the media now: stop the unmount cleanup for those paths.
+        submittedRef.current = true
+        for (const p of paths) orphanPathsRef.current.delete(p)
+        setSentId(res.reporte_id)
+        telemetry.track('reporte_enviado', {}, TELEMETRY_PRIORITY.LOW)
+        return true
+      }
+      showToast(res?.error_key ? t(res.error_key) : t('reporte_error_generico'), 'error')
+      return false
+    } catch {
+      showToast(t('reporte_error_generico'), 'error')
+      return false
+    }
+  }
+
+  const doneMediaPaths = (): string[] =>
+    mediaRef.current.filter((m) => m.status === 'done' && m.path).map((m) => m.path as string)
+
   const handleSubmit = async () => {
     if (!canSubmit) return
     setSubmitting(true)
     try {
-      const paths = mediaRef.current.filter((m) => m.status === 'done' && m.path).map((m) => m.path as string)
+      const paths = doneMediaPaths()
       const payload: SubmitPayload = {
         p_titulo: titulo.trim(),
         p_descripcion: descripcion.trim(),
@@ -199,20 +346,99 @@ export function ReportarProblemaPage() {
         p_version_app: APP_VERSION,
         p_plataforma: detectPlatform(),
       }
-      const res = await rpc<CrearReporteResult>('fn_crear_reporte', payload as unknown as Record<string, unknown>)
-      if (res?.ok && typeof res.reporte_id === 'number') {
-        // The report owns the media now: stop the unmount cleanup for those paths.
-        submittedRef.current = true
-        for (const p of paths) orphanPathsRef.current.delete(p)
-        setSentId(res.reporte_id)
-        telemetry.track('reporte_enviado', {}, TELEMETRY_PRIORITY.LOW)
-      } else {
-        showToast(res?.error_key ? t(res.error_key) : t('reporte_error_generico'), 'error')
-      }
-    } catch {
-      showToast(t('reporte_error_generico'), 'error')
+      await finishReporte(payload, paths)
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  // ── Audio body mode ──────────────────────────────────────────────────
+  const discardAudio = () => {
+    // Owner decision: the take is all-or-nothing; discarding frees the mic.
+    recorder.cancel()
+    audioKeyRef.current = null
+  }
+
+  const handleChangeModo = (next: ReporteModo) => {
+    if (next === modo || audioProcessing) return
+    if (recorder.state !== 'idle') recorder.cancel()
+    audioKeyRef.current = null
+    setModo(next)
+  }
+
+  const handleAudioPressStart = () => {
+    // Press-and-hold, same interaction as the voice feature recorder.
+    if (recorder.state === 'recording' || recorder.state === 'requesting_permission') return
+    void recorder.start()
+  }
+
+  const handleAudioPressEnd = () => {
+    if (recorder.state !== 'recording') return
+    recorder.stop()
+  }
+
+  const handleCancelAudioSend = () => {
+    // The backend offers no job cancel: stopping the polling and the fetch
+    // discards everything. No report was created and none will be.
+    audioAbortRef.current?.abort()
+    audioAbortRef.current = null
+    setAudioProcessing(false)
+    discardAudio()
+  }
+
+  const handleSendAudio = async () => {
+    if (!canSendAudio) return
+    const blob = recorder.blob
+    if (!blob) return
+    const controller = new AbortController()
+    audioAbortRef.current = controller
+    setAudioProcessing(true)
+    try {
+      if (!audioKeyRef.current) audioKeyRef.current = newId()
+      const { data } = await supabase.auth.getSession()
+      const accessToken = data.session?.access_token
+      if (!accessToken) {
+        throw new VoiceApiError('UNAUTHORIZED', audioErrorI18nKey('UNAUTHORIZED'), null, 'No session')
+      }
+      const created = await createBugReportJob({
+        audioBlob: blob,
+        idempotencyKey: audioKeyRef.current,
+        language: DEFAULT_VOICE_LANGUAGE,
+        accessToken,
+        signal: controller.signal,
+      })
+      await pollBugReportJob(created.job_id, accessToken, controller.signal)
+      // All-or-nothing: if the transcript cannot be read, nothing reaches
+      // fn_crear_reporte and the user records again or switches to text.
+      const transcript = await getBugReportTranscript({
+        jobId: created.job_id,
+        accessToken,
+        signal: controller.signal,
+      })
+      // The backend owns the audio now: drop the in-memory take before the RPC.
+      discardAudio()
+      const paths = doneMediaPaths()
+      const payload: SubmitPayload = {
+        p_titulo: titulo.trim(),
+        p_descripcion: descripcion.trim() || null,
+        p_tipo: tipo,
+        p_transcripcion_audio: transcript,
+        p_tiene_audio: true,
+        p_media: paths,
+        p_pantalla: sourceScreen,
+        p_version_app: APP_VERSION,
+        p_plataforma: detectPlatform(),
+      }
+      await finishReporte(payload, paths)
+    } catch (error) {
+      // An abort means the user cancelled: the cancel handler already discarded.
+      if (isAbortError(error)) return
+      const code = error instanceof VoiceApiError ? error.code : 'UNKNOWN'
+      showToast(t(audioErrorI18nKey(code)), 'error')
+      discardAudio()
+    } finally {
+      if (audioAbortRef.current === controller) audioAbortRef.current = null
+      setAudioProcessing(false)
     }
   }
 
@@ -281,6 +507,33 @@ export function ReportarProblemaPage() {
         </div>
 
         <div className="reporte-field">
+          <div
+            className="reporte-segmented"
+            role="group"
+            aria-label={t('reporte_descripcion_label')}
+          >
+            <button
+              type="button"
+              className={`reporte-seg-btn reporte-seg-btn--modo ${modo === 'texto' ? 'reporte-seg-btn--active' : ''}`}
+              aria-pressed={modo === 'texto'}
+              disabled={audioProcessing}
+              onClick={() => handleChangeModo('texto')}
+            >
+              {t('reporte_modo_texto')}
+            </button>
+            <button
+              type="button"
+              className={`reporte-seg-btn reporte-seg-btn--modo ${modo === 'audio' ? 'reporte-seg-btn--active' : ''}`}
+              aria-pressed={modo === 'audio'}
+              disabled={audioProcessing}
+              onClick={() => handleChangeModo('audio')}
+            >
+              {t('reporte_modo_audio')}
+            </button>
+          </div>
+        </div>
+
+        <div className="reporte-field">
           <label htmlFor="reporte-descripcion">{t('reporte_descripcion_label')}</label>
           <textarea
             id="reporte-descripcion"
@@ -290,7 +543,7 @@ export function ReportarProblemaPage() {
             onChange={(e) => setDescripcion(e.target.value)}
             placeholder={tipo === 'sugerencia' ? t('reporte_descripcion_placeholder_sugerencia') : t('reporte_descripcion_placeholder')}
           />
-          {descTrimmed > 0 && descTrimmed < 10 && (
+          {modo === 'texto' && descTrimmed > 0 && descTrimmed < 10 && (
             <p className="reporte-field-error">{t('error_reporte_descripcion')}</p>
           )}
           {descripcion.length >= DESC_COUNTER_THRESHOLD && (
@@ -298,6 +551,70 @@ export function ReportarProblemaPage() {
           )}
           <p className="reporte-privacy">{t('reporte_aviso_privacidad')}</p>
         </div>
+
+        {modo === 'audio' && (
+          <div className="reporte-field reporte-audio">
+            <p className="reporte-audio-hint">{t('reporte_modo_audio_hint')}</p>
+            {audioProcessing ? (
+              <div className="reporte-audio-block" role="status">
+                <span className="reporte-audio-spinner" aria-hidden="true" />
+                <p className="reporte-audio-status">{t('reporte_audio_procesando')}</p>
+                <button type="button" className="btn btn-ghost" onClick={handleCancelAudioSend}>
+                  {t('reporte_audio_cancelar')}
+                </button>
+              </div>
+            ) : recorder.state === 'recording' || recorder.state === 'requesting_permission' ? (
+              <div className="reporte-audio-block">
+                <VoiceRecorderButton
+                  label={t('reporte_grabar')}
+                  onPressStart={handleAudioPressStart}
+                  onPressEnd={handleAudioPressEnd}
+                  disabled={recorder.state === 'requesting_permission'}
+                />
+                <p className="reporte-audio-status">
+                  {t('reporte_grabando', { segundos: recorder.seconds })}
+                </p>
+              </div>
+            ) : recorder.state === 'recorded' && recorder.autoStopped ? (
+              <div className="reporte-audio-block">
+                {/* The 60s hard cut is never sent: only a fresh recording helps. */}
+                <p className="reporte-audio-alert">{t('reporte_audio_max')}</p>
+                <button type="button" className="btn btn-ghost" onClick={discardAudio}>
+                  {t('reporte_descartar_audio')}
+                </button>
+              </div>
+            ) : audioReady ? (
+              <div className="reporte-audio-block">
+                {/* Owner decision: no player. The take is sent or discarded. */}
+                <div className="reporte-audio-actions">
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    disabled={!canSendAudio}
+                    onClick={() => void handleSendAudio()}
+                  >
+                    {t('reporte_enviar_audio')}
+                  </button>
+                  <button type="button" className="btn btn-ghost" onClick={discardAudio}>
+                    {t('reporte_descartar_audio')}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="reporte-audio-block">
+                {recorder.state === 'error' && recorder.error && (
+                  <p className="reporte-audio-alert">{t(recorder.error.i18nKey)}</p>
+                )}
+                <VoiceRecorderButton
+                  label={t('reporte_grabar')}
+                  onPressStart={handleAudioPressStart}
+                  onPressEnd={handleAudioPressEnd}
+                />
+                <p className="reporte-audio-hint">{t('reporte_grabar')}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="reporte-field">
           <span className="reporte-field-label">{t('reporte_capturas_label')}</span>
@@ -349,14 +666,16 @@ export function ReportarProblemaPage() {
           />
         </div>
 
-        <button
-          type="button"
-          className="btn btn-primary reporte-submit"
-          disabled={!canSubmit}
-          onClick={() => void handleSubmit()}
-        >
-          {submitting || pendingUploads > 0 ? t('reporte_enviando') : t('reporte_enviar')}
-        </button>
+        {modo === 'texto' && (
+          <button
+            type="button"
+            className="btn btn-primary reporte-submit"
+            disabled={!canSubmit}
+            onClick={() => void handleSubmit()}
+          >
+            {submitting || pendingUploads > 0 ? t('reporte_enviando') : t('reporte_enviar')}
+          </button>
+        )}
       </section>
     </main>
   )

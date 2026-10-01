@@ -80,6 +80,68 @@
   color: var(--mint);
 }
 
+/* Body-mode selector (texto / audio): neutral active state */
+.reporte-seg-btn--modo.reporte-seg-btn--active {
+  background: var(--mint-dim);
+  color: var(--mint);
+}
+
+.reporte-seg-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Voice-note body (audio mode) */
+.reporte-audio {
+  justify-items: center;
+  gap: 12px;
+}
+
+.reporte-audio-block {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.reporte-audio-status {
+  margin: 0;
+  color: var(--text-2);
+  font-size: calc(0.88rem * var(--font-scale));
+  text-align: center;
+}
+
+.reporte-audio-hint {
+  margin: 0;
+  color: var(--text-3);
+  font-size: calc(0.78rem * var(--font-scale));
+  line-height: 1.4;
+  text-align: center;
+}
+
+.reporte-audio-alert {
+  margin: 0;
+  color: var(--coral, #FF6B6B);
+  font-size: calc(0.85rem * var(--font-scale));
+  text-align: center;
+}
+
+.reporte-audio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.reporte-audio-spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--text-3);
+  border-top-color: var(--mint);
+  border-radius: var(--radius-full);
+  animation: reporte-spin 0.8s linear infinite;
+}
+
 .reporte-field input:focus-visible,
 .reporte-field textarea:focus-visible {
   outline: none;

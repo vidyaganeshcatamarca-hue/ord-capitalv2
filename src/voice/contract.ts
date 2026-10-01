@@ -13,8 +13,14 @@ export const VOICE_JOB_CREATE_PATH = '/v1/voice/jobs' as const;
 /** Builds the polling path for a previously created voice job. */
 export const VOICE_JOB_POLL_PATH = (jobId: string): string => `/v1/voice/jobs/${jobId}`;
 
-/** Maximum accepted audio duration, in milliseconds. */
+/** Default maximum accepted audio duration, in milliseconds (movement jobs). */
 export const MAX_AUDIO_DURATION_MS = 30000;
+
+/**
+ * Maximum duration accepted for a bug-report voice note, in milliseconds.
+ * The backend accepts 60s for `kind=bug_report`; movements keep the default.
+ */
+export const BUG_REPORT_MAX_AUDIO_MS = 60000;
 
 /** Maximum accepted audio payload size, in bytes (2 MB). */
 export const MAX_AUDIO_BYTES = 2 * 1024 * 1024;
@@ -33,22 +39,33 @@ export interface BuildVoiceJobFormDataInput {
   audioBlob: Blob;
   idempotencyKey: string;
   language: string;
-  context: VoiceContext;
+  /** Movement jobs send their entity context; bug-report jobs omit it. */
+  context?: VoiceContext;
+  /** Backend job discriminator (e.g. 'bug_report'). Not appended when undefined. */
+  kind?: string;
+  /** Optional codec hint. Omitted by default: the backend detects it with ffprobe. */
+  audioCodec?: string;
 }
 
 /**
  * Builds the multipart/form-data body for the enqueue request.
- * The audio codec is never sent explicitly; the backend detects it with ffprobe.
+ * `context` is appended only when provided (movements); `kind` and
+ * `audio_codec` are appended only when the caller supplies them.
  */
 export function buildVoiceJobFormData(input: BuildVoiceJobFormDataInput): FormData {
-  const { audioBlob, idempotencyKey, language, context } = input;
+  const { audioBlob, idempotencyKey, language, context, kind, audioCodec } = input;
   const formData = new FormData();
   const mimeType = audioBlob.type || 'application/octet-stream';
   formData.append('audio', audioBlob, `voice.${mimeType.split('/')[1] || 'bin'}`);
   formData.append('idempotency_key', idempotencyKey);
   formData.append('language', language);
-  formData.append('context', JSON.stringify(context));
-  // NOTE: 'audio_codec' is intentionally omitted - the backend detects it with ffprobe.
+  if (kind !== undefined) formData.append('kind', kind);
+  // Movement callers always pass `context`, so their body is unchanged; the
+  // bug-report contract never carries the field, so it stays unappended.
+  if (context !== undefined) formData.append('context', JSON.stringify(context));
+  // NOTE: 'audio_codec' is intentionally omitted unless the caller knows the
+  // codec - the backend detects it with ffprobe.
+  if (audioCodec !== undefined) formData.append('audio_codec', audioCodec);
   return formData;
 }
 

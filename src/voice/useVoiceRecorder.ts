@@ -1,6 +1,6 @@
 // src/voice/useVoiceRecorder.ts
 // ============================================
-// Voice v1 - MediaRecorder hook with a hard 30s cut
+// Voice v1 - MediaRecorder hook with a configurable hard cut (30s default)
 // ============================================
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isBrowserSupported, pickSupportedMime, type SupportedMime } from './codec';
@@ -23,6 +23,16 @@ export interface VoiceRecorderError {
   retryable?: boolean;
 }
 
+/** Options accepted by `useVoiceRecorder`. */
+export interface UseVoiceRecorderOptions {
+  /**
+   * Hard cut for the recording, in milliseconds.
+   * Defaults to `MAX_AUDIO_DURATION_MS` (30s, movements); the bug-report
+   * recorder passes `BUG_REPORT_MAX_AUDIO_MS` (60s).
+   */
+  maxDurationMs?: number;
+}
+
 /** Public surface of `useVoiceRecorder`. */
 export interface UseVoiceRecorderResult {
   state: VoiceRecorderState;
@@ -32,7 +42,7 @@ export interface UseVoiceRecorderResult {
   mimeType: string | null;
   error: VoiceRecorderError | null;
   /**
-   * True only when the 30s hard cut stopped the recorder on its own.
+   * True only when the hard cut stopped the recorder on its own.
    * The UI must never upload that blob: it only offers a fresh recording.
    */
   autoStopped: boolean;
@@ -93,7 +103,8 @@ function classifyMicrophoneError(error: unknown): VoiceRecorderError {
  * Records a voice note in memory. The hook never uploads: `useVoiceJobs` owns
  * submission so the recorder stays focused on the MediaRecorder lifecycle.
  */
-export function useVoiceRecorder(): UseVoiceRecorderResult {
+export function useVoiceRecorder(options?: UseVoiceRecorderOptions): UseVoiceRecorderResult {
+  const maxDurationMs = options?.maxDurationMs ?? MAX_AUDIO_DURATION_MS;
   const [state, setState] = useState<VoiceRecorderState>('idle');
   const [seconds, setSeconds] = useState(0);
   const [blob, setBlob] = useState<Blob | null>(null);
@@ -328,13 +339,14 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
       if (startedAt === null) return;
       const elapsedMs = Date.now() - startedAt;
       if (mountedRef.current) setSeconds(Math.floor(elapsedMs / 1000));
-      if (elapsedMs >= MAX_AUDIO_DURATION_MS) {
-        // Hard cut at 30s: the recorder is stopped without user interaction.
-        // Flagged as automatic so the UI discards the blob instead of sending it.
+      if (elapsedMs >= maxDurationMs) {
+        // Hard cut at the configured limit: the recorder is stopped without
+        // user interaction. Flagged as automatic so the UI discards the blob
+        // instead of sending it.
         stopRef.current(true);
       }
     }, 1000);
-  }, [clearTicker, commitState, releaseStream, stopTracksAndRecorder]);
+  }, [clearTicker, commitState, maxDurationMs, releaseStream, stopTracksAndRecorder]);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -346,7 +358,7 @@ export function useVoiceRecorder(): UseVoiceRecorderResult {
     };
   }, [stopTracksAndRecorder]);
 
-  const maxSeconds = Math.floor(MAX_AUDIO_DURATION_MS / 1000);
+  const maxSeconds = Math.floor(maxDurationMs / 1000);
 
   return {
     state,

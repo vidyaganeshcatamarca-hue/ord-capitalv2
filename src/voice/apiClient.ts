@@ -253,6 +253,74 @@ export async function createVoiceJob(input: CreateVoiceJobInput): Promise<VoiceJ
   };
 }
 
+/** Discriminator the backend expects for bug-report voice jobs. */
+const BUG_REPORT_JOB_KIND = 'bug_report';
+
+/** Input required to enqueue a new bug-report voice job. */
+export interface CreateBugReportJobInput {
+  audioBlob: Blob;
+  idempotencyKey: string;
+  language: string;
+  accessToken: string;
+  signal?: AbortSignal;
+  /** Optional codec hint; omitted by default so the backend detects it. */
+  audioCodec?: string;
+}
+
+/**
+ * Enqueues a bug-report voice job (`kind=bug_report`).
+ * The multipart never carries a `context` field: the bug-report contract is
+ * audio + idempotency key + language + kind (+ optional codec) only.
+ * Accepts 200 (idempotent hit, `reused: true`) and 202 (new job), with the
+ * same envelope handling as `createVoiceJob`.
+ */
+export async function createBugReportJob(
+  input: CreateBugReportJobInput
+): Promise<VoiceJobCreate> {
+  const { audioBlob, idempotencyKey, language, accessToken, signal, audioCodec } = input;
+
+  let response: Response;
+  try {
+    response = await fetch(`${VOICE_API_BASE_URL}${VOICE_JOB_CREATE_PATH}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: buildVoiceJobFormData({
+        audioBlob,
+        idempotencyKey,
+        language,
+        kind: BUG_REPORT_JOB_KIND,
+        audioCodec,
+      }),
+      signal,
+    });
+  } catch (error) {
+    if (isAbortError(error)) throw error;
+    throw createNetworkError(SEND_FAILED_I18N_KEY, detailFromError(error));
+  }
+
+  if (response.status !== 200 && response.status !== 202) {
+    throw await buildHttpError(response);
+  }
+
+  const body = await readJsonBody(response);
+  if (!isVoiceJobCreateLike(body)) {
+    throw new VoiceApiError(
+      'UNKNOWN',
+      mapVoiceErrorToI18nKey('UNKNOWN'),
+      response.status,
+      'Voice job response is missing job_id'
+    );
+  }
+
+  return {
+    schema_version: typeof body.schema_version === 'number' ? body.schema_version : 1,
+    job_id: body.job_id,
+    status: 'queued',
+    stage: 'queued',
+    reused: body.reused === true,
+  };
+}
+
 /** Polls a voice job. A 404 is reported as `NOT_FOUND`. */
 export async function getVoiceJob(input: GetVoiceJobInput): Promise<VoiceJob> {
   const { jobId, accessToken, signal } = input;
@@ -297,4 +365,58 @@ export async function getVoiceJob(input: GetVoiceJobInput): Promise<VoiceJob> {
     completed_at: asStringOrNull(body.completed_at),
     failed_at: asStringOrNull(body.failed_at),
   };
+}
+
+/** Input required to read the transcript of a completed bug-report job. */
+export interface GetBugReportTranscriptInput {
+  jobId: string;
+  accessToken: string;
+  signal?: AbortSignal;
+}
+
+/**
+ * Reads `result.transcript` of a completed bug-report job from the poll
+ * endpoint. `getVoiceJob` intentionally discards any `result` that is not a
+ * movements payload, so the transcript needs this sibling reader over the same
+ * endpoint with the same fetch and error-envelope handling.
+ */
+export async function getBugReportTranscript(
+  input: GetBugReportTranscriptInput
+): Promise<string> {
+  const { jobId, accessToken, signal } = input;
+
+  let response: Response;
+  try {
+    response = await fetch(`${VOICE_API_BASE_URL}${VOICE_JOB_POLL_PATH(jobId)}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${accessToken}` },
+      signal,
+    });
+  } catch (error) {
+    if (isAbortError(error)) throw error;
+    throw createNetworkError(mapVoiceErrorToI18nKey('NETWORK'), detailFromError(error));
+  }
+
+  if (response.status !== 200) {
+    throw await buildHttpError(response);
+  }
+
+  const body = await readJsonBody(response);
+  const result =
+    typeof body === 'object' && body !== null
+      ? (body as Record<string, unknown>).result
+      : null;
+  const transcript =
+    typeof result === 'object' && result !== null
+      ? (result as Record<string, unknown>).transcript
+      : null;
+  if (typeof transcript !== 'string' || transcript.trim().length === 0) {
+    throw new VoiceApiError(
+      'UNKNOWN',
+      mapVoiceErrorToI18nKey('UNKNOWN'),
+      response.status,
+      'Bug report job result is missing a transcript'
+    );
+  }
+  return transcript;
 }
