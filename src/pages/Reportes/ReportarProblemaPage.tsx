@@ -520,6 +520,12 @@ export function ReportarProblemaPage() {
     mediaRef.current.filter((m) => m.status === 'done' && m.path).map((m) => m.path as string)
 
   const handleSubmit = async () => {
+    // An attached take carries the report body: submit via the audio path.
+    // The written note (if any) travels along as the optional description.
+    if (audioReady) {
+      void handleSendAudio()
+      return
+    }
     if (!canSubmit) return
     setSubmitting(true)
     try {
@@ -781,61 +787,14 @@ export function ReportarProblemaPage() {
               />
             </div>
           </div>
-          {(
-            recorder.state === 'recording'
-            || recorder.state === 'requesting_permission'
-            || recorder.state === 'recorded' && recorder.autoStopped
-            || audioReady
-            || audioProcessing
-          ) ? (
-            /* The audio status block takes the textarea slot: the ring is
-              always visible while recording (owner), and the pending take
-              waits for an explicit Enviar/Rechazar of the whole report. */
-            <div className="reporte-audio-slot">
-              {audioProcessing ? (
-                <div className="reporte-audio-block" role="status">
-                  <span className="reporte-audio-spinner" aria-hidden="true" />
-                  <p className="reporte-audio-status">{t('reporte_audio_procesando')}</p>
-                  <button type="button" className="btn btn-ghost" onClick={handleCancelAudioSend}>
-                    {t('reporte_audio_cancelar')}
-                  </button>
-                </div>
-              ) : audioReady ? (
-                /* Pending take: just the audio badge + Eliminar. The generic
-                  Enviar reporte button below is the ONLY submission path —
-                  it includes the take when present (owner). */
-                <div className="reporte-audio-block reporte-audio-confirm">
-                  <AudioLines size={16} aria-hidden="true" />
-                  <p className="reporte-audio-status">{t('reporte_audio_grabada')}</p>
-                  <button type="button" className="btn btn-ghost" onClick={discardAudio}>
-                    {t('reporte_eliminar_nota')}
-                  </button>
-                </div>
-              ) : recorder.state === 'recorded' && recorder.autoStopped ? (
-                <div className="reporte-audio-block">
-                  {/* The 60s hard cut is never sent: only a fresh recording helps. */}
-                  <p className="reporte-audio-alert">{t('reporte_audio_max')}</p>
-                  <button type="button" className="btn btn-ghost" onClick={discardAudio}>
-                    {t('reporte_descartar_audio')}
-                  </button>
-                </div>
-              ) : (
-                <div className="reporte-audio-block reporte-audio-ringblock">
-                  <VoiceCountdown secondsRemaining={recorder.remainingSeconds} total={Math.round(BUG_REPORT_MAX_AUDIO_MS / 1000)} />
-                  <p className="reporte-audio-status">{t('voice.recording')}</p>
-                </div>
-              )}
-            </div>
-          ) : (
-            <textarea
-              id="reporte-descripcion"
-              rows={6}
-              maxLength={MAX_DESC}
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              placeholder={tipo === 'sugerencia' ? t('reporte_descripcion_placeholder_sugerencia') : t('reporte_descripcion_placeholder')}
-            />
-          )}
+          <textarea
+            id="reporte-descripcion"
+            rows={6}
+            maxLength={MAX_DESC}
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
+            placeholder={tipo === 'sugerencia' ? t('reporte_descripcion_placeholder_sugerencia') : t('reporte_descripcion_placeholder')}
+          />
           {!audioTaken && descTrimmed > 0 && descTrimmed < 10 && (
             <p className="reporte-field-error">{t('error_reporte_descripcion')}</p>
           )}
@@ -844,6 +803,47 @@ export function ReportarProblemaPage() {
           )}
           <p className="reporte-privacy">{t('reporte_aviso_privacidad')}</p>
         </div>
+
+        {(
+          recorder.state === 'recording'
+          || recorder.state === 'requesting_permission'
+          || recorder.state === 'recorded' && recorder.autoStopped
+          || audioReady
+          || audioProcessing
+        ) && (
+          <div className="reporte-field reporte-audio">
+            {audioProcessing ? (
+              <div className="reporte-audio-block" role="status">
+                <span className="reporte-audio-spinner" aria-hidden="true" />
+                <p className="reporte-audio-status">{t('reporte_audio_procesando')}</p>
+                <button type="button" className="btn btn-ghost" onClick={handleCancelAudioSend}>
+                  {t('reporte_audio_cancelar')}
+                </button>
+              </div>
+            ) : audioReady ? (
+              <div className="reporte-audio-block reporte-audio-confirm">
+                <span className="reporte-audio-badge" aria-hidden="true"><AudioLines size={24} /></span>
+                <p className="reporte-audio-status">{t('reporte_audio_grabada')}</p>
+                <button type="button" className="btn btn-outline" onClick={discardAudio}>
+                  {t('reporte_eliminar_audio')}
+                </button>
+              </div>
+            ) : recorder.state === 'recorded' && recorder.autoStopped ? (
+              <div className="reporte-audio-block">
+                {/* The 60s hard cut is never sent: only a fresh recording helps. */}
+                <p className="reporte-audio-alert">{t('reporte_audio_max')}</p>
+                <button type="button" className="btn btn-outline" onClick={discardAudio}>
+                  {t('reporte_descartar_audio')}
+                </button>
+              </div>
+            ) : (
+              <div className="reporte-audio-block reporte-audio-ringblock">
+                <VoiceCountdown secondsRemaining={recorder.remainingSeconds} total={Math.round(BUG_REPORT_MAX_AUDIO_MS / 1000)} />
+                <p className="reporte-audio-status">{t('voice.recording')}</p>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="reporte-field">
           <span className="reporte-field-label">{t('reporte_capturas_label')}</span>
@@ -895,7 +895,7 @@ export function ReportarProblemaPage() {
           />
         </div>
 
-        {
+        <div className="reporte-actions">
           <button
             type="button"
             className="btn btn-primary reporte-submit"
@@ -904,7 +904,15 @@ export function ReportarProblemaPage() {
           >
             {submitting || pendingUploads > 0 ? t('reporte_enviando') : t('reporte_enviar')}
           </button>
-        }
+          <button
+            type="button"
+            className="btn btn-ghost reporte-cancel"
+            disabled={submitting}
+            onClick={() => navigate('/configuracion')}
+          >
+            {t('btn_cancel')}
+          </button>
+        </div>
     </section>
 
       {showScreenPicker && (
