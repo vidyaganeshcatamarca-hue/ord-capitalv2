@@ -1,0 +1,154 @@
+=== PASS A v3: runs y reconstruccion ===
+L198 MULTI [86 92] -> ["→","🆒"] | pay_overpay_leftover_summary: "Sobrante restante: {monto}   va al próximo
+L244 MULTI [9c 85] -> ["✅","🜅"] | btn_confirm_payment: " Confirmar Pago",
+L255 MULTI [9c 85] -> ["✅","🜅"] | btn_register_purchase: " Registrar Compra",
+L256 OK [9f 92 b0] -> "💰" | card_detail_limit_available: "° Límite Disponible",
+L258 OK [9f 93 85] -> "📅" | card_detail_next_due: " Próximo Vencimiento",
+L265 OK [9f 93 8a] -> "📊" | card_detail_stress_thermometer: " Termómetro de Estrés",
+L270 OK [9f 9b 8d ef b8 8f] -> "🛍️" | card_detail_pending_installments: "ï¸ Cuotas Pendientes",
+L273 OK [9f 93 9c] -> "📜" | card_detail_payment_history: " Historial de Pagos",
+L276 MULTI [9c 85] -> ["✅","🜅"] | card_detail_liquidated_installments: " {count} cuotas liquidadas",
+L309 MULTI [9a 99 ef b8 8f] -> ["⚙️","🚙️"] | golden_rules_settings_title: "ï¸ % de Distribución de Ingresos",
+L311 OK [9f 95 8a ef b8 8f] -> "🕊️" | budget_mode_libertad_short: "ï¸ Anticipado",
+L317 MULTI [9c 85] -> ["✅","🜅"] | golden_rules_sum_ok: " Total: 100%    ¡Perfecto!",
+L317 MULTI [80 94] -> ["—","🀔"] | golden_rules_sum_ok: " Total: 100%    ¡Perfecto!",
+L318 MULTI [9a a0 ef b8 8f] -> ["⚠️","🚠️"] | golden_rules_sum_error: " ï¸ Total: {suma}%   Debe ser exactamente 100%
+L318 MULTI [80 94] -> ["—","🀔"] | golden_rules_sum_error: " ï¸ Total: {suma}%   Debe ser exactamente 100%
+L319 OK [9f 93 85] -> "📅" | golden_rules_cycle_start_day: " Día de inicio del ciclo",
+L328 OK [9f 92 a1] -> "💡" | suggested_distribution_title: "¡ Sugerencia Inicial",
+L336 MULTI [9c 85] -> ["✅","🜅"] | hero_base_cero_alcanzado: "¡BASE CERO ALCANZADO!  ",
+L339 MULTI [80 94] -> ["—","🀔"] | hero_libertad_desc: "Modo libertad activo   presupuesta según tu ideal",
+L355 MULTI [9c 85] -> ["✅","🜅"] | toast_transfer_envelope_success: " Transferencia realizada entre sobres",
+L369 OK [9f 92 a1] -> "💡" | budget_golden_rules_modal_sug_title: "¡ Sugerencia Inicial",
+L399 MULTI [80 94] -> ["—","🀔"] | budget_subtexto_anticipado: "Modo libertad activo   según tu dinero ideal
+L422 OK [9f 94 8d] -> "🔍" | placeholder_select_category: " Selecciona una categoría...",
+L440 MULTI [9a a0 ef b8 8f] -> ["⚠️","🚠️"] | wallets_maintenance_required: " ï¸ Mantenimiento Requerido ({count})",
+L469 MULTI [80 a6] -> ["…","🀦"] | income_sources_empty_desc: "Crea las categorías de donde proviene tu dinero
+L476 MULTI [9e 95] -> ["➕","🞕"] | rubro_form_title_new: " Nuevo Rubro",
+L483 MULTI [9e 95] -> ["➕","🞕"] | source_form_title_new: " Nueva Fuente",
+L488 MULTI [9e 95] -> ["➕","🞕"] | subcat_form_title_new: " Nueva Subcuenta",
+L505 MULTI [9c 85] -> ["✅","🜅"] | btn_approve_all: " Aprobar Todos",
+L509 MULTI [9d 8c] -> ["❌","🝌"] | btn_reject: " Rechazar",
+L510 MULTI [9c 85] -> ["✅","🜅"] | btn_approve: " Aprobar",
+L539 MULTI [86 90] -> ["←","🆐"] | btn_back_to_social: " Volver a Redes Sociales",
+L764 OK [9f 93 8b] -> "📋" | bcg_lista_titulo: " Detalle por Cuadrante",
+L769 OK [9f 93 8a] -> "📊" | bcg_detalle_stats_titulo: " Estadísticas del Mes",
+L775 OK [9f 98 8a] -> "😊" | bcg_detalle_placer_label: " Placer / Utilidad",
+L777 MULTI [9c 82 ef b8 8f] -> ["✂️","🜂️"] | bcg_detalle_flex_label: "ï¸ Flexibilidad de Recorte",
+L779 OK [9f 8f b7 ef b8 8f] -> "🏷️" | bcg_detalle_clasif_titulo: "·ï¸ Clasificación Automática",
+L780 OK [9f 93 9c] -> "📜" | bcg_detalle_ultimos_movs: " Últimos Movimientos",
+L797 MULTI [9c 82 ef b8 8f] -> ["✂️","🜂️"] | bcg_podora_titulo: "ï¸ La Podora BCG",
+L798 OK [9f 92 a1] -> "💡" | bcg_podora_intro: "¡ Estos gastos no te aportan valor según tu calificaci
+L799 OK [9f 8f 86] -> "🏆" | bcg_podora_vacio_titulo: "  ¡Felicitaciones!",
+L804 OK [9f 93 8a] -> "📊" | bcg_podora_impacto_titulo: " Impacto Total",
+L809 OK [9f 8e 9a ef b8 8f] -> "🎚️" | bcg_podora_simulador_titulo: "ï¸ Simulador de recorte",
+L815 OK [9f 92 a1] -> "💡" | bcg_podora_decision_tuya: "¡ La decisión es tuya. Estos son solo datos pa
+L816 OK [9f 93 b7] -> "📷" | bcg_podora_capturar: "· Capturar mi Compromiso",
+L825 OK [9f 93 8a] -> "📊" | bcg_hormiga_resumen_titulo: " Resumen del Mes",
+L828 OK [9f 93 88] -> "📈" | bcg_hormiga_comparativa_titulo: " Comparativa",
+L832 MULTI [9c 85] -> ["✅","🜅"] | bcg_hormiga_tendencia_improving: " Mejorando ({pct}%)",
+L833 MULTI [9a a0] -> ["⚠","🚠"] | bcg_hormiga_tendencia_worsening: "  ¸ Empeorando (+{pct}%)",
+L833 MULTI [8f] -> ["‏","🀏","⁏","🁏","₏","🂏","⃏","🃏","ℏ","🄏","⅏","🅏","↏","🆏","⇏","🇏","∏","🈏","≏","🉏","⊏","🊏","⋏","🋏","⌏","🌏","⍏","🍏","⎏","🎏","⏏","🏏","␏","🐏","⑏","👏","⒏","💏","Ⓩ","📏","┏","🔏","╏","🕏","▏","🖏","●","🗏","☏","😏","♏","🙏","⚏","🚏","⛏","🛏","✏","🜏","❏","🝏","➏","🞏","⟏","🟏","⠏","🠏","⡏","🡏","⢏","🢏","⣏","🣏","⤏","🤏","⥏","🥏","⦏","🦏","⧏","🧏","⨏","🨏","⩏","🩏","⪏","🪏","⫏","🫏","⬏","⭏","⮏","⯏"] | bcg_hormiga_tendencia_worsening: "  ¸ Empeorando (+{pct}%)",
+L835 OK [9f 90 9c] -> "🐜" | bcg_hormiga_top_titulo: " Top Hormigas del Mes",
+L842 OK [9f 8f 86] -> "🏆" | bcg_hormiga_estado_zero_titulo: "  ¡Increíble!",
+L844 OK [9f 90 9c] -> "🐜" | bcg_hormiga_estado_no_buzon_titulo: " Tus hormigas suman {monto}",
+L847 OK [9f 90 9c] -> "🐜" | bcg_hormiga_estado_transfer_titulo: " Atrapamos {monto} en hormigas",
+L864 OK [9f 93 8a] -> "📊" | bcg_empty_sin_gastos: " Aún no hay gastos este mes para analizar.",
+L867 OK [9f 8f 86] -> "🏆" | bcg_empty_sin_podora: " No tienes candidatos a recortar este mes.",
+L868 OK [9f 8f 86] -> "🏆" | bcg_empty_sin_hormigas: " No registraste gastos hormiga este mes.",
+L872 MULTI [80 94] -> ["—","🀔"] | // FASE 7: PANTALLA 9   WAR ROOM
+L896 MULTI [89 88] -> ["≈","🉈"] | war_escudo_label_meses: " {meses} meses",
+L897 MULTI [86 92] -> ["→","🆒"] | war_escudo_cta_detalle: "Ver Detalle  ",
+L898 MULTI [86 92] -> ["→","🆒"] | war_escudo_cta_fondo: "Crear Fondo de Emergencia  ",
+L900 MULTI [9c 85] -> ["✅","🜅"] | war_escudo_recomendacion_ok: " Tu escudo supera los 6 meses. Mantenete as
+L903 MULTI [98 95] -> ["☕","😕"] | war_safe_titulo: " Safe-to-Spend Diario",
+L905 OK [9f 9f a2] -> "🟢" | war_safe_luz_verde: "¢ Luz Verde",
+L906 OK [9f 9f a1] -> "🟡" | war_safe_luz_amarilla: "¡ Precaución",
+L907 OK [9f 94 b4] -> "🔴" | war_safe_luz_roja: "´ Detente",
+L909 OK [9f 93 8a] -> "📊" | war_safe_desglose_titulo: " Desglose del Cálculo",
+L917 OK [9f 93 85] -> "📅" | war_safe_evolucion_titulo: " Evolución últimos 7 días",
+L922 OK [9f 93 89] -> "📉" | war_licuadora_titulo: " Licuadora de Inflación",
+L931 OK [9f 92 a1] -> "💡" | war_licuadora_insight_titulo: "¡ Insight",
+L933 OK [9f 8e 89] -> "🎉" | war_licuadora_insight_positivo: " Tu patrimonio le ganó a la inflación: 
+L936 MULTI [86 92] -> ["→","🆒"] | war_licuadora_cta_inversiones: "Ver Inversiones  ",
+L945 MULTI [86 92] -> ["→","🆒"] | war_radar_cta_heatmap: "Ver Heatmap  ",
+L953 OK [9f 94 a5] -> "🔥" | war_radar_detalle_gasto_diario: "¥ Gasto diario supervivencia",
+L954 OK [9f 92 b0] -> "💰" | war_radar_leyenda_ingreso: "° Ingreso esperado",
+L956 OK [9f 93 85] -> "📅" | war_radar_sin_vencimientos: " No hay vencimientos programados en los pró
+L965 OK [9f 8f 86] -> "🏆" | war_podora_mensaje_sin: " No tenés gastos Perro. Todo lo que gastás te a
+L966 MULTI [86 92] -> ["→","🆒"] | war_podora_cta: "Ver Análisis BCG  ",
+L971 OK [9f 93 89] -> "📉" | war_escudo_detalle_burn_fijo: " Burn rate (gastos fijos)",
+L972 OK [9f 94 a5] -> "🔥" | war_escudo_detalle_burn_supervivencia: "¥ Burn rate (supervivencia)",
+L973 OK [9f 93 85] -> "📅" | war_escudo_detalle_ventana: " Basado en {dias} días de historial",
+L976 MULTI [86 92] -> ["→","🆒"] | war_escudo_config_cta: "Editar lista de gastos fijos  ",
+L983 MULTI [9c 85] -> ["✅","🜅"] | war_escudo_config_exito: " Gastos fijos guardados. Escudo recalculado.",
+L984 MULTI [9d 8c] -> ["❌","🝌"] | war_escudo_config_error: " No se pudieron guardar los gastos fijos.",
+L989 MULTI [80 a6] -> ["…","🀦"] | war_escudo_simulador_intro: "¿Qué pasaría si ¦?",
+L994 OK [9f 93 8a] -> "📊" | sim_scenario_current_state: " Situación Actual",
+L996 OK [9f 92 bc] -> "💼" | sim_scenario_loss_main_income: "¼ Pierdo mi ingreso principal",
+L998 OK [9f 93 88] -> "📈" | sim_scenario_fixed_costs_up_20: " Mis gastos suben 20%",
+L1000 OK [9f 9a a8] -> "🚨" | sim_scenario_emergency: "¨ Emergencia de $100.000",
+L1004 MULTI [88 92] -> ["−","🈒"] | sim_scenario_impacto_negativo: "{dias} días",
+L1008 MULTI [98 95] -> ["☕","😕"] | war_safe_detalle_titulo: " Safe-to-Spend Diario",
+L1012 OK [9f 93 89] -> "📉" | war_licuadora_detalle_titulo: " Licuadora de Inflación",
+L1022 OK [9f 92 a1] -> "💡" | war_radar_detalle_sugerencia_titulo: "¡ Sugerencia",
+L1023 MULTI [9c 85] -> ["✅","🜅"] | war_radar_detalle_sin_criticos: " No hay días críticos en los próximos 30
+L1026 MULTI [80 a6] -> ["…","🀦"] | war_room_loading: "Cargando tu Centro de Supervivencia ¦",
+L1031 MULTI [86 92] -> ["→","🆒"] | war_room_btn_ir_inversiones: "Ir a Inversiones  ",
+L1034 MULTI [86 90] -> ["←","🆐"] | war_room_volver: " Volver al War Room",
+L1035 MULTI [86 90] -> ["←","🆐"] | war_room_nav_anterior: "",
+L1036 MULTI [86 92] -> ["→","🆒"] | war_room_nav_siguiente: "",
+L1040 MULTI [80 94] -> ["—","🀔"] | // FASE 8: PANTALLA 10   SANEAMIENTO
+L1045 OK [9f a7 b9] -> "🧹" | saneamiento_title: "§¹ Saneamiento",
+L1047 MULTI [86 90] -> ["←","🆐"] | saneamiento_volver: " Volver",
+L1048 MULTI [80 a6] -> ["…","🀦"] | saneamiento_loading: "Cargando tu Centro de Saneamiento ¦",
+L1052 OK [9f 93 a5] -> "📥" | saneamiento_bandejawidget_titulo: "¥ Bandeja de Entrada",
+L1067 OK [9f 93 85] -> "📅" | saneamiento_calendariowidget_titulo: " Calendario Financiero",
+L1094 MULTI [8f] -> ["‏","🀏","⁏","🁏","₏","🂏","⃏","🃏","ℏ","🄏","⅏","🅏","↏","🆏","⇏","🇏","∏","🈏","≏","🉏","⊏","🊏","⋏","🋏","⌏","🌏","⍏","🍏","⎏","🎏","⏏","🏏","␏","🐏","⑏","👏","⒏","💏","Ⓩ","📏","┏","🔏","╏","🕏","▏","🖏","●","🗏","☏","😏","♏","🙏","⚏","🚏","⛏","🛏","✏","🜏","❏","🝏","➏","🞏","⟏","🟏","⠏","🠏","⡏","🡏","⢏","🢏","⣏","🣏","⤏","🤏","⥏","🥏","⦏","🦏","⧏","🧏","⨏","🨏","⩏","🩏","⪏","🪏","⫏","🫏","⬏","⭏","⮏","⯏"] | saneamiento_editar_titulo: "¸ Editar Gasto",
+L1102 MULTI [80 a6] -> ["…","🀦"] | saneamiento_nota_placeholder: "Ej: Almuerzo de negocios ¦",
+L1107 MULTI [9d 8c] -> ["❌","🝌"] | saneamiento_rechazar_titulo: " Rechazar Gasto",
+L1117 MULTI [9c 85] -> ["✅","🜅"] | saneamiento_lote_titulo: " Aprobar {count} gastos",
+L1122 OK [9f a7 ae] -> "🧮" | saneamiento_estrategia_math: "§® Matemático",
+L1123 OK [9f 94 a5] -> "🔥" | saneamiento_estrategia_emotional: "¥ Emocional",
+L1124 OK [9f a4 9d] -> "🤝" | saneamiento_estrategia_relationships: "¤ Vínculos",
+L1132 MULTI [80 a6] -> ["…","🀦"] | saneamiento_input_extra_placeholder: "Extra ¦",
+L1138 OK [9f 93 8a] -> "📊" | saneamiento_simular_titulo: " Simulación de Pago Extra",
+L1158 MULTI [80 94] -> ["—","🀔"] | saneamiento_leyenda_normal: "$10.000   $50.000",
+L1178 MULTI [80 a6] -> ["…","🀦"] | saneamiento_audio_enviando: "Enviando ¦",
+L1183 OK [9f 93 b7] -> "📷" | saneamiento_foto_titulo: "· Foto del Ticket",
+L1246 MULTI [80 94] -> ["—","🀔"] | // FASE 1: PANTALLA 3   BILLETERAS / CUENTAS
+L1307 MULTI [9e 95] -> ["➕","🞕"] | modal_nueva_title: " Nueva Cuenta",
+L1309 MULTI [9c 95] -> ["✕","🜕"] | btn_cerrar_x: "Cerrar  ",
+L1331 MULTI [80 94] -> ["—","🀔"] | // FASE 9: PANTALLA 11   INVERSIONES
+L1419 MULTI [80 94] -> ["—","🀔"] | // Modals   labels & placeholders (Task 6)
+L1683 MULTI [80 93] -> ["–","🀓"] | config_ocr_enabled: "OCR   Lectura inteligente de ticket",
+L1775 MULTI [85] -> [" ","🀅","⁅","🁅","₅","🂅","⃅","🃅","℅","🄅","ⅅ","🅅","ↅ","🆅","⇅","🇅","∅","🈅","≅","🉅","⊅","🊅","⋅","🋅","⌅","🌅","⍅","🍅","⎅","🎅","⏅","🏅","␅","🐅","⑅","👅","⒅","💅","Ⓟ","📅","┅","🔅","╅","🕅","▅","🖅","◅","🗅","★","😅","♅","🙅","⚅","🚅","⛅","🛅","✅","🜅","❅","🝅","➅","🞅","⟅","🟅","⠅","🠅","⡅","🡅","⢅","🢅","⣅","🣅","⤅","🤅","⥅","🥅","⦅","🦅","⧅","🧅","⨅","🨅","⩅","🩅","⪅","🪅","⫅","🫅","⬅","⭅","⮅","⯅"] | budget_zero_base_reached: "¡BASE CERO ALCANZADO!",
+L1782 MULTI [9c 85] -> ["✅","🜅"] | budget_success_deficit_covered: " Se cubrió el déficit con disponible par
+L1786 MULTI [9c 85] -> ["✅","🜅"] | budget_rules_total_perfect: " Total: 100%    ¡Perfecto!",
+L1786 MULTI [80 94] -> ["—","🀔"] | budget_rules_total_perfect: " Total: 100%    ¡Perfecto!",
+L1787 OK [9f 93 85] -> "📅" | budget_golden_rules_anchor_day: " Día de inicio del ciclo",
+L1803 OK [9f 9f a1] -> "🟡" | card_status_caution: "¡ Precaución",
+L1805 MULTI [9a] -> ["‚","🀚","⁚","🁚","ₚ","🂚","⃚","🃚","ℚ","🄚","⅚","🅚","↚","🆚","⇚","🇚","√","🈚","≚","🉚","⊚","🊚","⋚","🋚","⌚","🌚","⍚","🍚","⎚","🎚","⏚","🏚","␚","🐚","⑚","👚","⒚","💚","ⓚ","📚","┚","🔚","╚","🕚","▚","🖚","◚","🗚","☚","😚","♚","🙚","⚚","🚚","⛚","🛚","✚","🜚","❚","🝚","➚","🞚","⟚","🟚","⠚","🠚","⡚","🡚","⢚","🢚","⣚","🣚","⤚","🤚","⥚","🥚","⦚","🦚","⧚","🧚","⨚","🨚","⩚","🩚","⪚","🪚","⫚","🫚","⬚","⭚","⮚","⯚"] | card_due_critical: "Vence en {dias} días. Acción inmediata requerida.",
+L1815 OK [9f 9f a0] -> "🟠" | card_due_urgent: "  Vence en {dias} días. Pago urgente.",
+L1816 OK [9f 9f a1] -> "🟡" | card_due_caution: "¡ Vence en {dias} días.",
+L1838 MULTI [80 94] -> ["—","🀔"] | card_due_date_overdue: "Día {day}   vencida hace {days} día(s)",
+L1938 MULTI [8f] -> ["‏","🀏","⁏","🁏","₏","🂏","⃏","🃏","ℏ","🄏","⅏","🅏","↏","🆏","⇏","🇏","∏","🈏","≏","🉏","⊏","🊏","⋏","🋏","⌏","🌏","⍏","🍏","⎏","🎏","⏏","🏏","␏","🐏","⑏","👏","⒏","💏","Ⓩ","📏","┏","🔏","╏","🕏","▏","🖏","●","🗏","☏","😏","♏","🙏","⚏","🚏","⛏","🛏","✏","🜏","❏","🝏","➏","🞏","⟏","🟏","⠏","🠏","⡏","🡏","⢏","🢏","⣏","🣏","⤏","🤏","⥏","🥏","⦏","🦏","⧏","🧏","⨏","🨏","⩏","🩏","⪏","🪏","⫏","🫏","⬏","⭏","⮏","⯏"] | cat_rubro_edit_title: "¸ Editar Rubro",
+L1939 MULTI [9e 95] -> ["➕","🞕"] | cat_rubro_new_title: " Nuevo Rubro",
+L1940 MULTI [8f] -> ["‏","🀏","⁏","🁏","₏","🂏","⃏","🃏","ℏ","🄏","⅏","🅏","↏","🆏","⇏","🇏","∏","🈏","≏","🉏","⊏","🊏","⋏","🋏","⌏","🌏","⍏","🍏","⎏","🎏","⏏","🏏","␏","🐏","⑏","👏","⒏","💏","Ⓩ","📏","┏","🔏","╏","🕏","▏","🖏","●","🗏","☏","😏","♏","🙏","⚏","🚏","⛏","🛏","✏","🜏","❏","🝏","➏","🞏","⟏","🟏","⠏","🠏","⡏","🡏","⢏","🢏","⣏","🣏","⤏","🤏","⥏","🥏","⦏","🦏","⧏","🧏","⨏","🨏","⩏","🩏","⪏","🪏","⫏","🫏","⬏","⭏","⮏","⯏"] | cat_fuente_edit_title: "¸ Editar Fuente",
+L1941 MULTI [9e 95] -> ["➕","🞕"] | cat_fuente_new_title: " Nueva Fuente",
+L1942 MULTI [8f] -> ["‏","🀏","⁏","🁏","₏","🂏","⃏","🃏","ℏ","🄏","⅏","🅏","↏","🆏","⇏","🇏","∏","🈏","≏","🉏","⊏","🊏","⋏","🋏","⌏","🌏","⍏","🍏","⎏","🎏","⏏","🏏","␏","🐏","⑏","👏","⒏","💏","Ⓩ","📏","┏","🔏","╏","🕏","▏","🖏","●","🗏","☏","😏","♏","🙏","⚏","🚏","⛏","🛏","✏","🜏","❏","🝏","➏","🞏","⟏","🟏","⠏","🠏","⡏","🡏","⢏","🢏","⣏","🣏","⤏","🤏","⥏","🥏","⦏","🦏","⧏","🧏","⨏","🨏","⩏","🩏","⪏","🪏","⫏","🫏","⬏","⭏","⮏","⯏"] | cat_subcuenta_edit_title: "¸ Editar Subcuenta",
+L1943 MULTI [9e 95] -> ["➕","🞕"] | cat_subcuenta_new_title: " Nueva Subcuenta",
+L1975 MULTI [80 a6] -> ["…","🀦"] | cat_empty_desc: "Crea las categorías de donde proviene tu dinero (Salario, 
+L2011 OK [9f 93 b7] -> "📷" | error_html2canvas_unavailable: "· html2canvas no disponible. Próximamente
+L2016 OK [9f 93 88] -> "📈" | inflation_badge: " Inflación",
+L2019 OK [9f 92 a1] -> "💡" | emotional_analysis_advanced_tip: "¡ Algunas funciones avanzadas requieren
+L2065 MULTI [9c 85] -> ["✅","🜅"] | config_maintenance_success: " Caché borrada. Recargando ¦",
+L2065 MULTI [80 a6] -> ["…","🀦"] | config_maintenance_success: " Caché borrada. Recargando ¦",
+L2066 MULTI [9d 8c] -> ["❌","🝌"] | config_maintenance_error: " No pude borrar la caché. Probá recargando man
+L2067 OK [9f 86 95] -> "🆕" | config_pwa_updated: " Nueva versión disponible. Recargando ¦",
+L2067 MULTI [80 a6] -> ["…","🀦"] | config_pwa_updated: " Nueva versión disponible. Recargando ¦",
+L2114 MULTI [80 94] -> ["—","🀔"] | // Cuentas tour (placeholder   T7)
+L2118 MULTI [80 94] -> ["—","🀔"] | // Tarjetas tour (placeholder   T8)
+L2122 MULTI [80 94] -> ["—","🀔"] | // Presupuestos tour (placeholder   T9)
+L2126 MULTI [80 94] -> ["—","🀔"] | // Ajustes tour (placeholder   T10)
+reconstruidos OK: 67 | multi: 85 | fallidos: 0

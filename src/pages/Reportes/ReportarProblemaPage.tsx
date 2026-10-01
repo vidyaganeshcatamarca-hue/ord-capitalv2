@@ -639,12 +639,32 @@ export function ReportarProblemaPage() {
         accessToken,
         signal: controller.signal,
       })
+      const paths = doneMediaPaths()
+      // Written note routing (owner): whatever the user TYPED travels through
+      // the translate endpoint to become final Spanish; the AUDIO went to the
+      // transcription above. Both may co-exist in one report.
+      let descExtra: string | null = null
+      const note = descripcion.trim()
+      if (note.length > 0) {
+        const extra = await translateBugReportText({
+          text: note,
+          language: sourceLanguage,
+          accessToken,
+        })
+        if (extra.errorCode) {
+          // Keep the take pending so Enviar retries the whole flow with the
+          // same idempotency key (no report was created).
+          setAudioProcessing(false)
+          showToast(t('reporte_translate_error'), 'error')
+          return
+        }
+        descExtra = extra.text
+      }
       // The backend owns the audio now: drop the in-memory take before the RPC.
       discardAudio()
-      const paths = doneMediaPaths()
       const payload: SubmitPayload = {
         p_titulo: titulo.trim(),
-        p_descripcion: descripcion.trim() || null,
+        p_descripcion: descExtra,
         p_tipo: tipo,
         p_transcripcion_audio: transcript,
         p_tiene_audio: true,
