@@ -2126,7 +2126,7 @@ export const reports = {
   reporte_descartar_audio: "Descartar",
   reporte_audio_hint_titulo: "contanos con una nota de voz",
   reporte_audio_parar: "Tocá de nuevo el micrófono para terminar y enviar",
-  pantalla_label: "¿Dónde te pasó? (pantalla)",
+  pantalla_label: "¿Donde te pasó?la sección",
   pantalla_placeholder: "Elegí la pantalla o el menú",
   pantalla_required: "Elegí dónde te pasó para poder enviar",
   pantalla_picker_titulo: "Elegir pantalla",

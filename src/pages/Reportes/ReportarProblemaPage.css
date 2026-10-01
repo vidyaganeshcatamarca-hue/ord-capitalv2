@@ -346,3 +346,144 @@
   align-items: center;
   gap: 10px;
 }
+/* Screen-picker trigger: looks like the Título input (owner) */
+.reporte-picker-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  transition: background .15s ease, border-color .15s ease;
+}
+
+.reporte-picker-trigger:hover {
+  border-color: var(--mint);
+}
+
+.reporte-picker-trigger:active {
+  background: var(--surface-3, var(--surface-2));
+}
+
+.reporte-picker-placeholder {
+  color: var(--text-3);
+}
+
+.reporte-picker-trigger > span:first-of-type {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Tree picker modal (rubro accordion system, self-contained styles) */
+.reporte-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.reporte-modal-panel {
+  width: 100%;
+  max-width: 480px;
+  max-height: 78vh;
+  overflow: auto;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 14px;
+}
+
+.reporte-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.reporte-modal-title {
+  font-weight: 600;
+  font-size: 1.02rem;
+}
+
+.reporte-tree-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.reporte-tree-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.reporte-tree-row:last-child {
+  border-bottom: none;
+}
+
+.reporte-tree-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 6px;
+  background: none;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.reporte-tree-btn:hover {
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+
+.reporte-tree-icon {
+  display: inline-flex;
+  color: var(--text-3);
+}
+
+.reporte-tree-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.reporte-tree-expand {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+/* The audio status block takes the textarea slot */
+.reporte-audio-slot {
+  display: block;
+}
+
+.reporte-audio-confirm .reporte-audio-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}

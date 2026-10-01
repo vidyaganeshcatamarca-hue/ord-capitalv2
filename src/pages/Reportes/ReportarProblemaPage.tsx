@@ -139,18 +139,18 @@ function PantallaNodeRow({ node, depth, expanded, onToggle, onSelect }: {
   const hijos = node.children ?? []
   return (
     <>
-      <div className="home-filter-rubro-row reporte-tree-row" style={{ paddingLeft: depth * 14 }}>
+      <div className="reporte-tree-row" style={{ paddingLeft: depth * 14 }}>
         <button
-          className="home-filter-rubro-btn"
+          className="reporte-tree-btn"
           onClick={() => onSelect(node.code)}
         >
-          <span className="home-filter-rubro-icon">{PANTALLA_ICONS[node.iconKey] ?? null}</span>
-          <span className="home-filter-rubro-name">{t(node.code)}</span>
+          <span className="reporte-tree-icon">{PANTALLA_ICONS[node.iconKey] ?? null}</span>
+          <span className="reporte-tree-name">{t(node.code)}</span>
         </button>
         {hijos.length > 0 && (
           <button
             type="button"
-            className="home-filter-expand-btn"
+            className="reporte-tree-expand"
             onClick={() => onToggle(node.code)}
             aria-label={t(isOpen ? 'btn_collapse' : 'btn_expand')}
           >
@@ -570,14 +570,9 @@ export function ReportarProblemaPage() {
   // sends (voz recorder closure: take ends => transcript flows).
   const handleMicTap = () => {
     if (recorder.state === 'recording') {
-      // Second tap: stop the take - and stopping SENDS (voz closure:
-      // take ends => transcript flows). A short title cannot carry it.
-      if (!titleValid) {
-        recorder.cancel()
-        audioKeyRef.current = null
-        showToast(t('error_reporte_titulo'), 'error')
-        return
-      }
+      // Second tap: stop the take. A confirm block then asks to send the
+      // FULL report: Enviar submits title+type+screen+captures+transcript
+      // (owner: "enviar" is not the note, it is the whole issue).
       recorder.stop()
       return
     }
@@ -586,14 +581,6 @@ export function ReportarProblemaPage() {
     void recorder.start()
   }
 
-  // Once a valid take exists, the audio path fires exactly once — the
-  // "Enviar nota de voz" intermediate buttons are gone (owner decision).
-  const autoSendRef = useRef(false)
-  useEffect(() => {
-    if (!audioReady || autoSendRef.current || !canSendAudio) return
-    autoSendRef.current = true
-    void handleSendAudio().finally(() => { autoSendRef.current = false })
-  })
 
   const handleCancelAudioSend = () => {
     // The backend offers no job cancel: stopping the polling and the fetch
@@ -781,14 +768,67 @@ export function ReportarProblemaPage() {
               />
             </div>
           </div>
-          <textarea
-            id="reporte-descripcion"
-            rows={6}
-            maxLength={MAX_DESC}
-            value={descripcion}
-            onChange={(e) => setDescripcion(e.target.value)}
-            placeholder={tipo === 'sugerencia' ? t('reporte_descripcion_placeholder_sugerencia') : t('reporte_descripcion_placeholder')}
-          />
+          {(
+            recorder.state === 'recording'
+            || recorder.state === 'requesting_permission'
+            || recorder.state === 'recorded' && recorder.autoStopped
+            || audioReady
+            || audioProcessing
+          ) ? (
+            /* The audio status block takes the textarea slot: the ring is
+              always visible while recording (owner), and the pending take
+              waits for an explicit Enviar/Rechazar of the whole report. */
+            <div className="reporte-audio-slot">
+              {audioProcessing ? (
+                <div className="reporte-audio-block" role="status">
+                  <span className="reporte-audio-spinner" aria-hidden="true" />
+                  <p className="reporte-audio-status">{t('reporte_audio_procesando')}</p>
+                  <button type="button" className="btn btn-ghost" onClick={handleCancelAudioSend}>
+                    {t('reporte_audio_cancelar')}
+                  </button>
+                </div>
+              ) : audioReady ? (
+                <div className="reporte-audio-block reporte-audio-confirm">
+                  <p className="reporte-audio-status">{t('reporte_audio_grabada')}</p>
+                  <div className="reporte-audio-actions">
+                    <button
+                      type="button"
+                      className="btn btn-primary"
+                      disabled={!canSendAudio}
+                      onClick={() => void handleSendAudio()}
+                    >
+                      {t('reporte_enviar')}
+                    </button>
+                    <button type="button" className="btn btn-ghost" onClick={discardAudio}>
+                      {t('reporte_audio_rechazar')}
+                    </button>
+                  </div>
+                </div>
+              ) : recorder.state === 'recorded' && recorder.autoStopped ? (
+                <div className="reporte-audio-block">
+                  {/* The 60s hard cut is never sent: only a fresh recording helps. */}
+                  <p className="reporte-audio-alert">{t('reporte_audio_max')}</p>
+                  <button type="button" className="btn btn-ghost" onClick={discardAudio}>
+                    {t('reporte_descartar_audio')}
+                  </button>
+                </div>
+              ) : (
+                <div className="reporte-audio-block reporte-audio-ringblock">
+                  <VoiceCountdown secondsRemaining={recorder.remainingSeconds} total={Math.round(BUG_REPORT_MAX_AUDIO_MS / 1000)} />
+                  <p className="reporte-audio-status">{t('voice.recording')}</p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <textarea
+              id="reporte-descripcion"
+              rows={6}
+              maxLength={MAX_DESC}
+              value={descripcion}
+              onChange={(e) => setDescripcion(e.target.value)}
+              placeholder={tipo === 'sugerencia' ? t('reporte_descripcion_placeholder_sugerencia') : t('reporte_descripcion_placeholder')}
+            />
+          )}
           {!audioTaken && descTrimmed > 0 && descTrimmed < 10 && (
             <p className="reporte-field-error">{t('error_reporte_descripcion')}</p>
           )}
@@ -797,33 +837,6 @@ export function ReportarProblemaPage() {
           )}
           <p className="reporte-privacy">{t('reporte_aviso_privacidad')}</p>
         </div>
-
-        {(recorder.state === 'recording' || recorder.state === 'requesting_permission' || recorder.state === 'recorded' && recorder.autoStopped || audioProcessing) && (
-          <div className="reporte-field reporte-audio">
-            {audioProcessing ? (
-              <div className="reporte-audio-block" role="status">
-                <span className="reporte-audio-spinner" aria-hidden="true" />
-                <p className="reporte-audio-status">{t('reporte_audio_procesando')}</p>
-                <button type="button" className="btn btn-ghost" onClick={handleCancelAudioSend}>
-                  {t('reporte_audio_cancelar')}
-                </button>
-              </div>
-            ) : recorder.state === 'recorded' && recorder.autoStopped ? (
-              <div className="reporte-audio-block">
-                {/* The 60s hard cut is never sent: only a fresh recording helps. */}
-                <p className="reporte-audio-alert">{t('reporte_audio_max')}</p>
-                <button type="button" className="btn btn-ghost" onClick={discardAudio}>
-                  {t('reporte_descartar_audio')}
-                </button>
-              </div>
-            ) : (
-              <div className="reporte-audio-block reporte-audio-ringblock">
-                <VoiceCountdown secondsRemaining={recorder.remainingSeconds} total={Math.round(BUG_REPORT_MAX_AUDIO_MS / 1000)} />
-                <p className="reporte-audio-status">{t('reporte_audio_parar')}</p>
-              </div>
-            )}
-          </div>
-        )}
 
         <div className="reporte-field">
           <span className="reporte-field-label">{t('reporte_capturas_label')}</span>
@@ -896,7 +909,7 @@ export function ReportarProblemaPage() {
                 <X size={20} />
               </button>
             </div>
-            <div className="home-filter-picker-list reporte-tree-list">
+            <div className="reporte-tree-list">
               <PantallaTree
                 nodes={PANTALLA_TREE}
                 expanded={expandedPantalla}
