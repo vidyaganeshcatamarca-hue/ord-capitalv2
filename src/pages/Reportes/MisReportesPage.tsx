@@ -22,6 +22,7 @@ interface Reporte {
   tipo?: ReporteTipo
   creado_el: string
   respuesta_admin: string | null
+  pantalla: string | null
   tiene_audio: boolean
   media: string[]
 }
@@ -208,6 +209,9 @@ export function MisReportesPage() {
                   <div className="reportes-card-body">
                     <p className="reportes-card-full-date">{formatFullDate(reporte.creado_el)}</p>
                     {reporte.descripcion && <p className="reportes-card-desc">{reporte.descripcion}</p>}
+                    {reporte.pantalla && (
+                      <p className="reportes-card-pantalla">{t('reporte_pantalla_label')}: {t(reporte.pantalla)}</p>
+                    )}
 
                     {reporte.respuesta_admin && (
                       <div className="reportes-answer">

@@ -228,14 +228,9 @@ export function ReportarProblemaPage() {
   const mediaRef = useRef<MediaItem[]>([])
   mediaRef.current = media
 
-  // Source screen comes from the entry tap (router state); fallback to the
-  // referrer route or the current pathname.
-  const sourceScreen =
-    (location.state as { origen?: string } | null)?.origen ??
-    (typeof document !== 'undefined' && document.referrer
-      ? new URL(document.referrer).pathname
-      : '/')
-
+  // Owner decision: the affected screen/menu is USER-SELECTED (required),
+  // grouped by app area; value stored = the stable key code. No auto-pick.
+  const [pantallaElegida, setPantallaElegida] = useState('')
   useEffect(() => {
     return () => {
       // An audio send still in flight dies with the page: abort fetch + polling.
@@ -257,7 +252,7 @@ export function ReportarProblemaPage() {
   const audioReady = recorder.state === 'recorded' && recorder.blob !== null && !recorder.autoStopped
   const audioTaken = audioReady || audioProcessing
   const clientValid = titleValid && (audioTaken || descValid)
-  const canSubmit = clientValid && pendingUploads === 0 && !submitting && !audioProcessing && sentId === null
+  const canSubmit = clientValid && pantallaElegida !== '' && pendingUploads === 0 && !submitting && !audioProcessing && sentId === null
   const canSendAudio =
     titleValid && audioReady && pendingUploads === 0 && !audioProcessing && sentId === null
 
@@ -377,7 +372,7 @@ export function ReportarProblemaPage() {
         p_transcripcion_audio: null,
         p_tiene_audio: false,
         p_media: paths,
-        p_pantalla: sourceScreen,
+        p_pantalla: pantallaElegida,
         p_version_app: APP_VERSION,
         p_plataforma: detectPlatform(),
         p_idioma_origen: sourceLanguage,
@@ -478,7 +473,7 @@ export function ReportarProblemaPage() {
         p_transcripcion_audio: transcript,
         p_tiene_audio: true,
         p_media: paths,
-        p_pantalla: sourceScreen,
+        p_pantalla: pantallaElegida,
         p_version_app: APP_VERSION,
         p_plataforma: detectPlatform(),
         p_idioma_origen: sourceLanguage,
@@ -542,6 +537,53 @@ export function ReportarProblemaPage() {
               {t('reporte_tipo_sugerencia')}
             </button>
           </div>
+        </div>
+
+        <div className="reporte-field">
+          <span className="reporte-field-label">{t('pantalla_label')}</span>
+          <select
+            value={pantallaElegida}
+            onChange={(e) => setPantallaElegida(e.target.value)}
+          >
+            <option value="">{t('pantalla_placeholder')}</option>
+            <optgroup label={t('pantalla_grupo_nucleo')}>
+              <option value="pantalla_inicio">{t('pantalla_inicio')}</option>
+              <option value="pantalla_cuentas_ingresos">{t('pantalla_cuentas_ingresos')}</option>
+              <option value="pantalla_cuentas_egresos">{t('pantalla_cuentas_egresos')}</option>
+              <option value="pantalla_tarjetas">{t('pantalla_tarjetas')}</option>
+            </optgroup>
+            <optgroup label={t('pantalla_grupo_carga')}>
+              <option value="pantalla_carga_egreso">{t('pantalla_carga_egreso')}</option>
+              <option value="pantalla_carga_ingreso">{t('pantalla_carga_ingreso')}</option>
+              <option value="pantalla_carga_transferencia">{t('pantalla_carga_transferencia')}</option>
+              <option value="pantalla_tickets">{t('pantalla_tickets')}</option>
+            </optgroup>
+            <optgroup label={t('pantalla_grupo_presupuesto')}>
+              <option value="pantalla_presupuesto_libertad">{t('pantalla_presupuesto_libertad')}</option>
+              <option value="pantalla_presupuesto_base_cero">{t('pantalla_presupuesto_base_cero')}</option>
+            </optgroup>
+            <optgroup label={t('pantalla_grupo_aprobar')}>
+              <option value="pantalla_para_aprobar">{t('pantalla_para_aprobar')}</option>
+              <option value="pantalla_saneamiento">{t('pantalla_saneamiento')}</option>
+            </optgroup>
+            <optgroup label={t('pantalla_grupo_analisis')}>
+              <option value="pantalla_analisis">{t('pantalla_analisis')}</option>
+              <option value="pantalla_salud">{t('pantalla_salud')}</option>
+              <option value="pantalla_supervivencia">{t('pantalla_supervivencia')}</option>
+            </optgroup>
+            <optgroup label={t('pantalla_grupo_ahorro')}>
+              <option value="pantalla_sobres">{t('pantalla_sobres')}</option>
+              <option value="pantalla_inversiones">{t('pantalla_inversiones')}</option>
+              <option value="pantalla_familia">{t('pantalla_familia')}</option>
+            </optgroup>
+            <optgroup label={t('pantalla_grupo_sistema')}>
+              <option value="pantalla_ajustes">{t('pantalla_ajustes')}</option>
+              <option value="pantalla_ayuda">{t('pantalla_ayuda')}</option>
+              <option value="pantalla_carga_voz">{t('pantalla_carga_voz')}</option>
+              <option value="pantalla_reportes">{t('pantalla_reportes')}</option>
+              <option value="pantalla_otra">{t('pantalla_otra')}</option>
+            </optgroup>
+          </select>
         </div>
 
         {import.meta.env.DEV && (
