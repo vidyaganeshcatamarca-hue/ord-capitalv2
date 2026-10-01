@@ -534,7 +534,15 @@ export function ReportarProblemaPage() {
         submittedRef.current = true
         for (const p of paths) orphanPathsRef.current.delete(p)
         setSentId(res.reporte_id)
-        telemetry.track('reporte_enviado', {}, TELEMETRY_PRIORITY.LOW)
+        // Owner: the send mode is measured (audio | text | both | pending) to
+        // learn how users report bugs for the telemetry dashboard.
+        const sendMode =
+          payload.p_tiene_audio && payload.p_descripcion != null && payload.p_descripcion.trim() !== ''
+            ? 'both'
+            : payload.p_tiene_audio
+              ? 'audio'
+              : 'text'
+        telemetry.track('reporte_enviado', { send_mode: sendMode }, TELEMETRY_PRIORITY.LOW)
         return true
       }
       showToast(res?.error_key ? t(res.error_key) : t('reporte_error_generico'), 'error')
