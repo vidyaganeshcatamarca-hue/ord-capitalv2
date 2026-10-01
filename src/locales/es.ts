@@ -2128,6 +2128,8 @@ export const reports = {
   reporte_audio_parar: "Tocá de nuevo el micrófono para terminar y enviar",
   pantalla_label: "¿Dónde te pasó? (pantalla)",
   pantalla_placeholder: "Elegí la pantalla o el menú",
+  pantalla_required: "Elegí dónde te pasó para poder enviar",
+  pantalla_picker_titulo: "Elegir pantalla",
   pantalla_grupo_nucleo: "Núcleo de la app",
   pantalla_inicio: "Inicio",
   pantalla_cuentas_ingresos: "Cuentas › Ingresos (fuentes de ingresos / billeteras)",
