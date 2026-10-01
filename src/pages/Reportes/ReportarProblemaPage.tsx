@@ -837,7 +837,7 @@ export function ReportarProblemaPage() {
 
         <div className="reporte-field">
           <div className="reporte-desc-top">
-            <label htmlFor="reporte-descripcion">{t('reporte_descripcion_label')}</label>
+            <label htmlFor="reporte-descripcion">{tipo === 'sugerencia' ? t('reporte_descripcion_label_sugerencia') : t('reporte_descripcion_label')}</label>
             <div className="reporte-mic-wrap">
               <p className="reporte-audio-hint">{t('reporte_audio_hint_titulo')}</p>
               <VoiceRecorderButton
