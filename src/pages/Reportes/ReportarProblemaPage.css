@@ -310,3 +310,38 @@
 .reporte-success-back {
   margin-top: 12px;
 }
+
+/* Mic affordance beside the question label (owner: no body-mode tab) */
+.reporte-desc-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.reporte-mic-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  max-width: 46%;
+}
+
+.reporte-mic-wrap .reporte-audio-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  text-align: center;
+  color: var(--text-3);
+  line-height: 1.25;
+}
+
+.reporte-mic-wrap .voice-recorder-button {
+  width: 52px;
+  height: 52px;
+  flex: none;
+}
+
+.reporte-audio-ringblock {
+  align-items: center;
+  gap: 10px;
+}

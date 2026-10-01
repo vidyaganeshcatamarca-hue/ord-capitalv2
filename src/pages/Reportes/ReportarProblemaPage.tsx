@@ -17,6 +17,7 @@ import {
   translateBugReportText,
 } from '@/voice/apiClient'
 import { BUG_REPORT_MAX_AUDIO_MS } from '@/voice/contract'
+import { VoiceCountdown } from '@/components/voice/VoiceCountdown'
 import { useVoiceRecorder } from '@/voice/useVoiceRecorder'
 import { POLL_DELAYS_MS, POLL_INTERVAL_MAX_MS } from '@/voice/useVoicePolling'
 import { APP_VERSION } from '@/config/app'
@@ -161,6 +162,7 @@ interface SubmitPayload {
   p_pantalla: string
   p_version_app: string
   p_plataforma: string
+  p_idioma_origen: string
 }
 
 function detectPlatform(): string {
@@ -208,7 +210,6 @@ export function ReportarProblemaPage() {
   // TEMP (E2E flag): '' = auto (device locale); one of DEV_LANG_OPTIONS overrides.
   const [devLang, setDevLang] = useState('')
   const sourceLanguage = devLang || navigator.language || 'es-AR'
-  const [modo, setModo] = useState<ReporteModo>('texto')
   const [audioProcessing, setAudioProcessing] = useState(false)
   const [media, setMedia] = useState<MediaItem[]>([])
   const [mediaLimitMsg, setMediaLimitMsg] = useState(false)
@@ -250,11 +251,13 @@ export function ReportarProblemaPage() {
   const pendingUploads = media.filter((m) => m.status === 'uploading').length
   const titleValid = titulo.trim().length >= 5
   const descValid = descripcion.trim().length >= 10 && descripcion.trim().length <= MAX_DESC
-  // XOR body validation: text mode requires the description, audio mode does not.
-  const clientValid = titleValid && (modo === 'audio' || descValid)
-  const canSubmit = clientValid && pendingUploads === 0 && !submitting && sentId === null
-  // A recorded take the backend has not accepted yet (the 60s hard cut is never sent).
+  // A recorded take the backend has not accepted yet (the 60s hard cut is
+  // never sent). An active take already covers the report body: a short
+  // description then must NOT block the submit nor nag (owner).
   const audioReady = recorder.state === 'recorded' && recorder.blob !== null && !recorder.autoStopped
+  const audioTaken = audioReady || audioProcessing
+  const clientValid = titleValid && (audioTaken || descValid)
+  const canSubmit = clientValid && pendingUploads === 0 && !submitting && !audioProcessing && sentId === null
   const canSendAudio =
     titleValid && audioReady && pendingUploads === 0 && !audioProcessing && sentId === null
 
@@ -377,6 +380,7 @@ export function ReportarProblemaPage() {
         p_pantalla: sourceScreen,
         p_version_app: APP_VERSION,
         p_plataforma: detectPlatform(),
+        p_idioma_origen: sourceLanguage,
       }
       await finishReporte(payload, paths)
     } catch (error) {
@@ -396,23 +400,35 @@ export function ReportarProblemaPage() {
     audioKeyRef.current = null
   }
 
-  const handleChangeModo = (next: ReporteModo) => {
-    if (next === modo || audioProcessing) return
-    if (recorder.state !== 'idle') recorder.cancel()
-    audioKeyRef.current = null
-    setModo(next)
-  }
-
   const handleAudioPressStart = () => {
-    // Press-and-hold, same interaction as the voice feature recorder.
+    // Press-and-hold, same interaction as the voice feature recorder. One idempotency
+    // key per take: a fresh recording always carries a fresh key (contract).
     if (recorder.state === 'recording' || recorder.state === 'requesting_permission') return
+    audioKeyRef.current = newId()
     void recorder.start()
   }
 
   const handleAudioPressEnd = () => {
     if (recorder.state !== 'recording') return
+    // Release-to-send (same flow as the voz data capture): a short title
+    // cannot carry the take, so the recording is discarded cleanly.
+    if (!titleValid) {
+      recorder.cancel()
+      audioKeyRef.current = null
+      showToast(t('error_reporte_titulo'), 'error')
+      return
+    }
     recorder.stop()
   }
+
+  // Once a valid take exists, the audio path fires exactly once — the
+  // "Enviar nota de voz" intermediate buttons are gone (owner decision).
+  const autoSendRef = useRef(false)
+  useEffect(() => {
+    if (!audioReady || autoSendRef.current || !canSendAudio) return
+    autoSendRef.current = true
+    void handleSendAudio().finally(() => { autoSendRef.current = false })
+  })
 
   const handleCancelAudioSend = () => {
     // The backend offers no job cancel: stopping the polling and the fetch
@@ -465,6 +481,7 @@ export function ReportarProblemaPage() {
         p_pantalla: sourceScreen,
         p_version_app: APP_VERSION,
         p_plataforma: detectPlatform(),
+        p_idioma_origen: sourceLanguage,
       }
       await finishReporte(payload, paths)
     } catch (error) {
@@ -567,34 +584,18 @@ export function ReportarProblemaPage() {
         </div>
 
         <div className="reporte-field">
-          <div
-            className="reporte-segmented"
-            role="group"
-            aria-label={t('reporte_descripcion_label')}
-          >
-            <button
-              type="button"
-              className={`reporte-seg-btn reporte-seg-btn--modo ${modo === 'texto' ? 'reporte-seg-btn--active' : ''}`}
-              aria-pressed={modo === 'texto'}
-              disabled={audioProcessing}
-              onClick={() => handleChangeModo('texto')}
-            >
-              {t('reporte_modo_texto')}
-            </button>
-            <button
-              type="button"
-              className={`reporte-seg-btn reporte-seg-btn--modo ${modo === 'audio' ? 'reporte-seg-btn--active' : ''}`}
-              aria-pressed={modo === 'audio'}
-              disabled={audioProcessing}
-              onClick={() => handleChangeModo('audio')}
-            >
-              {t('reporte_modo_audio')}
-            </button>
+          <div className="reporte-desc-top">
+            <label htmlFor="reporte-descripcion">{t('reporte_descripcion_label')}</label>
+            <div className="reporte-mic-wrap">
+              <p className="reporte-audio-hint">{t('reporte_audio_hint_titulo')}</p>
+              <VoiceRecorderButton
+                label={t('reporte_audio_hint_titulo')}
+                onPressStart={handleAudioPressStart}
+                onPressEnd={handleAudioPressEnd}
+                disabled={audioProcessing || submitting || !!sentId}
+              />
+            </div>
           </div>
-        </div>
-
-        <div className="reporte-field">
-          <label htmlFor="reporte-descripcion">{t('reporte_descripcion_label')}</label>
           <textarea
             id="reporte-descripcion"
             rows={6}
@@ -603,7 +604,7 @@ export function ReportarProblemaPage() {
             onChange={(e) => setDescripcion(e.target.value)}
             placeholder={tipo === 'sugerencia' ? t('reporte_descripcion_placeholder_sugerencia') : t('reporte_descripcion_placeholder')}
           />
-          {modo === 'texto' && descTrimmed > 0 && descTrimmed < 10 && (
+          {!audioTaken && descTrimmed > 0 && descTrimmed < 10 && (
             <p className="reporte-field-error">{t('error_reporte_descripcion')}</p>
           )}
           {descripcion.length >= DESC_COUNTER_THRESHOLD && (
@@ -612,9 +613,8 @@ export function ReportarProblemaPage() {
           <p className="reporte-privacy">{t('reporte_aviso_privacidad')}</p>
         </div>
 
-        {modo === 'audio' && (
+        {(recorder.state === 'recording' || recorder.state === 'requesting_permission' || recorder.state === 'recorded' && recorder.autoStopped || audioProcessing) && (
           <div className="reporte-field reporte-audio">
-            <p className="reporte-audio-hint">{t('reporte_modo_audio_hint')}</p>
             {audioProcessing ? (
               <div className="reporte-audio-block" role="status">
                 <span className="reporte-audio-spinner" aria-hidden="true" />
@@ -622,18 +622,6 @@ export function ReportarProblemaPage() {
                 <button type="button" className="btn btn-ghost" onClick={handleCancelAudioSend}>
                   {t('reporte_audio_cancelar')}
                 </button>
-              </div>
-            ) : recorder.state === 'recording' || recorder.state === 'requesting_permission' ? (
-              <div className="reporte-audio-block">
-                <VoiceRecorderButton
-                  label={t('reporte_grabar')}
-                  onPressStart={handleAudioPressStart}
-                  onPressEnd={handleAudioPressEnd}
-                  disabled={recorder.state === 'requesting_permission'}
-                />
-                <p className="reporte-audio-status">
-                  {t('reporte_grabando', { segundos: recorder.seconds })}
-                </p>
               </div>
             ) : recorder.state === 'recorded' && recorder.autoStopped ? (
               <div className="reporte-audio-block">
@@ -643,34 +631,10 @@ export function ReportarProblemaPage() {
                   {t('reporte_descartar_audio')}
                 </button>
               </div>
-            ) : audioReady ? (
-              <div className="reporte-audio-block">
-                {/* Owner decision: no player. The take is sent or discarded. */}
-                <div className="reporte-audio-actions">
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    disabled={!canSendAudio}
-                    onClick={() => void handleSendAudio()}
-                  >
-                    {t('reporte_enviar_audio')}
-                  </button>
-                  <button type="button" className="btn btn-ghost" onClick={discardAudio}>
-                    {t('reporte_descartar_audio')}
-                  </button>
-                </div>
-              </div>
             ) : (
-              <div className="reporte-audio-block">
-                {recorder.state === 'error' && recorder.error && (
-                  <p className="reporte-audio-alert">{t(recorder.error.i18nKey)}</p>
-                )}
-                <VoiceRecorderButton
-                  label={t('reporte_grabar')}
-                  onPressStart={handleAudioPressStart}
-                  onPressEnd={handleAudioPressEnd}
-                />
-                <p className="reporte-audio-hint">{t('reporte_grabar')}</p>
+              <div className="reporte-audio-block reporte-audio-ringblock">
+                <VoiceCountdown secondsRemaining={recorder.remainingSeconds} total={Math.round(BUG_REPORT_MAX_AUDIO_MS / 1000)} />
+                <p className="reporte-audio-status">{t('voice.record_hint')}</p>
               </div>
             )}
           </div>
@@ -726,7 +690,7 @@ export function ReportarProblemaPage() {
           />
         </div>
 
-        {modo === 'texto' && (
+        {
           <button
             type="button"
             className="btn btn-primary reporte-submit"
@@ -735,8 +699,8 @@ export function ReportarProblemaPage() {
           >
             {submitting || pendingUploads > 0 ? t('reporte_enviando') : t('reporte_enviar')}
           </button>
-        )}
-      </section>
+        }
+    </section>
     </main>
   )
 }

@@ -2121,14 +2121,10 @@ export const reports = {
   reporte_max_3_capturas: "Máximo 3 capturas por reporte",
   reporte_error_media: "No se pudo subir una captura. Probá de nuevo.",
   reporte_ver_imagen: "Ver captura",
-  // Voice-note body mode (audio bug reports)
-  reporte_modo_texto: "Escribir",
-  reporte_modo_audio: "Nota de voz",
-  reporte_modo_audio_hint: "Grabá hasta 60 segundos contando qué pasó y qué esperabas",
-  reporte_grabar: "Grabar nota de voz",
-  reporte_grabando: "Grabando ({segundos} de 60)",
-  reporte_enviar_audio: "Enviar nota de voz",
+  // Voice-note body (audio bug reports): the mic sits beside the question
+  // label with a title hint (owner: no tab, release-to-send like voz capture).
   reporte_descartar_audio: "Descartar",
+  reporte_audio_hint_titulo: "Si querés, podés contar tu problema con una nota de voz",
   reporte_audio_procesando: "Convirtiendo tu nota de voz en texto...",
   reporte_audio_cancelar: "Cancelar",
   reporte_audio_limite: "Estás enviando muchas notas de voz seguidas. Esperá un rato y probá de nuevo.",
