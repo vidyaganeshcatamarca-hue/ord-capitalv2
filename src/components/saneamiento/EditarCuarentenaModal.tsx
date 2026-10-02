@@ -88,6 +88,18 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
       ? item.tipo
       : 'expense'
   )
+  // Unified expense source: wallets and cards share one select. The value is
+  // prefixed (`w:<id>` / `t:<id>` / empty) so the field keeps a single state
+  // while the payload still receives the concrete wallet or card id.
+  const [origen, setOrigen] = useState<string>(() =>
+    item.tipo === 'card_expense' && item.tarjeta_id != null
+      ? `t:${item.tarjeta_id}`
+      : item.billetera_id != null
+        ? `w:${item.billetera_id}`
+        : item.tarjeta_id != null
+          ? `t:${item.tarjeta_id}`
+          : ''
+  )
   const [monto, setMonto] = useState<string>(numberValue(item.monto))
   const [fecha, setFecha] = useState<string>(item.fecha || '')
   const [detalle, setDetalle] = useState<string>(item.detalle || '')
@@ -203,8 +215,50 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
     // wallet before the data even arrives.
     if (loadingLists || !requiereSaldoSuficiente || !billeteraId) return
     const sel = billeterasOrigen.find((b) => String(b.billetera_id) === billeteraId)
-    if (!sel) setBilleteraId('')
+    if (!sel) {
+      setBilleteraId('')
+      // Keep the unified origen field in sync: a cleared wallet must not stay
+      // displayed as the chosen source.
+      setOrigen((prev) => (prev === `w:${billeteraId}` ? '' : prev))
+    }
   }, [loadingLists, requiereSaldoSuficiente, billeteraId, billeterasOrigen])
+
+  // The card-only inputs (currency and installments) belong to a card source,
+  // whether it was picked directly or inherited from the edited movement.
+  const isCardOrigen = tipo === 'card_expense' || origen.startsWith('t:')
+
+  // Picking a source derives the movement type and the concrete ids, so a card
+  // can never submit as a plain expense or the other way around.
+  const handleOrigenChange = (value: string) => {
+    setOrigen(value)
+    if (value.startsWith('w:')) {
+      setBilleteraId(value.slice(2))
+      setTarjetaId('')
+      setTipo('expense')
+    } else if (value.startsWith('t:')) {
+      setTarjetaId(value.slice(2))
+      setBilleteraId('')
+      setTipo('card_expense')
+    } else {
+      setBilleteraId('')
+      setTarjetaId('')
+    }
+  }
+
+  // Manual type changes only seed the unified field for the two expense types;
+  // the rest keep their own fields untouched.
+  const handleTipoChange = (next: CuarentenaMovementType) => {
+    setTipo(next)
+    if (next === 'expense') {
+      setOrigen(billeteraId ? `w:${billeteraId}` : '')
+    } else if (next === 'card_expense') {
+      setOrigen(tarjetaId ? `t:${tarjetaId}` : '')
+    } else {
+      // A leftover card selection must not keep painting the card-only
+      // currency/installment inputs on top of the other types' fields.
+      setOrigen('')
+    }
+  }
 
   // Suggest the destination amount from the day's USD rate when editing a
   // cross-currency transfer leaves it empty (buying or selling USD).
@@ -322,7 +376,7 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
         <form onSubmit={handleSubmit} className="saneamiento-form">
           <div className="form-group">
             <label>{t('cuarentena_tipo_label')}</label>
-            <select value={tipo} onChange={(e) => setTipo(e.target.value as CuarentenaMovementType)}>
+            <select value={tipo} onChange={(e) => handleTipoChange(e.target.value as CuarentenaMovementType)}>
               {MOVEMENT_TYPE_KEYS.map((key) => (
                 <option key={key} value={key}>
                   {t(`cuarentena_tipo_${key}`)}
@@ -360,7 +414,7 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
             </div>
           )}
 
-          {(tipo === 'expense' || tipo === 'transfer') && (
+          {tipo === 'transfer' && (
             <div className="form-group">
               <label>{t('saneamiento_billetera')}</label>
               {loadingLists ? (
@@ -379,6 +433,57 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
                 </select>
               )}
             </div>
+          )}
+
+          {(tipo === 'expense' || tipo === 'card_expense') && (
+            <div className="form-group">
+              <label>{t('saneamiento_origen')}</label>
+              {loadingLists ? (
+                <div className="spinner-sm" />
+              ) : (
+                <select value={origen} onChange={(e) => handleOrigenChange(e.target.value)}>
+                  {/* One source per expense: wallets first, cards grouped
+                      below. The disabled placeholder doubles as the field
+                      title until the user picks one. */}
+                  <option value="" disabled>{t('saneamiento_seleccionar_billetera')}</option>
+                  {billeterasOrigen.map((b) => (
+                    <option key={`w-${b.billetera_id}`} value={`w:${b.billetera_id}`}>
+                      {t(b.nombre)} ({b.moneda}) — {formatCurrency(b.saldo_actual, b.moneda)}
+                    </option>
+                  ))}
+                  <optgroup label={t('cuarentena_grupo_tarjetas')}>
+                    {tarjetas.map((tarjeta) => (
+                      <option key={`t-${tarjeta.tarjeta_id}`} value={`t:${tarjeta.tarjeta_id}`}>
+                        {tarjeta.nombre_tarjeta}
+                      </option>
+                    ))}
+                  </optgroup>
+                </select>
+              )}
+            </div>
+          )}
+
+          {isCardOrigen && (
+            <>
+              <div className="form-group">
+                <label>{t('cuarentena_moneda')}</label>
+                <select value={moneda} onChange={(e) => setMoneda(e.target.value)}>
+                  <option value="ARS">ARS</option>
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>{t('edit_movement_installments_label')}</label>
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={cuotas}
+                  onChange={(e) => setCuotas(e.target.value)}
+                />
+              </div>
+            </>
           )}
 
           {(tipo === 'income' || tipo === 'transfer') && (
@@ -410,45 +515,6 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
                 placeholder={crossCurrency ? t('cuarentena_destination_requerido') : undefined}
               />
             </div>
-          )}
-
-          {tipo === 'card_expense' && (
-            <>
-              <div className="form-group">
-                <label>{t('cuarentena_campo_tarjeta')}</label>
-                {loadingLists ? (
-                  <div className="spinner-sm" />
-                ) : (
-                  <select value={tarjetaId} onChange={(e) => setTarjetaId(e.target.value)}>
-                    <option value="">{t('cuarentena_seleccionar_tarjeta')}</option>
-                    {tarjetas.map((tarjeta) => (
-                      <option key={tarjeta.tarjeta_id} value={tarjeta.tarjeta_id}>
-                        {tarjeta.nombre_tarjeta}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              </div>
-
-              <div className="form-group">
-                <label>{t('cuarentena_moneda')}</label>
-                <select value={moneda} onChange={(e) => setMoneda(e.target.value)}>
-                  <option value="ARS">ARS</option>
-                  <option value="USD">USD</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label>{t('cuarentena_cuotas')}</label>
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={cuotas}
-                  onChange={(e) => setCuotas(e.target.value)}
-                />
-              </div>
-            </>
           )}
 
           {tipo === 'income' && (
