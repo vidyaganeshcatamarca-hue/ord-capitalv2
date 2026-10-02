@@ -21,6 +21,12 @@ export const BUG_REPORT_TRANSLATE_PATH = '/v1/bug-reports/translate' as const;
 
 /** Default maximum accepted audio duration, in milliseconds (movement jobs). */
 export const MAX_AUDIO_DURATION_MS = 30000;
+// Owner: the wall-clock cut runs ahead of the backend cap so the encoder
+// delay never pushes the blob past it (AUDIO_TOO_LONG on near-limit takes).
+export const AUDIO_HARD_CUT_GRACE_MS = 2000;
+
+/** Wall-clock tolerance for the onstop over-limit check (user 86 data). */
+export const AUDIO_STOP_TOLERANCE_MS = 1000;
 
 /**
  * Maximum duration accepted for a bug-report voice note, in milliseconds.

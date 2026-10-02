@@ -49,7 +49,7 @@ import {
   Wallet,
   X,
 } from 'lucide-react'
-import { BUG_REPORT_MAX_AUDIO_MS } from '@/voice/contract'
+import { BUG_REPORT_MAX_AUDIO_MS, AUDIO_HARD_CUT_GRACE_MS } from '@/voice/contract'
 import { VoiceCountdown } from '@/components/voice/VoiceCountdown'
 import { useVoiceRecorder } from '@/voice/useVoiceRecorder'
 import { POLL_DELAYS_MS, POLL_INTERVAL_MAX_MS } from '@/voice/useVoicePolling'
@@ -409,7 +409,7 @@ export function ReportarProblemaPage() {
   const audioAbortRef = useRef<AbortController | null>(null)
   // Idempotency key of the current take: one crypto UUID per new recording.
   const audioKeyRef = useRef<string | null>(null)
-  const recorder = useVoiceRecorder({ maxDurationMs: BUG_REPORT_MAX_AUDIO_MS })
+  const recorder = useVoiceRecorder({ maxDurationMs: BUG_REPORT_MAX_AUDIO_MS - AUDIO_HARD_CUT_GRACE_MS })
   // Paths uploaded to storage that were never submitted: best-effort cleanup on unmount.
   const orphanPathsRef = useRef<Set<string>>(new Set())
   const submittedRef = useRef(false)
@@ -914,7 +914,7 @@ export function ReportarProblemaPage() {
               </div>
             ) : (
               <div className="reporte-audio-block reporte-audio-ringblock">
-                <VoiceCountdown secondsRemaining={recorder.remainingSeconds} total={Math.round(BUG_REPORT_MAX_AUDIO_MS / 1000)} />
+                <VoiceCountdown secondsRemaining={recorder.remainingSeconds} total={Math.round((BUG_REPORT_MAX_AUDIO_MS - AUDIO_HARD_CUT_GRACE_MS) / 1000)} />
                 <p className="reporte-audio-status">{t('voice.recording')}</p>
                 <button type="button" className="btn btn-outline" onClick={() => recorder.stop()}>
                   {t('reporte_audio_finalizar')}

@@ -4,7 +4,7 @@
 // ============================================
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { isBrowserSupported, pickSupportedMime, type SupportedMime } from './codec';
-import { MAX_AUDIO_DURATION_MS } from './contract';
+import { AUDIO_HARD_CUT_GRACE_MS, AUDIO_STOP_TOLERANCE_MS, MAX_AUDIO_DURATION_MS } from './contract';
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry';
 
 /** Lifecycle of the recorder. */
@@ -104,7 +104,8 @@ function classifyMicrophoneError(error: unknown): VoiceRecorderError {
  * submission so the recorder stays focused on the MediaRecorder lifecycle.
  */
 export function useVoiceRecorder(options?: UseVoiceRecorderOptions): UseVoiceRecorderResult {
-  const maxDurationMs = options?.maxDurationMs ?? MAX_AUDIO_DURATION_MS;
+  const maxDurationMs =
+    options?.maxDurationMs ?? (MAX_AUDIO_DURATION_MS - AUDIO_HARD_CUT_GRACE_MS);
   const [state, setState] = useState<VoiceRecorderState>('idle');
   const [seconds, setSeconds] = useState(0);
   const [blob, setBlob] = useState<Blob | null>(null);
@@ -122,6 +123,8 @@ export function useVoiceRecorder(options?: UseVoiceRecorderOptions): UseVoiceRec
   const discardRef = useRef(false);
   // Read by `onstop`, which fires asynchronously after the stop request.
   const autoStoppedRef = useRef(false);
+  /** Wall-clock milliseconds on record at the instant stop() runs. */
+  const elapsedAtStopRef = useRef<number | null>(null);
   const stopRef = useRef<(autoStopped?: boolean) => void>(() => undefined);
 
   const commitState = useCallback((next: VoiceRecorderState): void => {
@@ -176,6 +179,10 @@ export function useVoiceRecorder(options?: UseVoiceRecorderOptions): UseVoiceRec
       return;
     }
     clearTicker();
+    // Capture the real take length BEFORE clearing state: the hard-cut
+    // interval throttles in background PWA states, so an over-limit take
+    // can reach release without the ticker ever firing.
+    elapsedAtStopRef.current = startedAtRef.current !== null ? Date.now() - startedAtRef.current : null;
     discardRef.current = false;
     autoStoppedRef.current = stoppedAutomatically;
     try {
@@ -193,6 +200,7 @@ export function useVoiceRecorder(options?: UseVoiceRecorderOptions): UseVoiceRec
 
   const cancel = useCallback((): void => {
     discardRef.current = true;
+    elapsedAtStopRef.current = null;
     autoStoppedRef.current = false;
     chunksRef.current = [];
     stopTracksAndRecorder();
@@ -308,7 +316,11 @@ export function useVoiceRecorder(options?: UseVoiceRecorderOptions): UseVoiceRec
 
       setBlob(new Blob(capturedChunks, { type: capturedType }));
       setMimeType(capturedType);
-      setAutoStopped(stoppedAutomatically);
+      const elapsedAtStop = elapsedAtStopRef.current;
+      elapsedAtStopRef.current = null;
+      const overLimitTake =
+        elapsedAtStop !== null && elapsedAtStop > maxDurationMs + AUDIO_STOP_TOLERANCE_MS;
+      setAutoStopped(stoppedAutomatically || overLimitTake);
       commitState('recorded');
     };
 

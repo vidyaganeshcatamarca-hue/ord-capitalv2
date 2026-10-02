@@ -19,7 +19,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { t } from '@/locales/i18n'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
-import { MAX_AUDIO_DURATION_MS } from '@/voice/contract'
+import { AUDIO_HARD_CUT_GRACE_MS, MAX_AUDIO_DURATION_MS } from '@/voice/contract'
 import { mapVoiceErrorToI18nKey } from '@/voice/errors'
 import { RESUME_WINDOW_MS } from '@/voice/storage'
 import { useVoiceJobs } from '@/voice/useVoiceJobs'
@@ -37,7 +37,7 @@ export interface VoiceRecorderModalProps {
 }
 
 /** Highest duration the recorder accepts, in seconds. */
-const TOTAL_SECONDS = Math.floor(MAX_AUDIO_DURATION_MS / 1000)
+const TOTAL_SECONDS = Math.floor((MAX_AUDIO_DURATION_MS - AUDIO_HARD_CUT_GRACE_MS) / 1000)
 
 /** Job phases still owned by the modal (upload or backend processing). */
 const IN_FLIGHT_PHASES: readonly string[] = ['uploading', 'queued', 'processing']
