@@ -626,6 +626,10 @@ export function ReportarProblemaPage() {
   // visible ring counts 60->0; a second tap stops the take - and stopping
   // sends (voz recorder closure: take ends => transcript flows).
   const handleMicTap = () => {
+    // Owner bug-1: tapping the mic while the note textarea is focused must not
+    // leave the soft keyboard up - close it explicitly on every mic tap.
+    const active = document.activeElement
+    if (active instanceof HTMLElement && active !== document.body) active.blur()
     if (recorder.state === 'recording') {
       // Second tap: stop the take. A confirm block then asks to send the
       // FULL report: Enviar submits title+type+screen+captures+transcript
