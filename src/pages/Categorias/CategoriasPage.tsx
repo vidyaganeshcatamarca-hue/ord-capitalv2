@@ -52,6 +52,7 @@ interface CategoriaIngreso {
   icono: string
   color: string
   es_pasivo: boolean
+  tiene_movimientos: boolean
 }
 
 // ─── Sub-componentes de formulario ──────────────────────────────────────────
@@ -244,6 +245,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
 }) {
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [nombre, setNombre] = useState(ingreso?.nombre ?? '')
   const [descripcion, setDescripcion] = useState(ingreso?.descripcion ?? '')
   const [icono, setIcono] = useState(ingreso?.icono ?? 'Coins')
@@ -351,8 +353,69 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
               {loading ? t('edit_movement_saving') : ingreso ? t('cat_btn_actualizar') : t('cat_btn_crear_fuente')}
             </button>
           </div>
+
+          {ingreso && (
+            <div className="cat-modal-actions" style={{ borderTop: '1px solid var(--border)', paddingTop: '12px' }}>
+              <button
+                type="button"
+                className="btn btn-secondary font-semibold"
+                disabled={loading}
+                onClick={async () => {
+                  setLoading(true)
+                  try {
+                    await rpc('fn_archivar_fuente_ingreso', { p_producto_id: ingreso.producto_id, p_archivar: false })
+                    showToast(t('cat_fuente_archivada'), 'success')
+                    onSaved()
+                    onClose()
+                  } catch (err: any) {
+                    showToast(parseError(err), 'error')
+                  } finally {
+                    setLoading(false)
+                  }
+                }}
+              >
+                <CategoryIcon name="Archive" size={16} /> {t('cat_fuente_archivar')}
+              </button>
+              {!ingreso.tiene_movimientos && (
+                <button
+                  type="button"
+                  className="btn btn-danger font-semibold"
+                  disabled={loading}
+                  onClick={() => setConfirmDelete(true)}
+                >
+                  <CategoryIcon name="Trash2" size={16} /> {t('btn_delete')}
+                </button>
+              )}
+            </div>
+          )}
         </form>
       </div>
+
+      {confirmDelete && (
+        <ConfirmModal
+          isOpen
+          title={t('cat_fuente_eliminar_title')}
+          message={t('cat_fuente_eliminar_confirm')}
+          confirmText={t('btn_delete')}
+          cancelText={t('btn_cancelar')}
+          type="danger"
+          onConfirm={async () => {
+            setConfirmDelete(false)
+            setLoading(true)
+            try {
+              await rpc('fn_eliminar_fuente_ingreso', { p_producto_id: ingreso!.producto_id })
+              showToast(t('cat_fuente_eliminada'), 'success')
+              onSaved()
+              onClose()
+            } catch (err: any) {
+              showToast(parseError(err), 'error')
+            } finally {
+              setLoading(false)
+            }
+          }}
+          onCancel={() => setConfirmDelete(false)}
+        />
+      )}
     </div>
   )
 }
