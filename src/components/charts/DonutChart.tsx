@@ -49,14 +49,18 @@ export function DonutChart({ data, hideAmounts, total: totalOverride, centerLabe
                 cy="50"
                 r={radius}
                 fill="transparent"
-                stroke={item.color || 'var(--mint)'}
                 strokeWidth={strokeWidth}
+                // Colors like "var(--mint, #00B127)" are stored in the DB: only
+                // CSS resolves var(), so the stroke must live in style, not in
+                // the SVG presentation attribute (bug-list #7: legend color ≠
+                // segment color from the third income source on).
+                style={{
+                  stroke: item.color || 'var(--mint)',
+                  transition: 'stroke-dashoffset 0.5s ease',
+                }}
                 strokeDasharray={`${strokeLength} ${circumference}`}
                 strokeDashoffset={strokeOffset}
                 transform="rotate(-90 50 50)"
-                style={{
-                  transition: 'stroke-dashoffset 0.5s ease',
-                }}
               />
             )
           })
