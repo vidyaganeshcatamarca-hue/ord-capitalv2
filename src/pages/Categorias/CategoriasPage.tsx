@@ -246,6 +246,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
   const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [confirmArchive, setConfirmArchive] = useState(false)
   const [nombre, setNombre] = useState(ingreso?.nombre ?? '')
   const [descripcion, setDescripcion] = useState(ingreso?.descripcion ?? '')
   const [icono, setIcono] = useState(ingreso?.icono ?? 'Coins')
@@ -360,19 +361,7 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
                 type="button"
                 className="btn btn-secondary font-semibold"
                 disabled={loading}
-                onClick={async () => {
-                  setLoading(true)
-                  try {
-                    await rpc('fn_archivar_fuente_ingreso', { p_producto_id: ingreso.producto_id, p_archivar: false })
-                    showToast(t('cat_fuente_archivada'), 'success')
-                    onSaved()
-                    onClose()
-                  } catch (err: any) {
-                    showToast(parseError(err), 'error')
-                  } finally {
-                    setLoading(false)
-                  }
-                }}
+                onClick={() => setConfirmArchive(true)}
               >
                 <CategoryIcon name="Archive" size={16} /> {t('cat_fuente_archivar')}
               </button>
@@ -390,6 +379,32 @@ function IngresoModal({ ingreso, onClose, onSaved }: {
           )}
         </form>
       </div>
+
+      {confirmArchive && (
+        <ConfirmModal
+          isOpen
+          title={t('cat_fuente_archivar')}
+          message={t('cat_fuente_archivar_confirm')}
+          confirmText={t('btn_aceptar')}
+          cancelText={t('btn_cancelar')}
+          type="primary"
+          onConfirm={async () => {
+            setConfirmArchive(false)
+            setLoading(true)
+            try {
+              await rpc('fn_archivar_fuente_ingreso', { p_producto_id: ingreso!.producto_id, p_archivar: false })
+              showToast(t('cat_fuente_archivada'), 'success')
+              onSaved()
+              onClose()
+            } catch (err: any) {
+              showToast(parseError(err), 'error')
+            } finally {
+              setLoading(false)
+            }
+          }}
+          onCancel={() => setConfirmArchive(false)}
+        />
+      )}
 
       {confirmDelete && (
         <ConfirmModal
