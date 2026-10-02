@@ -262,12 +262,6 @@ export function BilleterasPage() {
           {/* ── HEADER DE CUENTAS ── */}
           <div className="page-header" style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginTop: 0 }}>
             <div className="flex gap-2">
-              <button
-                className="btn btn-secondary btn-sm font-semibold"
-                onClick={() => window.dispatchEvent(new CustomEvent('open-crear-fuente'))}
-              >
-                {t('wallets.btn_add_fuente')}
-              </button>
               <button className="btn btn-primary btn-sm font-semibold" onClick={() => setShowCreateModal(true)}>
                 {t('wallets.btn_add_cuenta')}
               </button>
@@ -382,6 +376,12 @@ export function BilleterasPage() {
           {/* ── HEADER DE FUENTES DE INGRESO ── */}
           <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 className="font-display" style={{ fontSize: 'calc(20px * var(--font-scale))' }}>{t('wallets.header_fuentes_ingreso')}</h2>
+            <button
+              className="btn btn-secondary btn-sm font-semibold"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-crear-fuente'))}
+            >
+              {t('wallets.btn_add_fuente')}
+            </button>
           </div>
 
           <TabIngresos hideNewBtn={true} />
