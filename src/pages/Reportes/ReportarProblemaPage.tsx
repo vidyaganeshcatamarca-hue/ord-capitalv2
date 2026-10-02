@@ -410,6 +410,15 @@ export function ReportarProblemaPage() {
   // Idempotency key of the current take: one crypto UUID per new recording.
   const audioKeyRef = useRef<string | null>(null)
   const recorder = useVoiceRecorder({ maxDurationMs: BUG_REPORT_MAX_AUDIO_MS - AUDIO_HARD_CUT_GRACE_MS })
+  // Owner: when the mic tap starts a take, the countdown ring renders below
+  // the description textarea, out of view. Scroll it to screen center so the
+  // user always SEES that recording started.
+  const recordingBlockRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (recorder.state === 'recording') {
+      recordingBlockRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [recorder.state])
   // Paths uploaded to storage that were never submitted: best-effort cleanup on unmount.
   const orphanPathsRef = useRef<Set<string>>(new Set())
   const submittedRef = useRef(false)
@@ -887,7 +896,7 @@ export function ReportarProblemaPage() {
           || audioReady
           || audioProcessing
         ) && (
-          <div className="reporte-field reporte-audio">
+          <div className="reporte-field reporte-audio" ref={recordingBlockRef}>
             {audioProcessing ? (
               <div className="reporte-audio-block" role="status">
                 <span className="reporte-audio-spinner" aria-hidden="true" />
