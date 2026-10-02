@@ -88,7 +88,7 @@ interface VoiceJobBridgeProps {
  */
 function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
   const { showToast } = useToast()
-  const { jobs, submit, retryLastSubmit, resumePending, abandonInFlightJobs } = useVoiceJobs()
+  const { jobs, submit, retryLastSubmit, resumePending, abandonInFlightJobs , reloadVoiceContext } = useVoiceJobs()
   const { loading: loadSaving, loadQuarantine, refresh } = useVoiceQuarantine()
 
   const [failedJob, setFailedJob] = useState<VoiceJobState | null>(null)
@@ -110,6 +110,14 @@ function VoiceJobBridge({ open, onClose }: VoiceJobBridgeProps) {
   }, [onClose])
 
   const inFlightJob = useMemo(() => latestInFlightJob(jobs), [jobs])
+
+  useEffect(() => {
+    if (open) reloadVoiceContext()
+  }, [open, reloadVoiceContext])
+
+  // Owner bug-8: categories (and wallets/cards) created after the bridge
+  // mounted never reached the voice context snapshot. Refresh it every time
+  // the modal opens so new entries are in the context without an app restart.
 
   // Coming back to the foreground: jobs still inside the resume window restart
   // their polling; jobs that stayed hidden longer than that are dead for the

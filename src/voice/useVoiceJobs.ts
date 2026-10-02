@@ -45,6 +45,8 @@ export interface VoiceJobState {
 
 /** Public surface of `useVoiceJobs`. */
 export interface UseVoiceJobsResult {
+  /** Rebuilds the user-catalog snapshot (categories, wallets, cards, region). */
+  reloadVoiceContext(): void;
   jobs: Record<string, VoiceJobState>;
   /**
    * Uploads the blob. Resolves to the backend job id once the job was accepted,
@@ -127,7 +129,9 @@ async function readAccessToken(): Promise<string | null> {
  */
 export function useVoiceJobs(): UseVoiceJobsResult {
   const [jobs, dispatch] = useReducer(voiceJobsReducer, {});
-  const { context } = useVoiceContext();
+  // Owner bug-8: the catalog snapshot must refresh per voice session, so the
+  // reload handle is exposed (the bridge calls it on every modal open).
+  const { context, reload: reloadVoiceContext } = useVoiceContext();
 
   const contextRef = useRef<VoiceContext | null>(null);
   const lastSubmitRef = useRef<{ blob: Blob; idempotencyKey: string } | null>(null);
@@ -463,5 +467,5 @@ export function useVoiceJobs(): UseVoiceJobsResult {
     return abandoned;
   }, []);
 
-  return { jobs, submit, retryLastSubmit, resumePending, clearJob, abandonInFlightJobs };
+  return { jobs, submit, retryLastSubmit, resumePending, clearJob, abandonInFlightJobs, reloadVoiceContext };
 }
