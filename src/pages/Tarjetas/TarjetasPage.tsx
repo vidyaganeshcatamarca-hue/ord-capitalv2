@@ -184,38 +184,24 @@ function getTermMsg(key: string): string {
   return map[key] || key
 }
 
-function getNextVencimientoDate(diaCierre: number, diaVencimiento: number): Date {
+function getNextVencimientoDate(diaVencimiento: number): Date {
+  // Owner bug-6: days-to-due must be the next occurrence of the due day from
+  // today, matching fn_reporte_vencimientos_tarjetas. The old cycle-aware
+  // computation skipped the near due (e.g. due day 14 with close day 20 on
+  // Oct 2 reported 44 days instead of 12). Date overflow past month-end
+  // normalizes the same way the backend interval math does.
   const hoy = new Date()
-  const añoHoy = hoy.getFullYear()
-  const mesHoy = hoy.getMonth()
-  const diaHoy = hoy.getDate()
-
-  let finCiclo: Date
-  if (diaHoy <= diaCierre) {
-    finCiclo = new Date(añoHoy, mesHoy, diaCierre - 1)
-  } else {
-    finCiclo = new Date(añoHoy, mesHoy + 1, diaCierre - 1)
+  if (hoy.getDate() <= diaVencimiento) {
+    return new Date(hoy.getFullYear(), hoy.getMonth(), diaVencimiento)
   }
-
-  const añoFin = finCiclo.getFullYear()
-  const mesFin = finCiclo.getMonth()
-
-  let vencimientoCiclo: Date
-  if (diaVencimiento <= diaCierre) {
-    vencimientoCiclo = new Date(añoFin, mesFin + 1, diaVencimiento)
-  } else {
-    vencimientoCiclo = new Date(añoFin, mesFin, diaVencimiento)
-  }
-
-  return vencimientoCiclo
+  return new Date(hoy.getFullYear(), hoy.getMonth() + 1, diaVencimiento)
 }
 
 function getDiasParaProximoVencimiento(card: MapaTarjeta): number {
-  if (card.dia_cierre === undefined || card.dia_cierre === null ||
-      card.dia_vencimiento === undefined || card.dia_vencimiento === null) {
+  if (card.dia_vencimiento === undefined || card.dia_vencimiento === null) {
     return Infinity
   }
-  const venc = getNextVencimientoDate(card.dia_cierre, card.dia_vencimiento)
+  const venc = getNextVencimientoDate(card.dia_vencimiento)
   const hoy = new Date()
   const hoySoloFecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
   const diffTime = venc.getTime() - hoySoloFecha.getTime()
