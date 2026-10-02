@@ -748,16 +748,29 @@ export function TabIngresos({ hideNewBtn = false }: { hideNewBtn?: boolean }) {
 
   return (
     <div className="cat-tab-content">
-      <div className="cat-toolbar">
-        <div className="cat-toolbar-info">
-          <span className="cat-toolbar-text">{t('cat_fuentes_helper')}</span>
-        </div>
-        {!hideNewBtn && (
-          <button className="btn btn-primary cat-new-btn" onClick={() => setModal({ open: true, item: null })}>
-            {t('cat_fuente_new_btn')}
-          </button>
+        {hideNewBtn ? (
+          // Billeteras context: the section header lives here because only this
+          // component knows the list state. Owner rule: with sources the header
+          // shows the (primary/green) add button; empty state shows the single
+          // crear button inside the empty card instead (one button, never two).
+          <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 className="font-display" style={{ fontSize: 'calc(20px * var(--font-scale))' }}>{t('wallets.header_fuentes_ingreso')}</h2>
+            {!loading && ingresos.length > 0 && (
+              <button className="btn btn-primary btn-sm font-semibold" onClick={() => setModal({ open: true, item: null })}>
+                {t('wallets.btn_add_fuente')}
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="cat-toolbar">
+            <div className="cat-toolbar-info">
+              <span className="cat-toolbar-text">{t('cat_fuentes_helper')}</span>
+            </div>
+            <button className="btn btn-primary cat-new-btn" onClick={() => setModal({ open: true, item: null })}>
+              {t('cat_fuente_new_btn')}
+            </button>
+          </div>
         )}
-      </div>
 
       {loading ? (
         <div className="cat-loading"><div className="spinner" /></div>

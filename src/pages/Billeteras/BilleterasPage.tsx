@@ -372,17 +372,9 @@ export function BilleterasPage() {
 
           {/* Divisor estético */}
           <div style={{ margin: '40px 0 24px 0', borderTop: '1px solid var(--border)', opacity: 0.5 }} />
+          {/* ── HEADER DE FUENTES DE INGRESO: lo dibuja <TabIngresos> (conoce el
+               estado de la lista: sin fuentes => sin botón, sólo el cartel). */}
 
-          {/* ── HEADER DE FUENTES DE INGRESO ── */}
-          <div className="page-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 className="font-display" style={{ fontSize: 'calc(20px * var(--font-scale))' }}>{t('wallets.header_fuentes_ingreso')}</h2>
-            <button
-              className="btn btn-secondary btn-sm font-semibold"
-              onClick={() => window.dispatchEvent(new CustomEvent('open-crear-fuente'))}
-            >
-              {t('wallets.btn_add_fuente')}
-            </button>
-          </div>
 
           <TabIngresos hideNewBtn={true} />
 
