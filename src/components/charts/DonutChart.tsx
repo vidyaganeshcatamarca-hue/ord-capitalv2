@@ -38,7 +38,13 @@ export function DonutChart({ data, hideAmounts, total: totalOverride, centerLabe
           return data.map((item, idx) => {
             const percentage = Number(item.porcentaje_del_total) || 0
             if (percentage <= 0) return null
-            const strokeLength = Math.max(0, (percentage / 100) * circumference - gap)
+            const preGapLength = Math.max(0, (percentage / 100) * circumference)
+            // A slice smaller than the gap must lose NO gap: otherwise it is
+            // clipped to nothing and the surface track shows, reading as a
+            // WRONG-color segment (user report: 1.1% income source rendered as
+            // a cream sliver instead of its green).
+            const segmentGap = preGapLength <= gap + 1 ? 0 : gap
+            const strokeLength = Math.max(0, preGapLength - segmentGap)
             const strokeOffset = -(accumulatedPercent / 100) * circumference
             accumulatedPercent += percentage
 
