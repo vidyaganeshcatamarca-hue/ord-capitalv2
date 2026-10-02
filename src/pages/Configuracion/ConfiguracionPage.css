@@ -13,6 +13,7 @@
      back arrow; keep hierarchy without the banner proportions. */
   font-size: clamp(calc(1.6rem * var(--font-scale)), calc(6.2vw * var(--font-scale)), calc(2.2rem * var(--font-scale)));
   line-height: 1.08;
+  text-align: center;
   color: var(--text);
 }
 
