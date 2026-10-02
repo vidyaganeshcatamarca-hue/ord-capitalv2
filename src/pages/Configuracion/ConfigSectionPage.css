@@ -4,6 +4,13 @@
   max-width: 880px;
 }
 
+.config-page-header h1 {
+  margin: 0 0 6px;
+  font-size: clamp(calc(1.6rem * var(--font-scale)), calc(6.2vw * var(--font-scale)), calc(2.2rem * var(--font-scale)));
+  line-height: 1.08;
+  color: var(--text);
+}
+
 .config-back-button {
   display: inline-flex;
   align-items: center;

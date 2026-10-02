@@ -6,6 +6,7 @@ import { rpc, supabase } from '@/lib/supabase'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { t } from '@/locales/i18n'
 import './MisReportesPage.css'
+import '../Configuracion/ConfigSectionPage.css'
 
 const BUCKET = 'reportes'
 
