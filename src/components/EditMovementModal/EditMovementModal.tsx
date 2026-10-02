@@ -391,7 +391,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
                 required
                 disabled={loading}
               >
-                <option value="">{t('placeholder_select_source')}</option>
+                <option value="" disabled>{t('placeholder_select_source')}</option>
                 <optgroup label={t('group_accounts_wallets')}>
                   {billeteras.map(b => (
                     <option key={`billetera-${b.billetera_id}`} value={`billetera-${b.billetera_id}`}>
@@ -420,7 +420,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
                   required
                   disabled={loading}
                 >
-                  <option value="">{t('placeholder_select_destination')}</option>
+                  <option value="" disabled>{t('placeholder_select_destination')}</option>
                   {billeteras.map(b => (
                     <option key={b.billetera_id} value={b.billetera_id}>
                       {t(b.nombre)} ({b.moneda})
@@ -441,7 +441,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
                   required
                   disabled={loading}
                 >
-                  <option value="">{t('option_select_category')}</option>
+                  <option value="" disabled>{t('option_select_category')}</option>
                   {categoriasEgreso.map(cat => (
                     <option key={cat.id} value={cat.id}>
                       {cat.label}
@@ -461,7 +461,7 @@ export function EditMovementModal({ movement, onClose, onSuccess }: EditMovement
                   onChange={e => setCuentaIngresoId(e.target.value ? Number(e.target.value) : null)}
                   disabled={loading}
                 >
-                  <option value="">{t('placeholder_select_source_optional')}</option>
+                  <option value="" disabled>{t('placeholder_select_source_optional')}</option>
                   {fuentesIngreso.map(f => (
                     <option key={f.producto_id} value={f.producto_id}>
                       {t(f.nombre)}

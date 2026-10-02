@@ -233,7 +233,7 @@ export function NuevaInversionModal({
               disabled={submitting || billeteras.length === 0}
               required
             >
-              <option value="">{t('placeholder_select_wallet')}</option>
+              <option value="" disabled>{t('placeholder_select_wallet')}</option>
               {billeteras
                 .filter((b) => b.moneda === moneda)
                 .map((b) => (

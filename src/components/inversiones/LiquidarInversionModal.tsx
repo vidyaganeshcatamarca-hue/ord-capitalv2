@@ -281,7 +281,7 @@ export function LiquidarInversionModal({
               disabled={submitting || billeterasMismaMoneda.length === 0}
               required
             >
-              <option value="">{t('placeholder_select_destination_wallet')}</option>
+              <option value="" disabled>{t('placeholder_select_destination_wallet')}</option>
               {billeterasMismaMoneda.map((b) => (
                 <option key={b.billetera_id} value={b.billetera_id}>
                   {t(b.nombre)}

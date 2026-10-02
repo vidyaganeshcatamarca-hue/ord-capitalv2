@@ -136,7 +136,7 @@ export function RespaldoFisicoPanel({ sobres, billeteras, onSuccess }: RespaldoF
         <label>
           <span>{t('sobres_select_envelope')}</span>
           <select value={selectedSobreId ?? ''} onChange={(event) => setSelectedSobreId(event.target.value ? Number(event.target.value) : null)}>
-            <option value="">{t('sobres_select_envelope')}</option>
+            <option value="" disabled>{t('sobres_select_envelope')}</option>
             {sobres.map((sobre) => <option key={sobre.fondo_id} value={sobre.fondo_id}>{sobre.nombre}</option>)}
           </select>
         </label>

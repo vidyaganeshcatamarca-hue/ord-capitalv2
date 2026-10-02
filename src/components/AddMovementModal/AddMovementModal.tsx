@@ -1513,7 +1513,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       marginBottom: '16px'
                     }}
                   >
-                    <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('movement_select_origin_placeholder')}</option>
+                    <option value="" disabled style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('movement_select_origin_placeholder')}</option>
                     {origenOptions.map(b => (
                       <option key={b.billetera_id} value={b.billetera_id} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
                         {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
@@ -1540,7 +1540,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       marginBottom: '16px'
                     }}
                   >
-                    <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('movement_select_destination_placeholder')}</option>
+                    <option value="" disabled style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('movement_select_destination_placeholder')}</option>
                     {destinoOptions.map(b => (
                       <option key={b.billetera_id} value={b.billetera_id} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
                         {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
@@ -2040,7 +2040,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           marginBottom: '16px'
                         }}
                       >
-                        <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>Selecciona una fuente (opcional)...</option>
+                        <option value="" disabled style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('placeholder_select_source_optional')}</option>
                         {catIngresos.map(ci => (
                           <option key={ci.producto_id} value={ci.producto_id} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
                             {/* Native options are text-only: lucide names leak. */}
