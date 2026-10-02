@@ -227,6 +227,8 @@ export function useVoiceJobs(): UseVoiceJobsResult {
           });
         },
         onFailed: ({ code }) => {
+          // Processing-terminal failures were invisible to analytics until now.
+          telemetry.track('voice_job_failed', { job_id: jobId, error_code: code }, TELEMETRY_PRIORITY.LOW)
           // Covers the local deadline (`TIMEOUT`) and every backend failure: the
           // poller is released and the job is no longer resumable.
           pollersRef.current.get(jobId)?.cancel();
@@ -325,7 +327,7 @@ export function useVoiceJobs(): UseVoiceJobsResult {
         idempotency_key: idempotencyKey,
       });
 
-      telemetry.track('voice_sent', { job_id: created.job_id }, TELEMETRY_PRIORITY.MEDIUM);
+      telemetry.track('voice_sent', { job_id: created.job_id, audio_bytes: blob.size, audio_codec: blob.type }, TELEMETRY_PRIORITY.MEDIUM);
 
       dispatch({ type: 'remove', jobId: idempotencyKey });
       dispatch({
