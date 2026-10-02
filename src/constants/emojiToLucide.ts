@@ -78,6 +78,77 @@ export const WALLET_ICONS = [
 // ==== Alias para retrocompatibilidad ====
 export const LUCIDE_RUBRO_ICONS = RUBRO_ICONS
 export const LUCIDE_INGRESO_ICONS = INGRESO_ICONS
+
+// ==== Lucide name -> emoji (native <option> menus are TEXT-ONLY to the OS:
+// a raw lucide name like "Briefcase" leaks as literal text there, while an
+// emoji renders fine. Sources/rubros created with the old picker store an
+// emoji directly; pass anything else through untouched.) ====
+export const LUCIDE_NAME_TO_EMOJI: Record<string, string> = {
+  // RUBRO_ICONS
+  Users: '👥',
+  HandHeart: '🤲',
+  Dog: '🐕',
+  BriefcaseBusiness: '💼',
+  Store: '🏬',
+  ShieldCheck: '🛡️',
+  Scale: '⚖️',
+  FileText: '📄',
+  Church: '⛪',
+  HeartHandshake: '🤝',
+  Balloon: '🎈',
+  Gift: '🎁',
+  BrushCleaning: '🧽',
+  LockKeyhole: '🔒',
+  Truck: '🚚',
+  UsersRound: '👥',
+  Palette: '🎨',
+  Lightbulb: '💡',
+  Sprout: '🌱',
+  HandCoins: '🪙',
+  // INGRESO_ICONS
+  Briefcase: '💼',
+  Laptop: '💻',
+  FilePenLine: '📝',
+  Rocket: '🚀',
+  ShoppingCart: '🛒',
+  Percent: '💯',
+  Wrench: '🔧',
+  HousePlus: '🏠',
+  GraduationCap: '🎓',
+  MessageCircle: '💬',
+  KeyRound: '🔑',
+  Car: '🚗',
+  ChartNoAxesCombined: '📈',
+  PiggyBank: '🐷',
+  SquarePlay: '▶️',
+  Copyright: '©',
+  Bike: '🚲',
+  CarTaxiFront: '🚖',
+  Tag: '🏷️',
+  Armchair: '🪑',
+  // WALLET_ICONS
+  Wallet: '👛',
+  WalletCards: '💳',
+  Smartphone: '📱',
+  QrCode: '🔳',
+  Nfc: '📶',
+  CircleDollarSign: '💵',
+  Building2: '🏢',
+  Vault: '🏦',
+  Banknote: '💵',
+  Coins: '🪙',
+  DollarSign: '💵',
+  Euro: '💶',
+  PoundSterling: '💷',
+  JapaneseYen: '💴',
+  Bitcoin: '₿',
+}
+
+/** Emoji glyph for an icon value: lucide names convert, emoji passes through. */
+export function iconGlyph(icono: string | null | undefined): string {
+  if (!icono) return '💰'
+  return LUCIDE_NAME_TO_EMOJI[icono] ?? icono
+}
 export const LUCIDE_WALLET_ICONS = WALLET_ICONS
 
 // ==== Otros arrays existentes (proyectos, etc.) ====

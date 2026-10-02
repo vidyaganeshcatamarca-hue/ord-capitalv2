@@ -3,6 +3,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { filterUserEditableCategories } from '@/lib/categoryFilters'
+import { iconGlyph } from '@/constants/emojiToLucide'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { RUBRO_ICONS } from '@/constants/emojiToLucide'
 
@@ -151,7 +152,7 @@ export function AddCategoryModal({ onClose, onSuccess }: AddCategoryModalProps) 
               >
                 {parentCategories.map((c) => (
                   <option key={c.estructura_id} value={c.estructura_id}>
-                    {c.icono} {t(c.nombre_cuenta)}
+                    {iconGlyph(c.icono)} {t(c.nombre_cuenta)}
                   </option>
                 ))}
               </select>

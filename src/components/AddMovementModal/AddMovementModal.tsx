@@ -20,6 +20,7 @@ import { CategoryIcon, formatWalletIconForOption } from '@/components/CategoryIc
 import { ProyectoIcon } from '@/components/ProyectoIcon'
 import { WalletIcon } from '@/components/WalletIcon'
 import { WalletDropdownSelect } from '@/components/WalletDropdownSelect'
+import { iconGlyph } from '@/constants/emojiToLucide'
 import './AddMovementModal.css'
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
@@ -2042,7 +2043,8 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         <option value="" style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>Selecciona una fuente (opcional)...</option>
                         {catIngresos.map(ci => (
                           <option key={ci.producto_id} value={ci.producto_id} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
-                            {ci.icono} {ci.nombre}
+                            {/* Native options are text-only: lucide names leak. */}
+                            {iconGlyph(ci.icono)} {ci.nombre}
                           </option>
                         ))}
                       </select>
