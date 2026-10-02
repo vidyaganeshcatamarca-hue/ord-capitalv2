@@ -338,7 +338,10 @@ interface MediaItem {
 
 interface SubmitPayload {
   p_titulo: string
+  /** Spanish translation (owner dashboard only). */
   p_descripcion: string | null
+  /** The user's text in its ORIGINAL language, shown back to the reporter. */
+  p_texto_original: string | null
   p_tipo: ReporteTipo
   p_transcripcion_audio: string | null
   p_tiene_audio: boolean
@@ -568,14 +571,19 @@ export function ReportarProblemaPage() {
     setSubmitting(true)
     try {
       const paths = doneMediaPaths()
-      // All-or-nothing: fn_crear_reporte only receives the final Spanish text
-      // confirmed by the translate endpoint; without it nothing is sent.
+      // All-or-nothing: nothing reaches fn_crear_reporte unless the translate
+      // endpoint confirmed the Spanish text. Both texts travel together: the
+      // original (for the user) and the translation (for the owner dashboard).
       const { data } = await supabase.auth.getSession()
       const accessToken = data.session?.access_token
       if (!accessToken) {
         showToast(t('reporte_translate_error'), 'error')
         return
       }
+      // The RPC carries both texts: `p_texto_original` is what the user wrote
+      // (shown back to them) and `p_descripcion` is the Spanish translation
+      // (owner dashboard only).
+      const textoOriginal = descripcion.trim()
       const translation = await translateBugReportText({
         text: descripcion.trim(),
         language: sourceLanguage,
@@ -595,6 +603,7 @@ export function ReportarProblemaPage() {
       const payload: SubmitPayload = {
         p_titulo: titulo.trim(),
         p_descripcion: translation.text,
+        p_texto_original: textoOriginal !== '' ? textoOriginal : null,
         p_tipo: tipo,
         p_transcripcion_audio: null,
         p_tiene_audio: false,
@@ -707,6 +716,7 @@ export function ReportarProblemaPage() {
       const payload: SubmitPayload = {
         p_titulo: titulo.trim(),
         p_descripcion: descExtra,
+        p_texto_original: note !== '' ? note : null,
         p_tipo: tipo,
         p_transcripcion_audio: transcript,
         p_tiene_audio: true,

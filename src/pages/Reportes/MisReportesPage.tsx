@@ -8,7 +8,6 @@ import { t } from '@/locales/i18n'
 import './MisReportesPage.css'
 
 const BUCKET = 'reportes'
-const SIGNED_URL_TTL = 3600
 
 type ReporteEstado = 'nuevo' | 'en_revision' | 'resuelto'
 
@@ -17,13 +16,17 @@ type ReporteTipo = 'bug' | 'sugerencia'
 interface Reporte {
   reporte_id: number
   titulo: string
-  descripcion: string | null
+  /** Owner: the text the user wrote, in its ORIGINAL language. Never the translation. */
+  texto_original: string | null
   estado: ReporteEstado
   tipo?: ReporteTipo
   creado_el: string
   respuesta_admin: string | null
   pantalla: string | null
   tiene_audio: boolean
+  /** Historical flag: the report had attachments when it was created. */
+  tuvo_adjuntos: boolean
+  /** Storage paths only (lazy cleanup of resolved reports). Never rendered. */
   media: string[]
 }
 
@@ -83,8 +86,6 @@ export function MisReportesPage() {
   const [reportes, setReportes] = useState<Reporte[]>([])
   const [loading, setLoading] = useState(true)
   const [expandedId, setExpandedId] = useState<number | null>(null)
-  // Signed media URLs cached per report while the card is expanded.
-  const [mediaUrls, setMediaUrls] = useState<Record<number, Array<string | null>>>({})
   const [deletingReporte, setDeletingReporte] = useState<Reporte | null>(null)
   const [deleting, setDeleting] = useState(false)
   const mountedRef = useRef(true)
@@ -119,22 +120,8 @@ export function MisReportesPage() {
     return () => { mountedRef.current = false }
   }, [fetchReportes])
 
-  const loadMediaUrls = async (reporte: Reporte) => {
-    if (reporte.media.length === 0 || mediaUrls[reporte.reporte_id]) return
-    const { data, error } = await supabase.storage
-      .from(BUCKET)
-      .createSignedUrls(reporte.media, SIGNED_URL_TTL)
-    if (!mountedRef.current || error || !data) return
-    setMediaUrls((prev) => ({
-      ...prev,
-      [reporte.reporte_id]: data.map((item) => item.signedUrl ?? null),
-    }))
-  }
-
   const toggleExpand = (reporte: Reporte) => {
-    const next = expandedId === reporte.reporte_id ? null : reporte.reporte_id
-    setExpandedId(next)
-    if (next !== null) void loadMediaUrls(reporte)
+    setExpandedId(expandedId === reporte.reporte_id ? null : reporte.reporte_id)
   }
 
   const handleDelete = async () => {
@@ -159,11 +146,6 @@ export function MisReportesPage() {
       showToast(t('reporte_borrado_ok'), 'success')
       setDeletingReporte(null)
       setExpandedId(null)
-      setMediaUrls((prev) => {
-        const next = { ...prev }
-        delete next[deletingReporte.reporte_id]
-        return next
-      })
       await fetchReportes()
     } catch {
       showToast(t('error_reporte_borrar'), 'error')
@@ -215,7 +197,7 @@ export function MisReportesPage() {
                 {expanded && (
                   <div className="reportes-card-body">
                     <p className="reportes-card-full-date">{formatFullDate(reporte.creado_el)}</p>
-                    {reporte.descripcion && <p className="reportes-card-desc">{reporte.descripcion}</p>}
+                    {reporte.texto_original && <p className="reportes-card-desc">{reporte.texto_original}</p>}
                     {reporte.pantalla && (
                       <p className="reportes-card-pantalla">{t('reporte_pantalla_label')}: {t(reporte.pantalla)}</p>
                     )}
@@ -227,23 +209,21 @@ export function MisReportesPage() {
                       </div>
                     )}
 
-                    {reporte.media.length > 0 && (
-                      <div className="reportes-media">
-                        {(mediaUrls[reporte.reporte_id] ?? reporte.media.map(() => null)).map((url, idx) => (
-                          <div key={reporte.media[idx]} className="reportes-media-thumb">
-                            {url ? (
-                              <img className="reportes-media-img" src={url} alt={t('reporte_ver_imagen')} loading="lazy" />
-                            ) : (
-                              <span className="reportes-media-placeholder" aria-hidden="true">🖼️</span>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
                     <div className="reportes-card-footer">
-                      {reporte.tiene_audio && (
-                        <span className="reportes-audio-icon" aria-hidden="true">🎙️</span>
+                      {/* Owner: indicators only - the captures themselves are never shown. */}
+                      {(reporte.tuvo_adjuntos || reporte.tiene_audio) && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginRight: 'auto' }}>
+                          {reporte.tuvo_adjuntos && (
+                            <span className="reportes-pill reportes-pill--nuevo">
+                              {(reporte.media as string[]).length > 0
+                                ? t('reporte_con_adjuntos_n', { n: (reporte.media as string[]).length })
+                                : t('reporte_con_adjuntos')}
+                            </span>
+                          )}
+                          {reporte.tiene_audio && (
+                            <span className="reportes-pill reportes-pill--nuevo">{t('reporte_con_audio')}</span>
+                          )}
+                        </div>
                       )}
                       {reporte.estado === 'nuevo' && (
                         <button
