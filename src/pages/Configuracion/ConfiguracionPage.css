@@ -9,8 +9,10 @@
 
 .config-page-header h1 {
   margin: 0 0 6px;
-  font-size: clamp(calc(2rem * var(--font-scale)), calc(9vw * var(--font-scale)), calc(3.2rem * var(--font-scale)));
-  line-height: 0.95;
+  /* Owner bug-3: section titles were oversized and crammed against the
+     back arrow; keep hierarchy without the banner proportions. */
+  font-size: clamp(calc(1.6rem * var(--font-scale)), calc(6.2vw * var(--font-scale)), calc(2.2rem * var(--font-scale)));
+  line-height: 1.08;
   color: var(--text);
 }
 

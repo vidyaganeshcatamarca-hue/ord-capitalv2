@@ -7,15 +7,20 @@
 .config-back-button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
   justify-self: start;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 50%;
   background: var(--surface-2);
   color: var(--text);
-  padding: 8px 12px;
-  font: inherit;
+  padding: 0;
+  font-size: calc(1.4rem * var(--font-scale));
+  line-height: 1;
   cursor: pointer;
+  /* Owner bug-3: the arrow stays apart from the section title. */
+  margin-bottom: 2px;
 }
 
 .config-back-button:hover {

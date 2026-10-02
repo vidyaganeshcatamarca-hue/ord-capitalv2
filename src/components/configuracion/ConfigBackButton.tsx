@@ -10,9 +10,13 @@ export function ConfigBackButton({ to = '/configuracion' }: ConfigBackButtonProp
   const navigate = useNavigate()
 
   return (
-    <button type="button" className="config-back-button" onClick={() => navigate(to)}>
+    <button
+      type="button"
+      className="config-back-button"
+      onClick={() => navigate(to)}
+      aria-label={t('config_back_to_settings')}
+    >
       <span aria-hidden="true">‹</span>
-      {t('config_back_to_settings')}
     </button>
   )
 }
