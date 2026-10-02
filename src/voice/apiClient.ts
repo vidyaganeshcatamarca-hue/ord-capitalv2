@@ -210,7 +210,7 @@ function detailFromError(error: unknown): string {
  * `AbortError`, so user cancellation and this transport timeout stay
  * distinguishable: the timeout maps to the ordinary NETWORK error path.
  */
-const VOICE_REQUEST_TIMEOUT_MS = 15000;
+const VOICE_REQUEST_TIMEOUT_MS = 20000;
 
 async function fetchBounded(
   url: string,
