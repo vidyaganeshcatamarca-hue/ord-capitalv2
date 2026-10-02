@@ -203,6 +203,42 @@ function detailFromError(error: unknown): string {
 }
 
 /**
+ * Owner bug: the backend has no timeout of its own, so a down/unhanging
+ * server left the "enviando audio…" spinner alive for minutes (the browser
+ * fetch never gave up). Every voice call now bounds its request: at the mark
+ * the fetch is aborted with a `TimeoutError` reason — deliberately NOT an
+ * `AbortError`, so user cancellation and this transport timeout stay
+ * distinguishable: the timeout maps to the ordinary NETWORK error path.
+ */
+const VOICE_REQUEST_TIMEOUT_MS = 20000;
+
+async function fetchBounded(
+  url: string,
+  options: RequestInit,
+  signal?: AbortSignal
+): Promise<Response> {
+  const controller = new AbortController();
+  const timeoutReason = new DOMException('Voice request timed out', 'TimeoutError');
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const onOuterAbort = (): void => {
+    if (timer !== undefined) clearTimeout(timer);
+    controller.abort(signal?.reason);
+  };
+  if (signal?.aborted) {
+    controller.abort(signal.reason);
+  } else if (signal) {
+    signal.addEventListener('abort', onOuterAbort, { once: true });
+  }
+  timer = setTimeout(() => controller.abort(timeoutReason), VOICE_REQUEST_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+    signal?.removeEventListener('abort', onOuterAbort);
+  }
+}
+
+/**
  * Enqueues a new voice job.
  * Accepts 200 (idempotent hit, `reused: true`) and 202 (new job) as success.
  * The `Content-Type` header is intentionally never set so the browser can add
@@ -220,12 +256,15 @@ export async function createVoiceJob(input: CreateVoiceJobInput): Promise<VoiceJ
 
   let response: Response;
   try {
-    response = await fetch(`${VOICE_API_BASE_URL}${VOICE_JOB_CREATE_PATH}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: buildVoiceJobFormData({ audioBlob, idempotencyKey, language, context }),
-      signal,
-    });
+    response = await fetchBounded(
+      `${VOICE_API_BASE_URL}${VOICE_JOB_CREATE_PATH}`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: buildVoiceJobFormData({ audioBlob, idempotencyKey, language, context }),
+      },
+      signal
+    );
   } catch (error) {
     if (isAbortError(error)) throw error;
     throw createNetworkError(SEND_FAILED_I18N_KEY, detailFromError(error));
@@ -282,18 +321,21 @@ export async function createBugReportJob(
 
   let response: Response;
   try {
-    response = await fetch(`${VOICE_API_BASE_URL}${VOICE_JOB_CREATE_PATH}`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: buildVoiceJobFormData({
-        audioBlob,
-        idempotencyKey,
-        language,
-        kind: BUG_REPORT_JOB_KIND,
-        audioCodec,
-      }),
-      signal,
-    });
+    response = await fetchBounded(
+      `${VOICE_API_BASE_URL}${VOICE_JOB_CREATE_PATH}`,
+      {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: buildVoiceJobFormData({
+          audioBlob,
+          idempotencyKey,
+          language,
+          kind: BUG_REPORT_JOB_KIND,
+          audioCodec,
+        }),
+      },
+      signal
+    );
   } catch (error) {
     if (isAbortError(error)) throw error;
     throw createNetworkError(SEND_FAILED_I18N_KEY, detailFromError(error));
@@ -328,11 +370,14 @@ export async function getVoiceJob(input: GetVoiceJobInput): Promise<VoiceJob> {
 
   let response: Response;
   try {
-    response = await fetch(`${VOICE_API_BASE_URL}${VOICE_JOB_POLL_PATH(jobId)}`, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${accessToken}` },
-      signal,
-    });
+    response = await fetchBounded(
+      `${VOICE_API_BASE_URL}${VOICE_JOB_POLL_PATH(jobId)}`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+      signal
+    );
   } catch (error) {
     if (isAbortError(error)) throw error;
     throw createNetworkError(mapVoiceErrorToI18nKey('NETWORK'), detailFromError(error));
@@ -388,11 +433,14 @@ export async function getBugReportTranscript(
 
   let response: Response;
   try {
-    response = await fetch(`${VOICE_API_BASE_URL}${VOICE_JOB_POLL_PATH(jobId)}`, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${accessToken}` },
-      signal,
-    });
+    response = await fetchBounded(
+      `${VOICE_API_BASE_URL}${VOICE_JOB_POLL_PATH(jobId)}`,
+      {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      },
+      signal
+    );
   } catch (error) {
     if (isAbortError(error)) throw error;
     throw createNetworkError(mapVoiceErrorToI18nKey('NETWORK'), detailFromError(error));
@@ -475,15 +523,18 @@ export async function translateBugReportText(
 
   let response: Response;
   try {
-    response = await fetch(`${VOICE_API_BASE_URL}${BUG_REPORT_TRANSLATE_PATH}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
+    response = await fetchBounded(
+      `${VOICE_API_BASE_URL}${BUG_REPORT_TRANSLATE_PATH}`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ text, language }),
       },
-      body: JSON.stringify({ text, language }),
-      signal,
-    });
+      signal
+    );
   } catch (error) {
     if (isAbortError(error)) throw error;
     throw createNetworkError(SEND_FAILED_I18N_KEY, detailFromError(error));
