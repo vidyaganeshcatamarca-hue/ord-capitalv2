@@ -636,6 +636,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   voice_service_unavailable: "El servicio de voz no está disponible. Intentá más tarde.",
   voice_unauthorized: "Tu sesión expiró. Volvé a iniciar sesión.",
   voice_generic_error: "Ocurrió un error al procesar tu audio.",
+  voice_network_error: "No pudimos conectar con el servicio. Revisá tu conexión y probá de nuevo.",
   voice_load_failed: "No se pudieron guardar los movimientos en la cuarentena.",
 };
 
@@ -656,7 +657,7 @@ export const voice = {
   // Recorder modal (Voice v1)
   title: "Registrar por voz",
   mic_request: "Esperando permiso del micrófono...",
-  record_hint: "Mantené presionado para grabar. Soltá para enviar.",
+  record_hint: "Presiona el microfono para detener y enviar.",
   hold_to_send: "Soltá para enviar",
   record_again: "Grabar de nuevo",
   queued: "En cola para procesar...",

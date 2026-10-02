@@ -18,6 +18,8 @@ export const VOICE_ERROR_CODE_TO_I18N_KEY: Record<string, string> = {
   CONFLICT: 'voice_generic_error',
   INVALID_REQUEST: 'voice_generic_error',
   INTERNAL_ERROR: 'voice_service_unavailable',
+  NETWORK: 'voice_network_error',
+  UNKNOWN: 'voice_generic_error',
 };
 
 const DEFAULT_ERROR_KEY = 'voice_generic_error';
