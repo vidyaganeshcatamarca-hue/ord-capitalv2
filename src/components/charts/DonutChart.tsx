@@ -43,7 +43,11 @@ export function DonutChart({ data, hideAmounts, total: totalOverride, centerLabe
             // clipped to nothing and the surface track shows, reading as a
             // WRONG-color segment (user report: 1.1% income source rendered as
             // a cream sliver instead of its green).
-            const segmentGap = preGapLength <= gap + 1 ? 0 : gap
+            const segmentGap = preGapLength <= gap + 1
+              // Proportional (never full) gap for tiny slices: keeps the
+              // separator symmetric on both flanks without erasing the slice.
+              ? Math.min(gap, preGapLength * 0.35)
+              : gap
             const strokeLength = Math.max(0, preGapLength - segmentGap)
             const strokeOffset = -(accumulatedPercent / 100) * circumference
             accumulatedPercent += percentage
