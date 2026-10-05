@@ -852,9 +852,8 @@ export function ReportarProblemaPage() {
             </span>
             <ChevronDown size={18} aria-hidden="true" />
           </button>
-          {!pantallaElegida && (
-            <p className="reporte-field-error" aria-live="polite">{t('pantalla_required')}</p>
-          )}
+          {/* Owner: the inline red hint was redundant with the select's own
+              placeholder and squeezed the layout; remove it and keep the gap. */}
         </div>
         )}
 
