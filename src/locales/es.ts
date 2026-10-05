@@ -1111,7 +1111,7 @@ export const saneamiento = {
   movement_toast_income: "Ingreso registrado",
   movement_toast_transfer: "Transferencia realizada",
   card_cmp_first_cycle: "Primer ciclo con uso — todavía no hay comparación",
-  card_cmp_legend: "En cada barra: arriba % vs ciclo anterior · abajo % vs media",
+  card_cmp_legend: "En cada barra: % de arriba = vs ciclo anterior · % de abajo = vs media de los 6 ciclos",
   card_cmp_vs_prev_tooltip: "vs ciclo anterior",
   card_cmp_vs_media_tooltip: "vs media de los ciclos",
   transfer_entre_cuentas: "Transferencia entre cuentas",

@@ -172,14 +172,6 @@ function getUrgencyMsg(key: string, dias: number): string {
   return map[key] || t('card_due_normal', { dias })
 }
 
-function getTendenciaMsg(key: string): string {
-  const map: Record<string, string> = {
-    alert_card_overuse: t('card_trend_overuse'),
-    alert_card_savings: t('card_trend_savings'),
-    alert_card_stable: t('card_trend_stable'),
-  }
-  return map[key] || ''
-}
 
 function getTermMsg(key: string): string {
   const map: Record<string, string> = {
@@ -1275,7 +1267,7 @@ export function TarjetasPage() {
                               )}
                               <div
                                 className={`comparativa-bar ${x.ciclo_index === 0 ? `actual${isSaving ? ' saving' : ''}` : 'anterior'}`}
-                                style={{ height: Math.max(4, (Number(x.total_ciclo) / serieMax) * 56) }}
+                                style={{ height: Math.max(4, (Number(x.total_ciclo) / serieMax) * 76) }}
                               />
                               <div className="comparativa-bar-label">
                                 {new Date(`${x.fecha_inicio}T00:00:00`).toLocaleDateString('es-AR', { month: 'short' })}
@@ -1307,12 +1299,6 @@ export function TarjetasPage() {
                       )}
 
 
-                      <div className="comparativa-msg"><CategoryIcon name={isSaving ? 'BarChart3' : 'TriangleAlert'} size={14} /> {getTendenciaMsg(c.mensaje_key)}</div>
-                      {isSaving && (
-                        <span className="comparativa-badge-great">
-                          <CategoryIcon name="BarChart3" size={14} /> {t('card_trend_saving_badge', { pct: Math.abs(Number(c.variacion_porcentual)).toFixed(0) })}
-                        </span>
-                      )}
                     </div>
                   )
                 })}
