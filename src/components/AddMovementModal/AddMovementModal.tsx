@@ -257,6 +257,8 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   const [tarjetaId, setTarjetaId] = useState<number | null>(null)
   const [cuotas, setCuotas] = useState<number>(1)
   const [esUsd, setEsUsd] = useState(false)
+  // Cross-currency transfer: amount as it lands in the destination wallet.
+  const [destinationAmount, setDestinationAmount] = useState('')
   const [cotizacionUsd, setCotizacionUsd] = useState(1)
   const [billeteraDestinoId, setBilleteraDestinoId] = useState<number | null>(null)
   const [categoriaEgreso, setCategoriaEgreso] = useState<CategoriaSeleccionada | null>(null)
@@ -641,12 +643,36 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
     if (requiereSaldoSuficiente && numericMonto > 0 && b.saldo_actual < numericMonto) return false
     return true
   })
+
   const monedaOrigen = origenTipo === 'billetera'
     ? (billeteras.find(b => b.billetera_id === billeteraOrigenId)?.moneda ?? 'ARS')
     : (esUsd ? 'USD' : 'ARS')
+  // Transfers may cross currencies (ARS <-> USD): the cuarentena edit/approve
+  // flow already supports it, so the destination list shows every other active
+  // wallet regardless of currency.
   const destinoOptions = billeteras.filter(b =>
-    isWalletActive(b) && b.moneda === monedaOrigen && b.billetera_id !== billeteraOrigenId
+    isWalletActive(b) && b.billetera_id !== billeteraOrigenId
   )
+  const billeteraDestinoMoneda = billeteras.find(b => b.billetera_id === billeteraDestinoId)?.moneda ?? null
+  const crossCurrencyTransfer = tipo === 'transfer' && !!billeteraDestinoMoneda && billeteraDestinoMoneda !== monedaOrigen
+
+  // Suggest the destination amount from the current USD rate when a
+  // cross-currency transfer leaves it empty (cuarentena pattern). Hint only.
+  useEffect(() => {
+    if (!crossCurrencyTransfer || !numericMonto) return
+    if ((parseFloat(destinationAmount) || 0) > 0) return
+    // Rate converts between ARS and USD (user default currency basis).
+    if (monedaOrigen !== 'ARS' && monedaOrigen !== 'USD') return
+    if (billeteraDestinoMoneda !== 'ARS' && billeteraDestinoMoneda !== 'USD') return
+    if (!cotizacionUsd || cotizacionUsd <= 0) return
+    const baseAUsd =
+      monedaOrigen === 'USD'
+        ? numericMonto
+        : numericMonto / cotizacionUsd
+    const sugerencia: number =
+      billeteraDestinoMoneda === 'USD' ? baseAUsd : baseAUsd * cotizacionUsd
+    setDestinationAmount(sugerencia.toFixed(2))
+  }, [crossCurrencyTransfer, numericMonto, destinationAmount, monedaOrigen, billeteraDestinoMoneda, cotizacionUsd])
 
   // ── Reseteo defensivo: si la billetera preseleccionada deja de ser válida
   // (borrada, inactiva, o saldo insuficiente), limpiamos la selección
@@ -784,6 +810,10 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
         showToast(t('movement_error_destination_required'), 'error')
         return
       }
+      if (crossCurrencyTransfer && !((parseFloat(destinationAmount) || 0) > 0)) {
+        showToast(t('cuarentena_error_destination_amount'), 'error')
+        return
+      }
       if (billeteraDestinoId === billeteraOrigenId) {
         showToast(t('movement_error_transfer_same_wallet'), 'error')
         return
@@ -836,6 +866,9 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
           p_proyecto_id: proyectoId,
           p_cuenta_ingreso_id: tipo === 'income' ? categoriaIngreso?.producto_id ?? null : null,
           p_detalle: nota.trim() || null,
+        p_destination_amount: tipo === 'transfer'
+            ? (crossCurrencyTransfer ? parseFloat(destinationAmount) : null)
+            : null,
         })
       }
 
@@ -1097,7 +1130,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       <>
                         <label className="step-label" style={{ marginTop: '16px' }}>{t('step_account')}</label>
                         {destinoOptions.length === 0 ? (
-                          <div className="step-warning">⚠️ No hay cuentas en {monedaOrigen} para transferir</div>
+                          <div className="step-warning">⚠️ {t("movement_no_accounts_transfer")}</div>
                         ) : (
                           <div className="cuenta-lista pc-max-height">
                             {destinoOptions.map(b => (
@@ -1112,6 +1145,21 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                 <div className="cuenta-saldo">{formatMonto(b.saldo_actual.toString(), b.moneda)}</div>
                               </button>
                             ))}
+                          </div>
+                        )}
+                        {crossCurrencyTransfer && (
+                          <div style={{ marginTop: '12px' }}>
+                            <label className="step-label">{t("movement_destination_amount_label")}</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              inputMode="decimal"
+                              className="monto-raw"
+                              value={destinationAmount}
+                              onChange={e => setDestinationAmount(e.target.value)}
+                              placeholder={t('cuarentena_destination_requerido')}
+                              style={{ width: '100%', padding: '12px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '10px', color: 'var(--text)', fontSize: '14px' }}
+                            />
                           </div>
                         )}
                       </>
@@ -1543,10 +1591,25 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     <option value="" disabled style={{ background: 'var(--surface)', color: 'var(--text-3)' }}>{t('movement_select_destination_placeholder')}</option>
                     {destinoOptions.map(b => (
                       <option key={b.billetera_id} value={b.billetera_id} style={{ background: 'var(--surface)', color: 'var(--text)' }}>
-                        {t(b.nombre)} ({formatMonto(b.saldo_actual.toString(), b.moneda)})
+                        {t(b.nombre)} ({b.moneda}) — {formatMonto(b.saldo_actual.toString(), b.moneda)}
                       </option>
                     ))}
                   </select>
+
+                  {crossCurrencyTransfer && (
+                    <>
+                      <label className="step-label">{t("movement_destination_amount_label")}</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        inputMode="decimal"
+                        className="form-control mb-3"
+                        value={destinationAmount}
+                        onChange={e => setDestinationAmount(e.target.value)}
+                        placeholder={t('cuarentena_destination_requerido')}
+                      />
+                    </>
+                  )}
 
                   {/* Cuándo (Fecha) */}
                   <label className="step-label">{t("step_when")}</label>
