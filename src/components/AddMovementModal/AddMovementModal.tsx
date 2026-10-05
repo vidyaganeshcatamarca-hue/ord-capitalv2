@@ -87,7 +87,14 @@ const TIPO_CONFIG = {
   expense:  { label: t('type_expense', { defaultValue: 'Gasto' }),         emoji: '➖', color: 'var(--coral)' },
   income:   { label: t('type_income', { defaultValue: 'Ingreso' }),        emoji: '➕', color: 'var(--mint)' },
   transfer: { label: t('type_transfer', { defaultValue: 'Transferencia' }),  emoji: '↔️', color: 'var(--blue)', btnLabel: t('btn_confirm_transfer', { defaultValue: 'Confirmar Transferencia' }) },
+}// Toast text per movement type: the old template hardcode
+// ("${label} registrado") could not be edited from es.ts.
+const TIPO_TOAST_KEY: Record<TipoMovimiento, string> = {
+  expense: 'movement_toast_expense',
+  income: 'movement_toast_income',
+  transfer: 'movement_toast_transfer',
 }
+
 
 const FECHA_CHIPS = [
   { label: t('home_filter_period_today', { defaultValue: 'Hoy' }),        offset: 0 },
@@ -872,7 +879,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
         })
       }
 
-      showToast(`${TIPO_CONFIG[tipo].label} registrado`, 'success')
+      showToast(t(TIPO_TOAST_KEY[tipo]), 'success')
       onSuccess()
       onClose()
     } catch (err: any) {

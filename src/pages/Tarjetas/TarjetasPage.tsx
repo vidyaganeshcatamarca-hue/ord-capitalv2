@@ -1228,7 +1228,9 @@ export function TarjetasPage() {
                 <p>{t("card_need_full_cycle_comparative")}</p>
               </div>
             ) : (
-              <div className="comparativa-list">
+              <>
+                <p className="comparativa-legend">{t('card_cmp_legend')}</p>
+                <div className="comparativa-list">
                 {comparativa.map(c => {
                   // Series (up to 6 cycles, oldest first; index 0 = current).
                   const serie = serieTarjetas
@@ -1253,17 +1255,39 @@ export function TarjetasPage() {
                       </div>
 
                       <div className="comparativa-bars comparativa-bars-6">
-                        {serie.map(x => (
-                          <div key={x.ciclo_index} className="comparativa-bar-wrap">
-                            <div
-                              className={`comparativa-bar ${x.ciclo_index === 0 ? `actual${isSaving ? ' saving' : ''}` : 'anterior'}`}
-                              style={{ height: Math.max(4, (Number(x.total_ciclo) / serieMax) * 56) }}
-                            />
-                            <div className="comparativa-bar-label">
-                              {new Date(`${x.fecha_inicio}T00:00:00`).toLocaleDateString('es-AR', { month: 'short' })}
+                        {serie.map((x, pos) => {
+                          const prevTotal = pos > 0 ? Number(serie[pos - 1].total_ciclo) : 0
+                          const pctPrev = pos > 0 && prevTotal > 0
+                            ? Math.round(((Number(x.total_ciclo) - prevTotal) / prevTotal) * 100)
+                            : null
+                          const media = serie.reduce((acc, y) => acc + Number(y.total_ciclo), 0) / serie.length
+                          const pctMedia = media > 0
+                            ? Math.round(((Number(x.total_ciclo) - media) / media) * 100)
+                            : null
+                          const pctClass = (v: number | null) =>
+                            v === null ? '' : v > 0 ? 'cmp-pct-up' : v < 0 ? 'cmp-pct-down' : ''
+                          return (
+                            <div key={x.ciclo_index} className="comparativa-bar-wrap">
+                              {pctPrev !== null && (
+                                <span className={`comparativa-bar-pct ${pctClass(pctPrev)}`}>
+                                  {pctPrev > 0 ? '+' : ''}{pctPrev}%
+                                </span>
+                              )}
+                              <div
+                                className={`comparativa-bar ${x.ciclo_index === 0 ? `actual${isSaving ? ' saving' : ''}` : 'anterior'}`}
+                                style={{ height: Math.max(4, (Number(x.total_ciclo) / serieMax) * 56) }}
+                              />
+                              <div className="comparativa-bar-label">
+                                {new Date(`${x.fecha_inicio}T00:00:00`).toLocaleDateString('es-AR', { month: 'short' })}
+                              </div>
+                              {pctMedia !== null && (
+                                <span className="comparativa-bar-mediapct">
+                                  {pctMedia > 0 ? '+' : ''}{pctMedia}%
+                                </span>
+                              )}
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
 
                       <div className="comparativa-ciclo-montos">
@@ -1292,7 +1316,8 @@ export function TarjetasPage() {
                     </div>
                   )
                 })}
-              </div>
+                </div>
+              </>
             )}
           </>
         )}
