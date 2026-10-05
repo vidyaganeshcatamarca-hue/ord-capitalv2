@@ -82,6 +82,15 @@ interface PagoHistorial {
   moneda?: 'ARS' | 'USD'
 }
 
+interface SerieCicloTarjeta {
+  ciclo_index: number
+  fecha_inicio: string
+  fecha_fin: string
+  tarjeta_id: number
+  nombre_tarjeta: string
+  total_ciclo: number
+}
+
 interface ComparativaTarjeta {
   tarjeta_id: number
   nombre_tarjeta: string
@@ -221,6 +230,7 @@ export function TarjetasPage() {
   const [cotizacionUsd, setCotizacionUsd] = useState<number>(1)
   const [totalPasivo, setTotalPasivo] = useState<number>(0)
   const [comparativa, setComparativa] = useState<ComparativaTarjeta[]>([])
+  const [serieTarjetas, setSerieTarjetas] = useState<SerieCicloTarjeta[]>([])
   const [loading, setLoading] = useState(true)
 
   // â”€â”€ Vista â”€â”€
@@ -281,14 +291,15 @@ export function TarjetasPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
-      const [resT, resV, resB, resUsd, pasivoRes, comparativaRes, archivedRes] = await Promise.all([
+      const [resT, resV, resB, resUsd, pasivoRes, comparativaRes, archivedRes, serieRes] = await Promise.all([
         rpc<MapaTarjeta[]>('fn_reporte_mapa_tarjetas').catch(() => [] as MapaTarjeta[]),
         rpc<VencimientoTarjeta[]>('fn_reporte_vencimientos_tarjetas').catch(() => [] as VencimientoTarjeta[]),
         rpc<any[]>('fn_obtener_billeteras_activas').catch(() => [] as any[]),
         rpc<number>('fn_obtener_cotizacion_usd').catch(() => 1),
         rpc<number>('fn_obtener_saldo_pasivo_tarjetas').catch(() => 0),
         rpc<ComparativaTarjeta[]>('fn_reporte_comparativa_tarjetas').catch(() => [] as ComparativaTarjeta[]),
-        rpc<any[]>('fn_reporte_tarjetas_archivadas').catch(() => [] as any[]),
+        rpc<any[]>('fn_reporte_tarjetas_archivadas').catch(() => [] as any[]), 
+        rpc<SerieCicloTarjeta[]>('fn_reporte_serie_tarjetas', { p_ciclos: 6 }).catch(() => [] as SerieCicloTarjeta[]),
       ])
       setTarjetas(resT || [])
       setVencimientos(resV || [])
@@ -297,6 +308,7 @@ export function TarjetasPage() {
       setTotalPasivo(Number(pasivoRes) || 0)
       setComparativa(comparativaRes || [])
       setArchivedCards(archivedRes || [])
+      setSerieTarjetas(serieRes || [])
     } catch (err: any) {
       showToast('Error al cargar tarjetas: ' + parseError(err), 'error')
     } finally {
@@ -1218,9 +1230,12 @@ export function TarjetasPage() {
             ) : (
               <div className="comparativa-list">
                 {comparativa.map(c => {
-                  const maxAmt = Math.max(Number(c.gasto_mes_anterior), Number(c.gasto_mes_actual), 1)
-                  const heightAnt = Math.max(4, (Number(c.gasto_mes_anterior) / maxAmt) * 48)
-                  const heightAct = Math.max(4, (Number(c.gasto_mes_actual) / maxAmt) * 48)
+                  // Series (up to 6 cycles, oldest first; index 0 = current).
+                  const serie = serieTarjetas
+                    .filter(x => x.tarjeta_id === c.tarjeta_id)
+                    .sort((x, y) => y.ciclo_index - x.ciclo_index)
+                  const serieMax = Math.max(...serie.map(x => Number(x.total_ciclo)), 1)
+                  const usoPrevio = serie.length > 1 && serie.slice(1).some(x => Number(x.total_ciclo) > 0)
                   const tendencia = c.tendencia_key
                   const isSaving = c.variacion_porcentual < -20
 
@@ -1237,24 +1252,36 @@ export function TarjetasPage() {
                         </div>
                       </div>
 
-                      <div className="comparativa-bars">
-                        <div className="comparativa-bar-wrap">
-                          <div className="comparativa-bar anterior" style={{ height: heightAnt }} />
-                          <div className="comparativa-bar-label">{t('card_cmp_cycle_ant')}</div>
-                          <div className="comparativa-bar-amount" style={{ color: 'var(--color-text-muted)' }}>
-                            {fmtMoneda(c.gasto_mes_anterior, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
+                      <div className="comparativa-bars comparativa-bars-6">
+                        {serie.map(x => (
+                          <div key={x.ciclo_index} className="comparativa-bar-wrap">
+                            <div
+                              className={`comparativa-bar ${x.ciclo_index === 0 ? `actual${isSaving ? ' saving' : ''}` : 'anterior'}`}
+                              style={{ height: Math.max(4, (Number(x.total_ciclo) / serieMax) * 56) }}
+                            />
+                            <div className="comparativa-bar-label">
+                              {new Date(`${x.fecha_inicio}T00:00:00`).toLocaleDateString('es-AR', { month: 'short' })}
+                            </div>
                           </div>
-                        </div>
-                        <div className="comparativa-bar-wrap">
-                          {/* Bar color is SEMANTIC: a large drop deserves green
-                              (money saved), coral only when usage grows. */}
-                          <div className={`comparativa-bar actual ${isSaving ? 'saving' : ''}`} style={{ height: heightAct }} />
-                          <div className="comparativa-bar-label">{t('card_cmp_cycle_act')}</div>
-                          <div className="comparativa-bar-amount" style={{ color: isSaving ? 'var(--color-mint)' : 'var(--color-coral)' }}>
-                            {fmtMoneda(c.gasto_mes_actual, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
-                          </div>
-                        </div>
+                        ))}
                       </div>
+
+                      <div className="comparativa-ciclo-montos">
+                        <span>{t('card_cmp_cycle_ant')}</span>
+                        <strong style={{ color: 'var(--color-text-muted)' }}>
+                          {fmtMoneda(c.gasto_mes_anterior, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
+                        </strong>
+                        <span>→</span>
+                        <span>{t('card_cmp_cycle_act')}</span>
+                        <strong style={{ color: isSaving ? 'var(--color-mint)' : 'var(--color-coral)' }}>
+                          {fmtMoneda(c.gasto_mes_actual, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
+                        </strong>
+                      </div>
+
+                      {!usoPrevio && (
+                        <p className="comparativa-first-cycle">{t('card_cmp_first_cycle')}</p>
+                      )}
+
 
                       <div className="comparativa-msg"><CategoryIcon name={isSaving ? 'BarChart3' : 'TriangleAlert'} size={14} /> {getTendenciaMsg(c.mensaje_key)}</div>
                       {isSaving && (

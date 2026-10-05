@@ -1736,3 +1736,22 @@
   color: var(--color-text-muted);
   font-weight: 500;
 }
+
+.comparativa-ciclo-montos {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  font-size: calc(12px * var(--font-scale));
+  color: var(--color-text-muted);
+  margin-top: 6px;
+}
+.comparativa-ciclo-montos strong { font-family: var(--font-mono, monospace); }
+.comparativa-first-cycle {
+  font-size: calc(12px * var(--font-scale));
+  color: var(--color-text-muted);
+  margin-top: 6px;
+  text-align: center;
+}
+.comparativa-bars-6 .comparativa-bar-label { font-size: 9px; }

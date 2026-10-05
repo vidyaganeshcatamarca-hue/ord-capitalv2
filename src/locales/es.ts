@@ -1847,6 +1847,7 @@ export const inversiones = {
   card_trend_saving_badge: "¡Excelente disciplina! Redujiste tu uso un {pct}% este ciclo.",
   card_cmp_cycle_ant: "Ciclo anterior",
   card_cmp_cycle_act: "Ciclo actual",
+  card_cmp_first_cycle: "Primer ciclo con uso — todavía no hay comparación",
   card_capacity_label: "Cap. de pago",
   card_due_estimated_prefix: "Estimado: {monto}",
   card_reactivated_success: "Tarjeta reactivada con éxito",
