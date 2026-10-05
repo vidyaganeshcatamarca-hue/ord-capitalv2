@@ -1229,23 +1229,28 @@ export function TarjetasPage() {
                       <div className="comparativa-header">
                         <div className="comparativa-name"><CategoryIcon name="CreditCard" size={14} /> {c.nombre_tarjeta}</div>
                         <div className={`comparativa-tendencia ${tendencia === 'trend_up' ? 'tendencia-up' : tendencia === 'trend_down' ? 'tendencia-down' : 'tendencia-stable'}`}>
-                          {tendencia === 'trend_up' ? 'â†‘' : tendencia === 'trend_down' ? 'â†“' : 'â†’'}
-                          {' '}{Math.abs(Number(c.variacion_porcentual)).toFixed(1)}%
+                          {/* Trend icons: the arrow glyphs were stored mangled
+                              (mojibake) and rendered as garbage on the user's
+                              screens. */}
+                          <CategoryIcon name={tendencia === 'trend_up' ? 'TrendingUp' : tendencia === 'trend_down' ? 'TrendingDown' : 'Minus'} size={14} />
+                          {Math.abs(Number(c.variacion_porcentual)).toFixed(1)}%
                         </div>
                       </div>
 
                       <div className="comparativa-bars">
                         <div className="comparativa-bar-wrap">
                           <div className="comparativa-bar anterior" style={{ height: heightAnt }} />
-                          <div className="comparativa-bar-label">Ant.</div>
+                          <div className="comparativa-bar-label">{t('card_cmp_cycle_ant')}</div>
                           <div className="comparativa-bar-amount" style={{ color: 'var(--color-text-muted)' }}>
                             {fmtMoneda(c.gasto_mes_anterior, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
                           </div>
                         </div>
                         <div className="comparativa-bar-wrap">
-                          <div className="comparativa-bar actual" style={{ height: heightAct }} />
-                          <div className="comparativa-bar-label">Act.</div>
-                          <div className="comparativa-bar-amount" style={{ color: 'var(--color-coral)' }}>
+                          {/* Bar color is SEMANTIC: a large drop deserves green
+                              (money saved), coral only when usage grows. */}
+                          <div className={`comparativa-bar actual ${isSaving ? 'saving' : ''}`} style={{ height: heightAct }} />
+                          <div className="comparativa-bar-label">{t('card_cmp_cycle_act')}</div>
+                          <div className="comparativa-bar-amount" style={{ color: isSaving ? 'var(--color-mint)' : 'var(--color-coral)' }}>
                             {fmtMoneda(c.gasto_mes_actual, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
                           </div>
                         </div>
@@ -1254,7 +1259,7 @@ export function TarjetasPage() {
                       <div className="comparativa-msg"><CategoryIcon name={isSaving ? 'BarChart3' : 'TriangleAlert'} size={14} /> {getTendenciaMsg(c.mensaje_key)}</div>
                       {isSaving && (
                         <span className="comparativa-badge-great">
-                          <CategoryIcon name="BarChart3" size={14} /> Â¡Excelente disciplina! Redujiste tu uso un {Math.abs(Number(c.variacion_porcentual)).toFixed(0)}% este mes.
+                          <CategoryIcon name="BarChart3" size={14} /> {t('card_trend_saving_badge', { pct: Math.abs(Number(c.variacion_porcentual)).toFixed(0) })}
                         </span>
                       )}
                     </div>
