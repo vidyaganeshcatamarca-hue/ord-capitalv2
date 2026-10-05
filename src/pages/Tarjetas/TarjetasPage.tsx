@@ -291,7 +291,7 @@ export function TarjetasPage() {
         rpc<number>('fn_obtener_saldo_pasivo_tarjetas').catch(() => 0),
         rpc<ComparativaTarjeta[]>('fn_reporte_comparativa_tarjetas').catch(() => [] as ComparativaTarjeta[]),
         rpc<any[]>('fn_reporte_tarjetas_archivadas').catch(() => [] as any[]), 
-        rpc<SerieCicloTarjeta[]>('fn_reporte_serie_tarjetas', { p_ciclos: 6 }).catch(() => [] as SerieCicloTarjeta[]),
+        rpc<SerieCicloTarjeta[]>('fn_reporte_serie_tarjetas', { p_ciclos: 12 }).catch(() => [] as SerieCicloTarjeta[]),
       ])
       setTarjetas(resT || [])
       setVencimientos(resV || [])
@@ -1224,12 +1224,21 @@ export function TarjetasPage() {
                 <p className="comparativa-legend">{t('card_cmp_legend')}</p>
                 <div className="comparativa-list">
                 {comparativa.map(c => {
-                  // Series (up to 6 cycles, oldest first; index 0 = current).
-                  const serie = serieTarjetas
+                  // Series (up to 12 fetched; the CHART shows the last 6).
+                  // Owner rules: bars = max 6 although more data exists; the
+                  // AVERAGE uses every available cycle (since first use, tail
+                  // zeros trim) — capped at 12.
+                  const serieFull = serieTarjetas
                     .filter(x => x.tarjeta_id === c.tarjeta_id)
                     .sort((x, y) => y.ciclo_index - x.ciclo_index)
+                  const serie = serieFull.slice(0, 6)
                   const serieMax = Math.max(...serie.map(x => Number(x.total_ciclo)), 1)
-                  const usoPrevio = serie.length > 1 && serie.slice(1).some(x => Number(x.total_ciclo) > 0)
+                  const usoPrevio = serieFull.length > 1 && serieFull.slice(0, 5).some(x => Number(x.total_ciclo) > 0)
+                  // Available window: drop the OLDEST leading run of zero
+                  // cycles (no card usage yet); interior zeros are real.
+                  let primerUso = serieFull.findIndex(x => Number(x.total_ciclo) > 0)
+                  if (primerUso < 0) primerUso = serieFull.length
+                  const serieDisponible = serieFull.slice(primerUso)
                   const tendencia = c.tendencia_key
                   const isSaving = c.variacion_porcentual < -20
 
@@ -1252,7 +1261,7 @@ export function TarjetasPage() {
                           const pctPrev = pos > 0 && prevTotal > 0
                             ? Math.round(((Number(x.total_ciclo) - prevTotal) / prevTotal) * 100)
                             : null
-                          const media = serie.reduce((acc, y) => acc + Number(y.total_ciclo), 0) / serie.length
+                          const media = serieDisponible.reduce((acc, y) => acc + Number(y.total_ciclo), 0) / Math.max(serieDisponible.length, 1)
                           const pctMedia = media > 0
                             ? Math.round(((Number(x.total_ciclo) - media) / media) * 100)
                             : null
