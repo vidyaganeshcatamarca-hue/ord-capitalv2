@@ -1221,7 +1221,12 @@ export function TarjetasPage() {
               </div>
             ) : (
               <>
-                <p className="comparativa-legend">{t('card_cmp_legend')}</p>
+                {/* Two stacked lines, each explains one reference; the gap
+                  between them is exactly the line break (owner). */}
+              <div className="comparativa-legend">
+                <span>{t('card_cmp_legend_up')}</span>
+                <span>{t('card_cmp_legend_down')}</span>
+              </div>
                 <div className="comparativa-list">
                 {comparativa.map(c => {
                   // Series (up to 12 fetched; the CHART shows the last 6).
