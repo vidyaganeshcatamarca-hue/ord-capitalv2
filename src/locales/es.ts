@@ -406,6 +406,15 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   budget_rules_valid_sum: "La suma de los porcentajes es 100%. Todo en orden.",
   budget_rules_invalid_sum: "La suma debe ser exactamente 100% para guardar.",
 
+  // Cupos resumen card (config vs. real, ciclo corriente)
+  budget_resumen_cupos_title: "Resumen de cupos del ciclo",
+  budget_resumen_state_ok: "Ciclo en orden",
+  budget_resumen_state_warning: "Cerca del límite",
+  budget_resumen_state_over: "En rojo — algún cupo excedido",
+  budget_resumen_legend_ideal: "Configurado",
+  budget_resumen_legend_real: "Consumido",
+  budget_resumen_row_config: "Config: {pct}%",
+
   // AddMovementModal
   modal_step_details_title: "3. Detalles",
   label_date: "Fecha",
@@ -1111,8 +1120,8 @@ export const saneamiento = {
   movement_toast_income: "Ingreso registrado",
   movement_toast_transfer: "Transferencia realizada",
   card_cmp_first_cycle: "Primer ciclo con uso — todavía no hay comparación",
-  card_cmp_legend_up: "En cada barra: % de arriba = vs ciclo anterior",
-  card_cmp_legend_down: "% de abajo = vs media (ciclos con uso, hasta 12)",
+  card_cmp_legend_up: "% de arriba = vs ciclo anterior",
+  card_cmp_legend_down: "% de abajo = vs media (ciclos con uso, max. 12)",
   card_cmp_vs_prev_tooltip: "vs ciclo anterior",
   card_cmp_vs_media_tooltip: "vs media de los ciclos",
   transfer_entre_cuentas: "Transferencia entre cuentas",

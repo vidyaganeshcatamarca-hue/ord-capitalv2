@@ -6,6 +6,7 @@ import { t, parseError } from '@/locales/i18n'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { SYSTEM_CATEGORY_NAMES } from '@/lib/categoryFilters'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
+import { CuposResumenCard, type CupoResumen } from './CuposResumenCard'
 import './Presupuestos.css'
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
@@ -95,6 +96,7 @@ export function PresupuestosPage() {
   const [saldoAsignar, setSaldoAsignar] = useState<number | null>(null)
   const [sobres, setSobres] = useState<SobreDetalle[]>([])
   const [config, setConfig] = useState<ConfigPresupuesto | null>(null)
+  const [cuposResumen, setCuposResumen] = useState<CupoResumen[] | null>(null)
   const [loading, setLoading] = useState(true)
 
   // Mes seleccionado (offset respecto a hoy, 0 = mes actual)
@@ -176,10 +178,19 @@ export function PresupuestosPage() {
   const cargarDatos = useCallback(async () => {
     setLoading(true)
     try {
-      const [rSaldo, rSobres, rConfig] = await Promise.all([
+      const [rSaldo, rSobres, rConfig, rCupos] = await Promise.all([
         supabase.rpc('fn_obtener_saldo_a_asignar', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_reporte_sobres_detalle', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_obtener_config_presupuesto'),
+        // Optional card data: reports the current cycle only, so a failure must
+        // never break the screen → isolated try/catch that resolves to null.
+        (async () => {
+          try {
+            return await supabase.rpc('fn_reporte_termometro_presupuestos')
+          } catch {
+            return { data: null, error: 'cupos-resumen-unavailable' }
+          }
+        })(),
       ])
 
       if (rSaldo.error) throw rSaldo.error
@@ -193,6 +204,21 @@ export function PresupuestosPage() {
         }
       )
       setSobres(sobresFiltrados)
+
+      if (rCupos?.error || !Array.isArray(rCupos?.data)) {
+        setCuposResumen(null)
+      } else {
+        // RETURNS TABLE → rows arrive as an array; Number() guards unknown wire format
+        setCuposResumen(
+          (rCupos.data as any[]).map(row => ({
+            cupo_nombre: String(row.cupo_nombre ?? ''),
+            porcentaje_configurado: Number(row.porcentaje_configurado) || 0,
+            monto_limite: Number(row.monto_limite) || 0,
+            monto_consumido: Number(row.monto_consumido) || 0,
+            porcentaje_llenado: Number(row.porcentaje_llenado) || 0,
+          })),
+        )
+      }
 
       if (!rConfig.error && rConfig.data) {
         // fn_obtener_config_presupuesto retorna TABLE → data es array, tomar primer elemento
@@ -721,6 +747,10 @@ export function PresupuestosPage() {
           <EmptyState />
         ) : (
           <>
+            {mesOffset === 0 && cuposResumen && cuposResumen.length > 0 && (
+              <CuposResumenCard cupos={cuposResumen} />
+            )}
+
             {sobresExcedidos.length > 0 && (
               <div className="sobres-excedidos-alerta">
                 <div className="alerta-header">
