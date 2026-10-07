@@ -13,6 +13,7 @@ import { rowsToCsv } from '../src/lib/importExport/csv.ts'
 import {
   durationBucket,
   errorKeyOf,
+  planAccountCreation,
   rowToMovementParams,
 } from '../src/lib/importExport/execute.ts'
 import {
@@ -184,6 +185,89 @@ test('durationBucket coarsens elapsed milliseconds into the 5 buckets', () => {
   assert.equal(durationBucket(60_000), '<300')
   assert.equal(durationBucket(299_999), '<300')
   assert.equal(durationBucket(300_000), '300+')
+})
+
+// ── planAccountCreation (account target resolution, defect 2) ───────────────
+
+function accountTarget(overrides = {}) {
+  return {
+    key: 'vivienda|luz',
+    existingId: null,
+    existingParentId: null,
+    finalName: 'Vivienda',
+    sub: 'Luz',
+    subName: 'Luz',
+    cupo: 'need',
+    ...overrides,
+  }
+}
+
+test('planAccountCreation reuses the matched leaf and creates nothing', () => {
+  assert.deepEqual(planAccountCreation(accountTarget({ existingId: 42 })), {
+    action: 'reuse-leaf',
+    leafId: 42,
+  })
+})
+
+test('planAccountCreation reuses an existing parent for a sub-only target (no parent re-creation)', () => {
+  const plan = planAccountCreation(accountTarget({ existingParentId: 7 }))
+  assert.deepEqual(plan, { action: 'reuse-parent', parentId: 7, subName: 'Luz' })
+  // There is no create-parent branch, so executeImport never calls
+  // fn_crear_cuenta_egreso for this target: the parent is NOT duplicated.
+  assert.notEqual(plan.action, 'create-parent')
+})
+
+test('planAccountCreation creates the parent (deduped by normalized name) only when both ids are absent', () => {
+  const plan = planAccountCreation(
+    accountTarget({ finalName: '  Vivienda ', sub: 'Luz', subName: 'Luz', cupo: 'want' })
+  )
+  assert.deepEqual(plan, {
+    action: 'create-parent',
+    parentKey: 'vivienda',
+    parentName: '  Vivienda ',
+    cupo: 'want',
+    subName: 'Luz',
+  })
+})
+
+test('planAccountCreation treats a parent-only target as a sub-less parent', () => {
+  const existing = planAccountCreation(accountTarget({ sub: null, existingParentId: 7 }))
+  assert.deepEqual(existing, { action: 'reuse-parent', parentId: 7, subName: null })
+
+  const brandNew = planAccountCreation(accountTarget({ sub: null, subName: '' }))
+  assert.equal(brandNew.action, 'create-parent')
+  assert.equal(brandNew.subName, null)
+})
+
+test('planAccountCreation ignores non-finite existing ids', () => {
+  assert.equal(
+    planAccountCreation(accountTarget({ existingId: Number.NaN })).action,
+    'create-parent'
+  )
+  assert.equal(
+    planAccountCreation(accountTarget({ existingId: Number.NaN, existingParentId: Number.NaN }))
+      .action,
+    'create-parent'
+  )
+})
+
+test('two new subs under the same new parent share one parentKey (created once)', () => {
+  const a = planAccountCreation(accountTarget({ key: 'vivienda|luz', sub: 'Luz', subName: 'Luz' }))
+  const b = planAccountCreation(accountTarget({ key: 'vivienda|agua', sub: 'Agua', subName: 'Agua' }))
+  assert.equal(a.action, 'create-parent')
+  assert.equal(b.action, 'create-parent')
+
+  // Mirror executeImport's createdParentIds dedupe: equal parentKey -> one call.
+  const created = new Set()
+  let parentsCreated = 0
+  for (const plan of [a, b]) {
+    if (plan.action === 'create-parent' && !created.has(plan.parentKey)) {
+      created.add(plan.parentKey)
+      parentsCreated++
+    }
+  }
+  assert.equal(a.parentKey, b.parentKey)
+  assert.equal(parentsCreated, 1)
 })
 
 // ── exportFile.ts — pure helpers (T5) ────────────────────────────────────────

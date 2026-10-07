@@ -1888,7 +1888,7 @@ export const inversiones = {
   config_ie_reconcile_wallets_hint: "Aprobá las billeteras que vamos a crear antes de continuar.",
   config_ie_reconcile_accounts_title: "Cuentas nuevas",
   config_ie_reconcile_accounts_hint: "Aprobá las cuentas que vamos a crear antes de continuar.",
-  config_ie_reconcile_uses: "usará: {nombre}",
+  config_ie_reconcile_uses: "Usará la existente: {nombre} (no se crea nada)",
   config_ie_reconcile_new_wallet_name: "Nombre",
   config_ie_reconcile_new_wallet_currency: "Moneda",
   config_ie_reconcile_new_account_name: "Nombre de la cuenta",
