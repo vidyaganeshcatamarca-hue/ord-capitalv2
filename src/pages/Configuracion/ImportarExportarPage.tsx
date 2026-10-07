@@ -18,7 +18,7 @@ import type {
   SepId,
   TipoSource,
 } from '@/lib/importExport/schema'
-import { parseUploadedFile } from '@/lib/importExport/parseWorkbook'
+import { extensionOf, parseUploadedFile } from '@/lib/importExport/parseWorkbook'
 import { canExecute, countStatuses } from '@/lib/importExport/validate'
 import { durationBucket, executeImport } from '@/lib/importExport/execute'
 import type { ImportExecutionResult, ReconcileHandoff } from '@/lib/importExport/execute'
@@ -193,8 +193,10 @@ export function ImportarExportarPage() {
   const [result, setResult] = useState<ImportExecutionResult | null>(null)
   const bytesRef = useRef<ArrayBuffer | null>(null)
 
-  // One prefs fetch for the whole page (read-only).
+  // One prefs fetch for the whole page (read-only). Adoption event, once
+  // per mount (LOW): screen opened from the settings hub.
   useEffect(() => {
+    telemetry.track('card_import_export_opened', {}, TELEMETRY_PRIORITY.LOW)
     let cancelled = false
     async function load() {
       try {
@@ -220,6 +222,11 @@ export function ImportarExportarPage() {
         showToast(t('config_ie_error_empty_file'), 'error')
         return
       }
+      telemetry.track('import_export_action', {
+        direction: 'import',
+        format: extensionOf(file.name),
+        rows: parsed.rows.length,
+      }, TELEMETRY_PRIORITY.MEDIUM)
       bytesRef.current = bytes
       setSelectedFile({ name: file.name, size: file.size })
       setTable(parsed)
