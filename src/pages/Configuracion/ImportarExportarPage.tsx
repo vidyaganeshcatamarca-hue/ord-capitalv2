@@ -369,7 +369,6 @@ export function ImportarExportarPage() {
         {
           inserted: execution.inserted,
           failed: execution.failed,
-          excluded: execution.excludedCount,
           wallets_created: execution.walletsCreated,
           cats_parent_created: execution.parentsCreated,
           cats_sub_created: execution.subsCreated,
