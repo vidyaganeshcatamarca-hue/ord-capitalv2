@@ -13,6 +13,7 @@ import {
 import type {
   CanonicalFieldId,
   FieldMapping,
+  ImportTipo,
   ImportUserPrefs,
   MappedRows,
   SepId,
@@ -114,6 +115,7 @@ function buildPreviewRows(
   mapping: FieldMapping,
   sep: SepId,
   tipoSource: TipoSource,
+  fixedTipo: ImportTipo,
   prefs: ImportUserPrefs
 ): PreviewCell[][] {
   const rawAt = (row: string[], fieldId: CanonicalFieldId): string => {
@@ -129,12 +131,28 @@ function buildPreviewRows(
     const monto = parseMonto(montoRaw, prefs)
 
     const tipoRaw = rawAt(row, 'tipo')
-    const tipo = inferTipo({ tipoRaw, valor: monto.valor })
-    const tipoValue = tipo
-      ? t(tipo === 'income' ? 'config_tipo_movimiento_ingreso' : 'config_tipo_movimiento_egreso')
-      : ''
+    // Fixed mode reflects the chosen tipo for every row; the column and the
+    // amount sign are ignored there (owner bug 4).
+    const tipo: ImportTipo | null =
+      tipoSource === 'fixed'
+        ? fixedTipo
+        : inferTipo(tipoSource === 'sign' ? { valor: monto.valor } : { tipoRaw, valor: monto.valor })
+    const tipoValue =
+      tipo === null
+        ? ''
+        : t(
+            tipo === 'income'
+              ? 'config_tipo_movimiento_ingreso'
+              : tipo === 'transfer'
+                ? 'type_transfer'
+                : 'config_tipo_movimiento_egreso'
+          )
     const tipoError =
-      tipoSource === 'column' ? tipoRaw !== '' && tipo === null : montoRaw !== '' && tipo === null
+      tipoSource === 'column'
+        ? tipoRaw !== '' && tipo === null
+        : tipoSource === 'sign'
+          ? montoRaw !== '' && tipo === null
+          : false
 
     const cuentaRaw = rawAt(row, 'cuenta')
     const cuenta = splitCuenta(cuentaRaw, sep)
@@ -185,6 +203,9 @@ export function ImportarExportarPage() {
   const [mapping, setMapping] = useState<FieldMapping>({})
   const [sep, setSep] = useState<SepId>('dash')
   const [tipoSource, setTipoSource] = useState<TipoSource>('column')
+  // Tipo applied to every row when the fixed mode is selected (owner bug 4).
+  // Default Egreso: imported expenses are the most typical case.
+  const [fixedTipo, setFixedTipo] = useState<ImportTipo>('expense')
   const [prefs, setPrefs] = useState<UserPrefsRow>(DEFAULT_PREFS)
   const [parsing, setParsing] = useState(false)
   const [executing, setExecuting] = useState(false)
@@ -233,6 +254,7 @@ export function ImportarExportarPage() {
       setMapping(guessHeaderMapping(parsed.headers).mapping)
       setSep('dash')
       setTipoSource('column')
+      setFixedTipo('expense')
       setStep('map')
     } catch (err) {
       showToast(parseError(err), 'error')
@@ -271,7 +293,9 @@ export function ImportarExportarPage() {
   }
 
   const fieldIdForIndex = (index: number): CanonicalFieldId | undefined =>
-    (Object.keys(mapping) as CanonicalFieldId[]).find((key) => mapping[key] === index)
+    (Object.keys(mapping) as CanonicalFieldId[]).find(
+      (key) => (key !== 'tipo' || tipoSource === 'column') && mapping[key] === index
+    )
 
   const gateRequired = useMemo(() => {
     const set = new Set<CanonicalFieldId>(MAPPING_GATE_FIELDS)
@@ -285,8 +309,8 @@ export function ImportarExportarPage() {
   )
 
   const previewRows = useMemo(
-    () => (table ? buildPreviewRows(table, mapping, sep, tipoSource, prefs) : []),
-    [table, mapping, sep, tipoSource, prefs]
+    () => (table ? buildPreviewRows(table, mapping, sep, tipoSource, fixedTipo, prefs) : []),
+    [table, mapping, sep, tipoSource, fixedTipo, prefs]
   )
 
   const handleContinue = () => {
@@ -367,6 +391,7 @@ export function ImportarExportarPage() {
     setMapping({})
     setSep('dash')
     setTipoSource('column')
+    setFixedTipo('expense')
     setDiscardedCount(0)
     setResult(null)
     setExecuting(false)
@@ -462,7 +487,9 @@ export function ImportarExportarPage() {
                   <p className="config-ie-hint">{t('config_ie_map_columns_hint')}</p>
 
                   <div className="config-ie-map-grid">
-                    {CANONICAL_FIELDS.map((field) => (
+                    {CANONICAL_FIELDS.filter(
+                      (field) => field.id !== 'tipo' || tipoSource === 'column'
+                    ).map((field) => (
                       <div className="config-ie-map-row" key={field.id}>
                         <label className="config-ie-map-label" htmlFor={`ie-map-${field.id}`}>
                           <span>{t(field.labelKey)}</span>
@@ -539,7 +566,32 @@ export function ImportarExportarPage() {
                         >
                           {t('config_ie_map_tipo_signo')}
                         </button>
+                        <button
+                          type="button"
+                          role="radio"
+                          aria-checked={tipoSource === 'fixed'}
+                          className={`config-ie-pill ${tipoSource === 'fixed' ? 'config-ie-pill--active' : ''}`}
+                          onClick={() => setTipoSource('fixed')}
+                        >
+                          {t('config_ie_map_tipo_fijo')}
+                        </button>
                       </div>
+                      {tipoSource === 'fixed' && (
+                        <label className="config-ie-map-option">
+                          <span className="config-ie-map-option-label">
+                            {t('config_ie_map_tipo_fijo_valor')}
+                          </span>
+                          <select
+                            className="config-ie-map-select"
+                            value={fixedTipo}
+                            onChange={(e) => setFixedTipo(e.target.value as ImportTipo)}
+                          >
+                            <option value="income">{t('config_tipo_movimiento_ingreso')}</option>
+                            <option value="expense">{t('config_tipo_movimiento_egreso')}</option>
+                            <option value="transfer">{t('type_transfer')}</option>
+                          </select>
+                        </label>
+                      )}
                     </div>
                   </div>
 
@@ -629,6 +681,7 @@ export function ImportarExportarPage() {
                   mapping={mapping}
                   sep={sep}
                   tipoSource={tipoSource}
+                  fixedTipo={fixedTipo}
                   prefs={prefs}
                   onBack={() => setStep('map')}
                   onContinue={handleExecute}
