@@ -16,23 +16,23 @@ interface Props {
   cupos: CupoResumen[]
 }
 
-// Open/closed state lives until the tab session closes.
+// Open/closed state persists across app restarts (localStorage).
 const SESSION_KEY = 'presupuestos_resumen_abierto'
 
 const readAbiertoInicial = (): boolean => {
   try {
-    const stored = sessionStorage.getItem(SESSION_KEY)
+    const stored = localStorage.getItem(SESSION_KEY)
     // Absent → default open.
     return stored === null ? true : stored === '1'
   } catch {
-    // sessionStorage unavailable (private mode / non-browser env) → default open
+    // storage unavailable (private mode / non-browser env) → default open
     return true
   }
 }
 
 const writeAbierto = (abierto: boolean) => {
   try {
-    sessionStorage.setItem(SESSION_KEY, abierto ? '1' : '0')
+    localStorage.setItem(SESSION_KEY, abierto ? '1' : '0')
   } catch {
     // ignore: state still works for this render
   }
