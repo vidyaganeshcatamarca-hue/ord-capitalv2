@@ -408,12 +408,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
 
   // Cupos resumen card (config vs. real, ciclo corriente)
   budget_resumen_cupos_title: "Resumen de cupos del ciclo",
-  budget_resumen_state_ok: "Ciclo en orden",
-  budget_resumen_state_warning: "Cerca del límite",
-  budget_resumen_state_over: "En rojo — algún cupo excedido",
-  budget_resumen_legend_base: "Cada sector: el % configurado para ese cupo",
-  budget_resumen_legend_real: "Consumido",
-  budget_resumen_legend_consumido_oscuro: "La porción oscura titilante es lo ya consumido del cupo",
+  budget_resumen_distribucion_title: "Distribución de gastos {pcts}",
   budget_resumen_row_config: "Config: {pct}%",
 
   // AddMovementModal
