@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
+import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { FileSpreadsheet } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { rpc } from '@/lib/supabase'
 import { t } from '@/locales/i18n'
@@ -14,7 +16,7 @@ import './ConfiguracionHub.css'
 const BASE_CERO_HOME_KEY = 'base_cero_como_inicio'
 
 interface ConfigLinkCardProps {
-  icon: string
+  icon: ReactNode
   titleKey: string
   descKey: string
   to: string
@@ -99,6 +101,12 @@ export function ConfiguracionHub() {
         titleKey="config_section_region"
         descKey="config_region_desc"
         to="/configuracion/region"
+      />
+      <ConfigLinkCard
+        icon={<FileSpreadsheet size={22} />}
+        titleKey="config_ie_title"
+        descKey="config_ie_desc"
+        to="/configuracion/importar-exportar"
       />
       <PresupuestoCicloCard />
       <NotificacionesCard />

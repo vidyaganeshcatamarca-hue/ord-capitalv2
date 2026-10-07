@@ -1819,6 +1819,21 @@ export const inversiones = {
   config_terms: "Términos y condiciones",
   config_privacy_policy: "Política de privacidad",
   config_back_to_settings: "Volver a Ajustes",
+
+  // Ajustes: Importar / Exportar movimientos (v1)
+  config_ie_title: "Importar y exportar movimientos",
+  config_ie_desc: "Traé movimientos desde Excel o CSV, o descargá tu historial.",
+  config_ie_tab_import: "Importar",
+  config_ie_tab_export: "Exportar",
+  config_ie_import_filedrop_hint: "Elegí un archivo .xlsx, .csv o .tsv con tus movimientos",
+  config_ie_import_selected: "Archivo seleccionado",
+  config_ie_import_read_error: "No pudimos leer el archivo. Probá de nuevo.",
+  config_ie_export_title_hint: "Elegí el rango de movimientos que querés exportar.",
+  config_ie_export_range_current: "Mes actual",
+  config_ie_export_range_previous: "Mes anterior",
+  config_ie_export_range_custom: "Rango personalizado",
+  config_ie_export_btn_disabled_hint: "La exportación estará disponible en una próxima versión.",
+
   config_pwa_install_title: "Instalar la app",
   config_pwa_install_desc: "Agregá la app a tu pantalla de inicio para usarla como una app nativa.",
   pwa_install_ios_hint: "En iOS, usá Compartir y luego \"Agregar a pantalla de inicio\".",

@@ -71,6 +71,7 @@ const RegionFormatoPage = lazy(() => import('@/pages/Configuracion/RegionFormato
 const PresupuestoCicloPage = lazy(() => import('@/pages/Configuracion/PresupuestoCicloPage').then(module => ({ default: module.PresupuestoCicloPage })))
 const PreferenciasOperativasPage = lazy(() => import('@/pages/Configuracion/PreferenciasOperativasPage').then(module => ({ default: module.PreferenciasOperativasPage })))
 const AcercaPage = lazy(() => import('@/pages/Configuracion/AcercaPage').then(module => ({ default: module.AcercaPage })))
+const ImportarExportarPage = lazy(() => import('@/pages/Configuracion/ImportarExportarPage').then(module => ({ default: module.ImportarExportarPage })))
 const AyudaPage = lazy(() => import('@/pages/Ayuda/AyudaPage').then(module => ({ default: module.AyudaPage })))
 const ReportarProblemaPage = lazy(() => import('@/pages/Reportes/ReportarProblemaPage').then(module => ({ default: module.ReportarProblemaPage })))
 const MisReportesPage = lazy(() => import('@/pages/Reportes/MisReportesPage').then(module => ({ default: module.MisReportesPage })))
@@ -181,6 +182,7 @@ function AppLayout() {
           <Route path="/privacidad" element={<PrivacidadPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
           <Route path="/configuracion/region" element={<RegionFormatoPage />} />
+          <Route path="/configuracion/importar-exportar" element={<ImportarExportarPage />} />
           <Route path="/configuracion/presupuesto" element={<PresupuestoCicloPage />} />
           <Route path="/configuracion/notificaciones" element={<NotificacionesPage />} />
           <Route path="/configuracion/operativas" element={<PreferenciasOperativasPage />} />
