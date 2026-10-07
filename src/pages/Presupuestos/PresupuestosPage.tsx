@@ -186,7 +186,7 @@ export function PresupuestosPage() {
         // never break the screen → isolated try/catch that resolves to null.
         (async () => {
           try {
-            return await supabase.rpc('fn_reporte_termometro_presupuestos')
+            return await supabase.rpc('fn_reporte_termometro_presupuestos', { p_mes_periodo: mesPeriodoStr })
           } catch {
             return { data: null, error: 'cupos-resumen-unavailable' }
           }
@@ -747,7 +747,7 @@ export function PresupuestosPage() {
           <EmptyState />
         ) : (
           <>
-            {mesOffset === 0 && cuposResumen && cuposResumen.length > 0 && (
+            {cuposResumen && cuposResumen.length > 0 && (
               <CuposResumenCard cupos={cuposResumen} />
             )}
 

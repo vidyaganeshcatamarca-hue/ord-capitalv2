@@ -20,9 +20,9 @@
 .crc-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   width: 100%;
-  padding: 12px 14px;
+  padding: 16px;
   background: transparent;
   border: none;
   color: var(--text);
@@ -36,8 +36,8 @@
 .crc-header:hover { background: var(--surface-2); }
 
 .crc-dot {
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -48,35 +48,41 @@
 }
 
 .crc-chevron {
-  font-size: calc(11px * var(--font-scale));
+  font-size: calc(15px * var(--font-scale));
   color: var(--text-3);
   transition: transform 0.25s ease;
 }
 .crc-chevron.abierto { transform: rotate(90deg); }
 
-/* ---------- BODY (max-height collapse, same pattern as .acord-grupo-body) ---------- */
+/* ---------- BODY (grid-rows collapse: no max-height cap, works on desktop) ---------- */
 .crc-body {
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.3s ease;
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
 }
 .crc-body.abierto {
-  max-height: 2000px;
+  grid-template-rows: 1fr;
+}
+/* Inner wrapper required by the 0fr/1fr technique */
+.crc-body-inner {
+  overflow: hidden;
+  min-height: 0;
 }
 
 .crc-inner {
   display: flex;
-  align-items: center;
-  gap: 16px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 14px;
   padding: 4px 14px 14px;
-  flex-wrap: wrap;
 }
 
-/* ---------- MINI DONUT ---------- */
+/* ---------- DONUT (centered on its own line) ---------- */
 .crc-donut-wrap {
   position: relative;
-  width: 120px;
-  height: 120px;
+  width: 140px;
+  height: 140px;
+  margin: 0 auto;
   flex-shrink: 0;
 }
 .crc-donut {
@@ -106,35 +112,68 @@
   color: var(--text);
 }
 
+/* Consumed overlay: same hue, darker, soft pulse on top of its segment */
+.crc-arc-consumido {
+  filter: brightness(0.55);
+  animation: crc-titilar 1.2s ease-in-out infinite;
+}
+.crc-arc-consumido.overflow {
+  filter: none;
+  animation: crc-titilar-rojo 1.2s ease-in-out infinite;
+}
+@keyframes crc-titilar {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+@keyframes crc-titilar-rojo {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .crc-arc-consumido,
+  .crc-arc-consumido.overflow {
+    animation: none;
+  }
+  .crc-body {
+    transition: none;
+  }
+}
+
 /* ---------- LEGEND / ROWS ---------- */
 .crc-legend {
-  flex: 1;
-  min-width: 190px;
+  width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
+.crc-legend-hint {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-bottom: 8px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid var(--border);
+}
 .crc-legend-row {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: calc(10px * var(--font-scale));
   color: var(--text-3);
-  padding-bottom: 4px;
-  border-bottom: 1px solid var(--border);
 }
-.crc-legend-ring {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 3px solid var(--text-3);
+.crc-legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  background: var(--mint);
 }
-.crc-legend-ring.interno {
-  width: 6px;
-  height: 6px;
-  border-width: 2px;
-  margin-left: 6px;
+.crc-legend-swatch.consumido {
+  background: var(--mint);
+  filter: brightness(0.55);
+  animation: crc-titilar 1.2s ease-in-out infinite;
 }
 
 .crc-row {

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import { t } from '@/locales/i18n'
 import './CuposResumenCard.css'
 
@@ -14,6 +14,28 @@ export interface CupoResumen {
 
 interface Props {
   cupos: CupoResumen[]
+}
+
+// Open/closed state lives until the tab session closes.
+const SESSION_KEY = 'presupuestos_resumen_abierto'
+
+const readAbiertoInicial = (): boolean => {
+  try {
+    const stored = sessionStorage.getItem(SESSION_KEY)
+    // Absent → default open.
+    return stored === null ? true : stored === '1'
+  } catch {
+    // sessionStorage unavailable (private mode / non-browser env) → default open
+    return true
+  }
+}
+
+const writeAbierto = (abierto: boolean) => {
+  try {
+    sessionStorage.setItem(SESSION_KEY, abierto ? '1' : '0')
+  } catch {
+    // ignore: state still works for this render
+  }
 }
 
 // Traffic-light thresholds (same cuts as estado_sobre in fn_reporte_sobres_detalle)
@@ -72,11 +94,15 @@ interface Arco {
   stroke: string
   len: number
   offset: number
+  overlayLen: number
+  overflow: boolean
   circumference: number
 }
 
+// Single ring: each segment spans its configured share of the circle, and the
+// consumed part is a shorter arc drawn on top of the very same segment.
 const buildArcos = (
-  segments: { pct: number; stroke: string; key: string }[],
+  segments: { pct: number; fill: number; stroke: string; key: string }[],
   radius: number,
 ): Arco[] => {
   const circumference = 2 * Math.PI * radius
@@ -91,14 +117,32 @@ const buildArcos = (
     const len = Math.max(0, preGap - segGap)
     const offset = -(acc / 100) * circumference
     acc += seg.pct
-    return { key: seg.key, stroke: seg.stroke, len, offset, circumference }
+    const over = seg.fill > 100
+    const fraction = Math.min(Math.max(seg.fill, 0), 100) / 100
+    return {
+      key: seg.key,
+      stroke: seg.stroke,
+      len,
+      offset,
+      overlayLen: len * fraction,
+      overflow: over,
+      circumference,
+    }
   })
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function CuposResumenCard({ cupos }: Props) {
-  const [abierto, setAbierto] = useState(false)
+  const [abierto, setAbierto] = useState<boolean>(readAbiertoInicial)
+
+  const toggle = useCallback(() => {
+    setAbierto(prev => {
+      const next = !prev
+      writeAbierto(next)
+      return next
+    })
+  }, [])
 
   if (!cupos || cupos.length === 0) return null
 
@@ -116,25 +160,17 @@ export function CuposResumenCard({ cupos }: Props) {
   })
 
   const worst = peorEstado(cupos)
-  const totalConfig = items.reduce((s, i) => s + i.config, 0)
   const totalConsumido = items.reduce((s, i) => s + i.consumido, 0)
 
-  // Outer ring: configured distribution. Inner ring: real consumption shares.
-  const arcosConfig = buildArcos(
+  // One ring: segment span = configured share, overlay = consumed share of it.
+  const arcos = buildArcos(
     items.map(i => ({
-      pct: totalConfig > 0 ? (i.config / totalConfig) * 100 : 0,
+      pct: i.config,
+      fill: i.llenado,
       stroke: i.meta.color,
-      key: `cfg-${i.key}`,
+      key: i.key,
     })),
     38,
-  )
-  const arcosReal = buildArcos(
-    items.map(i => ({
-      pct: totalConsumido > 0 ? (i.consumido / totalConsumido) * 100 : 0,
-      stroke: i.meta.color,
-      key: `real-${i.key}`,
-    })),
-    24,
   )
 
   return (
@@ -143,7 +179,7 @@ export function CuposResumenCard({ cupos }: Props) {
         type="button"
         className="crc-header"
         aria-expanded={abierto}
-        onClick={() => setAbierto(prev => !prev)}
+        onClick={toggle}
       >
         <span className="crc-dot" style={{ background: ESTADO_COLOR[worst] }} />
         <span className="crc-summary">{t(ESTADO_LABEL_KEY[worst])}</span>
@@ -151,27 +187,28 @@ export function CuposResumenCard({ cupos }: Props) {
       </button>
 
       <div className={`crc-body ${abierto ? 'abierto' : ''}`}>
-        <div className="crc-inner">
+        <div className="crc-body-inner">
           <div className="crc-donut-wrap">
             <svg viewBox="0 0 100 100" className="crc-donut">
-              <circle cx="50" cy="50" r="38" fill="transparent" style={{ stroke: 'var(--surface-2)' }} strokeWidth="9" />
-              <circle cx="50" cy="50" r="24" fill="transparent" style={{ stroke: 'var(--surface-2)' }} strokeWidth="9" />
-              {arcosConfig.map(a => (
+              {/* Track: remainder of the cycle that is not configured */}
+              <circle cx="50" cy="50" r="38" fill="transparent" style={{ stroke: 'var(--surface-2)' }} strokeWidth="10" />
+              {arcos.map(a => (
                 <circle
-                  key={a.key}
-                  cx="50" cy="50" r="38" fill="transparent" strokeWidth="9"
+                  key={`base-${a.key}`}
+                  cx="50" cy="50" r="38" fill="transparent" strokeWidth="10"
                   style={{ stroke: a.stroke, transition: 'stroke-dasharray 0.5s ease' }}
                   strokeDasharray={`${a.len} ${a.circumference}`}
                   strokeDashoffset={a.offset}
                   transform="rotate(-90 50 50)"
                 />
               ))}
-              {arcosReal.map(a => (
+              {arcos.map(a => (
                 <circle
-                  key={a.key}
-                  cx="50" cy="50" r="24" fill="transparent" strokeWidth="9"
-                  style={{ stroke: a.stroke, transition: 'stroke-dasharray 0.5s ease' }}
-                  strokeDasharray={`${a.len} ${a.circumference}`}
+                  key={`over-${a.key}`}
+                  className={`crc-arc-consumido${a.overflow ? ' overflow' : ''}`}
+                  cx="50" cy="50" r="38" fill="transparent" strokeWidth="10"
+                  style={{ stroke: a.overflow ? 'var(--red)' : a.stroke }}
+                  strokeDasharray={`${a.overlayLen} ${a.circumference}`}
                   strokeDashoffset={a.offset}
                   transform="rotate(-90 50 50)"
                 />
@@ -189,11 +226,15 @@ export function CuposResumenCard({ cupos }: Props) {
           </div>
 
           <div className="crc-legend">
-            <div className="crc-legend-row">
-              <span className="crc-legend-ring" />
-              <span>{t('budget_resumen_legend_ideal')}</span>
-              <span className="crc-legend-ring interno" />
-              <span>{t('budget_resumen_legend_real')}</span>
+            <div className="crc-legend-hint">
+              <div className="crc-legend-row">
+                <span className="crc-legend-swatch" />
+                <span>{t('budget_resumen_legend_base')}</span>
+              </div>
+              <div className="crc-legend-row">
+                <span className="crc-legend-swatch consumido" />
+                <span>{t('budget_resumen_legend_consumido_oscuro')}</span>
+              </div>
             </div>
             {items.map(i => (
               <div key={i.key} className="crc-row">
