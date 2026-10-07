@@ -13,6 +13,7 @@ import { filterUserEditableCategories } from '@/lib/categoryFilters'
 import type {
   CanonicalFieldId,
   FieldMapping,
+  ImportTipo,
   ImportUserPrefs,
   MappedRows,
   SepId,
@@ -62,6 +63,8 @@ interface ReconcileStepProps {
   mapping: FieldMapping
   sep: SepId
   tipoSource: TipoSource
+  /** Tipo applied to every row when tipoSource === 'fixed' (owner bug 4). */
+  fixedTipo: ImportTipo
   prefs: ImportUserPrefs
   onBack: () => void
   /** Emits the freshly re-validated workset plus entity resolutions and
@@ -87,7 +90,6 @@ interface AccountResolution {
   resolvedTo: string | null
   finalName: string
   subName: string
-  cupo: CupoTipo
   approved: boolean
 }
 
@@ -95,6 +97,21 @@ const TIPO_WORD: Record<'income' | 'expense' | 'transfer', string> = {
   income: 'ingreso',
   expense: 'egreso',
   transfer: 'transferencia',
+}
+
+/** i18n keys for the three movement tipos (ingreso/egreso/transferencia). */
+const TIPO_LABEL_KEY: Record<ImportTipo, string> = {
+  income: 'config_tipo_movimiento_ingreso',
+  expense: 'config_tipo_movimiento_egreso',
+  transfer: 'type_transfer',
+}
+
+const CUPO_VALUES: readonly CupoTipo[] = ['need', 'want', 'tithe']
+
+function asCupoTipo(value: unknown, fallbackName: string): CupoTipo {
+  return typeof value === 'string' && (CUPO_VALUES as readonly string[]).includes(value)
+    ? (value as CupoTipo)
+    : suggestCupo(fallbackName)
 }
 
 const CUPO_OPTIONS: ReadonlyArray<{ value: CupoTipo; labelKey: string }> = [
@@ -229,6 +246,14 @@ interface AccountEntityCardProps {
   resolution: AccountResolution | undefined
   ambiguity: boolean
   collisionCandidates: Array<{ key: string; label: string }>
+  /** True when this card also creates the parent (no existing parent match).
+   * Only then does the card own the parent's cupo; a sub-only card inherits. */
+  padreIsNew: boolean
+  /** Resolved parent name shown in the inherited-cupo hint. */
+  padreDisplayName: string
+  /** Effective parent cupo; a sub-card never owns it, it inherits this. */
+  cupo: CupoTipo
+  onCupoChange: (cupo: CupoTipo) => void
   onChange: (next: AccountResolution) => void
 }
 
@@ -237,13 +262,16 @@ function AccountEntityCard({
   resolution,
   ambiguity,
   collisionCandidates,
+  padreIsNew,
+  padreDisplayName,
+  cupo,
+  onCupoChange,
   onChange,
 }: AccountEntityCardProps) {
   const current = resolution ?? {
     resolvedTo: null,
     finalName: account.padre,
     subName: account.sub ?? '',
-    cupo: suggestCupo(account.padre),
     approved: false,
   }
 
@@ -266,32 +294,42 @@ function AccountEntityCard({
         />
       </label>
       {account.sub !== null && (
-        <label className="config-ie-entity-field">
-          <span>{t('config_ie_reconcile_new_account_sub')}</span>
-          <input
-            type="text"
-            className="config-ie-reconcile-input"
-            value={current.subName}
-            onChange={(e) => onChange({ ...current, resolvedTo: null, subName: e.target.value, approved: false })}
-          />
-        </label>
+        <>
+          <label className="config-ie-entity-field">
+            <span>{t('config_ie_reconcile_new_account_sub')}</span>
+            <input
+              type="text"
+              className="config-ie-reconcile-input"
+              value={current.subName}
+              onChange={(e) => onChange({ ...current, resolvedTo: null, subName: e.target.value, approved: false })}
+            />
+          </label>
+          <span className="config-ie-entity-note">
+            {padreIsNew
+              ? t('config_ie_reconcile_sub_inherits')
+              : t('config_ie_reconcile_sub_inherits_from', { padre: padreDisplayName })}
+          </span>
+        </>
       )}
-      <label className="config-ie-entity-field">
-        <span>{t('config_ie_reconcile_new_account_cupo')}</span>
-        <select
-          className="config-ie-reconcile-select"
-          value={current.cupo}
-          onChange={(e) =>
-            onChange({ ...current, resolvedTo: null, cupo: e.target.value as CupoTipo, approved: false })
-          }
-        >
-          {CUPO_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {t(option.labelKey)}
-            </option>
-          ))}
-        </select>
-      </label>
+      {padreIsNew && (
+        <>
+          <label className="config-ie-entity-field">
+            <span>{t('config_ie_reconcile_new_account_cupo')}</span>
+            <select
+              className="config-ie-reconcile-select"
+              value={cupo}
+              onChange={(e) => onCupoChange(e.target.value as CupoTipo)}
+            >
+              {CUPO_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {t(option.labelKey)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <span className="config-ie-entity-note">{t('config_ie_reconcile_cupo_padre_hint')}</span>
+        </>
+      )}
       {collisionCandidates.length > 0 && (
         <label className="config-ie-entity-field">
           <span>{t('config_ie_reconcile_use_existing')}</span>
@@ -335,6 +373,7 @@ export function ReconcileStep({
   mapping,
   sep,
   tipoSource,
+  fixedTipo,
   prefs,
   onBack,
   onContinue,
@@ -350,6 +389,7 @@ export function ReconcileStep({
       mapping,
       sep,
       tipoSource,
+      fixedTipo,
       prefs,
     })
     return table.rows.map((raw, index) => ({
@@ -362,6 +402,9 @@ export function ReconcileStep({
   const [discardedCount, setDiscardedCount] = useState(0)
   const [walletRes, setWalletRes] = useState<Record<string, WalletResolution>>({})
   const [accountRes, setAccountRes] = useState<Record<string, AccountResolution>>({})
+  // Single source of truth for the cupo of a NEW parent (owner bug 3): the
+  // parent owns it and every sub-card under it inherits the same value.
+  const [padreCupo, setPadreCupo] = useState<Record<string, CupoTipo>>({})
 
   // ── Entity catalogs: read once, guarded. On failure the step is blocked
   // (matching against existing wallets/categories is required to avoid
@@ -432,6 +475,43 @@ export function ReconcileStep({
     [entities.accounts, existingAccountKeys]
   )
 
+  /** Existing parent accounts keyed by normalized name: their label and the
+   * real tipo_cupo a new sub would inherit from them. */
+  const existingParentByKey = useMemo(() => {
+    const map = new Map<string, { label: string; cupo: CupoTipo }>()
+    for (const rubro of rubros) {
+      const label = t(rubro.nombre_cuenta)
+      map.set(normalizeNombre(label), { label, cupo: asCupoTipo(rubro.tipo_cupo, label) })
+    }
+    return map
+  }, [rubros])
+
+  /** Whether a card creates its parent or only a sub, plus how the sub
+   * inherits the parent's cupo (owner bug 3). */
+  const padreInfoFor = (padre: string) => {
+    const norm = normalizeNombre(padre)
+    const padreKey = accountKey({ padre, sub: null })
+    const match = accountMatches[padreKey]
+    const autoPadre = match?.exact ?? match?.normalized ?? null
+    const resolvedPadre = autoPadre ?? accountRes[padreKey]?.resolvedTo ?? null
+    const existing = existingParentByKey.get(norm)
+    return {
+      norm,
+      isNew: existing === undefined && resolvedPadre === null,
+      displayName:
+        existing?.label ?? (resolvedPadre ? accountLabels[resolvedPadre] ?? padre : padre),
+      inheritedCupo: existing?.cupo ?? null,
+    }
+  }
+
+  /** Effective cupo an account target carries to execution: a NEW parent uses
+   * the shared padre-cupo selection; an existing parent passes on its own. */
+  const cupoForAccount = (account: CollectedAccount): CupoTipo => {
+    const info = padreInfoFor(account.padre)
+    if (!info.isNew && info.inheritedCupo !== null) return info.inheritedCupo
+    return padreCupo[info.norm] ?? suggestCupo(account.padre)
+  }
+
   // Currency options come from the fetched wallets (prefs moneda_default is not
   // exposed by the allowed RPC set; DEFAULT_CURRENCY is the empty-catalog floor).
   const currencyOptions = useMemo(() => {
@@ -493,7 +573,6 @@ export function ReconcileStep({
             resolvedTo: auto,
             finalName: prior?.finalName ?? account.padre,
             subName: prior?.subName ?? (account.sub ?? ''),
-            cupo: prior?.cupo ?? suggestCupo(account.padre),
             approved: prior?.approved ?? auto !== null,
           }
         }
@@ -508,10 +587,10 @@ export function ReconcileStep({
       return {
         ...row,
         overrides,
-        data: buildRow(cells, effectiveMapping, sep, tipoSource, prefs),
+        data: buildRow(cells, effectiveMapping, sep, tipoSource, prefs, fixedTipo),
       }
     },
-    [mapping, sep, tipoSource, prefs]
+    [mapping, sep, tipoSource, prefs, fixedTipo]
   )
 
   const editCell = (index: number, fieldId: CanonicalFieldId, value: string) => {
@@ -581,7 +660,7 @@ export function ReconcileStep({
       const { cells, effectiveMapping } = effectiveRow(row.raw, row.overrides, mapping)
       executeRows.push({
         index,
-        data: buildRow(cells, effectiveMapping, sep, tipoSource, prefs),
+        data: buildRow(cells, effectiveMapping, sep, tipoSource, prefs, fixedTipo),
       })
     })
 
@@ -613,7 +692,7 @@ export function ReconcileStep({
         finalName: resolution?.finalName ?? account.padre,
         sub: account.sub,
         subName: resolution?.subName ?? (account.sub ?? ''),
-        cupo: resolution?.cupo ?? suggestCupo(account.padre),
+        cupo: cupoForAccount(account),
       }
     })
 
@@ -730,7 +809,9 @@ export function ReconcileStep({
                     )}
                   </td>
                   <td>
-                    {hasError ? (
+                    {tipoSource === 'fixed' ? (
+                      t(TIPO_LABEL_KEY[fixedTipo])
+                    ) : hasError ? (
                       <select
                         className="config-ie-reconcile-select"
                         value={row.data.tipo ?? ''}
@@ -910,6 +991,7 @@ export function ReconcileStep({
               )
             }
             const collisionCandidates = existingAccounts.filter((candidate) => candidate.key === key)
+            const info = padreInfoFor(account.padre)
             return (
               <AccountEntityCard
                 key={key}
@@ -917,6 +999,10 @@ export function ReconcileStep({
                 resolution={resolution}
                 ambiguity={Boolean(match?.ambiguity)}
                 collisionCandidates={collisionCandidates}
+                padreIsNew={info.isNew}
+                padreDisplayName={info.displayName}
+                cupo={cupoForAccount(account)}
+                onCupoChange={(next) => setPadreCupo((prev) => ({ ...prev, [info.norm]: next }))}
                 onChange={(next) => setAccountRes((prev) => ({ ...prev, [key]: next }))}
               />
             )

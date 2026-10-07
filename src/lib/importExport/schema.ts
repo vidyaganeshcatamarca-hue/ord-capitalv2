@@ -89,8 +89,9 @@ export const MAPPING_GATE_FIELDS: readonly CanonicalFieldId[] = [
   'cuenta',
 ]
 
-/** Where the movement tipo comes from: an explicit column or the amount sign. */
-export type TipoSource = 'column' | 'sign'
+/** Where the movement tipo comes from: an explicit column, the amount sign, or
+ * one fixed tipo applied to every row (owner bug 4). */
+export type TipoSource = 'column' | 'sign' | 'fixed'
 
 /** Account-name separator ids; the char drives splitCuenta in parser.ts. */
 export type SepId = 'dash' | 'slash' | 'pipe'

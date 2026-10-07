@@ -30,13 +30,14 @@ const FULL_MAP = {
 }
 const SIGN_MAP = { fecha: 0, monto: 1, billetera_origen: 2, cuenta: 3 }
 
-function buildOne(row, mapping = FULL_MAP, sep = 'dash', tipoSource = 'column') {
+function buildOne(row, mapping = FULL_MAP, sep = 'dash', tipoSource = 'column', fixedTipo = undefined) {
   return buildWorkset({
     headers: HEADERS,
     rows: [row],
     mapping,
     sep,
     tipoSource,
+    fixedTipo,
     prefs: PREFS,
   })[0]
 }
@@ -124,6 +125,49 @@ test('signo mode infers the tipo from the amount sign and skips cuenta for incom
   assert.equal(expense.tipo, 'expense')
   assert.equal(expense.cuenta, null)
   assert.deepEqual(expense.fieldErrors, [ROW_ERROR_KEYS.cuenta])
+})
+
+test('fixed mode applies the chosen tipo to every row and ignores the amount sign', () => {
+  // The tipo column says "egreso" and the amount is negative, but fixed mode
+  // owns the tipo: the row comes out as income with its magnitude intact.
+  const income = buildOne(
+    ['15/03/2026', 'egreso', '-500,00', 'Efectivo', '', '', ''],
+    FULL_MAP,
+    'dash',
+    'fixed',
+    'income'
+  )
+  assert.equal(income.tipo, 'income')
+  assert.equal(income.monto, -500)
+  assert.deepEqual(income.fieldErrors, [])
+})
+
+test('fixed mode never raises a tipo error, even with an empty tipo column', () => {
+  const row = buildOne(
+    ['15/03/2026', '', '500,00', 'Efectivo', '', 'A-B', ''],
+    FULL_MAP,
+    'dash',
+    'fixed',
+    'expense'
+  )
+  assert.equal(row.tipo, 'expense')
+  assert.equal(row.fieldErrors.includes(ROW_ERROR_KEYS.tipo), false)
+  assert.deepEqual(row.fieldErrors, [])
+})
+
+test('fixed transfer skips cuenta like other transfers (schema flags)', () => {
+  const row = buildOne(
+    ['15/03/2026', 'egreso', '-500,00', 'Efectivo', 'Banco', 'A-B', ''],
+    FULL_MAP,
+    'dash',
+    'fixed',
+    'transfer'
+  )
+  assert.equal(row.tipo, 'transfer')
+  assert.equal(row.cuenta, null)
+  assert.equal(row.monto, -500)
+  assert.deepEqual(row.wallets, { origen: 'efectivo', destino: 'banco' })
+  assert.deepEqual(row.fieldErrors, [])
 })
 
 test('collectEntities dedups wallets and keeps distinct account pairs', () => {

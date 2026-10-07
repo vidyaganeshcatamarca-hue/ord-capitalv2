@@ -57,6 +57,9 @@ export interface BuildWorksetInput {
   mapping: FieldMapping
   sep: SepId
   tipoSource: TipoSource
+  /** Tipo applied to every row when tipoSource === 'fixed' (owner bug 4).
+   * Ignored by the column/sign modes and by the tipo column's default. */
+  fixedTipo?: ImportTipo
   prefs: ImportUserPrefs
 }
 
@@ -81,7 +84,15 @@ function rawAt(row: string[], mapping: FieldMapping, fieldId: CanonicalFieldId):
   return row[index] ?? ''
 }
 
-function resolveTipo(tipoRaw: string, monto: number | null, tipoSource: TipoSource): ImportTipo | null {
+function resolveTipo(
+  tipoRaw: string,
+  monto: number | null,
+  tipoSource: TipoSource,
+  fixedTipo?: ImportTipo
+): ImportTipo | null {
+  // Fixed mode owns the tipo for every row: the file's tipo column and the
+  // amount sign are both irrelevant (owner bug 4).
+  if (tipoSource === 'fixed') return fixedTipo ?? null
   if (tipoSource === 'column' && TRANSFER_WORDS.has(normalizeNombre(tipoRaw))) {
     return 'transfer'
   }
@@ -96,7 +107,8 @@ export function buildRow(
   mapping: FieldMapping,
   sep: SepId,
   tipoSource: TipoSource,
-  prefs: ImportUserPrefs
+  prefs: ImportUserPrefs,
+  fixedTipo?: ImportTipo
 ): WorksetRow {
   const fieldErrors: string[] = []
 
@@ -109,7 +121,7 @@ export function buildRow(
   const montoOk = monto !== null && Number.isFinite(monto) && Math.abs(monto) > 0
   if (!montoOk) fieldErrors.push(ROW_ERROR_KEYS.monto)
 
-  const tipo = resolveTipo(rawAt(row, mapping, 'tipo'), monto, tipoSource)
+  const tipo = resolveTipo(rawAt(row, mapping, 'tipo'), monto, tipoSource, fixedTipo)
   if (tipo === null) fieldErrors.push(ROW_ERROR_KEYS.tipo)
 
   const origen = normalizeNombre(rawAt(row, mapping, 'billetera_origen'))
@@ -141,9 +153,9 @@ export function buildRow(
 }
 
 export function buildWorkset(input: BuildWorksetInput): WorksetRow[] {
-  const { rows, mapping, sep, tipoSource, prefs } = input
+  const { rows, mapping, sep, tipoSource, fixedTipo, prefs } = input
   const list = Array.isArray(rows) ? rows : []
-  return list.map((row) => buildRow(row, mapping, sep, tipoSource, prefs))
+  return list.map((row) => buildRow(row, mapping, sep, tipoSource, prefs, fixedTipo))
 }
 
 export interface CollectedAccount {
