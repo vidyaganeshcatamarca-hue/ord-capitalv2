@@ -59,8 +59,11 @@ const HEADER_ALIASES: Record<CanonicalField, string[]> = {
   fecha: ['fecha', 'date', 'dia', 'fecha_mov'],
   tipo: ['tipo', 'tipo_mov', 'tipo_movimiento'],
   monto: ['monto', 'importe', 'amount', 'valor'],
-  billetera_origen: ['billetera', 'cuenta_origen', 'medio', 'medio_pago'],
-  billetera_destino: ['destino', 'billetera_destino'],
+  // 'billetera de origen/destino' are the exact labels the export writes
+  // (config_ie_map_field_billetera_*), so an exported file re-imports with
+  // full auto-guess.
+  billetera_origen: ['billetera', 'billetera de origen', 'cuenta_origen', 'medio', 'medio_pago'],
+  billetera_destino: ['destino', 'billetera destino', 'billetera de destino'],
   cuenta: ['cuenta', 'categoria', 'concepto'],
   detalle: ['detalle', 'descripcion', 'observacion', 'memo'],
 }

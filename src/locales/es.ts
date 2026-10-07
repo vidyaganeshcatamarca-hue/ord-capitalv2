@@ -1807,7 +1807,14 @@ export const inversiones = {
   config_ie_export_range_current: "Mes actual",
   config_ie_export_range_previous: "Mes anterior",
   config_ie_export_range_custom: "Rango personalizado",
-  config_ie_export_btn_disabled_hint: "La exportación estará disponible en una próxima versión.",
+  config_ie_export_format_label: "Formato del archivo",
+  config_ie_export_format_xlsx: "Excel (.xlsx)",
+  config_ie_export_format_csv: "CSV (.csv)",
+  config_ie_export_generate: "Generar archivo",
+  config_ie_export_custom_hint: "Elegí la fecha desde y hasta para el rango personalizado.",
+  config_ie_export_empty: "No hay movimientos en el rango elegido.",
+  config_ie_export_success: "Archivo generado con {count} movimientos.",
+  config_ie_export_sheet_name: "Movimientos",
 
   // Ajustes: Importar movimientos — paso de mapeo (T3a)
   config_ie_map_title: "Asigná las columnas",
@@ -1817,7 +1824,6 @@ export const inversiones = {
   config_ie_map_field_monto: "Monto",
   config_ie_map_field_billetera_origen: "Billetera de origen",
   config_ie_map_field_billetera_destino: "Billetera de destino",
-  config_ie_map_field_monto_destino: "Monto de destino",
   config_ie_map_field_cuenta: "Cuenta",
   config_ie_map_field_detalle: "Detalle",
   config_ie_map_unassigned: "Sin asignar",

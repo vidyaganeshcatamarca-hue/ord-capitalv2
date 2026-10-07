@@ -11,7 +11,6 @@ export type CanonicalFieldId =
   | 'monto'
   | 'billetera_origen'
   | 'billetera_destino'
-  | 'monto_destino'
   | 'cuenta'
   | 'detalle'
 
@@ -28,7 +27,7 @@ export interface CanonicalFieldDef {
   /** i18n key for the field label (one label per canonical field). */
   labelKey: string
   required: RequiredByTipo
-  /** Field only meaningful for transfers (destination wallet + amount). */
+  /** Field only meaningful for transfers (the destination wallet). */
   transferOnly: boolean
 }
 
@@ -60,12 +59,6 @@ export const CANONICAL_FIELDS: readonly CanonicalFieldDef[] = [
   {
     id: 'billetera_destino',
     labelKey: 'config_ie_map_field_billetera_destino',
-    required: { income: false, expense: false, transfer: true },
-    transferOnly: true,
-  },
-  {
-    id: 'monto_destino',
-    labelKey: 'config_ie_map_field_monto_destino',
     required: { income: false, expense: false, transfer: true },
     transferOnly: true,
   },

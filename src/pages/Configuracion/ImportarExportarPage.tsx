@@ -24,6 +24,7 @@ import { durationBucket, executeImport } from '@/lib/importExport/execute'
 import type { ImportExecutionResult, ReconcileHandoff } from '@/lib/importExport/execute'
 import { ReconcileStep } from './importexport/ReconcileStep'
 import { SummaryStep } from './importexport/SummaryStep'
+import { ExportPanel } from './importexport/ExportPanel'
 import {
   guessHeaderMapping,
   inferTipo,
@@ -37,7 +38,6 @@ import './ConfigSectionPage.css'
 import './ImportarExportarPage.css'
 
 type TabKey = 'import' | 'export'
-type RangeKey = 'current' | 'previous' | 'custom'
 // Wizard steps owned by this page: 'file' (pick + parse) -> 'map' (T3a) ->
 // 'reconcile' (T3b: per-row status, inline fixes, NEW entity blocks) ->
 // 'summary' (T4: executed counters, failed-rows CSV, reset).
@@ -55,33 +55,29 @@ interface PreviewCell {
   error: boolean
 }
 
-const RANGE_OPTIONS: Array<{ key: RangeKey; labelKey: string }> = [
-  { key: 'current', labelKey: 'config_ie_export_range_current' },
-  { key: 'previous', labelKey: 'config_ie_export_range_previous' },
-  { key: 'custom', labelKey: 'config_ie_export_range_custom' },
-]
-
 const SEPARATOR_LABEL_KEYS: Record<SepId, string> = {
   dash: 'config_ie_map_sep_dash',
   slash: 'config_ie_map_sep_slash',
   pipe: 'config_ie_map_sep_pipe',
 }
 
-// Regional prefs the wizard needs to parse dates/amounts. Defaults mirror
-// RegionFormatoPage so the preview stays sane before the RPC resolves.
-const DEFAULT_PREFS: ImportUserPrefs = {
-  separador_miles: '.',
-  separador_decimal: ',',
-  formato_fecha: 'DD/MM/YYYY',
-}
-
 interface UserPrefsRow extends ImportUserPrefs {
   decimales_moneda_local?: number
 }
 
+// Regional prefs the wizard needs to parse dates/amounts and the export needs
+// to format them. Defaults mirror RegionFormatoPage so the preview stays sane
+// before the RPC resolves.
+const DEFAULT_PREFS: UserPrefsRow = {
+  separador_miles: '.',
+  separador_decimal: ',',
+  formato_fecha: 'DD/MM/YYYY',
+  decimales_moneda_local: 0,
+}
+
 /** Single reusable prefs READ. Same RPC RegionFormatoPage uses
  * (fn_obtener_preferencias_usuario); no writes happen here. */
-async function loadImportPrefs(): Promise<ImportUserPrefs> {
+async function loadImportPrefs(): Promise<UserPrefsRow> {
   const data = await rpc<UserPrefsRow[]>('fn_obtener_preferencias_usuario')
   const row = Array.isArray(data) ? data[0] : data
   return { ...DEFAULT_PREFS, ...(row ?? {}) }
@@ -189,15 +185,12 @@ export function ImportarExportarPage() {
   const [mapping, setMapping] = useState<FieldMapping>({})
   const [sep, setSep] = useState<SepId>('dash')
   const [tipoSource, setTipoSource] = useState<TipoSource>('column')
-  const [prefs, setPrefs] = useState<ImportUserPrefs>(DEFAULT_PREFS)
+  const [prefs, setPrefs] = useState<UserPrefsRow>(DEFAULT_PREFS)
   const [parsing, setParsing] = useState(false)
   const [executing, setExecuting] = useState(false)
   const [progress, setProgress] = useState({ done: 0, total: 0 })
   const [discardedCount, setDiscardedCount] = useState(0)
   const [result, setResult] = useState<ImportExecutionResult | null>(null)
-  const [range, setRange] = useState<RangeKey>('current')
-  const [customFrom, setCustomFrom] = useState('')
-  const [customTo, setCustomTo] = useState('')
   const bytesRef = useRef<ArrayBuffer | null>(null)
 
   // One prefs fetch for the whole page (read-only).
@@ -646,48 +639,14 @@ export function ImportarExportarPage() {
             <h2>{t('config_ie_tab_export')}</h2>
             <p>{t('config_ie_export_title_hint')}</p>
 
-            <div className="config-ie-range" role="radiogroup" aria-label={t('config_ie_export_title_hint')}>
-              {RANGE_OPTIONS.map((opt) => (
-                <button
-                  key={opt.key}
-                  type="button"
-                  role="radio"
-                  aria-checked={range === opt.key}
-                  className={`config-ie-range-btn ${range === opt.key ? 'config-ie-range-btn--active' : ''}`}
-                  onClick={() => setRange(opt.key)}
-                >
-                  {t(opt.labelKey)}
-                </button>
-              ))}
-            </div>
-
-            {range === 'custom' && (
-              <div className="config-ie-range-dates">
-                <label>
-                  <span>{t('home_filter_from')}</span>
-                  <input
-                    type="date"
-                    value={customFrom}
-                    onChange={(e) => setCustomFrom(e.target.value)}
-                  />
-                </label>
-                <label>
-                  <span>{t('home_filter_to')}</span>
-                  <input
-                    type="date"
-                    value={customTo}
-                    onChange={(e) => setCustomTo(e.target.value)}
-                  />
-                </label>
-              </div>
-            )}
-
-            <button type="button" className="config-section-save" disabled>
-              {t('config_ie_tab_export')}
-            </button>
-            <p className="config-ie-hint">{t('config_ie_export_btn_disabled_hint')}</p>
-
-            {/* NEXT STEP (T5): build workbook + download */}
+            <ExportPanel
+              prefs={{
+                separador_miles: prefs.separador_miles,
+                separador_decimal: prefs.separador_decimal,
+                decimales: prefs.decimales_moneda_local ?? 0,
+                formato_fecha: prefs.formato_fecha,
+              }}
+            />
           </article>
         )}
       </section>
