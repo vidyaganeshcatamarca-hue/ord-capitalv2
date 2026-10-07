@@ -27,6 +27,9 @@ export const ROW_ERROR_KEYS = {
   billetera: 'config_ie_error_row_billetera',
   cuenta: 'config_ie_error_row_cuenta',
   destino: 'config_ie_error_row_destino',
+  /** Row uses an account the owner rejected: listed so the user can fix it,
+   * but excluded from the import batch and from the hard gate (defect 2). */
+  cuenta_rechazada: 'config_ie_error_row_cuenta_rechazada',
 } as const
 
 export interface WorksetWallets {
@@ -246,23 +249,59 @@ export function matchEntities(
   return result
 }
 
+/** Re-tag the workset with the owner's account rejections (defect 2). A row
+ * whose cuentaKey (accountKey of its cuenta) is in `rejectedKeys` carries the
+ * cuenta_rechazada error key; every other row is left untouched. Idempotent
+ * and self-replacing: a prior rejection is stripped first, so calling this
+ * again with a shorter list clears the rejections the user reinstated.
+ * Returns new row objects only for the rows that actually change. */
+export function applyAccountRejections(
+  rows: WorksetRow[],
+  rejectedKeys: string[]
+): WorksetRow[] {
+  const rejected = new Set(Array.isArray(rejectedKeys) ? rejectedKeys : [])
+  const list = Array.isArray(rows) ? rows : []
+  return list.map((row) => {
+    const cleaned = row.fieldErrors.filter((key) => key !== ROW_ERROR_KEYS.cuenta_rechazada)
+    const isRejected = row.cuenta !== null && rejected.has(accountKey(row.cuenta))
+    const fieldErrors = isRejected
+      ? [...cleaned, ROW_ERROR_KEYS.cuenta_rechazada]
+      : cleaned
+    const unchanged =
+      fieldErrors.length === row.fieldErrors.length &&
+      fieldErrors.every((key, index) => key === row.fieldErrors[index])
+    return unchanged ? row : { ...row, fieldErrors }
+  })
+}
+
 export interface WorksetStatus {
   ok: number
+  /** Rows with at least one blocking error (any key other than
+   * cuenta_rechazada). Rejected rows never count here, so they never close
+   * the gate. */
   error: number
+  /** Rows excluded from the batch because they use a rejected account. */
+  excluded: number
   clean: boolean
 }
 
 export function countStatuses(rows: WorksetRow[]): WorksetStatus {
   let ok = 0
   let error = 0
+  let excluded = 0
   for (const row of rows) {
-    if (row.fieldErrors.length === 0) ok++
-    else error++
+    if (row.fieldErrors.length === 0) {
+      ok++
+      continue
+    }
+    if (row.fieldErrors.includes(ROW_ERROR_KEYS.cuenta_rechazada)) excluded++
+    if (row.fieldErrors.some((key) => key !== ROW_ERROR_KEYS.cuenta_rechazada)) error++
   }
-  return { ok, error, clean: error === 0 }
+  return { ok, error, excluded, clean: error === 0 }
 }
 
-/** The hard gate: every row must be error-free before execution is attempted. */
+/** The hard gate: every IMPORTABLE row must be error-free. Rows tagged with
+ * cuenta_rechazada are excluded, so they do not block execution (defect 2). */
 export function canExecute(rows: WorksetRow[]): boolean {
   return countStatuses(rows).clean
 }

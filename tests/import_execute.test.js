@@ -13,6 +13,7 @@ import { rowsToCsv } from '../src/lib/importExport/csv.ts'
 import {
   durationBucket,
   errorKeyOf,
+  partitionExcludedRows,
   planAccountCreation,
   rowToMovementParams,
 } from '../src/lib/importExport/execute.ts'
@@ -268,6 +269,51 @@ test('two new subs under the same new parent share one parentKey (created once)'
   }
   assert.equal(a.parentKey, b.parentKey)
   assert.equal(parentsCreated, 1)
+})
+
+// ── partitionExcludedRows (rejected accounts, owner defect 2) ───────────────
+
+test('partitionExcludedRows drops rejected-account rows and counts them', () => {
+  const expense = {
+    index: 0,
+    data: rowOf(['15/03/2026', 'egreso', '100', 'Efectivo', '', 'Alimentos-Super', '']),
+  }
+  const income = {
+    index: 1,
+    data: rowOf(['15/03/2026', 'ingreso', '500,00', 'Efectivo', '', '', 'Sueldo']),
+  }
+  const transfer = {
+    index: 2,
+    data: rowOf(['15/03/2026', 'transferencia', '500,00', 'Efectivo', 'Banco', 'Ahorro-Meta', '']),
+  }
+
+  const result = partitionExcludedRows([expense, income, transfer], ['alimentos|super'])
+  assert.equal(result.excludedCount, 1)
+  assert.deepEqual(
+    result.rows.map((row) => row.index),
+    [1, 2]
+  )
+
+  // No rejections: everything survives and the count is 0.
+  const passthrough = partitionExcludedRows([expense, income], [])
+  assert.equal(passthrough.excludedCount, 0)
+  assert.equal(passthrough.rows.length, 2)
+
+  // Defensive: a missing list is treated as empty.
+  assert.deepEqual(partitionExcludedRows(undefined, []), { rows: [], excludedCount: 0 })
+})
+
+test('partitionExcludedRows keys exactly on the normalized accountKey the caller passes', () => {
+  const expense = {
+    index: 0,
+    data: rowOf(['15/03/2026', 'egreso', '100', 'Efectivo', '', 'Alimentos-Super', '']),
+  }
+  // accountKey() output is the contract for rejectedKeys (already normalized).
+  assert.equal(partitionExcludedRows([expense], ['alimentos|super']).excludedCount, 1)
+  // A different key leaves the row in the importable batch.
+  const other = partitionExcludedRows([expense], ['otra|sub'])
+  assert.equal(other.excludedCount, 0)
+  assert.deepEqual(other.rows.map((row) => row.index), [0])
 })
 
 // ── exportFile.ts — pure helpers (T5) ────────────────────────────────────────

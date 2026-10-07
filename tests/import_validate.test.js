@@ -11,6 +11,7 @@ import {
   buildRow,
   collectEntities,
   accountKey,
+  applyAccountRejections,
   matchEntities,
   countStatuses,
   canExecute,
@@ -240,11 +241,11 @@ test('countStatuses and canExecute summarize the workset', () => {
     tipoSource: 'column',
     prefs: PREFS,
   })
-  assert.deepEqual(countStatuses(clean), { ok: 2, error: 0, clean: true })
+  assert.deepEqual(countStatuses(clean), { ok: 2, error: 0, excluded: 0, clean: true })
   assert.equal(canExecute(clean), true)
 
   const dirty = [...clean, buildOne(['bad', 'egreso', '100', 'Efectivo', '', 'A-B', ''])]
-  assert.deepEqual(countStatuses(dirty), { ok: 2, error: 1, clean: false })
+  assert.deepEqual(countStatuses(dirty), { ok: 2, error: 1, excluded: 0, clean: false })
   assert.equal(canExecute(dirty), false)
 })
 
@@ -282,4 +283,63 @@ test('buildRow works on a single raw row for the inline edit flow', () => {
     PREFS
   )
   assert.deepEqual(row.fieldErrors, [])
+})
+
+// ── account rejections (owner defect 2) ─────────────────────────────────────
+
+function worksetOf(rows) {
+  return buildWorkset({
+    headers: HEADERS,
+    rows,
+    mapping: FULL_MAP,
+    sep: 'dash',
+    tipoSource: 'column',
+    prefs: PREFS,
+  })
+}
+
+const CLEAN_INCOME = ['15/03/2026', 'ingreso', '500,00', 'Efectivo', '', '', 'Sueldo']
+const CLEAN_EXPENSE = ['15/03/2026', 'egreso', '100', 'Efectivo', '', 'Alimentos-Super', '']
+const BROKEN_EXPENSE = ['bad', 'egreso', '100', 'Efectivo', '', 'Otra-Sub', '']
+
+const ALIMENTOS_KEY = accountKey({ padre: 'Alimentos', sub: 'Super' })
+
+test('applyAccountRejections tags only the rejected account rows and is idempotent', () => {
+  const rows = worksetOf([CLEAN_INCOME, CLEAN_EXPENSE])
+  const tagged = applyAccountRejections(rows, [ALIMENTOS_KEY])
+
+  assert.deepEqual(tagged[0].fieldErrors, [])
+  assert.deepEqual(tagged[1].fieldErrors, [ROW_ERROR_KEYS.cuenta_rechazada])
+
+  // Re-applying the same rejection changes nothing (no duplicate keys).
+  const again = applyAccountRejections(tagged, [ALIMENTOS_KEY])
+  assert.deepEqual(again[1].fieldErrors, [ROW_ERROR_KEYS.cuenta_rechazada])
+
+  // Income/transfer rows carry no cuenta and are never excluded.
+  assert.equal(tagged[0].fieldErrors.includes(ROW_ERROR_KEYS.cuenta_rechazada), false)
+})
+
+test('applyAccountRejections clears the tag when the account is reinstated', () => {
+  const tagged = applyAccountRejections(worksetOf([CLEAN_EXPENSE]), [ALIMENTOS_KEY])
+  const reinstated = applyAccountRejections(tagged, [])
+  assert.deepEqual(reinstated[0].fieldErrors, [])
+
+  // Replacing one rejection with another also drops the old tag.
+  const otherKey = accountKey({ padre: 'Otra', sub: 'Sub' })
+  const swapped = applyAccountRejections(tagged, [otherKey])
+  assert.deepEqual(swapped[0].fieldErrors, [])
+})
+
+test('countStatuses and canExecute ignore rejected rows for the gate', () => {
+  const rows = applyAccountRejections(worksetOf([CLEAN_EXPENSE]), [ALIMENTOS_KEY])
+  assert.deepEqual(countStatuses(rows), { ok: 0, error: 0, excluded: 1, clean: true })
+  assert.equal(canExecute(rows), true)
+})
+
+test('countStatuses keeps real errors blocking while counting excluded rows', () => {
+  const rows = applyAccountRejections(worksetOf([CLEAN_INCOME, CLEAN_EXPENSE, BROKEN_EXPENSE]), [
+    ALIMENTOS_KEY,
+  ])
+  assert.deepEqual(countStatuses(rows), { ok: 1, error: 1, excluded: 1, clean: false })
+  assert.equal(canExecute(rows), false)
 })

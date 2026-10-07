@@ -213,3 +213,28 @@
   font-size: calc(0.8rem * var(--font-scale));
   font-weight: 700;
 }
+
+.config-ie-entity-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.config-ie-entity-btn--secondary {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.config-ie-entity-btn--secondary:hover {
+  background: var(--red-dim);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+/* Compact state for an account the owner rejected (defect 2). */
+.config-ie-entity-card--rejected {
+  border-style: dashed;
+  border-color: var(--text-3);
+  background: var(--surface-3);
+}

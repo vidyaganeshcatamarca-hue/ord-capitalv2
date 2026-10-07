@@ -354,6 +354,7 @@ export function ImportarExportarPage() {
       const execution = await executeImport({
         rows: payload.rows,
         resolutions: payload.resolutions,
+        excludedCount: payload.excludedCount,
         onProgress: (done, total) => setProgress({ done, total }),
       })
       for (const failure of execution.failures) {
@@ -368,6 +369,7 @@ export function ImportarExportarPage() {
         {
           inserted: execution.inserted,
           failed: execution.failed,
+          excluded: execution.excludedCount,
           wallets_created: execution.walletsCreated,
           cats_parent_created: execution.parentsCreated,
           cats_sub_created: execution.subsCreated,

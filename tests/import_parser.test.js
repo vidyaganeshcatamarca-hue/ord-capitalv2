@@ -151,6 +151,21 @@ test('guessHeaderMapping auto-fills every canonical field on a clean header row'
   assert.deepEqual(guessed, [true, true, true, true, true, true, true])
 })
 
+test('guessHeaderMapping auto-guesses the exact labels the export emits', () => {
+  const { mapping } = guessHeaderMapping([
+    'Fecha', 'Tipo', 'Monto', 'Billetera de origen', 'Billetera de destino', 'Cuenta', 'Detalle',
+  ])
+  assert.deepEqual(mapping, {
+    fecha: 0,
+    tipo: 1,
+    monto: 2,
+    billetera_origen: 3,
+    billetera_destino: 4,
+    cuenta: 5,
+    detalle: 6,
+  })
+})
+
 test('guessHeaderMapping marks ambiguous or unknown headers as not guessed', () => {
   const { mapping, guessed } = guessHeaderMapping(['Monto', 'Importe', 'Rareza'])
   assert.deepEqual(mapping, { monto: 0 })
