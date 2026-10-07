@@ -19,7 +19,11 @@ import type {
   TipoSource,
 } from '@/lib/importExport/schema'
 import { parseUploadedFile } from '@/lib/importExport/parseWorkbook'
+import { canExecute, countStatuses } from '@/lib/importExport/validate'
+import { durationBucket, executeImport } from '@/lib/importExport/execute'
+import type { ImportExecutionResult, ReconcileHandoff } from '@/lib/importExport/execute'
 import { ReconcileStep } from './importexport/ReconcileStep'
+import { SummaryStep } from './importexport/SummaryStep'
 import {
   guessHeaderMapping,
   inferTipo,
@@ -35,8 +39,9 @@ import './ImportarExportarPage.css'
 type TabKey = 'import' | 'export'
 type RangeKey = 'current' | 'previous' | 'custom'
 // Wizard steps owned by this page: 'file' (pick + parse) -> 'map' (T3a) ->
-// 'reconcile' (T3b: per-row status, inline fixes, NEW entity blocks).
-type WizardStep = 'file' | 'map' | 'reconcile'
+// 'reconcile' (T3b: per-row status, inline fixes, NEW entity blocks) ->
+// 'summary' (T4: executed counters, failed-rows CSV, reset).
+type WizardStep = 'file' | 'map' | 'reconcile' | 'summary'
 
 interface SelectedFile {
   name: string
@@ -186,6 +191,10 @@ export function ImportarExportarPage() {
   const [tipoSource, setTipoSource] = useState<TipoSource>('column')
   const [prefs, setPrefs] = useState<ImportUserPrefs>(DEFAULT_PREFS)
   const [parsing, setParsing] = useState(false)
+  const [executing, setExecuting] = useState(false)
+  const [progress, setProgress] = useState({ done: 0, total: 0 })
+  const [discardedCount, setDiscardedCount] = useState(0)
+  const [result, setResult] = useState<ImportExecutionResult | null>(null)
   const [range, setRange] = useState<RangeKey>('current')
   const [customFrom, setCustomFrom] = useState('')
   const [customTo, setCustomTo] = useState('')
@@ -294,11 +303,79 @@ export function ImportarExportarPage() {
     setStep('reconcile')
   }
 
-  // NEXT STEP (T4): execution — the hard gate below still needs the real
-  // sequential insert pipeline.
-  const handleContinueToExecute = () => {
-    // NEXT STEP (T4): kick off the sequential inserts here.
+  // T4 execution: final hard re-verify, aggregate telemetry, sequential
+  // inserts with progress, then the summary step.
+  const handleExecute = async (payload: ReconcileHandoff) => {
+    const workset = payload.rows.map((row) => row.data)
+    const status = countStatuses(workset)
+    if (!canExecute(workset)) {
+      showToast(t('config_ie_error_gate_dirty'), 'error')
+      setStep('reconcile')
+      return
+    }
+
+    telemetry.track(
+      'import_validated',
+      { rows_ok: status.ok, rows_error: 0, clean: true },
+      TELEMETRY_PRIORITY.HIGH
+    )
+    telemetry.track('import_row_fixed', { ...payload.fixes }, TELEMETRY_PRIORITY.HIGH)
+
+    setDiscardedCount(payload.discarded)
+    setResult(null)
+    setExecuting(true)
+    setProgress({ done: 0, total: payload.rows.length })
+
+    try {
+      const execution = await executeImport({
+        rows: payload.rows,
+        resolutions: payload.resolutions,
+        onProgress: (done, total) => setProgress({ done, total }),
+      })
+      for (const failure of execution.failures) {
+        telemetry.track(
+          'import_row_error',
+          { error_key: failure.errorKey },
+          TELEMETRY_PRIORITY.HIGH
+        )
+      }
+      telemetry.track(
+        'import_executed',
+        {
+          inserted: execution.inserted,
+          failed: execution.failed,
+          wallets_created: execution.walletsCreated,
+          cats_parent_created: execution.parentsCreated,
+          cats_sub_created: execution.subsCreated,
+          duration_bucket: durationBucket(execution.durationMs),
+        },
+        TELEMETRY_PRIORITY.MEDIUM
+      )
+      setResult(execution)
+      setStep('summary')
+    } catch (err) {
+      showToast(parseError(err), 'error')
+    } finally {
+      setExecuting(false)
+    }
   }
+
+  const handleReset = () => {
+    bytesRef.current = null
+    setSelectedFile(null)
+    setTable(null)
+    setMapping({})
+    setSep('dash')
+    setTipoSource('column')
+    setDiscardedCount(0)
+    setResult(null)
+    setExecuting(false)
+    setProgress({ done: 0, total: 0 })
+    setStep('file')
+  }
+
+  const progressPercent =
+    progress.total > 0 ? Math.round((progress.done / progress.total) * 100) : 0
 
   return (
     <main className="page config-page" aria-labelledby="import-export-title">
@@ -342,11 +419,13 @@ export function ImportarExportarPage() {
             className="config-section-card"
           >
             <h2>
-              {step === 'reconcile'
-                ? t('config_ie_reconcile_title')
-                : step === 'map'
-                  ? t('config_ie_map_title')
-                  : t('config_ie_tab_import')}
+              {step === 'summary'
+                ? t('config_ie_summary_title')
+                : step === 'reconcile'
+                  ? t('config_ie_reconcile_title')
+                  : step === 'map'
+                    ? t('config_ie_map_title')
+                    : t('config_ie_tab_import')}
             </h2>
 
             {step === 'file' ? (
@@ -518,6 +597,31 @@ export function ImportarExportarPage() {
                   </div>
                 </>
               )
+            ) : step === 'summary' && result && table ? (
+              <SummaryStep
+                result={result}
+                table={table}
+                discarded={discardedCount}
+                onReset={handleReset}
+              />
+            ) : executing ? (
+              <div className="config-ie-progress" role="status">
+                <p className="config-ie-progress-label">
+                  {t('config_ie_progress_label', { done: progress.done, total: progress.total })}
+                </p>
+                <div
+                  className="config-ie-progress-track"
+                  role="progressbar"
+                  aria-valuemin={0}
+                  aria-valuemax={progress.total}
+                  aria-valuenow={progress.done}
+                >
+                  <div
+                    className="config-ie-progress-fill"
+                    style={{ width: `${progressPercent}%` }}
+                  />
+                </div>
+              </div>
             ) : (
               table && (
                 <ReconcileStep
@@ -527,7 +631,7 @@ export function ImportarExportarPage() {
                   tipoSource={tipoSource}
                   prefs={prefs}
                   onBack={() => setStep('map')}
-                  onContinue={handleContinueToExecute}
+                  onContinue={handleExecute}
                 />
               )
             )}

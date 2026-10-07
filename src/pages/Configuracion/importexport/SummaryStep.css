@@ -1,0 +1,90 @@
+/* SummaryStep — wizard step 5 (T4): inserted/failed/discarded counters,
+   created-entity counts, failed-rows download and reset. Tokens only. */
+
+.config-ie-summary {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.config-ie-summary-counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+
+.config-ie-summary-card {
+  display: grid;
+  gap: 6px;
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.config-ie-summary-card--error {
+  border-color: var(--red);
+  background: var(--red-dim);
+}
+
+.config-ie-summary-card-value {
+  color: var(--mint);
+  font-size: calc(1.5rem * var(--font-scale));
+  font-weight: 700;
+  line-height: 1;
+}
+
+.config-ie-summary-card--error .config-ie-summary-card-value {
+  color: var(--red);
+}
+
+.config-ie-summary-card-label {
+  color: var(--text-3);
+  font-size: calc(0.8rem * var(--font-scale));
+  font-weight: 650;
+}
+
+.config-ie-summary-entities {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.config-ie-summary-section-title {
+  margin: 0;
+  color: var(--text);
+  font-size: calc(0.9rem * var(--font-scale));
+  font-weight: 700;
+}
+
+.config-ie-summary-entity-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+}
+
+.config-ie-summary-entity-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.config-ie-summary-entity-row dt {
+  color: var(--text-2);
+  font-size: calc(0.84rem * var(--font-scale));
+}
+
+.config-ie-summary-entity-row dd {
+  margin: 0;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.config-ie-summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-3);
+}

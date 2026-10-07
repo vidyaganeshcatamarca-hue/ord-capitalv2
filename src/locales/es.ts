@@ -1874,6 +1874,23 @@ export const inversiones = {
   config_ie_reconcile_continue: "Continuar a la ejecución",
   config_ie_reconcile_none: "No hay entidades nuevas por resolver.",
 
+  // Ajustes: Importar movimientos — ejecución y resumen (T4)
+  config_ie_progress_label: "Importando {done} de {total}…",
+  config_ie_error_gate_dirty: "Hay filas con errores. Revisalas antes de importar.",
+  config_ie_error_entity_creation: "No pudimos crear una billetera o cuenta nueva para esta fila.",
+  config_ie_error_row_import_failed: "No pudimos importar esta fila.",
+  config_ie_summary_title: "Resumen de la importación",
+  config_ie_summary_inserted: "Movimientos importados",
+  config_ie_summary_failed: "Filas con error",
+  config_ie_summary_discarded: "Filas descartadas",
+  config_ie_summary_entities_title: "Entidades creadas",
+  config_ie_summary_wallets_created: "Billeteras",
+  config_ie_summary_cats_parent_created: "Cuentas principales",
+  config_ie_summary_cats_sub_created: "Subcuentas",
+  config_ie_summary_download_failed: "Descargar filas con error",
+  config_ie_summary_failed_error_col: "Error",
+  config_ie_summary_retry: "Importar otro archivo",
+
   config_pwa_install_title: "Instalar la app",
   config_pwa_install_desc: "Agregá la app a tu pantalla de inicio para usarla como una app nativa.",
   pwa_install_ios_hint: "En iOS, usá Compartir y luego \"Agregar a pantalla de inicio\".",
