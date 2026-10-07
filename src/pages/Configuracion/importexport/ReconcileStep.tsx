@@ -9,6 +9,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { filterUserEditableCategories } from '@/lib/categoryFilters'
 import type {
   CanonicalFieldId,
@@ -435,23 +436,40 @@ export function ReconcileStep({
   )
   const entities = useMemo(() => collectEntities(activeRows), [activeRows])
 
-  const existingWalletNames = useMemo(() => wallets.map((wallet) => wallet.nombre), [wallets])
+  // Display layer (catalogRegistry): a system wallet stores the i18n key
+  // ('wallet_cash_default_name') while the user SEES the translated label
+  // ("Efectivo"). Matching and every label must speak that display language,
+  // otherwise a file row for the cash wallet can never match (defect 1).
+  const existingWalletNames = useMemo(
+    () => wallets.map((wallet) => catalogDisplayName(wallet.nombre)),
+    [wallets]
+  )
   const walletMatches = useMemo(
     () => matchEntities(entities.wallets, existingWalletNames),
     [entities.wallets, existingWalletNames]
   )
+  /** Existing wallets keyed by the normalized DISPLAY name: resolves a matched
+   * display label back to its real id/currency at handoff time. */
+  const existingWalletByNorm = useMemo(() => {
+    const map = new Map<string, WalletRow>()
+    for (const wallet of wallets) {
+      const key = normalizeNombre(catalogDisplayName(wallet.nombre))
+      if (!map.has(key)) map.set(key, wallet)
+    }
+    return map
+  }, [wallets])
 
   const existingAccounts = useMemo(() => {
     const list: Array<{ key: string; label: string; estructuraId: number }> = []
     for (const rubro of rubros) {
-      const parent = t(rubro.nombre_cuenta)
+      const parent = catalogDisplayName(rubro.nombre_cuenta)
       list.push({
         key: accountKey({ padre: parent, sub: null }),
         label: parent,
         estructuraId: rubro.estructura_id,
       })
       for (const child of rubro.hijos ?? []) {
-        const childName = t(child.nombre_cuenta)
+        const childName = catalogDisplayName(child.nombre_cuenta)
         list.push({
           key: accountKey({ padre: parent, sub: childName }),
           label: `${parent} › ${childName}`,
@@ -478,10 +496,14 @@ export function ReconcileStep({
   /** Existing parent accounts keyed by normalized name: their label and the
    * real tipo_cupo a new sub would inherit from them. */
   const existingParentByKey = useMemo(() => {
-    const map = new Map<string, { label: string; cupo: CupoTipo }>()
+    const map = new Map<string, { label: string; cupo: CupoTipo; estructuraId: number }>()
     for (const rubro of rubros) {
-      const label = t(rubro.nombre_cuenta)
-      map.set(normalizeNombre(label), { label, cupo: asCupoTipo(rubro.tipo_cupo, label) })
+      const label = catalogDisplayName(rubro.nombre_cuenta)
+      map.set(normalizeNombre(label), {
+        label,
+        cupo: asCupoTipo(rubro.tipo_cupo, label),
+        estructuraId: rubro.estructura_id,
+      })
     }
     return map
   }, [rubros])
@@ -501,6 +523,7 @@ export function ReconcileStep({
       displayName:
         existing?.label ?? (resolvedPadre ? accountLabels[resolvedPadre] ?? padre : padre),
       inheritedCupo: existing?.cupo ?? null,
+      existingId: existing?.estructuraId ?? null,
     }
   }
 
@@ -525,8 +548,11 @@ export function ReconcileStep({
   const walletOptions = useMemo(() => {
     const options = new Map<string, string>()
     for (const wallet of wallets) {
-      const value = normalizeNombre(wallet.nombre)
-      if (!options.has(value)) options.set(value, wallet.nombre)
+      // Value = normalized DISPLAY name so the picker feeds the same string
+      // the matcher uses; label = what the user actually sees.
+      const label = catalogDisplayName(wallet.nombre)
+      const value = normalizeNombre(label)
+      if (!options.has(value)) options.set(value, label)
     }
     for (const name of entities.wallets) if (!options.has(name)) options.set(name, name)
     return Array.from(options, ([value, label]) => ({ value, label }))
@@ -668,7 +694,11 @@ export function ReconcileStep({
       const auto = autoFor(name)
       const resolution = walletRes[name]
       const resolvedName = auto ?? resolution?.resolvedTo ?? null
-      const existing = resolvedName ? wallets.find((wallet) => wallet.nombre === resolvedName) : undefined
+      // resolvedName is a DISPLAY label now, so resolve it through the
+      // normalized-display map, never by raw nombre equality.
+      const existing = resolvedName
+        ? existingWalletByNorm.get(normalizeNombre(resolvedName))
+        : undefined
       return {
         name,
         existingId: existing ? existing.billetera_id : null,
@@ -686,9 +716,14 @@ export function ReconcileStep({
       const existing = resolvedKey
         ? existingAccounts.find((candidate) => candidate.key === resolvedKey)
         : undefined
+      // Sub-only target: the whole pair did not match, but its parent may
+      // already exist. Carry the parent id so executeImport never re-creates it
+      // (defect 2). A matched leaf already owns both.
+      const parentInfo = padreInfoFor(account.padre)
       return {
         key,
         existingId: existing ? existing.estructuraId : null,
+        existingParentId: existing ? null : parentInfo.existingId,
         finalName: resolution?.finalName ?? account.padre,
         sub: account.sub,
         subName: resolution?.subName ?? (account.sub ?? ''),

@@ -2,9 +2,10 @@
 // Execution layer for the Importar/Exportar wizard (spec §2/§4, T4).
 //
 // Two layers live here on purpose:
-//  - PURE helpers (rowToMovementParams, errorKeyOf, durationBucket): plain
-//    data in/out, zero imports of the app runtime, unit-testable through
-//    node --test with Node's native TypeScript type stripping.
+//  - PURE helpers (rowToMovementParams, planAccountCreation, errorKeyOf,
+//    durationBucket): plain data in/out, zero imports of the app runtime,
+//    unit-testable through node --test with Node's native TypeScript type
+//    stripping.
 //  - IMPURE executeImport: the thin sequential RPC wrapper. It dynamically
 //    imports '@/lib/supabase' and '@/locales/i18n' INSIDE the function so the
 //    module stays loadable by node --test (only the pure exports are tested).
@@ -54,8 +55,14 @@ export interface WalletTarget {
 export interface AccountTarget {
   /** accountKey() of the source padre|sub pair. */
   key: string
-  /** Existing leaf estructura_id when matched; null means "create". */
+  /** Existing LEAF estructura_id when the whole padre|sub pair matched; null
+   * means the leaf must be created (or reached through existingParentId). */
   existingId: number | null
+  /** Existing PARENT estructura_id when only the parent already lives in the
+   * catalog. Kept separate from existingId so a sub-only target never
+   * re-creates the parent (defect 2: leaf unmatched + parent present would
+   * otherwise call fn_crear_cuenta_egreso and duplicate the parent). */
+  existingParentId: number | null
   finalName: string
   sub: string | null
   subName: string
@@ -195,6 +202,45 @@ function asId(value: unknown): number {
   return Number(value)
 }
 
+/** PURE creation decision for one account target. Discriminated union so the
+ * executeImport loop reads one branch and the tests can assert the exact
+ * action without any RPC:
+ *  - reuse-leaf:    the whole padre|sub pair already exists; no RPC.
+ *  - reuse-parent:  the sub hangs from an already-existing parent (or the
+ *                   target IS that parent); NO fn_crear_cuenta_egreso.
+ *  - create-parent: the parent must be created (deduped across targets by
+ *                   parentKey), then the sub when one is present. */
+export type AccountCreationPlan =
+  | { action: 'reuse-leaf'; leafId: number }
+  | { action: 'reuse-parent'; parentId: number; subName: string | null }
+  | {
+      action: 'create-parent'
+      parentKey: string
+      parentName: string
+      cupo: CupoTipo
+      subName: string | null
+    }
+
+/** Resolve one account target against the existing catalog: leaf match wins,
+ * then an existing parent, and only when neither is known does the parent get
+ * created. `sub` null/'' means the target is the parent itself (no subcuenta). */
+export function planAccountCreation(target: AccountTarget): AccountCreationPlan {
+  const subName = target.sub === null || target.sub === '' ? null : target.subName
+  if (target.existingId !== null && Number.isFinite(target.existingId)) {
+    return { action: 'reuse-leaf', leafId: asId(target.existingId) }
+  }
+  if (target.existingParentId !== null && Number.isFinite(target.existingParentId)) {
+    return { action: 'reuse-parent', parentId: asId(target.existingParentId), subName }
+  }
+  return {
+    action: 'create-parent',
+    parentKey: normalizeNombre(target.finalName),
+    parentName: target.finalName,
+    cupo: target.cupo,
+    subName,
+  }
+}
+
 /**
  * IMPURE: create the approved NEW entities (once) and insert the rows
  * sequentially. A failure never aborts the batch: entity-creation failures
@@ -249,34 +295,42 @@ export async function executeImport({
   let subsCreated = 0
 
   for (const target of resolutions.accounts) {
-    if (target.existingId !== null && Number.isFinite(target.existingId)) {
-      accountIds.set(target.key, asId(target.existingId))
+    const plan = planAccountCreation(target)
+    if (plan.action === 'reuse-leaf') {
+      accountIds.set(target.key, plan.leafId)
       continue
     }
     try {
-      const parentKey = normalizeNombre(target.finalName)
-      let parentId = createdParentIds.get(parentKey)
-      if (parentId === undefined) {
-        parentId = asId(
-          await rpc<number>('fn_crear_cuenta_egreso', {
-            p_nombre: target.finalName,
-            p_descripcion: '',
-            p_tipo_cupo: target.cupo,
-            p_icono: 'Tag',
-            p_color: null,
-          })
-        )
-        createdParentIds.set(parentKey, parentId)
-        parentsCreated++
+      let parentId: number
+      if (plan.action === 'reuse-parent') {
+        // The parent already exists: never call fn_crear_cuenta_egreso. This is
+        // the defect-2 fix for a sub-only target under a known parent.
+        parentId = plan.parentId
+      } else {
+        let created = createdParentIds.get(plan.parentKey)
+        if (created === undefined) {
+          created = asId(
+            await rpc<number>('fn_crear_cuenta_egreso', {
+              p_nombre: plan.parentName,
+              p_descripcion: '',
+              p_tipo_cupo: plan.cupo,
+              p_icono: 'Tag',
+              p_color: null,
+            })
+          )
+          createdParentIds.set(plan.parentKey, created)
+          parentsCreated++
+        }
+        parentId = created
       }
 
-      if (target.sub === null || target.sub === '') {
+      if (plan.subName === null) {
         accountIds.set(target.key, parentId)
       } else {
         const subId = asId(
           await rpc<number>('fn_crear_subcuenta_egreso', {
             p_padre_id: parentId,
-            p_nombre: target.subName,
+            p_nombre: plan.subName,
             p_descripcion: '',
             p_icono: 'Tag',
             p_es_deseo: target.cupo === 'want',
