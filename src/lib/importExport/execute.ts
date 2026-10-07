@@ -85,11 +85,13 @@ export interface RowFixCounts {
 }
 
 /** Payload handed from the reconciliation step to the page when the user
- * confirms the gate. */
+ * confirms the gate. `rows` already excludes the rows that use a rejected
+ * account; `excludedCount` is how many were dropped (defect 2). */
 export interface ReconcileHandoff {
   rows: ExecuteRow[]
   resolutions: ImportResolutions
   discarded: number
+  excludedCount: number
   fixes: RowFixCounts
 }
 
@@ -108,6 +110,9 @@ export interface ImportExecutionResult {
   subsCreated: number
   walletsFailed: number
   accountsFailed: number
+  /** Rows the reconcile step excluded because they use a rejected account.
+   * Passed through from the handoff; 0 for callers that never set it. */
+  excludedCount: number
   durationMs: number
 }
 
@@ -188,6 +193,9 @@ export function rowToMovementParams(
 export interface ExecuteImportInput {
   rows: ExecuteRow[]
   resolutions: ImportResolutions
+  /** Rows already dropped from `rows` because they use a rejected account.
+   * Echoed back in the result; optional so older callers keep working. */
+  excludedCount?: number
   onProgress?: (done: number, total: number) => void
 }
 
@@ -242,6 +250,31 @@ export function planAccountCreation(target: AccountTarget): AccountCreationPlan 
 }
 
 /**
+ * PURE: split execute rows into the importable batch and the rows that use a
+ * rejected account (counted, never sent to the RPCs). A row with no cuenta
+ * (income/transfer) is never excluded. `rejectedKeys` are accountKey() values.
+ */
+export function partitionExcludedRows(
+  rows: ExecuteRow[],
+  rejectedKeys: string[]
+): { rows: ExecuteRow[]; excludedCount: number } {
+  const rejected = new Set(Array.isArray(rejectedKeys) ? rejectedKeys : [])
+  const list = Array.isArray(rows) ? rows : []
+  const kept: ExecuteRow[] = []
+  let excludedCount = 0
+  for (const row of list) {
+    const cuenta = row.data.cuenta
+    const key = cuenta ? accountKey(cuenta) : null
+    if (key !== null && rejected.has(key)) {
+      excludedCount++
+      continue
+    }
+    kept.push(row)
+  }
+  return { rows: kept, excludedCount }
+}
+
+/**
  * IMPURE: create the approved NEW entities (once) and insert the rows
  * sequentially. A failure never aborts the batch: entity-creation failures
  * cascade to their rows as config_ie_error_entity_creation, and registrar
@@ -250,6 +283,7 @@ export function planAccountCreation(target: AccountTarget): AccountCreationPlan 
 export async function executeImport({
   rows,
   resolutions,
+  excludedCount,
   onProgress,
 }: ExecuteImportInput): Promise<ImportExecutionResult> {
   const startedAt = Date.now()
@@ -424,6 +458,7 @@ export async function executeImport({
     subsCreated,
     walletsFailed: walletErrors.size,
     accountsFailed: accountErrors.size,
+    excludedCount: excludedCount ?? 0,
     durationMs: Date.now() - startedAt,
   }
 }

@@ -62,6 +62,12 @@ export function SummaryStep({ result, table, discarded, onReset }: SummaryStepPr
           <span className="config-ie-summary-card-value">{discarded}</span>
           <span className="config-ie-summary-card-label">{t('config_ie_summary_discarded')}</span>
         </div>
+        {result.excludedCount > 0 && (
+          <div className="config-ie-summary-card">
+            <span className="config-ie-summary-card-value">{result.excludedCount}</span>
+            <span className="config-ie-summary-card-label">{t('config_ie_summary_excluded')}</span>
+          </div>
+        )}
       </div>
 
       <section className="config-ie-summary-entities">

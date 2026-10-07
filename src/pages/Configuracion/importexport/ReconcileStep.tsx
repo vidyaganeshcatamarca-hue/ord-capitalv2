@@ -21,7 +21,9 @@ import type {
   TipoSource,
 } from '@/lib/importExport/schema'
 import {
+  ROW_ERROR_KEYS,
   accountKey,
+  applyAccountRejections,
   buildRow,
   buildWorkset,
   collectEntities,
@@ -30,6 +32,7 @@ import {
   suggestCupo,
 } from '@/lib/importExport/validate'
 import type { CollectedAccount, CupoTipo, WorksetRow } from '@/lib/importExport/validate'
+import { partitionExcludedRows } from '@/lib/importExport/execute'
 import type {
   AccountTarget,
   ExecuteRow,
@@ -92,6 +95,9 @@ interface AccountResolution {
   finalName: string
   subName: string
   approved: boolean
+  /** Owner rejected this account: its rows are excluded from the batch and the
+   * card collapses to a compact state until reincorporated (defect 2). */
+  rejected?: boolean
 }
 
 const TIPO_WORD: Record<'income' | 'expense' | 'transfer', string> = {
@@ -276,6 +282,29 @@ function AccountEntityCard({
     approved: false,
   }
 
+  // Rejected account: collapse to a compact state. Its rows leave the batch
+  // until the owner reincorporates it (defect 2).
+  if (current.rejected) {
+    return (
+      <div className="config-ie-entity-card config-ie-entity-card--rejected">
+        <p className="config-ie-entity-relationship">
+          {t('config_ie_reconcile_parent_sub', {
+            padre: current.finalName,
+            sub: account.sub ?? t('config_ie_reconcile_no_sub'),
+          })}
+        </p>
+        <span className="config-ie-entity-note">{t('config_ie_reconcile_reject_hint')}</span>
+        <button
+          type="button"
+          className="config-ie-entity-btn"
+          onClick={() => onChange({ ...current, rejected: false })}
+        >
+          {t('config_ie_reconcile_reinstate')}
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="config-ie-entity-card">
       {ambiguity && <p className="config-ie-entity-warn">{t('config_ie_reconcile_ambiguous')}</p>}
@@ -354,17 +383,27 @@ function AccountEntityCard({
           </select>
         </label>
       )}
-      {current.approved ? (
-        <span className="config-ie-entity-approved">✓ {t('config_ie_reconcile_approved')}</span>
-      ) : (
+      <div className="config-ie-entity-actions">
+        {current.approved ? (
+          <span className="config-ie-entity-approved">✓ {t('config_ie_reconcile_approved')}</span>
+        ) : (
+          <button
+            type="button"
+            className="config-ie-entity-btn"
+            onClick={() => onChange({ ...current, approved: true })}
+          >
+            {t('config_ie_reconcile_approve')}
+          </button>
+        )}
         <button
           type="button"
-          className="config-ie-entity-btn"
-          onClick={() => onChange({ ...current, approved: true })}
+          className="config-ie-entity-btn config-ie-entity-btn--secondary"
+          title={t('config_ie_reconcile_reject_hint')}
+          onClick={() => onChange({ ...current, rejected: true })}
         >
-          {t('config_ie_reconcile_approve')}
+          {t('config_ie_reconcile_reject')}
         </button>
-      )}
+      </div>
     </div>
   )
 }
@@ -406,6 +445,11 @@ export function ReconcileStep({
   // Single source of truth for the cupo of a NEW parent (owner bug 3): the
   // parent owns it and every sub-card under it inherits the same value.
   const [padreCupo, setPadreCupo] = useState<Record<string, CupoTipo>>({})
+  // Row whose inline editors must stay mounted even after its last error is
+  // fixed by a keystroke (owner defect 1: focus loss). onFocus sets the row
+  // index, onBlur clears it, so the editor outlives the change that made the
+  // row valid and only unmounts once the user leaves the field.
+  const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null)
 
   // ── Entity catalogs: read once, guarded. On failure the step is blocked
   // (matching against existing wallets/categories is required to avoid
@@ -430,11 +474,30 @@ export function ReconcileStep({
     void loadEntities()
   }, [loadEntities])
 
-  const activeRows = useMemo(
+  const baseRows = useMemo(
     () => rows.filter((row) => !row.discarded).map((row) => row.data),
     [rows]
   )
-  const entities = useMemo(() => collectEntities(activeRows), [activeRows])
+  // Entities are collected from the base rows: a rejection only adds an error
+  // key, it never changes which wallets/accounts the file references, so the
+  // card list stays stable while the owner toggles rejections.
+  const entities = useMemo(() => collectEntities(baseRows), [baseRows])
+
+  // Accounts the owner rejected (defect 2): their rows leave the batch without
+  // closing the gate (countStatuses ignores this key).
+  const rejectedAccountKeys = useMemo(
+    () =>
+      new Set(
+        entities.accounts
+          .filter((account) => accountRes[accountKey(account)]?.rejected === true)
+          .map((account) => accountKey(account))
+      ),
+    [entities.accounts, accountRes]
+  )
+  const activeRows = useMemo(
+    () => applyAccountRejections(baseRows, Array.from(rejectedAccountKeys)),
+    [baseRows, rejectedAccountKeys]
+  )
 
   // Display layer (catalogRegistry): a system wallet stores the i18n key
   // ('wallet_cash_default_name') while the user SEES the translated label
@@ -663,6 +726,9 @@ export function ReconcileStep({
 
   const accountsResolved = entities.accounts.every((account) => {
     const key = accountKey(account)
+    // A rejected account is a choice, not a pending decision: it never blocks
+    // the gate (its rows are simply excluded).
+    if (accountRes[key]?.rejected) return true
     const match = accountMatches[key]
     const auto = match?.exact ?? match?.normalized ?? null
     if (auto !== null || accountRes[key]?.resolvedTo) return true
@@ -670,6 +736,13 @@ export function ReconcileStep({
     if (!resolution) return false
     return resolution.approved && resolution.finalName.trim() !== ''
   })
+
+  /** Whether this row uses an account the owner rejected (drives the inline
+   * rejection tag shown in the table so the user can fix it). */
+  const isRowRejected = (row: ReconcileRow): boolean => {
+    const key = row.data.cuenta ? accountKey(row.data.cuenta) : null
+    return key !== null && rejectedAccountKeys.has(key)
+  }
 
   const statusCount = countStatuses(activeRows)
   const gateOpen = statusCount.clean && walletsResolved && accountsResolved
@@ -680,15 +753,21 @@ export function ReconcileStep({
    * file cannot carry a monto_destino, so ExecuteRow has no destination amount
    * and execute.ts always emits p_destination_amount: null. */
   const buildHandoff = (): ReconcileHandoff => {
-    const executeRows: ExecuteRow[] = []
+    const rebuiltRows: ExecuteRow[] = []
     rows.forEach((row, index) => {
       if (row.discarded) return
       const { cells, effectiveMapping } = effectiveRow(row.raw, row.overrides, mapping)
-      executeRows.push({
+      rebuiltRows.push({
         index,
         data: buildRow(cells, effectiveMapping, sep, tipoSource, prefs, fixedTipo),
       })
     })
+    // Rows on a rejected account never reach execution: counted and dropped
+    // here (defect 2) so the page/execute path only ever sees importable rows.
+    const { rows: executeRows, excludedCount } = partitionExcludedRows(
+      rebuiltRows,
+      Array.from(rejectedAccountKeys)
+    )
 
     const walletTargets: WalletTarget[] = entities.wallets.map((name) => {
       const auto = autoFor(name)
@@ -707,29 +786,31 @@ export function ReconcileStep({
       }
     })
 
-    const accountTargets: AccountTarget[] = entities.accounts.map((account) => {
-      const key = accountKey(account)
-      const match = accountMatches[key]
-      const auto = match?.exact ?? match?.normalized ?? null
-      const resolution = accountRes[key]
-      const resolvedKey = resolution?.resolvedTo ?? auto
-      const existing = resolvedKey
-        ? existingAccounts.find((candidate) => candidate.key === resolvedKey)
-        : undefined
-      // Sub-only target: the whole pair did not match, but its parent may
-      // already exist. Carry the parent id so executeImport never re-creates it
-      // (defect 2). A matched leaf already owns both.
-      const parentInfo = padreInfoFor(account.padre)
-      return {
-        key,
-        existingId: existing ? existing.estructuraId : null,
-        existingParentId: existing ? null : parentInfo.existingId,
-        finalName: resolution?.finalName ?? account.padre,
-        sub: account.sub,
-        subName: resolution?.subName ?? (account.sub ?? ''),
-        cupo: cupoForAccount(account),
-      }
-    })
+    const accountTargets: AccountTarget[] = entities.accounts
+      .filter((account) => accountRes[accountKey(account)]?.rejected !== true)
+      .map((account) => {
+        const key = accountKey(account)
+        const match = accountMatches[key]
+        const auto = match?.exact ?? match?.normalized ?? null
+        const resolution = accountRes[key]
+        const resolvedKey = resolution?.resolvedTo ?? auto
+        const existing = resolvedKey
+          ? existingAccounts.find((candidate) => candidate.key === resolvedKey)
+          : undefined
+        // Sub-only target: the whole pair did not match, but its parent may
+        // already exist. Carry the parent id so executeImport never re-creates
+        // it (defect 2). A matched leaf already owns both.
+        const parentInfo = padreInfoFor(account.padre)
+        return {
+          key,
+          existingId: existing ? existing.estructuraId : null,
+          existingParentId: existing ? null : parentInfo.existingId,
+          finalName: resolution?.finalName ?? account.padre,
+          sub: account.sub,
+          subName: resolution?.subName ?? (account.sub ?? ''),
+          cupo: cupoForAccount(account),
+        }
+      })
 
     const fixes: RowFixCounts = {
       rows_fixed_total: 0,
@@ -755,6 +836,7 @@ export function ReconcileStep({
       rows: executeRows,
       resolutions: { wallets: walletTargets, accounts: accountTargets },
       discarded: discardedCount,
+      excludedCount,
       fixes,
     }
   }
@@ -803,7 +885,17 @@ export function ReconcileStep({
           <tbody>
             {rows.map((row, index) => {
               if (row.discarded) return null
-              const hasError = row.data.fieldErrors.length > 0
+              // A rejected row surfaces the rejection tag so the user can fix
+              // it inline, but it never blocks the gate (countStatuses ignores
+              // cuenta_rechazada).
+              const rowFieldErrors =
+                isRowRejected(row) && !row.data.fieldErrors.includes(ROW_ERROR_KEYS.cuenta_rechazada)
+                  ? [...row.data.fieldErrors, ROW_ERROR_KEYS.cuenta_rechazada]
+                  : row.data.fieldErrors
+              const hasError = rowFieldErrors.length > 0
+              // Editors stay mounted while the row is focused, even after the
+              // last error is fixed mid-keystroke (owner defect 1: focus loss).
+              const isEditing = hasError || focusedRowIndex === index
               const rowClass = hasError ? 'config-ie-reconcile-tr--error' : undefined
               return (
                 <tr key={index} className={rowClass}>
@@ -823,7 +915,7 @@ export function ReconcileStep({
                       </span>
                       {hasError && (
                         <span className="config-ie-reconcile-errors">
-                          {row.data.fieldErrors.map((key) => (
+                          {rowFieldErrors.map((key) => (
                             <span key={key}>{t(key)}</span>
                           ))}
                         </span>
@@ -831,12 +923,14 @@ export function ReconcileStep({
                     </span>
                   </td>
                   <td>
-                    {hasError ? (
+                    {isEditing ? (
                       <input
                         type="date"
                         className="config-ie-reconcile-input"
                         value={row.overrides.fecha ?? row.data.fechaISO ?? ''}
                         onChange={(e) => editCell(index, 'fecha', e.target.value)}
+                        onFocus={() => setFocusedRowIndex(index)}
+                        onBlur={() => setFocusedRowIndex(null)}
                         aria-label={t('config_ie_map_field_fecha')}
                       />
                     ) : (
@@ -846,11 +940,13 @@ export function ReconcileStep({
                   <td>
                     {tipoSource === 'fixed' ? (
                       t(TIPO_LABEL_KEY[fixedTipo])
-                    ) : hasError ? (
+                    ) : isEditing ? (
                       <select
                         className="config-ie-reconcile-select"
                         value={row.data.tipo ?? ''}
                         onChange={(e) => editTipo(index, e.target.value as 'income' | 'expense' | 'transfer')}
+                        onFocus={() => setFocusedRowIndex(index)}
+                        onBlur={() => setFocusedRowIndex(null)}
                         aria-label={t('config_ie_map_field_tipo')}
                       >
                         <option value="" disabled>
@@ -871,12 +967,14 @@ export function ReconcileStep({
                     )}
                   </td>
                   <td>
-                    {hasError ? (
+                    {isEditing ? (
                       <input
                         type="text"
                         className="config-ie-reconcile-input"
                         value={row.overrides.monto ?? rawAt(row.raw, mapping, 'monto')}
                         onChange={(e) => editCell(index, 'monto', e.target.value)}
+                        onFocus={() => setFocusedRowIndex(index)}
+                        onBlur={() => setFocusedRowIndex(null)}
                         aria-label={t('config_ie_map_field_monto')}
                       />
                     ) : (
@@ -884,11 +982,13 @@ export function ReconcileStep({
                     )}
                   </td>
                   <td>
-                    {hasError ? (
+                    {isEditing ? (
                       <select
                         className="config-ie-reconcile-select"
                         value={row.data.wallets.origen}
                         onChange={(e) => editCell(index, 'billetera_origen', e.target.value)}
+                        onFocus={() => setFocusedRowIndex(index)}
+                        onBlur={() => setFocusedRowIndex(null)}
                         aria-label={t('config_ie_map_field_billetera_origen')}
                       >
                         <option value="">{t('config_ie_map_unassigned')}</option>
@@ -903,11 +1003,13 @@ export function ReconcileStep({
                     )}
                   </td>
                   <td>
-                    {hasError ? (
+                    {isEditing ? (
                       <select
                         className="config-ie-reconcile-select"
                         value={row.data.wallets.destino}
                         onChange={(e) => editCell(index, 'billetera_destino', e.target.value)}
+                        onFocus={() => setFocusedRowIndex(index)}
+                        onBlur={() => setFocusedRowIndex(null)}
                         aria-label={t('config_ie_map_field_billetera_destino')}
                       >
                         <option value="">{t('config_ie_map_unassigned')}</option>
@@ -922,12 +1024,14 @@ export function ReconcileStep({
                     )}
                   </td>
                   <td>
-                    {hasError ? (
+                    {isEditing ? (
                       <input
                         type="text"
                         className="config-ie-reconcile-input"
                         value={row.overrides.cuenta ?? rawAt(row.raw, mapping, 'cuenta')}
                         onChange={(e) => editCell(index, 'cuenta', e.target.value)}
+                        onFocus={() => setFocusedRowIndex(index)}
+                        onBlur={() => setFocusedRowIndex(null)}
                         aria-label={t('config_ie_map_field_cuenta')}
                       />
                     ) : row.data.cuenta ? (
@@ -939,12 +1043,14 @@ export function ReconcileStep({
                     )}
                   </td>
                   <td>
-                    {hasError ? (
+                    {isEditing ? (
                       <input
                         type="text"
                         className="config-ie-reconcile-input"
                         value={row.overrides.detalle ?? row.data.detalle}
                         onChange={(e) => editCell(index, 'detalle', e.target.value)}
+                        onFocus={() => setFocusedRowIndex(index)}
+                        onBlur={() => setFocusedRowIndex(null)}
                         aria-label={t('config_ie_map_field_detalle')}
                       />
                     ) : (
@@ -1015,7 +1121,9 @@ export function ReconcileStep({
             const match = accountMatches[key]
             const auto = match?.exact ?? match?.normalized ?? null
             const resolution = accountRes[key]
-            if (auto !== null || resolution?.resolvedTo) {
+            // A rejected account keeps its compact card even when it was
+            // auto-matched: the user must be able to reincorporate it.
+            if (resolution?.rejected !== true && (auto !== null || resolution?.resolvedTo)) {
               const resolvedKey = auto ?? resolution?.resolvedTo ?? key
               return (
                 <span key={key} className="config-ie-entity-chip">
