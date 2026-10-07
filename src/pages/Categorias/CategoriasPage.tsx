@@ -15,12 +15,13 @@ import './Categorias.css'
 
 // ─── Constantes ────────────────────────────────────────────────────────────
 const COLORS = ['#1F2937','#4B5563','#9CA3AF','#F3F4F6','#EF4444','#F97316','#F59E0B','#10B981','#3B82F6','#8B5CF6']
+// Budget classifications selectable for a rubro. 'saving' and 'investment'
+// are NOT offered: savings and investments are managed via envelopes and
+// their own modules (e.g. cat_investments is created by fn_crear_inversion).
 const CUPOS = [
-  { value: 'need',       label: t('cat_need_label'),      desc: t('cat_need_desc') },
-  { value: 'want',       label: t('cat_want_label'),      desc: t('cat_want_desc') },
-  { value: 'saving',     label: t('cat_saving_label'),     desc: t('cat_saving_desc') },
-  { value: 'investment', label: t('cat_investment_label'),  desc: t('cat_investment_desc') },
-  { value: 'tithe',      label: t('cat_tithe_label'),     desc: t('cat_tithe_desc') },
+  { value: 'need',  label: t('cat_need_label'),  desc: t('cat_need_desc') },
+  { value: 'want',  label: t('cat_want_label'),  desc: t('cat_want_desc') },
+  { value: 'tithe', label: t('cat_tithe_label'), desc: t('cat_tithe_desc') },
 ]
 
 // ─── Tipos ──────────────────────────────────────────────────────────────────
