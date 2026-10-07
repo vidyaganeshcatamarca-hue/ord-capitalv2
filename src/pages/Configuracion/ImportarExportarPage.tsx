@@ -19,6 +19,7 @@ import type {
   TipoSource,
 } from '@/lib/importExport/schema'
 import { parseUploadedFile } from '@/lib/importExport/parseWorkbook'
+import { ReconcileStep } from './importexport/ReconcileStep'
 import {
   guessHeaderMapping,
   inferTipo,
@@ -33,9 +34,9 @@ import './ImportarExportarPage.css'
 
 type TabKey = 'import' | 'export'
 type RangeKey = 'current' | 'previous' | 'custom'
-// Wizard steps owned by this page: 'file' (pick + parse) -> 'map' (T3a).
-// NEXT STEP (T3b): reconciliation adds a 'reconcile' step and entity blocks.
-type WizardStep = 'file' | 'map'
+// Wizard steps owned by this page: 'file' (pick + parse) -> 'map' (T3a) ->
+// 'reconcile' (T3b: per-row status, inline fixes, NEW entity blocks).
+type WizardStep = 'file' | 'map' | 'reconcile'
 
 interface SelectedFile {
   name: string
@@ -290,7 +291,13 @@ export function ImportarExportarPage() {
       { fields_mapped: fieldsMapped, sep, tipo_source: tipoSource },
       TELEMETRY_PRIORITY.LOW
     )
-    // NEXT STEP (T3b): reconciliation — per-row status + NEW entity blocks.
+    setStep('reconcile')
+  }
+
+  // NEXT STEP (T4): execution — the hard gate below still needs the real
+  // sequential insert pipeline.
+  const handleContinueToExecute = () => {
+    // NEXT STEP (T4): kick off the sequential inserts here.
   }
 
   return (
@@ -334,7 +341,13 @@ export function ImportarExportarPage() {
             aria-labelledby="ie-tab-import"
             className="config-section-card"
           >
-            <h2>{step === 'map' ? t('config_ie_map_title') : t('config_ie_tab_import')}</h2>
+            <h2>
+              {step === 'reconcile'
+                ? t('config_ie_reconcile_title')
+                : step === 'map'
+                  ? t('config_ie_map_title')
+                  : t('config_ie_tab_import')}
+            </h2>
 
             {step === 'file' ? (
               <>
@@ -364,7 +377,7 @@ export function ImportarExportarPage() {
                   </div>
                 )}
               </>
-            ) : (
+            ) : step === 'map' ? (
               table && (
                 <>
                   <p className="config-ie-hint">{t('config_ie_map_columns_hint')}</p>
@@ -504,6 +517,18 @@ export function ImportarExportarPage() {
                     </button>
                   </div>
                 </>
+              )
+            ) : (
+              table && (
+                <ReconcileStep
+                  table={table}
+                  mapping={mapping}
+                  sep={sep}
+                  tipoSource={tipoSource}
+                  prefs={prefs}
+                  onBack={() => setStep('map')}
+                  onContinue={handleContinueToExecute}
+                />
               )
             )}
           </article>

@@ -1,0 +1,207 @@
+/* ReconcileStep — wizard step 3 (T3b). Row-status table with inline correction,
+   entity blocks for NEW wallets/accounts and the hard-gate action. Tokens only,
+   no hardcoded colors. */
+
+.config-ie-reconcile {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.config-ie-reconcile-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: baseline;
+  margin: 0;
+  color: var(--text);
+  font-weight: 650;
+  font-size: calc(0.9rem * var(--font-scale));
+}
+
+.config-ie-reconcile-discarded {
+  color: var(--text-3);
+  font-weight: 500;
+  font-size: calc(0.8rem * var(--font-scale));
+}
+
+.config-ie-reconcile-error {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--red);
+  border-radius: var(--radius-md);
+  background: var(--red-dim);
+  color: var(--text);
+}
+
+.config-ie-reconcile-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+}
+
+.config-ie-reconcile-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: calc(0.82rem * var(--font-scale));
+}
+
+.config-ie-reconcile-table th,
+.config-ie-reconcile-table td {
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+
+.config-ie-reconcile-table th {
+  color: var(--text-3);
+  font-weight: 650;
+  background: var(--surface-2);
+  white-space: nowrap;
+}
+
+.config-ie-reconcile-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.config-ie-reconcile-tr--error {
+  background: var(--red-dim);
+}
+
+.config-ie-status-cell {
+  display: grid;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.config-ie-status-dot {
+  font-size: calc(0.95rem * var(--font-scale));
+  line-height: 1;
+}
+
+.config-ie-status-dot--ok {
+  color: var(--mint);
+}
+
+.config-ie-status-dot--error {
+  color: var(--red);
+}
+
+.config-ie-reconcile-errors {
+  display: grid;
+  gap: 2px;
+  color: var(--red);
+  font-size: calc(0.72rem * var(--font-scale));
+  font-weight: 600;
+}
+
+.config-ie-reconcile-input,
+.config-ie-reconcile-select {
+  width: 100%;
+  min-width: 120px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 6px 8px;
+  font: inherit;
+  font-size: calc(0.8rem * var(--font-scale));
+}
+
+.config-ie-reconcile-input:focus,
+.config-ie-reconcile-select:focus {
+  outline: none;
+  border-color: var(--mint);
+}
+
+/* ── Entity blocks ─────────────────────────────────────────────────── */
+
+.config-ie-entity-section {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.config-ie-entity-title {
+  margin: 0;
+  color: var(--text);
+  font-size: calc(0.9rem * var(--font-scale));
+  font-weight: 700;
+}
+
+.config-ie-entity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: var(--space-3);
+}
+
+.config-ie-entity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--mint);
+  border-radius: 999px;
+  background: var(--mint-dim);
+  color: var(--mint);
+  font-size: calc(0.8rem * var(--font-scale));
+  font-weight: 650;
+}
+
+.config-ie-entity-card {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.config-ie-entity-warn {
+  margin: 0;
+  color: var(--amber);
+  font-size: calc(0.78rem * var(--font-scale));
+  font-weight: 650;
+}
+
+.config-ie-entity-relationship {
+  margin: 0;
+  color: var(--text-2);
+  font-size: calc(0.8rem * var(--font-scale));
+  font-weight: 650;
+}
+
+.config-ie-entity-field {
+  display: grid;
+  gap: 4px;
+  color: var(--text-2);
+  font-size: calc(0.75rem * var(--font-scale));
+  font-weight: 650;
+}
+
+.config-ie-entity-btn {
+  justify-self: start;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-3);
+  color: var(--text);
+  font: inherit;
+  font-size: calc(0.8rem * var(--font-scale));
+  font-weight: 650;
+  cursor: pointer;
+  transition: all 160ms ease;
+}
+
+.config-ie-entity-btn:hover {
+  border-color: var(--mint);
+  color: var(--mint);
+}
+
+.config-ie-entity-approved {
+  justify-self: start;
+  color: var(--mint);
+  font-size: calc(0.8rem * var(--font-scale));
+  font-weight: 700;
+}
