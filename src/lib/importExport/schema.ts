@@ -72,7 +72,10 @@ export const CANONICAL_FIELDS: readonly CanonicalFieldDef[] = [
   {
     id: 'cuenta',
     labelKey: 'config_ie_map_field_cuenta',
-    required: { income: false, expense: true, transfer: true },
+    // Only expenses carry a category: AddMovementModal passes
+    // estructura_egreso_id = null for income and transfer
+    // (AddMovementModal.tsx:872), so the round-trip stays consistent.
+    required: { income: false, expense: true, transfer: false },
     transferOnly: false,
   },
   {

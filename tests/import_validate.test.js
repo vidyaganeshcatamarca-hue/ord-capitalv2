@@ -141,10 +141,14 @@ test('collectEntities dedups wallets and keeps distinct account pairs', () => {
   })
   const entities = collectEntities(rows)
   assert.deepEqual(entities.wallets, ['efectivo', 'banco'])
+  // Only expense rows carry an account: schema marks cuenta optional for
+  // income and transfer, matching fn_registrar_movimiento_caja usage.
   assert.deepEqual(entities.accounts, [
     { padre: 'Alimentos', sub: 'Super' },
-    { padre: 'Ahorro', sub: 'Meta' },
   ])
+  // The cuenta values on transfer rows were ignored, not surfaced as errors.
+  assert.equal(rows[1].fieldErrors.length, 0)
+  assert.equal(rows[2].fieldErrors.length, 0)
 })
 
 test('accountKey normalizes the parent and treats a missing sub as empty', () => {

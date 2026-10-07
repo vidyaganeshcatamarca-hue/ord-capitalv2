@@ -28,6 +28,13 @@ import {
   suggestCupo,
 } from '@/lib/importExport/validate'
 import type { CollectedAccount, CupoTipo, WorksetRow } from '@/lib/importExport/validate'
+import type {
+  AccountTarget,
+  ExecuteRow,
+  ReconcileHandoff,
+  RowFixCounts,
+  WalletTarget,
+} from '@/lib/importExport/execute'
 import { normalizeNombre, parseMonto } from '@/lib/importExport/parser'
 import './ReconcileStep.css'
 
@@ -57,7 +64,9 @@ interface ReconcileStepProps {
   tipoSource: TipoSource
   prefs: ImportUserPrefs
   onBack: () => void
-  onContinue: () => void
+  /** Emits the freshly re-validated workset plus entity resolutions and
+   * inline-fix counters when the user confirms the hard gate. */
+  onContinue: (handoff: ReconcileHandoff) => void
 }
 
 interface ReconcileRow {
@@ -390,15 +399,20 @@ export function ReconcileStep({
   )
 
   const existingAccounts = useMemo(() => {
-    const list: Array<{ key: string; label: string }> = []
+    const list: Array<{ key: string; label: string; estructuraId: number }> = []
     for (const rubro of rubros) {
       const parent = t(rubro.nombre_cuenta)
-      list.push({ key: accountKey({ padre: parent, sub: null }), label: parent })
+      list.push({
+        key: accountKey({ padre: parent, sub: null }),
+        label: parent,
+        estructuraId: rubro.estructura_id,
+      })
       for (const child of rubro.hijos ?? []) {
         const childName = t(child.nombre_cuenta)
         list.push({
           key: accountKey({ padre: parent, sub: childName }),
           label: `${parent} › ${childName}`,
+          estructuraId: child.estructura_id,
         })
       }
     }
@@ -554,6 +568,83 @@ export function ReconcileStep({
 
   const statusCount = countStatuses(activeRows)
   const gateOpen = statusCount.clean && walletsResolved && accountsResolved
+
+  /** Freshly rebuild the effective rows + entity resolutions at confirm time.
+   * The page re-checks canExecute() on handoff.rows as the final hard gate. */
+  const buildHandoff = (): ReconcileHandoff => {
+    const executeRows: ExecuteRow[] = []
+    rows.forEach((row, index) => {
+      if (row.discarded) return
+      const { cells, effectiveMapping } = effectiveRow(row.raw, row.overrides, mapping)
+      const destRaw = row.overrides.monto_destino ?? rawAt(row.raw, mapping, 'monto_destino')
+      const parsedDest = parseMonto(destRaw, prefs).valor
+      executeRows.push({
+        index,
+        data: buildRow(cells, effectiveMapping, sep, tipoSource, prefs),
+        destinationAmount:
+          parsedDest !== null && Math.abs(parsedDest) > 0 ? Math.abs(parsedDest) : null,
+      })
+    })
+
+    const walletTargets: WalletTarget[] = entities.wallets.map((name) => {
+      const auto = autoFor(name)
+      const resolution = walletRes[name]
+      const resolvedName = auto ?? resolution?.resolvedTo ?? null
+      const existing = resolvedName ? wallets.find((wallet) => wallet.nombre === resolvedName) : undefined
+      return {
+        name,
+        existingId: existing ? existing.billetera_id : null,
+        newName: resolution?.newName ?? name,
+        currency: existing?.moneda ?? resolution?.currency ?? defaultCurrency,
+      }
+    })
+
+    const accountTargets: AccountTarget[] = entities.accounts.map((account) => {
+      const key = accountKey(account)
+      const match = accountMatches[key]
+      const auto = match?.exact ?? match?.normalized ?? null
+      const resolution = accountRes[key]
+      const resolvedKey = resolution?.resolvedTo ?? auto
+      const existing = resolvedKey
+        ? existingAccounts.find((candidate) => candidate.key === resolvedKey)
+        : undefined
+      return {
+        key,
+        existingId: existing ? existing.estructuraId : null,
+        finalName: resolution?.finalName ?? account.padre,
+        sub: account.sub,
+        subName: resolution?.subName ?? (account.sub ?? ''),
+        cupo: resolution?.cupo ?? suggestCupo(account.padre),
+      }
+    })
+
+    const fixes: RowFixCounts = {
+      rows_fixed_total: 0,
+      fixes_date: 0,
+      fixes_tipo: 0,
+      fixes_monto: 0,
+      fixes_wallets: 0,
+      fixes_cuenta: 0,
+    }
+    for (const row of rows) {
+      if (row.discarded) continue
+      const o = row.overrides
+      if (Object.keys(o).length === 0) continue
+      fixes.rows_fixed_total++
+      if (o.fecha !== undefined) fixes.fixes_date++
+      if (o.tipo !== undefined) fixes.fixes_tipo++
+      if (o.monto !== undefined) fixes.fixes_monto++
+      if (o.billetera_origen !== undefined || o.billetera_destino !== undefined) fixes.fixes_wallets++
+      if (o.cuenta !== undefined) fixes.fixes_cuenta++
+    }
+
+    return {
+      rows: executeRows,
+      resolutions: { wallets: walletTargets, accounts: accountTargets },
+      discarded: discardedCount,
+      fixes,
+    }
+  }
 
   if (entitiesStatus === 'loading') {
     return <p className="config-ie-hint">{t('config_loading')}</p>
@@ -845,7 +936,7 @@ export function ReconcileStep({
           type="button"
           className="config-ie-btn-primary"
           disabled={!gateOpen}
-          onClick={onContinue}
+          onClick={() => onContinue(buildHandoff())}
         >
           {t('config_ie_reconcile_continue')}
         </button>
