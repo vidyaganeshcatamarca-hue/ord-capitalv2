@@ -570,19 +570,18 @@ export function ReconcileStep({
   const gateOpen = statusCount.clean && walletsResolved && accountsResolved
 
   /** Freshly rebuild the effective rows + entity resolutions at confirm time.
-   * The page re-checks canExecute() on handoff.rows as the final hard gate. */
+   * The page re-checks canExecute() on handoff.rows as the final hard gate.
+   * Cross-currency transfers are out of scope for v1 (spec §5 amendment): the
+   * file cannot carry a monto_destino, so ExecuteRow has no destination amount
+   * and execute.ts always emits p_destination_amount: null. */
   const buildHandoff = (): ReconcileHandoff => {
     const executeRows: ExecuteRow[] = []
     rows.forEach((row, index) => {
       if (row.discarded) return
       const { cells, effectiveMapping } = effectiveRow(row.raw, row.overrides, mapping)
-      const destRaw = row.overrides.monto_destino ?? rawAt(row.raw, mapping, 'monto_destino')
-      const parsedDest = parseMonto(destRaw, prefs).valor
       executeRows.push({
         index,
         data: buildRow(cells, effectiveMapping, sep, tipoSource, prefs),
-        destinationAmount:
-          parsedDest !== null && Math.abs(parsedDest) > 0 ? Math.abs(parsedDest) : null,
       })
     })
 

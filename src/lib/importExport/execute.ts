@@ -9,6 +9,12 @@
 //    imports '@/lib/supabase' and '@/locales/i18n' INSIDE the function so the
 //    module stays loadable by node --test (only the pure exports are tested).
 //
+// Cross-currency transfers are NOT supported by the import (spec §5 amendment,
+// owner decision): the canonical schema has no monto_destino, so every row is
+// inserted with p_destination_amount: null. A transfer between wallets with
+// different currencies therefore reaches fn_registrar_movimiento_caja and fails
+// there with the backend's own error contract (surfaced per row in the summary).
+//
 // RPC surface (existing only, no new RPCs, no table access):
 //  fn_crear_billetera, fn_crear_cuenta_egreso, fn_crear_subcuenta_egreso,
 //  fn_registrar_movimiento_caja.
@@ -29,12 +35,12 @@ export const ROW_IMPORT_ERROR_KEY = 'config_ie_error_row_import_failed'
 export interface ExecuteRow {
   index: number
   data: WorksetRow
-  /** Parsed monto_destino from the mapped column, when the file provided one. */
-  destinationAmount: number | null
 }
 
 /** A wallet referenced by the workset: reuse an existing id or create a new
- * wallet with the user-approved name/currency. */
+ * wallet with the user-approved name/currency. `currency` is only consumed by
+ * the creation call (fn_crear_billetera) — the import never uses it to decide
+ * a destination amount. */
 export interface WalletTarget {
   /** Normalized name as referenced by the rows. */
   name: string
@@ -130,27 +136,22 @@ export function errorKeyOf(err: unknown): string {
 export interface MovementParamIds {
   origenWalletId: number
   destinoWalletId?: number | null
-  /** Currencies decide the cross-currency destination amount rule. */
-  origenCurrency?: string | null
-  destinoCurrency?: string | null
   /** Resolved leaf estructura_id for expense rows. */
   estructuraEgresoId?: number | null
-  /** Parsed monto_destino, only used when the transfer crosses currencies. */
-  destinationAmount?: number | null
-}
-
-function sameCurrency(a: string | null | undefined, b: string | null | undefined): boolean {
-  if (!a || !b) return false
-  return String(a).toUpperCase() === String(b).toUpperCase()
 }
 
 /**
  * PURE: build the exact fn_registrar_movimiento_caja param object for one row.
  *
  * Tipo rules: expense carries the account as estructura_egreso_id; income
- * carries none; transfers carry the destination wallet and, ONLY when the two
- * wallets have different currencies AND a monto_destino was parsed, the
- * p_destination_amount double-insert value.
+ * carries none; transfers carry the destination wallet.
+ *
+ * p_destination_amount is ALWAYS null and must keep being sent: the backend
+ * contract requires the parameter to be present, and the value is what tells
+ * fn_registrar_movimiento_caja to do a single (non cross-currency) insert. The
+ * import path has no monto_destino column anymore (spec §5 amendment), so a
+ * cross-currency transfer hits the backend's own validation and fails as a
+ * normal per-row error.
  */
 export function rowToMovementParams(
   row: WorksetRow,
@@ -159,16 +160,6 @@ export function rowToMovementParams(
   const tipo: ImportTipo = row.tipo ?? 'income'
   const monto = Math.abs(row.monto ?? 0)
   const isTransfer = tipo === 'transfer'
-
-  const crossesCurrency =
-    isTransfer && !sameCurrency(ids.origenCurrency, ids.destinoCurrency)
-  const destinationAmount =
-    crossesCurrency &&
-    ids.destinationAmount !== null &&
-    ids.destinationAmount !== undefined &&
-    ids.destinationAmount > 0
-      ? ids.destinationAmount
-      : null
 
   return {
     p_tipo: tipo,
@@ -183,7 +174,7 @@ export function rowToMovementParams(
     p_proyecto_id: null,
     p_cuenta_ingreso_id: null,
     p_detalle: row.detalle ? row.detalle : null,
-    p_destination_amount: isTransfer ? destinationAmount : null,
+    p_destination_amount: null,
   }
 }
 
@@ -227,12 +218,10 @@ export async function executeImport({
 
   // ── 1) Wallets ─────────────────────────────────────────────────────────
   const walletIds = new Map<string, number>()
-  const walletCurrency = new Map<string, string>()
   const walletErrors = new Map<string, string>()
   let walletsCreated = 0
 
   for (const target of resolutions.wallets) {
-    walletCurrency.set(target.name, target.currency)
     if (target.existingId !== null && Number.isFinite(target.existingId)) {
       walletIds.set(target.name, asId(target.existingId))
       continue
@@ -354,13 +343,10 @@ export async function executeImport({
       const params = rowToMovementParams(data, {
         origenWalletId: origenId as number,
         destinoWalletId: destinoId ?? null,
-        origenCurrency: walletCurrency.get(origenName) ?? null,
-        destinoCurrency: walletCurrency.get(destinoName) ?? null,
         estructuraEgresoId:
           data.tipo === 'expense' && rowAccountKey !== null
             ? accountIds.get(rowAccountKey) ?? null
             : null,
-        destinationAmount: row.destinationAmount,
       })
       await rpc('fn_registrar_movimiento_caja', params)
       inserted++
