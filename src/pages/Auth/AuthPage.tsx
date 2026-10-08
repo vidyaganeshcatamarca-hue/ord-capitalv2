@@ -307,8 +307,19 @@ export function AuthPage() {
         <div className="onboarding-slide slide-active">
           <ConsentGate
             onAccepted={() => {
+              // Two distinct flows:
+              //  - FIRST RUN: consent was just accepted during the initial
+              //    signup. Continue straight into onboarding (mirrors
+              //    handleWelcomeBackContinue) instead of re-checking status,
+              //    which would hit the generic else-branch and wrongly show
+              //    WelcomeBack right after signup.
+              //  - RECOVERY: a later re-entry (fresh page load with an active
+              //    session and incomplete onboarding) goes through
+              //    checkExistingOnboarding() -> WelcomeBack -> "Continue" ->
+              //    slide 3.
               setShowConsentGate(false)
-              checkExistingOnboarding()
+              setSlide(3)
+              localStorage.setItem('onboarding_slide', '3')
             }}
             onOpenDoc={setLegalDoc}
           />

@@ -13,6 +13,24 @@
   flex-direction: column;
 }
 
+/* ─── Onboarding-Only Font Bumps (mobile readability) ───
+   Scoped to the first-run onboarding container so the app-wide .form-label
+   (13px) and .text-xs utility (12px) stay untouched elsewhere in the app.
+   Sizes keep the user font-scale multiplier. */
+.onboarding-container .slide-subtitle {
+  font-size: calc(16px * var(--font-scale));
+}
+
+.onboarding-container .form-label {
+  font-size: calc(15px * var(--font-scale));
+}
+
+/* Wallet-slide cash hint only: this exact class combo, so any other
+   text-xs element inside onboarding is not affected. */
+.onboarding-container .text-xs.text-muted {
+  font-size: calc(14px * var(--font-scale));
+}
+
 /* ─── ProgressBar Superior Fijo ─── */
 .onboarding-progress-bar {
   position: absolute;
@@ -446,15 +464,23 @@
   margin: 0;
 }
 
-/* Modos Activos */
-.card-active-libertad {
-  border-color: var(--mint);
+/* Modos Activos
+   The selected card must keep a THICK, permanent border. `.mode-card:hover`
+   (0-2-0) beats a plain `.card-active-*` (0-1-0) and would erase the
+   selection on desktop hover / sticky mobile tap, so the active rules also
+   carry an explicit :hover variant at higher specificity, and the border is
+   2px to actually read as selected. box-sizing is border-box globally, so
+   the extra pixel grows inward and does not shift the layout. */
+.mode-card.card-active-libertad,
+.mode-card.card-active-libertad:hover {
+  border: 2px solid var(--mint);
   background: rgba(0, 180, 216, 0.04);
   box-shadow: 0 0 12px rgba(0, 180, 216, 0.1);
 }
 
-.card-active-disciplina {
-  border-color: var(--coral);
+.mode-card.card-active-disciplina,
+.mode-card.card-active-disciplina:hover {
+  border: 2px solid var(--coral);
   background: rgba(230, 57, 70, 0.04);
   box-shadow: 0 0 12px rgba(230, 57, 70, 0.1);
 }

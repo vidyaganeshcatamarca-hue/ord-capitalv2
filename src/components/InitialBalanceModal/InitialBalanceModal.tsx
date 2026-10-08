@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { t, parseError } from '@/locales/i18n'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { Billetera } from '@/types/Billetera'
 
 interface Props {
@@ -62,7 +63,7 @@ export function InitialBalanceModal({ billetera, onClose, onSuccess }: Props) {
         <div style={{ padding: 'var(--space-2) var(--space-2)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
             <h3 className="font-display" style={{ fontSize: '18px', margin: 0 }}>
-              {t('wallet_complete_initial_balance_title', { name: billetera.nombre })}
+              {t('wallet_complete_initial_balance_title', { name: catalogDisplayName(billetera.nombre) })}
             </h3>
             <button type="button" className="text-xs text-muted" onClick={onClose} disabled={loading}>{t('btn_close')}</button>
           </div>
