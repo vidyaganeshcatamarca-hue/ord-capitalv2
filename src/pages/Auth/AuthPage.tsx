@@ -7,6 +7,7 @@ import { t, parseError } from '@/locales/i18n'
 import { ConsentCheckbox } from '@/components/ConsentCheckbox/ConsentCheckbox'
 import { ConsentGate } from '@/components/ConsentGate/ConsentGate'
 import { LegalDocModal } from '@/components/LegalDocModal/LegalDocModal'
+import { consentJustAcceptedThisLoad } from '@/components/AppConsentGate/AppConsentGate'
 import { WelcomeBack } from '@/components/WelcomeBack/WelcomeBack'
 import { LEGAL_VERSIONS } from '@/config/legal'
 import './Auth.css'
@@ -108,6 +109,16 @@ export function AuthPage() {
               navigate('/', { replace: true })
             } else if (status.consentimiento_aceptado === false) {
               setShowConsentGate(true)
+            } else if (consentJustAcceptedThisLoad()) {
+              // El gate se aceptó en ESTA misma carga de página (signup
+              // continuo): continuar el onboarding, sin cartel de recuperación.
+              // Los re-chequeos posteriores (token refresh) no tocan el slide
+              // en curso. En una carga nueva el flag se apaga y el flujo de
+              // recuperación (Bienvenido de nuevo) vuelve a funcionar.
+              if (initial) {
+                setSlide(3)
+                localStorage.setItem('onboarding_slide', '3')
+              }
             } else {
               // Sólo el primer chequeo abre la pantalla de recuperación;
               // re-chequeos por refresh de token no interrumpen el flujo.

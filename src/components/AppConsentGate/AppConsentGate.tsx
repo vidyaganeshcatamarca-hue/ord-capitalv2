@@ -8,6 +8,17 @@ interface AppConsentGateProps {
   children: ReactNode
 }
 
+// True ONLY when the consent gate was passed during THIS page load: module
+// state dies on a full reload, which is exactly the 'came back later'
+// case the recovery (welcome-back) screen targets. Fresh sign-ups pass
+// the gate in the same load that starts the onboarding, so AuthPage uses
+// this to continue the flow instead of offering account recovery.
+let consentGatePassedThisLoad = false
+
+export function consentJustAcceptedThisLoad(): boolean {
+  return consentGatePassedThisLoad
+}
+
 /**
  * Gate global de consentimiento legal. Se monta entre AppVersionGate
  * y AuthProvider (a nivel App, NO dentro de AuthPage).
@@ -86,6 +97,7 @@ export function AppConsentGate({ children }: AppConsentGateProps) {
     <>
       <ConsentGate
         onAccepted={() => {
+          consentGatePassedThisLoad = true
           setNeedsConsent(false)
           void runCheck()
         }}
