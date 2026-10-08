@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { useNavigate } from 'react-router-dom'
@@ -45,6 +45,11 @@ export function AuthPage() {
 
   // Welcome back (recuperación de onboarding incompleto)
   const [showWelcomeBack, setShowWelcomeBack] = useState(false)
+  // El primero check de este mount es el único que puede abrir la pantalla
+  // de recuperación: AuthContext re-dispara onAuthStateChange en cada
+  // TOKEN_REFRESHED, y ese re-chequeo a mitad de onboarding (consent OK +
+  // incompleto) no debe interrumpir el flujo continuo con el cartel.
+  const ranInitialCheck = useRef(false)
 
   // Slide 3: Wallet State
   const [walletName, setWalletName] = useState('')
@@ -79,6 +84,8 @@ export function AuthPage() {
 
   const checkExistingOnboarding = async (retries = 3, delay = 200) => {
     setLoading(true)
+    const initial = !ranInitialCheck.current
+    ranInitialCheck.current = true
     const localCompleted = localStorage.getItem('onboarding_completo') === 'true'
 
     try {
@@ -102,7 +109,9 @@ export function AuthPage() {
             } else if (status.consentimiento_aceptado === false) {
               setShowConsentGate(true)
             } else {
-              setShowWelcomeBack(true)
+              // Sólo el primer chequeo abre la pantalla de recuperación;
+              // re-chequeos por refresh de token no interrumpen el flujo.
+              if (initial) setShowWelcomeBack(true)
             }
             return // Éxito
           }
