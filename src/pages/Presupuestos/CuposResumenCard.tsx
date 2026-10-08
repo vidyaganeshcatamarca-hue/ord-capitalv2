@@ -10,6 +10,7 @@ export interface CupoResumen {
   monto_limite: number
   monto_consumido: number
   porcentaje_llenado: number
+  estado: string
 }
 
 interface Props {
@@ -38,16 +39,22 @@ const writeAbierto = (abierto: boolean) => {
   }
 }
 
-// Traffic-light thresholds (same cuts as estado_sobre in fn_reporte_sobres_detalle)
-const UMBRAL_WARNING = 70
-const UMBRAL_OVER = 100
+// Traffic-light SOURCE OF TRUTH is the RPC itself (fn_reporte_termometro
+// v3, 'estado' column): it computes on the REAL cycle income, server-side.
 
-type Estado = 'verde' | 'amarillo' | 'rojo'
+type Estado = 'verde' | 'amarillo' | 'rojo' | 'sin_datos'
 
 const ESTADO_COLOR: Record<Estado, string> = {
   verde: 'var(--mint)',
   amarillo: 'var(--amber)',
   rojo: 'var(--red)',
+  sin_datos: 'var(--text-3)',
+}
+const mapEstado = (estado: unknown): Estado => {
+  if (estado === 'verde') return 'verde'
+  if (estado === 'amarillo_precaucion') return 'amarillo'
+  if (estado === 'rojo_excedido') return 'rojo'
+  return 'sin_datos'
 }
 
 // Fixed order used for the distribution title in the collapsed header
@@ -65,17 +72,13 @@ const FALLBACK_META = { labelKey: 'budget_resumen_cupos_title', icon: '•', col
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const estadoPorLlenado = (pct: number): Estado => {
-  if (pct > UMBRAL_OVER) return 'rojo'
-  if (pct >= UMBRAL_WARNING) return 'amarillo'
-  return 'verde'
-}
+const estadoPorLlenado = mapEstado
 
 const peorEstado = (cupos: CupoResumen[]): Estado => {
-  const pct = cupos.map(c => Number(c.porcentaje_llenado) || 0)
-  if (pct.some(v => v > UMBRAL_OVER)) return 'rojo'
-  if (pct.some(v => v >= UMBRAL_WARNING)) return 'amarillo'
-  return 'verde'
+  const estados = cupos.map(c => mapEstado(c.estado))
+  if (estados.some(e => e === 'rojo')) return 'rojo'
+  if (estados.some(e => e === 'amarillo')) return 'amarillo'
+  return estados.some(e => e === 'verde') ? 'verde' : 'sin_datos'
 }
 
 
@@ -102,7 +105,7 @@ export function CuposResumenCard({ cupos }: Props) {
       meta,
       llenado,
       config: Number(c.porcentaje_configurado) || 0,
-      estado: estadoPorLlenado(llenado) as Estado,
+      estado: mapEstado(c.estado),
     }
   })
 
@@ -136,9 +139,10 @@ export function CuposResumenCard({ cupos }: Props) {
         <div className="crc-body-inner">
           <div className="crc-rows">
             {rows.map(i => {
-              const over = i.llenado > UMBRAL_OVER
-              const fillPct = Math.min(Math.max(i.llenado, 0), 100)
-              const fillColor = over ? 'var(--red)' : ESTADO_COLOR[i.estado]
+              const over = i.estado === 'rojo'
+              const sinDatos = i.estado === 'sin_datos'
+              const fillPct = sinDatos ? 0 : Math.min(Math.max(i.llenado, 0), 100)
+              const fillColor = ESTADO_COLOR[i.estado]
               return (
                 <div key={i.key} className="crc-row">
                   <span className="crc-row-icon">{i.meta.icon}</span>
@@ -151,9 +155,9 @@ export function CuposResumenCard({ cupos }: Props) {
                   <span className={`crc-row-dot ${i.estado}`} style={{ background: ESTADO_COLOR[i.estado] }} />
                   <span
                     className="crc-row-pct font-mono"
-                    style={{ color: over ? 'var(--red)' : ESTADO_COLOR[i.estado] }}
+                    style={{ color: ESTADO_COLOR[i.estado] }}
                   >
-                    {i.llenado.toFixed(0)}%
+                    {sinDatos ? '—' : `${i.llenado.toFixed(0)}%`}
                   </span>
                   <div className="crc-row-bar">
                     <div

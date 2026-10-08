@@ -1325,6 +1325,7 @@ export const wallets = {
   income_donut_periodo_anio: "Año actual",
   income_donut_loading: "Cargando…",
   income_donut_empty: "No registraste ingresos en este período",
+  fuente_sin_asociar: "Sin fuente asociada",
 
   // Toasts
   toast_enter_name: "Por favor, ingresa el nombre de la cuenta",

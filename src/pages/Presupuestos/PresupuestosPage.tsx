@@ -216,6 +216,7 @@ export function PresupuestosPage() {
             monto_limite: Number(row.monto_limite) || 0,
             monto_consumido: Number(row.monto_consumido) || 0,
             porcentaje_llenado: Number(row.porcentaje_llenado) || 0,
+            estado: String(row.estado ?? 'sin_datos'),
           })),
         )
       }

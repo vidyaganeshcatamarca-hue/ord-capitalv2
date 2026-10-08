@@ -665,7 +665,7 @@ function IncomeSourcesDonut({ hideAmounts }: { hideAmounts: boolean }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
                   <span style={{ display: 'inline-block', width: '12px', height: '12px', borderRadius: '3px', background: item.color, flexShrink: 0 }} />
                   <span style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {item.nombre}
+                    {t(item.nombre)}
                   </span>
                 </div>
                 <span className="font-mono" style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text-secondary)', flexShrink: 0 }}>
