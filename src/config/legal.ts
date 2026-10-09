@@ -1,17 +1,18 @@
 /**
- * Versiones vigentes de los documentos legales.
+ * Versiones de bootstrap de los documentos legales.
  *
- * Single source of truth para el consentimiento que ORD registra al
- * primer sign-up (ver `useConsentimientoLegal.ts`, `fn_handle_new_user`,
- * `fn_registrar_consentimiento_legal`).
+ * Fuente de verdad en RUNTIME: `fn_obtener_estado_legal` (tabla
+ * `legal_document_version` + log `p_legal_consentimientos`). Este valor solo
+ * se usa en dos lugares:
+ *   1. Bootstrap del sign-up: `fn_handle_new_user` recibe las versiones en
+ *      `options.data` antes de que exista sesión para consultar la RPC
+ *      (ver `AuthPage` / `useConsentimientoLegal.registrarConsentimiento`).
+ *   2. Fallback sin conexión.
  *
- * Cómo actualizar cuando cambie un documento:
- *   1. Cambiar el valor aquí.
- *   2. Actualizar el HTML correspondiente en `public/legal/`.
- *   3. Rebuild + deploy.
- *
- * Nota: bajo el alcance actual, los usuarios existentes NO se
- * re-promptan al subir versión. Solo nuevos sign-ups reciben la nueva.
+ * Regla de mantenimiento: al publicar una fila nueva en
+ * `legal_document_version`, actualizar `LEGAL_VERSIONS` en la MISMA release.
+ * El gate de re-aceptación (`LegalUpdateGate`) siempre usa las versiones
+ * vigentes que devuelve la RPC, no este archivo.
  */
 
 export const LEGAL_VERSIONS = {

@@ -14,6 +14,7 @@ import { SideNav } from '@/components/SideNav/SideNav'
 import { PWABanner } from '@/components/PWABanner'
 import { AppVersionGate } from '@/components/AppVersionGate/AppVersionGate'
 import { AppConsentGate } from '@/components/AppConsentGate/AppConsentGate'
+import { LegalUpdateGate } from '@/components/LegalUpdateGate/LegalUpdateGate'
 import { TelemetryRouteTracker } from '@/components/TelemetryRouteTracker/TelemetryRouteTracker'
 
 
@@ -261,6 +262,7 @@ export default function App() {
       <ErrorBoundary>
         <AppVersionGate>
         <AppConsentGate>
+        <LegalUpdateGate>
         <AuthProvider>
           <SessionTrackerProvider>
             <HogarProvider>
@@ -285,6 +287,7 @@ export default function App() {
             </HogarProvider>
           </SessionTrackerProvider>
         </AuthProvider>
+        </LegalUpdateGate>
         </AppConsentGate>
         </AppVersionGate>
       </ErrorBoundary>

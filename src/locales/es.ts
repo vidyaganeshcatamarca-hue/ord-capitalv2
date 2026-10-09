@@ -616,6 +616,19 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   toast_consent_error: "No pudimos registrar tu consentimiento. Intentalo de nuevo.",
   error_consent_required: "Debes aceptar los términos y condiciones para continuar.",
 
+  // Versionado legal (LegalUpdateGate): overlay de re-aceptación + modal de aviso
+  legal_update_overlay_title: "Actualizá los términos para continuar",
+  legal_update_overlay_body: "Actualizamos nuestros Términos y Condiciones y la Política de Privacidad. Para seguir usando ORD Capital Personal necesitamos que los aceptes nuevamente.",
+  legal_update_accept: "Aceptar y continuar",
+  legal_update_retry: "Reintentar",
+  legal_update_error: "No pudimos registrar los cambios. Intentalo de nuevo.",
+  legal_update_notify_title: "Actualizamos nuestros Términos y Política de Privacidad",
+  legal_update_notify_summary: "Hicimos cambios en los documentos legales. Podés revisarlos ahora; no afectan el uso de la app.",
+  legal_update_view_changes: "Ver cambios",
+  legal_update_continue: "Continuar",
+  legal_update_terms_label: "Términos y Condiciones de Uso",
+  legal_update_privacy_label: "Política de Privacidad",
+
   // Versión de app (AppVersionGate)
   appversion_banner_title: "Hay una nueva versión disponible",
   appversion_banner_message: "Actualizá para disfrutar las mejoras.",

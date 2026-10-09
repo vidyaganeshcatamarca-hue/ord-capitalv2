@@ -1,0 +1,84 @@
+/* Gate de versionado legal (spec versionado-legal §5).
+ * Overlay bloqueante: mismo lenguaje visual que ConsentGate (full-screen,
+ * backdrop difuminado, card centrada). El modal de aviso (notify) comparte la
+ * card pero NO captura los clics del fondo: la app sigue usable. */
+
+/* z-index por debajo de LegalDocModal (1100) para que el HTML del documento
+ * abierto desde el gate quede SIEMPRE por encima del overlay. */
+.legal-update-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+}
+
+/* Non-blocking (§5.3 "app not blocked"): el fondo deja pasar los eventos a la
+ * app de abajo; solo la card captura los clics. */
+.legal-update-notify-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  pointer-events: none;
+}
+
+.legal-update-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.legal-update-card--notify {
+  pointer-events: auto;
+}
+
+.legal-update-title {
+  color: var(--text);
+  font-size: calc(20px * var(--font-scale));
+  font-weight: 700;
+}
+
+.legal-update-body {
+  color: var(--text-3);
+  font-size: calc(14px * var(--font-scale));
+  line-height: 1.5;
+}
+
+.legal-update-error {
+  color: var(--coral);
+  font-size: calc(13px * var(--font-scale));
+  line-height: 1.4;
+}
+
+.legal-update-links {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.legal-update-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--accent-mint);
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
