@@ -84,3 +84,7 @@ y modal combinado no bloqueante para avisos. `usuarios` queda libre de campos le
 - Desviaciones aceptadas del writer: ON DELETE CASCADE en user_id (convención p_app_sessions), REVOKE/GRANT belt-and-braces, regex de formato de versión (protege el cast de fn_compare_versions), rol admin + audit en las RPCs admin, skip de 'aceptado' con version NULL, funnels notas actualizadas.
 - fn_compare_versions existe (funcionesSQL/fn_compare_versions.md): IMMUTABLE, -1/0/1, compara primeros dos segmentos; el validador de formato lo protege.
 - Deuda registrada: tests/sql/consentimiento_tyc_test.sql + migration_consentimiento_tyc.sql quedan obsoletos tras el DROP futuro; índice (doc_type, evento, version) diferido.
+## Pendiente de memoria (para proxima sesion con mem_* disponible)
+
+- Fix Engram aplicado (mcp.json engram exposure codemode -> direct; causa: -builtin:codemode matava la unica via, pi mcp list OK).
+- Persistir mirror Engram del feature versionado-legal: decision (tabla DB enfoque B + log usuarios) / bugfix (derivacion pending_action con guard requires_acceptance) / pattern (anti-bypass versiones NULL, aceptar sella notificado) / config (fix exposure). topic keys sugeridos: architecture/legal-versioning, bugfix/legal-pending-action, config/engram-exposure-direct.
