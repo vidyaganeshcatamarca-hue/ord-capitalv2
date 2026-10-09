@@ -56,6 +56,16 @@ export async function registrarConsentimiento(
     p_terminos_version: versions.terminos,
     p_privacidad_version: versions.privacidad,
   })
+  // Aceptar implica notificado (versionado-legal §5): sin esto, cada nuevo
+  // sign-up veria el modal de aviso justo despues de haber aceptado esa
+  // misma version en el gate de onboarding. Fire-and-forget: si falla, la
+  // proxima `obtenerEstadoLegal` vuelve a derivar 'notify' y se reintenta —
+  // el modal es inofensivo, solo duplicado potencial.
+  try {
+    await registrarNotificacionLegal()
+  } catch {
+    // best-effort: la aceptacion ya quedo registrada
+  }
   return data
 }
 
