@@ -687,7 +687,7 @@ export const voice = {
   transcribing: "Transcribiendo el audio...",
   interpreting: "Interpretando el movimiento...",
   finalizing: "Finalizando...",
-  sent: "Listo. El movimiento quedó en revisión.",
+  sent: "Listo. El movimiento quedó para revisión.",
   processing_bg: "Lo estamos procesando. Te avisaremos cuando esté listo para aprobación.",
   not_sent_hint: "El audio no se envió.",
   seconds_left: "{seconds} s restantes",
@@ -1141,7 +1141,7 @@ export const saneamiento = {
   saneamiento_sin_detalle: "Sin detalle",
 
   // Editar modal
-  saneamiento_editar_titulo: "✏️ Editar Gasto",
+  saneamiento_editar_titulo: "✏️ Editar movimiento",
   saneamiento_monto: "Monto",
   saneamiento_categoria: "Categoría",
   saneamiento_seleccionar_categoria: "Seleccionar categoría",
