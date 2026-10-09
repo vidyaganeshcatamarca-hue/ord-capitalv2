@@ -88,3 +88,17 @@ y modal combinado no bloqueante para avisos. `usuarios` queda libre de campos le
 
 - Fix Engram aplicado (mcp.json engram exposure codemode -> direct; causa: -builtin:codemode matava la unica via, pi mcp list OK).
 - Persistir mirror Engram del feature versionado-legal: decision (tabla DB enfoque B + log usuarios) / bugfix (derivacion pending_action con guard requires_acceptance) / pattern (anti-bypass versiones NULL, aceptar sella notificado) / config (fix exposure). topic keys sugeridos: architecture/legal-versioning, bugfix/legal-pending-action, config/engram-exposure-direct.
+
+## Delivery a produccion (2026-10-09)
+
+Cherry-pick de los 7 commits (afa226b..7a16a25) + push a origin/produccion por pedido explicito del dueno. Pre-push: tsc OK + smoke consent OK. Commit ajeno en es.ts (copy voice/saneamiento) quedo fuera del delivery.
+
+| feature | produccion |
+|---|---|
+| 37f907f | afa226b |
+| 93e12e8 | 1aed352 |
+| 6dd7c2d | 9fa50a8 |
+| a9e9eff | cdc6025 |
+| e88c708 | 528dd0d |
+| 670eec1 | 5071c39 |
+| dc91dda | 7a16a25 |
