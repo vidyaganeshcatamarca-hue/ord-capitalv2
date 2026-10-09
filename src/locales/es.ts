@@ -629,6 +629,10 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   legal_update_terms_label: "Términos y Condiciones de Uso",
   legal_update_privacy_label: "Política de Privacidad",
 
+  // Gate de orientacion (overlay nativo en landscape)
+  gate_orientation_title: "Por favor, rotá tu dispositivo",
+  gate_orientation_body: "Esta app está optimizada para vista vertical. Poné tu celular en posición vertical para continuar.",
+
   // Versión de app (AppVersionGate)
   appversion_banner_title: "Hay una nueva versión disponible",
   appversion_banner_message: "Actualizá para disfrutar las mejoras.",
@@ -2299,7 +2303,3 @@ export const tour = {
   'ajustes.title': 'Conocé los ajustes',
   'ajustes.description': 'Te mostramos cómo personalizar tu experiencia.',
 };
-  // Gate de orientacion (overlay nativo en landscape)
-  gate_orientation_title: "Por favor, rotá tu dispositivo",
-  gate_orientation_body: "Esta app está optimizada para vista vertical. Poné tu celular en posición vertical para continuar.",
-
