@@ -2,7 +2,10 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.75);
-  z-index: 1000;
+  /* Confirm dialogs must always stack above every bottom sheet (1010) and
+     full-screen modal (1100: LegalDocModal / EditMovementModal / LegalUpdateGate),
+     otherwise the confirm is hidden when it is opened from a bottom sheet. */
+  z-index: 1200;
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
