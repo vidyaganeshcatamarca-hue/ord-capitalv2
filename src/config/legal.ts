@@ -15,8 +15,8 @@
  */
 
 export const LEGAL_VERSIONS = {
-  terminos: '1.0',
-  privacidad: '1.0',
+  terminos: '1.1',
+  privacidad: '1.1',
 } as const
 
 export type LegalDocType = keyof typeof LEGAL_VERSIONS
