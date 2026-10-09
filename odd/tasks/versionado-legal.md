@@ -56,12 +56,28 @@ y modal combinado no bloqueante para avisos. `usuarios` queda libre de campos le
 
 ## Tanda 3 — Verificación
 
-- [ ] Test SQL transaccional con ROLLBACK (runner solo con OK; create/run/drop vía Management API)
+- [x] Test SQL transaccional con ROLLBACK (runner solo con OK; create/run/drop vía Management API) (PASS 29/29 - fn_run_legal_versionado_test ejecutado con BEGIN/ROLLBACK y DROP final; cero residuo verificado)
 - [ ] `node --test "tests/**/*.test.js"` · `node scripts/check-i18n.mjs` · `npx tsc --noEmit` (orquestador)
 
 ## Log de commits (evidencia)
 
 - `37f907f` feat(legal): bump terms and privacy docs to v1.1
+- `93e12e8` feat(legal): add legal versioning SQL batch (tables, RPCs, backfill, seeds)
+- `6dd7c2d` feat(legal): add legal update gates (blocking re-acceptance overlay, combined notify modal)
+- `a9e9eff` fix(legal): seal legal notification on acceptance (signup flow)
+
+## Checks Tanda 3 (orquestador)
+
+- tests/sql/legal_versionado_test.js: PASS 29/29 (A fallo seguro, B rollout notify, C/D derivacion, E guard requires_acceptance, F anti-bypass, G idempotencia, H gate admin JSON)
+- Verificacion post-test via Management API: log identico al snapshot pre-test, sin fila 2.0, runner DROP-eado -> cero residuo
+- Pendiente (fuera del scope del runner): smoke manual del overlay/modal en la app con un usuario real
+
+## Checks Tanda 2 (orquestador)
+
+- npx tsc --noEmit: OK
+- node tests/consentimiento.test.js: OK (pin LEGAL_VERSIONS actualizado a 1.1)
+- node tests/consentimiento_v2.test.js: OK
+- node scripts/check-i18n.mjs: FAIL por deuda preexistente (249 USED-NOT-DEFINED + hardcoded legacy); sin incidencias nuevas de legal_update_*
 
 ## Notas de revisión del batch (Tanda 0)
 
