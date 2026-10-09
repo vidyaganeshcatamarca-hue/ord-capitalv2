@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App'
+import { t } from '@/locales/i18n'
 
 // Sequential session counter for debugging — increments on every page load.
 ;(() => {
@@ -69,6 +70,15 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
 //   2) CSS fallback: overlay full-screen cuando @media (orientation: landscape) + max-height
 // ============================================
 
+function isNativePlatform(): boolean {
+  // Mismo patron de guard que lib/haptics.ts.
+  try {
+    return typeof window !== 'undefined' && !!(window as any).Capacitor?.isNativePlatform?.()
+  } catch {
+    return false
+  }
+}
+
 function isMobileDevice(): boolean {
   if (typeof window === 'undefined') return false
   // Heuristica: dispositivos moviles tienen ancho chico en portrait.
@@ -81,21 +91,27 @@ function isMobileDevice(): boolean {
 
 function injectOrientationLockOverlay(): void {
   if (document.getElementById('orientation-lock-overlay')) return
+  const title = t('gate_orientation_title')
+  const body = t('gate_orientation_body')
   const overlay = document.createElement('div')
   overlay.id = 'orientation-lock-overlay'
   overlay.className = 'orientation-lock-overlay'
   overlay.setAttribute('role', 'alertdialog')
   overlay.setAttribute('aria-modal', 'true')
-  overlay.setAttribute('aria-label', 'Por favor, rota tu dispositivo')
+  overlay.setAttribute('aria-label', title)
   overlay.innerHTML = `
     <div class="orientation-lock-icon" aria-hidden="true">📱</div>
-    <h2>Por favor, rotá tu dispositivo</h2>
-    <p>Esta app está optimizada para vista vertical. Poné tu celular en posición vertical para continuar.</p>
+    <h2>${title}</h2>
+    <p>${body}</p>
   `
   document.body.appendChild(overlay)
 }
 
 async function tryLockPortrait(): Promise<void> {
+  // Gate de orientacion solo en nativo (Capacitor). En web — incl. PWA de
+  // escritorio y ventanas chicas — la heuristica por tamano daba falsos
+  // positivos y mostraba el overlay donde no correspondia.
+  if (!isNativePlatform()) return
   if (!isMobileDevice()) return
   // Intentar lock nativo (Capacitor, navegadores HTTPS modernos)
   const orientation = (screen as any).orientation

@@ -981,8 +981,11 @@ input::placeholder, textarea::placeholder {
   50% { transform: rotate(0deg); }
 }
 
-/* Mostrar solo en landscape + dispositivos moviles (ancho limitado). */
-@media (orientation: landscape) and (max-height: 500px) {
+/* Mostrar solo en landscape, en dispositivos moviles (ancho limitado) y con
+   puntero tactil: evita que una ventana de escritorio baja (<= 500px) active
+   el gate de orientacion. Belt-and-braces para PWA abierta en un browser movil,
+   donde screen.orientation.lock() no esta disponible. */
+@media (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
   .orientation-lock-overlay {
     display: flex;
   }
