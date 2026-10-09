@@ -2299,3 +2299,7 @@ export const tour = {
   'ajustes.title': 'Conocé los ajustes',
   'ajustes.description': 'Te mostramos cómo personalizar tu experiencia.',
 };
+  // Gate de orientacion (overlay nativo en landscape)
+  gate_orientation_title: "Por favor, rotá tu dispositivo",
+  gate_orientation_body: "Esta app está optimizada para vista vertical. Poné tu celular en posición vertical para continuar.",
+
