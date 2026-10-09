@@ -70,7 +70,7 @@ y modal combinado no bloqueante para avisos. `usuarios` queda libre de campos le
 
 - tests/sql/legal_versionado_test.js: PASS 29/29 (A fallo seguro, B rollout notify, C/D derivacion, E guard requires_acceptance, F anti-bypass, G idempotencia, H gate admin JSON)
 - Verificacion post-test via Management API: log identico al snapshot pre-test, sin fila 2.0, runner DROP-eado -> cero residuo
-- Pendiente (fuera del scope del runner): smoke manual del overlay/modal en la app con un usuario real
+- Pendiente (fuera del scope del runner): smoke manual del modal de aviso (escenarios 1-4 del reporte de cierre). El overlay bloqueante se verifica solo cuando exista una 2.0 real: decision del dueno (2026-10-09) de confiar en lo ya probado (runner E: derivacion require_acceptance verificada; overlay reutiliza la linea del gate de onboarding productivo). Sin staging ni mocks.
 
 ## Checks Tanda 2 (orquestador)
 
