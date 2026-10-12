@@ -1,11 +1,27 @@
 import { useCallback, useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
+import { useLanguage } from '@/locales/LanguageProvider'
+import { buildLocale, currencySymbolPosition, resolveCurrencySymbol } from '@/lib/currencySymbol'
 
 interface UserFormatPrefs {
   decimales_moneda_local: number
   decimales_segunda_moneda: number
   separador_miles: string
   separador_decimal: string
+}
+
+/** Region resolved from `fn_obtener_region_usuario()`. */
+export interface UserRegion {
+  countryCode: string
+  localCurrency: string
+  language: string
+}
+
+/** Raw PostgREST row shape returned by `fn_obtener_region_usuario()`. */
+interface UserRegionRow {
+  pais_codigo?: string | null
+  moneda_default?: string | null
+  idioma_default?: string | null
 }
 
 const DEFAULTS: UserFormatPrefs = {
@@ -15,8 +31,70 @@ const DEFAULTS: UserFormatPrefs = {
   separador_decimal: ',',
 }
 
+/**
+ * The hook mounts on many screens at once and every instance needs the same
+ * region, so the in-flight promise is memoized at module scope: N mounts share
+ * one RPC instead of firing N identical requests.
+ *
+ * A failure is intentionally NOT cached. The `.catch` clears the promise so a
+ * later mount (or `reloadRegion`) can retry instead of inheriting a broken
+ * state for the rest of the session.
+ */
+let regionPromise: Promise<UserRegion | null> | null = null
+
+/** Drops the memoized region request so the next call hits the RPC again. */
+export function invalidateRegionCache(): void {
+  regionPromise = null
+}
+
+function toText(value: unknown): string {
+  return String(value ?? '').trim()
+}
+
+function fetchUserRegion(): Promise<UserRegion | null> {
+  if (!regionPromise) {
+    regionPromise = rpc<UserRegionRow[]>('fn_obtener_region_usuario')
+      .then((data) => {
+        const row = Array.isArray(data) ? data[0] : data
+        if (!row) return null
+        const localCurrency = toText(row.moneda_default).toUpperCase()
+        if (!localCurrency) return null
+        return {
+          countryCode: toText(row.pais_codigo).toUpperCase(),
+          localCurrency,
+          language: toText(row.idioma_default).toLowerCase(),
+        }
+      })
+      .catch(() => {
+        regionPromise = null
+        return null
+      })
+  }
+  return regionPromise
+}
+
 export function useNumberFormat() {
+  const { lang } = useLanguage()
   const [prefs, setPrefs] = useState<UserFormatPrefs>(DEFAULTS)
+  const [region, setRegion] = useState<UserRegion | null>(null)
+  const [regionLoading, setRegionLoading] = useState(true)
+  const [regionError, setRegionError] = useState(false)
+  const [regionAttempt, setRegionAttempt] = useState(0)
+
+  useEffect(() => {
+    let cancelled = false
+    setRegionLoading(true)
+    setRegionError(false)
+    fetchUserRegion().then((resolved) => {
+      if (cancelled) return
+      setRegion(resolved)
+      setRegionError(resolved === null)
+      setRegionLoading(false)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [regionAttempt])
 
   useEffect(() => {
     let cancelled = false
@@ -25,39 +103,74 @@ export function useNumberFormat() {
         if (cancelled) return
         const row = Array.isArray(data) ? data[0] : data
         if (!row) return
+        // Decimals and separators are derived by the server when the country
+        // is confirmed; the client only reads and clamps them.
         setPrefs({
           decimales_moneda_local: clampInt(row.decimales_moneda_local, 0, 4, 0),
           decimales_segunda_moneda: clampInt(row.decimales_segunda_moneda, 0, 4, 1),
-          separador_miles: typeof row.separador_miles === 'string' && row.separador_miles ? row.separador_miles : DEFAULTS.separador_miles,
-          separador_decimal: typeof row.separador_decimal === 'string' && row.separador_decimal ? row.separador_decimal : DEFAULTS.separador_decimal,
+          separador_miles:
+            typeof row.separador_miles === 'string' && row.separador_miles
+              ? row.separador_miles
+              : DEFAULTS.separador_miles,
+          separador_decimal:
+            typeof row.separador_decimal === 'string' && row.separador_decimal
+              ? row.separador_decimal
+              : DEFAULTS.separador_decimal,
         })
       })
       .catch(() => {
-        // Mantener defaults si la RPC falla.
+        // Keep defaults if the RPC fails.
       })
     return () => {
       cancelled = true
     }
   }, [])
 
+  const locale = buildLocale(lang, region?.countryCode ?? null)
+
+  const reloadRegion = useCallback(() => {
+    invalidateRegionCache()
+    setRegionAttempt((attempt) => attempt + 1)
+  }, [])
+
   const formatMonto = useCallback(
-    (monto: number | string, moneda: string = 'ARS'): string => {
+    (monto: number | string, moneda?: string): string => {
       const n = typeof monto === 'string' ? parseFloat(monto) : Number(monto)
       if (Number.isNaN(n)) return '-'
-      const digits = moneda === 'USD' ? prefs.decimales_segunda_moneda : prefs.decimales_moneda_local
+
+      // No explicit currency means the user's local currency, never a literal.
+      const currency = toText(moneda || region?.localCurrency).toUpperCase()
+      if (!currency) return '-'
+
+      const digits =
+        currency === 'USD' ? prefs.decimales_segunda_moneda : prefs.decimales_moneda_local
       const fixed = n.toFixed(digits)
       const [intPart, decPart] = fixed.split('.')
       const intWithThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, prefs.separador_miles)
-      const symbol = moneda === 'USD' ? 'U$S' : '$'
-      if (decPart !== undefined && digits > 0) {
-        return `${symbol} ${intWithThousands}${prefs.separador_decimal}${decPart}`
-      }
-      return `${symbol} ${intWithThousands}`
+
+      const symbol = resolveCurrencySymbol(currency, locale, null)
+      const position = currencySymbolPosition(currency, locale)
+      const numberText =
+        decPart !== undefined && digits > 0
+          ? `${intWithThousands}${prefs.separador_decimal}${decPart}`
+          : intWithThousands
+
+      if (!symbol) return numberText
+      return position === 'after' ? `${numberText} ${symbol}` : `${symbol} ${numberText}`
     },
-    [prefs]
+    [prefs, region, locale]
   )
 
-  return { formatMonto, prefs }
+  return {
+    formatMonto,
+    prefs,
+    localCurrency: region?.localCurrency ?? null,
+    countryCode: region?.countryCode ?? null,
+    locale,
+    regionLoading,
+    regionError,
+    reloadRegion,
+  }
 }
 
 function clampInt(value: unknown, min: number, max: number, fallback: number): number {

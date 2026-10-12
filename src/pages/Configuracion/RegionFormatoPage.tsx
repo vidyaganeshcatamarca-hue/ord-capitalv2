@@ -5,6 +5,7 @@ import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { isSupported, SUPPORTED } from '@/locales/language'
 import { useLanguage } from '@/locales/LanguageProvider'
+import { invalidateRegionCache } from '@/hooks/useNumberFormat'
 import './ConfiguracionPage.css'
 import './ConfigSectionPage.css'
 
@@ -126,6 +127,10 @@ export function RegionFormatoPage() {
         p_moneda_local: newRegion.moneda_default,
         p_idioma: newRegion.idioma_default,
       })
+      // The region is memoized module-wide because many screens read it. Without
+      // this, changing the country here leaves the rest of the app showing the
+      // previous currency until a full reload.
+      invalidateRegionCache()
     } catch (err) {
       showToast(parseError(err), 'error')
     }
