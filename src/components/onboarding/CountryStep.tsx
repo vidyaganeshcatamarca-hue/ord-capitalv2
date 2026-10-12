@@ -4,7 +4,9 @@ import { parseError, t } from '@/locales/i18n'
 import { parseDeviceLocales, resolveRegionFromLocale } from '@/locales/language'
 import { useLanguage } from '@/locales/LanguageProvider'
 import { useOptionalAuth } from '@/contexts/AuthContext'
+import { Capacitor } from '@capacitor/core'
 import { useCountryCatalog } from '@/lib/useCountryCatalog'
+import { resolveCountrySuggestion } from '@/lib/countrySuggestion'
 import { writeRegionSnapshot } from '@/lib/regionSnapshot'
 import {
   currencyName,
@@ -20,7 +22,30 @@ interface CountryStepProps {
   onConfirmed: (country: Country) => void
 }
 
-type CountryOrigin = 'locale' | 'manual'
+type CountryOrigin = 'locale' | 'ip' | 'manual'
+
+/**
+ * Country of the connection, asked to Vercel once per page load.
+ *
+ * It resolves to `null` (never rejects) when the endpoint is missing, the
+ * request fails or it takes too long, because the step must not be blocked
+ * waiting for a signal it can live without.
+ */
+const GEO_TIMEOUT_MS = 2500
+let geoPromise: Promise<string | null> | null = null
+
+function fetchGeoCountry(): Promise<string | null> {
+  if (!geoPromise) {
+    const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
+    const timer = setTimeout(() => controller?.abort(), GEO_TIMEOUT_MS)
+    geoPromise = fetch('/api/geo', { signal: controller?.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => (body && typeof body.country === 'string' ? body.country : null))
+      .catch(() => null)
+      .finally(() => clearTimeout(timer))
+  }
+  return geoPromise
+}
 
 /**
  * Mandatory onboarding step: country. It is always shown and always requires an
@@ -49,6 +74,8 @@ export function CountryStep({ onConfirmed }: CountryStepProps) {
 
   const [selected, setSelected] = useState<Country | null>(null)
   const [origin, setOrigin] = useState<CountryOrigin>('manual')
+  // `undefined` while Vercel is still answering, `null` when there is no signal.
+  const [ipCountry, setIpCountry] = useState<string | null | undefined>(undefined)
   const [unsupported, setUnsupported] = useState(false)
   const [showSearch, setShowSearch] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -57,27 +84,42 @@ export function CountryStep({ onConfirmed }: CountryStepProps) {
   const didPreselect = useRef(false)
 
   useEffect(() => {
-    if (didPreselect.current) return
-
-    if (!deviceRegion) {
-      // No locale signal: nothing to pre-select, the user must choose.
-      didPreselect.current = true
-      return
+    let cancelled = false
+    fetchGeoCountry().then((country) => {
+      if (!cancelled) setIpCountry(country)
+    })
+    return () => {
+      cancelled = true
     }
+  }, [])
+
+  useEffect(() => {
+    if (didPreselect.current) return
+    // Wait for both signals before deciding: pre-selecting from the locale and
+    // reconsidering later would yank a country out from under the user.
+    if (ipCountry === undefined) return
     // Wait for the catalog. If the RPC is still loading or failed, retrying it
     // should still be able to pre-select, so do not mark the attempt as done.
     if (countries.length === 0) return
 
     didPreselect.current = true
-    const match = findCountry(index, deviceRegion)
+
+    const suggestion = resolveCountrySuggestion({
+      isNative: Capacitor.isNativePlatform(),
+      ipCountry,
+      deviceRegion,
+    })
+    if (!suggestion.country) return
+
+    const match = findCountry(index, suggestion.country)
     if (match) {
       setSelected(match)
-      setOrigin('locale')
+      setOrigin(suggestion.source === 'ip' ? 'ip' : 'locale')
     } else {
-      // Detected region is not in the supported catalog (design D19).
+      // Detected country is not in the supported catalog (design D19).
       setUnsupported(true)
     }
-  }, [countries.length, index, deviceRegion])
+  }, [countries.length, index, deviceRegion, ipCountry])
 
   const handleSelect = (country: Country) => {
     setSelected(country)

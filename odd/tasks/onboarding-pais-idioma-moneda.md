@@ -106,6 +106,27 @@ Evidencia: `tests/onboarding/country-catalog.test.js`, `src/lib/countryCatalog.t
 - Al reanudar directo en el slide de billetera, el símbolo del saldo queda vacío en vez de mostrar `$` a la fuerza. Lo cablea WU4a contra el catálogo.
 - Al quitar el selector de moneda quedaron **9 claves sin consumidor** en `es.ts` (`country_ar` … `country_uy`, `label_country_residence`). El gate las reporta como advertencia, no como falla.
 
+### WU3c — Hecha el 2026-10-12
+
+Detección de país por IP, con el orden que decidió el dueño tras ver que un navegador en `es-ES`
+le sugería España estando en Argentina.
+
+- [x] `api/geo.ts` — endpoint de Vercel que lee `x-vercel-ip-country`. Sin terceros: Vercel ya termina la
+      conexión, así que no entra un nuevo procesador de datos. Devuelve `{ country: null }` cuando el
+      header no está (Vercel no lo setea en local).
+- [x] `vercel.json` — el rewrite comodín pasó a `/((?!api/).*)` para no tapar `/api/*`. La doc de Vercel
+      pide envolver la regex en un parámetro sin nombre para el lookahead negativo.
+- [x] `src/lib/countrySuggestion.ts` — módulo puro con el orden: **en nativo gana el dispositivo**, **en
+      web gana la IP** y el navegador queda de último recurso. Sin señal, no hay sugerencia.
+- [x] `CountryStep` — pide la IP una vez (con timeout de 2,5 s), espera a tener las dos señales antes de
+      decidir, y registra el origen real (`ip` | `locale` | `manual`).
+- [x] DDL: el `CHECK` de `origen_pais` acepta `'ip'` (el PRD §20 lo pide y sin eso la confirmación fallaba).
+- [x] Tests del módulo puro: el caso reportado (IP AR + locale ES → AR), y los 7 restantes. **8/8**.
+
+**Pendiente de verificar en el deploy:** los headers de geolocalización no existen en local, así que el
+endpoint solo se puede probar después de deployar. Para comprobarlo: `curl https://<dominio>/api/geo`
+debe devolver `{"country":"AR"}` desde una conexión argentina.
+
 ### WU3b — próximas tareas
 
 - [ ] Consumir `fn_obtener_paises()` con cache; sin snapshot embarcado. **Hecho en WU3a.**
