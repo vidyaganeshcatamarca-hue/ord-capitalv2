@@ -582,6 +582,33 @@ moneda local) en `saldo_operativo` y en el patrimonio. Y `patrimonio_neto_usd` s
 sí lo es; en `fn_reporte_patrimonio_neto_consolidado` no, porque el ARS también está incrustado en el
 contrato del JSON. Por eso se parte en H2a (WU1) y H2b (rollout).
 
+### 6.10 [Corrección posterior] Confirmar el país pasa a ser explícito
+
+La pantalla de Configuración usa `fn_configurar_region_usuario` también para guardar **solo el idioma**.
+Con el estampado incondicional, cambiar el idioma marcaba `confirmado_at`: el país quedaba como
+"confirmado por el usuario" sin que lo hubiera confirmado, y WU3 necesita distinguir "todavía no
+eligió" de "ya confirmó".
+
+```sql
+-- p_origen pasa a DEFAULT NULL, y confirmado_at solo se estampa si el cliente lo declara.
+-- Misma firma: CREATE OR REPLACE es seguro.
+INSERT INTO public.p_config_region
+    (user_id, pais_codigo, moneda_default, idioma_default, origen_pais, confirmado_at)
+VALUES
+    (v_user_id, p_pais_codigo, v_moneda_pais::text, p_idioma, p_origen,
+     CASE WHEN p_origen IS NOT NULL THEN now() ELSE NULL END)
+ON CONFLICT (user_id) DO UPDATE SET
+    ...
+    origen_pais   = COALESCE(EXCLUDED.origen_pais, p_config_region.origen_pais),
+    confirmado_at = CASE
+        WHEN EXCLUDED.origen_pais IS NOT NULL THEN now()
+        ELSE p_config_region.confirmado_at
+    END;
+```
+
+Contrato resultante: **pasar `p_origen` (`'locale'` o `'manual'`) es confirmar el país; no pasarlo
+es solo actualizar el formato regional.** WU3 usa esto para saber si debe mostrar el paso de país.
+
 ---
 
 ## 7. Fase 6 — Claves i18n nuevas (van a `src/locales/es.ts`, WU3)
@@ -707,6 +734,7 @@ configuración de usuario.
 - [x] [H2a] Los dos lookups de cotización de los reportes arreglados
 - [x] Test transaccional en verde (**18/18 PASS**) y sin runner que borrar: el test es un bloque `DO` con excepción forzada
 - [x] [H4] Los 3 overloads legado eliminados (aprobados uno a uno por el dueño), con **9/9 PASS**
+- [x] [Corrección] Confirmar el país es explícito (ver §6.10) — test ampliado a **19/19 PASS**
 - [x] Espejos actualizados en `funcionesSQL/` — 14 archivos, escritos **desde la base** con `pg_get_functiondef`, no transcritos
 - [x] Entrada agregada en `start_info/indice de funciones.md` (#255) para `fn_obtener_paises`
 - [x] Commit de la WU1: `ea0c790`

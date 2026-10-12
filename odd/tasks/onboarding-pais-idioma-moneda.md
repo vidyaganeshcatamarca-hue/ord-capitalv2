@@ -67,6 +67,26 @@ Evidencia: `temp_sql/run_test_wu1.mjs` (18 aserciones), `temp_sql/20_seed_review
 - [ ] Selector de idioma en Configuración (y en el onboarding), funcional con una sola opción.
 - [ ] Tests con diccionario falso de 3 claves: resolver, fallback, persistencia, re-render.
 
+### WU2 — Hecha el 2026-10-12
+
+- [x] `src/locales/language.ts` — módulo puro **sin imports** (requisito para que los tests lo importen directo con Node): `SUPPORTED`, `Lang`, `DEFAULT_LANG`, `isSupported`, `normalizeLocale`, `parseDeviceLocales`, `resolveRegionFromLocale`, `resolveLanguage` y `fallbackChain`.
+- [x] `src/locales/i18n.ts` — mapas de diccionarios, `getLanguage`, `subscribe`, `setLanguage` con caída a `DEFAULT_LANG`, y `t()` recorriendo la cadena de fallback sin tocar el orden plano/`seccion.clave` ni el final `defaultValue || key`.
+- [x] `src/locales/LanguageProvider.tsx` — contexto, persistencia en `localStorage['ord_lang']`, `useSyncExternalStore` y remount por `key={lang}`.
+- [x] `src/App.tsx` — provider dentro de `ModoAppProvider`, con el tracker de telemetría afuera del límite de remount.
+- [x] Selector de idioma funcional en `RegionFormatoPage`, etiquetas vía `Intl.DisplayNames` (verificado en runtime: `es` → "español").
+- [x] Tests con `node:test` que importan el código real: **27/27 PASS**.
+- [x] `npx tsc --noEmit` limpio.
+
+Decisiones del writer que vale la pena registrar: el provider va **debajo** de auth/toast/modo (arriba,
+un cambio de idioma re-dispararía el bootstrap de sesión); `TelemetryRouteTracker` queda fuera del
+límite de remount (adentro duplicaba `main_module_opened`); y los tests afirman invariantes que
+sobreviven al crecimiento, no que el catálogo tenga un solo idioma.
+
+### Deuda anotada que NO es de esta WU
+
+- `tests/lib/locales/i18n.js` es una **copia precompilada vieja** de `i18n.ts`: `i18n-nested-keys.test.js` hoy no testea el módulo real. Preexistente.
+- `RegionFormatoPage` guarda `idioma_default` con la misma llamada que configura el país. Con la §6.10 ya no miente sobre la confirmación, pero WU3 tiene que decidir si el idioma merece su propio camino.
+
 ### WU3 — próximas tareas
 
 - [ ] Consumir `fn_obtener_paises()` con cache; sin snapshot embarcado.
