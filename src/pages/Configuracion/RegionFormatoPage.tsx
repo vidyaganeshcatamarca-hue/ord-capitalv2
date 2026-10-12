@@ -3,6 +3,8 @@ import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
+import { isSupported, SUPPORTED } from '@/locales/language'
+import { useLanguage } from '@/locales/LanguageProvider'
 import './ConfiguracionPage.css'
 import './ConfigSectionPage.css'
 
@@ -73,8 +75,23 @@ function getCurrencyForCountry(code: string) {
   return COUNTRY_OPTIONS.find((c) => c.code === code)?.currency ?? 'ARS'
 }
 
+/**
+ * Language names come from Intl, the same way country names do, so shipping a
+ * new language needs no new key in es.ts.
+ */
+function languageLabel(lang: string): string {
+  try {
+    const display = new Intl.DisplayNames([lang], { type: 'language' })
+    return display.of(lang) ?? t('config_language_spanish')
+  } catch {
+    // Engines built without full ICU have no Intl.DisplayNames.
+    return t('config_language_spanish')
+  }
+}
+
 export function RegionFormatoPage() {
   const { showToast } = useToast()
+  const { lang, setLang } = useLanguage()
   const [region, setRegion] = useState<RegionPrefs>(DEFAULT_REGION)
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS)
   const [loading, setLoading] = useState(true)
@@ -184,10 +201,19 @@ export function RegionFormatoPage() {
             <label htmlFor="idioma-default">{t('config_language')}</label>
             <select
               id="idioma-default"
-              value={region.idioma_default}
-              onChange={(e) => updateRegionField('idioma_default', e.target.value)}
+              value={lang}
+              onChange={(e) => {
+                const next = e.target.value
+                if (!isSupported(next)) return
+                // Switch the live UI first; the region save below keeps the
+                // path this screen already had.
+                setLang(next)
+                updateRegionField('idioma_default', next)
+              }}
             >
-              <option value="es">{t('config_language_spanish')}</option>
+              {SUPPORTED.map((code) => (
+                <option key={code} value={code}>{languageLabel(code)}</option>
+              ))}
             </select>
           </div>
         </article>

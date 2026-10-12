@@ -23,6 +23,10 @@ tests/*
 !tests/voice_errors.test.js
 !tests/voice_codec.test.js
 !tests/voice_storage.test.js
+!tests/i18n/
+tests/i18n/*
+!tests/i18n/language-resolver.test.js
+!tests/i18n/language-dictionary-coverage.test.js
 scratch/
 walkthrough.md
 AGENTS.md

@@ -1,4 +1,5 @@
 import * as es from './es.js';
+import { DEFAULT_LANG, fallbackChain, isSupported } from './language.js';
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry';
 
 // Tanda 4 telemetry (app_error): throttle ~10 tracks per error_code per
@@ -19,19 +20,51 @@ function trackAppError(errorCode: string) {
   }
 }
 
-const locales: Record<string, any> = {
+// Adding a language is one line here plus its `xx.ts` import above.
+const dictionaries: Record<string, any> = {
   es
 };
 
-let currentLang = 'es';
+let currentLang: string = DEFAULT_LANG;
+
+// Subscribers exist because components call t() directly and never read the
+// language themselves: without a notification there is no way to know that
+// every memoized translation in the tree is stale.
+const listeners = new Set<() => void>();
 
 /**
- * Establece el idioma actual del traductor.
+ * Returns the language currently used by the translator.
  */
-export function setLanguage(lang: string) {
-  if (locales[lang]) {
-    currentLang = lang;
+export function getLanguage(): string {
+  return currentLang;
+}
+
+/**
+ * Sets the active language. Unsupported codes resolve to DEFAULT_LANG so the
+ * lookup chain always terminates in a dictionary that exists.
+ */
+export function setLanguage(lang: string): void {
+  const next = isSupported(lang) ? lang : DEFAULT_LANG;
+  if (next === currentLang) return;
+  currentLang = next;
+  for (const listener of listeners) {
+    try {
+      listener();
+    } catch {
+      // A broken subscriber must not keep the rest of the app from updating.
+    }
   }
+}
+
+/**
+ * Registers a listener and returns its unsubscribe function, as expected by
+ * `useSyncExternalStore`.
+ */
+export function subscribe(listener: () => void): () => void {
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+  };
 }
 
 /**
@@ -48,43 +81,50 @@ export function setLanguage(lang: string) {
  *     plana.
  * Si la clave tiene parámetros con formato {param_name}, serán reemplazados por los valores correspondientes.
  *
+ * La cadena de fallback se recorre idioma por idioma; dentro de cada idioma el
+ * orden es siempre el mismo: clave plana primero, `seccion.clave` después.
+ *
  * @param key Clave de traducción (ej. 'error_unauthorized', 'wallets.btn_add_cuenta')
  * @param params Parámetros opcionales para formatear en la cadena traducida
  */
 export function t(key: string, params?: Record<string, any>): string {
-  const dict = locales[currentLang] || es;
-  const sections = Object.values(dict).filter(
-    (s): s is Record<string, any> => !!s && typeof s === 'object' && !Array.isArray(s)
-  );
-
   const format = (raw: string): string => {
     if (!params) return raw
     return raw.replace(/\{(\w+)\}/g, (_, k) => String(params[k] ?? `{${k}}`))
   };
 
-  // 1) Busqueda plana: la key coincide exacta con algun campo de cualquier seccion.
-  for (const section of sections) {
-    if (key in section) {
-      const value = (section as any)[key]
-      if (typeof value === 'string') return format(value)
+  for (const lang of fallbackChain(currentLang)) {
+    const dict = dictionaries[lang]
+    if (!dict) continue
+
+    const sections = Object.values(dict).filter(
+      (s): s is Record<string, any> => !!s && typeof s === 'object' && !Array.isArray(s)
+    );
+
+    // 1) Busqueda plana: la key coincide exacta con algun campo de cualquier seccion.
+    for (const section of sections) {
+      if (key in section) {
+        const value = (section as any)[key]
+        if (typeof value === 'string') return format(value)
+      }
+    }
+
+    // 2) Busqueda anidada: 'wallets.btn_add_cuenta' -> primer segmento es
+    //    nombre de seccion, resto es la key dentro de esa seccion. Asi no
+    //    hace falta mover las traducciones a objetos anidados en es.ts.
+    const dotIdx = key.indexOf('.')
+    if (dotIdx > 0 && dotIdx < key.length - 1) {
+      const sectionName = key.slice(0, dotIdx)
+      const innerKey = key.slice(dotIdx + 1)
+      const section = (dict as Record<string, any>)[sectionName]
+      if (section && typeof section === 'object' && innerKey in section) {
+        const value = (section as any)[innerKey]
+        if (typeof value === 'string') return format(value)
+      }
     }
   }
 
-  // 2) Busqueda anidada: 'wallets.btn_add_cuenta' -> primer segmento es
-  //    nombre de seccion, resto es la key dentro de esa seccion. Asi no
-  //    hace falta mover las traducciones a objetos anidados en es.ts.
-  const dotIdx = key.indexOf('.')
-  if (dotIdx > 0 && dotIdx < key.length - 1) {
-    const sectionName = key.slice(0, dotIdx)
-    const innerKey = key.slice(dotIdx + 1)
-    const section = (dict as Record<string, any>)[sectionName]
-    if (section && typeof section === 'object' && innerKey in section) {
-      const value = (section as any)[innerKey]
-      if (typeof value === 'string') return format(value)
-    }
-  }
-
-  // Fallback si no se encuentra en el archivo:
+  // Fallback si no se encuentra en ningun idioma de la cadena:
   // Si se proveyó un defaultValue en params se retorna, de lo contrario se retorna la clave
   return params?.defaultValue || key;
 }
