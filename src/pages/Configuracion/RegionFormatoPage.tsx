@@ -5,7 +5,9 @@ import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { isSupported, SUPPORTED } from '@/locales/language'
 import { useLanguage } from '@/locales/LanguageProvider'
+import { useOptionalAuth } from '@/contexts/AuthContext'
 import { invalidateRegionCache } from '@/hooks/useNumberFormat'
+import { clearPrefsSnapshot, writePrefsSnapshot, writeRegionSnapshot } from '@/lib/regionSnapshot'
 import './ConfiguracionPage.css'
 import './ConfigSectionPage.css'
 
@@ -93,6 +95,7 @@ function languageLabel(lang: string): string {
 export function RegionFormatoPage() {
   const { showToast } = useToast()
   const { lang, setLang } = useLanguage()
+  const userId = useOptionalAuth()?.session?.user?.id ?? null
   const [region, setRegion] = useState<RegionPrefs>(DEFAULT_REGION)
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS)
   const [loading, setLoading] = useState(true)
@@ -129,8 +132,17 @@ export function RegionFormatoPage() {
       })
       // The region is memoized module-wide because many screens read it. Without
       // this, changing the country here leaves the rest of the app showing the
-      // previous currency until a full reload.
+      // previous currency until a full reload. The snapshot is rewritten with the
+      // new values so the next paint does not need a refetch either.
       invalidateRegionCache()
+      writeRegionSnapshot(userId, {
+        countryCode: newRegion.pais_codigo,
+        localCurrency: newRegion.moneda_default,
+        language: newRegion.idioma_default,
+      })
+      // Confirming a country re-derives the formats server-side, so the cached
+      // copy has to go: the next read is what must win, not the old snapshot.
+      clearPrefsSnapshot()
     } catch (err) {
       showToast(parseError(err), 'error')
     }
@@ -149,6 +161,12 @@ export function RegionFormatoPage() {
         p_separador_decimal: newPrefs.separador_decimal,
         p_primer_dia_semana: newPrefs.primer_dia_semana,
         p_formato_fecha: newPrefs.formato_fecha,
+      })
+      writePrefsSnapshot(userId, {
+        decimales_moneda_local: newPrefs.decimales_moneda_local,
+        decimales_segunda_moneda: newPrefs.decimales_segunda_moneda,
+        separador_miles: newPrefs.separador_miles,
+        separador_decimal: newPrefs.separador_decimal,
       })
     } catch (err) {
       showToast(parseError(err), 'error')

@@ -1,7 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { useLanguage } from '@/locales/LanguageProvider'
+import { useOptionalAuth } from '@/contexts/AuthContext'
 import { buildLocale, currencySymbolPosition, resolveCurrencySymbol } from '@/lib/currencySymbol'
+import {
+  readPrefsSnapshot,
+  readRegionSnapshot,
+  writePrefsSnapshot,
+  writeRegionSnapshot,
+} from '@/lib/regionSnapshot'
 
 interface UserFormatPrefs {
   decimales_moneda_local: number
@@ -75,11 +82,29 @@ function fetchUserRegion(): Promise<UserRegion | null> {
 
 export function useNumberFormat() {
   const { lang } = useLanguage()
+  const userId = useOptionalAuth()?.session?.user?.id ?? null
   const [prefs, setPrefs] = useState<UserFormatPrefs>(DEFAULTS)
   const [region, setRegion] = useState<UserRegion | null>(null)
   const [regionLoading, setRegionLoading] = useState(true)
   const [regionError, setRegionError] = useState(false)
   const [regionAttempt, setRegionAttempt] = useState(0)
+  const [hydratedFor, setHydratedFor] = useState<string | null>(null)
+
+  // First paint from the local snapshot. These values change rarely, so beating
+  // the RPC by one round trip is the difference between rendering '-' and
+  // rendering the amount. It runs as soon as the user id is known, and again if
+  // the user changes (the snapshot is per user and must not leak between them).
+  useEffect(() => {
+    if (!userId || hydratedFor === userId) return
+    const cachedRegion = readRegionSnapshot(userId)
+    const cachedPrefs = readPrefsSnapshot(userId)
+    if (cachedRegion) {
+      setRegion(cachedRegion)
+      setRegionLoading(false)
+    }
+    if (cachedPrefs) setPrefs(cachedPrefs)
+    setHydratedFor(userId)
+  }, [userId, hydratedFor])
 
   useEffect(() => {
     let cancelled = false
@@ -90,11 +115,13 @@ export function useNumberFormat() {
       setRegion(resolved)
       setRegionError(resolved === null)
       setRegionLoading(false)
+      // Refresh the snapshot so the next first paint does not wait either.
+      writeRegionSnapshot(userId, resolved)
     })
     return () => {
       cancelled = true
     }
-  }, [regionAttempt])
+  }, [regionAttempt, userId])
 
   useEffect(() => {
     let cancelled = false
@@ -105,7 +132,7 @@ export function useNumberFormat() {
         if (!row) return
         // Decimals and separators are derived by the server when the country
         // is confirmed; the client only reads and clamps them.
-        setPrefs({
+        const next: UserFormatPrefs = {
           decimales_moneda_local: clampInt(row.decimales_moneda_local, 0, 4, 0),
           decimales_segunda_moneda: clampInt(row.decimales_segunda_moneda, 0, 4, 1),
           separador_miles:
@@ -116,7 +143,9 @@ export function useNumberFormat() {
             typeof row.separador_decimal === 'string' && row.separador_decimal
               ? row.separador_decimal
               : DEFAULTS.separador_decimal,
-        })
+        }
+        setPrefs(next)
+        writePrefsSnapshot(userId, next)
       })
       .catch(() => {
         // Keep defaults if the RPC fails.
@@ -124,7 +153,7 @@ export function useNumberFormat() {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [userId])
 
   const locale = buildLocale(lang, region?.countryCode ?? null)
 

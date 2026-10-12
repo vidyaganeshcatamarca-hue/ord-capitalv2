@@ -31,6 +31,7 @@ tests/i18n/*
 tests/onboarding/*
 !tests/onboarding/country-catalog.test.js
 !tests/onboarding/currency-symbol.test.js
+!tests/onboarding/user-snapshot.test.js
 scratch/
 walkthrough.md
 AGENTS.md
