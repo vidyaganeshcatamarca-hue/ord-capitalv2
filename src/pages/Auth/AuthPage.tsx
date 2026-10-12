@@ -9,12 +9,62 @@ import { ConsentGate } from '@/components/ConsentGate/ConsentGate'
 import { LegalDocModal } from '@/components/LegalDocModal/LegalDocModal'
 import { consentJustAcceptedThisLoad } from '@/components/AppConsentGate/AppConsentGate'
 import { WelcomeBack } from '@/components/WelcomeBack/WelcomeBack'
+import { CountryStep } from '@/components/onboarding/CountryStep'
 import { LEGAL_VERSIONS } from '@/config/legal'
+import type { Country } from '@/lib/countryCatalog'
 import './Auth.css'
 
 type Mode = 'login' | 'register'
 type BudgetMode = 'libertad' | 'disciplina'
-type CurrencyCode = 'ARS' | 'USD' | 'MXN' | 'EUR' | 'CLP' | 'COP' | 'PEN' | 'UYU'
+
+// The country step landed as slide 3, so every index >= 3 shifted by one
+// (wallet 3->4, anchor day 4->5, budget mode 5->6). The progress key is
+// versioned and the legacy 1..5 value is migrated on first read.
+const TOTAL_SLIDES = 6
+const SLIDE_STORAGE_KEY = 'onboarding_slide_v2'
+const LEGACY_SLIDE_STORAGE_KEY = 'onboarding_slide'
+
+function persistSlide(index: number): void {
+  try {
+    localStorage.setItem(SLIDE_STORAGE_KEY, String(index))
+  } catch {
+    // Storage can be blocked; the in-memory slide still drives the flow.
+  }
+}
+
+function clearPersistedSlide(): void {
+  try {
+    localStorage.removeItem(SLIDE_STORAGE_KEY)
+    localStorage.removeItem(LEGACY_SLIDE_STORAGE_KEY)
+  } catch {
+    // Same as persistSlide.
+  }
+}
+
+/** Reads the slide, migrating the legacy key by +1 for every index >= 3. */
+function readStoredSlide(): number | null {
+  try {
+    const current = localStorage.getItem(SLIDE_STORAGE_KEY)
+    if (current !== null) {
+      const parsed = parseInt(current, 10)
+      return Number.isFinite(parsed) ? parsed : null
+    }
+
+    const legacy = localStorage.getItem(LEGACY_SLIDE_STORAGE_KEY)
+    if (legacy !== null) {
+      const parsed = parseInt(legacy, 10)
+      if (Number.isFinite(parsed)) {
+        const migrated = parsed >= 3 ? parsed + 1 : parsed
+        persistSlide(migrated)
+        localStorage.removeItem(LEGACY_SLIDE_STORAGE_KEY)
+        return migrated
+      }
+    }
+  } catch {
+    // Storage can be blocked (private mode); no progress to resume from.
+  }
+  return null
+}
 
 const withTimeout = <T,>(promise: PromiseLike<T>, ms = 4000): Promise<T> => {
   return Promise.race([
@@ -28,7 +78,7 @@ export function AuthPage() {
   const { session, setOnboardingCompleto } = useAuth()
   const { showToast } = useToast()
 
-  // Onboarding Slides (1 to 5)
+  // Onboarding Slides (1 a 6: bienvenida, auth, pais, billetera, dia ancla, modo)
   const [slide, setSlide] = useState(1)
 
   // Slide 2: Auth State
@@ -52,17 +102,21 @@ export function AuthPage() {
   // incompleto) no debe interrumpir el flujo continuo con el cartel.
   const ranInitialCheck = useRef(false)
 
-  // Slide 3: Wallet State
+  // Slide 3: Country State — the local currency comes from the chosen country,
+  // it is never selected by the user.
+  const [localCountry, setLocalCountry] = useState<Country | null>(null)
+  const localCurrencySymbol = localCountry?.currencySymbol ?? ''
+
+  // Slide 4: Wallet State
   const [walletName, setWalletName] = useState('')
-  const [currency, setCurrency] = useState<CurrencyCode>('ARS')
   const [calcInput, setCalcInput] = useState('0')
   const [cashBalanceInput, setCashBalanceInput] = useState('0')
   const [selectedIcon, setSelectedIcon] = useState('💵')
 
-  // Slide 4: Anchor Day State
+  // Slide 5: Anchor Day State
   const [anchorDay, setAnchorDay] = useState(1)
 
-  // Slide 5: Psychological Contract State
+  // Slide 6: Psychological Contract State
   const [budgetMode, setBudgetMode] = useState<BudgetMode>('libertad')
 
   // Redirección si ya está autenticado al cargar
@@ -74,12 +128,28 @@ export function AuthPage() {
 
   // Cargar progreso guardado de localStorage
   useEffect(() => {
-    const savedSlide = localStorage.getItem('onboarding_slide')
-    if (savedSlide && session) {
-      const parsed = parseInt(savedSlide, 10)
-      if (parsed > 2 && parsed <= 5) {
-        setSlide(parsed)
+    if (!session) return
+    const savedSlide = readStoredSlide()
+    if (savedSlide === null || savedSlide <= 2 || savedSlide > TOTAL_SLIDES) return
+
+    // Nadie llega al paso de billetera sin pais confirmado. Una sesion que quedo a
+    // medias ANTES de que existiera el paso de pais reanuda en 4 (billetera) por la
+    // migracion de indices, pero su fila de region todavia tiene el 'AR' viejo del
+    // trigger: eso no es una eleccion. Se confirma el pais primero.
+    let cancelled = false
+    const restoreSlide = async () => {
+      try {
+        const { data } = await supabase.rpc('fn_obtener_region_usuario')
+        if (cancelled) return
+        const row = Array.isArray(data) ? data[0] : data
+        setSlide(row?.confirmado === true ? savedSlide : 3)
+      } catch {
+        if (!cancelled) setSlide(3)
       }
+    }
+    restoreSlide()
+    return () => {
+      cancelled = true
     }
   }, [session])
 
@@ -105,7 +175,7 @@ export function AuthPage() {
             if (status.onboarding_completo) {
               setOnboardingCompleto(true)
               localStorage.setItem('onboarding_completo', 'true')
-              localStorage.removeItem('onboarding_slide')
+              clearPersistedSlide()
               navigate('/', { replace: true })
             } else if (status.consentimiento_aceptado === false) {
               setShowConsentGate(true)
@@ -117,7 +187,7 @@ export function AuthPage() {
               // recuperación (Bienvenido de nuevo) vuelve a funcionar.
               if (initial) {
                 setSlide(3)
-                localStorage.setItem('onboarding_slide', '3')
+                persistSlide(3)
               }
             } else {
               // Sólo el primer chequeo abre la pantalla de recuperación;
@@ -154,7 +224,7 @@ export function AuthPage() {
   const goToSlide = (nextSlide: number) => {
     setSlide(nextSlide)
     if (session) {
-      localStorage.setItem('onboarding_slide', nextSlide.toString())
+      persistSlide(nextSlide)
     }
   }
 
@@ -162,13 +232,13 @@ export function AuthPage() {
   const handleWelcomeBackContinue = () => {
     setShowWelcomeBack(false)
     setSlide(3)
-    localStorage.setItem('onboarding_slide', '3')
+    persistSlide(3)
   }
 
   const handleWelcomeBackSwitch = async () => {
     try {
       await supabase.auth.signOut()
-      localStorage.removeItem('onboarding_slide')
+      clearPersistedSlide()
       localStorage.removeItem('onboarding_completo')
       setShowWelcomeBack(false)
       setSlide(1)
@@ -226,7 +296,7 @@ export function AuthPage() {
 
 
 
-  // --- LLAMADA RPC SLIDE 3: Guardar Billetera ---
+  // --- LLAMADA RPC SLIDE 4: Guardar Billetera ---
   const handleSaveWallet = async () => {
     const saldo = parseFloat(calcInput) || 0
     const cashSaldo = parseFloat(cashBalanceInput) || 0
@@ -244,7 +314,6 @@ export function AuthPage() {
     try {
       const { error } = await supabase.rpc('fn_crear_billeteras_iniciales', {
         p_cuenta_nombre: name,
-        p_cuenta_moneda: currency,
         p_cuenta_saldo_apertura: saldo,
         p_cuenta_saldo_omitido: saldo <= 0,
         p_cuenta_icono: selectedIcon,
@@ -257,7 +326,7 @@ export function AuthPage() {
       if (error) throw error
 
       showToast(t('toast_initial_wallets_created'), 'success')
-      goToSlide(4)
+      goToSlide(5)
     } catch (err: any) {
       showToast(parseError(err), 'error')
     } finally {
@@ -265,7 +334,7 @@ export function AuthPage() {
     }
   }
 
-  // --- PREVIEW RANGO DE DÍA ANCLA (SLIDE 4) ---
+  // --- PREVIEW RANGO DE DÍA ANCLA (SLIDE 5) ---
   const getCyclePreviewText = () => {
     const today = new Date()
     const currentMonth = today.toLocaleString('es-ES', { month: 'long' })
@@ -281,7 +350,7 @@ export function AuthPage() {
     }
   }
 
-  // --- LLAMADA RPC SLIDE 5: Finalizar Onboarding ---
+  // --- LLAMADA RPC SLIDE 6: Finalizar Onboarding ---
   const handleFinishOnboarding = async () => {
     setLoading(true)
     const modoRPC = budgetMode === 'libertad' ? 'anticipado' : 'base_cero'
@@ -296,7 +365,7 @@ export function AuthPage() {
 
       // Guardar completado y redirigir
       setOnboardingCompleto(true)
-      localStorage.removeItem('onboarding_slide') // Limpiar slide temporal
+      clearPersistedSlide()
       showToast(t('toast_onboarding_completed'), 'success')
       navigate('/', { replace: true })
     } catch (err: any) {
@@ -339,7 +408,7 @@ export function AuthPage() {
               //    slide 3.
               setShowConsentGate(false)
               setSlide(3)
-              localStorage.setItem('onboarding_slide', '3')
+              persistSlide(3)
             }}
             onOpenDoc={setLegalDoc}
           />
@@ -382,7 +451,7 @@ export function AuthPage() {
 
       {/* ProgressBar Fijo Superior */}
       <div className="onboarding-progress-bar">
-        <div className="onboarding-progress-fill" style={{ width: `${slide * 20}%` }} />
+        <div className="onboarding-progress-fill" style={{ width: `${(slide / TOTAL_SLIDES) * 100}%` }} />
       </div>
 
       {/* MODAL DE DOCUMENTO LEGAL */}
@@ -536,8 +605,18 @@ export function AuthPage() {
         </div>
       )}
 
-      {/* SLIDE 3: PRIMERA BILLETERA */}
+      {/* SLIDE 3: PAÍS (OBLIGATORIO) */}
       {slide === 3 && (
+        <CountryStep
+          onConfirmed={(country) => {
+            setLocalCountry(country)
+            goToSlide(4)
+          }}
+        />
+      )}
+
+      {/* SLIDE 4: PRIMERA BILLETERA */}
+      {slide === 4 && (
         <div className="onboarding-slide slide-active">
           <div className="slide-content scroll-area">
             <h2 className="slide-title">{t('onboarding_wallet_title')}</h2>
@@ -569,57 +648,33 @@ export function AuthPage() {
               </div>
             </div>
 
-            <div className="form-group mb-3">
-              <label className="form-label">{t('label_country_residence')}</label>
-              <select
-                className="form-control"
-                style={{
-                  width: '100%',
-                  padding: '12px',
-                  background: 'var(--surface-2)',
-                  border: '1px solid var(--border)',
-                  borderRadius: '10px',
-                  color: 'var(--text)',
-                  fontSize: 'calc(16px * var(--font-scale))',
-                  outline: 'none'
-                }}
-                value={currency}
-                onChange={e => setCurrency(e.target.value as CurrencyCode)}
-              >
-                <option value="ARS">{t('country_ar')}</option>
-                <option value="USD">{t('country_us')}</option>
-                <option value="MXN">{t('country_mx')}</option>
-                <option value="EUR">{t('country_es')}</option>
-                <option value="CLP">{t('country_cl')}</option>
-                <option value="COP">{t('country_co')}</option>
-                <option value="PEN">{t('country_pe')}</option>
-                <option value="UYU">{t('country_uy')}</option>
-              </select>
-            </div>
-
               {/* Balance de Cuenta Inicial */}
               <div className="form-group mb-3">
                 <label className="form-label">{t('label_primary_initial_balance')}</label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <span style={{ 
-                    position: 'absolute', 
-                    left: '16px', 
-                    fontSize: 'calc(22px * var(--font-scale))', 
-                    fontWeight: 'bold', 
-                    color: 'var(--text-3)' 
-                  }}>
-                    {currency === 'EUR' ? '€' : currency === 'USD' ? 'U$S' : '$'}
-                  </span>
+                  {localCurrencySymbol && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        left: '16px',
+                        fontSize: 'calc(22px * var(--font-scale))',
+                        fontWeight: 'bold',
+                        color: 'var(--text-3)',
+                      }}
+                    >
+                      {localCurrencySymbol}
+                    </span>
+                  )}
                   <input
                     type="number"
                     inputMode="decimal"
                     className="calc-display font-mono"
-                    style={{ 
-                      width: '100%', 
-                      paddingLeft: '64px', 
+                    style={{
+                      width: '100%',
+                      paddingLeft: localCurrencySymbol ? '64px' : '16px',
                       textAlign: 'right',
                       fontSize: 'calc(24px * var(--font-scale))',
-                      fontWeight: 'bold'
+                      fontWeight: 'bold',
                     }}
                     value={calcInput}
                     onChange={e => setCalcInput(e.target.value)}
@@ -636,25 +691,29 @@ export function AuthPage() {
               <div className="form-group mb-3">
                 <label className="form-label">{t('label_cash_initial_balance')}</label>
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  <span style={{
-                    position: 'absolute',
-                    left: '16px',
-                    fontSize: 'calc(22px * var(--font-scale))',
-                    fontWeight: 'bold',
-                    color: 'var(--text-3)'
-                  }}>
-                    {currency === 'EUR' ? '€' : currency === 'USD' ? 'U$S' : '$'}
-                  </span>
+                  {localCurrencySymbol && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        left: '16px',
+                        fontSize: 'calc(22px * var(--font-scale))',
+                        fontWeight: 'bold',
+                        color: 'var(--text-3)',
+                      }}
+                    >
+                      {localCurrencySymbol}
+                    </span>
+                  )}
                   <input
                     type="number"
                     inputMode="decimal"
                     className="calc-display font-mono"
                     style={{
                       width: '100%',
-                      paddingLeft: '64px',
+                      paddingLeft: localCurrencySymbol ? '64px' : '16px',
                       textAlign: 'right',
                       fontSize: 'calc(24px * var(--font-scale))',
-                      fontWeight: 'bold'
+                      fontWeight: 'bold',
                     }}
                     value={cashBalanceInput}
                     onChange={e => setCashBalanceInput(e.target.value)}
@@ -682,12 +741,12 @@ export function AuthPage() {
         </div>
       )}
 
-      {/* SLIDE 4: TU RITMO (DÍA ANCLA) */}
-      {slide === 4 && (
+      {/* SLIDE 5: TU RITMO (DÍA ANCLA) */}
+      {slide === 5 && (
         <div className="onboarding-slide slide-active">
           <div className="slide-content">
             <div className="slide-header-actions">
-              <button className="onboarding-skip-btn" onClick={() => { setAnchorDay(1); goToSlide(5); }}>
+              <button className="onboarding-skip-btn" onClick={() => { setAnchorDay(1); goToSlide(6); }}>
                 {t('btn_skip')}
               </button>
             </div>
@@ -723,10 +782,10 @@ export function AuthPage() {
             </div>
 
             <div className="slide-footer flex flex-col gap-2">
-              <button className="btn btn-primary btn-full btn-lg" onClick={() => goToSlide(5)}>
+              <button className="btn btn-primary btn-full btn-lg" onClick={() => goToSlide(6)}>
                 {t('btn_next')}
               </button>
-              <button className="onboarding-link-btn" onClick={() => { setAnchorDay(1); goToSlide(5); }}>
+              <button className="onboarding-link-btn" onClick={() => { setAnchorDay(1); goToSlide(6); }}>
                 {t('btn_use_day_1')}
               </button>
             </div>
@@ -734,8 +793,8 @@ export function AuthPage() {
         </div>
       )}
 
-      {/* SLIDE 5: CONTRATO PSICOLÓGICO */}
-      {slide === 5 && (
+      {/* SLIDE 6: CONTRATO PSICOLÓGICO */}
+      {slide === 6 && (
         <div className="onboarding-slide slide-active">
           <div className="slide-content scroll-area">
             <h2 className="slide-title">{t('onboarding_budget_mode_title')}</h2>

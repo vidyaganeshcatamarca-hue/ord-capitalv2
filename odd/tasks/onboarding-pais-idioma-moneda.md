@@ -87,15 +87,34 @@ sobreviven al crecimiento, no que el catálogo tenga un solo idioma.
 - `tests/lib/locales/i18n.js` es una **copia precompilada vieja** de `i18n.ts`: `i18n-nested-keys.test.js` hoy no testea el módulo real. Preexistente.
 - `RegionFormatoPage` guarda `idioma_default` con la misma llamada que configura el país. Con la §6.10 ya no miente sobre la confirmación, pero WU3 tiene que decidir si el idioma merece su propio camino.
 
-### WU3 — próximas tareas
+### WU3a — Hecha el 2026-10-12
 
-- [ ] Consumir `fn_obtener_paises()` con cache; sin snapshot embarcado.
-- [ ] `LocaleResolver.resolveRegionFromLocale()` a partir de `navigator.language(s)`.
-- [ ] Buscador de países: `Intl.DisplayNames` (es + en) + ISO + sin acentos, lista vacía hasta escribir.
-- [ ] Paso de país/idioma obligatorio, con "Continuar" deshabilitado si no hay selección.
-- [ ] Reordenar el onboarding: el país se persiste **antes** de la billetera.
-- [ ] Quitar el selector de moneda del slide de billetera (la define el país).
-- [ ] Versionar `localStorage['onboarding_slide']` a `_v2` y migrar el valor guardado.
+- [x] `src/lib/countryCatalog.ts` — módulo puro **sin imports**: normalización de filas de PostgREST (trim solo a los `char(n)`; los `text` como `' '` se preservan), índice de búsqueda con nombres en `es` + `en` + ISO + sin acentos, `searchCountries` con prefijo antes que contenido y vacío con query vacía, `findCountry`, `regionalDefaults`, y los helpers de presentación (`regionName`, `currencyName`, `flagEmoji`) que derivan de `Intl.DisplayNames` y del código.
+- [x] `src/lib/useCountryCatalog.ts` — `fn_obtener_paises()` por RPC, cache en `localStorage['ord_countries_v1']`, refresco en background, error con reintento. Sin catálogo embarcado.
+- [x] `src/components/onboarding/CountryStep.tsx` + `CountrySearchModal.tsx` — paso obligatorio, preselección por locale, confirmación explícita, buscador con lista vacía hasta escribir y máximo 8 resultados.
+- [x] `AuthPage.tsx` — paso de país como slide 3 (billetera 4, día ancla 5, modo 6), clave `onboarding_slide_v2` con migración `+1` para índices >= 3, selector de moneda y `CurrencyCode` eliminados, `p_cuenta_moneda` ya no se envía.
+- [x] 9 claves `onboarding_country_*` en `es.ts`.
+- [x] Tests del módulo puro: **16/16 PASS**.
+- [x] `npx tsc --noEmit` limpio.
+- [x] Guard propio (no pedido al writer): al reanudar se consulta `fn_obtener_region_usuario` y, si el país **no** está confirmado, se vuelve al slide 3. Sin esto, una sesión que quedó a medias antes de que existiera el paso de país migraba a 4 y se salteaba la elección, quedándose con el `AR` viejo del trigger.
+
+Evidencia: `tests/onboarding/country-catalog.test.js`, `src/lib/countryCatalog.ts`, `src/pages/Auth/AuthPage.tsx`.
+
+### Deuda anotada de WU3a
+
+- `regionalDefaults()` está exportado pero **todavía no se consume**: el paso de país solo llama a `fn_configurar_region_usuario`. Persistir los defaults derivados con `fn_actualizar_preferencia_usuario` es la WU3b.
+- Al reanudar directo en el slide de billetera, el símbolo del saldo queda vacío en vez de mostrar `$` a la fuerza. Lo cablea WU4a contra el catálogo.
+- Al quitar el selector de moneda quedaron **9 claves sin consumidor** en `es.ts` (`country_ar` … `country_uy`, `label_country_residence`). El gate las reporta como advertencia, no como falla.
+
+### WU3b — próximas tareas
+
+- [ ] Consumir `fn_obtener_paises()` con cache; sin snapshot embarcado. **Hecho en WU3a.**
+- [ ] `LocaleResolver.resolveRegionFromLocale()` a partir de `navigator.language(s)`. **Hecho en WU3a.**
+- [ ] Buscador de países: `Intl.DisplayNames` (es + en) + ISO + sin acentos, lista vacía hasta escribir. **Hecho en WU3a.**
+- [ ] Paso de país/idioma obligatorio, con "Continuar" deshabilitado si no hay selección. **Hecho en WU3a.**
+- [ ] Reordenar el onboarding: el país se persiste **antes** de la billetera. **Hecho en WU3a.**
+- [ ] Quitar el selector de moneda del slide de billetera (la define el país). **Hecho en WU3a.**
+- [ ] Versionar `localStorage['onboarding_slide']` a `_v2` y migrar el valor guardado. **Hecho en WU3a.**
 - [ ] Derivar los defaults regionales con `fn_actualizar_preferencia_usuario`.
 - [ ] Selector de `formato_hora` en RegionFormatoPage.
 - [ ] Actualizar el catálogo hardcodeado de `RegionFormatoPage` para que salga de la RPC.

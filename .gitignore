@@ -27,6 +27,9 @@ tests/*
 tests/i18n/*
 !tests/i18n/language-resolver.test.js
 !tests/i18n/language-dictionary-coverage.test.js
+!tests/onboarding/
+tests/onboarding/*
+!tests/onboarding/country-catalog.test.js
 scratch/
 walkthrough.md
 AGENTS.md
