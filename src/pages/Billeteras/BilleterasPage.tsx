@@ -9,6 +9,8 @@ import { Billetera } from '@/types/Billetera'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
+import { currencyName } from '@/lib/countryCatalog'
+import { resolveCurrencySymbol } from '@/lib/currencySymbol'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBalanceModal'
 import { BilleteraDetailModal } from '@/components/BilleteraDetailModal/BilleteraDetailModal'
@@ -49,7 +51,7 @@ export function BilleterasPage() {
 
   // Estado del Formulario de Creación
   const [newName, setNewName] = useState('')
-  const [newMoneda, setNewMoneda] = useState('ARS')
+  const [newMoneda, setNewMoneda] = useState('')
   const [newSaldoApertura, setNewSaldoApertura] = useState('0')
   const [newIcono, setNewIcono] = useState('Wallet')
 
@@ -79,11 +81,45 @@ export function BilleterasPage() {
   }, [billeteras, selectedBilletera])
 
   // Formateo de montos respetando decimales del usuario (useNumberFormat)
-  const { formatMonto: formatMontoBase } = useNumberFormat()
+  const {
+    formatMonto: formatMontoBase,
+    localCurrency,
+    locale,
+    regionLoading,
+    regionError,
+    reloadRegion,
+  } = useNumberFormat()
   const formatAmount = useCallback((monto: number, moneda: string) => {
     if (hideAmounts) return '***'
     return formatMontoBase(monto, moneda)
   }, [hideAmounts, formatMontoBase])
+
+  // Single source for a currency label. The wallet list used to switch between
+  // two hardcoded keys, so a EUR wallet came out labelled as Argentine pesos.
+  const currencyLabel = useCallback(
+    (code: string) => `${currencyName(code, locale)} (${code})`,
+    [locale]
+  )
+
+  // The backend accepts only the user's local currency or USD. The old
+  // hardcoded ARS list is what produced `error_currency_not_local` for users
+  // living outside Argentina, so the picker is derived from the region.
+  const currencyOptions = useMemo(() => {
+    if (!localCurrency) return [] as { code: string; label: string }[]
+    const codes = localCurrency === 'USD' ? ['USD'] : [localCurrency, 'USD']
+    return codes.map((code) => ({
+      code,
+      label: `${currencyLabel(code)} ${resolveCurrencySymbol(code, locale)}`,
+    }))
+  }, [localCurrency, locale, currencyLabel])
+
+  // Keep the selection valid once the region resolves, without overriding a
+  // choice the user already made.
+  useEffect(() => {
+    setNewMoneda((current) =>
+      currencyOptions.some((option) => option.code === current) ? current : localCurrency ?? ''
+    )
+  }, [currencyOptions, localCurrency])
 
   // Semáforo con texto explicativo (Observación 3)
   const getSemaforoDetails = (ultimaConciliacionAt: string | null) => {
@@ -115,6 +151,11 @@ export function BilleterasPage() {
       return
     }
 
+    if (!newMoneda) {
+      showToast(t('error_generic'), 'error')
+      return
+    }
+
     const now = new Date()
     const localDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
 
@@ -130,7 +171,7 @@ export function BilleterasPage() {
       setShowCreateModal(false)
       // Resetear campos
       setNewName('')
-      setNewMoneda('ARS')
+      setNewMoneda(localCurrency ?? '')
       setNewSaldoApertura('0')
       setNewIcono('Wallet')
       fetchData()
@@ -334,7 +375,7 @@ export function BilleterasPage() {
                               {b.saldo_inicial_pendiente && <span className="prevision-badge">{t('wallet_pending_initial_balance_badge')}</span>}
                             </div>
                             <div className="billetera-item-type">
-                              <span>{b.moneda === 'USD' ? t('wallets.moneda_usd') : t('wallets.moneda_ars')}</span>
+                              <span>{currencyLabel(b.moneda)}</span>
                               <span>•</span>
                               <span style={{ color: `var(--text-3)`, fontWeight: 600 }}>
                                 {sem.text} {sem.days !== null && (sem.days === 0 ? t('wallets.sem_hace_hoy') : t('wallets.sem_hace_dias', { days: sem.days }))}
@@ -426,10 +467,30 @@ export function BilleterasPage() {
 
               <div className="form-group mb-3">
                 <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_moneda')}</label>
-                <select className="form-control" value={newMoneda} onChange={(e) => setNewMoneda(e.target.value)}>
-                  <option value="ARS">{t('wallets.option_moneda_ars')}</option>
-                  <option value="USD">{t('option_usd_currency')}</option>
+                <select
+                  className="form-control"
+                  value={newMoneda}
+                  onChange={(e) => setNewMoneda(e.target.value)}
+                  disabled={regionLoading || regionError || currencyOptions.length === 0}
+                  required
+                >
+                  {currencyOptions.map((option) => (
+                    <option key={option.code} value={option.code}>{option.label}</option>
+                  ))}
                 </select>
+                {regionError && (
+                  <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span className="text-xs" style={{ color: 'var(--coral)' }}>{t('error_generic')}</span>
+                    <button
+                      type="button"
+                      className="text-xs font-semibold"
+                      style={{ color: 'var(--coral)' }}
+                      onClick={reloadRegion}
+                    >
+                      {t('btn_retry')}
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="form-group mb-4">
