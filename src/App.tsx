@@ -4,6 +4,7 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { HogarProvider } from '@/contexts/HogarContext'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { ModoAppProvider, useModoApp } from '@/contexts/ModoAppContext'
+import { LanguageProvider } from '@/locales/LanguageProvider'
 import { SessionTrackerProvider } from '@/providers/SessionTrackerProvider'
 import { t } from '@/locales/i18n'
 import { useToast } from '@/contexts/ToastContext'
@@ -268,7 +269,15 @@ export default function App() {
             <HogarProvider>
             <ToastProvider>
               <ModoAppProvider>
+              {/* The route tracker stays outside the language provider: it renders
+               * null and uses no translations, while remounting it would emit a
+               * duplicate main_module_opened for the module already open. */}
               <TelemetryRouteTracker />
+              {/* Below auth/toast/modo on purpose: a language change remounts
+               * this subtree to invalidate every translated string, and
+               * remounting the session or the app-mode bootstrap would only
+               * cause a spinner flash and a redundant refetch. */}
+              <LanguageProvider>
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
                   {/* Rutas públicas */}
@@ -282,7 +291,8 @@ export default function App() {
                   </Route>
                 </Routes>
               </Suspense>
-            </ModoAppProvider>
+              </LanguageProvider>
+              </ModoAppProvider>
             </ToastProvider>
             </HogarProvider>
           </SessionTrackerProvider>
