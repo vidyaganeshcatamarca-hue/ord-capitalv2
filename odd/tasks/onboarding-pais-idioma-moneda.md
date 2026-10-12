@@ -50,12 +50,13 @@ Evidencia: `temp_sql/run_test_wu1.mjs` (18 aserciones), `temp_sql/20_seed_review
 
 ### Pendiente en WU1
 
-- [ ] `[H4]` Decidir si se borra el overload viejo de `fn_crear_billetera` (oid 27228, 4 argumentos): hace
-      ambigua cualquier llamada con menos de 5 argumentos (`function is not unique`). El cliente manda
-      los 5, así que hoy no rompe, pero es una mina. Igual caso en `fn_reporte_safe_to_spend` (29110) y
-      `fn_reporte_patrimonio_neto_consolidado` (29112), ambos con `p_user_id uuid`.
+- [x] `[H4]` Los 3 overloads legado eliminados el 2026-10-12, aprobados uno a uno por el dueño:
+      `fn_crear_billetera(text,text,numeric,text)` (oid 27228), `fn_reporte_safe_to_spend(uuid,uuid)` (29110)
+      y `fn_reporte_patrimonio_neto_consolidado(uuid)` (29112). Se borraron por **firma exacta**, nunca
+      por nombre. Verificación 9/9 PASS, incluida la prueba decisiva de que una llamada de 3 argumentos
+      ya no falla con `is not unique`. Script: `temp_sql/h4_drop_overloads.mjs`.
 - [ ] `[H5]` Reportar y rotar el `CRON_SECRET` que está en texto plano dentro de `cron.job`.
-- [ ] Commit de la WU1 (pendiente de pedido explícito del dueño).
+- [x] Commit de la WU1: `ea0c790`
 
 ### WU2 — próximas tareas
 
