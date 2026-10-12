@@ -3,7 +3,9 @@ import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { parseDeviceLocales, resolveRegionFromLocale } from '@/locales/language'
 import { useLanguage } from '@/locales/LanguageProvider'
+import { useOptionalAuth } from '@/contexts/AuthContext'
 import { useCountryCatalog } from '@/lib/useCountryCatalog'
+import { writeRegionSnapshot } from '@/lib/regionSnapshot'
 import {
   currencyName,
   findCountry,
@@ -32,6 +34,7 @@ type CountryOrigin = 'locale' | 'manual'
  */
 export function CountryStep({ onConfirmed }: CountryStepProps) {
   const { lang } = useLanguage()
+  const userId = useOptionalAuth()?.session?.user?.id ?? null
   const { countries, index, loading, error, reload } = useCountryCatalog()
 
   const deviceRegion = useMemo(
@@ -96,6 +99,13 @@ export function CountryStep({ onConfirmed }: CountryStepProps) {
         p_moneda_local: selected.localCurrency,
         p_idioma: lang,
         p_origen: origin,
+      })
+      // Cache the region immediately: the wallet slide comes next and must not
+      // wait for a refetch to know which currency it is working with.
+      writeRegionSnapshot(userId, {
+        countryCode: selected.code,
+        localCurrency: selected.localCurrency,
+        language: lang,
       })
       onConfirmed(selected)
     } catch (err) {

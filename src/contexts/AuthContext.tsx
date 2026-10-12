@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react'
 import { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { clearUserSnapshots } from '@/lib/regionSnapshot'
 
 interface AuthContextType {
   session: Session | null
@@ -139,6 +140,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signOut = async () => {
+    // The region and format snapshots are per user; leaving them behind would
+    // show the next user on this device the previous one's currency until the
+    // RPC lands.
+    clearUserSnapshots()
     await supabase.auth.signOut()
   }
 
@@ -164,4 +169,13 @@ export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth debe usarse dentro de AuthProvider')
   return ctx
+}
+
+/**
+ * Same context as `useAuth` but returns null outside the provider. Used by hooks
+ * that only need the user id to tag local snapshots and must keep working (with
+ * no cache) in any rendering context.
+ */
+export function useOptionalAuth(): AuthContextType | null {
+  return useContext(AuthContext)
 }
