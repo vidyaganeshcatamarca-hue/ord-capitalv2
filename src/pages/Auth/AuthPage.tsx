@@ -73,9 +73,22 @@ const withTimeout = <T,>(promise: PromiseLike<T>, ms = 4000): Promise<T> => {
   ])
 }
 
+/**
+ * `fn_verificar_status_onboarding` raises `error_unauthorized` when there is no
+ * `usuarios` row for the current `auth.uid()`. That is definitive, not transient:
+ * the session points at an account that no longer exists.
+ */
+function isUnauthorizedError(error: unknown): boolean {
+  const message =
+    typeof error === 'string'
+      ? error
+      : ((error as { message?: string } | null)?.message ?? '')
+  return message.includes('error_unauthorized')
+}
+
 export function AuthPage() {
   const navigate = useNavigate()
-  const { session, setOnboardingCompleto } = useAuth()
+  const { session, setOnboardingCompleto, signOut } = useAuth()
   const { showToast } = useToast()
 
   // Onboarding Slides (1 a 6: bienvenida, auth, pais, billetera, dia ancla, modo)
@@ -158,6 +171,7 @@ export function AuthPage() {
     const initial = !ranInitialCheck.current
     ranInitialCheck.current = true
     const localCompleted = localStorage.getItem('onboarding_completo') === 'true'
+    let unauthorized = false
 
     try {
       if (!session?.user?.id) {
@@ -197,12 +211,30 @@ export function AuthPage() {
             return // Éxito
           }
           console.warn(`Intento ${i + 1} de checkExistingOnboarding falló:`, error)
+          if (isUnauthorizedError(error)) unauthorized = true
         } catch (err) {
           console.warn(`Intento ${i + 1} de checkExistingOnboarding lanzó excepción/timeout:`, err)
         }
         if (i < retries - 1) {
           await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
         }
+      }
+
+      // The session points at a user the backend does not know: the account was
+      // deleted while its token was still alive. Retrying is pointless, and leaving
+      // the user here traps them — there is no way out of the onboarding without a
+      // working session, and the only escape used to be clearing browser storage.
+      // Dropping the session hands control back to the login screen.
+      if (unauthorized) {
+        console.warn('[auth] la sesion no existe en el backend; cerrando sesion')
+        clearPersistedSlide()
+        localStorage.removeItem('onboarding_completo')
+        try {
+          await signOut()
+        } catch (err) {
+          console.warn('[auth] el cierre de sesion fallo:', err)
+        }
+        return
       }
 
       // Fallback si todos los reintentos de la RPC fallaron
