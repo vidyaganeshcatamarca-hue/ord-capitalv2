@@ -691,20 +691,29 @@ configuración de usuario.
 
 ---
 
-## 12. Checklist de ejecución (una vez aprobado)
+## 12. Checklist de ejecución — ✅ EJECUTADO el 2026-10-12
 
-- [ ] Fase 0 ejecutada y resultado documentado en este archivo
-- [ ] `temp_sql/gen_seed_paises.cjs` escrito y seed generado
-- [ ] Seed revisado por el dueño (conteo de filas y spot-check de PY, ES, AR, BR, US)
-- [ ] Tablas creadas
-- [ ] Seed insertado
-- [ ] `soportado = true` aplicado a los 72 (o a la lista ajustada)
-- [ ] `fn_obtener_paises()` creada
-- [ ] `p_config_region` migrada
-- [ ] `p_preferencias_usuario.formato_hora` agregada (+ los 2 DROP/CREATE de preferencias)
-- [ ] Las 7 funciones modificadas
-- [ ] [H1] `fn_configurar_inflacion` arreglada (sin `p_cotizaciones_dolar`)
-- [ ] [H2a] Los dos lookups de cotización de los reportes arreglados
-- [ ] Test transaccional en verde y runner borrado
-- [ ] Espejos actualizados en `funcionesSQL/` (7 funciones + 1 nueva)
-- [ ] Entrada agregada en `start_info/indice de funciones.md` para `fn_obtener_paises`
+- [x] Fase 0 ejecutada y resultado documentado en la §1.b de este archivo
+- [x] `temp_sql/gen_seed_paises.mjs` escrito y seed generado (es `.mjs`, no `.cjs`: con `"type":"module"` los `.cjs` con top-level await fallan)
+- [x] Seed revisado por el dueño (conteo de filas y spot-check de PY, ES, AR, BR, US)
+- [x] Tablas creadas (`p_monedas`, `p_paises`)
+- [x] Seed insertado (249 países, 153 monedas)
+- [x] `soportado = true` aplicado a los 72
+- [x] `fn_obtener_paises()` creada
+- [x] `p_config_region` migrada (país y moneda nullable, `origen_pais`, `confirmado_at`)
+- [x] `p_preferencias_usuario.formato_hora` agregada, con los 2 DROP/CREATE de preferencias
+- [x] Las 9 funciones modificadas
+- [x] [H1] `fn_configurar_inflacion` arreglada (ya no consulta `p_cotizaciones_dolar`)
+- [x] [H2a] Los dos lookups de cotización de los reportes arreglados
+- [x] Test transaccional en verde (**18/18 PASS**) y sin runner que borrar: el test es un bloque `DO` con excepción forzada
+- [x] [H4] Los 3 overloads legado eliminados (aprobados uno a uno por el dueño), con **9/9 PASS**
+- [x] Espejos actualizados en `funcionesSQL/` — 14 archivos, escritos **desde la base** con `pg_get_functiondef`, no transcritos
+- [x] Entrada agregada en `start_info/indice de funciones.md` (#255) para `fn_obtener_paises`
+- [x] Commit de la WU1: `ea0c790`
+
+### Nota sobre qué queda versionado
+
+`.gitignore` excluye `docs/`, `start_info/`, `funcionesSQL/`, `supabase/` y `temp_sql/`. O sea que
+**los espejos, el índice y el spec son base de conocimiento local, no versionada** — por diseño del
+repo. Lo único versionado de este cambio es el SQL de este archivo (en `propuestas/`), las claves de
+i18n y el feature doc de `odd/tasks/`. Conviene saberlo: un `git clone` limpio no trae los espejos.
