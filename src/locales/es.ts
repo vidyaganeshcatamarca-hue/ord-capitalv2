@@ -22,6 +22,11 @@ export const errors = {
 
   // Billeteras y cuentas
   error_currency_not_supported: "Moneda no soportada.",
+
+  // Region, pais y moneda (onboarding multiglobal)
+  error_region_not_configured: "Todavía no elegiste tu país. Elegilo para poder crear tu primera cuenta.",
+  error_currency_not_local: "La moneda solo puede ser la de tu país o dólares estadounidenses.",
+  error_country_not_supported: "Ese país todavía no está disponible. Elegí el país donde usás tu dinero.",
   error_no_orphan_savings_funds: "No hay sobres vinculados a esta Cuenta Madre para distribuir rendimientos.",
   error_opening_balance_negative: "El saldo de apertura no puede ser negativo (-).",
 error_transfer_different_currencies: "Operación inválida: No se permiten transferencias directas entre cuentas de diferentes monedas ({currency_from} a {currency_to}).",
