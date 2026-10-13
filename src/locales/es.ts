@@ -1519,6 +1519,7 @@ export const inversiones = {
   filter_all: "Todas",
   loading: "Cargando...",
   error_generic: "Ocurrió un error. Intentá de nuevo.",
+  cotizacion_no_soportada: "Cotización no soportada: no se puede convertir este monto por ahora.",
   confirm_liquidate: "Confirmar liquidación",
   confirm_liquidate_message: "¿Estás seguro de liquidar esta inversión? Esta acción no se puede deshacer.",
   field_required: "Campo obligatorio",

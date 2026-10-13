@@ -267,7 +267,10 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   const [esUsd, setEsUsd] = useState(false)
   // Cross-currency transfer: amount as it lands in the destination wallet.
   const [destinationAmount, setDestinationAmount] = useState('')
-  const [cotizacionUsd, setCotizacionUsd] = useState(1)
+  // Null honesto: si la cotización local no existe, no se convierte nada (nada se
+  // invierte con tasa 1). El sugeridor de transferencias salta y las conversiones
+  // de pago con tarjeta muestran el aviso de cotización no soportada.
+  const [cotizacionUsd, setCotizacionUsd] = useState<number | null>(1)
   const [billeteraDestinoId, setBilleteraDestinoId] = useState<number | null>(null)
   const [categoriaEgreso, setCategoriaEgreso] = useState<CategoriaSeleccionada | null>(null)
   const [categoriaIngreso, setCategoriaIngreso] = useState<CatIngreso | null>(null)
@@ -453,7 +456,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
           rpc<Rubro[]>('fn_obtener_arbol_categorias').catch(() => []),
           rpc<CatIngreso[]>('fn_listar_categorias_ingreso').catch(() => []),
           rpc<any[]>('fn_reporte_mapa_tarjetas').catch(() => []),
-          rpc<number>('fn_obtener_cotizacion_usd').catch(() => 1),
+          rpc<number>('fn_obtener_cotizacion_usd').catch(() => null),
         ])
         if (!alive) return
         cachedBilleteras = bill ?? []
@@ -462,7 +465,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
           .sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es', { sensitivity: 'base' }))
         cachedCatIngresos = ingrCat ?? []
         cachedTarjetas = tarj ?? []
-        cachedUsd = resUsd ?? 1
+        cachedUsd = resUsd ?? null
         
         setBilleteras(cachedBilleteras)
         setRubros(cachedRubros)
@@ -1123,11 +1126,12 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         </div>
                         {esUsd && montoNum > 0 && (() => {
                           const tc = tarjetas.find(t => t.tarjeta_id === tarjetaId)
-                          const mFinal = montoNum * cotizacionUsd
+                          const mFinal = montoNum * (cotizacionUsd ?? 0)
                           return (
                             <div style={{ fontSize: 11, color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: 8, marginTop: 8, borderLeft: '3px solid var(--color-mint)' }}>
-                              {t('card_usd_quote_current', { rate: formatMonto(cotizacionUsd.toString()) })}
-                              <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString()) })}</span>
+                              {cotizacionUsd == null
+                                ? <span style={{ color: 'var(--color-warning, #ffc107)' }}>{t('cotizacion_no_soportada')}</span>
+                                : <>{t('card_usd_quote_current', { rate: formatMonto(cotizacionUsd.toString()) })}<br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString()) })}</span></>}
                             </div>
                           )
                         })()}
@@ -2074,11 +2078,12 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       </div>
                       {esUsd && montoNum > 0 && (() => {
                         const tc = tarjetas.find(t => t.tarjeta_id === tarjetaId)
-                        const mFinal = montoNum * cotizacionUsd
+                        const mFinal = montoNum * (cotizacionUsd ?? 0)
                         return (
                           <div style={{ fontSize: 12, color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: 8, marginTop: 10, borderLeft: '3px solid var(--color-mint)' }}>
-                            {t('card_usd_quote_simple', { rate: formatMonto(cotizacionUsd.toString()) })}
-                            <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString()) })}</span>
+                            {cotizacionUsd == null
+                              ? <span style={{ color: 'var(--color-warning, #ffc107)' }}>{t('cotizacion_no_soportada')}</span>
+                              : <>{t('card_usd_quote_simple', { rate: formatMonto(cotizacionUsd.toString()) })}<br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString()) })}</span></>}
                           </div>
                         )
                       })()}
