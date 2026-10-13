@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { t, parseError } from '@/locales/i18n'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { SYSTEM_CATEGORY_NAMES } from '@/lib/categoryFilters'
@@ -46,12 +47,9 @@ interface SugerenciaActivacion {
 }
 
 // ─── HELPERS ─────────────────────────────────────────────────────────────────
-
-const formatMonto = (n: number) => {
-  const abs = Math.abs(n)
-  const str = Math.round(abs).toLocaleString('es-AR')
-  return n < 0 ? `-$${str}` : `$${str}`
-}
+// El formateo de montos sale del contexto regional (useNumberFormat): el signo y el
+// locale ya no viven hardcodeados en esta pantalla. PresupuestosPage monta su propio
+// envoltorio con 0 decimales (resumenes de lectura rapida) via formatMontoLocal.
 
 const getMesPeriodo = (offset: number = 0): Date => {
   const d = new Date()
@@ -91,6 +89,13 @@ export function PresupuestosPage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [returnToConfig, setReturnToConfig] = useState(false)
+
+  // Montos en la moneda local del contexto, 0 decimales (montos redondeados como antes).
+  const { formatMonto: formatMontoCtx } = useNumberFormat()
+  const formatMonto = useCallback(
+    (n: number) => formatMontoCtx(n, undefined, 0),
+    [formatMontoCtx]
+  )
 
   // Estado de datos
   const [saldoAsignar, setSaldoAsignar] = useState<number | null>(null)
@@ -345,7 +350,7 @@ export function PresupuestosPage() {
       // Tanda 4 telemetry: only explicit user saves count (plan §3 Fase 8 —
       // avoids false positives from system UPDATEs)
       telemetry.track('budget_adjusted', {}, TELEMETRY_PRIORITY.MEDIUM)
-      showToast(`$${Math.round(monto).toLocaleString('es-AR')} ${t('toast_assigned_to')} ${t(sobreSeleccionado.nombre_categoria)}`, 'success')
+      showToast(`${formatMonto(monto)} ${t('toast_assigned_to')} ${t(sobreSeleccionado.nombre_categoria)}`, 'success')
       setShowAsignarSheet(false)
       setSobreSeleccionado(null)
       await cargarDatos()
@@ -795,6 +800,7 @@ export function PresupuestosPage() {
                 onToggle={() => toggleAcordeon(tipo)}
                 onAsignar={handleAbrirAsignar}
                 modoPresupuesto={config?.modo_presupuesto}
+                fmt={formatMonto}
               />
             ))}
 
@@ -1225,9 +1231,11 @@ interface GrupoProps {
   onToggle: () => void
   onAsignar: (s: SobreDetalle) => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
+  /** Montos en la moneda local del contexto, 0 decimales (viene de PresupuestosPage). */
+  fmt: (n: number) => string
 }
 
-function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, modoPresupuesto }: GrupoProps) {
+function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, modoPresupuesto, fmt }: GrupoProps) {
   const meta = TIPO_CUPO_META[tipo] ?? { label: tipo.toUpperCase(), icono: '📦' }
   const totalAsignado = items.reduce((s, i) => s + Number(i.monto_asignado ?? 0), 0)
 
@@ -1240,7 +1248,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, modoPresupue
         </div>
         <div className="acord-grupo-right">
           <span className="acord-grupo-total">
-            {totalAsignado > 0 ? `$${Math.round(totalAsignado).toLocaleString('es-AR')}` : '—'}
+            {totalAsignado > 0 ? fmt(totalAsignado) : '—'}
           </span>
           <span className={`acord-chevron${abierto ? ' abierto' : ''}`}>▶</span>
         </div>
@@ -1255,6 +1263,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, modoPresupue
             isLast={i === items.length - 1}
             onAsignar={() => onAsignar(sobre)}
             modoPresupuesto={modoPresupuesto}
+            fmt={fmt}
           />
         ))}
       </div>
@@ -1269,9 +1278,11 @@ interface FilaSobreProps {
   isLast: boolean
   onAsignar: () => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
+  /** Montos en la moneda local del contexto, 0 decimales (viene de GrupoAcordeon). */
+  fmt: (n: number) => string
 }
 
-function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto }: FilaSobreProps) {
+function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto, fmt }: FilaSobreProps) {
   const pct = getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
   const colorBarra = getColorBarra(sobre.estado_sobre)
   const sinDatos = sobre.estado_sobre === 'sin_movimiento'
@@ -1309,7 +1320,7 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto }: FilaSobreProps
           <span>{t(sobre.nombre_categoria)}</span>
         </div>
         <span className={`sobre-disponible ${colorDisponible()}`} style={{ marginRight: 80 }}>
-          {disponibleEfectivo >= 0 ? `$${Math.round(disponibleEfectivo).toLocaleString('es-AR')}` : `-$${Math.round(Math.abs(disponibleEfectivo)).toLocaleString('es-AR')}`}
+          {disponibleEfectivo >= 0 ? fmt(disponibleEfectivo) : `-${fmt(Math.abs(disponibleEfectivo))}`}
         </span>
       </div>
 
@@ -1327,11 +1338,11 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto }: FilaSobreProps
       <div className="sobre-stats">
         <span className="sobre-stat">
           <span className="sobre-stat-label">Asig: </span>
-          <span className="sobre-stat-val">${Math.round(Number(sobre.monto_asignado)).toLocaleString('es-AR')}</span>
+          <span className="sobre-stat-val">{fmt(Number(sobre.monto_asignado))}</span>
         </span>
         <span className="sobre-stat">
           <span className="sobre-stat-label">Gast: </span>
-          <span className="sobre-stat-val">${Math.round(Number(sobre.monto_gastado)).toLocaleString('es-AR')}</span>
+          <span className="sobre-stat-val">{fmt(Number(sobre.monto_gastado))}</span>
         </span>
         {!sinDatos && (
           <span className="sobre-stat">
@@ -1344,7 +1355,7 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto }: FilaSobreProps
       {/* Arrastre badge (solo base_cero, donde el arrastre es real) */}
       {modoPresupuesto !== 'anticipado' && arrastre > 0 && (
         <div className="sobre-arrastre-badge">
-          ⚠️ {t('budget_carryover_warning')}: -{`$${Math.round(arrastre).toLocaleString('es-AR')}`}
+          ⚠️ {t('budget_carryover_warning')}: -{fmt(arrastre)}
         </div>
       )}
 
@@ -1359,13 +1370,13 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto }: FilaSobreProps
           <div className="sobre-stats">
             <span className="sobre-stat">
               <span className="sobre-stat-label">📊 {t('budget_prev_month_assigned')}: </span>
-              <span className="sobre-stat-val">${Math.round(Number(sobre.monto_asignado_anterior ?? 0)).toLocaleString('es-AR')}</span>
+              <span className="sobre-stat-val">{fmt(Number(sobre.monto_asignado_anterior ?? 0))}</span>
             </span>
           </div>
           <div className="sobre-stats">
             <span className="sobre-stat">
               <span className="sobre-stat-label">🧾 {t('budget_prev_month_spent')}: </span>
-              <span className="sobre-stat-val">${Math.round(Number(sobre.monto_gastado_anterior ?? 0)).toLocaleString('es-AR')}</span>
+              <span className="sobre-stat-val">{fmt(Number(sobre.monto_gastado_anterior ?? 0))}</span>
             </span>
           </div>
         </>
