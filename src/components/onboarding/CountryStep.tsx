@@ -27,6 +27,12 @@ type CountryOrigin = 'locale' | 'ip' | 'manual'
 /**
  * Country of the connection, asked to Vercel once per page load.
  *
+ * Vercel does not attach the geolocation headers locally, so in development there is
+ * no IP signal at all and the browser locale would always win — which is exactly how
+ * a browser set to "Spanish (Spain)" kept suggesting Spain from Argentina. Setting
+ * `VITE_DEV_GEO_COUNTRY=AR` in `.env.local` simulates the header so the priority
+ * logic can be exercised without deploying. It is dev-only on purpose.
+ *
  * It resolves to `null` (never rejects) when the endpoint is missing, the
  * request fails or it takes too long, because the step must not be blocked
  * waiting for a signal it can live without.
@@ -35,6 +41,11 @@ const GEO_TIMEOUT_MS = 2500
 let geoPromise: Promise<string | null> | null = null
 
 function fetchGeoCountry(): Promise<string | null> {
+  const devOverride = import.meta.env.DEV ? import.meta.env.VITE_DEV_GEO_COUNTRY : undefined
+  if (typeof devOverride === 'string' && devOverride.trim()) {
+    return Promise.resolve(devOverride.trim().toUpperCase())
+  }
+
   if (!geoPromise) {
     const controller = typeof AbortController !== 'undefined' ? new AbortController() : null
     const timer = setTimeout(() => controller?.abort(), GEO_TIMEOUT_MS)
