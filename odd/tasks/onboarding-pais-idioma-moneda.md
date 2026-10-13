@@ -5,6 +5,29 @@ Spec: `docs/superpowers/specs/2026-10-12-onboarding-pais-idioma-moneda-design.md
 Propuesta SQL: `propuestas/PROPUESTA_onboarding_pais_idioma_moneda_WU1.md`
 Rama: `fix/archivar-billetera-y-orientacion-pc`
 
+## ⚠️ PENDIENTE CRÍTICO: revertir el desbloqueo transitorio después del deploy
+
+El 2026-10-12 se aplicó un **desbloqueo transitorio** en `fn_crear_billetera`,
+`fn_crear_billetera_inicial` y `fn_crear_billeteras_iniciales`: **si el usuario no tiene país confirmado,
+se acepta la moneda que manda el cliente** (validada contra `p_monedas`) en vez de lanzar
+`error_region_not_configured`.
+
+**Por qué:** la base es compartida entre desarrollo y producción. Los cambios de la WU1 quedaron vivos
+en la base mientras el frontend de producción siguió siendo el viejo, que no tiene paso de país. Los
+usuarios nuevos quedaban atrapados sin poder crear su primera billetera: **5 usuarios verificados**
+(ids 178 a 182) con `pais_codigo = NULL` y 0 billeteras.
+
+**Qué hacer cuando el frontend nuevo esté deployado:**
+
+1. Quitar la rama transitoria de las 3 funciones y volver a `RAISE EXCEPTION` con
+   `error_region_not_configured` cuando no hay país.
+2. Invertir las aserciones **5** y **5c** del test transaccional, que son las que documentan el
+   comportamiento transitorio.
+3. Verificar que no queden usuarios con país nulo creando billeteras.
+
+Scripts del parche: `temp_sql/38_desbloqueo_transitorio.mjs` y `temp_sql/38b_transitorio_contra_catalogo.mjs`.
+El aviso también quedó en los espejos de las 3 funciones.
+
 ## Decisión del dueño (2026)
 
 La app se prepara para cobertura mundial (Play Store). El país, el idioma y la moneda
