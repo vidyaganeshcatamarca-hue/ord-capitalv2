@@ -60,9 +60,18 @@ export function resolveMovementType(item: CuarentenaItem): CuarentenaMovementTyp
   return 'expense'
 }
 
-/** Display currency for a row: card rows carry `moneda`, wallet rows carry it on the wallet. */
-export function itemCurrency(item: CuarentenaItem): string {
-  return item.moneda || item.billetera_moneda || item.billetera_destino_moneda || 'ARS'
+/**
+ * Display currency for a row. Wallet rows resolve through the wallet (the row's own
+ * `moneda` is a legacy 'ARS' default and is not evidence). Card rows carry their
+ * currency explicitly. A row with no wallet and no card has NO reliable currency, so
+ * undefined makes formatCurrency fall back to the user's local currency (this is the
+ * missing-wallet banner case: it no longer prints ARS to a Spanish user).
+ */
+export function itemCurrency(item: CuarentenaItem): string | undefined {
+  const walletCurrency = item.billetera_moneda || item.billetera_destino_moneda
+  if (walletCurrency) return walletCurrency
+  if (item.tarjeta_id) return item.moneda || undefined
+  return undefined
 }
 
 /** True when a transfer moves money between wallets of different currencies. */
