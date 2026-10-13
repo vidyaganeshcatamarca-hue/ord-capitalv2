@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from 'react'
 import { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import { clearUserSnapshots } from '@/lib/regionSnapshot'
+import { clearUserSnapshots, clearOnboardingComplete, readOnboardingComplete, writeOnboardingComplete } from '@/lib/regionSnapshot'
 
 interface AuthContextType {
   session: Session | null
@@ -55,8 +55,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return
     }
     
-    // Optimista: Si ya está guardado en localStorage, lo habilitamos de inmediato para evitar bloqueos
-    const localCompleted = localStorage.getItem('onboarding_completo') === 'true'
+    // Optimista: si ESTE usuario ya lo completo alguna vez, habilitamos de inmediato para evitar
+    // bloqueos. Atado al usuario a proposito: el flag era global del dispositivo, asi que quien
+    // completaba el onboarding en este navegador mandaba al Home al siguiente que entrara con otra
+    // cuenta, antes de preguntarle nada al backend.
+    const localCompleted = readOnboardingComplete(sess.user.id)
     if (localCompleted) {
       setOnboardingCompleto(true)
     }
@@ -71,9 +74,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const completed = !!status.onboarding_completo
           setOnboardingCompleto(completed)
           if (completed) {
-            localStorage.setItem('onboarding_completo', 'true')
+            writeOnboardingComplete(sess.user.id, true)
           } else {
-            localStorage.removeItem('onboarding_completo')
+            clearOnboardingComplete()
           }
           return // Éxito
         }
@@ -128,7 +131,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setNombreUsuario('')
         // Solo eliminamos la bandera si el evento es explícitamente un cierre de sesión
         if (event === 'SIGNED_OUT') {
-          localStorage.removeItem('onboarding_completo')
+          clearOnboardingComplete()
         }
       }
     })

@@ -12,6 +12,11 @@ import { WelcomeBack } from '@/components/WelcomeBack/WelcomeBack'
 import { CountryStep } from '@/components/onboarding/CountryStep'
 import { LEGAL_VERSIONS } from '@/config/legal'
 import type { Country } from '@/lib/countryCatalog'
+import {
+  clearOnboardingComplete,
+  readOnboardingComplete,
+  writeOnboardingComplete,
+} from '@/lib/regionSnapshot'
 import './Auth.css'
 
 type Mode = 'login' | 'register'
@@ -170,7 +175,7 @@ export function AuthPage() {
     setLoading(true)
     const initial = !ranInitialCheck.current
     ranInitialCheck.current = true
-    const localCompleted = localStorage.getItem('onboarding_completo') === 'true'
+    const localCompleted = readOnboardingComplete(session?.user?.id)
     let unauthorized = false
 
     try {
@@ -188,7 +193,7 @@ export function AuthPage() {
           if (!error && status) {
             if (status.onboarding_completo) {
               setOnboardingCompleto(true)
-              localStorage.setItem('onboarding_completo', 'true')
+              writeOnboardingComplete(session?.user?.id, true)
               clearPersistedSlide()
               navigate('/', { replace: true })
             } else if (status.consentimiento_aceptado === false) {
@@ -228,7 +233,7 @@ export function AuthPage() {
       if (unauthorized) {
         console.warn('[auth] la sesion no existe en el backend; cerrando sesion')
         clearPersistedSlide()
-        localStorage.removeItem('onboarding_completo')
+        clearOnboardingComplete()
         try {
           await signOut()
         } catch (err) {
@@ -271,7 +276,7 @@ export function AuthPage() {
     try {
       await supabase.auth.signOut()
       clearPersistedSlide()
-      localStorage.removeItem('onboarding_completo')
+      clearOnboardingComplete()
       setShowWelcomeBack(false)
       setSlide(1)
       // El useEffect que observa `session` disparará el flujo de auth.

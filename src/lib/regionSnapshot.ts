@@ -18,6 +18,14 @@ import type { SnapshotStorage } from './userSnapshot'
 export const REGION_SNAPSHOT_KEY = 'ord_region_snapshot_v1'
 export const PREFS_SNAPSHOT_KEY = 'ord_prefs_snapshot_v1'
 
+/**
+ * Legacy device-wide flag. It had no owner, so whoever completed the onboarding on
+ * this browser left it set and the next account that signed in was pushed straight
+ * to the home screen before the backend was asked anything. Kept only to clean it up.
+ */
+const LEGACY_ONBOARDING_KEY = 'onboarding_completo'
+export const ONBOARDING_FLAG_KEY = 'ord_onboarding_complete_v1'
+
 export interface RegionSnapshot {
   countryCode: string
   localCurrency: string
@@ -96,4 +104,33 @@ export function clearUserSnapshots(): void {
   const storage = browserStorage()
   clearSnapshot(storage, REGION_SNAPSHOT_KEY)
   clearSnapshot(storage, PREFS_SNAPSHOT_KEY)
+  clearOnboardingComplete()
+}
+
+const isTrue = (value: unknown): value is boolean => value === true
+
+/** Whether THIS user is known to have finished the onboarding. Another user's flag never counts. */
+export function readOnboardingComplete(userId: string | null | undefined): boolean {
+  return readSnapshot(browserStorage(), ONBOARDING_FLAG_KEY, userId, isTrue) === true
+}
+
+export function writeOnboardingComplete(
+  userId: string | null | undefined,
+  completed: boolean
+): void {
+  if (!completed) {
+    clearOnboardingComplete()
+    return
+  }
+  writeSnapshot(browserStorage(), ONBOARDING_FLAG_KEY, userId, true)
+}
+
+export function clearOnboardingComplete(): void {
+  const storage = browserStorage()
+  clearSnapshot(storage, ONBOARDING_FLAG_KEY)
+  try {
+    storage?.removeItem(LEGACY_ONBOARDING_KEY)
+  } catch {
+    // Same as every other storage call here: never break the UI over this.
+  }
 }
