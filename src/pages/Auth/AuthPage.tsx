@@ -20,11 +20,12 @@ import {
 import './Auth.css'
 
 type Mode = 'login' | 'register'
-type BudgetMode = 'libertad' | 'disciplina'
 
 // The country step landed as slide 3, so every index >= 3 shifted by one
-// (wallet 3->4, anchor day 4->5, budget mode 5->6). The progress key is
-// versioned and the legacy 1..5 value is migrated on first read.
+// (wallet 3->4, virtual wallet 4->5, anchor day 5->6). The psychological-contract
+// (budget mode) screen was removed: every user starts in anticipado/libertad and
+// `handleFinishOnboarding` runs right after the anchor day. Progress key versioned;
+// the legacy 1..5 value is migrated on first read.
 const TOTAL_SLIDES = 6
 const SLIDE_STORAGE_KEY = 'onboarding_slide_v2'
 const LEGACY_SLIDE_STORAGE_KEY = 'onboarding_slide'
@@ -125,17 +126,20 @@ export function AuthPage() {
   const [localCountry, setLocalCountry] = useState<Country | null>(null)
   const localCurrencySymbol = localCountry?.currencySymbol ?? ''
 
-  // Slide 4: Wallet State
+  // Slide 4: Wallet State — the cash wallet. Its name and icon are fixed; only the
+  // opening balance is asked (decision del dueno: simplificar el onboarding).
+  const [cashBalanceInput, setCashBalanceInput] = useState('0')
+
+  // Slide 5: Optional virtual wallet. The form only appears when the user asks for it
+  // (boton); si no la quiere, continua sin crearla.
   const [walletName, setWalletName] = useState('')
   const [calcInput, setCalcInput] = useState('0')
-  const [cashBalanceInput, setCashBalanceInput] = useState('0')
   const [selectedIcon, setSelectedIcon] = useState('💵')
+  const [showVirtualForm, setShowVirtualForm] = useState(false)
+  const [virtualCreated, setVirtualCreated] = useState(false)
 
-  // Slide 5: Anchor Day State
+  // Slide 6: Anchor Day State
   const [anchorDay, setAnchorDay] = useState(1)
-
-  // Slide 6: Psychological Contract State
-  const [budgetMode, setBudgetMode] = useState<BudgetMode>('libertad')
 
   // Redirección si ya está autenticado al cargar
   useEffect(() => {
@@ -338,28 +342,21 @@ export function AuthPage() {
 
 
 
-  // --- LLAMADA RPC SLIDE 4: Guardar Billetera ---
+  // --- LLAMADA RPC SLIDE 4: crear SOLO la billetera en efectivo ---
+  // La cuenta bancaria/virtual no se crea aca: es una pantalla opcional despues
+  // (slide 5). Con p_cuenta_nombre NULL la RPC omite la cuenta por completo.
   const handleSaveWallet = async () => {
-    const saldo = parseFloat(calcInput) || 0
     const cashSaldo = parseFloat(cashBalanceInput) || 0
-
-    const name = walletName.trim()
-    const cashName = 'wallet_cash_default_name'
-
-    if (name.toLowerCase() === t('wallet_cash_default_name').toLowerCase()) {
-      showToast(t('error_initial_wallet_names_must_differ'), 'error')
-      return
-    }
 
     setLoading(true)
 
     try {
       const { error } = await supabase.rpc('fn_crear_billeteras_iniciales', {
-        p_cuenta_nombre: name,
-        p_cuenta_saldo_apertura: saldo,
-        p_cuenta_saldo_omitido: saldo <= 0,
-        p_cuenta_icono: selectedIcon,
-        p_efectivo_nombre: cashName,
+        p_cuenta_nombre: null,
+        p_cuenta_saldo_apertura: 0,
+        p_cuenta_saldo_omitido: true,
+        p_cuenta_icono: '💳',
+        p_efectivo_nombre: 'wallet_cash_default_name',
         p_efectivo_saldo_apertura: cashSaldo,
         p_efectivo_saldo_omitido: cashSaldo <= 0,
         p_efectivo_icono: '💵'
@@ -375,6 +372,34 @@ export function AuthPage() {
       setLoading(false)
     }
   }
+
+  // --- SLIDE 5: crear la billetera virtual (opcional, solo si el usuario pide) ---
+  const handleCreateVirtualWallet = async () => {
+    const name = walletName.trim()
+    if (!name) {
+      showToast(t('error_field_required', { field: t('label_virtual_wallet_name') }), 'error')
+      return
+    }
+    const saldo = parseFloat(calcInput) || 0
+
+    setLoading(true)
+    try {
+      // La moneda no se manda: con el pais ya confirmado, el backend la deriva.
+      const { error } = await supabase.rpc('fn_crear_billetera_inicial', {
+        p_nombre: name,
+        p_saldo_apertura: saldo,
+        p_icono: selectedIcon
+      })
+      if (error) throw error
+      setVirtualCreated(true)
+      showToast(t('toast_virtual_wallet_created'), 'success')
+    } catch (err: any) {
+      showToast(parseError(err), 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
 
   // --- PREVIEW RANGO DE DÍA ANCLA (SLIDE 5) ---
   const getCyclePreviewText = () => {
@@ -392,15 +417,16 @@ export function AuthPage() {
     }
   }
 
-  // --- LLAMADA RPC SLIDE 6: Finalizar Onboarding ---
+  // --- LLAMADA POST-ANCHOR-DAY: Finalizar Onboarding (sin pantalla de modo) ---
+  // Modo presupuesto fijo: anticipado ('libertad', la sugerencia del producto). La
+  // eleccion no se ofrece mas en el onboarding.
   const handleFinishOnboarding = async () => {
     setLoading(true)
-    const modoRPC = budgetMode === 'libertad' ? 'anticipado' : 'base_cero'
 
     try {
       const { error } = await supabase.rpc('fn_configurar_onboarding_final', {
         p_dia_ancla_ciclo: anchorDay,
-        p_modo_presupuesto: modoRPC
+        p_modo_presupuesto: 'anticipado'
       })
 
       if (error) throw error
@@ -657,78 +683,12 @@ export function AuthPage() {
         />
       )}
 
-      {/* SLIDE 4: PRIMERA BILLETERA */}
+      {/* SLIDE 4: BILLETERA EN EFECTIVO — solo el saldo inicial (nombre e ícono fijos) */}
       {slide === 4 && (
         <div className="onboarding-slide slide-active">
           <div className="slide-content scroll-area">
-            <h2 className="slide-title">{t('onboarding_wallet_title')}</h2>
-            <p className="slide-subtitle">{t('onboarding_wallet_subtitle')}</p>
-
-            <div className="form-group mb-3">
-              <label className="form-label">{t('label_wallet_name')}</label>
-              <input
-                type="text"
-                placeholder={t('placeholder_wallet_name')}
-                value={walletName}
-                onChange={e => setWalletName(e.target.value)}
-              />
-            </div>
-
-            <div className="form-group mb-3">
-              <label className="form-label">{t('label_wallet_icon')}</label>
-              <div className="emoji-selector-grid">
-                {['💵', '💶', '💷', '💴', '💰', '🪙', '💸', '💳', '🏦', '📱', '💼', '👛', '📈', '💎', '🏧'].map(emoji => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    className={`emoji-selector-btn ${selectedIcon === emoji ? 'active' : ''}`}
-                    onClick={() => setSelectedIcon(emoji)}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-              {/* Balance de Cuenta Inicial */}
-              <div className="form-group mb-3">
-                <label className="form-label">{t('label_primary_initial_balance')}</label>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                  {localCurrencySymbol && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        left: '16px',
-                        fontSize: 'calc(22px * var(--font-scale))',
-                        fontWeight: 'bold',
-                        color: 'var(--text-3)',
-                      }}
-                    >
-                      {localCurrencySymbol}
-                    </span>
-                  )}
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    className="calc-display font-mono"
-                    style={{
-                      width: '100%',
-                      paddingLeft: localCurrencySymbol ? '64px' : '16px',
-                      textAlign: 'right',
-                      fontSize: 'calc(24px * var(--font-scale))',
-                      fontWeight: 'bold',
-                    }}
-                    value={calcInput}
-                    onChange={e => setCalcInput(e.target.value)}
-                    onFocus={() => {
-                      if (calcInput === '0') setCalcInput('')
-                    }}
-                    onBlur={() => {
-                      if (!calcInput || parseFloat(calcInput) < 0) setCalcInput('0')
-                    }}
-                  />
-                </div>
-              </div>
+            <h2 className="slide-title">{t('onboarding_wallet_cash_title')}</h2>
+            <p className="slide-subtitle">{t('onboarding_wallet_cash_subtitle')}</p>
 
               <div className="form-group mb-3">
                 <label className="form-label">{t('label_cash_initial_balance')}</label>
@@ -776,19 +736,138 @@ export function AuthPage() {
                 onClick={() => handleSaveWallet()}
                 disabled={loading}
               >
-                {loading ? t('btn_saving') : t('btn_save_initial_wallets')}
+                {loading ? t('btn_saving') : t('onboarding_country_cta')}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* SLIDE 5: TU RITMO (DÍA ANCLA) */}
+      {/* SLIDE 5: BILLETERA VIRTUAL (OPCIONAL) */}
       {slide === 5 && (
+        <div className="onboarding-slide slide-active">
+          <div className="slide-content scroll-area">
+            <h2 className="slide-title">{t('onboarding_wallet_virtual_title')}</h2>
+            <p className="slide-subtitle">{t('onboarding_wallet_virtual_subtitle')}</p>
+
+            {virtualCreated ? (
+              <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
+                <p>✅ {t('toast_virtual_wallet_created')}</p>
+              </div>
+            ) : showVirtualForm ? (
+              <>
+                <div className="form-group mb-3">
+                  <label className="form-label">{t('label_virtual_wallet_name')}</label>
+                  <input
+                    type="text"
+                    placeholder={t('placeholder_wallet_name')}
+                    value={walletName}
+                    onChange={e => setWalletName(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+
+                <div className="form-group mb-3">
+                  <label className="form-label">{t('label_wallet_icon')}</label>
+                  <div className="emoji-selector-grid">
+                    {['💵', '💶', '💷', '💴', '💰', '🪙', '💸', '💳', '🏦', '📱', '💼', '👛', '📈', '💎', '🏧'].map(emoji => (
+                      <button
+                        key={emoji}
+                        type="button"
+                        className={`emoji-selector-btn ${selectedIcon === emoji ? 'active' : ''}`}
+                        onClick={() => setSelectedIcon(emoji)}
+                      >
+                        {emoji}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="form-group mb-3">
+                  <label className="form-label">{t('label_virtual_initial_balance')}</label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    {localCurrencySymbol && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          left: '16px',
+                          fontSize: 'calc(22px * var(--font-scale))',
+                          fontWeight: 'bold',
+                          color: 'var(--text-3)',
+                        }}
+                      >
+                        {localCurrencySymbol}
+                      </span>
+                    )}
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      className="calc-display font-mono"
+                      style={{
+                        width: '100%',
+                        paddingLeft: localCurrencySymbol ? '64px' : '16px',
+                        textAlign: 'right',
+                        fontSize: 'calc(24px * var(--font-scale))',
+                        fontWeight: 'bold',
+                      }}
+                      value={calcInput}
+                      onChange={e => setCalcInput(e.target.value)}
+                      onFocus={() => {
+                        if (calcInput === '0') setCalcInput('')
+                      }}
+                      onBlur={() => {
+                        if (!calcInput || parseFloat(calcInput) < 0) setCalcInput('0')
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <div className="slide-footer flex flex-col gap-2">
+                  <button
+                    className="btn btn-primary btn-full btn-lg"
+                    onClick={() => handleCreateVirtualWallet()}
+                    disabled={loading}
+                  >
+                    {loading ? t('btn_saving') : t('btn_create_virtual_wallet')}
+                  </button>
+                  <button
+                    type="button"
+                    className="onboarding-link-btn"
+                    onClick={() => { setShowVirtualForm(false); setCalcInput('0') }}
+                  >
+                    {t('btn_cancel')}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                className="btn btn-outline btn-full mt-2"
+                onClick={() => setShowVirtualForm(true)}
+              >
+                {t('btn_create_virtual_wallet')}
+              </button>
+            )}
+
+            <div className="slide-footer flex flex-col gap-2">
+              <button
+                className="btn btn-primary btn-full btn-lg"
+                onClick={() => goToSlide(6)}
+                disabled={loading}
+              >
+                {t('onboarding_country_cta')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SLIDE 6: TU RITMO (DIA ANCLA) - finaliza el onboarding, sin pantalla de modo */}
+      {slide === 6 && (
         <div className="onboarding-slide slide-active">
           <div className="slide-content">
             <div className="slide-header-actions">
-              <button className="onboarding-skip-btn" onClick={() => { setAnchorDay(1); goToSlide(6); }}>
+              <button className="onboarding-skip-btn" onClick={() => { setAnchorDay(1); handleFinishOnboarding(); }}>
                 {t('btn_skip')}
               </button>
             </div>
@@ -824,10 +903,10 @@ export function AuthPage() {
             </div>
 
             <div className="slide-footer flex flex-col gap-2">
-              <button className="btn btn-primary btn-full btn-lg" onClick={() => goToSlide(6)}>
-                {t('btn_next')}
+              <button className="btn btn-primary btn-full btn-lg" onClick={() => handleFinishOnboarding}>
+                {loading ? t('btn_creating_space', { defaultValue: 'Creando espacio...' }) : t('btn_next')}
               </button>
-              <button className="onboarding-link-btn" onClick={() => { setAnchorDay(1); goToSlide(6); }}>
+              <button className="onboarding-link-btn" onClick={() => { setAnchorDay(1); handleFinishOnboarding(); }}>
                 {t('btn_use_day_1')}
               </button>
             </div>
@@ -835,56 +914,6 @@ export function AuthPage() {
         </div>
       )}
 
-      {/* SLIDE 6: CONTRATO PSICOLÓGICO */}
-      {slide === 6 && (
-        <div className="onboarding-slide slide-active">
-          <div className="slide-content scroll-area">
-            <h2 className="slide-title">{t('onboarding_budget_mode_title')}</h2>
-            <p className="slide-subtitle">{t('onboarding_budget_mode_subtitle')}</p>
-
-            <div className="mode-cards flex flex-col gap-3">
-              {/* Tarjeta A: Modo Libertad */}
-              <div
-                className={`mode-card ${budgetMode === 'libertad' ? 'card-active-libertad' : ''}`}
-                onClick={() => setBudgetMode('libertad')}
-              >
-                <div className="mode-card-header">
-                  <span className="mode-emoji">🕊️</span>
-                  <div className="mode-title-wrap">
-                    <h3 className="mode-card-title">{t('budget_mode_libertad_title')}</h3>
-                    <span className="mode-badge-recommended">{t('label_recommended')}</span>
-                  </div>
-                </div>
-                <p className="mode-card-desc">
-                  {t('budget_mode_libertad_desc')}
-                </p>
-              </div>
-
-              {/* Tarjeta B: Modo Disciplina */}
-              <div
-                className={`mode-card ${budgetMode === 'disciplina' ? 'card-active-disciplina' : ''}`}
-                onClick={() => setBudgetMode('disciplina')}
-              >
-                <div className="mode-card-header">
-                  <span className="mode-emoji">🔒</span>
-                  <div className="mode-title-wrap">
-                    <h3 className="mode-card-title">{t('budget_mode_base_cero_title')}</h3>
-                  </div>
-                </div>
-                <p className="mode-card-desc">
-                  {t('budget_mode_base_cero_desc')}
-                </p>
-              </div>
-            </div>
-
-            <div className="slide-footer">
-              <button className="btn btn-primary btn-full btn-lg mt-4" onClick={handleFinishOnboarding} disabled={loading}>
-                {loading ? t('btn_creating_space', { defaultValue: 'Creando espacio...' }) : t('btn_create_my_space')}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
