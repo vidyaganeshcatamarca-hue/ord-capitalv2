@@ -178,7 +178,7 @@ export function CalendarioFinanciero({ eventosIniciales, onVolver, onChange }: C
                         </span>
                       </div>
                       <p className="saneamiento-item-meta">
-                        {formatDateShort(e.fecha)} · {formatCurrency(e.monto, 'ARS')}
+                        {formatDateShort(e.fecha)} · {formatCurrency(e.monto)}
                       </p>
                     </div>
                   </div>

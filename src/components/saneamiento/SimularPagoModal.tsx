@@ -31,7 +31,7 @@ export function SimularPagoModal({ deuda, monto, simulacion, isOpen, onClose, on
         <div className="saneamiento-simulacion">
           <div className="saneamiento-sim-row">
             <span>{t('saneamiento_simular_pago_extra')}</span>
-            <strong>{formatCurrency(monto, 'ARS')}</strong>
+            <strong>{formatCurrency(monto)}</strong>
           </div>
           <div className="saneamiento-sim-row">
             <span>{t('saneamiento_simular_meses_actuales')}</span>
@@ -47,11 +47,11 @@ export function SimularPagoModal({ deuda, monto, simulacion, isOpen, onClose, on
           </div>
           <div className="saneamiento-sim-row destacado">
             <span>{t('saneamiento_simular_intereses_ahorrados')}</span>
-            <strong>{formatCurrency(simulacion.ahorro_intereses_estimado, 'ARS')}</strong>
+            <strong>{formatCurrency(simulacion.ahorro_intereses_estimado)}</strong>
           </div>
           <div className="saneamiento-sim-row">
             <span>{t('saneamiento_simular_nuevo_saldo')}</span>
-            <strong>{formatCurrency(simulacion.nuevo_saldo, 'ARS')}</strong>
+            <strong>{formatCurrency(simulacion.nuevo_saldo)}</strong>
           </div>
 
           <div className="saneamiento-sim-aviso">

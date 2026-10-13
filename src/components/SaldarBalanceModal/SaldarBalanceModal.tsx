@@ -58,7 +58,7 @@ export function SaldarBalanceModal({
   const nombrePareja = isCreador ? t('hogar_integrantes_invitado') : t('hogar_integrantes_creador')
 
   const { formatMonto } = useNumberFormat()
-  const formatMoney = (value: number) => formatMonto(value, 'ARS')
+  const formatMoney = (value: number) => formatMonto(value)
 
   const billeterasOrigen = useMemo(
     () => billeteras.filter((b) => !b.es_fondo_prevision),

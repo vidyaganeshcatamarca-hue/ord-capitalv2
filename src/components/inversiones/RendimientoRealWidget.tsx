@@ -69,7 +69,7 @@ export function RendimientoRealWidget({
       <div className="rendimiento-real-row rendimiento-real-row--title">
         <h2 className="rendimiento-real-title">{t('title')}</h2>
         <span className="rendimiento-real-total-ars">
-          {formatCurrency(totalPesos, 'ARS')}
+          {formatCurrency(totalPesos)}
         </span>
       </div>
 

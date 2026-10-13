@@ -34,7 +34,7 @@ export function RechazarCuarentenaModal({ item, isOpen, onClose, onConfirmar }: 
 
         <div className="saneamiento-rechazar-body">
           <p className="text-muted" style={{ marginBottom: '16px' }}>
-            {item.detalle || catalogDisplayName(item.categoria_nombre)} — {formatCurrency(item.monto, 'ARS')}
+            {item.detalle || catalogDisplayName(item.categoria_nombre)} — {formatCurrency(item.monto)}
           </p>
 
           <div className="form-group">

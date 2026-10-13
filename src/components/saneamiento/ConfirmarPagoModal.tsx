@@ -69,7 +69,7 @@ export function ConfirmarPagoModal({ deuda, monto, isOpen, onClose, onConfirmar 
         <form onSubmit={handleSubmit} className="saneamiento-form">
           <div className="saneamiento-sim-row" style={{ marginBottom: '16px' }}>
             <span>{deuda.nombre_deuda}</span>
-            <strong>{formatCurrency(monto, 'ARS')}</strong>
+            <strong>{formatCurrency(monto)}</strong>
           </div>
 
           <div className="form-group">

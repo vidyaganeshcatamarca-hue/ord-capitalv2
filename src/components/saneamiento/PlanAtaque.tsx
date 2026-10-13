@@ -109,7 +109,7 @@ export function PlanAtaque({ estadoInicial, onVolver, onChange }: PlanAtaqueProp
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <span style={{ color: 'var(--text-secondary)', fontSize: 'calc(14px * var(--font-scale))' }}>{t('saneamiento_ataquewidget_deuda_total')}</span>
             <span style={{ fontSize: 'calc(24px * var(--font-scale))', fontWeight: 800, fontFamily: 'var(--font-display)' }}>
-              {formatCurrency(estado.deuda_total, 'ARS')}
+              {formatCurrency(estado.deuda_total)}
             </span>
           </div>
           <div className="saneamiento-progress-bg" style={{ margin: '12px 0' }}>
@@ -120,7 +120,7 @@ export function PlanAtaque({ estadoInicial, onVolver, onChange }: PlanAtaqueProp
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text-secondary)' }}>
             <span>{pct}% {t('saneamiento_ataquewidget_pagado')}</span>
-            <span>{formatCurrency(estado.pagado_total, 'ARS')}</span>
+            <span>{formatCurrency(estado.pagado_total)}</span>
           </div>
           {estado.fecha_fin_estimada && (
             <p style={{ margin: '12px 0 0', fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text-secondary)' }}>
@@ -222,8 +222,8 @@ function DeudaCard({ deuda, onSimular, onPagar }: DeudaCardProps) {
             </span>
           </div>
           <p className="saneamiento-item-meta">
-            {t('saneamiento_saldo')}: {formatCurrency(deuda.saldo_actual, 'ARS')} · TNA: {deuda.tna}%<br />
-            {t('saneamiento_cuota_mensual')}: {formatCurrency(deuda.cuota_mensual, 'ARS')}
+            {t('saneamiento_saldo')}: {formatCurrency(deuda.saldo_actual)} · TNA: {deuda.tna}%<br />
+            {t('saneamiento_cuota_mensual')}: {formatCurrency(deuda.cuota_mensual)}
             {deuda.vencimiento_proximo && <> · {t('saneamiento_vencimiento')}: {formatDateShort(deuda.vencimiento_proximo)}</>}
           </p>
         </div>
