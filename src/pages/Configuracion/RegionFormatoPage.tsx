@@ -6,10 +6,8 @@ import { parseError, t } from '@/locales/i18n'
 import { isSupported, SUPPORTED } from '@/locales/language'
 import { useLanguage } from '@/locales/LanguageProvider'
 import { useOptionalAuth } from '@/contexts/AuthContext'
-import { invalidateRegionCache } from '@/hooks/useNumberFormat'
 import { clearPrefsSnapshot, writePrefsSnapshot, writeRegionSnapshot } from '@/lib/regionSnapshot'
-import { useCountryCatalog } from '@/lib/useCountryCatalog'
-import { currencyName, findCountry, flagEmoji, regionName } from '@/lib/countryCatalog'
+import { currencyName, flagEmoji, regionName } from '@/lib/countryCatalog'
 import './ConfiguracionPage.css'
 import './ConfigSectionPage.css'
 
@@ -72,13 +70,13 @@ export function RegionFormatoPage() {
   const { showToast } = useToast()
   const { lang, setLang } = useLanguage()
   const userId = useOptionalAuth()?.session?.user?.id ?? null
-  // The country list and every derived default come from the catalog (WU1):
-  // adding a country to the DB adds it here with no code change.
-  const { countries, index: countryIndex, loading: catalogLoading } = useCountryCatalog()
+  // The country is data, not code — but it is NOT editable here once the user is
+  // logged in: it is the anchor of the regional derivation and of the frozen
+  // currency math (decision del dueno). It reads from the confirmed region row;
+  // only the language and the minor regional prefs change on this screen.
   const [region, setRegion] = useState<RegionPrefs | null>(null)
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS)
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
 
   const loadConfig = useCallback(async (cancelledRef: { cancelled: boolean }) => {
     setLoading(true)
@@ -103,35 +101,8 @@ export function RegionFormatoPage() {
     return () => { cancelledRef.cancelled = true }
   }, [loadConfig])
 
-  // Confirm a country: the server ignores p_moneda_local (country defines the
-  // currency) and re-derives the regional formats because p_origen is sent.
-  // Here the user is choosing it by hand, so the origin is 'manual'.
-  const confirmCountry = async (pais_codigo: string) => {
-    setSaving(true)
-    try {
-      await rpc('fn_configurar_region_usuario', {
-        p_pais_codigo: pais_codigo,
-        p_moneda_local: '',
-        p_idioma: lang,
-        p_origen: 'manual',
-      })
-      const country = findCountry(countryIndex, pais_codigo)
-      invalidateRegionCache()
-      writeRegionSnapshot(userId, {
-        countryCode: pais_codigo,
-        localCurrency: country?.localCurrency ?? '',
-        language: lang,
-      })
-      // Confirming re-derives the formats server-side: refresh what this page
-      // shows so the decimals/separators reflect the new country at once.
-      clearPrefsSnapshot()
-      await loadConfig({ cancelled: false })
-    } catch (err) {
-      showToast(parseError(err), 'error')
-    } finally {
-      setSaving(false)
-    }
-  }
+  // The country cannot be changed from this screen (decision del dueno): no
+  // confirm path here. It is set in onboarding; changing it is a support case.
 
   const savePrefs = async (newPrefs: UserPrefs) => {
     if (newPrefs.separador_miles === newPrefs.separador_decimal) {
@@ -159,18 +130,6 @@ export function RegionFormatoPage() {
     }
   }
 
-  const updateCountry = (pais_codigo: string) => {
-    if (!pais_codigo || catalogLoading) return
-    const country = findCountry(countryIndex, pais_codigo)
-    const nextRegion: RegionPrefs = {
-      pais_codigo,
-      moneda_default: country?.localCurrency ?? '',
-      idioma_default: lang,
-    }
-    setRegion(nextRegion)
-    void confirmCountry(pais_codigo)
-  }
-
   // Language-only changes must not stamp the country as confirmed (assertion 18):
   // no p_origen is sent. Without a confirmed country there is no row to update,
   // so the language persists through the provider's storage and nothing is sent.
@@ -179,7 +138,6 @@ export function RegionFormatoPage() {
     setLang(next)
     if (region?.pais_codigo) {
       setRegion({ ...region, idioma_default: next })
-      setSaving(true)
       rpc('fn_configurar_region_usuario', {
         p_pais_codigo: region.pais_codigo,
         p_moneda_local: '',
@@ -193,7 +151,6 @@ export function RegionFormatoPage() {
           })
         })
         .catch((err) => showToast(parseError(err), 'error'))
-        .finally(() => setSaving(false))
     }
   }
 
@@ -218,28 +175,14 @@ export function RegionFormatoPage() {
         {/* País e Idioma */}
         <article className="config-section-card">
           <h2>{t('config_country')}</h2>
-          <div className="config-section-field">
-            <label htmlFor="pais-codigo">{t('config_country')}</label>
-            <select
-              id="pais-codigo"
-              value={region?.pais_codigo ?? ''}
-              disabled={catalogLoading || saving}
-              onChange={(e) => updateCountry(e.target.value)}
-            >
-              <option value="">{catalogLoading ? t('config_loading') : '—'}</option>
-              {[...countries]
-                .map((c) => ({
-                  code: c.code,
-                  // Only soportado countries can be picked: the rest of the app
-                  // (onboarding gate, cron quoting) is defined by that flag.
-                  supported: true,
-                  label: regionName(c.code, lang) || c.code,
-                }))
-                .sort((a, b) => a.label.localeCompare(b.label, lang))
-                .map((c) => (
-                  <option key={c.code} value={c.code}>{c.label}</option>
-              ))}
-            </select>
+          <div className="config-section-row">
+            <span>{t('config_country')}</span>
+            <span>
+              {region?.pais_codigo
+                ? `${flagEmoji(region.pais_codigo)} ${regionName(region.pais_codigo, lang)}`
+                : '—'}
+              {" · "}<span style={{ color: 'var(--text-3)' }}>{t('config_country_locked')}</span>
+            </span>
           </div>
           <div className="config-section-field">
             <label htmlFor="idioma-default">{t('config_language')}</label>
