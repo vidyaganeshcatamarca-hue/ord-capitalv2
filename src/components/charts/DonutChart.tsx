@@ -1,4 +1,5 @@
 import { t } from '@/locales/i18n'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
 import './DonutChart.css'
 
 interface DonutChartProps {
@@ -10,6 +11,7 @@ interface DonutChartProps {
 }
 
 export function DonutChart({ data, hideAmounts, total: totalOverride, centerLabelKey = 'donut_total_expense', totalField = 'total_consumido' }: DonutChartProps) {
+  const { formatMonto } = useNumberFormat()
   const radius = 38
   const strokeWidth = 10
   const circumference = 2 * Math.PI * radius
@@ -79,7 +81,7 @@ export function DonutChart({ data, hideAmounts, total: totalOverride, centerLabe
       <div className="donut-center-text">
         <span className="donut-center-label">{t(centerLabelKey)}</span>
         <span className="donut-center-amount font-mono">
-          {hideAmounts ? '***' : `$${total.toLocaleString('es-AR', { maximumFractionDigits: 0 })}`}
+          {hideAmounts ? '***' : formatMonto(total)}
         </span>
       </div>
     </div>
