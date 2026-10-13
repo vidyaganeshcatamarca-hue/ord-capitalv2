@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
+import { canTreatSessionAsDead, supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
@@ -231,13 +231,18 @@ export function AuthPage() {
       // working session, and the only escape used to be clearing browser storage.
       // Dropping the session hands control back to the login screen.
       if (unauthorized) {
-        console.warn('[auth] la sesion no existe en el backend; cerrando sesion')
-        clearPersistedSlide()
-        clearOnboardingComplete()
-        try {
-          await signOut()
-        } catch (err) {
-          console.warn('[auth] el cierre de sesion fallo:', err)
+        // Same guard as the rpc interceptor: a brand-new session must not be killed.
+        // During the OAuth callback the code exchange is still running and those RPCs
+        // legitimately fail as unauthorized, so acting here would loop the login.
+        if (await canTreatSessionAsDead()) {
+          console.warn('[auth] la sesion no existe en el backend; cerrando sesion')
+          clearPersistedSlide()
+          clearOnboardingComplete()
+          try {
+            await signOut()
+          } catch (err) {
+            console.warn('[auth] el cierre de sesion fallo:', err)
+          }
         }
         return
       }
