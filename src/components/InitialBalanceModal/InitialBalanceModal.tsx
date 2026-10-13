@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { t, parseError } from '@/locales/i18n'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { Billetera } from '@/types/Billetera'
@@ -16,6 +17,9 @@ export function InitialBalanceModal({ billetera, onClose, onSuccess }: Props) {
   const [initialBalanceValue, setInitialBalanceValue] = useState('0')
   const [loading, setLoading] = useState(false)
   const { showToast } = useToast()
+  // The amount prefix comes from the currency, never from a literal: a wallet in euros
+  // used to render a dollar sign.
+  const { currencySymbol } = useNumberFormat()
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     if (e.target.value === '0') setInitialBalanceValue('')
@@ -76,7 +80,7 @@ export function InitialBalanceModal({ billetera, onClose, onSuccess }: Props) {
             <label className="text-xs text-muted mb-2 block font-semibold">{t('wallet_initial_balance_amount')}</label>
             <div style={{ position: 'relative' }}>
               <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', color: 'var(--text-3)' }}>
-                {billetera.moneda === 'USD' ? 'U$S' : '$'}
+                {currencySymbol(billetera.moneda)}
               </span>
               <input
                 type="number"

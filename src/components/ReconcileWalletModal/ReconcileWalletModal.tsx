@@ -19,7 +19,7 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
   const confirmBtnRef = useRef<HTMLButtonElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const { showToast } = useToast()
-  const { prefs } = useNumberFormat()
+  const { prefs, currencySymbol } = useNumberFormat()
 
   useEffect(() => {
     setSaldoReal(billetera.saldo_actual.toString())
@@ -116,7 +116,7 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
               <label className="text-xs text-muted mb-2 block font-semibold">{t('reconcile_label_real')}</label>
               <div style={{ position: 'relative' }}>
                 <span style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', fontFamily: 'var(--font-mono)', color: 'var(--text-3)' }}>
-                  {billetera.moneda === 'USD' ? 'U$S' : '$'}
+                  {currencySymbol(billetera.moneda)}
                 </span>
                 <input
                   ref={inputRef}

@@ -128,7 +128,7 @@ export function DistribucionView({ className }: DistribucionViewProps) {
                     </span>
                   </td>
                   <td>{item.cantidad}</td>
-                  <td>{formatCurrency(item.valor_total, 'ARS')}</td>
+                  <td>{formatCurrency(item.valor_total)}</td>
                   <td>{formatPercent(item.porcentaje_valor)}</td>
                 </tr>
               ))}

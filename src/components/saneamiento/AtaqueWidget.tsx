@@ -36,7 +36,7 @@ export function AtaqueWidget({ estado, onDetalle }: AtaqueWidgetProps) {
     >
       <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
         <span style={{ fontSize: 'calc(24px * var(--font-scale))', fontWeight: 800, fontFamily: 'var(--font-display)' }}>
-          {formatCurrency(estado.deuda_total, 'ARS')}
+          {formatCurrency(estado.deuda_total)}
         </span>
         <span style={{ color: 'var(--text-secondary)', fontSize: 'calc(14px * var(--font-scale))' }}>{t('saneamiento_ataquewidget_deuda_total')}</span>
       </div>
@@ -50,7 +50,7 @@ export function AtaqueWidget({ estado, onDetalle }: AtaqueWidgetProps) {
 
       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text-secondary)', marginBottom: '12px' }}>
         <span>{pct}% {t('saneamiento_ataquewidget_pagado')}</span>
-        <span>{formatCurrency(estado.pagado_total, 'ARS')}</span>
+        <span>{formatCurrency(estado.pagado_total)}</span>
       </div>
 
       <div style={{ fontSize: 'calc(14px * var(--font-scale))', marginBottom: '12px' }}>

@@ -923,7 +923,7 @@ export function HomePage() {
   }, [billeteras])
 
   // Formateo de montos respetando decimales del usuario (useNumberFormat)
-  const { formatMonto: formatMontoBase } = useNumberFormat()
+  const { formatMonto: formatMontoBase, currencySymbol, locale } = useNumberFormat()
   const formatAmount = useCallback((monto: number, moneda: string) => {
     if (hideAmounts) return '***'
     return formatMontoBase(monto, moneda)
@@ -1184,7 +1184,7 @@ export function HomePage() {
               {/* Ocultar dólares si es cero */}
               {patrimonioUSD > 0 && (
                 <p className="home-patrimonio-usd font-mono" style={{ marginTop: '4px', textAlign: 'left' }}>
-                  {hideAmounts ? '*** USD' : `U$S ${patrimonioUSD.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                  {hideAmounts ? '*** USD' : `${currencySymbol('USD')} ${patrimonioUSD.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </p>
               )}
               <div className="home-patrimonio-badge" style={{ marginTop: '8px' }}>
