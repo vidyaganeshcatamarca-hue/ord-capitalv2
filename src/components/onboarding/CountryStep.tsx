@@ -187,20 +187,33 @@ export function CountryStep({ onConfirmed }: CountryStepProps) {
               </button>
             </div>
           ) : selected ? (
-            <div
-              className="card"
-              style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px' }}
-            >
-              <span aria-hidden="true" style={{ fontSize: '32px', lineHeight: 1 }}>
-                {flagEmoji(selected.code)}
-              </span>
-              <div>
-                <div style={{ fontWeight: 700 }}>{regionName(selected.code, lang)}</div>
-                <div style={{ color: 'var(--text-3)' }}>
-                  {selected.localCurrency} · {currencyName(selected.localCurrency, lang)}
+            <>
+              <div
+                className="card"
+                style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px' }}
+              >
+                <span aria-hidden="true" style={{ fontSize: '32px', lineHeight: 1 }}>
+                  {flagEmoji(selected.code)}
+                </span>
+                <div>
+                  <div style={{ fontWeight: 700 }}>{regionName(selected.code, lang)}</div>
+                  <div style={{ color: 'var(--text-3)' }}>
+                    {selected.localCurrency} · {currencyName(selected.localCurrency, lang)}
+                  </div>
                 </div>
               </div>
-            </div>
+              {/* The change-country link sits right under the suggested country, not
+              under the CTA: the decision the user faces is about the country, and the
+              user report was that buried at the bottom it went unnoticed. */}
+              <button
+                type="button"
+                className="onboarding-link-btn"
+                style={{ marginTop: '8px' }}
+                onClick={() => setShowSearch(true)}
+              >
+                {t('onboarding_country_change')}
+              </button>
+            </>
           ) : loading || unsupported ? (
             <div className="card" style={{ padding: '16px', textAlign: 'center' }}>
               <p style={{ color: 'var(--text-3)' }}>
@@ -216,13 +229,6 @@ export function CountryStep({ onConfirmed }: CountryStepProps) {
               disabled={!selected || saving}
             >
               {saving ? t('btn_saving') : t('onboarding_country_cta')}
-            </button>
-            <button
-              type="button"
-              className="onboarding-link-btn"
-              onClick={() => setShowSearch(true)}
-            >
-              {t('onboarding_country_change')}
             </button>
             {submitError && (
               <p style={{ color: 'var(--danger, #e5484d)', fontSize: '14px' }}>{submitError}</p>
