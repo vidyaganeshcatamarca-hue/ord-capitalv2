@@ -176,3 +176,24 @@ debe devolver `{"country":"AR"}` desde una conexión argentina.
 - Trampa de Postgres documentada: agregar un parámetro con `CREATE OR REPLACE` crea un **overload nuevo**
   en vez de reemplazar. Por eso `fn_obtener_region_usuario`, `fn_get_default_currency` y
   `fn_configurar_region_usuario` se recrearon con `DROP` previo.
+
+## Log 2026-10-13 (tarde) — fixes multimoneda reportados por el dueño
+
+- ✅ Bandeja de cuarentena: itemCurrency sin billetera → moneda local (`c726070`).
+- ✅ Presupuestos: helper local con $/es-AR y 9 literales → useNumberFormat con 0 decimales (`c726070`). Queda 1 toLocaleDateString('es-AR') cosmético para labels de fecha.
+- ✅ Onboarding: "Elegir otro país" bajo el card sugerido (`02488d4`).
+- ✅ Donut: centro y filas de categoría sin decimales (override de formMonto — `78e091d`).
+- ✅ Onboarding simplificado (`f195f03`): slide 4 = sólo efectivo con aviso; slide 5 = virtual opcional (form al pedirlo, fn_crear_billetera_inicial); slide 6 = día ancla que finaliza directo con modo fijo 'anticipado' (libertad); sin pantalla de modo.
+- ✅ PRD admin países: docs/varias/paises.md (aprobación pendiente por el dueño: F2+ y 4.2/4.3).
+
+## Análisis módulo Tarjetas (WU4c — sin ejecutar, requiere decisiones)
+
+Estructura actual: `p_tarjetas_credito` NO tiene columna de moneda; el enunciado se consolida como
+`total_ars + total_usd * cotizacion` en 4 RPC (mapa, vencimientos, registrar_pago_multi,
+liquidar_multi). Los casos de moneda `ARS`|`USD` están clavados en SQL (p_cuotas_detalle) y el
+frontend repite `?? 'ARS' as 'ARS'|'USD'` en 11 spots + 3 acumuladores.
+
+Deudas concretas: (1) `p_cuotas_detalle.moneda` default 'ARS' heredado — igual bug de p_caja;
+(2) el fallback 1.00 mentiroso sigue vivo en 4 RPC; (3) mapeo moneda local del usuario → casos SQL;
+(4) frontend: defaults, agregadores y display.
+
