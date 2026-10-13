@@ -205,11 +205,20 @@ async function loadWalletRows(): Promise<VoiceCatalogWalletRow[]> {
   }
 }
 
-/** Resolves the user's local currency from `fn_obtener_region_usuario`. */
-async function loadLocalCurrency(): Promise<string> {
+/**
+ * Resolves the user's local currency for the voice context. Chain: the confirmed
+ * region's currency first; a user whose country never got confirmed (legacy stuck
+ * accounts) borrows the first wallet's currency — wallets cannot exist without a
+ * currency, so that value is real data, never an invention. Only when there is
+ * neither a region nor a wallet does the legacy 'ARS' default apply.
+ */
+async function loadLocalCurrency(walletRows?: VoiceCatalogWalletRow[]): Promise<string> {
   const rows = await safeRpcRows<VoiceCatalogRegionRow>('fn_obtener_region_usuario');
   const currency = rows[0]?.moneda_default;
-  return typeof currency === 'string' && currency.length > 0 ? currency : DEFAULT_LOCAL_CURRENCY;
+  if (typeof currency === 'string' && currency.length > 0) return currency;
+  const fromWallet = walletRows?.[0]?.moneda;
+  if (typeof fromWallet === 'string' && fromWallet.length > 0) return fromWallet;
+  return DEFAULT_LOCAL_CURRENCY;
 }
 
 /**
@@ -232,13 +241,14 @@ export function useVoiceContext(): UseVoiceContextResult {
     const load = async (): Promise<void> => {
       setLoading(true);
       try {
-        const [categories, incomeSources, wallets, cards, localCurrency] = await Promise.all([
+        const [categories, incomeSources, wallets, cards] = await Promise.all([
           safeRpcRows<VoiceCatalogCategoryRow>('fn_obtener_arbol_categorias'),
           safeRpcRows<VoiceCatalogIncomeSourceRow>('fn_listar_categorias_ingreso'),
           loadWalletRows(),
           safeRpcRows<VoiceCatalogCardRow>('fn_reporte_mapa_tarjetas'),
-          loadLocalCurrency(),
         ]);
+        if (!alive) return;
+        const localCurrency = await loadLocalCurrency(wallets);
         if (!alive) return;
         const built = buildVoiceContext({
           catalog: { categories, incomeSources, wallets, cards },
