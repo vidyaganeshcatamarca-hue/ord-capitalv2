@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
@@ -8,6 +8,8 @@ import { useLanguage } from '@/locales/LanguageProvider'
 import { useOptionalAuth } from '@/contexts/AuthContext'
 import { invalidateRegionCache } from '@/hooks/useNumberFormat'
 import { clearPrefsSnapshot, writePrefsSnapshot, writeRegionSnapshot } from '@/lib/regionSnapshot'
+import { useCountryCatalog } from '@/lib/useCountryCatalog'
+import { currencyName, findCountry, flagEmoji, regionName } from '@/lib/countryCatalog'
 import './ConfiguracionPage.css'
 import './ConfigSectionPage.css'
 
@@ -24,14 +26,13 @@ interface UserPrefs {
   separador_decimal: string
   primer_dia_semana: number
   formato_fecha: string
+  formato_hora: string
 }
 
-const DEFAULT_REGION: RegionPrefs = {
-  pais_codigo: 'AR',
-  moneda_default: 'ARS',
-  idioma_default: 'es',
-}
-
+// Region row absent happens for legacy accounts without regional config: the
+// country selector starts empty and picking one stamps the country with
+// origen 'manual'. Never preset 'AR' here: that wrote a country that no one
+// confirmed (it lied to any consumer reading the row).
 const DEFAULT_PREFS: UserPrefs = {
   decimales_moneda_local: 0,
   decimales_segunda_moneda: 1,
@@ -39,34 +40,8 @@ const DEFAULT_PREFS: UserPrefs = {
   separador_decimal: ',',
   primer_dia_semana: 1,
   formato_fecha: 'DD/MM/YYYY',
+  formato_hora: '24h',
 }
-
-// 20 países: Américas + Europa
-const COUNTRY_OPTIONS = [
-  // Américas
-  { code: 'AR', labelKey: 'config_country_argentina',  currency: 'ARS' },
-  { code: 'UY', labelKey: 'config_country_uruguay',    currency: 'UYU' },
-  { code: 'CL', labelKey: 'config_country_chile',      currency: 'CLP' },
-  { code: 'CO', labelKey: 'config_country_colombia',   currency: 'COP' },
-  { code: 'MX', labelKey: 'config_country_mexico',     currency: 'MXN' },
-  { code: 'PE', labelKey: 'config_country_peru',       currency: 'PEN' },
-  { code: 'BR', labelKey: 'config_country_brazil',     currency: 'BRL' },
-  { code: 'EC', labelKey: 'config_country_ecuador',    currency: 'USD' },
-  { code: 'PY', labelKey: 'config_country_paraguay',   currency: 'PYG' },
-  { code: 'BO', labelKey: 'config_country_bolivia',    currency: 'BOB' },
-  { code: 'VE', labelKey: 'config_country_venezuela',  currency: 'VES' },
-  { code: 'PA', labelKey: 'config_country_panama',     currency: 'PAB' },
-  { code: 'CR', labelKey: 'config_country_costa_rica', currency: 'CRC' },
-  // Europa
-  { code: 'ES', labelKey: 'config_country_spain',      currency: 'EUR' },
-  { code: 'DE', labelKey: 'config_country_germany',    currency: 'EUR' },
-  { code: 'FR', labelKey: 'config_country_france',     currency: 'EUR' },
-  { code: 'IT', labelKey: 'config_country_italy',      currency: 'EUR' },
-  { code: 'PT', labelKey: 'config_country_portugal',   currency: 'EUR' },
-  { code: 'GB', labelKey: 'config_country_uk',         currency: 'GBP' },
-  // Norteamérica
-  { code: 'US', labelKey: 'config_country_usa',        currency: 'USD' },
-]
 
 const WEEKDAY_OPTIONS = [
   { value: 1, labelKey: 'config_first_weekday_monday' },
@@ -74,9 +49,10 @@ const WEEKDAY_OPTIONS = [
   { value: 6, labelKey: 'config_first_weekday_saturday' },
 ]
 
-function getCurrencyForCountry(code: string) {
-  return COUNTRY_OPTIONS.find((c) => c.code === code)?.currency ?? 'ARS'
-}
+const TIME_FORMAT_OPTIONS = [
+  { value: '24h', labelKey: 'config_time_format_24' },
+  { value: '12h', labelKey: 'config_time_format_12' },
+]
 
 /**
  * Language names come from Intl, the same way country names do, so shipping a
@@ -96,55 +72,64 @@ export function RegionFormatoPage() {
   const { showToast } = useToast()
   const { lang, setLang } = useLanguage()
   const userId = useOptionalAuth()?.session?.user?.id ?? null
-  const [region, setRegion] = useState<RegionPrefs>(DEFAULT_REGION)
+  // The country list and every derived default come from the catalog (WU1):
+  // adding a country to the DB adds it here with no code change.
+  const { countries, index: countryIndex, loading: catalogLoading } = useCountryCatalog()
+  const [region, setRegion] = useState<RegionPrefs | null>(null)
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
 
-  useEffect(() => {
-    let cancelled = false
-    async function loadConfig() {
-      setLoading(true)
-      try {
-        const [regionData, prefsData] = await Promise.all([
-          rpc<RegionPrefs[]>('fn_obtener_region_usuario').catch(() => [] as RegionPrefs[]),
-          rpc<UserPrefs[]>('fn_obtener_preferencias_usuario').catch(() => [] as UserPrefs[]),
-        ])
-        if (cancelled) return
-        const regionRow = Array.isArray(regionData) ? regionData[0] : regionData
-        const prefsRow = Array.isArray(prefsData) ? prefsData[0] : prefsData
-        if (regionRow) setRegion({ ...DEFAULT_REGION, ...regionRow })
-        if (prefsRow) setPrefs({ ...DEFAULT_PREFS, ...prefsRow })
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
+  const loadConfig = useCallback(async (cancelledRef: { cancelled: boolean }) => {
+    setLoading(true)
+    try {
+      const [regionData, prefsData] = await Promise.all([
+        rpc<RegionPrefs[]>('fn_obtener_region_usuario').catch(() => [] as RegionPrefs[]),
+        rpc<UserPrefs[]>('fn_obtener_preferencias_usuario').catch(() => [] as UserPrefs[]),
+      ])
+      if (cancelledRef.cancelled) return
+      const regionRow = Array.isArray(regionData) ? regionData[0] : null
+      const prefsRow = Array.isArray(prefsData) ? prefsData[0] : null
+      setRegion(regionRow ? { ...regionRow } : null)
+      setPrefs({ ...DEFAULT_PREFS, ...(prefsRow ?? {}) })
+    } finally {
+      if (!cancelledRef.cancelled) setLoading(false)
     }
-    loadConfig()
-    return () => { cancelled = true }
   }, [])
 
-  const saveRegion = async (newRegion: RegionPrefs) => {
+  useEffect(() => {
+    const cancelledRef = { cancelled: false }
+    void loadConfig(cancelledRef)
+    return () => { cancelledRef.cancelled = true }
+  }, [loadConfig])
+
+  // Confirm a country: the server ignores p_moneda_local (country defines the
+  // currency) and re-derives the regional formats because p_origen is sent.
+  // Here the user is choosing it by hand, so the origin is 'manual'.
+  const confirmCountry = async (pais_codigo: string) => {
+    setSaving(true)
     try {
       await rpc('fn_configurar_region_usuario', {
-        p_pais_codigo: newRegion.pais_codigo,
-        p_moneda_local: newRegion.moneda_default,
-        p_idioma: newRegion.idioma_default,
+        p_pais_codigo: pais_codigo,
+        p_moneda_local: '',
+        p_idioma: lang,
+        p_origen: 'manual',
       })
-      // The region is memoized module-wide because many screens read it. Without
-      // this, changing the country here leaves the rest of the app showing the
-      // previous currency until a full reload. The snapshot is rewritten with the
-      // new values so the next paint does not need a refetch either.
+      const country = findCountry(countryIndex, pais_codigo)
       invalidateRegionCache()
       writeRegionSnapshot(userId, {
-        countryCode: newRegion.pais_codigo,
-        localCurrency: newRegion.moneda_default,
-        language: newRegion.idioma_default,
+        countryCode: pais_codigo,
+        localCurrency: country?.localCurrency ?? '',
+        language: lang,
       })
-      // Confirming a country re-derives the formats server-side, so the cached
-      // copy has to go: the next read is what must win, not the old snapshot.
+      // Confirming re-derives the formats server-side: refresh what this page
+      // shows so the decimals/separators reflect the new country at once.
       clearPrefsSnapshot()
+      await loadConfig({ cancelled: false })
     } catch (err) {
       showToast(parseError(err), 'error')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -161,6 +146,7 @@ export function RegionFormatoPage() {
         p_separador_decimal: newPrefs.separador_decimal,
         p_primer_dia_semana: newPrefs.primer_dia_semana,
         p_formato_fecha: newPrefs.formato_fecha,
+        p_formato_hora: newPrefs.formato_hora,
       })
       writePrefsSnapshot(userId, {
         decimales_moneda_local: newPrefs.decimales_moneda_local,
@@ -174,25 +160,47 @@ export function RegionFormatoPage() {
   }
 
   const updateCountry = (pais_codigo: string) => {
-    const nextRegion = {
-      ...region,
+    if (!pais_codigo || catalogLoading) return
+    const country = findCountry(countryIndex, pais_codigo)
+    const nextRegion: RegionPrefs = {
       pais_codigo,
-      moneda_default: getCurrencyForCountry(pais_codigo),
+      moneda_default: country?.localCurrency ?? '',
+      idioma_default: lang,
     }
     setRegion(nextRegion)
-    saveRegion(nextRegion)
+    void confirmCountry(pais_codigo)
   }
 
-  const updateRegionField = <K extends keyof RegionPrefs>(key: K, value: RegionPrefs[K]) => {
-    const nextRegion = { ...region, [key]: value }
-    setRegion(nextRegion)
-    saveRegion(nextRegion)
+  // Language-only changes must not stamp the country as confirmed (assertion 18):
+  // no p_origen is sent. Without a confirmed country there is no row to update,
+  // so the language persists through the provider's storage and nothing is sent.
+  const updateLanguage = (next: string) => {
+    if (!isSupported(next)) return
+    setLang(next)
+    if (region?.pais_codigo) {
+      setRegion({ ...region, idioma_default: next })
+      setSaving(true)
+      rpc('fn_configurar_region_usuario', {
+        p_pais_codigo: region.pais_codigo,
+        p_moneda_local: '',
+        p_idioma: next,
+      })
+        .then(() => {
+          writeRegionSnapshot(userId, {
+            countryCode: region.pais_codigo,
+            localCurrency: region.moneda_default,
+            language: next,
+          })
+        })
+        .catch((err) => showToast(parseError(err), 'error'))
+        .finally(() => setSaving(false))
+    }
   }
 
   const updatePref = <K extends keyof UserPrefs>(key: K, value: UserPrefs[K]) => {
     const nextPrefs = { ...prefs, [key]: value }
     setPrefs(nextPrefs)
-    savePrefs(nextPrefs)
+    void savePrefs(nextPrefs)
   }
 
   const preview = `125${prefs.separador_miles}000${prefs.separador_decimal}${'0'.repeat(prefs.decimales_moneda_local)}`
@@ -212,11 +220,24 @@ export function RegionFormatoPage() {
           <h2>{t('config_country')}</h2>
           <div className="config-section-field">
             <label htmlFor="pais-codigo">{t('config_country')}</label>
-            <select id="pais-codigo" value={region.pais_codigo} onChange={(e) => updateCountry(e.target.value)}>
-              {[...COUNTRY_OPTIONS]
-                .sort((a, b) => t(a.labelKey).localeCompare(t(b.labelKey)))
+            <select
+              id="pais-codigo"
+              value={region?.pais_codigo ?? ''}
+              disabled={catalogLoading || saving}
+              onChange={(e) => updateCountry(e.target.value)}
+            >
+              <option value="">{catalogLoading ? t('config_loading') : '—'}</option>
+              {[...countries]
+                .map((c) => ({
+                  code: c.code,
+                  // Only soportado countries can be picked: the rest of the app
+                  // (onboarding gate, cron quoting) is defined by that flag.
+                  supported: true,
+                  label: regionName(c.code, lang) || c.code,
+                }))
+                .sort((a, b) => a.label.localeCompare(b.label, lang))
                 .map((c) => (
-                  <option key={c.code} value={c.code}>{t(c.labelKey)}</option>
+                  <option key={c.code} value={c.code}>{c.label}</option>
               ))}
             </select>
           </div>
@@ -225,14 +246,7 @@ export function RegionFormatoPage() {
             <select
               id="idioma-default"
               value={lang}
-              onChange={(e) => {
-                const next = e.target.value
-                if (!isSupported(next)) return
-                // Switch the live UI first; the region save below keeps the
-                // path this screen already had.
-                setLang(next)
-                updateRegionField('idioma_default', next)
-              }}
+              onChange={(e) => updateLanguage(e.target.value)}
             >
               {SUPPORTED.map((code) => (
                 <option key={code} value={code}>{languageLabel(code)}</option>
@@ -246,7 +260,11 @@ export function RegionFormatoPage() {
           <h2>{t('config_currency')}</h2>
           <div className="config-section-row">
             <span>{t('config_currency_main')}</span>
-            <span>{region.moneda_default}</span>
+            <span>
+              {region?.pais_codigo ? `${flagEmoji(region.pais_codigo)} ` : ''}
+              {region?.moneda_default || '—'}
+              {region?.pais_codigo ? ` · ${currencyName(region.moneda_default, lang)}` : ''}
+            </span>
           </div>
           <div className="config-section-row">
             <span>{t('config_currency_secondary')}</span>
@@ -290,7 +308,7 @@ export function RegionFormatoPage() {
           </div>
           <div className="config-section-row">
             <span>{t('config_preview')}</span>
-            <span>{region.moneda_default} {preview}</span>
+            <span>{region?.moneda_default || ''} {preview}</span>
           </div>
         </article>
 
@@ -305,6 +323,23 @@ export function RegionFormatoPage() {
               onChange={(e) => updatePref('primer_dia_semana', Number(e.target.value))}
             >
               {WEEKDAY_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
+              ))}
+            </select>
+          </div>
+        </article>
+
+        {/* Formato de hora (24h por defecto; 12h para culturas AM/PM) */}
+        <article className="config-section-card">
+          <h2>{t('config_time_format_title')}</h2>
+          <div className="config-section-field">
+            <label htmlFor="formato-hora">{t('config_time_format_title')}</label>
+            <select
+              id="formato-hora"
+              value={prefs.formato_hora || '24h'}
+              onChange={(e) => updatePref('formato_hora', e.target.value)}
+            >
+              {TIME_FORMAT_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
               ))}
             </select>
