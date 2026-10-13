@@ -924,9 +924,9 @@ export function HomePage() {
 
   // Formateo de montos respetando decimales del usuario (useNumberFormat)
   const { formatMonto: formatMontoBase, currencySymbol, locale } = useNumberFormat()
-  const formatAmount = useCallback((monto: number, moneda?: string) => {
+  const formatAmount = useCallback((monto: number, moneda?: string, decimales?: number) => {
     if (hideAmounts) return '***'
-    return formatMontoBase(monto, moneda)
+    return formatMontoBase(monto, moneda, decimales)
   }, [hideAmounts, formatMontoBase])
 
   // Semáforo con días detallados (Observación 3)
@@ -1578,7 +1578,7 @@ export function HomePage() {
                                 <span className="category-name">{c.nombre_categoria ? t(c.nombre_categoria) : ''}</span>
                               </div>
                               <div className="category-amount-wrap">
-                                <span className="category-amount">{formatAmount(c.total_consumido)}</span>
+                                <span className="category-amount">{formatAmount(c.total_consumido, undefined, 0)}</span>
                                 <span className="category-percentage">{pct.toFixed(0)}%</span>
                               </div>
                             </div>

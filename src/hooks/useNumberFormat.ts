@@ -176,7 +176,7 @@ export function useNumberFormat() {
   }, [])
 
   const formatMonto = useCallback(
-    (monto: number | string, moneda?: string): string => {
+    (monto: number | string, moneda?: string, decimales?: number): string => {
       const n = typeof monto === 'string' ? parseFloat(monto) : Number(monto)
       if (Number.isNaN(n)) return '-'
 
@@ -184,8 +184,11 @@ export function useNumberFormat() {
       const currency = toText(moneda || region?.localCurrency).toUpperCase()
       if (!currency) return '-'
 
+      // Digit override for compact summaries (donut totals and category rows read
+      // better rounded); null/undefined keeps the regional preference.
       const digits =
-        currency === 'USD' ? prefs.decimales_segunda_moneda : prefs.decimales_moneda_local
+        decimales ??
+        (currency === 'USD' ? prefs.decimales_segunda_moneda : prefs.decimales_moneda_local)
       const fixed = n.toFixed(digits)
       const [intPart, decPart] = fixed.split('.')
       const intWithThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, prefs.separador_miles)
