@@ -81,7 +81,7 @@ export function DonutChart({ data, hideAmounts, total: totalOverride, centerLabe
       <div className="donut-center-text">
         <span className="donut-center-label">{t(centerLabelKey)}</span>
         <span className="donut-center-amount font-mono">
-          {hideAmounts ? '***' : formatMonto(total)}
+          {hideAmounts ? '***' : formatMonto(total, undefined, 0)}
         </span>
       </div>
     </div>
