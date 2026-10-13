@@ -9,6 +9,7 @@ import {
   writePrefsSnapshot,
   writeRegionSnapshot,
 } from '@/lib/regionSnapshot'
+import { setFormatContext } from '@/lib/format'
 
 interface UserFormatPrefs {
   decimales_moneda_local: number
@@ -157,6 +158,18 @@ export function useNumberFormat() {
 
   const locale = buildLocale(lang, region?.countryCode ?? null)
 
+  // `lib/format.ts` is called from ~22 files that cannot use a hook, so the resolved
+  // context is published for them. Without this, those screens kept formatting with
+  // Argentine rules (locale es-AR, 0 decimals, ARS by default).
+  useEffect(() => {
+    setFormatContext({
+      locale,
+      localCurrency: region?.localCurrency || 'ARS',
+      decimalsLocal: prefs.decimales_moneda_local,
+      decimalsSecondary: prefs.decimales_segunda_moneda,
+    })
+  }, [locale, region, prefs])
+
   const reloadRegion = useCallback(() => {
     invalidateRegionCache()
     setRegionAttempt((attempt) => attempt + 1)
@@ -190,8 +203,22 @@ export function useNumberFormat() {
     [prefs, region, locale]
   )
 
+  /**
+   * Symbol for a currency, resolved from the user's locale. Screens that render an
+   * input prefix must use this instead of writing '$' or 'U$S' by hand: with the
+   * symbol duplicated in a dozen files, a euro wallet showed a dollar sign.
+   */
+  const currencySymbol = useCallback(
+    (code?: string): string => {
+      const currency = toText(code || region?.localCurrency).toUpperCase()
+      return currency ? resolveCurrencySymbol(currency, locale, null) : ''
+    },
+    [region, locale]
+  )
+
   return {
     formatMonto,
+    currencySymbol,
     prefs,
     localCurrency: region?.localCurrency ?? null,
     countryCode: region?.countryCode ?? null,

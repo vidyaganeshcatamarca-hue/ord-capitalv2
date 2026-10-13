@@ -15,6 +15,7 @@ import { t, parseError } from '@/locales/i18n'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
 import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBalanceModal'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { suggestDestinationAmount } from '@/lib/currencyConversion'
 import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/categoryFilters'
 import { CategoryIcon, formatWalletIconForOption } from '@/components/CategoryIcon/CategoryIcon'
 import { ProyectoIcon } from '@/components/ProyectoIcon'
@@ -254,7 +255,7 @@ interface AddMovementModalProps {
 
 export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', initialBilleteraId, onOpenVoice }: AddMovementModalProps) {
   const { showToast } = useToast()
-  const { formatMonto } = useNumberFormat()
+  const { formatMonto, localCurrency, currencySymbol } = useNumberFormat()
 
   // ── Estado global del formulario ──
   const [tipo, setTipo] = useState<TipoMovimiento>(defaultTipo)
@@ -652,8 +653,8 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
   })
 
   const monedaOrigen = origenTipo === 'billetera'
-    ? (billeteras.find(b => b.billetera_id === billeteraOrigenId)?.moneda ?? 'ARS')
-    : (esUsd ? 'USD' : 'ARS')
+    ? (billeteras.find(b => b.billetera_id === billeteraOrigenId)?.moneda ?? localCurrency ?? '')
+    : (esUsd ? 'USD' : localCurrency ?? '')
   // Transfers may cross currencies (ARS <-> USD): the cuarentena edit/approve
   // flow already supports it, so the destination list shows every other active
   // wallet regardless of currency.
@@ -668,18 +669,19 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
   useEffect(() => {
     if (!crossCurrencyTransfer || !numericMonto) return
     if ((parseFloat(destinationAmount) || 0) > 0) return
-    // Rate converts between ARS and USD (user default currency basis).
-    if (monedaOrigen !== 'ARS' && monedaOrigen !== 'USD') return
-    if (billeteraDestinoMoneda !== 'ARS' && billeteraDestinoMoneda !== 'USD') return
-    if (!cotizacionUsd || cotizacionUsd <= 0) return
-    const baseAUsd =
-      monedaOrigen === 'USD'
-        ? numericMonto
-        : numericMonto / cotizacionUsd
-    const sugerencia: number =
-      billeteraDestinoMoneda === 'USD' ? baseAUsd : baseAUsd * cotizacionUsd
+    // The arithmetic lives in a pure module so it is testable without a browser, and so
+    // the 'ARS' that used to be nailed into it cannot come back: that hardcode is why a
+    // 100 EUR transfer to a USD wallet left the destination amount empty.
+    const sugerencia = suggestDestinationAmount({
+      amount: numericMonto,
+      originCurrency: monedaOrigen,
+      destinationCurrency: billeteraDestinoMoneda,
+      localCurrency,
+      usdRate: cotizacionUsd,
+    })
+    if (sugerencia === null) return
     setDestinationAmount(sugerencia.toFixed(2))
-  }, [crossCurrencyTransfer, numericMonto, destinationAmount, monedaOrigen, billeteraDestinoMoneda, cotizacionUsd])
+  }, [crossCurrencyTransfer, numericMonto, destinationAmount, monedaOrigen, billeteraDestinoMoneda, cotizacionUsd, localCurrency])
 
   // ── Reseteo defensivo: si la billetera preseleccionada deja de ser válida
   // (borrada, inactiva, o saldo insuficiente), limpiamos la selección
@@ -1011,7 +1013,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       <div className="importe-mic-row">
                         <div className="monto-input-container">
                         <span className="monto-currency-symbol">
-                          {monedaOrigen === 'USD' ? 'U$S' : '$'}
+                          {currencySymbol(monedaOrigen)}
                         </span>
                         <input
                           ref={amountInputRef}
@@ -1124,8 +1126,8 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           const mFinal = montoNum * cotizacionUsd
                           return (
                             <div style={{ fontSize: 11, color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: 8, marginTop: 8, borderLeft: '3px solid var(--color-mint)' }}>
-                              {t('card_usd_quote_current', { rate: formatMonto(cotizacionUsd.toString(), 'ARS') })}
-                              <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString(), 'ARS') })}</span>
+                              {t('card_usd_quote_current', { rate: formatMonto(cotizacionUsd.toString()) })}
+                              <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString()) })}</span>
                             </div>
                           )
                         })()}
@@ -1510,7 +1512,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     <div className="importe-mic-row">
                       <div className="monto-input-container" style={{ maxWidth: 320 }}>
                       <span className="monto-currency-symbol">
-                        {monedaOrigen === 'USD' ? 'U$S' : '$'}
+                        {currencySymbol(monedaOrigen)}
                       </span>
                       <input
                         type="text"
@@ -1689,7 +1691,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     <div className="importe-mic-row">
                       <div className="monto-input-container" style={{ maxWidth: 260, cursor: 'pointer' }} onClick={() => setShowCalculator(true)}>
                         <span className="monto-currency-symbol">
-                          {monedaOrigen === 'USD' ? 'U$S' : '$'}
+                          {currencySymbol(monedaOrigen)}
                         </span>
                         <input
                           type="text"
@@ -2075,8 +2077,8 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         const mFinal = montoNum * cotizacionUsd
                         return (
                           <div style={{ fontSize: 12, color: 'var(--color-text-muted)', background: 'rgba(255,255,255,0.03)', padding: '10px 14px', borderRadius: 8, marginTop: 10, borderLeft: '3px solid var(--color-mint)' }}>
-                            {t('card_usd_quote_simple', { rate: formatMonto(cotizacionUsd.toString(), 'ARS') })}
-                            <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString(), 'ARS') })}</span>
+                            {t('card_usd_quote_simple', { rate: formatMonto(cotizacionUsd.toString()) })}
+                            <br/><span style={{ color: 'var(--color-text)', fontWeight: 'bold' }}>{t('card_usd_estimated_total', { amount: formatMonto(mFinal.toString()) })}</span>
                           </div>
                         )
                       })()}
