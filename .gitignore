@@ -33,6 +33,8 @@ tests/onboarding/*
 !tests/onboarding/currency-symbol.test.js
 !tests/onboarding/user-snapshot.test.js
 !tests/onboarding/country-suggestion.test.js
+!tests/onboarding/currency-conversion.test.js
+!tests/onboarding/format-context.test.js
 scratch/
 walkthrough.md
 AGENTS.md
