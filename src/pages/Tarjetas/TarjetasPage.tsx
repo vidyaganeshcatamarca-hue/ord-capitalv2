@@ -219,7 +219,8 @@ export function TarjetasPage() {
   const [tarjetas, setTarjetas] = useState<MapaTarjeta[]>([])
   const [vencimientos, setVencimientos] = useState<VencimientoTarjeta[]>([])
   const [billeteras, setBilleteras] = useState<any[]>([])
-  const [cotizacionUsd, setCotizacionUsd] = useState<number>(1)
+  // Null honesto: sin cotización no se convierte (NADA se inventa con tasa 1).
+  const [cotizacionUsd, setCotizacionUsd] = useState<number | null>(1)
   const [totalPasivo, setTotalPasivo] = useState<number>(0)
   const [comparativa, setComparativa] = useState<ComparativaTarjeta[]>([])
   const [serieTarjetas, setSerieTarjetas] = useState<SerieCicloTarjeta[]>([])
@@ -287,7 +288,7 @@ export function TarjetasPage() {
         rpc<MapaTarjeta[]>('fn_reporte_mapa_tarjetas').catch(() => [] as MapaTarjeta[]),
         rpc<VencimientoTarjeta[]>('fn_reporte_vencimientos_tarjetas').catch(() => [] as VencimientoTarjeta[]),
         rpc<any[]>('fn_obtener_billeteras_activas').catch(() => [] as any[]),
-        rpc<number>('fn_obtener_cotizacion_usd').catch(() => 1),
+        rpc<number>('fn_obtener_cotizacion_usd').catch(() => null),
         rpc<number>('fn_obtener_saldo_pasivo_tarjetas').catch(() => 0),
         rpc<ComparativaTarjeta[]>('fn_reporte_comparativa_tarjetas').catch(() => [] as ComparativaTarjeta[]),
         rpc<any[]>('fn_reporte_tarjetas_archivadas').catch(() => [] as any[]), 
@@ -296,7 +297,7 @@ export function TarjetasPage() {
       setTarjetas(resT || [])
       setVencimientos(resV || [])
       setBilleteras((resB || []).filter((b: any) => !b.es_fondo_prevision))
-      setCotizacionUsd(resUsd || 1)
+      setCotizacionUsd(resUsd ?? null)
       setTotalPasivo(Number(pasivoRes) || 0)
       setComparativa(comparativaRes || [])
       setArchivedCards(archivedRes || [])
@@ -1080,11 +1081,15 @@ export function TarjetasPage() {
                     <div className="tarjetas-alert-monto-stack">
                       <div className="tarjetas-alert-monto-row">
                         <span className="tarjetas-alert-monto-label">{t('card_resumen_anterior_total_label')}:</span>
-                        <span className="tarjetas-alert-monto-value">{fmtARS(Number(v.resumen_anterior_total_ars ?? 0) + (Number(v.resumen_anterior_total_usd ?? 0) * cotizacionUsd))}</span>
+                        <span className="tarjetas-alert-monto-value">{cotizacionUsd == null
+                          ? <span style={{ color: 'var(--color-warning, #ffc107)' }}>{t('cotizacion_no_soportada')}</span>
+                          : fmtARS(Number(v.resumen_anterior_total_ars ?? 0) + (Number(v.resumen_anterior_total_usd ?? 0) * cotizacionUsd))}</span>
                       </div>
                       <div className="tarjetas-alert-monto-row">
                         <span className="tarjetas-alert-monto-label">{t('card_resumen_anterior_a_pagar_label')}:</span>
-                        <span className="tarjetas-alert-monto-value">{fmtARS(Number(v.resumen_anterior_a_pagar_ars ?? 0) + (Number(v.resumen_anterior_a_pagar_usd ?? 0) * cotizacionUsd))}</span>
+                        <span className="tarjetas-alert-monto-value">{cotizacionUsd == null
+                          ? <span style={{ color: 'var(--color-warning, #ffc107)' }}>{t('cotizacion_no_soportada')}</span>
+                          : fmtARS(Number(v.resumen_anterior_a_pagar_ars ?? 0) + (Number(v.resumen_anterior_a_pagar_usd ?? 0) * cotizacionUsd))}</span>
                       </div>
                       {Number(v.saldo_a_favor ?? 0) > 0 && Number(v.resumen_anterior_total_ars ?? 0) > Number(v.resumen_anterior_a_pagar_ars ?? 0) && (
                         <div className="tarjetas-alert-favor-chip">{t('card_resumen_anterior_covered_by_favor')}: {fmtARS(Number(v.saldo_a_favor))}</div>
@@ -1128,7 +1133,9 @@ export function TarjetasPage() {
                     <div className="tarjetas-alert-msg">{v.dias_para_vencimiento <= 0 ? t('card_resumen_vencido_alert') : getUrgencyMsg(v.mensaje_key, v.dias_para_vencimiento)}</div>
                   </div>
                   <div className="tarjetas-alert-monto">
-                    <div className="tarjetas-alert-monto-value">{fmtARS(Number(v.resumen_actual_total_ars ?? 0) + (Number(v.resumen_actual_total_usd ?? 0) * cotizacionUsd))}</div>
+                    <div className="tarjetas-alert-monto-value">{cotizacionUsd == null
+                      ? <span style={{ color: 'var(--color-warning, #ffc107)' }}>{t('cotizacion_no_soportada')}</span>
+                      : fmtARS(Number(v.resumen_actual_total_ars ?? 0) + (Number(v.resumen_actual_total_usd ?? 0) * cotizacionUsd))}</div>
                     <div className="tarjetas-alert-days">{t("card_days_format", { days: v.dias_para_vencimiento })}</div>
                   </div>
                 </div>
