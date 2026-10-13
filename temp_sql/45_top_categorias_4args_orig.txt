@@ -1,0 +1,69 @@
+CREATE OR REPLACE FUNCTION public.fn_reporte_top_categorias_mes(p_fecha_inicio date DEFAULT NULL::date, p_fecha_fin date DEFAULT NULL::date, p_billetera_id bigint DEFAULT NULL::bigint, p_tarjeta_id bigint DEFAULT NULL::bigint)
+ RETURNS TABLE(nombre_categoria text, icono text, color text, total_consumido numeric, porcentaje_del_total numeric)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  v_user_id bigint;
+  v_hogar_id bigint;
+  v_f_inicio date;
+  v_fin date;
+  v_total_mes numeric := 0;
+BEGIN
+  SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+  IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
+
+  SELECT hogar_id INTO v_hogar_id FROM public.p_hogar_participantes WHERE user_id = v_user_id;
+
+  -- FIX 2026: respetar los parametros de fecha del frontend cuando los provee.
+  -- Antes: la RPC siempre usaba el ciclo del modo presupuesto (1 mes),
+  -- ignorando los rangos explicitos (ej. "todo el anio").
+  IF p_fecha_inicio IS NULL OR p_fecha_fin IS NULL THEN
+    SELECT fecha_inicio, fecha_fin INTO v_f_inicio, v_fin
+    FROM public.fn_obtener_fechas_ciclo_presupuesto(CURRENT_DATE);
+  ELSE
+    v_f_inicio := p_fecha_inicio;
+    v_fin := p_fecha_fin;
+  END IF;
+
+  IF v_f_inicio > v_fin THEN
+    RAISE EXCEPTION '{"key": "error_invalid_date_range", "params": {}}';
+  END IF;
+
+  SELECT COALESCE(SUM(c.valor_egreso), 0) INTO v_total_mes
+  FROM public.p_caja c
+  WHERE c.tipo = 'expense'
+    AND c.fecha BETWEEN v_f_inicio AND v_fin
+    AND (p_billetera_id IS NULL OR c.billetera_origen_id = p_billetera_id)
+    AND (p_tarjeta_id IS NULL OR c.tarjeta_id = p_tarjeta_id)
+    AND ((c.user_id = v_user_id AND c.es_compartido = false)
+      OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true));
+
+  RETURN QUERY
+  WITH consumos AS (
+    SELECT
+      COALESCE(e.padre_id, e.estructura_id) AS rubro_id,
+      SUM(c.valor_egreso) AS total
+    FROM public.p_caja c
+    INNER JOIN public.p_estructuras_egresos e ON c.estructura_egreso_id = e.estructura_id
+    WHERE c.fecha BETWEEN v_f_inicio AND v_fin
+      AND c.tipo = 'expense'
+      AND (p_billetera_id IS NULL OR c.billetera_origen_id = p_billetera_id)
+      AND (p_tarjeta_id IS NULL OR c.tarjeta_id = p_tarjeta_id)
+      AND ((c.user_id = v_user_id AND c.es_compartido = false)
+        OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true))
+    GROUP BY COALESCE(e.padre_id, e.estructura_id)
+  )
+  SELECT
+    e.nombre_cuenta::text,
+    e.icono::text,
+    e.color::text,
+    con.total::numeric,
+    CASE WHEN v_total_mes > 0 THEN ROUND((con.total / v_total_mes) * 100, 2) ELSE 0 END::numeric
+  FROM consumos con
+  INNER JOIN public.p_estructuras_egresos e ON con.rubro_id = e.estructura_id
+  ORDER BY con.total DESC
+  LIMIT 10;
+END;
+$function$
