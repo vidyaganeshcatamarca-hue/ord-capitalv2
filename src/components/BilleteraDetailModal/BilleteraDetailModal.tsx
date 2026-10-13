@@ -38,7 +38,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
   }, [billetera.billetera_id])
 
   const { formatMonto } = useNumberFormat()
-  const formatAmount = (monto: number, moneda: string) => formatMonto(monto, moneda)
+  const formatAmount = (monto: number, moneda?: string) => formatMonto(monto, moneda)
 
   return (
     <>

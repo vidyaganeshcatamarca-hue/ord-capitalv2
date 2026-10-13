@@ -8,7 +8,7 @@ import { Billetera } from '@/types/Billetera'
 
 interface Props {
   billetera: Billetera
-  formatAmount: (monto: number, moneda: string) => string
+  formatAmount: (monto: number, moneda?: string) => string
   onClose: () => void
   onSuccess?: () => void
 }

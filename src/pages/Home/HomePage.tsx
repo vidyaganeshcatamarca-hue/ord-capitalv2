@@ -924,7 +924,7 @@ export function HomePage() {
 
   // Formateo de montos respetando decimales del usuario (useNumberFormat)
   const { formatMonto: formatMontoBase, currencySymbol, locale } = useNumberFormat()
-  const formatAmount = useCallback((monto: number, moneda: string) => {
+  const formatAmount = useCallback((monto: number, moneda?: string) => {
     if (hideAmounts) return '***'
     return formatMontoBase(monto, moneda)
   }, [hideAmounts, formatMontoBase])
@@ -1134,7 +1134,7 @@ export function HomePage() {
                 {alerts.vencimientos_3_dias.map((v: any, i: number) => (
                   <div key={i} className="alert-vencimiento-card">
                     <span>💳 {v.tarjeta} {t('alert_card_due_in_days', { dias: v.dias })}</span>
-                    <span className="font-mono font-semibold">{formatAmount(v.monto, 'ARS')}</span>
+                    <span className="font-mono font-semibold">{formatAmount(v.monto)}</span>
                   </div>
                 ))}
               </div>
@@ -1169,14 +1169,14 @@ export function HomePage() {
                 <div className="home-patrimonio-main-info">
                   <p className="home-patrimonio-label">{t('hero_title_total')}</p>
                   <p className="home-patrimonio-ars font-display animate-count">
-                    {formatAmount(animatedPatrimonioARS, 'ARS')}
+                    {formatAmount(animatedPatrimonioARS)}
                   </p>
                 </div>
                 {saldoHero && (
                   <div className="home-patrimonio-extra-info">
                     <p className="home-patrimonio-label-right">{t(saldoHero.title)}</p>
                     <p className="home-patrimonio-extra-amount font-mono" style={{ color: saldoHero.isRed ? 'var(--coral)' : 'var(--mint)' }}>
-                      {formatAmount(saldoHero.amount, 'ARS')}
+                      {formatAmount(saldoHero.amount)}
                     </p>
                   </div>
                 )}
@@ -1306,7 +1306,7 @@ export function HomePage() {
                 <p className="text-xs text-muted mt-1 leading-relaxed">
                   {t('mystery_leak_desc_prefix')}{' '}
                   <strong style={{ color: 'var(--text)' }}>
-                    {misterio?.olvidos_pesos ? formatAmount(misterio.olvidos_pesos, 'ARS') : ''}
+                    {misterio?.olvidos_pesos ? formatAmount(misterio.olvidos_pesos) : ''}
                     {misterio?.olvidos_pesos && misterio?.olvidos_dolares ? ' y ' : ''}
                     {misterio?.olvidos_dolares ? formatAmount(misterio.olvidos_dolares, 'USD') : ''}
                   </strong>{' '}
@@ -1578,7 +1578,7 @@ export function HomePage() {
                                 <span className="category-name">{c.nombre_categoria ? t(c.nombre_categoria) : ''}</span>
                               </div>
                               <div className="category-amount-wrap">
-                                <span className="category-amount">{formatAmount(c.total_consumido, 'ARS')}</span>
+                                <span className="category-amount">{formatAmount(c.total_consumido)}</span>
                                 <span className="category-percentage">{pct.toFixed(0)}%</span>
                               </div>
                             </div>
