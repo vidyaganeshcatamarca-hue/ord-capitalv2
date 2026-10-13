@@ -89,7 +89,7 @@ export function BilleterasPage() {
     regionError,
     reloadRegion,
   } = useNumberFormat()
-  const formatAmount = useCallback((monto: number, moneda: string) => {
+  const formatAmount = useCallback((monto: number, moneda?: string) => {
     if (hideAmounts) return '***'
     return formatMontoBase(monto, moneda)
   }, [hideAmounts, formatMontoBase])
