@@ -1,0 +1,4 @@
+# Line endings: blobs stored with LF; CRLF only where the platform demands it.
+* text=auto
+*.sh text eol=lf
+*.bat text eol=crlf
