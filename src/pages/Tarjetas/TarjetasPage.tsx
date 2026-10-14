@@ -9,6 +9,7 @@ import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { CategoryIcon } from '@/components/CategoryIcon'
 import { WalletIcon } from '@/components/WalletIcon'
 import { WalletDropdownSelect } from '@/components/WalletDropdownSelect'
+import { isUserEditableCategory } from '@/lib/categoryFilters'
 import type { WalletOptionItem } from '@/components/WalletDropdownSelect'
 import './Tarjetas.css'
 import '../Configuracion/ConfigSectionPage.css'
@@ -220,6 +221,18 @@ function getDiasParaProximoVencimiento(card: MapaTarjeta): number {
 
 // â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+// Tipos minimos del arbol de categorias para el selector del modal de carga.
+interface LegacyRubroHijo {
+  estructura_id: number
+  nombre_cuenta: string
+}
+
+interface LegacyRubro {
+  estructura_id: number
+  nombre_cuenta: string
+  hijos?: LegacyRubroHijo[] | null
+}
+
 export function TarjetasPage() {
   const { showToast } = useToast()
   const { lang } = useLanguage()
@@ -243,6 +256,19 @@ export function TarjetasPage() {
   // â”€â”€ Detalle â”€â”€
   const [termometro, setTermometro] = useState<Termometro | null>(null)
   const [termoInfoOpen, setTermoInfoOpen] = useState(false)
+
+  // Carga de cuotas historicas (legacy installments)
+  const [showLegacyModal, setShowLegacyModal] = useState(false)
+  const [legacyDetalle, setLegacyDetalle] = useState('')
+  const [legacyCategoriaId, setLegacyCategoriaId] = useState<number | null>(null)
+  const [legacyCategorias, setLegacyCategorias] = useState<{ id: number; label: string }[]>([])
+  const [legacyCantidad, setLegacyCantidad] = useState('')
+  const [legacyMonto, setLegacyMonto] = useState('')
+  const [legacyMes, setLegacyMes] = useState('')           // 'YYYY-MM'
+  const [legacyAnio, setLegacyAnio] = useState('')         // 'YYYY'
+  const [legacyMoneda, setLegacyMoneda] = useState('')     // '' = resolver al abrir
+  const [legacySubmitting, setLegacySubmitting] = useState(false)
+  const [legacyDeleteTarget, setLegacyDeleteTarget] = useState<{ cargaId: number; n: number } | null>(null)
   const [historial, setHistorial] = useState<PagoHistorial[]>([])
   const [cuotasActivas, setCuotasActivas] = useState<any[]>([])
   const [loadingDetalle, setLoadingDetalle] = useState(false)
@@ -319,6 +345,95 @@ export function TarjetasPage() {
       setLoading(false)
     }
   }, [showToast])
+
+  const openLegacyModal = () => {
+    const hoy = new Date()
+    const mes = String(hoy.getMonth() + 1).padStart(2, '0')
+    setLegacyMes(mes)
+    setLegacyAnio(String(hoy.getFullYear()))
+    setLegacyMoneda(localCurrency || 'ARS')
+    setLegacyDetalle('')
+    setLegacyCategoriaId(null)
+    setLegacyCantidad('')
+    setLegacyMonto('')
+    setShowLegacyModal(true)
+    void loadLegacyCategorias()
+  }
+
+  // Categorias usuario (mismo filtro que AddMovementModal: sin las de sistema)
+  const loadLegacyCategorias = useCallback(async () => {
+    if (legacyCategorias.length > 0) return
+    try {
+      const rubros = await rpc<LegacyRubro[]>('fn_obtener_arbol_categorias').catch(() => [] as LegacyRubro[])
+      const opciones = rubros
+        .flatMap(r => (r.hijos ?? [])
+          .filter(h => isUserEditableCategory(h))
+          .map(h => ({ id: h.estructura_id, label: `${t(r.nombre_cuenta)} › ${h.nombre_cuenta}` })))
+        .sort((a, b) => a.label.localeCompare(b.label))
+      setLegacyCategorias(opciones)
+    } catch {
+      setLegacyCategorias([])
+    }
+  }, [legacyCategorias.length])
+
+
+  const handleLegacySubmit = async () => {
+    if (!selectedCard) return
+    if (!legacyDetalle.trim()) {
+      showToast(t('error_field_required', { field: t('card_legacy_field_detalle') }), 'error')
+      return
+    }
+    const cantidad = parseInt(legacyCantidad)
+    const monto = parseFloat(legacyMonto)
+    if (!cantidad || cantidad < 1 || cantidad > 120) {
+      showToast(t('error_invalid_cuotas', { max: 120 }), 'error')
+      return
+    }
+    if (!monto || monto <= 0 || isNaN(monto)) {
+      showToast(t('error_invalid_amount'), 'error')
+      return
+    }
+    const mesInicio = `${legacyAnio}-${legacyMes}-01`
+    setLegacySubmitting(true)
+    try {
+      await rpc('fn_registrar_cuotas_historicas', {
+        p_tarjeta_id: selectedCard.tarjeta_id,
+        p_detalle: legacyDetalle.trim(),
+        p_cantidad: cantidad,
+        p_monto_cuota: monto,
+        p_mes_inicio: mesInicio,
+        p_moneda: legacyMoneda || localCurrency || 'ARS',
+        p_estructura_egreso_id: legacyCategoriaId,
+      })
+      showToast(t('card_legacy_created_toast', {
+        cantidad,
+        fecha: new Intl.DateTimeFormat(lang === 'es' ? 'es-AR' : 'en-US', { month: 'long', year: 'numeric' }).format(new Date(mesInicio)) }), 'success')
+      setShowLegacyModal(false)
+      await fetchDetalle(selectedCard.tarjeta_id)
+      void fetchData()
+    } catch (err) {
+      showToast(parseError(err), 'error')
+    } finally {
+      setLegacySubmitting(false)
+    }
+  }
+
+  const handleLegacyDelete = async () => {
+    if (!legacyDeleteTarget) return
+    try {
+      await rpc('fn_eliminar_carga_cuotas_historicas', { p_carga_id: legacyDeleteTarget.cargaId })
+      showToast(t('card_legacy_deleted_toast'), 'success')
+      const card = selectedCard
+      setLegacyDeleteTarget(null)
+      if (card) {
+        await fetchDetalle(card.tarjeta_id)
+        void fetchData()
+      }
+    } catch (err) {
+      showToast(parseError(err), 'error')
+      setLegacyDeleteTarget(null)
+    }
+  }
 
   const fetchDetalle = useCallback(async (tarjetaId: number) => {
     try {
@@ -818,6 +933,7 @@ export function TarjetasPage() {
           <button className="tarjeta-detalle-back" onClick={() => setSelectedCard(null)} aria-label="Volver"><CategoryIcon name="ArrowLeft" size={18} /></button>
           <span className="tarjeta-detalle-title"><CategoryIcon name="CreditCard" size={18} /> {selectedCard.nombre_tarjeta}</span>
           <div className="tarjeta-detalle-actions">
+            <button className="tarjeta-detalle-action-btn" onClick={openLegacyModal} title={t('card_load_legacy_cuotas_btn')} aria-label={t('card_load_legacy_cuotas_btn')}><CategoryIcon name="Calendar" size={18} /></button>
             <button className="tarjeta-detalle-action-btn" onClick={() => openEdit(selectedCard)} title="Editar"><CategoryIcon name="Pencil" size={18} /></button>
           </div>
         </div>
@@ -938,7 +1054,7 @@ export function TarjetasPage() {
               </div>
             ) : (
               <div className="historial-list">
-                {cuotasActivas.filter(c => !c.pagado).map((c: any) => {
+                {(() => { const totalPorCarga = new Map<number, number>(); cuotasActivas.forEach(c => { if (c.carga_id != null && !c.pagado) totalPorCarga.set(c.carga_id, (totalPorCarga.get(c.carga_id) ?? 0) + 1) }); return cuotasActivas.filter(c => !c.pagado).map((c: any, idx: number) => {
                   const parts = c.fecha_estimada_pago ? c.fecha_estimada_pago.split('-') : []
                   const dueDateStr = parts[1] ? new Date(c.fecha_estimada_pago + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : '--'
                   return (
@@ -961,9 +1077,21 @@ export function TarjetasPage() {
                       <div className="historial-item-monto" style={{ color: 'var(--coral)' }}>
                         {fmtMoneda(c.monto_cuota, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
                       </div>
+                      {c.carga_id != null && idx === cuotasActivas.filter(x => !x.pagado).findIndex(x => x.carga_id === c.carga_id) && (
+                        <button
+                          type="button"
+                          className="tarjeta-detalle-action-btn"
+                          style={{ width: 26, height: 26, fontSize: 'calc(13px * var(--font-scale))' }}
+                          onClick={() => setLegacyDeleteTarget({ cargaId: c.carga_id, n: totalPorCarga.get(c.carga_id) ?? 1 })}
+                          title={t('card_legacy_delete_btn')}
+                          aria-label={t('card_legacy_delete_btn')}
+                        >
+                          <CategoryIcon name="CircleX" size={14} />
+                        </button>
+                      )}
                     </div>
                   )
-                })}
+                });})()}
               </div>
             )}
           </div>
@@ -1007,6 +1135,121 @@ export function TarjetasPage() {
           </div>
         </div>
 
+        {/* Modal de carga de cuotas historicas */}
+        {showLegacyModal && (
+          <div className="tarjeta-modal-overlay" onClick={() => setShowLegacyModal(false)}>
+            <div className="tarjeta-modal" onClick={e => e.stopPropagation()}>
+              <div className="tarjeta-modal-header">
+                <span className="tarjeta-modal-title">{t('card_legacy_modal_title')}</span>
+                <button className="tarjeta-modal-close" onClick={() => setShowLegacyModal(false)}>
+                  <CategoryIcon name="CircleX" size={18} />
+                </button>
+              </div>
+              <div className="tarjeta-modal-form">
+                <label className="tarjeta-form-label" htmlFor="legacy-detalle">{t('card_legacy_field_detalle')} *</label>
+                <input
+                  id="legacy-detalle"
+                  className="tarjeta-form-input"
+                  value={legacyDetalle}
+                  onChange={e => setLegacyDetalle(e.target.value)}
+                  maxLength={80}
+                  autoComplete="off"
+                />{/* Categorias usuario solo */}
+                <label className="tarjeta-form-label" htmlFor="legacy-categoria">{t('card_legacy_field_categoria')}</label>
+                <select
+                  id="legacy-categoria"
+                  className="tarjeta-form-input"
+                  value={legacyCategoriaId ?? ''}
+                  onChange={e => setLegacyCategoriaId(e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">{t('card_legacy_no_category')}</option>
+                  {legacyCategorias.map(c => (
+                    <option key={c.id} value={c.id}>{c.label}</option>
+                  ))}
+                </select>
+                <label className="tarjeta-form-label" htmlFor="legacy-cantidad">{t('card_legacy_field_cantidad')} *</label>
+                <input
+                  id="legacy-cantidad"
+                  className="tarjeta-form-input"
+                  type="number"
+                  min={1}
+                  max={120}
+                  value={legacyCantidad}
+                  onChange={e => setLegacyCantidad(e.target.value)}
+                  inputMode="numeric"
+                />
+                <label className="tarjeta-form-label" htmlFor="legacy-monto">{t('card_legacy_field_monto')} *</label>
+                <input
+                  id="legacy-monto"
+                  className="tarjeta-form-input"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={legacyMonto}
+                  onChange={e => setLegacyMonto(e.target.value)}
+                  inputMode="decimal"
+                />
+                <label className="tarjeta-form-label">{t('card_legacy_field_primer_venc')} *</label>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <select
+                    className="tarjeta-form-input"
+                    value={legacyMes}
+                    onChange={e => setLegacyMes(e.target.value)}
+                    aria-label={t('card_legacy_field_mes')}
+                  >
+                    {Array.from({ length: 12 }, (_, m) => {
+                      const nombre = new Intl.DateTimeFormat(lang === 'es' ? 'es-AR' : 'en-US', { month: 'long' }).format(new Date(2026, m, 1))
+                      return <option key={m + 1} value={String(m + 1).padStart(2, '0')}>{nombre}</option>
+                    })}
+                  </select>
+                  <select
+                    className="tarjeta-form-input"
+                    value={legacyAnio}
+                    onChange={e => setLegacyAnio(e.target.value)}
+                    aria-label={t('card_legacy_field_anio')}
+                  >
+                    {(() => {
+                      const y = new Date().getFullYear()
+                      return Array.from({ length: 3 }, (_, i) => (
+                        <option key={y + i} value={String(y + i)}>{y + i}</option>
+                      ))
+                    })()}
+                  </select>
+                </div>
+                <label className="tarjeta-form-label" htmlFor="legacy-moneda">{t('card_legacy_field_moneda')}</label>
+                <select
+                  id="legacy-moneda"
+                  className="tarjeta-form-input"
+                  value={legacyMoneda}
+                  onChange={e => setLegacyMoneda(e.target.value)}
+                >
+                  <option value={localCurrency || 'ARS'}>{(localCurrency || 'ARS') + ' (' + t('card_legacy_local_default') + ')'}</option>
+                  <option value="USD">USD</option>
+                </select>
+                <button
+                  className="btn-pagar-resumen"
+                  style={{ marginTop: 12 }}
+                  disabled={legacySubmitting || !legacyDetalle.trim() || !legacyCantidad || !legacyMonto}
+                  onClick={handleLegacySubmit}
+                >
+                  {legacySubmitting ? t('btn_saving') : t('card_legacy_save')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {legacyDeleteTarget && (
+          <ConfirmModal
+            isOpen={!!legacyDeleteTarget}
+            title={t('card_legacy_delete_confirm_title')}
+            message={t('card_legacy_delete_confirm_msg', { n: legacyDeleteTarget.n })}
+            confirmText={t('card_legacy_delete_btn')}
+            type="danger"
+            onConfirm={handleLegacyDelete}
+            onCancel={() => setLegacyDeleteTarget(null)}
+          />
+        )}
         {/* Modales desde el detalle */}
         {showEditModal && (
           <TarjetaFormModal
