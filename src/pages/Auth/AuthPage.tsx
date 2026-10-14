@@ -38,12 +38,67 @@ function persistSlide(index: number): void {
   }
 }
 
-function clearPersistedSlide(): void {
+function clearPersistedSlide(userId?: string): void {
   try {
     localStorage.removeItem(SLIDE_STORAGE_KEY)
     localStorage.removeItem(LEGACY_SLIDE_STORAGE_KEY)
+    if (userId) localStorage.removeItem(flowStorageKey(userId))
   } catch {
     // Same as persistSlide.
+  }
+}
+
+/**
+ * Snapshot del flujo en curso (slide + estado de la pantalla en la que se
+ * estaba). Chrome Android descarta pestañas por presión de memoria y al
+ * volver las recarga: sin este snapshot la app reabre el slide con su estado
+ * por defecto (form de billetera virtual cerrado, saldos en cero) y parece
+ * que "continuó sola". Se escribe en cada cambio del flujo activo.
+ *
+ * La clave es POR USUARIO: dos cuentas en un mismo teléfono no se roban el
+ * flujo en curso una de la otra.
+ */
+const FLOW_STORAGE_PREFIX = 'onboarding_flow_v1:'
+
+interface FlowSnapshot {
+  slide: number
+  showVirtualForm: boolean
+  walletName: string
+  calcInput: string
+  selectedIcon: string
+  virtualCreated: boolean
+  cashBalanceInput: string
+}
+
+function flowStorageKey(userId: string): string {
+  return `${FLOW_STORAGE_PREFIX}${userId}`
+}
+
+function persistFlowState(userId: string, snapshot: FlowSnapshot): void {
+  try {
+    localStorage.setItem(flowStorageKey(userId), JSON.stringify(snapshot))
+  } catch {
+    // Storage bloqueado: el flujo queda solo en memoria.
+  }
+}
+
+function readFlowState(userId: string): FlowSnapshot | null {
+  try {
+    const raw = localStorage.getItem(flowStorageKey(userId))
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as Partial<FlowSnapshot>
+    if (typeof parsed.slide !== 'number') return null
+    return {
+      slide: parsed.slide,
+      showVirtualForm: parsed.showVirtualForm === true,
+      walletName: typeof parsed.walletName === 'string' ? parsed.walletName : '',
+      calcInput: typeof parsed.calcInput === 'string' ? parsed.calcInput : '0',
+      selectedIcon: typeof parsed.selectedIcon === 'string' ? parsed.selectedIcon : '💵',
+      virtualCreated: parsed.virtualCreated === true,
+      cashBalanceInput: typeof parsed.cashBalanceInput === 'string' ? parsed.cashBalanceInput : '0',
+    }
+  } catch {
+    return null
   }
 }
 
@@ -121,6 +176,14 @@ export function AuthPage() {
   // incompleto) no debe interrumpir el flujo continuo con el cartel.
   const ranInitialCheck = useRef(false)
 
+  // Restauración del snapshot: UNA corrida por usuario autenticado. Claim
+  // inmediato al empezar; el cleanup lo libera SOLO si el intento quedó sin
+  // aplicar (ej. cambio de sesión a mitad del RPC). Así un re-run por
+  // TOKEN_REFRESHED con el intento ya aplicado conserva el claim (el restore
+  // no se re-ejecuta: no pisa letras tipeadas ni yankea el slide), y un
+  // usuario distinto (o re-login tras cancelación) ejecuta el suyo.
+  const restoredForUserId = useRef<string | null>(null)
+
   // Slide 3: Country State — the local currency comes from the chosen country,
   // it is never selected by the user.
   const [localCountry, setLocalCountry] = useState<Country | null>(null)
@@ -148,32 +211,67 @@ export function AuthPage() {
     }
   }, [session])
 
-  // Cargar progreso guardado de localStorage
-  useEffect(() => {
-    if (!session) return
-    const savedSlide = readStoredSlide()
-    if (savedSlide === null || savedSlide <= 2 || savedSlide > TOTAL_SLIDES) return
+  const userId = session?.user?.id ?? null
 
-    // Nadie llega al paso de billetera sin pais confirmado. Una sesion que quedo a
-    // medias ANTES de que existiera el paso de pais reanuda en 4 (billetera) por la
-    // migracion de indices, pero su fila de region todavia tiene el 'AR' viejo del
-    // trigger: eso no es una eleccion. Se confirma el pais primero.
+  // Cargar progreso guardado (y el estado de la pantalla al momento de
+  // haberse ido): la región confirmada decide si el slide restaurado es
+  // alcanzable; con región confirmada también recuperamos los valores del
+  // snapshot (form de billetera virtual abierto, saldos tipeados, etc.).
+  useEffect(() => {
+    if (!session || !userId) return
+    if (restoredForUserId.current === userId) return
+    restoredForUserId.current = userId
+    const savedFlow = readFlowState(userId)
+    const savedSlide = savedFlow ? savedFlow.slide : readStoredSlide()
+    if (savedSlide === null || savedSlide <= 2 || savedSlide > TOTAL_SLIDES) return
+    let applied = false
     let cancelled = false
     const restoreSlide = async () => {
       try {
         const { data } = await supabase.rpc('fn_obtener_region_usuario')
         if (cancelled) return
         const row = Array.isArray(data) ? data[0] : data
-        setSlide(row?.confirmado === true ? savedSlide : 3)
+        if (row?.confirmado === true) {
+          setSlide(savedSlide)
+          if (savedFlow) {
+            // El snapshot es la misma fuente que el effect de persistencia
+            // escribe en cada cambio del flujo: si el re-chequeo por token
+            // refresh lo re-ejecuta, restaura los valores ya vigentes.
+            restoreFlowExtras(savedFlow)
+          }
+        } else {
+          setSlide(3)
+        }
+        applied = true
       } catch {
         if (!cancelled) setSlide(3)
+        applied = true
       }
     }
     restoreSlide()
     return () => {
       cancelled = true
+      if (!applied && restoredForUserId.current === userId) {
+        restoredForUserId.current = null
+      }
     }
   }, [session])
+
+  // Snapshot del flujo en curso: se escribe en cada cambio relevante para que
+  // una recarga/discard de la pestaña recupere EXACTAMENTE la pantalla en la
+  // que el usuario estaba (no su estado por defecto).
+  useEffect(() => {
+    if (!userId || slide <= 2) return
+    persistFlowState(userId, {
+      slide,
+      showVirtualForm,
+      walletName,
+      calcInput,
+      selectedIcon,
+      virtualCreated,
+      cashBalanceInput,
+    })
+  }, [userId, slide, showVirtualForm, walletName, calcInput, selectedIcon, virtualCreated, cashBalanceInput])
 
   const checkExistingOnboarding = async (retries = 3, delay = 200) => {
     setLoading(true)
@@ -198,7 +296,7 @@ export function AuthPage() {
             if (status.onboarding_completo) {
               setOnboardingCompleto(true)
               writeOnboardingComplete(session?.user?.id, true)
-              clearPersistedSlide()
+              clearPersistedSlide(session?.user?.id)
               navigate('/', { replace: true })
             } else if (status.consentimiento_aceptado === false) {
               setShowConsentGate(true)
@@ -240,7 +338,7 @@ export function AuthPage() {
         // legitimately fail as unauthorized, so acting here would loop the login.
         if (await canTreatSessionAsDead()) {
           console.warn('[auth] la sesion no existe en el backend; cerrando sesion')
-          clearPersistedSlide()
+          clearPersistedSlide(session?.user?.id)
           clearOnboardingComplete()
           try {
             await signOut()
@@ -274,17 +372,37 @@ export function AuthPage() {
     }
   }
 
-  // --- WELCOME BACK (recuperación de onboarding incompleto) ---
+  // Restauración parcial: con el snapshot vigente reescribe el estado de la
+  // pantalla (form de billetera virtual, saldos, íconos) para volver EXACTO
+  // a donde se quedó el usuario.
+  const restoreFlowExtras = (snapshot: FlowSnapshot) => {
+    setShowVirtualForm(snapshot.showVirtualForm)
+    setWalletName(snapshot.walletName)
+    setCalcInput(snapshot.calcInput)
+    setSelectedIcon(snapshot.selectedIcon)
+    setVirtualCreated(snapshot.virtualCreated)
+    setCashBalanceInput(snapshot.cashBalanceInput)
+  }
+
   const handleWelcomeBackContinue = () => {
     setShowWelcomeBack(false)
-    setSlide(3)
-    persistSlide(3)
+    // Reanudar EN el slide donde se quedó (snapshot del flujo PER-USUARIO),
+    // no siempre en el 3: el usuario puede haber quedado a mitad de las
+    // billeteras, incluso con el form de la virtual abierto.
+    const saved = userId ? readFlowState(userId) : null
+    const resume = saved && saved.slide >= 3 && saved.slide <= TOTAL_SLIDES ? saved.slide : 3
+    if (saved) {
+      restoreFlowExtras(saved)
+    }
+    setSlide(resume)
+    persistSlide(resume)
   }
 
   const handleWelcomeBackSwitch = async () => {
+    const switchingUserId = session?.user?.id
     try {
       await supabase.auth.signOut()
-      clearPersistedSlide()
+      clearPersistedSlide(switchingUserId)
       clearOnboardingComplete()
       setShowWelcomeBack(false)
       setSlide(1)
@@ -383,11 +501,11 @@ export function AuthPage() {
   }
 
   // --- SLIDE 5: crear la billetera virtual (opcional, solo si el usuario pide) ---
-  const handleCreateVirtualWallet = async () => {
+  const handleCreateVirtualWallet = async (): Promise<boolean> => {
     const name = walletName.trim()
     if (!name) {
       showToast(t('error_field_required', { field: t('label_virtual_wallet_name') }), 'error')
-      return
+      return false
     }
     const saldo = parseFloat(calcInput) || 0
 
@@ -402,11 +520,36 @@ export function AuthPage() {
       if (error) throw error
       setVirtualCreated(true)
       showToast(t('toast_virtual_wallet_created'), 'success')
+      return true
     } catch (err: any) {
       showToast(parseError(err), 'error')
+      return false
     } finally {
       setLoading(false)
     }
+  }
+
+  // Cancelar SOLO cierra la creacion de la billetera virtual (vuelve al
+  // estado sin form del slide): no toca la operatoria en curso (billetera en
+  // efectivo ya guardada, dia ancla, etc.).
+  const handleCancelVirtualWallet = () => {
+    setShowVirtualForm(false)
+    setWalletName('')
+    setCalcInput('0')
+  }
+
+  // Continuar del form de billetera virtual: con nombre, crea la billetera y
+  // avanza; sin nombre, la virtual es opcional y solo avanza. Errores: se
+  // queda en la pantalla para reintento.
+  const handleVirtualContinue = async () => {
+    if (loading) return
+    if (!walletName.trim()) {
+      goToSlide(6)
+      return
+    }
+    const created = await handleCreateVirtualWallet()
+    if (!created) return
+    goToSlide(6)
   }
 
 
@@ -442,7 +585,7 @@ export function AuthPage() {
 
       // Guardar completado y redirigir
       setOnboardingCompleto(true)
-      clearPersistedSlide()
+      clearPersistedSlide(session?.user?.id)
       showToast(t('toast_onboarding_completed'), 'success')
       navigate('/', { replace: true })
     } catch (err: any) {
@@ -841,22 +984,26 @@ export function AuthPage() {
                   </div>
                 </div>
 
-                {/* confirmar el valor con "Listo/Ir": cierra el teclado, no avanza */}
-                <div className="slide-footer flex flex-col gap-2">
-                  <button
-                    type="button"
-                    className="btn btn-primary btn-full btn-lg"
-                    onClick={() => handleCreateVirtualWallet()}
-                    disabled={loading}
-                  >
-                    {loading ? t('btn_saving') : t('btn_create_virtual_wallet')}
-                  </button>
+                {/* Cancelar cierra la creacion (vuelve al estado sin form);
+                    Continuar crea si hay nombre y pasa a la siguiente pantalla */}
+                <div className="slide-footer flex flex-row gap-2">
                   <button
                     type="button"
                     className="onboarding-link-btn"
-                    onClick={() => { setShowVirtualForm(false); setCalcInput('0') }}
+                    style={{ flex: 1 }}
+                    onClick={() => handleCancelVirtualWallet()}
+                    disabled={loading}
                   >
                     {t('btn_cancel')}
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-full btn-lg"
+                    style={{ flex: 1 }}
+                    onClick={() => handleVirtualContinue()}
+                    disabled={loading}
+                  >
+                    {loading ? t('btn_saving') : t('onboarding_country_cta')}
                   </button>
                 </div>
               </div>

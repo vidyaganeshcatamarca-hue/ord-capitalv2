@@ -149,6 +149,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   btn_close: "Cerrar",
   reconcile_theoretical_balance: "Saldo Teórico (App)",
   reconcile_real_balance: "Saldo Real",
+  calc_key_backspace: "Borrar",
   btn_cancel: "Cancelar",
   btn_install: "Instalar",
   btn_confirm_adjustment: "Confirmar Ajuste",

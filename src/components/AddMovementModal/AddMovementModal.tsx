@@ -255,7 +255,7 @@ interface AddMovementModalProps {
 
 export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', initialBilleteraId, onOpenVoice }: AddMovementModalProps) {
   const { showToast } = useToast()
-  const { formatMonto, localCurrency, currencySymbol } = useNumberFormat()
+  const { formatMonto, localCurrency, currencySymbol, prefs } = useNumberFormat()
 
   // ── Estado global del formulario ──
   const [tipo, setTipo] = useState<TipoMovimiento>(defaultTipo)
@@ -1716,6 +1716,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           value={monto}
                           onChange={setMonto}
                           onClose={() => setShowCalculator(false)}
+                          decimalSeparator={prefs.separador_decimal}
                         />
                       </div>
                     )}
