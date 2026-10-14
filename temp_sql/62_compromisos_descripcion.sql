@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION public.fn_reporte_compromisos_tarjeta(p_tarjeta_id bigint, p_fecha_pago date DEFAULT CURRENT_DATE)
- RETURNS TABLE(cuota_id bigint, fecha_estimada_pago date, descripcion text, monto_cuota numeric, moneda text, posicion_cuota integer, total_cuotas integer, pagado boolean, caja_id bigint, es_ciclo_actual boolean)
+ RETURNS TABLE(cuota_id bigint, fecha_estimada_pago date, descripcion text, detalle_movimiento text, monto_cuota numeric, moneda text, posicion_cuota integer, total_cuotas integer, pagado boolean, caja_id bigint, es_ciclo_actual boolean)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
@@ -53,9 +53,11 @@ BEGIN
     SELECT
         c.cuota_id,
         c.fecha_estimada_pago,
-        -- La compra por voz solo guarda categoria (estructura) y a veces
-        -- detalle; el nombre de categoria es data del movimiento.
-        COALESCE(cx.nombre_cuenta_historico, cx.detalle, eg.nombre_cuenta)::text AS descripcion,
+        -- Contrato: descripcion = la CATEGORIA del movimiento (cuenta
+        -- historica si la hay, si no la estructura); detalle = el texto libre
+        -- de la compra (el UI lo muestra entre parentesis, en chico).
+        COALESCE(cx.nombre_cuenta_historico, eg.nombre_cuenta)::text AS descripcion,
+        cx.detalle::text AS detalle_movimiento,
         c.monto_cuota,
         COALESCE(c.moneda, 'ARS')::text AS moneda,
         c.numero_cuota AS posicion_cuota,
