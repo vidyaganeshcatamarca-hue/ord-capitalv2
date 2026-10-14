@@ -2,6 +2,8 @@
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
+import { useLanguage } from '@/locales/LanguageProvider'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { CategoryIcon } from '@/components/CategoryIcon'
@@ -67,6 +69,8 @@ interface Termometro {
   capacidad_pago_promedio: number
   saldo_actual_total: number
   cuota_proxima: number
+  moneda_proxima?: string | null
+  fecha_proxima?: string | null
   estado_alerta: string
   estado_mensaje: string
 }
@@ -180,6 +184,10 @@ function getTermMsg(key: string): string {
     msg_insufficient_balance_deficit: t('card_insufficient_balance_deficit'),
     msg_sufficient_balance_future_compromise: t('card_term_future_compromise'),
     msg_high_quota_insufficient_balance: t('card_term_high_quota'),
+    msg_no_cuotas_pending: t('card_term_no_cuotas'),
+    msg_term_medium_quota: t('card_term_medium_quota'),
+    msg_term_over_capacity: t('card_term_over_capacity'),
+    msg_cotizacion_no_soportada: t('cotizacion_no_soportada'),
     ok: t('card_status_ok'),
   }
   return map[key] || key
@@ -214,6 +222,8 @@ function getDiasParaProximoVencimiento(card: MapaTarjeta): number {
 
 export function TarjetasPage() {
   const { showToast } = useToast()
+  const { lang } = useLanguage()
+  const { localCurrency } = useNumberFormat()
 
   // â”€â”€ Data â”€â”€
   const [tarjetas, setTarjetas] = useState<MapaTarjeta[]>([])
@@ -232,6 +242,7 @@ export function TarjetasPage() {
 
   // â”€â”€ Detalle â”€â”€
   const [termometro, setTermometro] = useState<Termometro | null>(null)
+  const [termoInfoOpen, setTermoInfoOpen] = useState(false)
   const [historial, setHistorial] = useState<PagoHistorial[]>([])
   const [cuotasActivas, setCuotasActivas] = useState<any[]>([])
   const [loadingDetalle, setLoadingDetalle] = useState(false)
@@ -850,12 +861,31 @@ export function TarjetasPage() {
           <div className="termometro-widget">
             <div className="termometro-header">
               <span className="termometro-title"><CategoryIcon name="BarChart3" size={13} /> {t("card_stress_thermometer")}</span>
-              {termometro && (
-                <span className={`termometro-badge ${termometro.estado_alerta}`}>
-                  <CategoryIcon name={getSemaforoIcon(termometro.estado_alerta)} size={12} /> {getSemaforoLabel(termometro.estado_alerta)}
-                </span>
-              )}
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                {termometro && (
+                  <span className={`termometro-badge ${termometro.estado_alerta}`}>
+                    <CategoryIcon name={getSemaforoIcon(termometro.estado_alerta)} size={12} /> {getSemaforoLabel(termometro.estado_alerta)}
+                  </span>
+                )}
+                <button
+                  type="button"
+                  className="termometro-info-btn"
+                  style={{ width: 24, height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: '1px solid var(--color-border)', cursor: 'pointer' }}
+                  onClick={() => { setTermoInfoOpen(o => !o) }}
+                  aria-label={t('card_termometer_help_title')}
+                >
+                  <CategoryIcon name="Info" size={14} />
+                </button>
+              </span>
             </div>
+            {termoInfoOpen && (
+              <div className="termometro-info-box" style={{ margin: '8px 0', padding: '10px 12px', background: 'var(--color-bg-elevated, rgba(255,255,255,0.04))', borderRadius: 10, fontSize: 'calc(12px * var(--font-scale))', color: 'var(--color-text-muted)', lineHeight: 1.5 }}>
+                <b>{t('card_termometer_help_title')}</b>
+                <div>• {t('card_termometer_help_indice')}</div>
+                <div>• {t('card_termometer_help_cuota')}</div>
+                <div>• {t('card_termometer_help_capacidad')}</div>
+              </div>
+            )}
 
             {loadingDetalle ? (
               <div className="tarjeta-skeleton" style={{ height: 40 }} />
@@ -864,20 +894,27 @@ export function TarjetasPage() {
                 <div className="termometro-bar-wrapper">
                   <div
                     className={`termometro-bar-fill ${termometro.estado_alerta}`}
-                    style={{ width: `${Math.min(100, Number(termometro.indice_estres))}%` }}
+                    style={{ width: `${termometro.indice_estres != null ? Math.min(100, Number(termometro.indice_estres)) : 0}%` }}
                   />
                 </div>
                 <div className="termometro-metrics">
                   <div className="termometro-metric">
-                    <div className="termometro-metric-value">{Number(termometro.indice_estres).toFixed(0)}%</div>
+                    <div className="termometro-metric-value">{termometro.indice_estres != null ? `${Number(termometro.indice_estres).toFixed(1)}%` : '—'}</div>
                     <div className="termometro-metric-label">{t("card_stress_index")}</div>
                   </div>
                   <div className="termometro-metric">
-                    <div className="termometro-metric-value">{fmtARS(termometro.cuota_proxima)}</div>
-                    <div className="termometro-metric-label">{t("card_next_installment")}</div>
+                    <div className="termometro-metric-value">{fmtMoneda(Number(termometro.cuota_proxima), ((termometro.moneda_proxima ?? 'ARS') as 'ARS'|'USD'))}</div>
+                    <div className="termometro-metric-label">
+                      {t("card_next_installment")}
+                      {termometro.fecha_proxima && (
+                        <span style={{ display: 'block', fontSize: '0.92em' }}>
+                          {t('card_next_installment_due', { fecha: new Date(`${termometro.fecha_proxima}T12:00:00`).toLocaleDateString(lang === 'es' ? 'es-AR' : 'en-US') })}
+                        </span>
+                      )}
+                    </div>
                   </div>
                   <div className="termometro-metric">
-                    <div className="termometro-metric-value">{fmtARS(termometro.capacidad_pago_promedio)}</div>
+                    <div className="termometro-metric-value">{fmtMoneda(Number(termometro.capacidad_pago_promedio), (localCurrency ?? 'ARS') as 'ARS'|'USD')}</div>
                     <div className="termometro-metric-label">{t('card_capacity_label')}</div>
                   </div>
                 </div>
