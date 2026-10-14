@@ -944,7 +944,9 @@ export function TarjetasPage() {
                   return (
                     <div key={c.cuota_id} className="historial-item" style={{ alignItems: 'center' }}>
                       <div className="historial-item-info">
-                        <div className="historial-item-card">{!c.caja_id ? t('msg_refinanciacion_pago_minimo') : (c.descripcion || t('msg_compra_en_cuotas_default'))}</div>
+                        <div className="historial-item-card">{!c.caja_id ? t('msg_refinanciacion_pago_minimo') : (c.descripcion
+                          ? (String(c.descripcion).startsWith('cat_') ? t(String(c.descripcion)) : c.descripcion)
+                          : t('msg_compra_en_cuotas_default'))}</div>
                         <div className="historial-item-source">Cuota {c.posicion_cuota} de {c.total_cuotas} - Vence el {dueDateStr}</div>
                       </div>
                       <div className="historial-item-monto" style={{ color: 'var(--coral)' }}>
