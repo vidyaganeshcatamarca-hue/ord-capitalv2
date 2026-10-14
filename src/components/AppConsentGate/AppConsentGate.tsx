@@ -19,6 +19,51 @@ export function consentJustAcceptedThisLoad(): boolean {
   return consentGatePassedThisLoad
 }
 
+// Serialización de gates: LegalUpdateGate corre su primera consulta de estado
+// legal en paralelo con esta RPC de consentimiento. Para una cuenta nueva
+// (especialmente vía Google OAuth, que no pre-sella aceptación en el trigger)
+// esa consulta puede resolverse ANTES de que el ConsentGate registre la
+// aceptación, derivar 'require_acceptance' del instante previo y pintar el
+// overlay bloqueante que la aceptación del ConsentGate estaba por resolver —
+// el usuario acepta dos veces seguidas (bug observado 2026-10-14, Google).
+// waitForConsentGate resuelve cuando el chequeo del consentimiento quedó
+// resuelto para la sesión actual (sin pendiente, o ya aceptado).
+let consentSettledSinceSignIn = false
+let consentWaiters: Array<() => void> = []
+
+/**
+ * Se resuelve cuando el chequeo del ConsentGate quedó resuelto para la sesión
+ * actual. Nunca se cuelga: runCheck asienta en `finally` (incluso si falla la
+ * RPC o no hay sesión). No reemplaza al chequeo del estado legal: solo evita
+ * que el gate de re-aceptación consulte antes de que el consentimiento
+ * inicial esté resuelto.
+ */
+export function waitForConsentGate(): Promise<void> {
+  if (consentSettledSinceSignIn) return Promise.resolve()
+  return new Promise<void>((resolve) => {
+    consentWaiters.push(resolve)
+  })
+}
+
+function settleConsentWait(): void {
+  consentSettledSinceSignIn = true
+  const waiters = consentWaiters
+  consentWaiters = []
+  for (const resolve of waiters) resolve()
+}
+
+/**
+ * Invalida la serialización para la próxima sesión (SIGNED_IN con otra
+ * cuenta / SIGNED_OUT): libera los esperas pendientes y obliga a re-esperar
+ * el chequeo del nuevo login.
+ */
+function resetConsentWait(): void {
+  consentSettledSinceSignIn = false
+  const waiters = consentWaiters
+  consentWaiters = []
+  for (const resolve of waiters) resolve()
+}
+
 /**
  * Gate global de consentimiento legal. Se monta entre AppVersionGate
  * y AuthProvider (a nivel App, NO dentro de AuthPage).
@@ -67,7 +112,11 @@ export function AppConsentGate({ children }: AppConsentGateProps) {
       console.error('AppConsentGate: error al chequear consentimiento (fail-open):', err)
       setNeedsConsent(false)
     } finally {
+      // Asentar ANTES de devolver el control: tras setChecking el árbol decide
+      // (ConsentGate o children), y LegalUpdateGate retoma su fetch con la
+      // decisión ya tomada.
       setChecking(false)
+      settleConsentWait()
     }
   }
 
@@ -76,8 +125,11 @@ export function AppConsentGate({ children }: AppConsentGateProps) {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') {
+        // Otra sesión en la misma carga de página: re-serializar los gates.
+        resetConsentWait()
         void runCheck()
       } else if (event === 'SIGNED_OUT') {
+        resetConsentWait()
         setNeedsConsent(false)
         setChecking(false)
       }
