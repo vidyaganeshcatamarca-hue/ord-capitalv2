@@ -12,7 +12,8 @@ export const errors = {
   // Validaciones de campos
   error_field_required: "El campo {field} es obligatorio.",
   card_load_legacy_cuotas_btn: "Cargar cuotas anteriores",
-  card_legacy_btn_entry: "+ Cuotas anteriores",
+
+  card_legacy_btn_entry: "+ Cuotas anteriores",
   card_legacy_modal_title: "Cuotas de ciclos anteriores",
   card_legacy_field_detalle: "Detalle del ítem",
   card_legacy_field_categoria: "Categoría (opcional)",
@@ -148,6 +149,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   btn_close: "Cerrar",
   reconcile_theoretical_balance: "Saldo Teórico (App)",
   reconcile_real_balance: "Saldo Real",
+  calc_key_backspace: "Borrar",
   btn_cancel: "Cancelar",
   btn_install: "Instalar",
   btn_confirm_adjustment: "Confirmar Ajuste",
