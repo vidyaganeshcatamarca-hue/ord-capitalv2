@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
+import { Delete } from 'lucide-react'
+import { t } from '@/locales/i18n'
 import './CalculatorKeypad.css'
 
-import { safeEval } from '@/utils/math'
+import { safeEval, withUserDecimalSeparator } from '@/utils/math'
 
 // Set para O(1) lookup en lugar de [].includes() que itera el array en cada keystroke
 const OP_CHARS = new Set(['+', '-', '*', '/'])
@@ -10,10 +12,18 @@ interface CalculatorKeypadProps {
   value: string
   onChange: (val: string) => void
   onClose?: () => void
+  /**
+   * Decimal separator regional del usuario ('.' default, ',' soportado). SOLO
+   * presentacional: la tecla lo muestra y los displays lo pinta; el valor
+   * interno y lo emitido queda canónico ('.') para no truncar parseFloat.
+   */
+  decimalSeparator?: string
 }
 
-export function CalculatorKeypad({ value, onChange, onClose }: CalculatorKeypadProps) {
+export function CalculatorKeypad({ value, onChange, onClose, decimalSeparator = '.' }: CalculatorKeypadProps) {
   const [expr, setExpr] = useState<string>(value === '0' ? '' : value)
+  // Coherencia regional: la tecla decimal muestra 'sep'; todo lo interno queda '.',
+  const decSep = decimalSeparator === ',' ? ',' : '.'
 
   const evaluateExpression = (expression: string): string => {
     try {
@@ -117,10 +127,19 @@ export function CalculatorKeypad({ value, onChange, onClose }: CalculatorKeypadP
 
   return (
     <div className="calculator-keypad-container">
-      <div className="calc-display-expr">{expr || '0'}</div>
+      <div className="calc-display-expr">{withUserDecimalSeparator(expr, decSep) || '0'}</div>
       <div className="calc-buttons-grid">
         <button type="button" className="calc-btn clear" onClick={() => handlePress('C')}>C</button>
-        <button type="button" className="calc-btn" onClick={() => handlePress('←')}>←</button>
+        {/* Tecla de borrar con el icono usual del móvil (lucide Delete: ⌫ con ✕);
+            el char interno sigue siendo '←'. */}
+        <button
+          type="button"
+          className="calc-btn"
+          aria-label={t('calc_key_backspace')}
+          onClick={() => handlePress('←')}
+        >
+          <Delete size={20} aria-hidden="true" />
+        </button>
         <button type="button" className="calc-btn operator" onClick={() => handlePress('/')}>/</button>
         <button type="button" className="calc-btn operator" onClick={() => handlePress('*')}>*</button>
 
@@ -140,7 +159,8 @@ export function CalculatorKeypad({ value, onChange, onClose }: CalculatorKeypadP
         <button type="button" className="calc-btn equals" onClick={() => handlePress('=')}>=</button>
 
         <button type="button" className="calc-btn" style={{ gridColumn: 'span 2' }} onClick={() => handlePress('0')}>0</button>
-        <button type="button" className="calc-btn" onClick={() => handlePress('.')}>.</button>
+        {/* Decimal regional: la tecla pinta 'sep' pero apila '.' interno */}
+        <button type="button" className="calc-btn" onClick={() => handlePress('.')}>{decSep}</button>
         <button type="button" className="calc-btn" style={{ background: 'rgba(78, 205, 196, 0.1)', color: 'var(--mint)', borderColor: 'rgba(78, 205, 196, 0.3)' }} onClick={handleApply}>✓ OK</button>
       </div>
     </div>

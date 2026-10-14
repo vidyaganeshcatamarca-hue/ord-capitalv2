@@ -76,3 +76,17 @@ export function safeEval(expression: string): number {
   
   return result;
 }
+
+/**
+ * Presentational layer ONLY: maps the canonical internal decimal '.' to the
+ * user's regional decimal separator so the keypad shows what the user expects
+ * (',' for comma-regions). Operators, digits and sign are untouched, and
+ * emitted values stay canonical — parseFloat consumers never trunc.
+ *
+ * @param expr canonical keypad expression ('.', operators + - * /)
+ * @param decimalSeparator user's regional decimal separator ('.' or ',')
+ */
+export function withUserDecimalSeparator(expr: string, decimalSeparator: string): string {
+  if (decimalSeparator !== ',') return expr
+  return expr.replace(/\./g, ',')
+}
