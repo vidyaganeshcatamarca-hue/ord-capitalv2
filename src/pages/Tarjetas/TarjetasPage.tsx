@@ -278,7 +278,6 @@ export function TarjetasPage() {
   const [formLimiteUnPago, setFormLimiteUnPago] = useState('')
   const [formLimiteCuotas, setFormLimiteCuotas] = useState('')
   const [formColor, setFormColor] = useState(CARD_COLORS[0])
-  const [formRecargoDolar, setFormRecargoDolar] = useState('30')
   const [formSubmitting, setFormSubmitting] = useState(false)
 
   // â”€â”€ Formulario Pagar â”€â”€
@@ -557,7 +556,7 @@ const handleLegacySubmit = async () => {
 
   const resetForm = () => {
     setFormNombre(''); setFormBanco(''); setFormDiaVenc('10'); setFormDiaCierre('5')
-    setFormLimiteUnPago(''); setFormLimiteCuotas(''); setFormColor(CARD_COLORS[0]); setFormRecargoDolar('30')
+    setFormLimiteUnPago(''); setFormLimiteCuotas(''); setFormColor(CARD_COLORS[0])
   }
 
   const openEdit = (card: MapaTarjeta) => {
@@ -569,7 +568,6 @@ const handleLegacySubmit = async () => {
     setFormLimiteUnPago(card.limite_un_pago_total?.toString() || '')
     setFormLimiteCuotas(card.limite_cuotas_total?.toString() || '')
     setFormColor(card.color || CARD_COLORS[0])
-    setFormRecargoDolar((card as any).recargo_dolar_pct?.toString() || '30')
     setMenuOpen(null)
     setShowEditModal(true)
   }
@@ -590,7 +588,6 @@ const handleLegacySubmit = async () => {
         p_limite_un_pago: formLimiteUnPago ? parseFloat(formLimiteUnPago) : null,
         p_limite_cuotas: formLimiteCuotas ? parseFloat(formLimiteCuotas) : null,
         p_color: formColor,
-        p_recargo_dolar_pct: parseFloat(formRecargoDolar) || 30.00,
       })
       showToast('Tarjeta creada correctamente', 'success')
       setShowCreateModal(false)
@@ -616,7 +613,7 @@ const handleLegacySubmit = async () => {
         p_limite_un_pago: formLimiteUnPago ? parseFloat(formLimiteUnPago) : null,
         p_limite_cuotas: formLimiteCuotas ? parseFloat(formLimiteCuotas) : null,
         p_color: formColor || null,
-        p_recargo_dolar_pct: formRecargoDolar ? parseFloat(formRecargoDolar) : null,
+        p_recargo_dolar_pct: null,
       })
       showToast('Tarjeta actualizada', 'success')
       setShowEditModal(false)
@@ -1012,7 +1009,11 @@ const handleLegacySubmit = async () => {
           <div className="tarjeta-detalle-section">
             <div className="tarjeta-detalle-section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span><CategoryIcon name="ShoppingBag" size={13} /> Cuotas Pendientes</span>
-              <button className="tarjeta-detalle-action-btn" style={{ width: 'auto', padding: '0 10px', height: 28, fontSize: 'calc(12px * var(--font-scale))' }} onClick={openLegacyModal}>
+              <button
+                className="tarjetas-btn-new"
+                style={{ width: 'auto', padding: '0 14px', height: 36, fontSize: 'calc(13px * var(--font-scale))', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
+                onClick={openLegacyModal}
+              >
                 + {t('card_legacy_btn_entry')}
               </button>
             </div>
@@ -1232,8 +1233,6 @@ const handleLegacySubmit = async () => {
             setFormLimiteCuotas={setFormLimiteCuotas}
             formColor={formColor}
             setFormColor={setFormColor}
-            formRecargoDolar={formRecargoDolar}
-            setFormRecargoDolar={setFormRecargoDolar}
             formSubmitting={formSubmitting}
           />
         )}
@@ -1602,8 +1601,6 @@ const handleLegacySubmit = async () => {
           setFormLimiteUnPago={setFormLimiteUnPago}
           formLimiteCuotas={formLimiteCuotas}
           setFormLimiteCuotas={setFormLimiteCuotas}
-          formRecargoDolar={formRecargoDolar}
-          setFormRecargoDolar={setFormRecargoDolar}
           formColor={formColor}
           setFormColor={setFormColor}
           formSubmitting={formSubmitting}
@@ -1630,8 +1627,6 @@ const handleLegacySubmit = async () => {
           setFormLimiteUnPago={setFormLimiteUnPago}
           formLimiteCuotas={formLimiteCuotas}
           setFormLimiteCuotas={setFormLimiteCuotas}
-          formRecargoDolar={formRecargoDolar}
-          setFormRecargoDolar={setFormRecargoDolar}
           formColor={formColor}
           setFormColor={setFormColor}
           formSubmitting={formSubmitting}
@@ -1704,8 +1699,6 @@ interface TarjetaFormModalProps {
   setFormLimiteUnPago: (val: string) => void
   formLimiteCuotas: string
   setFormLimiteCuotas: (val: string) => void
-  formRecargoDolar: string
-  setFormRecargoDolar: (val: string) => void
   formColor: string
   setFormColor: (val: string) => void
   formSubmitting: boolean
@@ -1728,8 +1721,6 @@ export function TarjetaFormModal({
   setFormLimiteUnPago,
   formLimiteCuotas,
   setFormLimiteCuotas,
-  formRecargoDolar,
-  setFormRecargoDolar,
   formColor,
   setFormColor,
   formSubmitting,
@@ -1808,12 +1799,6 @@ export function TarjetaFormModal({
                 value={formLimiteCuotas} onChange={e => setFormLimiteCuotas(e.target.value)}
                 placeholder="Ej: 500000" inputMode="decimal" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
             </div>
-          </div>
-          <div>
-            <label className="tarjeta-form-label">{t("card_form_usd_surcharge_optional")}</label>
-            <input className="tarjeta-form-input" type="number" min={0} step="0.01"
-              value={formRecargoDolar} onChange={e => setFormRecargoDolar(e.target.value)}
-              placeholder="Ej: 30" inputMode="decimal" enterKeyHint="done" onKeyDown={handleKeyDown} onFocus={handleFocus} />
           </div>
           <div>
             <label className="tarjeta-form-label">Color de la tarjeta</label>
