@@ -12,7 +12,8 @@ export const errors = {
   // Validaciones de campos
   error_field_required: "El campo {field} es obligatorio.",
   card_load_legacy_cuotas_btn: "Cargar cuotas anteriores",
-  card_legacy_btn_entry: "Cuotas anteriores",
+
+  card_legacy_btn_entry: "Cuotas anteriores",
   card_legacy_modal_title: "Cuotas de ciclos anteriores",
   card_legacy_field_detalle: "Detalle del ítem",
   card_legacy_field_categoria: "Categoría (opcional)",

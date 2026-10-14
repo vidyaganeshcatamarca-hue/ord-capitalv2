@@ -1,0 +1,16 @@
+# Normalize line endings: repository stores LF, checkout follows core.autocrlf.
+* text=auto
+# Explicit CRLF-only artifacts (Windows shell).
+*.bat eol=crlf
+*.cmd eol=crlf
+# Binary files: never touch.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.pdf binary
