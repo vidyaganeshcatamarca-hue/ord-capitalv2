@@ -429,9 +429,11 @@ export function TarjetasPage() {
     // Regla UX: el resumen anterior siempre se muestra si hay cuotas impagas,
     // independientemente del saldo a favor. La aplicacion del saldo a favor es
     // una decision del usuario al momento de pagar.
+    // Prioridad: la que vence primero va primera (dias_para_vencimiento asc).
     () => vencimientos.filter(v =>
       Number(v.resumen_anterior_total_ars ?? 0) + Number(v.resumen_anterior_total_usd ?? 0) > 0
-      || Number(v.resumen_anterior_a_pagar_ars ?? 0) + Number(v.resumen_anterior_a_pagar_usd ?? 0) > 0),
+      || Number(v.resumen_anterior_a_pagar_ars ?? 0) + Number(v.resumen_anterior_a_pagar_usd ?? 0) > 0)
+      .sort((a, b) => a.dias_para_vencimiento - b.dias_para_vencimiento),
     [vencimientos]
   )
   const resumenActualAlerts = useMemo(
@@ -439,20 +441,23 @@ export function TarjetasPage() {
     // la ventana del ciclo actual). El neto post-favor asumia aplicacion automatica
     // del saldo a favor y confundia; la aplicacion del favor es decision del usuario
     // al pagar (mismo principio que el resumen anterior).
-    () => vencimientos.filter(v => Number(v.resumen_actual_total_ars ?? 0) + Number(v.resumen_actual_total_usd ?? 0) > 0),
+    // Prioridad: la que vence primero va primera (dias_para_vencimiento asc).
+    () => vencimientos.filter(v => Number(v.resumen_actual_total_ars ?? 0) + Number(v.resumen_actual_total_usd ?? 0) > 0)
+      .sort((a, b) => a.dias_para_vencimiento - b.dias_para_vencimiento),
     [vencimientos]
   )
 
+  // Regla del dueno: la seccion de cards (Mis Tarjetas) se ordena por MAYOR
+  // GASTO (consumido del limite en equivalente ARS), no por vencimiento.
   const sortedTarjetas = useMemo(() => {
+    const cot = cotizacionUsd ?? 0
     return [...tarjetas].sort((a, b) => {
-      const diasA = getDiasParaProximoVencimiento(a)
-      const diasB = getDiasParaProximoVencimiento(b)
-      if (diasA !== diasB) {
-        return diasA - diasB
-      }
+      const gastoA = Number(a.un_pago_consumido_ars ?? 0) + (Number(a.un_pago_consumido_usd ?? 0) * cot)
+      const gastoB = Number(b.un_pago_consumido_ars ?? 0) + (Number(b.un_pago_consumido_usd ?? 0) * cot)
+      if (gastoA !== gastoB) return gastoB - gastoA
       return a.nombre_tarjeta.localeCompare(b.nombre_tarjeta)
     })
-  }, [tarjetas])
+  }, [tarjetas, cotizacionUsd])
 
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   // Helpers for form reset
