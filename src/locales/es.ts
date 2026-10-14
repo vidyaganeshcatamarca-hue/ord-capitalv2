@@ -1820,6 +1820,17 @@ export const inversiones = {
   config_pwa_install_desc: "Agregá la app a tu pantalla de inicio para usarla como una app nativa.",
   pwa_install_ios_hint: "En iOS, usá Compartir y luego \"Agregar a pantalla de inicio\".",
   pwa_already_installed_or_unsupported: "La app ya está instalada o tu navegador no soporta esta función.",
+  pwa_install_samsung_title: "Instalar con Chrome",
+  pwa_install_samsung_desc: "Samsung Internet genera un instalador que Google Play Protect bloquea. Abrí Chrome y entrá a la app desde ahí.",
+  pwa_install_samsung_fallback: "¿No tenés (ni vas a instalar) Chrome? Podés instalar desde Samsung Internet: ante el aviso de Google, tocá \"Instalar de todas formas\".",
+  pwa_install_samsung_hint: "Samsung Internet bloquea la instalación de la app. Abrí ordcapital.app en Chrome (o instalá Chrome desde Play Store) y presioná Instalar ahí.",
+  pwa_install_chrome_hint: "¿No tenés Chrome? Instalalo gratis desde Play Store.",
+  pwa_open_in_chrome: "Abrir en Chrome",
+  pwa_copy_link: "Copiar enlace",
+  pwa_link_copied: "¡Enlace copiado!",
+  pwa_install_chrome_outdated_title: "Actualizá Chrome primero",
+  pwa_install_chrome_outdated_desc: "Tu versión de Chrome es antigua y el instalador puede ser rechazado. Actualizala desde Play Store y volvé a intentar.",
+  pwa_update_chrome: "Actualizar Chrome",
   config_notifications_active_count: "{count} de {total} alertas activas",
 
   // Región

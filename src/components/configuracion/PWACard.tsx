@@ -1,6 +1,12 @@
 import { useState, useEffect } from 'react'
 import { t } from '@/locales/i18n'
 import { useToast } from '@/contexts/ToastContext'
+import {
+  detectPwaBrowserEnv,
+  isChromeOutdatedForWebapk,
+  googleChromeSchemeUrl,
+} from '@/utils/pwaEnv'
+import { CHROME_PLAY_STORE_URL } from '@/components/PWABanner'
 
 // Almacenamos el evento globalmente en window
 declare global {
@@ -36,6 +42,25 @@ export function PWACard() {
   }, [])
 
   const handleInstallClick = async () => {
+    const env = detectPwaBrowserEnv(window.navigator.userAgent)
+
+    // Samsung Internet: mintea un WebAPK con targetSdk viejo que Play Protect
+    // bloquea en Android 14+. Guiamos a Chrome en lugar de disparar prompt().
+    if (env.kind === 'samsung-internet') {
+      showToast(t('pwa_install_samsung_hint'), 'info')
+      const schemeUrl = googleChromeSchemeUrl(window.location.href)
+      if (schemeUrl) window.location.href = schemeUrl
+      return
+    }
+
+    // Chrome desactualizado: el WebAPK minteado puede ser rechazado; primero
+    // pedimos actualizar desde Play Store.
+    if (isChromeOutdatedForWebapk(env)) {
+      showToast(t('pwa_install_chrome_outdated_desc'), 'info')
+      window.location.href = CHROME_PLAY_STORE_URL
+      return
+    }
+
     const promptEvent = window.deferredPrompt
     if (!promptEvent) {
       // Para iOS o navegadores que no soportan beforeinstallprompt
