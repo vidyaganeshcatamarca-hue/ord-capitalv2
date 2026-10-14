@@ -245,7 +245,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
     pay_multi_saldo_favor_label: "Desde saldo a favor",
     pay_favor_cubre_total_banner: "El saldo a favor cubre el total del resumen. No necesitás seleccionar cuenta.",
     pay_total_a_pagar_label: "Total a pagar",
-    pay_section_ars_title: "Pago en pesos",
+    pay_section_ars_title: "Pago en moneda local",
     pay_section_usd_title: "Pago en dólares",
     error_saldo_favor_insuficiente: "El saldo a favor no alcanza para cubrir ese monto.",
    pay_resumen_real_toggle: "¿El resumen real del banco es distinto?",

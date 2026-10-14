@@ -3,6 +3,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { useLanguage } from '@/locales/LanguageProvider'
+import { formatCurrency } from '@/lib/format'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
@@ -83,7 +84,7 @@ interface PagoHistorial {
   billetera_origen: string
   cuotas_liquidadas: number
   observaciones: string | null
-  moneda?: 'ARS' | 'USD'
+  moneda?: string
 }
 
 interface SerieCicloTarjeta {
@@ -104,15 +105,15 @@ interface ComparativaTarjeta {
   variacion_porcentual: number
   tendencia_key: string
   mensaje_key: string
-  moneda?: 'ARS' | 'USD'
+  moneda?: string
 }
 
 type PagarLine = {
   id: number
   billetera_id: number | null
   monto: string
-  target_moneda_cuota?: 'ARS' | 'USD'
-  moneda?: 'ARS' | 'USD'
+  target_moneda_cuota?: string
+  moneda?: string
   origen?: 'wallet' | 'favor'
 }
 
@@ -128,10 +129,10 @@ const CARD_COLORS = [
 const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })
 const fmtUSD = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
 
-function fmtARS(n: number) { return fmt.format(Number(n) || 0) }
-function fmtMoneda(n: number, moneda: 'ARS' | 'USD' = 'ARS') {
-  return moneda === 'USD' ? fmtUSD.format(Number(n) || 0) : fmt.format(Number(n) || 0)
-}
+// fmtARS/fmtMoneda: importes en moneda LOCAL del usuario (contexto inyectado
+// por useNumberFormat); las llaves *_ars del backend ya significan "moneda local".
+function fmtARS(n: number) { return formatCurrency(n) }
+function fmtMoneda(n: number, moneda?: string) { return formatCurrency(n, moneda) }
 
 function getMonthName(dateStr: string) {
   const d = new Date(dateStr + 'T00:00:00')
@@ -1888,6 +1889,10 @@ export function PagarModal({
   necesitoARS,
   necesitoUSD,
 }: PagarModalProps) {
+  // La seccion "ARS" del payment es la moneda LOCAL del usuario (RON para un
+  // user de Rumania); el literal 'ARS' fue hardcodeo de la era monounaria.
+  const { localCurrency } = useNumberFormat()
+  const localMon = localCurrency || 'ARS'
   const nextLineIdRef = useRef(2)
   const allLines = useMemo(() => [...pagarLineas, ...pagarLineasUsd], [pagarLineas, pagarLineasUsd])
   // Totales separados por moneda según la vía elegida para las cuotas USD.
@@ -2126,7 +2131,7 @@ export function PagarModal({
       setPagarLineasUsd((prev: PagarLine[]) => prev.map((l: PagarLine, i: number) => {
         const isEmpty = l.billetera_id == null && l.monto === ''
         const w = l.billetera_id != null ? billeteras.find(b => b.billetera_id === l.billetera_id) : undefined
-        const shouldResetMonto = l.billetera_id != null && w?.moneda !== 'ARS'
+        const shouldResetMonto = l.billetera_id != null && w?.moneda !== localMon
         // Fix 2026-09-15: al pasar a pagar en pesos, convertir el prefill USD
         // existente (o vacio) al equivalente ARS exacto. Antes el prefill USD del
         // mount hacia que isEmpty sea false y el monto quedaba reinterpretado.
@@ -2156,7 +2161,7 @@ export function PagarModal({
       id: nextLineIdRef.current++,
       billetera_id: null,
       monto: monto > 0 ? monto.toFixed(2) : '',
-      moneda: 'ARS' as const,
+      moneda: localMon as string,
       origen: 'favor' as const,
     }
     const emptyFirst = pagarLineas.length === 1 && pagarLineas[0].billetera_id == null && pagarLineas[0].monto === ''
@@ -2222,7 +2227,7 @@ export function PagarModal({
                 <span className="pay-total-header-label">{t('pay_total_a_pagar_label')}</span>
                 <span className="pay-total-header-montos">
                   {(!enModoObjetivo || Number(objetivoPago) > 0 || realNum !== null) && (
-                    <span className="pay-total-header-ars">{fmtMoneda(realNum ?? (enModoObjetivo ? Number(objetivoPago) : cicloARS), 'ARS')}</span>
+                    <span className="pay-total-header-ars">{fmtMoneda(realNum ?? (enModoObjetivo ? Number(objetivoPago) : cicloARS), localMon)}</span>
                   )}
                   {!enModoObjetivo && cicloARS > 0 && cicloUSD > 0 && (
                     <span className="pay-total-header-sep">·</span>
@@ -2273,7 +2278,7 @@ export function PagarModal({
               const usedWalletIds = allLines.filter((_, i) => i !== idx).map(l => l.billetera_id).filter(id => id != null)
               const baseWallets = billeteras.filter(b => !usedWalletIds.includes(b.billetera_id))
               // Sección ARS: solo billeteras ARS para líneas no favor.
-              const availableWallets = linea.origen === 'favor' ? baseWallets : baseWallets.filter(b => b.moneda === 'ARS')
+              const availableWallets = linea.origen === 'favor' ? baseWallets : baseWallets.filter(b => b.moneda === localMon)
               const recargoPct = Number(targetCard?.recargo_dolar_pct ?? 30)
               const cotizacion = Number(targetCard?.cotizacion_usd ?? 1)
               const montoNum = parseFloat(linea.monto) || 0
@@ -2400,7 +2405,7 @@ export function PagarModal({
                 const selectedWallet = billeteras.find(b => b.billetera_id === linea.billetera_id)
                 const usedWalletIds = allLines.filter((_, i) => i !== idx + pagarLineas.length).map(l => l.billetera_id).filter(id => id != null)
                 const baseWallets = billeteras.filter(b => !usedWalletIds.includes(b.billetera_id))
-                const availableWallets = linea.origen === 'favor' ? baseWallets : baseWallets.filter(b => b.moneda === sectionUsdPayIn)
+                const availableWallets = linea.origen === 'favor' ? baseWallets : baseWallets.filter(b => b.moneda === (sectionUsdPayIn === 'ARS' ? localMon : 'USD'))
                 const payInPesos = sectionUsdPayIn === 'ARS'
                 const cotizacion = Number(targetCard?.cotizacion_usd ?? 1)
                 const montoNum = parseFloat(linea.monto) || 0
@@ -2427,7 +2432,7 @@ export function PagarModal({
                             selectedWalletId={linea.billetera_id}
                             onSelectWallet={(id) => {
                               const w = billeteras.find(b => b.billetera_id === id)
-                              const target = payInPesos && w?.moneda === 'ARS' ? 'USD' : undefined
+                              const target = payInPesos && w?.moneda === localMon ? 'USD' : undefined
                               // Autollenado espejo de la sección ARS: el faltante
                               // USD (neto post-favor) convertido a la moneda de
                               // la línea (ARS cuando se paga en pesos), acotado
