@@ -1,0 +1,166 @@
+{
+ "out": {
+  "fn_aprobar_cuarentena_v2": {
+   "n_ars": 0,
+   "n_usd": 10
+  },
+  "fn_cargar_movimientos_voz": {
+   "n_ars": 1,
+   "n_usd": 1
+  },
+  "fn_configurar_inflacion": {
+   "n_ars": 1,
+   "n_usd": 0
+  },
+  "fn_configurar_region_usuario": {
+   "n_ars": 0,
+   "n_usd": 1
+  },
+  "fn_crear_billetera": {
+   "n_ars": 0,
+   "n_usd": 1
+  },
+  "fn_crear_billetera_inicial": {
+   "n_ars": 0,
+   "n_usd": 1
+  },
+  "fn_crear_billeteras_iniciales": {
+   "n_ars": 0,
+   "n_usd": 1
+  },
+  "fn_crear_cuenta_madre_ahorro": {
+   "n_ars": 1,
+   "n_usd": 0
+  },
+  "fn_crear_fondo_prevision": {
+   "n_ars": 1,
+   "n_usd": 0
+  },
+  "fn_crear_inversion": {
+   "n_ars": 1,
+   "n_usd": 0
+  },
+  "fn_gestionar_compra_cuotas": {
+   "n_ars": 1,
+   "n_usd": 2
+  },
+  "fn_gestionar_deuda": {
+   "n_ars": 2,
+   "n_usd": 0
+  },
+  "fn_liquidar_ciclo_tarjeta_multi": {
+   "n_ars": 4,
+   "n_usd": 4
+  },
+  "fn_obtener_cotizacion_usd": {
+   "n_ars": 1,
+   "n_usd": 0
+  },
+  "fn_p_caja_snapshot_moneda": {
+   "n_ars": 0,
+   "n_usd": 1
+  },
+  "fn_registrar_ajuste_diferencia_tarjeta": {
+   "n_ars": 1,
+   "n_usd": 0
+  },
+  "fn_registrar_cuotas_historicas": {
+   "n_ars": 2,
+   "n_usd": 1
+  },
+  "fn_registrar_gasto_tarjeta": {
+   "n_ars": 1,
+   "n_usd": 2
+  },
+  "fn_registrar_movimiento_caja": {
+   "n_ars": 1,
+   "n_usd": 4
+  },
+  "fn_registrar_pago_tarjeta_multi": {
+   "n_ars": 11,
+   "n_usd": 8
+  },
+  "fn_reporte_cartera_inversiones": {
+   "n_ars": 1,
+   "n_usd": 0
+  },
+  "fn_reporte_compromisos_tarjeta": {
+   "n_ars": 1,
+   "n_usd": 0
+  },
+  "fn_reporte_desviacion_misterio": {
+   "n_ars": 1,
+   "n_usd": 1
+  },
+  "fn_reporte_detalle_inversion": {
+   "n_ars": 1,
+   "n_usd": 0
+  },
+  "fn_reporte_escudo_tiempo": {
+   "n_ars": 0,
+   "n_usd": 3
+  },
+  "fn_reporte_historial_pagos_tarjetas": {
+   "n_ars": 1,
+   "n_usd": 0
+  },
+  "fn_reporte_mapa_tarjetas": {
+   "n_ars": 3,
+   "n_usd": 2
+  },
+  "fn_reporte_movimientos_recientes": {
+   "n_ars": 0,
+   "n_usd": 1
+  },
+  "fn_reporte_patrimonio_neto": {
+   "n_ars": 2,
+   "n_usd": 2
+  },
+  "fn_reporte_patrimonio_neto_consolidado": {
+   "n_ars": 3,
+   "n_usd": 6
+  },
+  "fn_reporte_podadora_bcg": {
+   "n_ars": 0,
+   "n_usd": 2
+  },
+  "fn_reporte_ranking_categorias": {
+   "n_ars": 2,
+   "n_usd": 0
+  },
+  "fn_reporte_safe_to_spend": {
+   "n_ars": 0,
+   "n_usd": 4
+  },
+  "fn_reporte_termometro_tarjeta": {
+   "n_ars": 1,
+   "n_usd": 4
+  },
+  "fn_reporte_top_categorias_mes": {
+   "n_ars": 2,
+   "n_usd": 0
+  },
+  "fn_reporte_vencimientos_tarjetas": {
+   "n_ars": 3,
+   "n_usd": 2
+  },
+  "fn_seed_billetera_efectivo": {
+   "n_ars": 1,
+   "n_usd": 0
+  },
+  "fn_t_limpiar_dependencias_caja": {
+   "n_ars": 1,
+   "n_usd": 1
+  },
+  "fn_valor_a_moneda_local": {
+   "n_ars": 2,
+   "n_usd": 0
+  }
+ },
+ "broken": [
+  "avg",
+  "avg",
+  "sum",
+  "sum"
+ ]
+}
