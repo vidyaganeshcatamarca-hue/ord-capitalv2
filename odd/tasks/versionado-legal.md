@@ -61,6 +61,8 @@ y modal combinado no bloqueante para avisos. `usuarios` queda libre de campos le
 
 ## Log de commits (evidencia)
 
+- L+: `fix(legal)`: doble-prompt en primer login (cuenta Google arieldere75, 2026-10-14): AppConsentGate y LegalUpdateGate corran fn_obtener_estado_legal en paralelo; para OAuth (sin metadata de versiones) el segundo derivaba require_acceptance del instante previo a la aceptacion del ConsentGate y pedia aceptacion doble. Fix: serializacion via waitForConsentGate() (AppConsentGate asienta en finally; reset en SIGNED_IN/SIGNED_OUT) + guarda aliveRef en LegalUpdateGate contra continuaciones vencidas que escribian el snapshot pre-aceptacion en la memoria de sesion. Cambios commiteados en `efbb870` (rama pi/sesion-3); verificado npx tsc --noEmit OK + node --test (132 pass, 1 fail preexistente: tests/icon-wrappers/test-runner-exit-status.test.js).
+
 - `37f907f` feat(legal): bump terms and privacy docs to v1.1
 - `93e12e8` feat(legal): add legal versioning SQL batch (tables, RPCs, backfill, seeds)
 - `6dd7c2d` feat(legal): add legal update gates (blocking re-acceptance overlay, combined notify modal)

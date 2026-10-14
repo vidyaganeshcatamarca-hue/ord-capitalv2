@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
+import { waitForConsentGate } from '@/components/AppConsentGate/AppConsentGate'
 import {
   obtenerEstadoLegal,
   registrarConsentimiento,
@@ -67,6 +68,20 @@ export function LegalUpdateGate({ children }: LegalUpdateGateProps) {
   // arbol), la memoria de sesion se limpia para re-chequear al remontar.
   const pendingRef = useRef(false)
 
+  // Guarda de continuaciones vencidas: una continuacion async retomada DESPUES
+  // del desmontaje del gate (p.ej. la consulta lanzada antes del swap del
+  // ConsentGate o durante el desmontaje del onboarding) NO debe escribir la
+  // memoria de sesion (legalEstadoFetchedThisSession / legalEstadoThisSession)
+  // con un snapshot previo a la aceptacion; si lo hace, el remount repinta el
+  // require_acceptance cacheado y el usuario acepta dos veces.
+  const aliveRef = useRef(true)
+  useEffect(() => {
+    aliveRef.current = true
+    return () => {
+      aliveRef.current = false
+    }
+  }, [])
+
   const applyEstado = (next: LegalEstado | null) => {
     legalEstadoThisSession = next
     setEstado(next)
@@ -102,7 +117,15 @@ export function LegalUpdateGate({ children }: LegalUpdateGateProps) {
       const { data: { session } } = await supabase.auth.getSession()
       if (!session) return
 
+      // Serializacion de gates (bug doble-prompt en signup OAuth): esperar a
+      // que AppConsentGate resuelva el consentimiento inicial antes de
+      // consultar el estado legal; sin esto, el fetch puede derivar
+      // 'require_acceptance' del instante previo a la aceptacion.
+      await waitForConsentGate()
+      if (!aliveRef.current) return
+
       const next = await obtenerEstadoLegal()
+      if (!aliveRef.current) return
       legalEstadoFetchedThisSession = true
       applyEstado(next)
     } catch (err) {
@@ -113,6 +136,7 @@ export function LegalUpdateGate({ children }: LegalUpdateGateProps) {
       // reintenta en el proximo arranque de la app (la sesion no re-chequea).
       const msg = parseError(err)
       console.error('LegalUpdateGate: error al obtener estado legal (fail-open):', msg)
+      if (!aliveRef.current) return
       legalEstadoFetchedThisSession = true
       applyEstado(null)
     }
