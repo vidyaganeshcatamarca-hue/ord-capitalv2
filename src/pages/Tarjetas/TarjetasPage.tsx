@@ -766,7 +766,7 @@ export function TarjetasPage() {
 
         {isConfigRequired ? (
           <div className="tarjeta-config-required" onClick={e => { e.stopPropagation(); openEdit(tc) }}>
-            <CategoryIcon name="Settings" size={14} /> {t("card_configure_limits_analysis")} â†’
+            <CategoryIcon name="Settings" size={14} /> {t("card_configure_limits_analysis")}
           </div>
         ) : (
           <>
@@ -815,7 +815,7 @@ export function TarjetasPage() {
       <div className="page tarjetas-view">
         {/* Header */}
         <div className="tarjeta-detalle-header">
-          <button className="tarjeta-detalle-back" onClick={() => setSelectedCard(null)}>â†</button>
+          <button className="tarjeta-detalle-back" onClick={() => setSelectedCard(null)} aria-label="Volver"><CategoryIcon name="ArrowLeft" size={18} /></button>
           <span className="tarjeta-detalle-title"><CategoryIcon name="CreditCard" size={18} /> {selectedCard.nombre_tarjeta}</span>
           <div className="tarjeta-detalle-actions">
             <button className="tarjeta-detalle-action-btn" onClick={() => openEdit(selectedCard)} title="Editar"><CategoryIcon name="Pencil" size={18} /></button>
@@ -1566,7 +1566,7 @@ export function TarjetaFormModal({
       <div className="tarjeta-modal" onClick={e => e.stopPropagation()}>
         <div className="tarjeta-modal-header">
           <span className="tarjeta-modal-title">{isEdit ? <><CategoryIcon name="Pencil" size={18} /> Editar Tarjeta</> : <><CategoryIcon name="CreditCard" size={18} /> Nueva Tarjeta</>}</span>
-          <button className="tarjeta-modal-close" onClick={onClose}>âœ•</button>
+          <button className="tarjeta-modal-close" onClick={onClose}><CategoryIcon name="CircleX" size={18} /></button>
         </div>
 
         <div className="tarjeta-modal-form">
@@ -2000,7 +2000,7 @@ export function PagarModal({
       <div className="tarjeta-modal" onClick={e => e.stopPropagation()}>
         <div className="tarjeta-modal-header">
           <span className="tarjeta-modal-title">{t('pay_resumen_title')}</span>
-          <button className="tarjeta-modal-close" onClick={onClose}>âœ•</button>
+          <button className="tarjeta-modal-close" onClick={onClose}><CategoryIcon name="CircleX" size={18} /></button>
         </div>
             {targetCard && (
               <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,107,107,0.08)', borderRadius: 10, fontSize: 'calc(13px * var(--font-scale))', color: 'var(--color-text-muted)' }}>
