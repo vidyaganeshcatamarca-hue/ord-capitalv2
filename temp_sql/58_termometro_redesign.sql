@@ -21,9 +21,11 @@ DECLARE
     v_user_id bigint; v_antiguedad int;
     v_ingreso_prom_180 numeric; v_gasto_no_card_prom_180 numeric;
     v_capacidad_prom numeric; v_saldo_total numeric; v_nombre text;
-    v_mono_local text; r_proxima record;
+    v_mono_local text;
     v_equiv_pendiente numeric; v_cuotas_sin_tasa int; v_ultima_fecha date;
     v_meses_restantes numeric; v_indice numeric;
+    v_fecha_proxima date; v_cuota_num numeric; v_cuota_mono text;
+    v_suma_bruta numeric; v_todas_usd boolean;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
@@ -65,14 +67,32 @@ BEGIN
         WHERE cd.tarjeta_id = p_tarjeta_id AND cd.pagado = false
     ) P;
 
-    -- Cuota individual que antes vence.
-    SELECT cd.monto_cuota, cd.moneda, cd.fecha_estimada_pago
-      INTO r_proxima
+    -- Proximo pago de la tarjeta: TODAS las cuotas impagas que comparten la
+    -- fecha estimada mas proxima (asi coincide con el estimado del resumen
+    -- cuando todas caen el mismo dia). Moneda: USD si todas son USD; si no,
+    -- equivalente en moneda local.
+    SELECT MIN(cd.fecha_estimada_pago) INTO v_fecha_proxima
       FROM public.p_cuotas_detalle cd
-      WHERE cd.tarjeta_id = p_tarjeta_id AND cd.pagado = false
-      ORDER BY cd.fecha_estimada_pago ASC LIMIT 1;
+      WHERE cd.tarjeta_id = p_tarjeta_id AND cd.pagado = false;
 
-    IF r_proxima IS NULL THEN
+    IF v_fecha_proxima IS NOT NULL THEN
+        SELECT COALESCE(SUM(P.monto_local), 0),
+               COALESCE(SUM(P.monto_cuota), 0),
+               COALESCE(bool_and(P.moneda = 'USD'), false)
+          INTO v_cuota_num, v_suma_bruta, v_todas_usd
+          FROM (
+              SELECT cd.monto_cuota, cd.moneda,
+                     (public.fn_valor_a_moneda_local(cd.monto_cuota, cd.moneda, v_user_id)).valor AS monto_local
+              FROM public.p_cuotas_detalle cd
+              WHERE cd.tarjeta_id = p_tarjeta_id AND cd.pagado = false
+                AND cd.fecha_estimada_pago = v_fecha_proxima
+          ) P;
+        v_cuota_mono := CASE WHEN v_todas_usd AND v_mono_local <> 'USD' THEN 'USD' ELSE v_mono_local END;
+        v_cuota_num := CASE WHEN v_todas_usd AND v_mono_local <> 'USD' THEN v_suma_bruta
+                            ELSE v_cuota_num END;
+    END IF;
+
+    IF v_fecha_proxima IS NULL THEN
         RETURN QUERY SELECT v_nombre, 0::numeric, v_capacidad_prom, v_saldo_total,
             0::numeric, NULL::text, NULL::date, 'green'::text, 'msg_no_cuotas_pending'::text;
         RETURN;
@@ -80,7 +100,7 @@ BEGIN
 
     IF v_cuotas_sin_tasa > 0 THEN
         RETURN QUERY SELECT v_nombre, NULL::numeric, v_capacidad_prom, v_saldo_total,
-            r_proxima.monto_cuota, r_proxima.moneda, r_proxima.fecha_estimada_pago,
+            v_cuota_num, v_cuota_mono, v_fecha_proxima,
             'yellow'::text, 'msg_cotizacion_no_soportada'::text;
         RETURN;
     END IF;
@@ -93,19 +113,19 @@ BEGIN
 
     IF v_capacidad_prom <= 0 THEN
         RETURN QUERY SELECT v_nombre, NULL::numeric, v_capacidad_prom, v_saldo_total,
-            r_proxima.monto_cuota, r_proxima.moneda, r_proxima.fecha_estimada_pago,
+            v_cuota_num, v_cuota_mono, v_fecha_proxima,
             'red'::text, 'msg_insufficient_balance_deficit'::text;
     ELSIF v_indice <= 30 THEN
         RETURN QUERY SELECT v_nombre, v_indice, v_capacidad_prom, v_saldo_total,
-            r_proxima.monto_cuota, r_proxima.moneda, r_proxima.fecha_estimada_pago,
+            v_cuota_num, v_cuota_mono, v_fecha_proxima,
             'green'::text, 'ok'::text;
     ELSIF v_indice <= 60 THEN
         RETURN QUERY SELECT v_nombre, v_indice, v_capacidad_prom, v_saldo_total,
-            r_proxima.monto_cuota, r_proxima.moneda, r_proxima.fecha_estimada_pago,
+            v_cuota_num, v_cuota_mono, v_fecha_proxima,
             'yellow'::text, 'msg_term_medium_quota'::text;
     ELSE
         RETURN QUERY SELECT v_nombre, v_indice, v_capacidad_prom, v_saldo_total,
-            r_proxima.monto_cuota, r_proxima.moneda, r_proxima.fecha_estimada_pago,
+            v_cuota_num, v_cuota_mono, v_fecha_proxima,
             'red'::text, 'msg_term_over_capacity'::text;
     END IF;
 END;
