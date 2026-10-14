@@ -9,7 +9,6 @@ import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { CategoryIcon } from '@/components/CategoryIcon'
 import { WalletIcon } from '@/components/WalletIcon'
 import { WalletDropdownSelect } from '@/components/WalletDropdownSelect'
-import { isUserEditableCategory } from '@/lib/categoryFilters'
 import type { WalletOptionItem } from '@/components/WalletDropdownSelect'
 import './Tarjetas.css'
 import '../Configuracion/ConfigSectionPage.css'
@@ -221,18 +220,6 @@ function getDiasParaProximoVencimiento(card: MapaTarjeta): number {
 
 // â”€â”€â”€ Main Component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
-// Tipos minimos del arbol de categorias para el selector del modal de carga.
-interface LegacyRubroHijo {
-  estructura_id: number
-  nombre_cuenta: string
-}
-
-interface LegacyRubro {
-  estructura_id: number
-  nombre_cuenta: string
-  hijos?: LegacyRubroHijo[] | null
-}
-
 export function TarjetasPage() {
   const { showToast } = useToast()
   const { lang } = useLanguage()
@@ -260,8 +247,6 @@ export function TarjetasPage() {
   // Carga de cuotas historicas (legacy installments)
   const [showLegacyModal, setShowLegacyModal] = useState(false)
   const [legacyDetalle, setLegacyDetalle] = useState('')
-  const [legacyCategoriaId, setLegacyCategoriaId] = useState<number | null>(null)
-  const [legacyCategorias, setLegacyCategorias] = useState<{ id: number; label: string }[]>([])
   const [legacyCantidad, setLegacyCantidad] = useState('')
   const [legacyMonto, setLegacyMonto] = useState('')
   const [legacyMes, setLegacyMes] = useState('')           // 'YYYY-MM'
@@ -353,31 +338,12 @@ export function TarjetasPage() {
     setLegacyAnio(String(hoy.getFullYear()))
     setLegacyMoneda(localCurrency || 'ARS')
     setLegacyDetalle('')
-    setLegacyCategoriaId(null)
     setLegacyCantidad('')
     setLegacyMonto('')
     setShowLegacyModal(true)
-    void loadLegacyCategorias()
   }
 
-  // Categorias usuario (mismo filtro que AddMovementModal: sin las de sistema)
-  const loadLegacyCategorias = useCallback(async () => {
-    if (legacyCategorias.length > 0) return
-    try {
-      const rubros = await rpc<LegacyRubro[]>('fn_obtener_arbol_categorias').catch(() => [] as LegacyRubro[])
-      const opciones = rubros
-        .flatMap(r => (r.hijos ?? [])
-          .filter(h => isUserEditableCategory(h))
-          .map(h => ({ id: h.estructura_id, label: `${t(r.nombre_cuenta)} › ${h.nombre_cuenta}` })))
-        .sort((a, b) => a.label.localeCompare(b.label))
-      setLegacyCategorias(opciones)
-    } catch {
-      setLegacyCategorias([])
-    }
-  }, [legacyCategorias.length])
-
-
-  const handleLegacySubmit = async () => {
+const handleLegacySubmit = async () => {
     if (!selectedCard) return
     if (!legacyDetalle.trim()) {
       showToast(t('error_field_required', { field: t('card_legacy_field_detalle') }), 'error')
@@ -403,11 +369,11 @@ export function TarjetasPage() {
         p_monto_cuota: monto,
         p_mes_inicio: mesInicio,
         p_moneda: legacyMoneda || localCurrency || 'ARS',
-        p_estructura_egreso_id: legacyCategoriaId,
+        p_estructura_egreso_id: null,
       })
       showToast(t('card_legacy_created_toast', {
         cantidad,
-        fecha: new Intl.DateTimeFormat(lang === 'es' ? 'es-AR' : 'en-US', { month: 'long', year: 'numeric' }).format(new Date(mesInicio)) }), 'success')
+        fecha: new Intl.DateTimeFormat(lang === 'es' ? 'es-AR' : 'en-US', { month: 'long', year: 'numeric' }).format(new Date(mesInicio + 'T12:00:00')) }), 'success')
       setShowLegacyModal(false)
       await fetchDetalle(selectedCard.tarjeta_id)
       void fetchData()
@@ -933,7 +899,6 @@ export function TarjetasPage() {
           <button className="tarjeta-detalle-back" onClick={() => setSelectedCard(null)} aria-label="Volver"><CategoryIcon name="ArrowLeft" size={18} /></button>
           <span className="tarjeta-detalle-title"><CategoryIcon name="CreditCard" size={18} /> {selectedCard.nombre_tarjeta}</span>
           <div className="tarjeta-detalle-actions">
-            <button className="tarjeta-detalle-action-btn" onClick={openLegacyModal} title={t('card_load_legacy_cuotas_btn')} aria-label={t('card_load_legacy_cuotas_btn')}><CategoryIcon name="Calendar" size={18} /></button>
             <button className="tarjeta-detalle-action-btn" onClick={() => openEdit(selectedCard)} title="Editar"><CategoryIcon name="Pencil" size={18} /></button>
           </div>
         </div>
@@ -1045,7 +1010,12 @@ export function TarjetasPage() {
 
           {/* Cuotas Activas */}
           <div className="tarjeta-detalle-section">
-            <div className="tarjeta-detalle-section-title"><CategoryIcon name="ShoppingBag" size={13} /> Cuotas Pendientes</div>
+            <div className="tarjeta-detalle-section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span><CategoryIcon name="ShoppingBag" size={13} /> Cuotas Pendientes</span>
+              <button className="tarjeta-detalle-action-btn" style={{ width: 'auto', padding: '0 10px', height: 28, fontSize: 'calc(12px * var(--font-scale))' }} onClick={openLegacyModal}>
+                + {t('card_legacy_btn_entry')}
+              </button>
+            </div>
             {loadingDetalle ? (
               <div className="tarjeta-skeleton" style={{ height: 80 }} />
             ) : cuotasActivas.filter(c => !c.pagado).length === 0 ? (
@@ -1061,7 +1031,7 @@ export function TarjetasPage() {
                     <div key={c.cuota_id} className="historial-item" style={{ alignItems: 'center' }}>
                       <div className="historial-item-info">
                         <div className="historial-item-card">
-                          {!c.caja_id ? t('msg_refinanciacion_pago_minimo') : (c.descripcion || c.detalle_movimiento) ? (
+                          {(!c.caja_id && !c.descripcion) ? t('msg_refinanciacion_pago_minimo') : (c.descripcion || c.detalle_movimiento) ? (
                             <>
                               {c.descripcion
                                 ? (String(c.descripcion).startsWith('cat_') ? t(String(c.descripcion)) : c.descripcion)
@@ -1155,18 +1125,6 @@ export function TarjetasPage() {
                   maxLength={80}
                   autoComplete="off"
                 />{/* Categorias usuario solo */}
-                <label className="tarjeta-form-label" htmlFor="legacy-categoria">{t('card_legacy_field_categoria')}</label>
-                <select
-                  id="legacy-categoria"
-                  className="tarjeta-form-input"
-                  value={legacyCategoriaId ?? ''}
-                  onChange={e => setLegacyCategoriaId(e.target.value ? Number(e.target.value) : null)}
-                >
-                  <option value="">{t('card_legacy_no_category')}</option>
-                  {legacyCategorias.map(c => (
-                    <option key={c.id} value={c.id}>{c.label}</option>
-                  ))}
-                </select>
                 <label className="tarjeta-form-label" htmlFor="legacy-cantidad">{t('card_legacy_field_cantidad')} *</label>
                 <input
                   id="legacy-cantidad"
