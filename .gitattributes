@@ -1,8 +1,9 @@
-# Normalize line endings: repository stores LF, checkout follows core.autocrlf.
+# Normalize line endings: repository stores LF; checkout follows the platform.
 * text=auto
-# Explicit CRLF-only artifacts (Windows shell).
-*.bat eol=crlf
-*.cmd eol=crlf
+# Shell scripts stay LF; Windows shell files stay CRLF.
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
 # Binary files: never touch.
 *.png binary
 *.jpg binary

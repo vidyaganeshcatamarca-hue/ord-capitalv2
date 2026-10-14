@@ -725,7 +725,7 @@ export const voice = {
   // Recorder modal (Voice v1)
   title: "Registrar por voz",
   mic_request: "Esperando permiso del micrófono...",
-  record_hint: "Presiona el microfono para detener y enviar.",
+  record_hint: "Presioná el botón para detener y enviar.",
   hold_to_send: "Soltá para enviar",
   record_again: "Grabar de nuevo",
   queued: "En cola para procesar...",
