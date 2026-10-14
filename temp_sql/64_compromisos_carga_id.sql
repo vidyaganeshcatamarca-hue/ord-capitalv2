@@ -61,7 +61,7 @@ BEGIN
         c.monto_cuota,
         COALESCE(c.moneda, 'ARS')::text AS moneda,
         c.numero_cuota AS posicion_cuota,
-        cx.cuotas_totales AS total_cuotas,
+        COALESCE(cx.cuotas_totales, CASE WHEN c.carga_id IS NOT NULL THEN COUNT(*) OVER (PARTITION BY c.carga_id) END)::integer AS total_cuotas,
         c.pagado,
         c.p_caja_id AS caja_id,
         (NOT c.pagado
