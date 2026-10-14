@@ -342,6 +342,15 @@ export function AuthPage() {
 
 
 
+  // "Ir"/"Listo" del teclado (Enter) SOLO confirma el valor ingresado: cierra
+  // el teclado y deja el dato. Un Enter NO guarda ni avanza de pantalla —
+  // eso queda siempre en el CTA visible del slide (decision del usuario).
+  const handleInputEnter = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    e.currentTarget.blur()
+  }
+
   // --- LLAMADA RPC SLIDE 4: crear SOLO la billetera en efectivo ---
   // La cuenta bancaria/virtual no se crea aca: es una pantalla opcional despues
   // (slide 5). Con p_cuenta_nombre NULL la RPC omite la cuenta por completo.
@@ -692,12 +701,9 @@ export function AuthPage() {
 
               <div className="form-group mb-3">
                 <label className="form-label">{t('label_cash_initial_balance')}</label>
-                {/* Form: en Chrome Android la tecla "Ir" del teclado numerico solo
-                    dispara envio dentro de un <form>; sin el, "Ir" queda muerta
-                    y el CTA real queda tapado por el teclado. */}
-                <form
-                  onSubmit={(e) => { e.preventDefault(); if (!loading) handleSaveWallet() }}
-                >
+                {/* "Ir" de Gboard SOLO confirma el valor (cierra el teclado): sin
+                    <form> la tecla queda muerta y hay que cerrarla a mano;
+                    con submit avanzaria de pantalla, que no es lo pedido. */}
                 <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                   {localCurrencySymbol && (
                     <span
@@ -715,7 +721,8 @@ export function AuthPage() {
                   <input
                     type="number"
                     inputMode="decimal"
-                    enterKeyHint="go"
+                    enterKeyHint="done"
+                    onKeyDown={handleInputEnter}
                     className="calc-display font-mono"
                     style={{
                       width: '100%',
@@ -735,17 +742,18 @@ export function AuthPage() {
                   />
                 </div>
                 <p className="text-xs text-muted mt-1">{t('onboarding_cash_balance_hint')}</p>
-                {/* submit via form: "Ir" del teclado y este botón hacen lo mismo */}
-                <button
-                  type="submit"
-                  className="btn btn-primary btn-full btn-lg"
-                  disabled={loading}
-                  style={{ marginTop: '16px' }}
-                >
-                  {loading ? t('btn_saving') : t('onboarding_country_cta')}
-                </button>
-                </form>
               </div>
+
+            <div className="slide-footer flex flex-col gap-2">
+              <button
+                type="button"
+                className="btn btn-primary btn-full btn-lg"
+                onClick={() => handleSaveWallet()}
+                disabled={loading}
+              >
+                {loading ? t('btn_saving') : t('onboarding_country_cta')}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -762,9 +770,7 @@ export function AuthPage() {
                 <p>✅ {t('toast_virtual_wallet_created')}</p>
               </div>
             ) : showVirtualForm ? (
-              <form
-                onSubmit={(e) => { e.preventDefault(); if (!loading) handleCreateVirtualWallet() }}
-              >
+              <div>
                 <div className="form-group mb-3">
                   <label className="form-label">{t('label_virtual_wallet_name')}</label>
                   <input
@@ -772,7 +778,8 @@ export function AuthPage() {
                     placeholder={t('placeholder_wallet_name')}
                     value={walletName}
                     onChange={e => setWalletName(e.target.value)}
-                    enterKeyHint="go"
+                    enterKeyHint="done"
+                    onKeyDown={handleInputEnter}
                     autoFocus
                   />
                 </div>
@@ -812,7 +819,8 @@ export function AuthPage() {
                     <input
                       type="number"
                       inputMode="decimal"
-                      enterKeyHint="go"
+                      enterKeyHint="done"
+                      onKeyDown={handleInputEnter}
                       className="calc-display font-mono"
                       style={{
                         width: '100%',
@@ -833,11 +841,12 @@ export function AuthPage() {
                   </div>
                 </div>
 
-                {/* submit via form: "Ir" del teclado y este botón hacen lo mismo */}
+                {/* confirmar el valor con "Listo/Ir": cierra el teclado, no avanza */}
                 <div className="slide-footer flex flex-col gap-2">
                   <button
-                    type="submit"
+                    type="button"
                     className="btn btn-primary btn-full btn-lg"
+                    onClick={() => handleCreateVirtualWallet()}
                     disabled={loading}
                   >
                     {loading ? t('btn_saving') : t('btn_create_virtual_wallet')}
@@ -850,7 +859,7 @@ export function AuthPage() {
                     {t('btn_cancel')}
                   </button>
                 </div>
-              </form>
+              </div>
             ) : (
               <button
                 type="button"
