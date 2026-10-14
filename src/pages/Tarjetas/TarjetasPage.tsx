@@ -2052,7 +2052,25 @@ export function PagarModal({
                           wallets={availableWallets}
                           selectedWalletId={linea.billetera_id}
                           onSelectWallet={(id) => {
-                            updateLine(idx, { billetera_id: id, target_moneda_cuota: undefined })
+                            // Autollenado: al elegir billetera el importe toma el
+                            // máximo pagable con esa billetera, acotado por lo que
+                            // aún falta de la sección (las otras líneas ya cargadas
+                            // se restan). El user puede editarlo después.
+                            const w = billeteras.find(b => b.billetera_id === id)
+                            const otras = pagarLineas
+                              .filter((_, i) => i !== idx)
+                              .reduce((s, l) => s + (parseFloat(l.monto) || 0), 0)
+                            const faltaSeccion = enModoObjetivo
+                              ? (realNum !== null
+                                ? Math.max(0, Math.min(realNum, cicloBruto) - favorNum - otras - pagoUSD * cotizacion)
+                                : Math.max(0, Math.max(0, Number(objetivoPago) - favorNum) - otras))
+                              : Math.max(0, necesitoARS - otras)
+                            const montoMax = w ? Math.max(0, Math.min(Number(w.saldo_actual), faltaSeccion)) : 0
+                            updateLine(idx, {
+                              billetera_id: id,
+                              target_moneda_cuota: undefined,
+                              monto: montoMax > 0 ? String(Math.floor(montoMax * 100) / 100) : '',
+                            })
                           }}
                           placeholder={t('pay_multi_wallet_placeholder')}
                           formatMonto={(val, moneda) => `${fmtMoneda(Number(val), (moneda ?? 'ARS') as 'ARS'|'USD')} ${moneda}`}
@@ -2171,7 +2189,31 @@ export function PagarModal({
                             onSelectWallet={(id) => {
                               const w = billeteras.find(b => b.billetera_id === id)
                               const target = payInPesos && w?.moneda === 'ARS' ? 'USD' : undefined
-                              updateLineUsd(idx, { billetera_id: id, target_moneda_cuota: target })
+                              // Autollenado espejo de la sección ARS: el faltante
+                              // USD (neto post-favor) convertido a la moneda de
+                              // la línea (ARS cuando se paga en pesos), acotado
+                              // por el saldo de la billetera.
+                              const otrasUsd = pagarLineasUsd
+                                .filter((_, i) => i !== idx)
+                                .reduce((s, l) => {
+                                  const m = parseFloat(l.monto) || 0
+                                  if (m <= 0) return s
+                                  const lw = billeteras.find(b => b.billetera_id === l.billetera_id)
+                                  if (lw?.moneda === 'USD') return s + m
+                                  return s + (cotizacion > 0 ? m / cotizacion : 0)
+                                }, 0)
+                              const faltaUsdSeccion = enModoObjetivo
+                                ? (realNum !== null
+                                  ? 0
+                                  : Math.max(0, Math.max(0, Number(objetivoPagoUSD ?? 0) - favorNumUsd) - otrasUsd))
+                                : Math.max(0, necesitoUSD - otrasUsd)
+                              const faltaSeccion = payInPesos ? faltaUsdSeccion * cotizacion : faltaUsdSeccion
+                              const montoMax = w ? Math.max(0, Math.min(Number(w.saldo_actual), faltaSeccion)) : 0
+                              updateLineUsd(idx, {
+                                billetera_id: id,
+                                target_moneda_cuota: target,
+                                monto: montoMax > 0 ? String(Math.floor(montoMax * 100) / 100) : '',
+                              })
                             }}
                             placeholder={t('pay_multi_wallet_placeholder')}
                             formatMonto={(val, moneda) => `${fmtMoneda(Number(val), (moneda ?? 'ARS') as 'ARS'|'USD')} ${moneda}`}
