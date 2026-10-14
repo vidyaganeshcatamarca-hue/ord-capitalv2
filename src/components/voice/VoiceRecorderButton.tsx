@@ -6,7 +6,7 @@
  */
 import { useCallback, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
-import { Mic } from 'lucide-react'
+import { Mic, Send } from 'lucide-react'
 
 export interface VoiceRecorderButtonProps {
   /** Fired once, when the press starts on an enabled button. */
@@ -16,6 +16,8 @@ export interface VoiceRecorderButtonProps {
   disabled?: boolean
   /** Accessible name of the button (already localized by the caller). */
   label: string
+  /** Glyph inside the circle: mic before recording, send while recording. */
+  icon?: 'mic' | 'send'
 }
 
 export function VoiceRecorderButton({
@@ -23,6 +25,7 @@ export function VoiceRecorderButton({
   onPressEnd,
   disabled = false,
   label,
+  icon = 'mic',
 }: VoiceRecorderButtonProps) {
   const [pressed, setPressed] = useState(false)
   // Guard so release/cancel/leave can never fire `onPressEnd` twice.
@@ -89,7 +92,7 @@ export function VoiceRecorderButton({
       onPointerLeave={handlePointerLeave}
       onContextMenu={(event) => event.preventDefault()}
     >
-      <Mic size={30} aria-hidden="true" />
+      {icon === 'send' ? <Send size={30} aria-hidden="true" /> : <Mic size={30} aria-hidden="true" />}
     </button>
   )
 }

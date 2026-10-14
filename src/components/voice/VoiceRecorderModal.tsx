@@ -474,6 +474,7 @@ function VoiceRecorderSession({
                 {requestingPermission ? t('voice.mic_request') : t('voice.recording')}
               </p>
               <VoiceRecorderButton
+                icon="send"
                 label={t('voice.hold_to_send')}
                 onPressStart={handlePressStart}
                 onPressEnd={handlePressEnd}
