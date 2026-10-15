@@ -4,7 +4,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
 import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/categoryFilters'
-import { isLikelyLucideName } from '@/components/CategoryIcon/CategoryIcon'
+import { CategoryIcon, isLikelyLucideName } from '@/components/CategoryIcon/CategoryIcon'
 import type { CuarentenaItem } from '@/pages/Saneamiento/SaneamientoPage'
 import type { CuarentenaMovementType } from './BandejaCuarentena'
 import './EditarCuarentenaModal.css'
@@ -138,15 +138,15 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
           ...r,
           hijos: (r.hijos ?? []).filter((h: any) => isUserEditableCategory(h)),
         }))
-        const resolveIcono = (raw: unknown, fallback: string): string => {
-          const value = typeof raw === 'string' ? raw.trim() : ''
-          return value !== '' && !isLikelyLucideName(value) ? value : fallback
-        }
+        // Picker rows render through <CategoryIcon>; the RAW icon (lucide
+        // name, emoji or legacy letter) must reach it. The text-only trigger
+        // label degrades lucide names to the folder emoji (icon audit) - see
+        // selectedCategoriaLabel.
         // Hierarchical groups: a parent with children becomes a native
         // <optgroup> (its label, not selectable), children are the options
         // and childless parents stay selectable on their own.
         const grupos: CategoriaGrupoOption[] = editable.map((r) => {
-          const parentIcono = resolveIcono(r.icono, '📁')
+          const parentIcono = String(r.icono ?? '').trim() || '📁'
           return {
             estructura_id: r.estructura_id,
             // Seed categories store an i18n key as the name (same as
@@ -157,7 +157,7 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
             hijos: (r.hijos ?? []).map((h: any) => ({
               estructura_id: h.estructura_id,
               nombre: t(h.nombre_cuenta),
-              icono: resolveIcono(h.icono, parentIcono),
+              icono: String(h.icono ?? '').trim() || parentIcono,
             })),
           }
         })
@@ -354,11 +354,15 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
 
   // Trigger label: the resolved selection, or the field placeholder.
   const selectedCategoriaLabel = (): string => {
+    // Text context: lucide names degrade to the folder emoji (icon audit);
+    // emojis and legacy letters print as they are.
+    const iconoTextoLabel = (raw: string): string =>
+      isLikelyLucideName(raw) ? '📁' : raw.trim()
     const idNum = Number(estructuraId)
     for (const g of categorias) {
-      if (g.estructura_id === idNum) return `${g.icono} ${g.nombre_cuenta}`
+      if (g.estructura_id === idNum) return `${iconoTextoLabel(g.icono)} ${g.nombre_cuenta}`
       const hijo = (g.hijos ?? []).find((h) => h.estructura_id === idNum)
-      if (hijo) return `${hijo.icono} ${hijo.nombre}`
+      if (hijo) return `${iconoTextoLabel(hijo.icono)} ${hijo.nombre}`
     }
     return t('saneamiento_seleccionar_categoria')
   }
@@ -581,7 +585,7 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
                           // A parent with children is a heading, never a
                           // selectable leaf: expenses point at a real subaccount.
                           <div className="ec-rubro-heading">
-                            <span className="ec-rubro-icon">{g.icono}</span>
+                            <span className="ec-rubro-icon"><CategoryIcon name={g.icono} size={16} /></span>
                             <span className="ec-rubro-name">{g.nombre_cuenta}</span>
                           </div>
                         ) : (
@@ -590,7 +594,7 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
                             className={`ec-opcion${Number(estructuraId) === g.estructura_id ? ' is-selected' : ''}`}
                             onClick={() => { setEstructuraId(String(g.estructura_id)); setPickerOpen(false) }}
                           >
-                            <span className="ec-rubro-icon">{g.icono}</span>
+                            <span className="ec-rubro-icon"><CategoryIcon name={g.icono} size={16} /></span>
                             <span className="ec-rubro-name">{g.nombre_cuenta}</span>
                           </button>
                         )}
@@ -614,7 +618,7 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
                               className={`ec-opcion ec-opcion-hijo${Number(estructuraId) === h.estructura_id ? ' is-selected' : ''}`}
                               onClick={() => { setEstructuraId(String(h.estructura_id)); setPickerOpen(false) }}
                             >
-                              <span className="ec-rubro-icon">{h.icono}</span>
+                              <span className="ec-rubro-icon"><CategoryIcon name={h.icono} size={16} /></span>
                               <span className="ec-rubro-name">{h.nombre}</span>
                             </button>
                           ))}
