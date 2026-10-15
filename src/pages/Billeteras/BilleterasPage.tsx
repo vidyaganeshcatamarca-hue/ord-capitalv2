@@ -327,7 +327,7 @@ export function BilleterasPage() {
                       </div>
                       <div className="flex gap-2">
                         {b.alertas_keys.includes('unreconciled') && (
-                          <button className="btn btn-xs btn-primary text-xs" onClick={() => openConciliar(b)}>
+                          <button className="btn btn-xs btn-danger text-xs" onClick={() => openConciliar(b)}>
                             <CategoryIcon name="Scale" size={12} /> {t('wallets.btn_conciliar')}
                           </button>
                         )}

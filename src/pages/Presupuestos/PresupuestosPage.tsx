@@ -25,6 +25,7 @@ interface SobreDetalle {
   arrastre_mes_anterior: number
   monto_asignado_anterior: number
   monto_gastado_anterior: number
+  gasto_promedio_6m: number
   estado_sobre: string
   metodo_sobregasto: string | null
   isVirtualDisponible?: boolean
@@ -386,10 +387,14 @@ export function PresupuestosPage() {
     await ejecutarAsignacion(nuevoLimite)
   }
 
-  const handleAsignarTodo = async () => {
-    if (!sobreSeleccionado || saldoAsignar === null) return
-    const nuevoLimite = Number(sobreSeleccionado.monto_asignado ?? 0) + saldoAsignar;
-    await ejecutarAsignacion(nuevoLimite)
+  // Smart assignment options: set the budget to a reference amount (previous
+  // month assigned / spent, or 6-month average), rounded to whole units.
+  const asignarMontoReferencia = async (monto: number) => {
+    if (isNaN(monto) || monto <= 0) {
+      showToast(t('error_invalid_amount'), 'error')
+      return
+    }
+    await ejecutarAsignacion(Math.round(monto))
   }
 
   const handleMontoManualConfirmar = async () => {
@@ -432,6 +437,7 @@ export function PresupuestosPage() {
         arrastre_mes_anterior: 0,
         monto_asignado_anterior: 0,
         monto_gastado_anterior: 0,
+        gasto_promedio_6m: 0,
         estado_sobre: '',
         metodo_sobregasto: null,
         isVirtualDisponible: true
@@ -862,11 +868,27 @@ export function PresupuestosPage() {
                   </div>
                 </div>
 
-                <div className="asignar-opcion" onClick={handleAsignarTodo}>
-                  <span className="asignar-opcion-icono">💸</span>
+                <div className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.monto_asignado_anterior ?? 0))}>
+                  <span className="asignar-opcion-icono">🔁</span>
                   <div className="asignar-opcion-texto">
-                    <h4>{t('budget_opcion_asignar_todo_title')}</h4>
-                    <p>{t('budget_opcion_asignar_todo_desc', { monto: formatMonto(saldoAsignar ?? 0) })}</p>
+                    <h4>{t('budget_option_same_prev_month_title')}</h4>
+                    <p>{t('budget_option_same_prev_month_desc', { monto: formatMonto(Number(sobreSeleccionado.monto_asignado_anterior ?? 0)) })}</p>
+                  </div>
+                </div>
+
+                <div className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.monto_gastado_anterior ?? 0))}>
+                  <span className="asignar-opcion-icono">🧾</span>
+                  <div className="asignar-opcion-texto">
+                    <h4>{t('budget_option_spent_prev_month_title')}</h4>
+                    <p>{t('budget_option_spent_prev_month_desc', { monto: formatMonto(Number(sobreSeleccionado.monto_gastado_anterior ?? 0)) })}</p>
+                  </div>
+                </div>
+
+                <div className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.gasto_promedio_6m ?? 0))}>
+                  <span className="asignar-opcion-icono">📊</span>
+                  <div className="asignar-opcion-texto">
+                    <h4>{t('budget_option_avg_six_months_title')}</h4>
+                    <p>{t('budget_option_avg_six_months_desc', { monto: formatMonto(Number(sobreSeleccionado.gasto_promedio_6m ?? 0)) })}</p>
                   </div>
                 </div>
 
@@ -1377,6 +1399,12 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto, fmt }: FilaSobre
             <span className="sobre-stat">
               <span className="sobre-stat-label">🧾 {t('budget_prev_month_spent')}: </span>
               <span className="sobre-stat-val">{fmt(Number(sobre.monto_gastado_anterior ?? 0))}</span>
+            </span>
+          </div>
+          <div className="sobre-stats">
+            <span className="sobre-stat">
+              <span className="sobre-stat-label">📈 {t('budget_prev_month_avg')}: </span>
+              <span className="sobre-stat-val">{fmt(Number(sobre.gasto_promedio_6m ?? 0))}</span>
             </span>
           </div>
         </>

@@ -865,6 +865,20 @@
   flex: 1.2;
 }
 
+/* PC: the amount input box was too narrow (fixed max-width) and long amounts
+   scrolled out of view while typing. Stretch the box across the first column
+   next to the mic button; mobile keeps the centered fixed-size look. */
+.pc-unified-form .importe-mic-row .monto-input-container {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+}
+.pc-unified-form .monto-input-box-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+}
+
 @media (min-width: 768px) {
   .pc-form-col {
     gap: 10px;

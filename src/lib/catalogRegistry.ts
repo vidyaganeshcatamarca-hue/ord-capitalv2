@@ -73,6 +73,7 @@ const SYSTEM_CATEGORY_NAMES: readonly string[] = [
   'cat_tech_electro',
   // Created on demand by RPCs.
   'cat_investments',
+  'cat_tithe',
   // Legacy seed (rows already stored for users created before the seed was
   // consolidated into the names above).
   'cat_alimentos_hogar',
