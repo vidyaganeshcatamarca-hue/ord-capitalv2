@@ -4,7 +4,7 @@ import { t } from '@/locales/i18n'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import './CalculatorKeypad.css'
 
-import { safeEval, withUserDecimalSeparator } from '@/utils/math'
+import { safeEval, formatExpressionForDisplay } from '@/utils/math'
 
 // Set para O(1) lookup en lugar de [].includes() que itera el array en cada keystroke
 const OP_CHARS = new Set(['+', '-', '*', '/'])
@@ -132,7 +132,7 @@ export function CalculatorKeypad({ value, onChange, onClose, decimalSeparator }:
 
   return (
     <div className="calculator-keypad-container">
-      <div className="calc-display-expr">{withUserDecimalSeparator(expr, decSep) || '0'}</div>
+      <div className="calc-display-expr">{formatExpressionForDisplay(expr, decSep, prefs.separador_miles) || '0'}</div>
       <div className="calc-buttons-grid">
         <button type="button" className="calc-btn clear" onClick={() => handlePress('C')}>C</button>
         {/* Tecla de borrar con el icono usual del móvil (lucide Delete: ⌫ con ✕);

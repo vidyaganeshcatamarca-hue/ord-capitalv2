@@ -10,7 +10,7 @@ import { useHogar } from '@/contexts/HogarContext'
 import { useModoApp } from '@/contexts/ModoAppContext'
 import { rpc } from '@/lib/supabase'
 import { CalculatorKeypad } from '@/components/CalculatorKeypad/CalculatorKeypad'
-import { safeEval } from '@/utils/math'
+import { safeEval, formatExpressionForDisplay } from '@/utils/math'
 import { t, parseError } from '@/locales/i18n'
 import { SubcuentaModal } from '@/components/SubcuentaModal/SubcuentaModal'
 import { InitialBalanceModal } from '@/components/InitialBalanceModal/InitialBalanceModal'
@@ -1701,7 +1701,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           type="text"
                           className="monto-input-box-field"
                           placeholder="0"
-                          value={monto === '0' ? '' : monto}
+                          value={monto === '0' ? '' : formatExpressionForDisplay(monto, prefs.separador_decimal, prefs.separador_miles)}
                           readOnly={true}
                           style={{ cursor: 'pointer' }}
                         />
