@@ -13,7 +13,7 @@
 DROP FUNCTION IF EXISTS public.fn_reporte_mapa_tarjetas();
 
 CREATE OR REPLACE FUNCTION public.fn_reporte_mapa_tarjetas()
- RETURNS TABLE(tarjeta_id bigint, nombre_tarjeta text, limite_un_pago_total numeric, un_pago_disponible numeric, limite_cuotas_total numeric, cuotas_disponible numeric, estado_config text, dia_cierre integer, dia_vencimiento integer, banco text, color text, recargo_dolar_pct numeric, cotizacion_usd numeric, un_pago_consumido_ars numeric, un_pago_consumido_usd numeric, cuotas_futuras_consumido_ars numeric, cuotas_futuras_consumido_usd numeric, moneda_iso character)
+ RETURNS TABLE(tarjeta_id bigint, nombre_tarjeta text, limite_un_pago_total numeric, un_pago_disponible numeric, limite_cuotas_total numeric, cuotas_disponible numeric, estado_config text, dia_cierre integer, dia_vencimiento integer, banco text, color text, recargo_dolar_pct numeric, cotizacion_usd numeric, un_pago_consumido_ars numeric, un_pago_consumido_usd numeric, cuotas_futuras_consumido_ars numeric, cuotas_futuras_consumido_usd numeric, moneda_iso character(3))
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
@@ -127,7 +127,6 @@ CREATE OR REPLACE FUNCTION public.fn_cargar_movimientos_voz(p_job_id uuid, p_mov
 AS $function$
 
 DECLARE
-    v_moneda_local text;
     v_user_id bigint;
     v_movement jsonb;
     v_index int;
@@ -166,11 +165,6 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_invalid_request", "params": {"field": "p_movements"}}';
     END IF;
 
-    -- Moneda local de la region confirmada (mismo patron que fn_reporte_mapa_tarjetas):
-    -- antes quedaba NULL y el filtro de moneda era inerte, dejando pasar divisas
-    -- que la CHECK de la tabla rechazaba y tirando los datos de la fila.
-    SELECT COALESCE((SELECT moneda_default FROM public.p_config_region WHERE user_id = v_user_id), 'ARS') INTO v_moneda_local;
-
     v_index := 0;
     FOR v_movement IN SELECT * FROM jsonb_array_elements(p_movements)
     LOOP
@@ -203,11 +197,12 @@ BEGIN
                 v_installments := NULL;
             END IF;
             v_currency := UPPER(TRIM(COALESCE(v_currency, '')));
-            IF v_currency = '' OR v_currency NOT IN (v_moneda_local, 'USD') THEN
+            IF v_currency = '' THEN
                 v_currency := NULL;
             END IF;
-            -- Solo divisas reales del app: una moneda sin cotizacion cargada
-            -- se pierde SIN tumba la fila (queda la moneda de la billetera).
+            -- Solo divisas reales del app: una moneda cargada en p_divisas se
+            -- conserva aunque no sea la local ni USD; una desconocida se pierde
+            -- SIN tumba la fila (queda la moneda de la billetera).
             IF v_currency IS NOT NULL AND NOT EXISTS (SELECT 1 FROM p_divisas WHERE nombre = v_currency) THEN
                 v_currency := NULL;
             END IF;
