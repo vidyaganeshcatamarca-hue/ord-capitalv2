@@ -150,10 +150,19 @@ function isUnauthorizedError(error: unknown): boolean {
 export function AuthPage() {
   const navigate = useNavigate()
   const { session, setOnboardingCompleto, signOut } = useAuth()
-  const { showToast } = useToast()
+  const { showToast, setToastPlacement } = useToast()
 
   // Onboarding Slides (1 a 6: bienvenida, auth, pais, billetera, dia ancla, modo)
   const [slide, setSlide] = useState(1)
+
+  // Toasts de creador de billeteras / cierre centrados: el toast bottom
+  // tapaba los botones Cancelar/Continuar y habia que esperar 4.5s
+  // (complaint del dueno 2026-10-15). Solo onboarding; el resto de la app
+  // sigue con el toast bottom.
+  useEffect(() => {
+    setToastPlacement(slide >= 3 && slide <= 6 ? 'center' : 'bottom')
+    return () => setToastPlacement('bottom')
+  }, [slide, setToastPlacement])
 
   // Slide 2: Auth State
   const [authMode, setAuthMode] = useState<Mode>('login')
