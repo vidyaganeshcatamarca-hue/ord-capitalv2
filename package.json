@@ -37,7 +37,8 @@
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-router-dom": "^7.1.0",
-    "shepherd.js": "^15.2.3"
+    "shepherd.js": "^15.2.3",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@capacitor/cli": "^7.0.0",

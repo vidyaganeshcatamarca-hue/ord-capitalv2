@@ -1,0 +1,20 @@
+/* ExportPanel — export tab (spec §5). Layout only: the range picker, the pill
+   group and the hint reuse the shared .config-ie-* styles already loaded by
+   ImportarExportarPage.css. Tokens only, no hardcoded colors. */
+
+.config-ie-export {
+  display: grid;
+  gap: var(--space-4);
+  margin-top: var(--space-2);
+}
+
+.config-ie-export .config-section-save {
+  justify-self: start;
+}
+
+@media (max-width: 480px) {
+  .config-ie-export .config-section-save {
+    justify-self: stretch;
+    width: 100%;
+  }
+}

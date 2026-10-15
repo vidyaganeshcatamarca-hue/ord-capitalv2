@@ -21,6 +21,9 @@ tests/*
 !tests/category-translation-sort.test.js
 !tests/voice_contract.test.js
 !tests/voice_errors.test.js
+!tests/import_parser.test.js
+!tests/import_validate.test.js
+!tests/import_execute.test.js
 !tests/voice_codec.test.js
 !tests/voice_storage.test.js
 !tests/i18n/

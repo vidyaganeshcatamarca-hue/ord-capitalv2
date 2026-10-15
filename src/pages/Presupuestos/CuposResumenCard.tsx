@@ -116,9 +116,11 @@ export function CuposResumenCard({ cupos }: Props) {
   // Bigger configured share first; Array.sort is stable, so RPC order breaks ties.
   const rows = [...visibles].sort((a, b) => b.config - a.config)
 
+  // Zero-config cupos are omitted from the title (e.g. 55-30-15-0 → 55-30-15).
   const pcts = PCTS_ORDER.map(
     name => (Number(cupos.find(c => c.cupo_nombre === name)?.porcentaje_configurado) || 0).toFixed(0),
-  ).join('-')
+  ).filter(pct => pct !== '0')
+    .join('-')
 
   const worst = peorEstado(cupos)
 
