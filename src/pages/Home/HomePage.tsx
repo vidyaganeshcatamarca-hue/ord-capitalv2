@@ -923,7 +923,7 @@ export function HomePage() {
   }, [billeteras])
 
   // Formateo de montos respetando decimales del usuario (useNumberFormat)
-  const { formatMonto: formatMontoBase, currencySymbol, locale } = useNumberFormat()
+  const { formatMonto: formatMontoBase, currencySymbol, locale, localCurrency } = useNumberFormat()
   const formatAmount = useCallback((monto: number, moneda?: string, decimales?: number) => {
     if (hideAmounts) return '***'
     return formatMontoBase(monto, moneda, decimales)
@@ -1638,11 +1638,16 @@ export function HomePage() {
                 <div className="timeline-feed">
                   {filteredMovimientos.map((m) => {
                     const isCardPayment = m.tipo === 'pago_tarjeta'
-                    // Currency of the amount: USD rows carry es_usd (the
-                    // movement's own flag, reliable for card charges approved
-                    // from quarantine); otherwise infer from the wallet map. Card
-                    // names are not wallets, so map misses fall back to ARS.
-                    const moneda = (isCardPayment && (m as any).moneda === 'USD') || ((m as any).es_usd === true) ? 'USD' : (walletCurrencyMap[m.nombre_billetera] ?? 'ARS')
+                    // Currency of the amount: the RPC exposes the movement's own
+                    // p_caja currency (authoritative); es_usd covers RPCs predating
+                    // that column, the wallet map catches name-only fallbacks and
+                    // the last resort is the user's LOCAL currency - never a
+                    // hardcoded 'ARS' (it rendered as a bare code for EUR/ROn users).
+                    const moneda = String((m as any).moneda ?? '').trim()
+                      || ((m as any).es_usd === true ? 'USD' : undefined)
+                      || walletCurrencyMap[m.nombre_billetera]
+                      || localCurrency
+                      || 'ARS'
                     const esEgreso = m.monto < 0
                     // Fuente de verdad: el color del rubro padre que viene directo de la RPC.
                     // Fallback heurístico solo si la RPC no lo expone (movimiento sin estructura_egreso_id).
