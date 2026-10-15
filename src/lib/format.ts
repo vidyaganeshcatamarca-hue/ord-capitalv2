@@ -1,6 +1,7 @@
 // lib/format.ts
 // ============================================
 // Shared formatting helpers used by ~22 files.
+import { parseCalendarDate } from './parseCalendarDate.ts'
 //
 // Everything here used to be nailed to Argentina: the locale was `'es-AR'`, the
 // decimals were always 0 (so a euro amount lost its cents) and the default currency
@@ -77,9 +78,23 @@ export function formatCurrency(
   }
 }
 
+/**
+ * Dual-path para display: fecha calendario pura (YYYY-MM-DD) se parsea sin
+ * timezone; cualquier ISO con hora es un instante y conserva el parseo UTC
+ * historico (ej: app_reportes.creado_el, timestamptz).
+ */
+function parseDisplayDate(dateStr: string): Date {
+  return /^\d{4}-\d{2}-\d{2}$/.test(dateStr.trim())
+    ? parseCalendarDate(dateStr)
+    : new Date(dateStr)
+}
+
 export function formatDate(dateStr: string | undefined | null): string {
   if (!dateStr) return '-'
-  const d = new Date(dateStr)
+  // YYYY-MM-DD es fecha calendario: parsearla con new Date() la manda a
+  // UTC medianoche y en UTC-3 muestra el dia anterior (bug de cuarentena).
+  // Los ISO con hora son instantes y conservan el parseo UTC historico.
+  const d = parseDisplayDate(dateStr)
   if (Number.isNaN(d.getTime())) return String(dateStr)
   try {
     return new Intl.DateTimeFormat(context.locale, {
@@ -94,7 +109,7 @@ export function formatDate(dateStr: string | undefined | null): string {
 
 export function formatDateShort(dateStr: string | undefined | null): string {
   if (!dateStr) return '-'
-  const d = new Date(dateStr)
+  const d = parseDisplayDate(dateStr)
   if (Number.isNaN(d.getTime())) return String(dateStr)
   try {
     return new Intl.DateTimeFormat(context.locale, { day: 'numeric', month: 'short' }).format(d)

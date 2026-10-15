@@ -41,6 +41,8 @@ export interface VoiceCatalogWalletRow {
 export interface VoiceCatalogCardRow {
   tarjeta_id: number | string;
   nombre_tarjeta: string;
+  /** Real single currency of the card (added in deploy 73); never inferred. */
+  moneda_iso?: string | null;
   activa?: boolean | null;
 }
 
@@ -58,9 +60,6 @@ export interface VoiceCatalogData {
   wallets: VoiceCatalogWalletRow[];
   cards: VoiceCatalogCardRow[];
 }
-
-/** Currencies the cards accept. The app exposes a manual USD toggle for every card. */
-const CARD_SUPPORTED_CURRENCIES: string[] = ['ARS', 'USD'];
 
 /** Fallback currency when the user region cannot be resolved. */
 const DEFAULT_LOCAL_CURRENCY = 'ARS';
@@ -147,13 +146,17 @@ export function buildVoiceContext(input: BuildVoiceContextInput): VoiceContext {
       currency: wallet.moneda,
     }));
 
-  // Cards: only active ones.
+  // Cards: only active ones, each with its REAL configured currency
+  // (p_tarjetas_credito.moneda_iso, now exposed by fn_reporte_mapa_tarjetas).
+  // Never inferred: a card without moneda_iso sends an empty list.
   const cards = catalog.cards
     .filter((card) => card.activa !== false)
     .map((card) => ({
       id: String(card.tarjeta_id),
       name: card.nombre_tarjeta,
-      supported_currencies: [...CARD_SUPPORTED_CURRENCIES],
+      supported_currencies: card.moneda_iso
+        ? [String(card.moneda_iso).trim().toUpperCase()]
+        : [],
     }));
 
   return {
