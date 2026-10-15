@@ -25,3 +25,21 @@ test('unknown/empty separator config falls back to canonical dot', () => {
   assert.equal(withUserDecimalSeparator('1.5', ''), '1.5')
   assert.equal(withUserDecimalSeparator('1.5', '/'), '1.5')
 })
+test('display: miles+decimal formateados segun la config del usuario', async () => {
+  const { formatExpressionForDisplay } = await import('../src/utils/math.ts')
+  // UK (miles ',', decimal '.')
+  assert.equal(formatExpressionForDisplay('10000', '.', ','), '10,000')
+  assert.equal(formatExpressionForDisplay('1234.56', '.', ','), '1,234.56')
+  // es-AR (miles '.', decimal ',')
+  assert.equal(formatExpressionForDisplay('1234.56', ',', '.'), '1.234,56')
+  assert.equal(formatExpressionForDisplay('1000000', ',', '.'), '1.000.000')
+  // expresiones con operadores
+  assert.equal(formatExpressionForDisplay('10000*2', ',', '.'), '10.000*2')
+  assert.equal(formatExpressionForDisplay('3*2.5+1.1', ',', '.'), '3*2,5+1,1')
+  // mientras tipea: decimal pendiente y punto inicial
+  assert.equal(formatExpressionForDisplay('12.', ',', '.'), '12,')
+  assert.equal(formatExpressionForDisplay('.5', ',', '.'), ',5')
+  // guard: separadores iguales -> canonicos
+  assert.equal(formatExpressionForDisplay('1000', '.', '.'), '1000')
+  assert.equal(formatExpressionForDisplay('', ',', '.'), '')
+})
