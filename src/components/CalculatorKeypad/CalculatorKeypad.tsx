@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Delete } from 'lucide-react'
 import { t } from '@/locales/i18n'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
 import './CalculatorKeypad.css'
 
 import { safeEval, withUserDecimalSeparator } from '@/utils/math'
@@ -20,10 +21,14 @@ interface CalculatorKeypadProps {
   decimalSeparator?: string
 }
 
-export function CalculatorKeypad({ value, onChange, onClose, decimalSeparator = '.' }: CalculatorKeypadProps) {
+export function CalculatorKeypad({ value, onChange, onClose, decimalSeparator }: CalculatorKeypadProps) {
   const [expr, setExpr] = useState<string>(value === '0' ? '' : value)
-  // Coherencia regional: la tecla decimal muestra 'sep'; todo lo interno queda '.',
-  const decSep = decimalSeparator === ',' ? ',' : '.'
+  // Coherencia regional: la calculadora se autoabastece de la configuracion
+  // (useNumberFormat) y no depende de que el padre pase el prop — asi un
+  // HMR parcial (padre viejo, hijo nuevo) no degrada la tecla a '.', y los
+  // usos futuros no necesitan wiring. decimalSeparator queda como override.
+  const { prefs } = useNumberFormat()
+  const decSep = (decimalSeparator ?? prefs.separador_decimal) === ',' ? ',' : '.'
 
   const evaluateExpression = (expression: string): string => {
     try {
