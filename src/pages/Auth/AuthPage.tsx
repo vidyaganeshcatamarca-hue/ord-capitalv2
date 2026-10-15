@@ -1017,15 +1017,21 @@ export function AuthPage() {
               </button>
             )}
 
-            <div className="slide-footer flex flex-col gap-2">
-              <button
-                className="btn btn-primary btn-full btn-lg"
-                onClick={() => goToSlide(6)}
-                disabled={loading}
-              >
-                {t('onboarding_country_cta')}
-              </button>
-            </div>
+            {/* Footer común solo cuando el form no está abierto: mientras
+                se crea la billetera, el pie del form (Cancelar + Continuar)
+                es la única fila de acción — duplicar el CTA en el pie del
+                slide mostraba dos botones idénticos con acciones distintas. */}
+            {!showVirtualForm && (
+              <div className="slide-footer flex flex-col gap-2">
+                <button
+                  className="btn btn-primary btn-full btn-lg"
+                  onClick={() => goToSlide(6)}
+                  disabled={loading}
+                >
+                  {t('onboarding_country_cta')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
