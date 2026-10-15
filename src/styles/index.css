@@ -411,6 +411,11 @@ input::placeholder, textarea::placeholder {
   pointer-events: none;
 }
 
+.toast-container.toast-center {
+  top: 45%;
+  bottom: auto;
+}
+
 .toast {
   display: flex;
   align-items: center;

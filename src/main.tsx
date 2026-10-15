@@ -89,6 +89,21 @@ function isMobileDevice(): boolean {
   return isMobileUA || isSmallScreen
 }
 
+function isPhoneBrowser(): boolean {
+  if (typeof window === 'undefined') return false
+  const ua = navigator.userAgent || ''
+  const isMobileUA = /Android|iPhone|iPad|iPod|Mobile/i.test(ua)
+  // Puntero tactil PRIMARIO: touch laptops de escritorio tienen puntero fino
+  // como primario y quedan excluidas del gate.
+  let coarse = false
+  try {
+    coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false
+  } catch {
+    coarse = false
+  }
+  return isMobileUA || coarse
+}
+
 function injectOrientationLockOverlay(): void {
   if (document.getElementById('orientation-lock-overlay')) return
   const title = t('gate_orientation_title')
@@ -108,10 +123,12 @@ function injectOrientationLockOverlay(): void {
 }
 
 async function tryLockPortrait(): Promise<void> {
-  // Gate de orientacion solo en nativo (Capacitor). En web — incl. PWA de
-  // escritorio y ventanas chicas — la heuristica por tamano daba falsos
-  // positivos y mostraba el overlay donde no correspondia.
-  if (!isNativePlatform()) return
+  // Gate de orientacion en NATIVO y en telefonos con PWA WEB: en un telefono
+  // la pantalla girada tapa la app con el overlay; en PC de escritorio NUNCA
+  // (aunque la ventana sea baja: eso era el falso positivo que c5a74f4 corregio).
+  // La ventana baja de PC queda excluida porque isPhoneBrowser exige UA movil o
+  // puntero tactil primario, no el mero tamano de ventana.
+  if (!isNativePlatform() && !isPhoneBrowser()) return
   if (!isMobileDevice()) return
   // Intentar lock nativo (Capacitor, navegadores HTTPS modernos)
   const orientation = (screen as any).orientation

@@ -2,6 +2,7 @@ import { createContext, useContext, useState, ReactNode, useCallback } from 'rea
 import { CircleCheck, CircleX, TriangleAlert, Info } from 'lucide-react'
 
 type ToastType = 'success' | 'error' | 'warning' | 'info'
+type ToastPlacement = 'bottom' | 'center'
 
 interface Toast {
   id: string
@@ -11,6 +12,9 @@ interface Toast {
 
 interface ToastContextType {
   showToast: (message: string, type?: ToastType) => void
+  /** Viewport position: 'center' while onboarding (a bottom toast covered the
+      CTA buttons and stalled the flow); 'bottom' everywhere else. */
+  setToastPlacement: (placement: ToastPlacement) => void
 }
 
 const ToastContext = createContext<ToastContextType | null>(null)
@@ -24,6 +28,11 @@ const ICONS: Record<ToastType, React.ComponentType<{ size?: number; color?: stri
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([])
+  const [placement, setPlacement] = useState<ToastPlacement>('bottom')
+
+  const setToastPlacement = useCallback((next: ToastPlacement) => {
+    setPlacement(next)
+  }, [])
 
   const showToast = useCallback((message: string, type: ToastType = 'success') => {
     const id = crypto.randomUUID()
@@ -40,9 +49,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <ToastContext.Provider value={{ showToast }}>
+    <ToastContext.Provider value={{ showToast, setToastPlacement }}>
       {children}
-      <div className="toast-container">
+      <div className={`toast-container${placement === 'center' ? ' toast-center' : ''}`}>
         {toasts.map(toast => {
           const Icon = ICONS[toast.type]
           return (
