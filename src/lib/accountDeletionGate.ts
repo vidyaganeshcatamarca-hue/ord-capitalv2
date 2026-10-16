@@ -4,10 +4,12 @@
 // Pure on purpose: no React, no backend/client calls, no DOM, no clock reads.
 // The caller injects `now`, so the gate is deterministic and unit-testable.
 //
-// S15 (owner decision, verbatim): "Los primeros 10 días el usuario puede hacer
+// S15 (owner decisions, verbatim): "Los primeros 10 días el usuario puede hacer
 // sin pin. Pasados los 10 días, el usuario para borrar los datos tiene que
 // poner el pin que ya tiene que haber configurado en el modo avanzado" and
 // "ambas bajo la misma regla" — delete-data and delete-account share this rule.
+// Owner revision (Log L10): "quiero llevar de 10 días a 15 días la opción del
+// borrado de los datos y de la cuenta" — the grace window is now 15.
 //
 // The PIN feature is still a placeholder (S6, backend work gated behind T5), so
 // no user has a PIN yet: callers pass PIN_CONFIGURED_FALLBACK and the gate locks
@@ -15,8 +17,8 @@
 //
 // Deletion is dangerous, so every unknown is fail-closed (locked).
 
-/** S15 — days of use during which deletion needs no PIN. */
-export const DAY_GRACE_WINDOW = 10
+/** S15 (owner revision L10) — days of use during which deletion needs no PIN. */
+export const DAY_GRACE_WINDOW = 15
 
 /**
  * S6/T5 — the PIN feature does not exist yet, therefore no user has a PIN
