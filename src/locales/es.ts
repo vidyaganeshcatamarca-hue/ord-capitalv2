@@ -2494,4 +2494,22 @@ export const tour = {
   // Ajustes tour (placeholder  — T10)
   'ajustes.title': 'Conocé los ajustes',
   'ajustes.description': 'Te mostramos cómo personalizar tu experiencia.',
+
+  // App-lock (feature pin-huella): pantalla de bloqueo y definición de PIN.
+  app_lock_title: "App protegida",
+  app_lock_subtitle: "Está bloqueada con tu PIN o huella.",
+  app_lock_use_biometria: "Desbloquear con la huella",
+  app_lock_use_pin: "Usar PIN",
+  app_lock_wrong_pin: "PIN no válido.",
+  app_lock_backoff: "Esperá {segundos} segundos antes de insistir.",
+  app_lock_biometria_error: "La huella no se pudo validar. Probá de nuevo o usá el PIN.",
+  app_lock_cooldown_message: "Demasiados intentos inválidos. El acceso se podrá restaurar:",
+  app_lock_reset_title: "Restaurar el acceso",
+  app_lock_reset_subtitle: "Define un nuevo PIN de 4 dígitos para volver a entrar.",
+  app_lock_reset_confirm_subtitle: "Confirmá el nuevo PIN.",
+  app_lock_pin_mismatch: "Los PIN no coinciden. Empezá de nuevo.",
+  app_lock_error_generico: "No se pudo completar. Probá de nuevo.",
+  app_lock_pin_entry: "Tu PIN de 4 dígitos",
+  app_lock_keypad: "Teclado de PIN",
+  app_lock_erase: "Borrar",
 };

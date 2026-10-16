@@ -6,6 +6,8 @@ import { ToastProvider } from '@/contexts/ToastContext'
 import { ModoAppProvider, useModoApp } from '@/contexts/ModoAppContext'
 import { LanguageProvider } from '@/locales/LanguageProvider'
 import { SessionTrackerProvider } from '@/providers/SessionTrackerProvider'
+import { AppLockProvider } from '@/contexts/AppLockContext'
+import { AppLockGate } from '@/components/AppLockGate/AppLockGate'
 import { t } from '@/locales/i18n'
 import { useToast } from '@/contexts/ToastContext'
 import { onPendingReporte, type ReporteOutcome } from '@/lib/reportesPending'
@@ -267,6 +269,7 @@ export default function App() {
         <AppConsentGate>
         <LegalUpdateGate>
         <AuthProvider>
+          <AppLockProvider>
           <SessionTrackerProvider>
             <HogarProvider>
             <ToastProvider>
@@ -280,6 +283,7 @@ export default function App() {
                * remounting the session or the app-mode bootstrap would only
                * cause a spinner flash and a redundant refetch. */}
               <LanguageProvider>
+              <AppLockGate />
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
                   {/* Rutas públicas */}
@@ -298,6 +302,7 @@ export default function App() {
             </ToastProvider>
             </HogarProvider>
           </SessionTrackerProvider>
+          </AppLockProvider>
         </AuthProvider>
         </LegalUpdateGate>
         </AppConsentGate>
