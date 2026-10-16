@@ -4,6 +4,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { useBilleteras } from '@/hooks/useBilleteras'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { useMonedasExtra } from '@/hooks/useMonedasExtra'
+import { buildWalletCurrencyOptions } from '@/lib/monedasExtra'
 import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { Billetera } from '@/types/Billetera'
 import { rpc } from '@/lib/supabase'
@@ -101,17 +103,19 @@ export function BilleterasPage() {
     [locale]
   )
 
-  // The backend accepts only the user's local currency or USD. The old
-  // hardcoded ARS list is what produced `error_currency_not_local` for users
-  // living outside Argentina, so the picker is derived from the region.
+  // The wallet picker is the user's currency SET: local + configured extras
+  // (fn_obtener_monedas_extra, deployed in T1). The old hardcoded [local, 'USD']
+  // pair is what froze the second currency at dollars; the backend now enforces
+  // the set (fn_crear_billetera* validates local + effective extras), so this
+  // list and the server never disagree. No extras yet -> local only.
+  const { extras } = useMonedasExtra()
   const currencyOptions = useMemo(() => {
     if (!localCurrency) return [] as { code: string; label: string }[]
-    const codes = localCurrency === 'USD' ? ['USD'] : [localCurrency, 'USD']
-    return codes.map((code) => ({
+    return buildWalletCurrencyOptions(localCurrency, extras).map((code) => ({
       code,
       label: `${currencyLabel(code)} ${resolveCurrencySymbol(code, locale)}`,
     }))
-  }, [localCurrency, locale, currencyLabel])
+  }, [localCurrency, extras, locale, currencyLabel])
 
   // Keep the selection valid once the region resolves, without overriding a
   // choice the user already made.
