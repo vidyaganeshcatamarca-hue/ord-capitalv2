@@ -58,6 +58,58 @@ button.config-hub-card {
   font-size: calc(1.5rem * var(--font-scale));
 }
 
+/* ── Groups per app mode (feature: menu-ajustes, T1) ───────────────────── */
+.config-hub-group {
+  display: grid;
+  gap: 10px;
+}
+
+.config-hub-group-title {
+  margin: 4px 0 0;
+  padding: 0 2px;
+  font-size: calc(0.76rem * var(--font-scale));
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-3);
+}
+
+.config-hub-group-cards {
+  display: grid;
+  gap: 12px;
+}
+
+/* S9 — "Pasar a Avanzado", the featured mode-switch entry */
+.config-hub-card--featured {
+  border-color: var(--mint);
+  background-color: var(--mint-dim);
+}
+
+.config-hub-card--featured:hover {
+  border-color: var(--mint);
+}
+
+/* Próximamente rows: they look like cards but do nothing */
+.config-hub-card--soon {
+  cursor: default;
+}
+
+.config-hub-card--soon:hover {
+  border-color: var(--border);
+}
+
+.config-hub-card-pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--mint-dim);
+  color: var(--text-2);
+  font-size: calc(0.7rem * var(--font-scale));
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
 /* PresupuestoCicloCard — card con header clickeable + toggle opcional */
 article.presupuesto-ciclo-card.config-hub-card {
   display: flex;

@@ -3,8 +3,11 @@ import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { FileSpreadsheet } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useModoApp } from '@/contexts/ModoAppContext'
 import { rpc } from '@/lib/supabase'
 import { t } from '@/locales/i18n'
+import { resolveSettingsMenu } from '@/config/settingsMenu'
+import type { SettingsMenuGroup, SettingsMenuItem } from '@/config/settingsMenu'
 import { ToggleSwitch } from './ToggleSwitch'
 import { MiCuentaCard } from './MiCuentaCard'
 import { AparienciaCard } from './AparienciaCard'
@@ -15,10 +18,27 @@ import './ConfiguracionHub.css'
 
 const BASE_CERO_HOME_KEY = 'base_cero_como_inicio'
 
+/**
+ * Entries declared by settingsMenu that the hub does NOT wire yet.
+ *   - report_issue / my_reports: T2 (S12) — the ConfiguracionPage support rows
+ *     still own them and the rename lands with that group work.
+ *   - guided_tour: T2 (S11).
+ */
+const DEFERRED_ENTRY_IDS = new Set(['report_issue', 'my_reports', 'guided_tour'])
+
+/** Icon of every row the hub renders from a `target:` destination. */
+const ROW_ICONS: Record<string, ReactNode> = {
+  region_format: '🌍',
+  load_registry: '⚙️',
+  home_config: '👥',
+  import_export: <FileSpreadsheet size={22} />,
+  about: '📱',
+}
+
 interface ConfigLinkCardProps {
   icon: ReactNode
   titleKey: string
-  descKey: string
+  descKey?: string
   to: string
 }
 
@@ -29,7 +49,42 @@ function ConfigLinkCard({ icon, titleKey, descKey, to }: ConfigLinkCardProps) {
       <span className="config-hub-card-icon" aria-hidden="true">{icon}</span>
       <div className="config-hub-card-content">
         <h3>{t(titleKey)}</h3>
-        <p>{t(descKey)}</p>
+        {descKey && <p>{t(descKey)}</p>}
+      </div>
+      <span className="config-hub-card-chevron" aria-hidden="true">›</span>
+    </button>
+  )
+}
+
+/** Placeholder row: declared by the spec, no destination until its feature lands. */
+function ConfigSoonCard({ item }: { item: SettingsMenuItem }) {
+  return (
+    <article className="config-hub-card config-hub-card--soon" aria-disabled="true">
+      <span className="config-hub-card-icon" aria-hidden="true">{ROW_ICONS[item.id] ?? '✨'}</span>
+      <div className="config-hub-card-content">
+        <h3>{t(item.titleKey)}</h3>
+        {item.descKey && <p>{t(item.descKey)}</p>}
+      </div>
+      <span className="config-hub-card-pill">{t('config_coming_soon')}</span>
+    </article>
+  )
+}
+
+/** S9 — the asymmetric Simple/Avanzado switch (same logic as ModoAppCard). */
+function ModeSwitchRow({ item }: { item: SettingsMenuItem }) {
+  const { activarModoAvanzado, desactivarModoAvanzado, loading } = useModoApp()
+  const goAdvanced = item.target === 'mode:to_advanced'
+  return (
+    <button
+      type="button"
+      className={`config-hub-card${item.featured ? ' config-hub-card--featured' : ''}`}
+      onClick={() => { void (goAdvanced ? activarModoAvanzado() : desactivarModoAvanzado()) }}
+      disabled={loading}
+    >
+      <span className="config-hub-card-icon" aria-hidden="true">{goAdvanced ? '🚀' : '↩️'}</span>
+      <div className="config-hub-card-content">
+        <h3>{t(item.titleKey)}</h3>
+        {item.descKey && <p>{t(item.descKey)}</p>}
       </div>
       <span className="config-hub-card-chevron" aria-hidden="true">›</span>
     </button>
@@ -90,41 +145,100 @@ function PresupuestoCicloCard() {
   )
 }
 
+function ComponentSlot({ slot, userId }: { slot: string; userId: string | undefined }) {
+  switch (slot) {
+    case 'MiCuentaCard': return <MiCuentaCard />
+    case 'AparienciaCard': return <AparienciaCard userId={userId} />
+    case 'NotificacionesCard': return <NotificacionesCard />
+    case 'PWACard': return <PWACard />
+    case 'MantenimientoAppCard': return <MantenimientoAppCard />
+    case 'PresupuestoCicloCard': return <PresupuestoCicloCard />
+    default: return null
+  }
+}
+
+/** Renders one entry of the resolved tree, or null while it is deferred. */
+function SettingsEntry({ item, userId }: { item: SettingsMenuItem; userId: string | undefined }) {
+  if (DEFERRED_ENTRY_IDS.has(item.id)) return null
+  if (item.soon || item.disabled) return <ConfigSoonCard item={item} />
+  if (!item.target) return null
+  if (item.target.startsWith('mode:')) return <ModeSwitchRow item={item} />
+  if (item.target.startsWith('component:')) {
+    return <ComponentSlot slot={item.target.slice('component:'.length)} userId={userId} />
+  }
+  if (item.target.startsWith('target:')) {
+    return (
+      <ConfigLinkCard
+        icon={ROW_ICONS[item.id] ?? '•'}
+        titleKey={item.titleKey}
+        descKey={item.descKey}
+        to={item.target.slice('target:'.length)}
+      />
+    )
+  }
+  return null
+}
+
+/**
+ * A subgroup with a target renders as one row until its leaves are wired
+ * (T2/T4); the leaves are already declared by settingsMenu.
+ */
+function SettingsSubgroup({ group }: { group: SettingsMenuGroup }) {
+  if (!group.target?.startsWith('target:')) return null
+  return (
+    <ConfigLinkCard
+      icon={ROW_ICONS[group.id] ?? '⚙️'}
+      titleKey={group.titleKey}
+      descKey={group.descKey}
+      to={group.target.slice('target:'.length)}
+    />
+  )
+}
+
+function isRenderable(item: SettingsMenuItem): boolean {
+  if (DEFERRED_ENTRY_IDS.has(item.id)) return false
+  return item.soon === true || item.disabled === true || item.target !== null
+}
+
+function SettingsGroupSection({ group, userId }: { group: SettingsMenuGroup; userId: string | undefined }) {
+  const subgroups = group.groups ?? []
+  const rendered = group.items.filter(isRenderable)
+  const renderedSubgroups = subgroups.filter((sub) => sub.target?.startsWith('target:'))
+  // An empty group is not rendered: everything in it is still deferred to a later task.
+  if (rendered.length === 0 && renderedSubgroups.length === 0) return null
+
+  const titleId = `config-group-${group.id}`
+  return (
+    <section className="config-hub-group" aria-labelledby={titleId}>
+      <h2 id={titleId} className="config-hub-group-title">{t(group.titleKey)}</h2>
+      <div className="config-hub-group-cards">
+        {rendered.map((item) => (
+          <SettingsEntry key={item.id} item={item} userId={userId} />
+        ))}
+        {renderedSubgroups.map((sub) => <SettingsSubgroup key={sub.id} group={sub} />)}
+      </div>
+    </section>
+  )
+}
+
 export function ConfiguracionHub() {
   const { user } = useAuth()
+  const { modo, proDisponible } = useModoApp()
+  const tree = resolveSettingsMenu(modo)
+
+  // S8/S9 — mode switch and placeholder entries live at the primary menu level.
+  const rootEntries = tree.rootEntries.filter(
+    (entry) => entry.id !== 'go_advanced' || proDisponible,
+  )
 
   return (
     <div className="config-hub">
-      <MiCuentaCard />
-      <ConfigLinkCard
-        icon="🌍"
-        titleKey="config_section_region"
-        descKey="config_region_desc"
-        to="/configuracion/region"
-      />
-      <ConfigLinkCard
-        icon={<FileSpreadsheet size={22} />}
-        titleKey="config_ie_title"
-        descKey="config_ie_desc"
-        to="/configuracion/importar-exportar"
-      />
-      <PresupuestoCicloCard />
-      <NotificacionesCard />
-      <AparienciaCard userId={user?.id} />
-      <ConfigLinkCard
-        icon="📊"
-        titleKey="config_section_operational"
-        descKey="config_operational_desc"
-        to="/configuracion/operativas"
-      />
-      <ConfigLinkCard
-        icon="📱"
-        titleKey="config_section_about"
-        descKey="config_about_desc"
-        to="/configuracion/acerca"
-      />
-      <PWACard />
-      <MantenimientoAppCard />
+      {tree.groups.map((group) => (
+        <SettingsGroupSection key={group.id} group={group} userId={user?.id} />
+      ))}
+      {rootEntries.map((entry) => (
+        <SettingsEntry key={entry.id} item={entry} userId={user?.id} />
+      ))}
     </div>
   )
 }
