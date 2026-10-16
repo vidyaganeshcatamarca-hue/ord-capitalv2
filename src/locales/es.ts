@@ -2376,6 +2376,18 @@ export const inversiones = {
   settings_delete_locked_body: "Pasados los primeros 10 días de uso, para borrar tus datos o tu cuenta necesitás el PIN de seguridad configurado en modo Avanzado.",
   settings_delete_locked_hint: "Configurá tu PIN en modo Avanzado para desbloquear el borrado.",
   settings_delete_locked_unknown: "No pudimos verificar la antigüedad de tu cuenta, así que el borrado queda bloqueado por seguridad.",
+  // S2 (U3) — Formato de números por moneda. Copy neutral: el código y el nombre
+  // reales de cada moneda llegan del mapa del backend (fn_obtener_formato_moneda).
+  settings_fmt_local: "Moneda local",
+  settings_fmt_second: "Segunda moneda",
+  settings_fmt_third: "Tercera moneda",
+  settings_fmt_third_desc: "Moneda sin configurar todavía.",
+  settings_fmt_decimals: "Decimales",
+  // Errores de fn_configurar_formato_moneda (el separador repetido se comparte
+  // con la escritura legacy de preferencias globales).
+  error_formato_moneda_moneda_invalida: "La moneda {moneda} no está activa en tu cuenta.",
+  error_formato_moneda_decimales: "Los decimales tienen que estar entre 0 y 4 (recibido: {decimales}).",
+  error_separators_must_differ: "El separador de miles y el separador decimal no pueden ser iguales.",
 };
 
 // Reports (bug reports)

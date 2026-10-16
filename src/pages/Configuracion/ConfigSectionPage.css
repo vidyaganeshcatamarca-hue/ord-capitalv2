@@ -249,3 +249,23 @@
   background: var(--surface-3);
   color: var(--text);
 }
+
+/* S2 (U3): 'Formato de números' groups one currency per block, separated by an
+   <hr> divider (local / second / third). No new font sizes, so no font-scale. */
+.config-section-fmt-group {
+  display: grid;
+}
+
+.config-section-divider {
+  width: 100%;
+  height: 1px;
+  margin: 6px 0;
+  border: 0;
+  background: var(--border);
+}
+
+/* The divider replaces the group title row's own top border, so the boundary
+   between two currencies reads as one line instead of two. */
+.config-section-fmt-group > .config-section-row:first-of-type {
+  border-top: 0;
+}
