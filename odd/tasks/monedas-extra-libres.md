@@ -113,7 +113,7 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
 | T5 | Voz | S5,A9,S25: **DECIDIDO NO IMPLEMENTAR el gate** (la moneda declarada queda metadata muerta; la pata manda). Ingesta voz ya data-driven (deploy 73) — intacta. Artefacto 76 commiteado sin deploy | inline | fbc1d42 (no deploy) |
 | T6 | Inversiones | A10: picker de moneda (pendiente respuesta) | pendiente | — |
 | T7 | Cuarentena | A12: sugerencia de conversión en EditarCuarentenaModal | inline | — |
-| T8 | Configuración UI | S5,S24,A1,A11: bloque Monedas (S18 menu-ajustes) en Región y formato: selectores 2ª/3ª + decimales por moneda (S22) + i18n | inline | — |
+| T8 | Configuración UI | S5,S24+T8b/S22,A1,A11: bloque Monedas (S18 peer) + fn_obtener_divisas_cotizadas (77) + formato por moneda (78, contrato peer) + i18n | inline | **4858793, 915a324, 20f492f** |
 | T9 | Cierre | S1–S11: sweep de literales restantes en funciones tocadas, docs, tests finales | verify | — |
 
 ## Log
@@ -249,3 +249,12 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
   fbc1d42 marcado NO-AUTORIZADO para deploy; si una sesión futura lo encuentra, NO debe
   deployarlo sin nueva autorización explícita del dueño. El valor del hallazgo queda
   documentado (v_rec.moneda nunca se usaba) para decisiones futuras del dueño.
+
+- **L18** (DEPLOY 77+78 APLICADO, aprobado por el dueño 2026-10-16, commits artefactos
+  4858793/20f492f): fn_obtener_divisas_cotizadas (catálogo 51 monedas, USD presente) +
+  fn_configurar_formato_moneda/fn_obtener_formato_moneda + columna
+  `p_config_region.monedas_formateo jsonb DEFAULT '{}'`. Smoke: permisos authenticated OK;
+  mapa user 1 (ARS): {ARS: 0 dec, USD: 1 dec, separadores globales}. Coordinación del peer:
+  contrato formato por moneda validado (mi backend; su U3 en Formato de números por moneda;
+  mi BloqueMonedas = selección 2ª/3ª); aviso de espejo + swap data-layer U3 enviado.
+  Formato del feature en la rama pi/sesion-3 COMPLETO (T1-T9): ver tabla Tasks.
