@@ -1,10 +1,11 @@
 // src/components/configuracion/ConfiguracionBorradoCard.tsx
 // Ajustes > Cuenta y seguridad > deletion entry (feature: menu-ajustes, T3, S15).
 //
-// Two options under ONE access rule (S15): the first 10 days of use need no PIN;
-// from there on the security PIN configured in mode Avanzado is required. The
-// PIN feature does not exist yet (S6 placeholder, T5 gated), so the gate always
-// locks past the window and the card shows the hint pointing to Avanzado.
+// Two options under ONE access rule (S15/L10: first 15 days no PIN, then the
+// PIN configured in mode Avanzado). Since the pi2 app-lock merge, the PIN
+// source is the peer-owned single truth: useAppLock().lockState === 'activa'
+// (AppLockContext). Before that merge the card used PIN_CONFIGURED_FALLBACK.
+// Owner revision L10 raised the grace window 10 -> 15 days.
 //
 //   - "Borrar mis datos": account stays, data restarts from zero. Its RPC does
 //     not exist yet (T5 gated), so the option renders disabled with a reason.
@@ -16,25 +17,61 @@
 // the backend does not expose usuarios.creado_at to the user app, so
 // `session.user.created_at` is the only source. No new RPC is added.
 
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { t } from '@/locales/i18n'
+import { useAppLock } from '@/contexts/AppLockContext'
+import { rpc } from '@/lib/supabase'
+import { t, parseError } from '@/locales/i18n'
+import { useToast } from '@/contexts/ToastContext'
+import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
+import { haptics } from '@/lib/haptics'
 import { DeleteAccountCard } from '@/components/privacidad/DeleteAccountCard'
 import {
   DELETE_DATA_BACKEND_AVAILABLE,
-  PIN_CONFIGURED_FALLBACK,
   resolveDeletionGate,
 } from '@/lib/accountDeletionGate'
 import './ConfiguracionHub.css'
 
+const DELETE_DATA_CONFIRMATION_TEXT = 'BORRAR DATOS'
+
 export function ConfiguracionBorradoCard() {
   const { session } = useAuth()
+  const { showToast } = useToast()
+  // PI2 single truth for hasPinConfigured (peer import contract): 'activa'.
+  // Comparing against a literal requires a string view of the union LockState.
+  const { lockState } = useAppLock()
+  const pinConfigured = (lockState as string | null) === 'activa'
   // One clock read per mount: the gate only needs the account age at render time.
   const now = useMemo(() => new Date(), [])
   const signupAt = session?.user?.created_at ?? null
-  const gate = resolveDeletionGate({ signupAt, pinConfigured: PIN_CONFIGURED_FALLBACK, now })
+  const gate = resolveDeletionGate({ signupAt, pinConfigured, now })
 
+  // S15/T5c — "borrar mis datos": the account stays, the data resets to zero.
+  const [showDataConfirm, setShowDataConfirm] = useState(false)
+  const [dataConfirmText, setDataConfirmText] = useState('')
+  const [deletingData, setDeletingData] = useState(false)
   const dataOptionDisabled = !DELETE_DATA_BACKEND_AVAILABLE
+
+  const handleDeleteData = async () => {
+    if (dataConfirmText !== DELETE_DATA_CONFIRMATION_TEXT) return
+    setDeletingData(true)
+    try {
+      await rpc('fn_borrar_datos_usuario', {
+        p_confirmacion_texto: DELETE_DATA_CONFIRMATION_TEXT,
+      })
+      showToast(t('settings_delete_data_success'), 'success')
+      haptics.success()
+      // The server data is gone (account row untouched); a reload drops the
+      // stale local caches and the app resumes the fresh onboarding state.
+      window.location.reload()
+    } catch (err) {
+      showToast(parseError(err), 'error')
+      haptics.error()
+    } finally {
+      setDeletingData(false)
+      setShowDataConfirm(false)
+    }
+  }
 
   return (
     <section className="config-delete-card" aria-labelledby="config-delete-title">
@@ -73,6 +110,23 @@ export function ConfiguracionBorradoCard() {
                 {t('settings_delete_option_data_unavailable')}
               </p>
             )}
+            <input
+              className="privacidad-delete-input"
+              type="text"
+              placeholder={t('privacidad_delete_placeholder')}
+              value={dataConfirmText}
+              onChange={(e) => setDataConfirmText(e.target.value.toUpperCase())}
+              autoComplete="off"
+              aria-label={t('settings_delete_option_data_title')}
+            />
+            <button
+              type="button"
+              className="config-delete-option-run"
+              disabled={dataOptionDisabled || deletingData || dataConfirmText !== DELETE_DATA_CONFIRMATION_TEXT}
+              onClick={() => setShowDataConfirm(true)}
+            >
+              {deletingData ? '…' : t('settings_delete_option_data_run')}
+            </button>
           </div>
 
           <div className="config-delete-option">
@@ -82,6 +136,19 @@ export function ConfiguracionBorradoCard() {
           </div>
         </>
       )}
+
+      {/* S15/T5c — data deletion uses the stricter text confirmation (BORRAR
+          DATOS) BEFORE the modal: the modal is the final confirmation step. */}
+      <ConfirmModal
+        isOpen={showDataConfirm}
+        type="danger"
+        title={t('settings_delete_option_data_title')}
+        message={t('settings_delete_option_data_desc')}
+        confirmText={t('settings_delete_option_data_run')}
+        cancelText={t('btn_cancel')}
+        onConfirm={handleDeleteData}
+        onCancel={() => setShowDataConfirm(false)}
+      />
     </section>
   )
 }

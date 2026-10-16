@@ -215,12 +215,14 @@ const ADVANCED_TREE: SettingsMenuTree = {
       items: [
         PROFILE_ENTRY,
         {
-          // S6 — placeholder only: the feature itself is out of this phase.
+          // S6 + PI2 integration: the PIN/biometry feature exists (feat/pin-huella
+          // merge) and lives at its own flat settings page. The soon placeholder
+          // becomes a real entry with the peer-contracted target.
           id: 'pin_protection',
           titleKey: 'settings_entry_pin_protection',
           descKey: 'settings_entry_pin_protection_desc',
-          target: null,
-          soon: true,
+          target: 'target:/configuracion/proteccion',
+          soon: false,
         },
         // T3 (S15): the deletion entry shares the rule with the simple tree.
         DATA_DELETION_ENTRY,

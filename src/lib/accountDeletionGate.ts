@@ -11,9 +11,11 @@
 // Owner revision (Log L10): "quiero llevar de 10 días a 15 días la opción del
 // borrado de los datos y de la cuenta" — the grace window is now 15.
 //
-// The PIN feature is still a placeholder (S6, backend work gated behind T5), so
-// no user has a PIN yet: callers pass PIN_CONFIGURED_FALLBACK and the gate locks
-// everything past the grace window.
+// Since the pi2 app-lock merge, the PIN source is the peer-owned single truth:
+// useAppLock().lockState === 'activa' (AppLockContext). The gate stays PURE:
+// callers pass the resolved boolean as `pinConfigured`. PIN_CONFIGURED_FALLBACK
+// is kept exported only as a migration-era fallback for call sites that have
+// not swapped to the context yet (the settings card has).
 //
 // Deletion is dangerous, so every unknown is fail-closed (locked).
 
@@ -21,9 +23,8 @@
 export const DAY_GRACE_WINDOW = 15
 
 /**
- * S6/T5 — the PIN feature does not exist yet, therefore no user has a PIN
- * configured. Once the PIN ships, replace this with the real check; until
- * then the gate locks after the grace window with reason 'pin_required'.
+ * S6/T5 legacy fallback — only for call sites not wired to AppLockContext yet.
+ * The settings card now uses useAppLock().lockState === 'activa' instead.
  */
 export const PIN_CONFIGURED_FALLBACK = false
 
@@ -32,7 +33,7 @@ export const PIN_CONFIGURED_FALLBACK = false
  * disabled with a reason. Nothing deletes data on the client: this flag only
  * gates a row.
  */
-export const DELETE_DATA_BACKEND_AVAILABLE = false
+export const DELETE_DATA_BACKEND_AVAILABLE = true
 
 export type DeletionGateReason = 'pin_required' | 'unknown_signup'
 

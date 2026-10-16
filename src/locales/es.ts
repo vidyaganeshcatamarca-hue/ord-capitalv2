@@ -2396,6 +2396,8 @@ export const inversiones = {
   settings_delete_locked_body: "Pasados los primeros 10 días de uso, para borrar tus datos o tu cuenta necesitás el PIN de seguridad configurado en modo Avanzado.",
   settings_delete_locked_hint: "Configurá tu PIN en modo Avanzado para desbloquear el borrado.",
   settings_delete_locked_unknown: "No pudimos verificar la antigüedad de tu cuenta, así que el borrado queda bloqueado por seguridad.",
+  settings_delete_option_data_run: "Borrar mis datos",
+  settings_delete_data_success: "Tus datos fueron borrados. La app va a reiniciar con tus cuentas limpias.",
   // S2 (U3) — Formato de números por moneda. Copy neutral: el código y el nombre
   // reales de cada moneda llegan del mapa del backend (fn_obtener_formato_moneda).
   settings_fmt_local: "Moneda local",
