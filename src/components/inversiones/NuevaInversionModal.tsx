@@ -3,6 +3,9 @@ import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { useMonedasExtra } from '@/hooks/useMonedasExtra'
+import { buildWalletCurrencyOptions } from '@/lib/monedasExtra'
 import './NuevaInversionModal.css'
 
 export interface BilleteraResumen {
@@ -20,7 +23,6 @@ interface NuevaInversionModalProps {
 }
 
 type TipoActivo = 'plazo_fijo' | 'cripto' | 'cedear' | 'acciones' | 'otro'
-type Moneda = 'ARS' | 'USD'
 
 const TIPO_OPCIONES: { value: TipoActivo; key: string }[] = [
   { value: 'plazo_fijo', key: 'type_plazo_fijo' },
@@ -37,12 +39,17 @@ export function NuevaInversionModal({
   billeteras,
 }: NuevaInversionModalProps) {
   const { showToast } = useToast()
+  // S21: las monedas de inversión son las del usuario (local + extras), no el
+  // par ARS/USD fijo. buildWalletCurrencyOptions ya está testeado (T2).
+  const { localCurrency } = useNumberFormat()
+  const { extras } = useMonedasExtra()
+  const monedasOptions = buildWalletCurrencyOptions(localCurrency, extras)
 
   const [nombre, setNombre] = useState('')
   const [tipo, setTipo] = useState<TipoActivo>('plazo_fijo')
   const [tasa, setTasa] = useState('')
   const [monto, setMonto] = useState('')
-  const [moneda, setMoneda] = useState<Moneda>('ARS')
+  const [moneda, setMoneda] = useState('')
   const [billeteraId, setBilleteraId] = useState<string>('')
   const [submitting, setSubmitting] = useState(false)
   const [touched, setTouched] = useState(false)
@@ -53,15 +60,23 @@ export function NuevaInversionModal({
       setTipo('plazo_fijo')
       setTasa('')
       setMonto('')
-      setMoneda('ARS')
+      setMoneda('')
       setBilleteraId('')
       setSubmitting(false)
       setTouched(false)
       return
     }
-    const mismaMoneda = billeteras.find((b) => b.moneda === 'ARS')
-    if (mismaMoneda) setBilleteraId(String(mismaMoneda.billetera_id))
-  }, [isOpen, billeteras])
+    // Moneda default = la del usuario (local); sin región, la primera del set.
+    if (moneda === '' ) {
+      const inicial = localCurrency || monedasOptions[0] || ''
+      if (inicial) setMoneda(inicial)
+    }
+    if (moneda) {
+      const mismaMoneda = billeteras.find((b) => b.moneda === moneda)
+      if (mismaMoneda) setBilleteraId(String(mismaMoneda.billetera_id))
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, billeteras, moneda, localCurrency, monedasOptions])
 
   const montoNum = Number(monto) || 0
   const tasaNum = Number(tasa) || 0
@@ -204,7 +219,7 @@ export function NuevaInversionModal({
           <div className="form-group">
             <label className="form-label">{t('label_currency')}</label>
             <div className="nueva-inversion-moneda-group">
-              {(['ARS', 'USD'] as const).map((m) => (
+              {monedasOptions.map((m) => (
                 <label
                   key={m}
                   className={`nueva-inversion-moneda-option ${

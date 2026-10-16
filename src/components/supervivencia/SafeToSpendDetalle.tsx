@@ -1,4 +1,5 @@
 import { t } from '@/locales/i18n'
+import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
 import type { SafeData } from '@/pages/Supervivencia/SupervivenciaPage'
 import './SafeToSpendDetalle.css'
 
@@ -6,17 +7,6 @@ interface SafeToSpendDetalleProps {
   safe: SafeData
 }
 
-function formatMoneyARS(v: number): string {
-  try {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0,
-    }).format(v)
-  } catch {
-    return `$${Math.round(v).toLocaleString('es-AR')}`
-  }
-}
 
 export function SafeToSpendDetalle({ safe }: SafeToSpendDetalleProps) {
   return (

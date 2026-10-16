@@ -1,4 +1,5 @@
 import type { SafeData } from '@/pages/Supervivencia/SupervivenciaPage'
+import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
 import { t } from '@/locales/i18n'
 import { WarWidgetCard } from './WarWidgetCard'
 
@@ -13,17 +14,6 @@ function semaforoFromSafe(s: SafeData): 'verde' | 'amarillo' | 'rojo' {
   return 'rojo'
 }
 
-function formatMoneyARS(v: number): string {
-  try {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0,
-    }).format(v)
-  } catch {
-    return `$${Math.round(v).toLocaleString('es-AR')}`
-  }
-}
 
 function luzKeyToLabel(key: SafeData['estado_semaforo_key']): string {
   if (key === 'green') return t('war_safe_luz_verde')

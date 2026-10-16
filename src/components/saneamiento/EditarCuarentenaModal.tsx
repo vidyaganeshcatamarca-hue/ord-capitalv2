@@ -109,6 +109,8 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
   const [tarjetaId, setTarjetaId] = useState<string>(numberValue(item.tarjeta_id))
   const [cuentaIngresoId, setCuentaIngresoId] = useState<string>(numberValue(item.cuenta_ingreso_id))
   const [destinationAmount, setDestinationAmount] = useState<string>(numberValue(item.destination_amount))
+  // S23: tasa del par para sugerencia + hint de frescura (S15).
+  const [cotizacionPar, setCotizacionPar] = useState<{ cotizacion: number; fecha: string | null } | null>(null)
   const [moneda, setMoneda] = useState<string>(item.moneda || 'ARS')
   const [cuotas, setCuotas] = useState<string>(numberValue(item.cuotas ?? 1))
 
@@ -260,36 +262,35 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
     }
   }
 
-  // Suggest the destination amount from the day's USD rate when editing a
-  // cross-currency transfer leaves it empty (buying or selling USD).
-  // It is only a hint: the user can (and may need to) override the value.
+  // S23 (misma regla que S16/T3): sugerencia del par completo cuando la
+  // edición de una transfer cruzada deja el destino vacío. La tasa sale de
+  // fn_obtener_cotizacion(origen, destino) (pivote genérico del T1) con su
+  // fecha honesta (S15); sin tasa el campo queda vacío (D17) y se tipea a mano.
+  // Solo es una sugerencia: el usuario la pisa libremente.
   useEffect(() => {
     if (!crossCurrency || !montoFormNum) return
     if ((parseFloat(destinationAmount) || 0) > 0) return
     let cancelled = false
-    rpc<number>('fn_obtener_cotizacion_usd')
+    rpc<{ cotizacion: number | null; fecha: string | null }[]>('fn_obtener_cotizacion', {
+      p_origen: billeteraMoneda,
+      p_destino: billeteraDestinoMoneda,
+    })
       .catch(() => null)
-      .then((cotizacion) => {
-        if (cancelled || !cotizacion || cotizacion <= 0) return
-        // Rate is stored per the user's default currency: it converts
-        // between that currency and USD. Pass through other pairs unchanged.
-        const baseAUsd =
-          billeteraMoneda === 'USD'
-            ? montoFormNum
-            : billeteraMoneda === 'ARS'
-              ? montoFormNum / cotizacion
-              : null
-        if (baseAUsd === null) return
-        let sugerencia: number
-        if (billeteraDestinoMoneda === 'USD') sugerencia = baseAUsd
-        else if (billeteraDestinoMoneda === 'ARS') sugerencia = baseAUsd * cotizacion
-        else return
-        setDestinationAmount(sugerencia.toFixed(2))
+      .then((data) => {
+        if (cancelled) return
+        const row = Array.isArray(data) ? data[0] : data
+        const cot = Number(row?.cotizacion)
+        if (!row || !(cot > 0)) return
+        setCotizacionPar({ cotizacion: cot, fecha: row?.fecha ? String(row.fecha) : null })
+        setDestinationAmount((Math.round(montoFormNum * cot * 100) / 100).toFixed(2))
       })
     return () => {
       cancelled = true
     }
-  }, [crossCurrency, montoFormNum, destinationAmount, billeteraMoneda, billeteraDestinoMoneda])
+    // destinationAmount fuera de deps a propósito: la sugerencia solo dispara
+    // mientras el campo esté vacío; re-disparar por tecla pelearía con el usuario.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [crossCurrency, montoFormNum, billeteraMoneda, billeteraDestinoMoneda])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -518,6 +519,11 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
                 onChange={(e) => setDestinationAmount(e.target.value)}
                 placeholder={crossCurrency ? t('cuarentena_destination_requerido') : undefined}
               />
+              {crossCurrency && cotizacionPar && (
+                <p className="cuarentena-tasa-hint" style={{ margin: '4px 0 0', fontSize: '12px', color: 'var(--color-text)' }}>
+                  {t('movement_tasa_par_hint', { tasa: cotizacionPar.cotizacion.toFixed(4), fecha: cotizacionPar.fecha ?? '-' })}
+                </p>
+              )}
             </div>
           )}
 

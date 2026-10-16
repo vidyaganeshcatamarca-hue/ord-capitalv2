@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { t } from '@/locales/i18n'
@@ -31,17 +32,6 @@ interface Escenario {
   esBase: boolean
 }
 
-function formatMoneyARS(v: number): string {
-  try {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0,
-    }).format(v)
-  } catch {
-    return `$${Math.round(v).toLocaleString('es-AR')}`
-  }
-}
 
 function mapearEscenarios(s: SimuladorResponse): Escenario[] {
   return [

@@ -11,6 +11,10 @@ import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/Reconcil
 import { WalletIcon } from '@/components/WalletIcon'
 import { TourTriggerButton } from '@/components/Tour/TourTriggerButton'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { useMonedasExtra } from '@/hooks/useMonedasExtra'
+import { buildHeroLines } from '@/lib/patrimonioHero'
+import { currencyName } from '@/lib/countryCatalog'
+import { parseTransferDetalle } from '@/lib/transferTitles'
 import { useCountUp } from '@/hooks/useCountUp'
 import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { generateColorShade } from '@/lib/colorUtils'
@@ -270,7 +274,7 @@ export function HomePage() {
   }
 
   // Datos de Base de Datos
-  const [patrimonio, setPatrimonio] = useState<{ total_pesos: number; total_dolares: number } | null>(null)
+  const [patrimonio, setPatrimonio] = useState<{ total_pesos: number; total_dolares: number; totales_por_moneda?: { moneda?: string | null; total?: number | string | null }[] } | null>(null)
   const [modoPresupuesto, setModoPresupuesto] = useState<'base_cero' | 'anticipado'>('base_cero')
   const [saldoHero, setSaldoHero] = useState<{ title: string; amount: number; isRed: boolean } | null>(null)
   const [alerts, setAlerts] = useState<{
@@ -459,7 +463,7 @@ export function HomePage() {
         saldoAsignarRes,
         configRes
       ] = await Promise.all([
-        rpc<{ total_pesos: number; total_dolares: number }[]>('fn_reporte_patrimonio_neto').catch(() => [] as any[]),
+        rpc<{ total_pesos: number; total_dolares: number; totales_por_moneda?: { moneda?: string | null; total?: number | string | null }[] }[]>('fn_reporte_patrimonio_neto').catch(() => [] as any[]),
         rpc<any>('fn_reporte_alertas_home').catch(() => null),
         fetchBilleterasFromPreference(),
         rpc<any[]>('fn_reporte_mapa_tarjetas').catch(() => [] as any[]),
@@ -924,6 +928,14 @@ export function HomePage() {
 
   // Formateo de montos respetando decimales del usuario (useNumberFormat)
   const { formatMonto: formatMontoBase, currencySymbol, locale, localCurrency } = useNumberFormat()
+  const { extras } = useMonedasExtra()
+  // S18: una línea por cada moneda del usuario con saldo != 0 (extras en su orden,
+  // luego huérfanas). Con el default ARS+USD y sin extras nuevas, la línea USD
+  // queda EXACTA como la fija de antes — lo dinámico cubre lo fijo.
+  const heroLines = useMemo(
+    () => buildHeroLines(localCurrency, patrimonio?.totales_por_moneda, extras),
+    [localCurrency, patrimonio?.totales_por_moneda, extras]
+  )
   const formatAmount = useCallback((monto: number, moneda?: string, decimales?: number) => {
     if (hideAmounts) return '***'
     return formatMontoBase(monto, moneda, decimales)
@@ -1027,7 +1039,9 @@ export function HomePage() {
   // A row stays hidden only while its count has not changed since dismissal.
   const filasVisibles = alertasFilas.filter((fila) => descartadas[fila.key] !== fila.conteo)
   const patrimonioARS = patrimonio?.total_pesos ?? 0
-  const patrimonioUSD = patrimonio?.total_dolares ?? 0
+  // S18: la línea USD fija del hero pasó a buildHeroLines (dinámica por moneda).
+  // total_dolares sigue vinienendo del RPC (los reportes legados lo consumen).
+  void patrimonio?.total_dolares
   // Animacion tipo velocimetro para el hero card. En el primer mount
   // arranca desde 0 (efecto aceleracion); en renders siguientes con
   // target cambiante, reanuda desde el valor actual.
@@ -1181,12 +1195,14 @@ export function HomePage() {
                   </div>
                 )}
               </div>
-              {/* Ocultar dólares si es cero */}
-              {patrimonioUSD > 0 && (
-                <p className="home-patrimonio-usd font-mono" style={{ marginTop: '4px', textAlign: 'left' }}>
-                  {hideAmounts ? '*** USD' : `${currencySymbol('USD')} ${patrimonioUSD.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              {/* S18: líneas dinámicas por moneda (USD conserva su slot */}
+              {heroLines.map((line) => (
+                <p key={line.moneda} className="home-patrimonio-usd font-mono" style={{ marginTop: '4px', textAlign: 'left' }}>
+                  {hideAmounts
+                    ? `*** ${line.moneda}`
+                    : `${currencySymbol(line.moneda)} ${line.total.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
                 </p>
-              )}
+              ))}
               <div className="home-patrimonio-badge" style={{ marginTop: '8px' }}>
                 <span className="dot dot-green" />
                 <span className="text-xs text-muted">{t('hero_sync_ok')}</span>
@@ -1707,7 +1723,25 @@ export function HomePage() {
                                   const destName = walletNameById.get(Number(destId))
                                   return destName ? ` -> ${t(destName)}` : ''
                                 })()}
-                                {m.detalle ? ` · ${m.detalle === 'card_summary_payment_split' ? t('card_summary_payment_split') : m.detalle === 'card_summary_payment_favor' ? t('card_summary_payment') : m.detalle.startsWith('card_summary') ? t('card_summary_payment') : t(m.detalle)}` : ''}
+                                                                {m.detalle ? ` · ${(() => {
+                                  // S17: cross-currency transfer titles travel as JSON
+                                  // {key: transfer_compra_moneda|venta, params:{moneda:CODE}}
+                                  // — the human currency name resolves HERE (currencyName),
+                                  // because the backend cannot know the user's language.
+                                  // Plain keys (legacy USD compra/venta, same-currency,
+                                  // card_summary…) keep the exact same path as before.
+                                  const rendered = parseTransferDetalle(
+                                    m.detalle,
+                                    (key, params) => t(key, {
+                                      ...params,
+                                      moneda: currencyName(String(params.moneda ?? ''), locale),
+                                    })
+                                  )
+                                  if (m.detalle === 'card_summary_payment_split') return t('card_summary_payment_split')
+                                  if (m.detalle === 'card_summary_payment_favor') return t('card_summary_payment')
+                                  if (m.detalle.startsWith('card_summary')) return t('card_summary_payment')
+                                  return rendered
+                                })()}` : ''}
                                 </>
                               )}
                             </span>

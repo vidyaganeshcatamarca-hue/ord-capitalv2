@@ -49,7 +49,7 @@ export const errors = {
 
   // Region, pais y moneda (onboarding multiglobal)
   error_region_not_configured: "Todavía no elegiste tu país. Elegilo para poder crear tu primera cuenta.",
-  error_currency_not_local: "La moneda solo puede ser la de tu país o dólares estadounidenses.",
+  error_currency_not_local: "La moneda debe ser la de tu país o una de tus monedas configuradas (Ajustes → Región y formato).",
   error_country_not_supported: "Ese país todavía no está disponible. Elegí el país donde usás tu dinero.",
   error_no_orphan_savings_funds: "No hay sobres vinculados a esta Cuenta Madre para distribuir rendimientos.",
   error_opening_balance_negative: "El saldo de apertura no puede ser negativo (-).",
@@ -1184,6 +1184,15 @@ export const saneamiento = {
   saneamiento_sin_categoria: "Sin categoría",
   transfer_compra_dolares: "Compra de dólares",
   transfer_venta_dolares: "Venta de dólares",
+  // S17: pares con extras — el detalle viaja como JSON {key, params:{moneda:CODE}};
+  // el renderer resuelve el nombre humano con currencyName(code, locale).
+  transfer_compra_moneda: "Compra de {moneda}",
+  transfer_venta_moneda: "Venta de {moneda}",
+  // S16/S15: hint de tasa del par en la transferencia cruzada (fecha = la más vieja de las dos cotizaciones).
+  movement_tasa_par_hint: "Tasa del día: 1 = {tasa} (actualizada: {fecha})",
+  // S20: al aprobar un item de cuarentena, la moneda declarada (voz/OCR) que no
+  // es una de las monedas activas del usuario bloquea; la fila queda editable.
+  error_cuarentena_moneda_no_activa: "La moneda declarada ({moneda}) no pertenece a tus monedas configuradas. Edita el movimiento para corregirla.",
   movement_toast_expense: "Gasto registrado",
   movement_toast_income: "Ingreso registrado",
   movement_toast_transfer: "Transferencia realizada",
@@ -1966,8 +1975,19 @@ export const inversiones = {
   config_language_spanish: "Español",
   config_currency: "Moneda",
   config_currency_main: "Moneda principal",
-  config_currency_secondary: "Segunda moneda (reserva)",
-  config_currency_locked: "Fijo (no configurable)",
+  config_currency_secondary: "Segunda moneda",
+  config_tercera_moneda: "Tercera moneda",
+  monedas_extras_vacia: "— Sin moneda —",
+  monedas_extras_guardado: "Monedas actualizadas",
+  // S25: retorno del motor S5/S9 del T1 (fn_configurar_monedas_extra).
+  error_monedas_extra_limite: "Solo podés configurar {max} monedas extra (elegiste {count}).",
+  error_monedas_extra_local: "{currency} ya es tu moneda principal.",
+  error_monedas_extra_duplicada: "Ya elegiste {currency} como moneda extra.",
+  error_monedas_extra_invalida: "{currency} no es una moneda con cotización disponible.",
+  error_monedas_extra_has_wallets: "No podés quitar {currency}: tenés {count} cuenta/s activas en esa moneda. Archivalas primero.",
+  // S22 (formato por moneda): retorno del backend del 78.
+  error_formato_moneda_moneda_invalida: "{currency} no es una de tus monedas configuradas.",
+  error_formato_moneda_decimales: "Los decimales deben estar entre 0 y 4.",
   config_format_numbers: "Formato de números",
   config_decimals_local: "Decimales (moneda local)",
   config_decimals_usd: "Decimales (USD)",

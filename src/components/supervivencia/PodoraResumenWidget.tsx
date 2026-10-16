@@ -1,4 +1,5 @@
 import type { PodoraData } from '@/pages/Supervivencia/SupervivenciaPage'
+import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
 import { t } from '@/locales/i18n'
 import { WarWidgetCard } from './WarWidgetCard'
 
@@ -7,17 +8,6 @@ interface PodoraResumenWidgetProps {
   onIrABcg: () => void
 }
 
-function formatMoneyARS(v: number): string {
-  try {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0,
-    }).format(v)
-  } catch {
-    return `$${Math.round(v).toLocaleString('es-AR')}`
-  }
-}
 
 export function PodoraResumenWidget({ podora, onIrABcg }: PodoraResumenWidgetProps) {
   const tieneCandidatos = (podora?.candidatos?.length ?? 0) > 0

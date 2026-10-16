@@ -752,24 +752,46 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
   const billeteraDestinoMoneda = billeteras.find(b => b.billetera_id === billeteraDestinoId)?.moneda ?? null
   const crossCurrencyTransfer = tipo === 'transfer' && !!billeteraDestinoMoneda && billeteraDestinoMoneda !== monedaOrigen
 
-  // Suggest the destination amount from the current USD rate when a
-  // cross-currency transfer leaves it empty (cuarentena pattern). Hint only.
+  // Suggest the destination amount from the pair's own rate when a cross-currency
+  // transfer leaves it empty (cuarentena pattern, S16). Hint only: the field stays
+  // editable, and a pair the backend cannot rate (no cron quote for either side)
+  // suggests NOTHING (D17) — the user types the value by hand.
+  // The rate comes from fn_obtener_cotizacion(origen, destino), the generic T1
+  // RPC that pivots through USD and returns {cotizacion, fecha} with the OLDER
+  // timestamp of the two quotes (S15: honest freshness, shown in the hint).
+  // The old single-rate path (usdRate from fn_obtener_cotizacion_usd + the pure
+  // helper) could only ever answer local<->USD; S16 answers every pair of the
+  // user's currency set. `suggestDestinationAmount` stays deployed as-is for the
+  // cuarentena flow until T7 applies the same rule there.
+  const [cotizacionPar, setCotizacionPar] = useState<{ cotizacion: number; fecha: string | null } | null>(null)
   useEffect(() => {
+    setCotizacionPar(null)
     if (!crossCurrencyTransfer || !numericMonto) return
     if ((parseFloat(destinationAmount) || 0) > 0) return
-    // The arithmetic lives in a pure module so it is testable without a browser, and so
-    // the 'ARS' that used to be nailed into it cannot come back: that hardcode is why a
-    // 100 EUR transfer to a USD wallet left the destination amount empty.
-    const sugerencia = suggestDestinationAmount({
-      amount: numericMonto,
-      originCurrency: monedaOrigen,
-      destinationCurrency: billeteraDestinoMoneda,
-      localCurrency,
-      usdRate: cotizacionUsd,
+    let cancelled = false
+    const origen = monedaOrigen
+    const destino = billeteraDestinoMoneda
+    rpc<{ cotizacion: number | null; fecha: string | null }[]>('fn_obtener_cotizacion', {
+      p_origen: origen,
+      p_destino: destino,
     })
-    if (sugerencia === null) return
-    setDestinationAmount(sugerencia.toFixed(2))
-  }, [crossCurrencyTransfer, numericMonto, destinationAmount, monedaOrigen, billeteraDestinoMoneda, cotizacionUsd, localCurrency])
+      .then((data) => {
+        if (cancelled) return
+        const row = Array.isArray(data) ? data[0] : data
+        if (!row || row.cotizacion == null || !(Number(row.cotizacion) > 0)) return
+        setCotizacionPar({ cotizacion: Number(row.cotizacion), fecha: row.fecha ? String(row.fecha) : null })
+        setDestinationAmount((Math.round(numericMonto * Number(row.cotizacion) * 100) / 100).toFixed(2))
+      })
+      .catch(() => {
+        if (!cancelled) setCotizacionPar(null)
+      })
+    return () => {
+      cancelled = true
+    }
+    // destinationAmount deliberately NOT in deps: the suggestion only fires while
+    // the field is empty; re-firing on every keystroke would fight the user.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [crossCurrencyTransfer, numericMonto, monedaOrigen, billeteraDestinoMoneda])
 
   // ── Reseteo defensivo: si la billetera preseleccionada deja de ser válida
   // (borrada, inactiva, o saldo insuficiente), limpiamos la selección
@@ -1274,6 +1296,11 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                               placeholder={t('cuarentena_destination_requerido')}
                               style={{ width: '100%', padding: '12px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: '10px', color: 'var(--text)', fontSize: '14px' }}
                             />
+                            {cotizacionPar && (
+                              <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'var(--color-text)' }}>
+                                {t('movement_tasa_par_hint', { tasa: cotizacionPar.cotizacion.toFixed(4), fecha: cotizacionPar.fecha ?? '-' })}
+                              </p>
+                            )}
                           </div>
                         )}
                       </>

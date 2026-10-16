@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
 import { supabase } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
@@ -29,17 +30,6 @@ interface ConfigItem {
   es_fijo: boolean
 }
 
-function formatMoneyARS(v: number): string {
-  try {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0,
-    }).format(v)
-  } catch {
-    return `$${Math.round(v).toLocaleString('es-AR')}`
-  }
-}
 
 export function ConfigGastosFijosModal({
   onClose,
