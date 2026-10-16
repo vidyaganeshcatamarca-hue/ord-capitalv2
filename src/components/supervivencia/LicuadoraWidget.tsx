@@ -1,4 +1,5 @@
 import type { LicuadoraData } from '@/pages/Supervivencia/SupervivenciaPage'
+import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
 import { t } from '@/locales/i18n'
 import { WarWidgetCard } from './WarWidgetCard'
 
@@ -20,17 +21,6 @@ function formatPct(v: number): string {
   return `${sign}${v.toFixed(1)}%`
 }
 
-function formatMoneyARS(v: number): string {
-  try {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0,
-    }).format(v)
-  } catch {
-    return `$${Math.round(v).toLocaleString('es-AR')}`
-  }
-}
 
 export function LicuadoraWidget({ licuadora, onDetalle }: LicuadoraWidgetProps) {
   if (!licuadora) {

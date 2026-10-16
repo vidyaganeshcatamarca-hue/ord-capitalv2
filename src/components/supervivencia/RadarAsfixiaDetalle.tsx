@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
 import { t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
 import type { RadarData } from '@/pages/Supervivencia/SupervivenciaPage'
@@ -8,17 +9,6 @@ interface RadarAsfixiaDetalleProps {
   radar: RadarData[]
 }
 
-function formatMoneyARS(v: number): string {
-  try {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0,
-    }).format(v)
-  } catch {
-    return `$${Math.round(v).toLocaleString('es-AR')}`
-  }
-}
 
 const DIAS_SEMANA = [t('day_short_lu', {defaultValue:'Lu'}), t('day_short_ma', {defaultValue:'Ma'}), t('day_short_mi', {defaultValue:'Mi'}), t('day_short_ju', {defaultValue:'Ju'}), t('day_short_vi', {defaultValue:'Vi'}), t('day_short_sa', {defaultValue:'Sá'}), t('day_short_do', {defaultValue:'Do'})]
 const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']

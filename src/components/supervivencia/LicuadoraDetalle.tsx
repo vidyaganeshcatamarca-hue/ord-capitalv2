@@ -1,4 +1,5 @@
 import { t } from '@/locales/i18n'
+import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
 import type { LicuadoraData } from '@/pages/Supervivencia/SupervivenciaPage'
 import './LicuadoraDetalle.css'
 
@@ -7,17 +8,6 @@ interface LicuadoraDetalleProps {
   onIrAInversiones: () => void
 }
 
-function formatMoneyARS(v: number): string {
-  try {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 0,
-    }).format(v)
-  } catch {
-    return `$${Math.round(v).toLocaleString('es-AR')}`
-  }
-}
 
 function formatPct(v: number): string {
   const sign = v > 0 ? '+' : ''
