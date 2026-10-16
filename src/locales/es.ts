@@ -2356,6 +2356,18 @@ export const inversiones = {
   settings_action_back_to_simple_desc: "Volvé a la experiencia simple de Ajustes.",
   settings_action_invite_friend: "Invitar a un amigo",
   settings_action_rate_app: "Calificar ORD",
+  // S15 — deletion entry (T3): both options share the 10-day + PIN rule.
+  settings_entry_data_deletion: "Borrado",
+  settings_delete_title: "Borrado de datos y cuenta",
+  settings_delete_help: "Desde acá podés borrar tus datos o eliminar tu cuenta. Ambas acciones son permanentes y piden confirmación.",
+  settings_delete_option_data_title: "Borrar mis datos",
+  settings_delete_option_data_desc: "Tu cuenta sigue activa, pero tus movimientos y tus datos arrancan de cero.",
+  settings_delete_option_data_unavailable: "Todavía no disponible: estamos preparando esta opción.",
+  settings_delete_option_account_title: "Borrar la cuenta",
+  settings_delete_option_account_desc: "Tu cuenta se archiva y se elimina definitivamente en 30 días. Mientras tanto podés revertirlo.",
+  settings_delete_locked_body: "Pasados los primeros 10 días de uso, para borrar tus datos o tu cuenta necesitás el PIN de seguridad configurado en modo Avanzado.",
+  settings_delete_locked_hint: "Configurá tu PIN en modo Avanzado para desbloquear el borrado.",
+  settings_delete_locked_unknown: "No pudimos verificar la antigüedad de tu cuenta, así que el borrado queda bloqueado por seguridad.",
 };
 
 // Reports (bug reports)

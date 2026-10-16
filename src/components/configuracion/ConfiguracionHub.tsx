@@ -14,6 +14,7 @@ import { AparienciaCard } from './AparienciaCard'
 import { NotificacionesCard } from './NotificacionesCard'
 import { PWACard } from './PWACard'
 import { MantenimientoAppCard } from './MantenimientoAppCard'
+import { ConfiguracionBorradoCard } from './ConfiguracionBorradoCard'
 import './ConfiguracionHub.css'
 
 const BASE_CERO_HOME_KEY = 'base_cero_como_inicio'
@@ -163,6 +164,8 @@ function ComponentSlot({ slot, userId }: { slot: string; userId: string | undefi
     case 'PWACard': return <PWACard />
     case 'MantenimientoAppCard': return <MantenimientoAppCard />
     case 'PresupuestoCicloCard': return <PresupuestoCicloCard />
+    // T3 (S15) — the deletion entry (both modes) owns its own 10-day + PIN gate.
+    case 'ConfiguracionBorradoCard': return <ConfiguracionBorradoCard />
     default: return null
   }
 }

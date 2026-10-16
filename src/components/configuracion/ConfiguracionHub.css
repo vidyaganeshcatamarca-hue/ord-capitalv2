@@ -159,3 +159,93 @@ article.presupuesto-ciclo-card.config-hub-card {
   font-size: calc(0.78rem * var(--font-scale));
   line-height: 1.4;
 }
+
+/* ── ConfiguracionBorradoCard (feature: menu-ajustes, T3 / S15) ─────────── */
+.config-delete-card {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+}
+
+.config-delete-head {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.config-delete-head-text h3 {
+  margin: 0 0 4px;
+  font-size: calc(0.95rem * var(--font-scale));
+  color: var(--text);
+}
+
+.config-delete-head-text p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: calc(0.82rem * var(--font-scale));
+  line-height: 1.4;
+}
+
+/* One option box per S15 option (delete data / delete account) */
+.config-delete-option {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg-2);
+}
+
+.config-delete-option--disabled {
+  opacity: 0.72;
+}
+
+.config-delete-option h4 {
+  margin: 0;
+  font-size: calc(0.9rem * var(--font-scale));
+  color: var(--text);
+}
+
+.config-delete-option p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: calc(0.82rem * var(--font-scale));
+  line-height: 1.4;
+}
+
+.config-delete-option-reason {
+  color: var(--text-3);
+  font-size: calc(0.78rem * var(--font-scale));
+  font-weight: 600;
+}
+
+/* The reused DeleteAccountCard already brings its own frame and padding. */
+.config-delete-option .privacidad-delete {
+  padding: 12px;
+  border-radius: 14px;
+}
+
+/* Locked after the 10-day window (S15): notice + hint, no destructive UI */
+.config-delete-locked {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+}
+
+.config-delete-locked p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: calc(0.85rem * var(--font-scale));
+  line-height: 1.45;
+}
+
+.config-delete-locked-hint {
+  color: var(--mint);
+  font-weight: 600;
+}

@@ -16,12 +16,8 @@
 // Specs covered here: S2 (Simple tree), S3 (Advanced tree), S5 (no OCR
 // auto-approval entry), S6 (PIN placeholder is advanced-only), S8 (invite/rate
 // as root entries), S9 (asymmetric mode switch), S10 (all copy through i18n),
-// S11/S12 (Ayuda y soporte), S14 (hogar inside Datos y operaciones).
-//
-// Deferred, on purpose:
-//   - T3 (S15): the deletion entries (delete_data / delete_account) belong to
-//     Cuenta y seguridad in BOTH trees. The data slot is intentionally absent
-//     until the 10-day + PIN rule lands.
+// S11/S12 (Ayuda y soporte), S14 (hogar inside Datos y operaciones),
+// S15 (deletion entry in Cuenta y seguridad, both modes).
 
 export type SettingsMenuModo = 'simple' | 'avanzado'
 
@@ -150,6 +146,17 @@ const PROFILE_ENTRY: SettingsMenuItem = {
   target: 'component:MiCuentaCard',
 }
 
+// S15 / T3 — the deletion entry lives in Cuenta y seguridad in BOTH trees under
+// the same access rule (first 10 days without PIN, then the security PIN of mode
+// Avanzado). It is a live entry: the 10-day + PIN gate and the two options
+// (delete data / delete account) live inside ConfiguracionBorradoCard, which
+// reuses the existing DeleteAccountCard for the account option.
+const DATA_DELETION_ENTRY: SettingsMenuItem = {
+  id: 'data_deletion',
+  titleKey: 'settings_entry_data_deletion',
+  target: 'component:ConfiguracionBorradoCard',
+}
+
 const REGION_FORMAT_ENTRY: SettingsMenuItem = {
   id: 'region_format',
   titleKey: 'settings_entry_region_format',
@@ -173,7 +180,7 @@ const SIMPLE_TREE: SettingsMenuTree = {
       titleKey: 'settings_group_account_security',
       items: [
         PROFILE_ENTRY,
-        // T3 (S15): delete_data / delete_account go here, same rule as advanced.
+        DATA_DELETION_ENTRY,
       ],
     },
     {
@@ -215,7 +222,8 @@ const ADVANCED_TREE: SettingsMenuTree = {
           target: null,
           soon: true,
         },
-        // T3 (S15): delete_data / delete_account go here.
+        // T3 (S15): the deletion entry shares the rule with the simple tree.
+        DATA_DELETION_ENTRY,
       ],
     },
     {
