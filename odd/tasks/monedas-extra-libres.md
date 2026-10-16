@@ -98,7 +98,7 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
 | ID | Módulo | Especificación | Ruta | Commit |
 |---|---|---|---|---|
 | T1 | Backend datos+RPC | S5,S7,S8,S9,S10,S11,S13,S14,S15,A2,A4: `monedas_extra` en `p_config_region`, RPC de configuración, `fn_obtener_cotizacion(origen,destino)` pivote, validación en `fn_crear_billetera*`, test transaccional 21/21 PASS, **DEPLOYADO 2026-10-16** | worker+fixes inline | **852f6f0** |
-| T2 | Billeteras | S2,S5,S8,S11,A3: picker local+extras, texto de error, display | inline | — |
+| T2 | Billeteras | S2,S5,S8,S10,S11,A3: picker local+extras (monedasExtra.ts + useMonedasExtra + BilleterasPage), texto de error no mentidor, RED→GREEN 8/8, suite 80/80, commit | inline | **8918a1a** |
 | T3 | Cargas manuales | S4,A5,A6: sugerencia genérica en cruzadas, etiquetas dinámicas, clasificación backend | worker | — |
 | T4 | Patrimonio/Home | S3,A7,A8: hero + totales_por_moneda + Supervivencia | inline | — |
 | T5 | Voz | S5,A9: validación backend + contexto (ya data-driven) | worker | — |
@@ -192,3 +192,15 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
   (7 archivos, 1189 líneas: 4 artefactos SQL/mjs + doc + scripts de deploy/smoke).
   Pendiente de cierre: espejo `funcionesSQL` en clone Personal (coordinar con peer de
   Ajustes, mensaje enviado).
+- **L13** (coordinación peer, 2026-10-16): el peer respondió (obs 605): (1) los espejos
+  `funcionesSQL` los hizo ÉL (obs del topic coordination/p3-tercera-moneda; si T1 necesita
+  fixes sobre esas funciones, avisarle por Engram y él actualiza); (2) su T7 queda placeholder
+  PURO y mi T8 llena los selectores leyendo mis 3 RPCs — antes de tocar Región y formato,
+  leer `odd/tasks/menu-ajustes.md` del clone Personal y editar, no pisar; (3) su estado:
+  Fase 1 lista (da6fd56, 39dd05c), restan T3/T7/T5/i18n.
+- **L14** (T2 HECHO, 2026-10-16): picker de billeteras = local + extras reales; RED observado
+  (8 aserciones fallando por módulo inexistente), luego GREEN con `src/lib/monedasExtra.ts`
+  puro + hook `useMonedasExtra` (promesa memoizada, fallo no cacheado); BilleterasPage consume
+  el set real; `error_currency_not_local` deja de mentir (S11). Tests: 8/8 + suite onboarding
+  80/80 + i18n 28/28 + tsc limpio. Commit **8918a1a** (6 archivos incl. whitelist .gitignore
+  del test, convención del repo).
