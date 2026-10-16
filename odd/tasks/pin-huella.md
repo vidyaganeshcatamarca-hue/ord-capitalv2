@@ -80,7 +80,7 @@ Deshabilitar exige resolver el bloqueo con el PIN guardado o con la huella (si e
 | ID | Specs | Ruta | Commit |
 |----|-------|------|--------|
 | T1 | S1–S12 (doc) | Rama `feat/pin-huella` (independiente, desde HEAD de `pi/sesion-2` en Personal-2) + este doc + mirror Engram | este commit |
-| T2 | S5, S6, S7 | `src/lib/appLock.ts` (lib pura: política de bloqueo, ventana 60 s, backoff, cooldown) + tests `tests/` | pendiente |
+| T2 | S5, S6, S7 | `src/lib/appLock.ts` (lib pura: política de bloqueo, ventana 60 s, backoff, cooldown) + tests `tests/` | `node --test tests/appLock.test.js` 8/8, tsc limpio; commit en esta rama |
 | T3 | S4, S5, S6 | LockScreen + contexto de bloqueo + hookup arranque/background | pendiente |
 | T4 | S2, S4, S8, S11, S12 | Pantalla de configuración `/configuracion/proteccion` + flip `pin_protection` (contrato P1) + i18n | pendiente |
 | T5 | S3, S9 | **GATED (OK del dueño)**: tabla dedicada + RPCs + espejos + índice post-deploy | pendiente |
