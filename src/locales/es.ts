@@ -14,7 +14,7 @@ export const errors = {
   card_load_legacy_cuotas_btn: "Cargar cuotas anteriores",
 
   card_legacy_btn_entry: "Cuotas anteriores",
-  card_legacy_modal_title: "Cuotas de ciclos anteriores",
+  card_legacy_modal_title: "Agrega cuotas de ciclos anteriores",
   card_legacy_field_detalle: "Detalle del ítem",
   card_legacy_field_categoria: "Categoría (opcional)",
   card_legacy_no_category: "Sin categoría",
@@ -2294,7 +2294,7 @@ export const inversiones = {
   movement_btn_unmet_reason_insufficient: "Saldo insuficiente en el origen",
   movement_select_origin_placeholder: "Selecciona origen...",
   movement_select_destination_placeholder: "Selecciona destino...",
-  movement_select_origin_or_card: "Selecciona un origen...",
+  movement_select_origin_or_card: "Selecciona una billetera...",
   step_account: "Cuenta",
   step_source: "Origen",
   step_details_label: "Detalles",

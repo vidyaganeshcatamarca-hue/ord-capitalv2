@@ -3,7 +3,7 @@
  * Flujo de registro en pasos: Categoría → Monto → Cuenta → Fecha → Detalles → Confirmar
  * Refactor del formulario plano original a un Bottom Sheet por pasos.
  */
-import { useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
+import { useState, useEffect, useLayoutEffect, useCallback, useRef, useSyncExternalStore } from 'react'
 import { Mic } from 'lucide-react'
 import { useToast } from '@/contexts/ToastContext'
 import { useHogar } from '@/contexts/HogarContext'
@@ -110,6 +110,42 @@ function toLocalDate(offsetDays = 0): string {
   const month = String(d.getMonth() + 1).padStart(2, '0')
   const day = String(d.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+// Import display: font shrinks stepwise so long amounts (1M… 100M+) stay fully
+// visible in the fixed input box instead of scrolling the leading digits out.
+const montoFontSize = (len: number, base: number, floor: number): number => {
+  if (len <= 6) return base
+  if (len <= 9) return Math.max(base - 8, floor)
+  if (len <= 12) return Math.max(base - 12, floor)
+  return floor
+}
+
+// Fit-to-width font for the importe box: sizes the text so the whole formatted
+// amount fits the MEASURED available px (monospace advance ≈ 0.62em), clamped
+// to [min, base]. Guarantees full visibility on narrow columns too.
+const fitImporteFont = (len: number, availPx: number, base: number, min: number): number => {
+  if (!len || availPx <= 0) return base
+  const fit = Math.floor(availPx / (len * 0.62))
+  return Math.max(min, Math.min(base, fit))
+}
+
+// Inverse of formatExpressionForDisplay: a value shown with thousands/decimal
+// regional separators is re-canonicalized to '.' decimals. A group separator
+// followed by 1-2 digits at the end is treated as a decimal being typed, so
+// "10.5" (dec-comma region) keeps its decimal instead of losing a digit.
+function displayMontoToCanonical(text: string, decimalSeparator: string, thousandsSeparator: string): string {
+  if (!text) return text
+  if (decimalSeparator === thousandsSeparator) return text
+  const marked = text
+    .replace(/^([\s\S]*?)([.,])(\d{1,2})$/, (_m, head, _sep, tail) => `${head}@@${tail}`)
+    .replace(/^([\s\S]*?)([.,])$/, (_m, head) => `${head}@@`)
+  let s = marked.split(thousandsSeparator).join('')
+  s = s.replace(/@@/g, '.')
+  if (decimalSeparator !== '.') {
+    s = s.split(decimalSeparator).join('.')
+  }
+  return s
 }
 
 interface CuotasSelectorProps {
@@ -370,6 +406,55 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   const inputFechaRef = useRef<HTMLInputElement>(null)
   const selectOrigenRef = useRef<HTMLSelectElement>(null)
   const amountInputRef = useRef<HTMLInputElement>(null)
+
+  // Available px for the amount input, measured live so the font can fit any
+  // amount to the real box width (the column is narrow on small PC windows).
+  const [inpAvailPx, setInpAvailPx] = useState(140)
+  useLayoutEffect(() => {
+    const measure = () => {
+      const el = amountInputRef.current
+      if (el) setInpAvailPx(el.clientWidth || 140)
+    }
+    measure()
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(measure) : null
+    const el = amountInputRef.current
+    if (ro && el) ro.observe(el)
+    window.addEventListener('resize', measure)
+    return () => {
+      ro?.disconnect()
+      window.removeEventListener('resize', measure)
+    }
+  }, [])
+
+  // Adaptive font for the PC amount input, self-correcting against REAL render
+  // metrics (mono advance varies with the resolved font): measure scrollWidth
+  // vs clientWidth and step the font down/up until the whole formatted amount
+  // fits. Runs on every amount change; never touches the mobile inputs.
+  const [importeFontPx, setImporteFontPx] = useState<number | null>(null)
+  useLayoutEffect(() => {
+    if (isMobile) return
+    const el = amountInputRef.current
+    if (!el) return
+    const disp = monto === '0' ? '' : formatExpressionForDisplay(monto, prefs.separador_decimal, prefs.separador_miles)
+    if (!disp) { setImporteFontPx(null); return }
+    const fits = (px: number): boolean => {
+      el.style.fontSize = `${px}px`
+      return el.scrollWidth <= el.clientWidth + 1
+    }
+    let px = fitImporteFont(disp.length, inpAvailPx, 32, 14)
+    let guard = 0
+    while (guard++ < 16) {
+      if (!fits(px)) {
+        if (px <= 14) { px = 14; break }
+        px -= 4
+      } else if (px < 32 && fits(px + 4)) {
+        px += 4
+      } else {
+        break
+      }
+    }
+    setImporteFontPx(px)
+  }, [monto, isMobile, inpAvailPx, prefs.separador_decimal, prefs.separador_miles])
 
   // ── Creación rápida de subcategoría ──
   const [showNewSubcatModal, setShowNewSubcatModal] = useState(false)
@@ -1023,11 +1108,20 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           type="text"
                           className="monto-input-box-field"
                           placeholder="0"
-                          value={monto === '0' ? '' : monto}
+                          value={monto === '0' ? '' : formatExpressionForDisplay(monto, prefs.separador_decimal, prefs.separador_miles)}
+                          style={{ fontSize: importeFontPx ?? 32 }}
                           onChange={e => {
-                            const val = e.target.value;
-                            if (/^[0-9.,+\-*/()]*$/.test(val)) {
-                              setMonto(val.replace(',', '.'));
+                            const el = e.target
+                            const caretAtEnd = el.selectionStart !== null && el.selectionStart === el.value.length
+                            // Undo display grouping with decimal protection.
+                            const canonical = displayMontoToCanonical(e.target.value, prefs.separador_decimal, prefs.separador_miles)
+                            if (/^[0-9.,+\-*/()]*$/.test(canonical)) {
+                              setMonto(canonical.replace(',', '.'))
+                            }
+                            if (caretAtEnd) {
+                              requestAnimationFrame(() => {
+                                try { el.setSelectionRange(el.value.length, el.value.length) } catch { /* detached */ }
+                              })
                             }
                           }}
                           onBlur={() => {
@@ -1035,9 +1129,16 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                               try {
                                 const evalRes = safeEval(monto);
                                 if (evalRes && !isNaN(evalRes) && isFinite(evalRes)) {
-                                  setMonto(parseFloat(evalRes.toFixed(2)).toString());
+                                  setMonto(evalRes.toFixed(2))
+                                  return
                                 }
                               } catch (e) {}
+                            }
+                            // Plain number: keep 2 canonical decimals so the box reads
+                            // like the side mirrors ("1.023.333,00").
+                            const num = parseFloat(monto)
+                            if (monto !== '' && !isNaN(num) && isFinite(num)) {
+                              setMonto(num.toFixed(2))
                             }
                           }}
                         />
@@ -1524,7 +1625,8 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         enterKeyHint="next"
                         className="monto-input-box-field"
                         placeholder="0"
-                        value={monto === '0' ? '' : monto}
+                        value={monto === '0' ? '' : formatExpressionForDisplay(monto, prefs.separador_decimal, prefs.separador_miles)}
+                        style={{ fontSize: montoFontSize((monto === '0' ? '' : formatExpressionForDisplay(monto, prefs.separador_decimal, prefs.separador_miles)).length, 24, 14) }}
                         onKeyDown={e => {
                           if (e.key === 'Enter') {
                             e.preventDefault();
@@ -1532,9 +1634,9 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           }
                         }}
                         onChange={e => {
-                          const val = e.target.value;
-                          if (/^[0-9.,+\-*/()]*$/.test(val)) {
-                            setMonto(val.replace(',', '.'));
+                          const canonical = displayMontoToCanonical(e.target.value, prefs.separador_decimal, prefs.separador_miles)
+                          if (/^[0-9.,+\-*/()]*$/.test(canonical)) {
+                            setMonto(canonical.replace(',', '.'))
                           }
                         }}
                       />
@@ -1693,7 +1795,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                     {/* Importe + mic: the pair stays centered, so the input
                         shifts a bit left without going flush. */}
                     <div className="importe-mic-row">
-                      <div className="monto-input-container" style={{ maxWidth: 260, cursor: 'pointer' }} onClick={() => setShowCalculator(true)}>
+                      <div className="monto-input-container" style={{ maxWidth: 320, cursor: 'pointer' }} onClick={() => setShowCalculator(true)}>
                         <span className="monto-currency-symbol">
                           {currencySymbol(monedaOrigen)}
                         </span>
@@ -1703,7 +1805,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           placeholder="0"
                           value={monto === '0' ? '' : formatExpressionForDisplay(monto, prefs.separador_decimal, prefs.separador_miles)}
                           readOnly={true}
-                          style={{ cursor: 'pointer' }}
+                          style={{ cursor: 'pointer', fontSize: montoFontSize((monto === '0' ? '' : formatExpressionForDisplay(monto, prefs.separador_decimal, prefs.separador_miles)).length, 24, 14) }}
                         />
                       </div>
                       {voiceMicButton}
