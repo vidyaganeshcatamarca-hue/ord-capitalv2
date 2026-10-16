@@ -70,6 +70,7 @@ const NotificacionesPage = lazy(() => import('@/pages/Configuracion/Notificacion
 const CategoriasConfigPage = lazy(() => import('@/pages/Configuracion/CategoriasConfigPage').then(module => ({ default: module.CategoriasConfigPage })))
 const HogarConfigPage = lazy(() => import('@/pages/Configuracion/HogarConfigPage').then(module => ({ default: module.HogarConfigPage })))
 const RegionFormatoPage = lazy(() => import('@/pages/Configuracion/RegionFormatoPage').then(module => ({ default: module.RegionFormatoPage })))
+const ProteccionPage = lazy(() => import('@/pages/Configuracion/ProteccionPage').then(m => ({ default: m.ProteccionPage })))
 const PresupuestoCicloPage = lazy(() => import('@/pages/Configuracion/PresupuestoCicloPage').then(module => ({ default: module.PresupuestoCicloPage })))
 const PreferenciasOperativasPage = lazy(() => import('@/pages/Configuracion/PreferenciasOperativasPage').then(module => ({ default: module.PreferenciasOperativasPage })))
 const AcercaPage = lazy(() => import('@/pages/Configuracion/AcercaPage').then(module => ({ default: module.AcercaPage })))
@@ -184,6 +185,8 @@ function AppLayout() {
           <Route path="/privacidad" element={<PrivacidadPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
           <Route path="/configuracion/region" element={<RegionFormatoPage />} />
+          {""}{/* pin-huella: flat settings subpage convention (peer contract) */}
+          <Route path="/configuracion/proteccion" element={<ProteccionPage />} />
           <Route path="/configuracion/importar-exportar" element={<ImportarExportarPage />} />
           <Route path="/configuracion/presupuesto" element={<PresupuestoCicloPage />} />
           <Route path="/configuracion/notificaciones" element={<NotificacionesPage />} />

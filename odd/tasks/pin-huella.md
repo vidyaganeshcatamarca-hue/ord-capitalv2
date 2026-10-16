@@ -82,7 +82,7 @@ Deshabilitar exige resolver el bloqueo con el PIN guardado o con la huella (si e
 | T1 | S1–S12 (doc) | Rama `feat/pin-huella` (independiente, desde HEAD de `pi/sesion-2` en Personal-2) + este doc + mirror Engram | este commit |
 | T2 | S5, S6, S7 | `src/lib/appLock.ts` (lib pura: política de bloqueo, ventana 60 s, backoff, cooldown) + tests `tests/` | `node --test tests/appLock.test.js` 8/8, tsc limpio; commit en esta rama |
 | T3 | S4, S5, S6 | LockScreen + contexto de bloqueo + hookup arranque/background | 13/13 (appLock 8 + appLockGate 5), tsc limpio; commit 9cedea3; sentinel PIN_BACKEND_ENABLED=false hasta T5 |
-| T4 | S2, S4, S8, S11, S12 | Pantalla de configuración `/configuracion/proteccion` + flip `pin_protection` (contrato P1) + i18n | pendiente |
+| T4 | S2, S4, S8, S11, S12 | Pantalla de configuración `/configuracion/proteccion` + i18n | tests 18/18 (proteccion 5 + appLock 8 + gate 5), tsc limpio; commit de esta rama. El flip `pin_protection` viaja a la integración (T6/T7, contrato con P1) porque su `settingsMenu.ts` no vive en esta rama independiente |
 | T5 | S3, S9 | **GATED (OK del dueño)**: tabla dedicada + RPCs + espejos + índice post-deploy | pendiente |
 | T6 | S10 | Fuente única `hasPinConfigured` publicada + aviso a P1 por Engram (su gate la consume en su rama) | pendiente (tras T5) |
 | T7 | — | Verificación integral (node --test, tsc, i18n) + cierre con árbol integrado de P1 | pendiente |

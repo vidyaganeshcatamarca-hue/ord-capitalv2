@@ -2512,4 +2512,22 @@ export const tour = {
   app_lock_pin_entry: "Tu PIN de 4 dígitos",
   app_lock_keypad: "Teclado de PIN",
   app_lock_erase: "Borrar",
+  app_lock_pin_invalido: "El PIN debe ser de 4 dígitos.",
+  app_lock_pin_debil: "Ese PIN es demasiado simple. Elegí otros 4 dígitos.",
+
+  // App-lock: pantalla de configuración (Ajustes · Cuenta y seguridad).
+  proteccion_title: "Protección con PIN o huella",
+  proteccion_desc: "Bloqueá el acceso a la app con un PIN de 4 dígitos y, si tu dispositivo lo permite, con tu huella.",
+  proteccion_estado_title: "Estado de la protección",
+  proteccion_estado_pin: "Protección con PIN",
+  proteccion_estado_huella: "Huella en este dispositivo",
+  proteccion_estado_activo: "Activada",
+  proteccion_estado_inactivo: "Desactivada",
+  proteccion_huella_no_soportada: "No disponible en este dispositivo",
+  proteccion_activar: "Activar la protección",
+  proteccion_cambiar_pin: "Cambiar el PIN",
+  proteccion_desactivar: "Desactivar la protección",
+  proteccion_activar_huella: "Registrar la huella en este dispositivo",
+  proteccion_desactivar_huella: "Quitar la huella de este dispositivo",
+  proteccion_backend_pendiente: "Disponible próximamente: falta el backend del PIN (pendiente de autorización).",
 };
