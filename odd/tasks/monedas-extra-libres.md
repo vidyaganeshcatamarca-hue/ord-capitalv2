@@ -109,12 +109,11 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
 | T2 | Billeteras | S2,S5,S8,S10,S11,A3: picker local+extras (monedasExtra.ts + useMonedasExtra + BilleterasPage), texto de error no mentidor, RED→GREEN 8/8, suite 80/80, commit | inline | **8918a1a** |
 | T3 | Cargas manuales | S4,S16-S17,A5,A6: sugerencia por par via fn_obtener_cotizacion + hint tasa/fecha; helper fn_titulo_transferencia (12/12 JS + 7/7 SQL), renderer JSON en HomePage, keys legacy USD intactas; **DEPLOYADO 2026-10-16** | worker+inline | — |
 | T4 | Patrimonio/Home | S3,S18,S19,A7,A8: hero líneas dinámicas (buildHeroLines + totales_por_moneda del RPC existente) + Supervivencia en moneda local real (9 copias formatMoneyARS extintas); SIN backend | inline | **c511070** |
-| T4 | Patrimonio/Home | S3,A7,A8: hero + totales_por_moneda + Supervivencia | inline | — |
 | T5 | Voz | S5,A9,S25: **DECIDIDO NO IMPLEMENTAR el gate** (la moneda declarada queda metadata muerta; la pata manda). Ingesta voz ya data-driven (deploy 73) — intacta. Artefacto 76 commiteado sin deploy | inline | fbc1d42 (no deploy) |
-| T6 | Inversiones | A10: picker de moneda (pendiente respuesta) | pendiente | — |
-| T7 | Cuarentena | A12: sugerencia de conversión en EditarCuarentenaModal | inline | — |
+| T6 | Inversiones | S21 (A10): picker = monedas del usuario (buildWalletCurrencyOptions + useMonedasExtra; moneda default = local real); LiquidarInversionModal ya matcheaba por moneda | inline | **25ce3db** |
+| T7 | Cuarentena | S23 (A12): sugerencia del par completo via fn_obtener_cotizacion + hint tasa/fecha; sin tasa manual (D17) | inline | **2f72276** |
 | T8 | Configuración UI | S5,S24+T8b/S22,A1,A11: bloque Monedas (S18 peer) + fn_obtener_divisas_cotizadas (77) + formato por moneda (78, contrato peer) + i18n | inline | **4858793, 915a324, 20f492f** |
-| T9 | Cierre | S1–S11: sweep de literales restantes en funciones tocadas, docs, tests finales | verify | — |
+| T9 | Cierre | S1–S23: sweep de literales en las funciones tocadas (74/75/77/78): **0 accidentales** — todos by-design (keys legacy USD S17, es_usd binaria fuera de alcance L6, defaults S13, fallback ARS de WU1); suites finales onboarding 106/106 + i18n 28/28 + tsc limpio; 12/12 claves i18n del feature presentes | docs | **95ad527 + cierre** |
 
 ## Log
 
@@ -258,3 +257,15 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
   contrato formato por moneda validado (mi backend; su U3 en Formato de números por moneda;
   mi BloqueMonedas = selección 2ª/3ª); aviso de espejo + swap data-layer U3 enviado.
   Formato del feature en la rama pi/sesion-3 COMPLETO (T1-T9): ver tabla Tasks.
+
+- **L19** (T9 cerrado, 2026-10-16): sweep de literales ARS/USD sobre los deploys del feature
+  (`74/75/77/78`): **0 accidentales**. Clasificación by-design: (a) `helper fn_titulo_transferencia`
+  con ramas `='USD'` → keys legacy ex S17 (decisión del dueño: 'Compra de dólares' intacta);
+  (b) `(v_moneda = 'USD')` x8 → columna `es_usd` de p_caja, binaria por alcance (L6: fuera de
+  C1); (c) `COALESCE(..., 'ARS')` → fallback legado WU1 de usuarios sin región confirmada;
+  (d) rama `v_local <> 'USD'` del getter de formato → slot USD de S13 (2ª default del dueño);
+  (e) comentarios/docstrings. Suites finales: onboarding 106/106, i18n 28/28, tsc limpio,
+  12/12 claves i18n del feature presentes en es.ts. **El feature queda COMPLETO y en
+  producción** (deploys 74/75/77/78 con OK del dueño). Espejos peer al día (entradas 256-263).
+  Pendientes inter-sesiones: swap del data-layer U3 del peer (su tarea), prueba end-to-end del
+  dueño.
