@@ -1190,6 +1190,9 @@ export const saneamiento = {
   transfer_venta_moneda: "Venta de {moneda}",
   // S16/S15: hint de tasa del par en la transferencia cruzada (fecha = la más vieja de las dos cotizaciones).
   movement_tasa_par_hint: "Tasa del día: 1 = {tasa} (actualizada: {fecha})",
+  // S20: al aprobar un item de cuarentena, la moneda declarada (voz/OCR) que no
+  // es una de las monedas activas del usuario bloquea; la fila queda editable.
+  error_cuarentena_moneda_no_activa: "La moneda declarada ({moneda}) no pertenece a tus monedas configuradas. Edita el movimiento para corregirla.",
   movement_toast_expense: "Gasto registrado",
   movement_toast_income: "Ingreso registrado",
   movement_toast_transfer: "Transferencia realizada",
