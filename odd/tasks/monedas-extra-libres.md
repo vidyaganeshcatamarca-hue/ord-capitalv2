@@ -100,6 +100,7 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
 | T1 | Backend datos+RPC | S5,S7,S8,S9,S10,S11,S13,S14,S15,A2,A4: `monedas_extra` en `p_config_region`, RPC de configuración, `fn_obtener_cotizacion(origen,destino)` pivote, validación en `fn_crear_billetera*`, test transaccional 21/21 PASS, **DEPLOYADO 2026-10-16** | worker+fixes inline | **852f6f0** |
 | T2 | Billeteras | S2,S5,S8,S10,S11,A3: picker local+extras (monedasExtra.ts + useMonedasExtra + BilleterasPage), texto de error no mentidor, RED→GREEN 8/8, suite 80/80, commit | inline | **8918a1a** |
 | T3 | Cargas manuales | S4,S16-S17,A5,A6: sugerencia por par via fn_obtener_cotizacion + hint tasa/fecha; helper fn_titulo_transferencia (12/12 JS + 7/7 SQL), renderer JSON en HomePage, keys legacy USD intactas; **DEPLOYADO 2026-10-16** | worker+inline | — |
+| T4 | Patrimonio/Home | S3,S18,S19,A7,A8: hero líneas dinámicas (buildHeroLines + totales_por_moneda del RPC existente) + Supervivencia en moneda local real (9 copias formatMoneyARS extintas); SIN backend | inline | **c511070** |
 | T4 | Patrimonio/Home | S3,A7,A8: hero + totales_por_moneda + Supervivencia | inline | — |
 | T5 | Voz | S5,A9: validación backend + contexto (ya data-driven) | worker | — |
 | T6 | Inversiones | A10: picker de moneda (pendiente respuesta) | pendiente | — |
@@ -217,3 +218,17 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
   funcionesSQL. Verificación del tier: verificador independiente corrió para T1 (veredicto
   procesado); T3 backend usó test transaccional 7/7 + smoke. S16/S17 usan S15 (fecha más
   vieja) y D17 (NULL honesto) del núcleo T1.
+
+- **L16** (T4 HECHO + incidente espejos CERRADO, 2026-10-16): (a) con la lectura autorizada
+  del dueño se verificó que 'Funciones y trigers de personal - copia.md' es SOLO SQL de
+  funciones (tabla markdown, sin prosa; bloques truncados por ancho de celda;
+  fn_aprobar_cuarentena_v2 ni existe ahí) y que Personal-2/temp_sql no tiene prosa B8:
+  la prosa perdida NO existe en ninguna fuente accesible → la reconstrucción parcial del
+  peer etiquetada [reconstruidasensa] queda como FINAL (aviso al peer; obs 612). (b) T4
+  commiteado (c511070): hero Home consume totales_por_moneda (shape jsonb que la WU3b ya
+  devolvía y el front ignoraba) con buildHeroLines (8/8 tests, RED observado) — extras en
+  su orden + huérfanas con saldo; USD conserva su slot (default ARS+USD: la línea queda
+  idéntica a la fija de antes); Supervivencia: extintas 9 copias locales de formatMoneyARS
+  clavadas en ARS para un usuario EUR — helper compartido formatoMonedaLocal (6/6 tests).
+  Suites onboarding 106/106 + i18n 28/28 + tsc limpio. Backend SIN cambios (S18/S19 eran
+  frontend; S19 corrige un bug latente de moneda-clavada previo al feature).
