@@ -38,6 +38,7 @@ tests/onboarding/*
 !tests/onboarding/country-suggestion.test.js
 !tests/onboarding/currency-conversion.test.js
 !tests/onboarding/monedas-extra.test.js
+!tests/onboarding/transfer-titles.test.js
 !tests/onboarding/format-context.test.js
 !tests/keypad_decimal_separator.test.js
 scratch/

@@ -11,6 +11,8 @@ import { ReconcileWalletModal } from '@/components/ReconcileWalletModal/Reconcil
 import { WalletIcon } from '@/components/WalletIcon'
 import { TourTriggerButton } from '@/components/Tour/TourTriggerButton'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { currencyName } from '@/lib/countryCatalog'
+import { parseTransferDetalle } from '@/lib/transferTitles'
 import { useCountUp } from '@/hooks/useCountUp'
 import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { generateColorShade } from '@/lib/colorUtils'
@@ -1707,7 +1709,25 @@ export function HomePage() {
                                   const destName = walletNameById.get(Number(destId))
                                   return destName ? ` -> ${t(destName)}` : ''
                                 })()}
-                                {m.detalle ? ` · ${m.detalle === 'card_summary_payment_split' ? t('card_summary_payment_split') : m.detalle === 'card_summary_payment_favor' ? t('card_summary_payment') : m.detalle.startsWith('card_summary') ? t('card_summary_payment') : t(m.detalle)}` : ''}
+                                                                {m.detalle ? ` · ${(() => {
+                                  // S17: cross-currency transfer titles travel as JSON
+                                  // {key: transfer_compra_moneda|venta, params:{moneda:CODE}}
+                                  // — the human currency name resolves HERE (currencyName),
+                                  // because the backend cannot know the user's language.
+                                  // Plain keys (legacy USD compra/venta, same-currency,
+                                  // card_summary…) keep the exact same path as before.
+                                  const rendered = parseTransferDetalle(
+                                    m.detalle,
+                                    (key, params) => t(key, {
+                                      ...params,
+                                      moneda: currencyName(String(params.moneda ?? ''), locale),
+                                    })
+                                  )
+                                  if (m.detalle === 'card_summary_payment_split') return t('card_summary_payment_split')
+                                  if (m.detalle === 'card_summary_payment_favor') return t('card_summary_payment')
+                                  if (m.detalle.startsWith('card_summary')) return t('card_summary_payment')
+                                  return rendered
+                                })()}` : ''}
                                 </>
                               )}
                             </span>

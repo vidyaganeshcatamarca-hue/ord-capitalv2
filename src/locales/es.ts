@@ -1184,6 +1184,12 @@ export const saneamiento = {
   saneamiento_sin_categoria: "Sin categoría",
   transfer_compra_dolares: "Compra de dólares",
   transfer_venta_dolares: "Venta de dólares",
+  // S17: pares con extras — el detalle viaja como JSON {key, params:{moneda:CODE}};
+  // el renderer resuelve el nombre humano con currencyName(code, locale).
+  transfer_compra_moneda: "Compra de {moneda}",
+  transfer_venta_moneda: "Venta de {moneda}",
+  // S16/S15: hint de tasa del par en la transferencia cruzada (fecha = la más vieja de las dos cotizaciones).
+  movement_tasa_par_hint: "Tasa del día: 1 = {tasa} (actualizada: {fecha})",
   movement_toast_expense: "Gasto registrado",
   movement_toast_income: "Ingreso registrado",
   movement_toast_transfer: "Transferencia realizada",
