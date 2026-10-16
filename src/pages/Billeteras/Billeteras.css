@@ -204,37 +204,7 @@
   color: var(--text-2);
 }
 
-/* ── Emojis Picker Grid ── */
-.emojis-picker-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: var(--space-2);
-  margin-bottom: var(--space-4);
-}
-
-.emoji-select-btn {
-  height: 44px;
-  border-radius: var(--radius-md);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  font-size: calc(20px * var(--font-scale));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-
-.emoji-select-btn:hover {
-  background: var(--surface-3);
-  border-color: var(--border-focus);
-}
-
-.emoji-select-btn.active {
-  background: rgba(0, 180, 216, 0.15);
-  border-color: var(--mint);
-  box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.2);
-}
+/* ── Emojis Picker Grid → moved to src/styles/iconPickerGrids.css (shared pickers) ── */
 
 /* ── Badge Fondo de Previsión ── */
 .prevision-badge {

@@ -1,0 +1,73 @@
+/* ─── Icon Picker Grids (shared by Categorias, SubcuentaModal,
+       AddCategoryModal, Billeteras and Onboarding) ───────────────────────
+   Single source of truth so lazily-loaded pages cannot ship a picker
+   without styles, and so the in-window scroll behavior is identical
+   everywhere. */
+
+/* Rubros / subcuentas / ingresos (CategoryIcon pickers) */
+.cat-emoji-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin-bottom: 4px;
+  /* In-window scroll for the expanded 125-icon catalog */
+  max-height: 220px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+.cat-emoji-btn {
+  aspect-ratio: 1;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: calc(18px * var(--font-scale));
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cat-emoji-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-soft, var(--surface-3));
+  box-shadow: 0 0 8px var(--accent, var(--mint, #00B127));
+}
+.cat-emoji-btn:hover:not(.active) {
+  border-color: var(--surface-3);
+  transform: scale(1.1);
+}
+
+/* Billeteras / categoría desde movimiento / onboarding */
+.emojis-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  /* In-window scroll for the expanded 125-icon catalog */
+  max-height: 244px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}
+.emoji-select-btn {
+  height: 44px;
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  font-size: calc(20px * var(--font-scale));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.emoji-select-btn:hover {
+  background: var(--surface-3);
+  border-color: var(--border-focus);
+}
+.emoji-select-btn.active {
+  background: rgba(0, 180, 216, 0.15);
+  border-color: var(--mint);
+  box-shadow: 0 0 0 2px rgba(0, 180, 216, 0.2);
+}

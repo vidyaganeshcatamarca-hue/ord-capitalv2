@@ -6,6 +6,8 @@ import { ToastProvider } from '@/contexts/ToastContext'
 import { ModoAppProvider, useModoApp } from '@/contexts/ModoAppContext'
 import { LanguageProvider } from '@/locales/LanguageProvider'
 import { SessionTrackerProvider } from '@/providers/SessionTrackerProvider'
+import { AppLockProvider } from '@/contexts/AppLockContext'
+import { AppLockGate } from '@/components/AppLockGate/AppLockGate'
 import { t } from '@/locales/i18n'
 import { useToast } from '@/contexts/ToastContext'
 import { onPendingReporte, type ReporteOutcome } from '@/lib/reportesPending'
@@ -66,6 +68,7 @@ const ConfiguracionPage = lazy(() => import('@/pages/Configuracion/Configuracion
 const NotificacionesPage = lazy(() => import('@/pages/Configuracion/NotificacionesPage').then(module => ({ default: module.NotificacionesPage })))
 const CategoriasConfigPage = lazy(() => import('@/pages/Configuracion/CategoriasConfigPage').then(module => ({ default: module.CategoriasConfigPage })))
 const HogarConfigPage = lazy(() => import('@/pages/Configuracion/HogarConfigPage').then(module => ({ default: module.HogarConfigPage })))
+const ProteccionPage = lazy(() => import('@/pages/Configuracion/ProteccionPage').then(m => ({ default: m.ProteccionPage })))
 const PresupuestoCicloPage = lazy(() => import('@/pages/Configuracion/PresupuestoCicloPage').then(module => ({ default: module.PresupuestoCicloPage })))
 const PreferenciasOperativasPage = lazy(() => import('@/pages/Configuracion/PreferenciasOperativasPage').then(module => ({ default: module.PreferenciasOperativasPage })))
 const ImportarExportarPage = lazy(() => import('@/pages/Configuracion/ImportarExportarPage').then(module => ({ default: module.ImportarExportarPage })))
@@ -177,6 +180,8 @@ function AppLayout() {
           <Route path="/salud" element={<SaludPage />} />
           <Route path="/sobres" element={<SobresPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
+          {/* pin-huella: flat settings subpage convention (peer contract) */}
+          <Route path="/configuracion/proteccion" element={<ProteccionPage />} />
           <Route path="/configuracion/importar-exportar" element={<ImportarExportarPage />} />
           <Route path="/configuracion/presupuesto" element={<PresupuestoCicloPage />} />
           <Route path="/configuracion/notificaciones" element={<NotificacionesPage />} />
@@ -261,6 +266,7 @@ export default function App() {
         <AppConsentGate>
         <LegalUpdateGate>
         <AuthProvider>
+          <AppLockProvider>
           <SessionTrackerProvider>
             <HogarProvider>
             <ToastProvider>
@@ -274,6 +280,7 @@ export default function App() {
                * remounting the session or the app-mode bootstrap would only
                * cause a spinner flash and a redundant refetch. */}
               <LanguageProvider>
+              <AppLockGate />
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
                   {/* Rutas públicas */}
@@ -292,6 +299,7 @@ export default function App() {
             </ToastProvider>
             </HogarProvider>
           </SessionTrackerProvider>
+          </AppLockProvider>
         </AuthProvider>
         </LegalUpdateGate>
         </AppConsentGate>

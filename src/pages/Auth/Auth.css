@@ -485,37 +485,7 @@
   box-shadow: 0 0 12px rgba(230, 57, 70, 0.1);
 }
 
-/* ─── Emojis Selector Grid ─── */
-.emoji-selector-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.emoji-selector-btn {
-  height: 48px;
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: calc(20px * var(--font-scale));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition-fast);
-}
-
-.emoji-selector-btn:hover {
-  border-color: var(--border-light);
-  background: var(--surface-3);
-}
-
-.emoji-selector-btn.active {
-  background: var(--mint-dim);
-  border-color: var(--mint);
-  box-shadow: 0 0 8px rgba(0, 180, 216, 0.2);
-  transform: scale(1.05);
-}
+/* ─── Emojis Selector Grid → moved to src/styles/iconPickerGrids.css (shared pickers) ─── */
 
 /* ─── Background Decorativo (Blobs Flotantes) ─── */
 .auth-bg {

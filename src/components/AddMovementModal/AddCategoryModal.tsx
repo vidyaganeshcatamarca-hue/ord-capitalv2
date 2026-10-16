@@ -6,6 +6,7 @@ import { filterUserEditableCategories } from '@/lib/categoryFilters'
 import { iconGlyph } from '@/constants/emojiToLucide'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { RUBRO_ICONS } from '@/constants/emojiToLucide'
+import '@/styles/iconPickerGrids.css'
 
 interface AddCategoryModalProps {
   onClose: () => void
