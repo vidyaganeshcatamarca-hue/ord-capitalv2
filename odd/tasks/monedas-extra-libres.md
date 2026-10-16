@@ -69,6 +69,14 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
 - **S23** (A12, 2026-10-16): la sugerencia de conversión en edición/aprobación de cuarentena es
   **la misma regla que transferencias manuales** (S16 + S15): genérica por pivote, fecha visible,
   sin tasa → manual (D17).
+- **S25** (decisión del dueño sobre T5/S20, 2026-10-16): la moneda DECLARADA en cuarentena
+  (voz/OCR) queda **metadata muerta**: el motor de aprobación NO la consulta y sigue
+  insertando con la **moneda real de la billetera elegida** (sume cabeza la billetera).
+  "deja la metadata muerta, no interfiere y no corresponde que hagas nada con ella. Lo que
+  manda es billetera y lo que diga el user no importa en el frontend". El patch 76 NO se
+  deploya; queda commiteado (fbc1d42) como artefacto de exploración, marcado NO-AUTORIZADO
+  para deploy. La clave i18n error_cuarentena_moneda_no_activa queda sin consumidor (sweep
+  la reportará como advertencia).
 - **S24** (coordinación menu-ajustes, 2026-10-16): T8 integra en la página Región y formato
   (`src/pages/Configuracion/RegionFormatoPage.tsx`), dentro del bloque **Monedas** que la spec
   paralela `odd/tasks/menu-ajustes.md` S18 reservó (obs 600/598): local no configurable (derivada
@@ -102,7 +110,7 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
 | T3 | Cargas manuales | S4,S16-S17,A5,A6: sugerencia por par via fn_obtener_cotizacion + hint tasa/fecha; helper fn_titulo_transferencia (12/12 JS + 7/7 SQL), renderer JSON en HomePage, keys legacy USD intactas; **DEPLOYADO 2026-10-16** | worker+inline | — |
 | T4 | Patrimonio/Home | S3,S18,S19,A7,A8: hero líneas dinámicas (buildHeroLines + totales_por_moneda del RPC existente) + Supervivencia en moneda local real (9 copias formatMoneyARS extintas); SIN backend | inline | **c511070** |
 | T4 | Patrimonio/Home | S3,A7,A8: hero + totales_por_moneda + Supervivencia | inline | — |
-| T5 | Voz | S5,A9: validación backend + contexto (ya data-driven) | worker | — |
+| T5 | Voz | S5,A9,S25: **DECIDIDO NO IMPLEMENTAR el gate** (la moneda declarada queda metadata muerta; la pata manda). Ingesta voz ya data-driven (deploy 73) — intacta. Artefacto 76 commiteado sin deploy | inline | fbc1d42 (no deploy) |
 | T6 | Inversiones | A10: picker de moneda (pendiente respuesta) | pendiente | — |
 | T7 | Cuarentena | A12: sugerencia de conversión en EditarCuarentenaModal | inline | — |
 | T8 | Configuración UI | S5,S24,A1,A11: bloque Monedas (S18 menu-ajustes) en Región y formato: selectores 2ª/3ª + decimales por moneda (S22) + i18n | inline | — |
@@ -232,3 +240,12 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
   clavadas en ARS para un usuario EUR — helper compartido formatoMonedaLocal (6/6 tests).
   Suites onboarding 106/106 + i18n 28/28 + tsc limpio. Backend SIN cambios (S18/S19 eran
   frontend; S19 corrige un bug latente de moneda-clavada previo al feature).
+
+- **L17** (T5 RESUELTO por decisión del dueño, 2026-10-16): el dueño preguntó de dónde sale
+  "la moneda que dijo el usuario" y decidió: **no interfiere, no corresponde tocarla** —
+  la moneda declarada de cuarentena queda metadata muerta; lo que manda es la moneda de la
+  la billetera elegida (el comportamiento histórico se preserva tal cual). El deploy 76
+  queda CANCELADO: el artefacto (76_deploy + test 5/5 + clave es.ts) vive en el commit
+  fbc1d42 marcado NO-AUTORIZADO para deploy; si una sesión futura lo encuentra, NO debe
+  deployarlo sin nueva autorización explícita del dueño. El valor del hallazgo queda
+  documentado (v_rec.moneda nunca se usaba) para decisiones futuras del dueño.
