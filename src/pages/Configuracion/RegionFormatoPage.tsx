@@ -66,6 +66,66 @@ function languageLabel(lang: string): string {
   }
 }
 
+/**
+ * CurrenciesBlock — reserved, structure-only slot for the multi-currency
+ * configuration in Región y formato (feature: menu-ajustes, S18 / task T7).
+ *
+ * INTEGRATION POINT — agent P3, task T8 "monedas extra" (parallel, independent):
+ *   · Spec:  odd/tasks/menu-ajustes.md (S18) + odd/tasks/monedas-extra-libres.md
+ *   · Topic: coordination/p3-tercera-moneda (Engram)
+ *   · Contract: T8 fills the second/third currency selectors and their format
+ *     with its own monedas-extra RPCs (mirrors under funcionesSQL/). This block
+ *     is the stable anchor: extend it in place. Do NOT mutate anything outside
+ *     CurrenciesBlock, and do NOT wire the monedas-extra RPCs here before T8 —
+ *     tests/regionCurrenciesBlock.test.js asserts their absence.
+ *
+ * Structure only: no state, no fetch, no handlers. The local currency is the
+ * value the page already resolves; the second/third slots are placeholders.
+ */
+interface CurrenciesBlockProps {
+  paisCodigo: string | null
+  localCurrency: string | null
+  lang: string
+}
+
+function CurrenciesBlock({ paisCodigo, localCurrency, lang }: CurrenciesBlockProps) {
+  return (
+    <article className="config-section-card">
+      <h2>{t('settings_entry_currencies_block')}</h2>
+      <p>{t('settings_entry_currencies_block_desc')}</p>
+
+      {/* Moneda local — derivada del país, solo lectura (S18). */}
+      <div className="config-section-row">
+        <span>{t('config_currency_main')}</span>
+        <span>
+          {paisCodigo ? `${flagEmoji(paisCodigo)} ` : ''}
+          {localCurrency || '—'}
+          {localCurrency ? ` · ${currencyName(localCurrency, lang)}` : ''}
+          <span className="config-section-action-desc">{t('settings_currencies_local_desc')}</span>
+        </span>
+      </div>
+
+      {/* Segunda moneda — hoy fija en USD; T8 la vuelve seleccionable. */}
+      <div className="config-section-row">
+        <span>{t('config_currency_secondary')}</span>
+        <span>
+          USD
+          <span className="config-section-action-desc">{t('settings_currencies_second_desc')}</span>
+        </span>
+      </div>
+
+      {/* Tercera moneda — slot reservado, arranca vacío (S18). */}
+      <div className="config-section-row">
+        <span>{t('settings_currencies_third_label')}</span>
+        <span>
+          —
+          <span className="config-section-action-desc">{t('settings_currencies_third_desc')}</span>
+        </span>
+      </div>
+    </article>
+  )
+}
+
 export function RegionFormatoPage() {
   const { showToast } = useToast()
   const { lang, setLang } = useLanguage()
@@ -214,6 +274,14 @@ export function RegionFormatoPage() {
             <span>USD — {t('config_currency_locked')}</span>
           </div>
         </article>
+
+        {/* Monedas — reserved block (S18). P3/T8 integration point:
+            extend ONLY the CurrenciesBlock component. */}
+        <CurrenciesBlock
+          paisCodigo={region?.pais_codigo ?? null}
+          localCurrency={region?.moneda_default ?? null}
+          lang={lang}
+        />
 
         {/* Formato de números */}
         <article className="config-section-card">

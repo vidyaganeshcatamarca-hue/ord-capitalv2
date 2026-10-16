@@ -2356,6 +2356,14 @@ export const inversiones = {
   settings_action_back_to_simple_desc: "Volvé a la experiencia simple de Ajustes.",
   settings_action_invite_friend: "Invitar a un amigo",
   settings_action_rate_app: "Calificar ORD",
+  // S18 — reserved Monedas block in Región y formato (T7). Structure only:
+  // the second/third currency selectors are wired by agent P3's T8.
+  settings_entry_currencies_block: "Monedas",
+  settings_entry_currencies_block_desc: "Configurá tus monedas y sus formatos. La moneda local se define según tu país.",
+  settings_currencies_local_desc: "Derivada de tu país.",
+  settings_currencies_second_desc: "Config pendiente.",
+  settings_currencies_third_label: "Tercera moneda",
+  settings_currencies_third_desc: "Config pendiente.",
   // S15 — deletion entry (T3): both options share the 10-day + PIN rule.
   settings_entry_data_deletion: "Borrado",
   settings_delete_title: "Borrado de datos y cuenta",
