@@ -269,3 +269,27 @@
 .config-section-fmt-group > .config-section-row:first-of-type {
   border-top: 0;
 }
+
+/* S4 (U2): the Legal rows open LegalDocModal — they are buttons now, not
+   Próximamente pill rows. The base .config-section-row layout is reused and the
+   native button chrome is stripped. */
+.config-section-row--link {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: none;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.config-section-row--link:hover span:first-child {
+  color: var(--mint);
+}
+
+.config-section-row-chevron {
+  color: var(--text-3);
+  font-size: calc(1.25rem * var(--font-scale));
+  line-height: 1;
+}

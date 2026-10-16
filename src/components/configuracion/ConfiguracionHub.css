@@ -59,21 +59,6 @@ button.config-hub-card {
 }
 
 /* ── Groups per app mode (feature: menu-ajustes, T1) ───────────────────── */
-.config-hub-group {
-  display: grid;
-  gap: 10px;
-}
-
-.config-hub-group-title {
-  margin: 4px 0 0;
-  padding: 0 2px;
-  font-size: calc(0.76rem * var(--font-scale));
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-3);
-}
-
 .config-hub-group-cards {
   display: grid;
   gap: 12px;

@@ -15,6 +15,8 @@ import { NotificacionesCard } from './NotificacionesCard'
 import { PWACard } from './PWACard'
 import { MantenimientoAppCard } from './MantenimientoAppCard'
 import { ConfiguracionBorradoCard } from './ConfiguracionBorradoCard'
+import { ConfigRegionBody } from '@/pages/Configuracion/RegionFormatoPage'
+import { ConfigAboutBody } from '@/pages/Configuracion/AcercaPage'
 import './ConfiguracionHub.css'
 
 const BASE_CERO_HOME_KEY = 'base_cero_como_inicio'
@@ -179,9 +181,47 @@ function ComponentSlot({ slot, userId }: { slot: string; userId: string | undefi
   }
 }
 
+/**
+ * U2 (S3) — Región y formato opens inline. The leaf is intercepted here by id
+ * instead of changing the frozen settingsMenu tree, so its `target:` route data
+ * stays intact while the hub mounts the page body inside the card.
+ */
+function RegionInlineCard({ item }: { item: SettingsMenuItem }) {
+  return (
+    <SettingsCollapsible
+      id="config-inline-region"
+      icon={ROW_ICONS[item.id] ?? '🌍'}
+      titleKey={item.titleKey}
+      descKey={item.descKey}
+    >
+      <ConfigRegionBody />
+    </SettingsCollapsible>
+  )
+}
+
+/**
+ * U2 (S4) — Acerca de opens inline too. Same interception by subgroup id: its
+ * body (Versión, Legal with LegalDocModal, Plan placeholder) renders inside the
+ * card instead of navigating to the retired page.
+ */
+function AboutInlineCard({ group }: { group: SettingsMenuGroup }) {
+  return (
+    <SettingsCollapsible
+      id="config-inline-about"
+      icon={ROW_ICONS[group.id] ?? '📱'}
+      titleKey={group.titleKey}
+      descKey={group.descKey}
+    >
+      <ConfigAboutBody />
+    </SettingsCollapsible>
+  )
+}
+
 /** Renders one entry of the resolved tree. */
 function SettingsEntry({ item, userId }: { item: SettingsMenuItem; userId: string | undefined }) {
   if (item.soon || item.disabled) return <ConfigSoonCard item={item} />
+  // U2 (S3): Región y formato never navigates; it expands inline.
+  if (item.id === 'region_format') return <RegionInlineCard item={item} />
   if (!item.target) return null
   if (item.target.startsWith('mode:')) return <ModeSwitchRow item={item} />
   if (item.target.startsWith('component:')) {
@@ -206,6 +246,8 @@ function SettingsEntry({ item, userId }: { item: SettingsMenuItem; userId: strin
  * (T2/T4); the leaves are already declared by settingsMenu.
  */
 function SettingsSubgroup({ group }: { group: SettingsMenuGroup }) {
+  // U2 (S4): Acerca de never navigates; it expands inline.
+  if (group.id === 'about') return <AboutInlineCard group={group} />
   if (!group.target?.startsWith('target:')) return null
   return (
     <ConfigLinkCard
@@ -234,7 +276,7 @@ interface SettingsCollapsibleProps {
  * through it and starts collapsed. The header mirrors the MiCuentaCard /
  * AparienciaCard pattern (button + aria-expanded + aria-controls + rotating
  * chevron). Leaf rows and the cards that already own their internal state are
- * not wrapped by it.
+ * not wrapped by it; U2 mounts the two inline cards (region / about) through it.
  */
 function SettingsCollapsible({ id, icon, titleKey, descKey, children }: SettingsCollapsibleProps) {
   const [open, setOpen] = useState(false)

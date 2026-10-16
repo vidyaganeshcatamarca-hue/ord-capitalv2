@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react'
-import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
@@ -324,7 +323,23 @@ function CurrenciesBlock({ paisCodigo, localCurrency, lang }: CurrenciesBlockPro
   )
 }
 
+/**
+ * Route-orphaned wrapper. The owner moved Región y formato into the hub as an
+ * inline accordion card (S3), so /configuracion/region no longer exists and the
+ * hub renders ConfigRegionBody directly. Kept exported so the module keeps the
+ * page name and any direct importer never breaks silently.
+ */
 export function RegionFormatoPage() {
+  return <ConfigRegionBody />
+}
+
+/**
+ * S3 — inline body of the "Región y formato" card. Same content the standalone
+ * page used to render (country/language, currency, the reserved CurrenciesBlock
+ * anchor, the per-currency format card, first weekday and time format), minus the
+ * page-level header and back button. The hub mounts it inside the region card.
+ */
+export function ConfigRegionBody() {
   const { showToast } = useToast()
   const { lang, setLang } = useLanguage()
   const userId = useOptionalAuth()?.session?.user?.id ?? null
@@ -336,26 +351,20 @@ export function RegionFormatoPage() {
   const [prefs, setPrefs] = useState<UserPrefs>(DEFAULT_PREFS)
   // Per-currency format map resolved by the backend (fn_obtener_formato_moneda).
   const [formats, setFormats] = useState<CurrencyFormatMap>({})
-  const [loading, setLoading] = useState(true)
 
   const loadConfig = useCallback(async (cancelledRef: { cancelled: boolean }) => {
-    setLoading(true)
-    try {
-      const [regionData, prefsData, formatData] = await Promise.all([
-        rpc<RegionPrefs[]>('fn_obtener_region_usuario').catch(() => [] as RegionPrefs[]),
-        rpc<UserPrefs[]>('fn_obtener_preferencias_usuario').catch(() => [] as UserPrefs[]),
-        rpc<CurrencyFormatMap>('fn_obtener_formato_moneda').catch(() => null),
-      ])
-      if (cancelledRef.cancelled) return
-      const regionRow = Array.isArray(regionData) ? regionData[0] : null
-      const prefsRow = Array.isArray(prefsData) ? prefsData[0] : null
-      const nextPrefs = { ...DEFAULT_PREFS, ...(prefsRow ?? {}) }
-      setRegion(regionRow ? { ...regionRow } : null)
-      setPrefs(nextPrefs)
-      setFormats(normalizeFormatMap(formatData, regionRow?.moneda_default ?? null, nextPrefs))
-    } finally {
-      if (!cancelledRef.cancelled) setLoading(false)
-    }
+    const [regionData, prefsData, formatData] = await Promise.all([
+      rpc<RegionPrefs[]>('fn_obtener_region_usuario').catch(() => [] as RegionPrefs[]),
+      rpc<UserPrefs[]>('fn_obtener_preferencias_usuario').catch(() => [] as UserPrefs[]),
+      rpc<CurrencyFormatMap>('fn_obtener_formato_moneda').catch(() => null),
+    ])
+    if (cancelledRef.cancelled) return
+    const regionRow = Array.isArray(regionData) ? regionData[0] : null
+    const prefsRow = Array.isArray(prefsData) ? prefsData[0] : null
+    const nextPrefs = { ...DEFAULT_PREFS, ...(prefsRow ?? {}) }
+    setRegion(regionRow ? { ...regionRow } : null)
+    setPrefs(nextPrefs)
+    setFormats(normalizeFormatMap(formatData, regionRow?.moneda_default ?? null, nextPrefs))
   }, [])
 
   useEffect(() => {
@@ -452,14 +461,7 @@ export function RegionFormatoPage() {
   }
 
   return (
-    <main className="page config-page" aria-labelledby="region-config-title">
-      <ConfigBackButton />
-      <header className="config-page-header">
-        <h1 id="region-config-title">{t('config_section_region')}</h1>
-        <p>{loading ? t('config_loading') : t('config_region_desc')}</p>
-      </header>
-
-      <section className="config-section-list" aria-label={t('config_section_region')}>
+    <section className="config-section-list" aria-label={t('config_section_region')}>
 
         {/* País e Idioma */}
         <article className="config-section-card">
@@ -557,8 +559,7 @@ export function RegionFormatoPage() {
           </div>
         </article>
 
-      </section>
-    </main>
+    </section>
   )
 }
 
