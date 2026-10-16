@@ -97,7 +97,7 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
 
 | ID | Módulo | Especificación | Ruta | Commit |
 |---|---|---|---|---|
-| T1 | Backend datos+RPC | S5,S7,S8,S9,S10,S11,S13,S14,S15,A2,A4: `monedas_extra` en `p_config_region`, RPC de configuración, `fn_obtener_cotizacion(origen,destino)` pivote, validación en `fn_crear_billetera*`, test transaccional 21/21 PASS, **DEPLOYADO 2026-10-16** | worker+fixes inline | — |
+| T1 | Backend datos+RPC | S5,S7,S8,S9,S10,S11,S13,S14,S15,A2,A4: `monedas_extra` en `p_config_region`, RPC de configuración, `fn_obtener_cotizacion(origen,destino)` pivote, validación en `fn_crear_billetera*`, test transaccional 21/21 PASS, **DEPLOYADO 2026-10-16** | worker+fixes inline | **852f6f0** |
 | T2 | Billeteras | S2,S5,S8,S11,A3: picker local+extras, texto de error, display | inline | — |
 | T3 | Cargas manuales | S4,A5,A6: sugerencia genérica en cruzadas, etiquetas dinámicas, clasificación backend | worker | — |
 | T4 | Patrimonio/Home | S3,A7,A8: hero + totales_por_moneda + Supervivencia | inline | — |
@@ -188,5 +188,7 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
   confirmado en las 3 funciones. Smoke read-only con claims reales (user 1, ARS):
   `fn_obtener_monedas_extra()` = `['USD']`; cotización ARS→USD = 0.00066 (~1/1515,
   recíproca con `fn_obtener_cotizacion_usd` ≈ 1515); EUR→GBP = 0.8457 por pivote; ZZZ→USD
-  = NULL/NULL (D17). Fecha de tasa = 2026-10-16 (cron al día). Pendiente de cierre:
-  espejo `funcionesSQL` en clone Personal (coordinar con peer de Ajustes) + commit WU.
+  = NULL/NULL (D17). Fecha de tasa = 2026-10-16 (cron al día). Commit WU **852f6f0**
+  (7 archivos, 1189 líneas: 4 artefactos SQL/mjs + doc + scripts de deploy/smoke).
+  Pendiente de cierre: espejo `funcionesSQL` en clone Personal (coordinar con peer de
+  Ajustes, mensaje enviado).
