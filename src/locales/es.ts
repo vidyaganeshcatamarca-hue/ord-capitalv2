@@ -2403,11 +2403,9 @@ export const inversiones = {
   settings_fmt_third: "Tercera moneda",
   settings_fmt_third_desc: "Moneda sin configurar todavía.",
   settings_fmt_decimals: "Decimales",
-  // Errores de fn_configurar_formato_moneda (el separador repetido se comparte
-  // con la escritura legacy de preferencias globales).
-  error_formato_moneda_moneda_invalida: "La moneda {moneda} no está activa en tu cuenta.",
-  error_formato_moneda_decimales: "Los decimales tienen que estar entre 0 y 4 (recibido: {decimales}).",
-  error_separators_must_differ: "El separador de miles y el separador decimal no pueden ser iguales.",
+  // Los errores de fn_configurar_formato_moneda viven en la sección errors
+  // (definidos por el merge de monedas-extra-libres); el separador repetido se
+  // comparte con la escritura legacy de preferencias globales.
 };
 
 // Reports (bug reports)
