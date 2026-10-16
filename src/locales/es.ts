@@ -1985,6 +1985,9 @@ export const inversiones = {
   error_monedas_extra_duplicada: "Ya elegiste {currency} como moneda extra.",
   error_monedas_extra_invalida: "{currency} no es una moneda con cotización disponible.",
   error_monedas_extra_has_wallets: "No podés quitar {currency}: tenés {count} cuenta/s activas en esa moneda. Archivalas primero.",
+  // S22 (formato por moneda): retorno del backend del 78.
+  error_formato_moneda_moneda_invalida: "{currency} no es una de tus monedas configuradas.",
+  error_formato_moneda_decimales: "Los decimales deben estar entre 0 y 4.",
   config_format_numbers: "Formato de números",
   config_decimals_local: "Decimales (moneda local)",
   config_decimals_usd: "Decimales (USD)",
