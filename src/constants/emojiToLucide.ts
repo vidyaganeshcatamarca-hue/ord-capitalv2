@@ -2,9 +2,162 @@
 // - HouseKey -> KeyRound (el icono "HouseKey" no existe; KeyRound es el alias semánticamente más cercano a "llave de casa")
 // - Bottle   -> Milk     (el icono "Bottle" no existe; Milk es su alias oficial en lucide-react)
 // - Broom    -> Brush    (el icono "Broom" no existe; Brush es el más cercano a escoba/limpieza)
+//
+// ==== Catálogo ampliado de selección (125 iconos) ====
+// MASTER_PICKER_ICONS es el set común de los pickers de rubros, ingresos y
+// billeteras. Cada contexto muestra primero sus 20 iconos históricos, luego
+// una tanda ordenada por relevancia del contexto, y el resto del set maestro
+// cierra la grilla. Los nombres fueron validados contra lucide-react@1.28.0
+// (los 20 primeros de cada lista deben conservar su posición histórica).
 
-// ==== Iconos para el picker de RUBROS/EGRESOS (20 iconos) ====
-export const RUBRO_ICONS = [
+// ==== Catálogo maestro (125 iconos validados) ====
+export const MASTER_PICKER_ICONS = [
+  // Históricos: unión de los tres sets de 20
+  'Users',
+  'HandHeart',
+  'Dog',
+  'BriefcaseBusiness',
+  'Store',
+  'ShieldCheck',
+  'Scale',
+  'FileText',
+  'Church',
+  'HeartHandshake',
+  'Balloon',
+  'Gift',
+  'BrushCleaning',
+  'LockKeyhole',
+  'Truck',
+  'UsersRound',
+  'Palette',
+  'Lightbulb',
+  'Sprout',
+  'HandCoins',
+  'Briefcase',
+  'Laptop',
+  'FilePenLine',
+  'Rocket',
+  'ShoppingCart',
+  'Percent',
+  'Wrench',
+  'HousePlus',
+  'GraduationCap',
+  'MessageCircle',
+  'KeyRound',
+  'Car',
+  'ChartNoAxesCombined',
+  'PiggyBank',
+  'SquarePlay',
+  'Copyright',
+  'Bike',
+  'CarTaxiFront',
+  'Tag',
+  'Armchair',
+  'Wallet',
+  'WalletCards',
+  'Smartphone',
+  'QrCode',
+  'Nfc',
+  'CircleDollarSign',
+  'Building2',
+  'Vault',
+  'Banknote',
+  'Coins',
+  'DollarSign',
+  'Euro',
+  'PoundSterling',
+  'JapaneseYen',
+  'SwissFranc',
+  'IndianRupee',
+  'Bitcoin',
+  // Dinero / banca
+  'CreditCard',
+  'WalletMinimal',
+  'Landmark',
+  'Receipt',
+  'TrendingUp',
+  'TrendingDown',
+  'BadgeDollarSign',
+  'Calculator',
+  'ChartPie',
+  'ChartColumn',
+  'Gem',
+  'Crown',
+  'BadgePercent',
+  'Handshake',
+  // Hogar / comida
+  'Home',
+  'Refrigerator',
+  'WashingMachine',
+  'Sofa',
+  'BedDouble',
+  'Tv',
+  'CookingPot',
+  'Utensils',
+  'Pizza',
+  'CupSoda',
+  'Milk',
+  'Drumstick',
+  'Cookie',
+  'Candy',
+  'Apple',
+  'Coffee',
+  'Hammer',
+  'Zap',
+  // Compras / moda / hobbies
+  'ShoppingBag',
+  'ShoppingBasket',
+  'Shirt',
+  'Footprints',
+  'Glasses',
+  'Watch',
+  'Backpack',
+  'Scissors',
+  'Sparkles',
+  'Diamond',
+  'Package',
+  'Trophy',
+  'Award',
+  'Music',
+  'Gamepad2',
+  // Transporte / viajes
+  'Bus',
+  'TrainFront',
+  'Plane',
+  'Ship',
+  'Fuel',
+  'MapPin',
+  'Umbrella',
+  'Tent',
+  'Palmtree',
+  // Trabajo / salud / familia
+  'Factory',
+  'Stethoscope',
+  'Pill',
+  'HeartPulse',
+  'Baby',
+  'Cat',
+  'PawPrint',
+  'Dumbbell',
+  'Target',
+  'ClipboardList',
+  'BookOpen',
+  'Recycle',
+] as const
+
+// ==== Contextos: 20 históricos + orden de relevancia + resto del maestro ====
+function contextOrder(
+  base: readonly string[],
+  front: readonly string[],
+  master: readonly string[],
+): string[] {
+  const preferred = [...base, ...front]
+  const rest = master.filter(name => !preferred.includes(name))
+  return [...preferred, ...rest]
+}
+
+// ==== Iconos para el picker de RUBROS/EGRESOS (familiar / hogar) ====
+const RUBRO_BASE = [
   'Users',
   'HandHeart',
   'Dog',
@@ -27,8 +180,84 @@ export const RUBRO_ICONS = [
   'HandCoins',
 ] as const
 
-// ==== Iconos para el picker de FUENTES DE INGRESO (20 iconos) ====
-export const INGRESO_ICONS = [
+const RUBRO_FRONT = [
+  // Hogar / comida
+  'Home',
+  'Refrigerator',
+  'WashingMachine',
+  'Sofa',
+  'BedDouble',
+  'Tv',
+  'CookingPot',
+  'Utensils',
+  'Pizza',
+  'CupSoda',
+  'Milk',
+  'Drumstick',
+  'Cookie',
+  'Candy',
+  'Apple',
+  'Coffee',
+  // Compras / personas
+  'ShoppingBag',
+  'ShoppingBasket',
+  'Shirt',
+  'Footprints',
+  'Glasses',
+  'Watch',
+  'Backpack',
+  'Scissors',
+  'Diamond',
+  'Sparkles',
+  'Package',
+  'Trophy',
+  'Award',
+  'Music',
+  'Gamepad2',
+  // Salud / mascotas
+  'Stethoscope',
+  'Pill',
+  'HeartPulse',
+  'Baby',
+  'Cat',
+  'PawPrint',
+  'Dumbbell',
+  'Target',
+  'Recycle',
+  'Hammer',
+  'Zap',
+  // Transporte / trabajo
+  'Bus',
+  'TrainFront',
+  'Plane',
+  'Ship',
+  'Fuel',
+  'MapPin',
+  'Umbrella',
+  'Tent',
+  'Palmtree',
+  'Factory',
+  'ClipboardList',
+  'BookOpen',
+  // Dinero al final
+  'CreditCard',
+  'WalletMinimal',
+  'Landmark',
+  'Receipt',
+  'TrendingUp',
+  'TrendingDown',
+  'BadgeDollarSign',
+  'Calculator',
+  'ChartPie',
+  'ChartColumn',
+  'Gem',
+  'Crown',
+  'BadgePercent',
+  'Handshake',
+] as const
+
+// ==== Iconos para el picker de FUENTES DE INGRESO (trabajo / negocio) ====
+const INGRESO_BASE = [
   'Briefcase',
   'Laptop',
   'FilePenLine',
@@ -51,8 +280,82 @@ export const INGRESO_ICONS = [
   'Armchair',
 ] as const
 
-// ==== Iconos para el picker de BILLETERAS (20 iconos) ====
-export const WALLET_ICONS = [
+const INGRESO_FRONT = [
+  // Dinero / negocios primero
+  'CreditCard',
+  'WalletMinimal',
+  'Landmark',
+  'Receipt',
+  'TrendingUp',
+  'TrendingDown',
+  'BadgeDollarSign',
+  'Calculator',
+  'ChartPie',
+  'ChartColumn',
+  'Gem',
+  'Crown',
+  'BadgePercent',
+  'Handshake',
+  'Factory',
+  'ClipboardList',
+  'BookOpen',
+  'Target',
+  'Stethoscope',
+  'Pill',
+  'HeartPulse',
+  'Dumbbell',
+  'Package',
+  'FileText',
+  'Hammer',
+  'Zap',
+  'Home',
+  // Objetos / servicios
+  'Refrigerator',
+  'WashingMachine',
+  'Sofa',
+  'BedDouble',
+  'Tv',
+  'CookingPot',
+  'Utensils',
+  'Pizza',
+  'CupSoda',
+  'Milk',
+  'Drumstick',
+  'Cookie',
+  'Candy',
+  'Apple',
+  'Coffee',
+  'ShoppingBag',
+  'ShoppingBasket',
+  'Shirt',
+  'Footprints',
+  'Glasses',
+  'Watch',
+  'Backpack',
+  'Scissors',
+  'Diamond',
+  'Sparkles',
+  'Trophy',
+  'Award',
+  'Music',
+  'Gamepad2',
+  'Bus',
+  'TrainFront',
+  'Plane',
+  'Ship',
+  'Fuel',
+  'MapPin',
+  'Umbrella',
+  'Tent',
+  'Palmtree',
+  'Baby',
+  'Cat',
+  'PawPrint',
+  'Recycle',
+] as const
+
+// ==== Iconos para el picker de BILLETERAS (banca / dinero) ====
+const WALLET_BASE = [
   'Wallet',
   'WalletCards',
   'Smartphone',
@@ -75,6 +378,78 @@ export const WALLET_ICONS = [
   'Bitcoin',
 ] as const
 
+const WALLET_FRONT = [
+  // Banca / dinero primero
+  'CreditCard',
+  'WalletMinimal',
+  'Landmark',
+  'Receipt',
+  'TrendingUp',
+  'TrendingDown',
+  'BadgeDollarSign',
+  'Calculator',
+  'ChartPie',
+  'ChartColumn',
+  'Gem',
+  'Crown',
+  'BadgePercent',
+  'Handshake',
+  'Home',
+  'Factory',
+  'ClipboardList',
+  'BookOpen',
+  'Target',
+  'Package',
+  'Hammer',
+  'Zap',
+  // Resto genérico
+  'Shirt',
+  'Footprints',
+  'Glasses',
+  'Watch',
+  'Backpack',
+  'ShoppingBag',
+  'ShoppingBasket',
+  'Scissors',
+  'Refrigerator',
+  'WashingMachine',
+  'Sofa',
+  'BedDouble',
+  'Tv',
+  'CookingPot',
+  'Utensils',
+  'Pizza',
+  'CupSoda',
+  'Milk',
+  'Drumstick',
+  'Cookie',
+  'Candy',
+  'Apple',
+  'Coffee',
+  'Bus',
+  'TrainFront',
+  'Plane',
+  'Ship',
+  'Fuel',
+  'MapPin',
+  'Umbrella',
+  'Tent',
+  'Palmtree',
+  'Baby',
+  'Cat',
+  'PawPrint',
+  'Recycle',
+  'Sparkles',
+  'Trophy',
+  'Award',
+  'Music',
+  'Gamepad2',
+] as const
+
+export const RUBRO_ICONS = contextOrder(RUBRO_BASE, RUBRO_FRONT, MASTER_PICKER_ICONS)
+export const INGRESO_ICONS = contextOrder(INGRESO_BASE, INGRESO_FRONT, MASTER_PICKER_ICONS)
+export const WALLET_ICONS = contextOrder(WALLET_BASE, WALLET_FRONT, MASTER_PICKER_ICONS)
+
 // ==== Alias para retrocompatibilidad ====
 export const LUCIDE_RUBRO_ICONS = RUBRO_ICONS
 export const LUCIDE_INGRESO_ICONS = INGRESO_ICONS
@@ -84,7 +459,7 @@ export const LUCIDE_INGRESO_ICONS = INGRESO_ICONS
 // emoji renders fine. Sources/rubros created with the old picker store an
 // emoji directly; pass anything else through untouched.) ====
 export const LUCIDE_NAME_TO_EMOJI: Record<string, string> = {
-  // RUBRO_ICONS
+  // RUBRO_ICONS (históricos)
   Users: '👥',
   HandHeart: '🤲',
   Dog: '🐕',
@@ -105,7 +480,7 @@ export const LUCIDE_NAME_TO_EMOJI: Record<string, string> = {
   Lightbulb: '💡',
   Sprout: '🌱',
   HandCoins: '🪙',
-  // INGRESO_ICONS
+  // INGRESO_ICONS (históricos)
   Briefcase: '💼',
   Laptop: '💻',
   FilePenLine: '📝',
@@ -126,7 +501,7 @@ export const LUCIDE_NAME_TO_EMOJI: Record<string, string> = {
   CarTaxiFront: '🚖',
   Tag: '🏷️',
   Armchair: '🪑',
-  // WALLET_ICONS
+  // WALLET_ICONS (históricos)
   Wallet: '👛',
   WalletCards: '💳',
   Smartphone: '📱',
@@ -141,13 +516,95 @@ export const LUCIDE_NAME_TO_EMOJI: Record<string, string> = {
   Euro: '💶',
   PoundSterling: '💷',
   JapaneseYen: '💴',
+  SwissFranc: '₣',
+  IndianRupee: '₹',
   Bitcoin: '₿',
+  // Catálogo ampliado: dinero / banca
+  CreditCard: '💳',
+  WalletMinimal: '👝',
+  Landmark: '🏛️',
+  Receipt: '🧾',
+  TrendingUp: '📈',
+  TrendingDown: '📉',
+  BadgeDollarSign: '💲',
+  Calculator: '🧮',
+  ChartPie: '🥧',
+  ChartColumn: '📊',
+  Gem: '💎',
+  Crown: '👑',
+  BadgePercent: '🏷️',
+  Handshake: '🤝',
+  // Hogar / comida
+  Home: '🏠',
+  Refrigerator: '🧊',
+  WashingMachine: '🫧',
+  Sofa: '🛋️',
+  BedDouble: '🛏️',
+  Tv: '📺',
+  CookingPot: '🍲',
+  Utensils: '🍴',
+  Pizza: '🍕',
+  CupSoda: '🥤',
+  Milk: '🥛',
+  Drumstick: '🍗',
+  Cookie: '🍪',
+  Candy: '🍬',
+  Apple: '🍎',
+  Coffee: '☕',
+  Hammer: '🔨',
+  Zap: '⚡',
+  // Compras / moda / hobbies
+  ShoppingBag: '🛍️',
+  ShoppingBasket: '🧺',
+  Shirt: '👕',
+  Footprints: '👣',
+  Glasses: '👓',
+  Watch: '⌚',
+  Backpack: '🎒',
+  Scissors: '✂️',
+  Sparkles: '✨',
+  Diamond: '💠',
+  Package: '📦',
+  Trophy: '🏆',
+  Award: '🏅',
+  Music: '🎵',
+  Gamepad2: '🎮',
+  // Transporte / viajes
+  Bus: '🚌',
+  TrainFront: '🚆',
+  Plane: '✈️',
+  Ship: '🚢',
+  Fuel: '⛽',
+  MapPin: '📍',
+  Umbrella: '☂️',
+  Tent: '⛺',
+  Palmtree: '🌴',
+  // Trabajo / salud / familia
+  Factory: '🏭',
+  Stethoscope: '🩺',
+  Pill: '💊',
+  HeartPulse: '❤️‍🩹',
+  Baby: '👶',
+  Cat: '🐈',
+  PawPrint: '🐾',
+  Dumbbell: '🏋️',
+  Target: '🎯',
+  ClipboardList: '📋',
+  BookOpen: '📖',
+  Recycle: '♻️',
 }
+
+// Matches lucide component names: a capitalized multi-letter identifier.
+const LUCIDE_NAME_PATTERN = /^[A-Z][A-Za-z0-9]+$/
 
 /** Emoji glyph for an icon value: lucide names convert, emoji passes through. */
 export function iconGlyph(icono: string | null | undefined): string {
   if (!icono) return '💰'
-  return LUCIDE_NAME_TO_EMOJI[icono] ?? icono
+  const mapped = LUCIDE_NAME_TO_EMOJI[icono]
+  if (mapped) return mapped
+  // Unknown lucide-looking names would leak as raw text in native menus.
+  if (LUCIDE_NAME_PATTERN.test(icono.trim())) return '🏷️'
+  return icono
 }
 export const LUCIDE_WALLET_ICONS = WALLET_ICONS
 

@@ -18,6 +18,9 @@ import {
   writeOnboardingComplete,
 } from '@/lib/regionSnapshot'
 import './Auth.css'
+import '@/styles/iconPickerGrids.css'
+import { WALLET_ICONS } from '@/constants/emojiToLucide'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 
 type Mode = 'login' | 'register'
 
@@ -93,7 +96,7 @@ function readFlowState(userId: string): FlowSnapshot | null {
       showVirtualForm: parsed.showVirtualForm === true,
       walletName: typeof parsed.walletName === 'string' ? parsed.walletName : '',
       calcInput: typeof parsed.calcInput === 'string' ? parsed.calcInput : '0',
-      selectedIcon: typeof parsed.selectedIcon === 'string' ? parsed.selectedIcon : '💵',
+      selectedIcon: typeof parsed.selectedIcon === 'string' ? parsed.selectedIcon : WALLET_ICONS[0],
       virtualCreated: parsed.virtualCreated === true,
       cashBalanceInput: typeof parsed.cashBalanceInput === 'string' ? parsed.cashBalanceInput : '0',
     }
@@ -206,7 +209,7 @@ export function AuthPage() {
   // (boton); si no la quiere, continua sin crearla.
   const [walletName, setWalletName] = useState('')
   const [calcInput, setCalcInput] = useState('0')
-  const [selectedIcon, setSelectedIcon] = useState('💵')
+  const [selectedIcon, setSelectedIcon] = useState(WALLET_ICONS[0])
   const [showVirtualForm, setShowVirtualForm] = useState(false)
   const [virtualCreated, setVirtualCreated] = useState(false)
 
@@ -938,18 +941,19 @@ export function AuthPage() {
 
                 <div className="form-group mb-3">
                   <label className="form-label">{t('label_wallet_icon')}</label>
-                  <div className="emoji-selector-grid">
-                    {['💵', '💶', '💷', '💴', '💰', '🪙', '💸', '💳', '🏦', '📱', '💼', '👛', '📈', '💎', '🏧'].map(emoji => (
-                      <button
-                        key={emoji}
-                        type="button"
-                        className={`emoji-selector-btn ${selectedIcon === emoji ? 'active' : ''}`}
-                        onClick={() => setSelectedIcon(emoji)}
-                      >
-                        {emoji}
-                      </button>
-                    ))}
-                  </div>
+                  <div className="emojis-picker-grid">
+                  {WALLET_ICONS.map(icon => (
+                    <button
+                      key={icon}
+                      type="button"
+                      className={`emoji-select-btn ${selectedIcon === icon ? 'active' : ''}`}
+                      onClick={() => setSelectedIcon(icon)}
+                      aria-label={icon}
+                    >
+                      <CategoryIcon name={icon} size={26} />
+                    </button>
+                  ))}
+                </div>
                 </div>
 
                 <div className="form-group mb-3">

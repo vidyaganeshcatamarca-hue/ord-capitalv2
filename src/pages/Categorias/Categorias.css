@@ -423,34 +423,7 @@
 .mb-5 { margin-bottom: 20px !important; }
 .mt-3 { margin-top: 12px !important; }
 
-/* ─── Emoji Grid ───────────────────────────────────────────────────────── */
-.cat-emoji-grid {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 6px;
-  margin-bottom: 4px;
-}
-.cat-emoji-btn {
-  aspect-ratio: 1;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--surface-2);
-  font-size: calc(18px * var(--font-scale));
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.cat-emoji-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-soft, var(--surface-3));
-  box-shadow: 0 0 8px var(--accent, var(--mint, #00B127));
-}
-.cat-emoji-btn:hover:not(.active) {
-  border-color: var(--surface-3);
-  transform: scale(1.1);
-}
+/* ─── Emoji Grid → moved to src/styles/iconPickerGrids.css (shared pickers) ─── */
 
 /* ─── Color Row ────────────────────────────────────────────────────────── */
 .cat-color-row {

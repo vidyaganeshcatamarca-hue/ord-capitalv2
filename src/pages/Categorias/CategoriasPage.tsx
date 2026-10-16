@@ -12,6 +12,7 @@ import { isUserEditableCategory } from '@/lib/categoryFilters'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { sortCategoriesByTranslatedName } from '@/lib/categorySorting'
 import './Categorias.css'
+import '@/styles/iconPickerGrids.css'
 
 // ─── Constantes ────────────────────────────────────────────────────────────
 const COLORS = ['#1F2937','#4B5563','#9CA3AF','#F3F4F6','#EF4444','#F97316','#F59E0B','#10B981','#3B82F6','#8B5CF6']

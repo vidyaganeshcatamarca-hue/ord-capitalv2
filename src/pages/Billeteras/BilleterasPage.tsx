@@ -21,6 +21,7 @@ import { DonutChart } from '@/components/charts/DonutChart'
 import { WALLET_ICONS } from '@/constants/emojiToLucide'
 import '@/pages/Categorias/Categorias.css'
 import './Billeteras.css'
+import '@/styles/iconPickerGrids.css'
 
 export function BilleterasPage() {
   const [searchParams] = useSearchParams()
