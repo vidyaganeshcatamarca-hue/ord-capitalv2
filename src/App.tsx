@@ -62,7 +62,6 @@ function CuarentenaBandejaRoute() {
 const InversionesPage = lazy(() => import('@/pages/Inversiones/InversionesPage').then(module => ({ default: module.InversionesPage })))
 const SaludPage = lazy(() => import('@/pages/Salud/SaludPage').then(module => ({ default: module.SaludPage })))
 const SobresPage = lazy(() => import('@/pages/Sobres/SobresPage').then(module => ({ default: module.SobresPage })))
-const PrivacidadPage = lazy(() => import('@/pages/Privacidad/PrivacidadPage').then(module => ({ default: module.PrivacidadPage })))
 const ConfiguracionPage = lazy(() => import('@/pages/Configuracion/ConfiguracionPage').then(module => ({ default: module.ConfiguracionPage })))
 const NotificacionesPage = lazy(() => import('@/pages/Configuracion/NotificacionesPage').then(module => ({ default: module.NotificacionesPage })))
 const CategoriasConfigPage = lazy(() => import('@/pages/Configuracion/CategoriasConfigPage').then(module => ({ default: module.CategoriasConfigPage })))
@@ -179,7 +178,6 @@ function AppLayout() {
           <Route path="/inversiones" element={<InversionesPage />} />
           <Route path="/salud" element={<SaludPage />} />
           <Route path="/sobres" element={<SobresPage />} />
-          <Route path="/privacidad" element={<PrivacidadPage />} />
           <Route path="/configuracion" element={<ConfiguracionPage />} />
           <Route path="/configuracion/region" element={<RegionFormatoPage />} />
           <Route path="/configuracion/importar-exportar" element={<ImportarExportarPage />} />
