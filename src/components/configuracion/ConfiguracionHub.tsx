@@ -41,6 +41,15 @@ const ROW_STATE: Record<string, Record<string, unknown>> = {
   my_reports: { origen: '/configuracion' },
 }
 
+/** Icon of every top-level tree group, rendered in its collapsible header (U1/S1). */
+const GROUP_ICONS: Record<string, ReactNode> = {
+  account_security: '🛡️',
+  preferences: '⚙️',
+  data_operations: '📊',
+  help_support: '🆘',
+  application: '📱',
+}
+
 interface ConfigLinkCardProps {
   icon: ReactNode
   titleKey: string
@@ -212,6 +221,53 @@ function isRenderable(item: SettingsMenuItem): boolean {
   return item.soon === true || item.disabled === true || item.target !== null
 }
 
+interface SettingsCollapsibleProps {
+  id: string
+  icon: ReactNode
+  titleKey: string
+  descKey?: string
+  children: ReactNode
+}
+
+/**
+ * U1 (S1) — one reusable accordion section. Every top-level tree group renders
+ * through it and starts collapsed. The header mirrors the MiCuentaCard /
+ * AparienciaCard pattern (button + aria-expanded + aria-controls + rotating
+ * chevron). Leaf rows and the cards that already own their internal state are
+ * not wrapped by it.
+ */
+function SettingsCollapsible({ id, icon, titleKey, descKey, children }: SettingsCollapsibleProps) {
+  const [open, setOpen] = useState(false)
+  const titleId = `${id}-title`
+  const bodyId = `${id}-body`
+  return (
+    <section className="config-hub-card config-hub-collapsible" aria-labelledby={titleId}>
+      <button
+        type="button"
+        className="config-hub-collapsible-header"
+        onClick={() => setOpen((value) => !value)}
+        aria-expanded={open}
+        aria-controls={bodyId}
+      >
+        <span className="config-hub-card-icon" aria-hidden="true">{icon}</span>
+        <div className="config-hub-card-content">
+          <h2 id={titleId} className="config-hub-collapsible-title">{t(titleKey)}</h2>
+          {descKey && <p>{t(descKey)}</p>}
+        </div>
+        <span
+          className={`config-hub-card-chevron config-hub-collapsible-chevron${open ? ' config-hub-collapsible-chevron--open' : ''}`}
+          aria-hidden="true"
+        >›</span>
+      </button>
+      {open && (
+        <div id={bodyId} className="config-hub-collapsible-body">
+          {children}
+        </div>
+      )}
+    </section>
+  )
+}
+
 function SettingsGroupSection({ group, userId }: { group: SettingsMenuGroup; userId: string | undefined }) {
   const subgroups = group.groups ?? []
   const rendered = group.items.filter(isRenderable)
@@ -219,17 +275,19 @@ function SettingsGroupSection({ group, userId }: { group: SettingsMenuGroup; use
   // An empty group is not rendered: everything in it is still deferred to a later task.
   if (rendered.length === 0 && renderedSubgroups.length === 0) return null
 
-  const titleId = `config-group-${group.id}`
   return (
-    <section className="config-hub-group" aria-labelledby={titleId}>
-      <h2 id={titleId} className="config-hub-group-title">{t(group.titleKey)}</h2>
+    <SettingsCollapsible
+      id={`config-group-${group.id}`}
+      icon={GROUP_ICONS[group.id] ?? '⚙️'}
+      titleKey={group.titleKey}
+    >
       <div className="config-hub-group-cards">
         {rendered.map((item) => (
           <SettingsEntry key={item.id} item={item} userId={userId} />
         ))}
         {renderedSubgroups.map((sub) => <SettingsSubgroup key={sub.id} group={sub} />)}
       </div>
-    </section>
+    </SettingsCollapsible>
   )
 }
 
