@@ -1,38 +1,63 @@
 // src/pages/Configuracion/ProteccionPage.tsx
-// PIN/biometry protection configuration (feature: pin-huella, task T4).
+// PIN/biometry protection configuration (feature: pin-huella, tasks T4 + T5).
 //
 // Specs covered: S2 (entry lives in Cuenta y seguridad, advanced tree only —
-// the tree entry is wired by the settingsMenu flip), S4 (biometry is a
-// per-device opt-in registered here), S8 (enable/disable/change require the
-// current PIN or biometry), S11 (copy through i18n), S12 (flat route).
-//
-// Interim behavior while PIN_BACKEND_ENABLED is false (T5 pending, same
-// pattern as ConfiguracionBorradoCard): every mutation is rendered disabled
-// with a reason instead of silently doing nothing.
+// the tree entry is wired by the settingsMenu flip at integration), S4
+// (biometry is a per-device opt-in registered here), S8 (enable/disable/
+// change demand the current PIN or biometry — server-verified), S11 (copy
+// through i18n), S12 (flat route).
 
 import { useState, useEffect, useCallback } from 'react'
 import { t } from '@/locales/i18n'
 import ConfigBackButton from '@/components/configuracion/ConfigBackButton'
 import './ConfiguracionPage.css'
+import { useAuth } from '@/contexts/AuthContext'
 import { useAppLock } from '@/contexts/AppLockContext'
-import { PIN_BACKEND_ENABLED } from '@/contexts/AppLockContext'
-import { biometriaDisponible } from '@/lib/biometricAppLock'
-import { registrarBiometriaUsuario, borrarBiometriaDispositivo } from '@/lib/biometricAppLock'
-import { validatePin } from '@/lib/pinFormat'
+import {
+  biometriaDisponible,
+  registrarBiometriaUsuario,
+  borrarBiometriaDispositivo,
+} from '@/lib/biometricAppLock'
 import { PinKeypad } from '@/components/AppLockGate/PinKeypad'
+import { validatePin } from '@/lib/pinFormat'
+import type { PinVerifyResult } from '@/contexts/AppLockContext'
+
+type PanelMode = 'idle' | 'activar' | 'cambiar_actual' | 'cambiar_nueva' | 'baja'
+
+/** Maps a failed result to the i18n key of its reason (S11: copy via t()). */
+function reasonKey(result: PinVerifyResult): string {
+  switch (result.reason) {
+    case 'pin_incorrecto':
+      return 'app_lock_wrong_pin'
+    case 'pin_actual_incorrecto':
+      return 'app_lock_wrong_current_pin'
+    case 'pin_debil':
+      return 'app_lock_pin_debil'
+    case 'en_cooldown':
+      return 'app_lock_cooldown_message'
+    case 'reset_pending':
+      return 'app_lock_reset_title'
+    case 'unavailable':
+      return 'proteccion_backend_pendiente'
+    default:
+      return 'app_lock_error_generico'
+  }
+}
 
 export function ProteccionPage() {
+  const { session, nombreUsuario } = useAuth()
   const {
     lockState,
     biometriaEnDispositivo,
     setBiometriaEnDispositivo,
-    verifyPin,
     definePin,
-    refreshStatus,
+    deactivatePin,
+    unlockWithBiometria,
   } = useAppLock()
 
   const [dispositivoSoporta, setDispositivoSoporta] = useState<boolean | null>(null)
   const [mensajeKey, setMensajeKey] = useState<string | null>(null)
+  const [panelMode, setPanelMode] = useState<PanelMode>('idle')
 
   useEffect(() => {
     let alive = true
@@ -44,39 +69,55 @@ export function ProteccionPage() {
     }
   }, [])
 
-  // S8 — every mutation shows what it will demand first. With the backend
-  // pending, actions stay disabled and the reason stays visible.
-  const accederAccion = useCallback(async (): Promise<'ok' | 'bloqueado'> => {
-    if (!PIN_BACKEND_ENABLED) {
-      setMensajeKey('proteccion_backend_pendiente')
-      return 'bloqueado'
-    }
-    // The full S8 flow (current PIN prompt / biometry confirmation before
-    // changes) activates together with the PIN RPCs in T5: this interim check
-    // keeps the switch inert and labels the reason.
-    setMensajeKey('proteccion_backend_pendiente')
-    return 'bloqueado'
-  }, [])
+  const run = useCallback(
+    async (action: () => Promise<PinVerifyResult>, okKey: string) => {
+      setMensajeKey(null)
+      const result = await action()
+      setMensajeKey(result.ok ? okKey : reasonKey(result))
+      if (result.ok) setPanelMode('idle')
+    },
+    [],
+  )
+
+  // S6 — the new PIN is validated client-side through the shared pinFormat
+  // (rejects weak AAAA before any server trip) and then server-verified.
+  const activarPin = useCallback((pin: string) => {
+    const error = validatePin(pin)
+    if (error) return setMensajeKey(error)
+    run(() => definePin(pin), 'proteccion_pin_creado')
+  }, [definePin, run])
+  const cambiarPin = useCallback(
+    (pinActual: string, pinNuevo: string) => {
+      const error = validatePin(pinNuevo)
+      if (error) return setMensajeKey(error)
+      run(() => definePin(pinNuevo, pinActual), 'proteccion_pin_cambiado')
+    },
+    [definePin, run],
+  )
+  const desactivarPin = useCallback((pinActual: string) => run(() => deactivatePin(pinActual), 'proteccion_pin_desactivado'), [deactivatePin, run])
 
   const activarHuella = useCallback(async () => {
-    if ((await accederAccion()) !== 'ok') return
-    void registrarBiometriaUsuario
-    void borrarBiometriaDispositivo
-    void setBiometriaEnDispositivo
-    void verifyPin
-    void definePin
-    void refreshStatus
-    void biometriaEnDispositivo
-    void lockState
-  }, [accederAccion])
+    if (!session) return
+    setMensajeKey(null)
+    const label = nombreUsuario || session.user.email || session.user.id
+    const ok = await registrarBiometriaUsuario(session.user.id, typeof label === 'string' ? label : 'ORD')
+    setMensajeKey(ok ? 'proteccion_huella_registrada' : 'app_lock_biometria_error')
+    setBiometriaEnDispositivo(ok)
+  }, [session, nombreUsuario, setBiometriaEnDispositivo])
 
-  const desactivarHuella = useCallback(async () => {
-    if ((await accederAccion()) !== 'ok') return
+  const desactivarHuella = useCallback(() => {
     borrarBiometriaDispositivo()
     setBiometriaEnDispositivo(false)
-  }, [accederAccion, setBiometriaEnDispositivo])
+    setMensajeKey('proteccion_huella_eliminada')
+  }, [setBiometriaEnDispositivo])
 
   const pinActivado = lockState != null && lockState.kind !== 'sin_pin'
+  const huellaHabilitable = pinActivado && dispositivoSoporta !== false
+
+  const cerrarPanel = useCallback(() => {
+    setPanelMode('idle')
+    setMensajeKey(null)
+  }, [])
 
   return (
     <main className="page config-page" aria-labelledby="proteccion-title">
@@ -104,38 +145,143 @@ export function ProteccionPage() {
             </span>
           </div>
 
-          {pinActivado ? (
+          {panelMode === 'idle' && (
             <div className="config-section-list" style={{ marginTop: '1rem' }}>
-              <button type="button" className="config-action-button" disabled onClick={() => void accederAccion()}>
-                {t('proteccion_cambiar_pin')}
-              </button>
-              <button type="button" className="config-action-button" disabled onClick={() => void accederAccion()}>
-                {t('proteccion_desactivar')}
-              </button>
-            </div>
-          ) : (
-            <div className="config-section-list" style={{ marginTop: '1rem' }}>
-              <button type="button" className="config-action-button" disabled onClick={() => void accederAccion()}>
-                {t('proteccion_activar')}
-              </button>
+              {pinActivado ? (
+                <>
+                  <button type="button" className="config-action-button" onClick={() => { setMensajeKey(null); setPanelMode('cambiar_actual') }}>
+                    {t('proteccion_cambiar_pin')}
+                  </button>
+                  <button type="button" className="config-action-button" onClick={() => { setMensajeKey(null); setPanelMode('baja') }}>
+                    {t('proteccion_desactivar')}
+                  </button>
+                </>
+              ) : (
+                <button type="button" className="config-action-button" onClick={() => { setMensajeKey(null); setPanelMode('activar') }}>
+                  {t('proteccion_activar')}
+                </button>
+              )}
+              {huellaHabilitable && (
+                <button
+                  type="button"
+                  className="config-action-button"
+                  onClick={() => void (biometriaEnDispositivo ? desactivarHuella() : activarHuella())}
+                >
+                  {biometriaEnDispositivo ? t('proteccion_desactivar_huella') : t('proteccion_activar_huella')}
+                </button>
+              )}
             </div>
           )}
 
-          {dispositivoSoporta === true && (
-            <button
-              type="button"
-              className="config-action-button"
-              disabled
-              onClick={() => void (biometriaEnDispositivo ? desactivarHuella() : activarHuella())}
-            >
-              {biometriaEnDispositivo ? t('proteccion_desactivar_huella') : t('proteccion_activar_huella')}
-            </button>
+          {panelMode === 'activar' && (
+            <NuevoPinPanel
+              tituloKey="proteccion_activar"
+              disabled={false}
+              onCancel={cerrarPanel}
+              onConfirm={(pin) => void activarPin(pin)}
+            />
+          )}
+          {panelMode === 'cambiar_actual' && (
+            <PinActualPanel
+              disabled={false}
+              onCancel={cerrarPanel}
+              onConfirm={(pinActual) => {
+                setMensajeKey(null)
+                setPanelMode('cambiar_nueva')
+                // guardar el PIN actual para el paso siguiente:
+                pinActualRef.current = pinActual
+              }}
+            />
+          )}
+          {panelMode === 'cambiar_nueva' && (
+            <NuevoPinPanel
+              tituloKey="proteccion_cambiar_pin"
+              disabled={false}
+              onCancel={cerrarPanel}
+              onConfirm={(pinNuevo) => {
+                setMensajeKey(null)
+                void cambiarPin(pinActualRef.current ?? '', pinNuevo)
+              }}
+            />
+          )}
+          {panelMode === 'baja' && (
+            <PinActualPanel
+              disabled={false}
+              onCancel={cerrarPanel}
+              onConfirm={(pinActual) => void desactivarPin(pinActual)}
+            />
           )}
 
           {mensajeKey && <p className="config-section-note" role="status">{t(mensajeKey)}</p>}
         </article>
       </section>
     </main>
+  )
+}
+
+// Ref compartido interno para el paso "cambiar" (actual → nueva); la propia
+// página vive unida, así el ref no trasciende el archivo.
+const pinActualRef: { current?: string } = { current: undefined }
+
+/** Doble entrada del PIN nuevo (activar / cambio). */
+function NuevoPinPanel({
+  tituloKey,
+  disabled,
+  onCancel,
+  onConfirm,
+}: {
+  tituloKey: string
+  disabled: boolean
+  onCancel: () => void
+  onConfirm: (pin: string) => void
+}) {
+  const [primero, setPrimero] = useState<string | null>(null)
+  const [mismatch, setMismatch] = useState(false)
+  if (primero == null) {
+    return (
+      <>
+        <p className="config-section-note">{t('app_lock_reset_subtitle')}</p>
+        <PinKeypad disabled={disabled} hint={null} onSubmit={(pin) => { setPrimero(pin); setMismatch(false) }} />
+        <button type="button" className="config-action-button" onClick={onCancel}>{t('proteccion_cancelar')}</button>
+      </>
+    )
+  }
+  return (
+    <>
+      <p className="config-section-note">{t('app_lock_reset_confirm_subtitle')}</p>
+      <PinKeypad
+        disabled={disabled}
+        hint={mismatch ? t('app_lock_pin_mismatch') : null}
+        onSubmit={(pin) => {
+          if (pin === primero) {
+            onConfirm(pin)
+          } else {
+            setMismatch(true)
+            setPrimero(null)
+          }
+        }}
+      />
+      <button type="button" className="config-action-button" onClick={onCancel}>{t('proteccion_cancelar')}</button>
+    </>
+  )
+}
+
+/** Entrada única del PIN actual (cambio / desactivar). */
+function PinActualPanel({
+  disabled,
+  onCancel,
+  onConfirm,
+}: {
+  disabled: boolean
+  onCancel: () => void
+  onConfirm: (pinActual: string) => void
+}) {
+  return (
+    <>
+      <p className="config-section-note">{t('proteccion_pedir_pin_actual')}</p>
+      <PinKeypad disabled={disabled} hint={null} onSubmit={onConfirm} />
+      <button type="button" className="config-action-button" onClick={onCancel}>{t('proteccion_cancelar')}</button>
+    </>
   )
 }
 

@@ -1,15 +1,20 @@
 // src/contexts/AppLockContext.tsx
-// App-lock state owner (feature: pin-huella, task T3).
+// App-lock state owner (feature: pin-huella, task T3 + T5 wiring).
 //
 // Owns: fetching the server-side PIN state, arming the lock on cold start and
-// on returns from background (>1 min, S5), and forwarding lock resolution
-// (PIN verification / biometric unlock) to the RPCs. Policy math lives ONLY in
+// on returns from background (>1 min, S5), and every lock resolution call
+// (verify / define / deactivate / biometric re-arm). Policy math lives ONLY in
 // src/lib/appLock.ts (imported, never reimplemented — contract test).
 //
-// Interim (documented): the PIN RPCs are T5 (gated to the owner's SQL OK).
-// Until they exist, PIN_BACKEND_ENABLED is false and every action here is an
-// inert no-op returning "unavailable", so the layer can be mounted and wired
-// without touching Supabase.
+// Backend live (T5 deployed with owner authorization): the RPCs exist and are
+// smoke-verified (temp_sql/74b). Server contract (S6/S7):
+//   fn_tiene_pin()           → { estado, bloqueado_hasta }
+//   fn_verificar_pin(p)      → { ok, intentos_fallidos, estado, bloqueado_hasta }
+//                              (RAISE only on misuse; the attempt counter is a
+//                              returned row, never an exception)
+//   fn_configurar_pin(p, a?) → void (RAISE on wrong current PIN / weak / format)
+//   fn_reactivar_pin()       → void (biometry cancels an ACTIVE window, S7)
+//   fn_desactivar_pin(a)     → void (RAISE unless the current PIN matches, S8)
 
 import { createContext, useContext, useCallback, useEffect, useMemo, useRef, useState, ReactNode } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
@@ -27,26 +32,33 @@ import {
 } from '@/lib/biometricAppLock'
 
 /**
- * T5 sentinel — flips to true in the same work-unit commit that deploys the
- * PIN RPCs (spec S9). While false: no RPC traffic, no lock is presented.
+ * T5 sentinel — the PIN RPCs are deployed and smoke-verified (owner-authorized
+ * SQL, 13/13 smokes). Every action in this file now talks to the server.
  */
-export const PIN_BACKEND_ENABLED = false
+export const PIN_BACKEND_ENABLED = true
 
-// RPC names (spec S9; exact names frozen when the T5 SQL is approved and
-// presented for verification before deploy).
+// RPC names (spec S9; deployed see funcionesSQL mirrors).
 export const RPC_PIN_ESTADO = 'fn_tiene_pin'
 export const RPC_PIN_VERIFICAR = 'fn_verificar_pin'
 export const RPC_PIN_CONFIGURAR = 'fn_configurar_pin'
 export const RPC_PIN_REACTIVAR = 'fn_reactivar_pin'
+export const RPC_PIN_DESACTIVAR = 'fn_desactivar_pin'
 
 interface FnTienePinRow {
   estado: PinServerState
   bloqueado_hasta?: string | null
 }
 
+interface FnVerificarPinRow {
+  ok: boolean
+  intentos_fallidos?: number | null
+  estado?: PinServerState
+  bloqueado_hasta?: string | null
+}
+
 export interface PinVerifyResult {
   ok: boolean
-  reason: 'unavailable' | 'pin_incorrecto' | 'en_cooldown' | 'reset_pending' | 'error' | null
+  reason: 'unavailable' | 'pin_incorrecto' | 'pin_actual_incorrecto' | 'en_cooldown' | 'reset_pending' | 'pin_debil' | 'error' | null
   /** Attempts count reported by the server after a failed attempt. */
   attempts?: number
   /** Backoff the caller must honor after this failure (seconds; from lib). */
@@ -68,7 +80,10 @@ interface AppLockState {
   biometriaEnDispositivo: boolean
   refreshStatus: () => Promise<void>
   verifyPin: (pin: string) => Promise<PinVerifyResult>
-  definePin: (pin: string) => Promise<PinVerifyResult>
+  /** Define/activate a new PIN; when the old one is active it must be passed. */
+  definePin: (pin: string, pinActual?: string | null) => Promise<PinVerifyResult>
+  /** S8 — quit the protection; demands the current PIN (server-verified). */
+  deactivatePin: (pinActual: string) => Promise<PinVerifyResult>
   /** Register biometry for this device (local credential; S4). */
   setBiometriaEnDispositivo: (enabled: boolean) => void
   unlockWithBiometria: () => Promise<PinVerifyResult>
@@ -95,7 +110,7 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
   const estadoRef = useRef<PinServerState | null>(null)
 
   const refreshStatus = useCallback(async () => {
-    if (!session || !PIN_BACKEND_ENABLED) {
+    if (!session) {
       setServerEstado(null)
       setBloqueadoHasta(null)
       setLocked(false)
@@ -108,13 +123,11 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
       estadoRef.current = estado
       setServerEstado(estado)
       setBloqueadoHasta(row?.bloqueado_hasta ?? null)
-      // S5 — cold start with a session and an active PIN: present the lock.
+      // S5 — cold start with a session and an enforcing state: present the lock.
       if (estado === 'activa' || estado === 'en_cooldown') setLocked(true)
       if (estado === 'activa' || estado === 'en_cooldown') setAttempts(0)
     } catch {
-      // Fail closed (lib contract): unknown server response → locked. The
-      // overlay cannot be resolved without the server anyway; degrades to
-      // "service unavailable" rather than handing an unlocked app to anyone.
+      // Fail closed (lib contract): unknown server response → locked.
       estadoRef.current = 'activa'
       setServerEstado('activa')
       setLocked(true)
@@ -130,8 +143,7 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
     }
   }, [refreshStatus])
 
-  // S5 — re-arm on return from background after more than 1 minute. The lock
-  // applies whenever the account has the PIN active (the resolver decides).
+  // S5 — re-arm on return from background after more than 1 minute.
   useEffect(() => {
     if (!session) return
     const onHidden = () => {
@@ -157,83 +169,116 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
 
   const verifyPin = useCallback(
     async (pin: string): Promise<PinVerifyResult> => {
-      if (!PIN_BACKEND_ENABLED) return { ok: false, reason: 'unavailable' }
+      if (!session || !PIN_BACKEND_ENABLED) return { ok: false, reason: 'unavailable' }
       try {
-        await rpc(RPC_PIN_VERIFICAR, { p_pin: pin })
-        setAttempts(0)
-        setWaitingBackoffSeconds(null)
-        setLocked(false)
-        await refreshStatus()
-        return { ok: true, reason: null }
-      } catch (err: any) {
-        const message = String(err?.message ?? '')
-        const serverAttempts = Number(err?.details?.intentos) || 0
-        if (message.includes('en_cooldown')) {
+        const data = await rpc<FnVerificarPinRow | FnVerificarPinRow[]>(RPC_PIN_VERIFICAR, { p_pin: pin })
+        const row = Array.isArray(data) ? data[0] : data
+        if (row?.ok === true) {
+          setAttempts(0)
+          setWaitingBackoffSeconds(null)
+          setLocked(false)
           await refreshStatus()
-          return { ok: false, reason: 'en_cooldown', lockout: true }
+          return { ok: true, reason: null }
         }
-        if (message.includes('pin_incorrecto')) {
-          const total = serverAttempts > attempts ? serverAttempts : attempts + 1
-          setAttempts(total)
-          const backoff = retryBackoffSeconds(total)
-          setWaitingBackoffSeconds(backoff)
-          if (backoff == null) {
-            // Threshold reached: fetch the server-imposed window (24 h).
-            await refreshStatus()
-            return { ok: false, reason: 'pin_incorrecto', attempts: total, lockout: true }
-          }
-          return { ok: false, reason: 'pin_incorrecto', attempts: total, backoffSeconds: backoff }
+        const estado = row?.estado ?? 'activa'
+        const total = Number(row?.intentos_fallidos) || 0
+        if (estado === 'en_cooldown') {
+          await refreshStatus()
+          return { ok: false, reason: 'en_cooldown', attempts: total, lockout: true }
         }
+        if (estado === 'restaurar') {
+          await refreshStatus()
+          return { ok: false, reason: 'reset_pending' }
+        }
+        setAttempts(total)
+        const backoff = retryBackoffSeconds(total)
+        setWaitingBackoffSeconds(backoff)
+        return { ok: false, reason: 'pin_incorrecto', attempts: total, backoffSeconds: backoff, lockout: backoff == null }
+      } catch (err: any) {
+        // RAISE paths: unauthorized / no pin / misuse format.
+        await refreshStatus()
         return { ok: false, reason: 'error' }
       }
     },
-    [attempts, refreshStatus],
+    [session, refreshStatus],
   )
 
   const definePin = useCallback(
-    async (pin: string): Promise<PinVerifyResult> => {
-      if (!PIN_BACKEND_ENABLED) return { ok: false, reason: 'unavailable' }
+    async (pin: string, pinActual?: string | null): Promise<PinVerifyResult> => {
+      if (!session || !PIN_BACKEND_ENABLED) return { ok: false, reason: 'unavailable' }
       try {
-        // S7 — after the lockout the server cleared the PIN ('restaurar'):
-        // saving a new one here is authorized without the old PIN. When the
-        // PIN is otherwise active this same RPC must reject without the old
-        // PIN (T5 defines that rule server-side).
-        await rpc(RPC_PIN_CONFIGURAR, { p_pin: pin })
-        await refreshStatus()
+        // servidor: 'restaurar' no exige el viejo; 'activa' exige p_pin_actual (S8)
+        await rpc(RPC_PIN_CONFIGURAR, { p_pin: pin, p_pin_actual: pinActual ?? null })
         setAttempts(0)
         setWaitingBackoffSeconds(null)
         setLocked(false)
+        await refreshStatus()
         return { ok: true, reason: null }
       } catch (err: any) {
         const message = String(err?.message ?? '')
+        if (message.includes('pin_actual_incorrecto')) {
+          return { ok: false, reason: 'pin_actual_incorrecto' }
+        }
+        if (message.includes('pin_debil')) {
+          return { ok: false, reason: 'pin_debil' }
+        }
         if (message.includes('en_cooldown')) {
           await refreshStatus()
           return { ok: false, reason: 'en_cooldown', lockout: true }
         }
+        if (message.includes('pin_nuevo_requerido')) {
+          await refreshStatus()
+          return { ok: false, reason: 'reset_pending' }
+        }
         return { ok: false, reason: 'error' }
       }
     },
-    [refreshStatus],
+    [session, refreshStatus],
+  )
+
+  const deactivatePin = useCallback(
+    async (pinActual: string): Promise<PinVerifyResult> => {
+      if (!session || !PIN_BACKEND_ENABLED) return { ok: false, reason: 'unavailable' }
+      try {
+        await rpc(RPC_PIN_DESACTIVAR, { p_pin_actual: pinActual })
+        setAttempts(0)
+        setWaitingBackoffSeconds(null)
+        await refreshStatus()
+        return { ok: true, reason: null }
+      } catch (err: any) {
+        const message = String(err?.message ?? '')
+        if (message.includes('pin_actual_incorrecto')) {
+          return { ok: false, reason: 'pin_actual_incorrecto' }
+        }
+        if (message.includes('en_cooldown')) {
+          await refreshStatus()
+          return { ok: false, reason: 'en_cooldown', lockout: true }
+        }
+        if (message.includes('pin_nuevo_requerido')) {
+          await refreshStatus()
+          return { ok: false, reason: 'reset_pending' }
+        }
+        return { ok: false, reason: 'error' }
+      }
+    },
+    [session, refreshStatus],
   )
 
   const unlockWithBiometria = useCallback(async (): Promise<PinVerifyResult> => {
-    if (!PIN_BACKEND_ENABLED || !biometriaHabilitadaEnEsteDispositivo()) {
+    if (!session || !PIN_BACKEND_ENABLED || !biometriaHabilitadaEnEsteDispositivo()) {
       return { ok: false, reason: 'unavailable' }
     }
     const verified = await desbloquearConBiometria()
     if (!verified) return { ok: false, reason: 'error' }
     try {
-      // S7 — biometric success proves the owner on this device: cancel the
-      // lockout and re-arm the PIN (server-side; T5 defines the RPC body).
+      // S7 — biometric success proves the owner on this device: re-arm the PIN.
       await rpc(RPC_PIN_REACTIVAR)
       await refreshStatus()
       return { ok: true, reason: null }
     } catch {
-      // Biometry verified but the re-arm RPC failed: still present the lock
-      // with the old state; the user can retry or use the PIN.
       return { ok: false, reason: 'error' }
     }
-  }, [refreshStatus])
+  }, [session, refreshStatus])
 
   const lockState = useMemo<LockState | null>(() => {
     if (!session || serverEstado == null) return null
@@ -250,10 +295,11 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
       refreshStatus,
       verifyPin,
       definePin,
+      deactivatePin,
       setBiometriaEnDispositivo: (enabled: boolean) => setBiometriaEnDispositivo(enabled),
       unlockWithBiometria,
     }),
-    [lockState, locked, attempts, waitingBackoffSeconds, biometriaEnDispositivo, refreshStatus, verifyPin, definePin, unlockWithBiometria],
+    [lockState, locked, attempts, waitingBackoffSeconds, biometriaEnDispositivo, refreshStatus, verifyPin, definePin, deactivatePin, unlockWithBiometria],
   )
 
   return <AppLockContext.Provider value={value}>{children}</AppLockContext.Provider>

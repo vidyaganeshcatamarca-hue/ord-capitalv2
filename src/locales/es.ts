@@ -2529,5 +2529,13 @@ export const tour = {
   proteccion_desactivar: "Desactivar la protección",
   proteccion_activar_huella: "Registrar la huella en este dispositivo",
   proteccion_desactivar_huella: "Quitar la huella de este dispositivo",
-  proteccion_backend_pendiente: "Disponible próximamente: falta el backend del PIN (pendiente de autorización).",
+  app_lock_wrong_current_pin: "El PIN actual no coincide.",
+
+  proteccion_cancelar: "Cancelar",
+  proteccion_pedir_pin_actual: "Confirmá tu PIN actual para continuar.",
+  proteccion_pin_creado: "Protección activada.",
+  proteccion_pin_cambiado: "PIN actualizado.",
+  proteccion_pin_desactivado: "Protección desactivada.",
+  proteccion_huella_registrada: "Huella registrada en este dispositivo.",
+  proteccion_huella_eliminada: "Huella eliminada de este dispositivo.",
 };
