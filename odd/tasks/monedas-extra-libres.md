@@ -99,7 +99,7 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
 |---|---|---|---|---|
 | T1 | Backend datos+RPC | S5,S7,S8,S9,S10,S11,S13,S14,S15,A2,A4: `monedas_extra` en `p_config_region`, RPC de configuración, `fn_obtener_cotizacion(origen,destino)` pivote, validación en `fn_crear_billetera*`, test transaccional 21/21 PASS, **DEPLOYADO 2026-10-16** | worker+fixes inline | **852f6f0** |
 | T2 | Billeteras | S2,S5,S8,S10,S11,A3: picker local+extras (monedasExtra.ts + useMonedasExtra + BilleterasPage), texto de error no mentidor, RED→GREEN 8/8, suite 80/80, commit | inline | **8918a1a** |
-| T3 | Cargas manuales | S4,A5,A6: sugerencia genérica en cruzadas, etiquetas dinámicas, clasificación backend | worker | — |
+| T3 | Cargas manuales | S4,S16-S17,A5,A6: sugerencia por par via fn_obtener_cotizacion + hint tasa/fecha; helper fn_titulo_transferencia (12/12 JS + 7/7 SQL), renderer JSON en HomePage, keys legacy USD intactas; **DEPLOYADO 2026-10-16** | worker+inline | — |
 | T4 | Patrimonio/Home | S3,A7,A8: hero + totales_por_moneda + Supervivencia | inline | — |
 | T5 | Voz | S5,A9: validación backend + contexto (ya data-driven) | worker | — |
 | T6 | Inversiones | A10: picker de moneda (pendiente respuesta) | pendiente | — |
@@ -204,3 +204,16 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
   el set real; `error_currency_not_local` deja de mentir (S11). Tests: 8/8 + suite onboarding
   80/80 + i18n 28/28 + tsc limpio. Commit **8918a1a** (6 archivos incl. whitelist .gitignore
   del test, convención del repo).
+- **L15** (T3 HECHO + DEPLOY REAL 75, aprobado por el dueño 2026-10-16, commit **de666f9**):
+  S16: sugerencia de monto destino en AddMovementModal via `fn_obtener_cotizacion(origen,
+  destino)` (cualquier par, pivote T1) + hint `movement_tasa_par_hint` ({tasa, fecha}, S15);
+  sin tasa → vacío/manual (D17). S17: helper `fn_titulo_transferencia` (mismo árbol que
+  `transferTitles.ts`, 12/12 JS) + renderer JSON con `currencyName` en HomePage + 3 claves es.ts.
+  Deploy real aplicado y smoke verde (8 casos read-only, legacy USD intacto). Hallazgo de
+  backend: `v_moneda_local` de `fn_registrar_movimiento_caja` era declarada sin asignar desde
+  siempre — el CASE legado con `= NULL` caía siempre en entre_cuentas (las etiquetas
+  compra/venta solo existían vía cuarentena); el helper la resuelve real (S17 activa).
+  Aviso al peer: 2 funciones tocadas + `fn_titulo_transferencia` nueva para espejo
+  funcionesSQL. Verificación del tier: verificador independiente corrió para T1 (veredicto
+  procesado); T3 backend usó test transaccional 7/7 + smoke. S16/S17 usan S15 (fecha más
+  vieja) y D17 (NULL honesto) del núcleo T1.
