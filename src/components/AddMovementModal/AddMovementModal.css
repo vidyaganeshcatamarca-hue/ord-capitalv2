@@ -39,12 +39,15 @@
 }
 
 @media (min-width: 768px) {
+  /* PC: previously centered inside the main area (right of the app sidebar)
+     with width 1100 — on ~1250px-CSS screens the three columns collapsed to
+     ~250px and the amount input could not fit its text. Overlay the whole
+     viewport (the backdrop already covers it) with a dynamic cap. */
   .add-movement-sheet {
-    left: calc(50vw + var(--sidebar-width, 240px) / 2);
+    left: 50vw;
     top: 50%;
     transform: translate(-50%, -50%);
-    width: 1100px;
-    max-width: calc(95vw - var(--sidebar-width, 240px));
+    width: min(1100px, calc(100vw - 24px));
     height: 680px;
     max-height: 90dvh;
     border-radius: 24px;
@@ -738,7 +741,7 @@
 
   .monto-input-container {
     padding: 4px 12px !important;
-    max-width: 260px !important;
+    max-width: 320px !important;
     gap: 6px !important;
   }
 
@@ -747,8 +750,10 @@
   }
 
   .monto-input-box-field {
-    font-size: 24px !important;
-    max-width: 150px !important;
+    font-size: 24px;
+    max-width: none;
+    flex: 1 1 auto;
+    min-width: 0;
   }
 
   .add-movement-sheet {
@@ -865,11 +870,21 @@
   flex: 1.2;
 }
 
+/* PC: the importe column holds the one input users read while typing — give it
+   priority space over the detalles column, and slim the pill padding. */
+.pc-form-col.billing-col {
+  flex: 1.25;
+}
+.pc-unified-form .importe-mic-row .monto-input-container {
+  padding: 8px 12px;
+}
+
 /* PC: the amount input box was too narrow (fixed max-width) and long amounts
    scrolled out of view while typing. Stretch the box across the first column
    next to the mic button; mobile keeps the centered fixed-size look. */
 .pc-unified-form .importe-mic-row .monto-input-container {
   flex: 1 1 auto;
+  width: 100%;
   min-width: 0;
   max-width: none;
 }
@@ -877,6 +892,20 @@
   flex: 1 1 auto;
   min-width: 0;
   max-width: none;
+}
+
+/* PC: the 70px voice-mic circle consumed ~25% of the importe row, pinching the
+   amount box next to it. Compact the mic on PC so the box gets room; mobile
+   keeps its own smaller sizes. */
+@media (min-width: 768px) {
+  .add-movement-mic-btn {
+    width: 48px;
+    height: 48px;
+  }
+  .add-movement-mic-btn svg {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 @media (min-width: 768px) {
