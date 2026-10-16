@@ -13,6 +13,16 @@ interface Props {
   onSuccess?: () => void
 }
 
+// Local calendar date (YYYY-MM-DD) of the device: reconciliation adjustments
+// must be stamped with the user's local day, not the server's UTC day.
+function toLocalDate(): string {
+  const d = new Date()
+  const year = d.getFullYear()
+  const month = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSuccess }: Props) {
   const [saldoReal, setSaldoReal] = useState(billetera.saldo_actual.toString())
   const [loading, setLoading] = useState(false)
@@ -65,7 +75,8 @@ export function ReconcileWalletModal({ billetera, formatAmount, onClose, onSucce
     try {
       await rpc('fn_ejecutar_conciliacion', {
         p_billetera_id: billetera.billetera_id,
-        p_saldo_real: saldoNum
+        p_saldo_real: saldoNum,
+        p_fecha: toLocalDate(),
       })
 
       const diff = saldoNum - Number(billetera.saldo_actual)
