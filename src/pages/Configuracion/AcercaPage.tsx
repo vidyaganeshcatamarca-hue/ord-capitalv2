@@ -22,36 +22,6 @@ export function AcercaPage() {
         </article>
 
         <article className="config-section-card">
-          <h2>{t('config_about_actions')}</h2>
-          <div className="config-section-actions">
-            <button type="button" className="config-section-action" disabled>
-              <span className="config-section-action-icon" aria-hidden="true">⭐</span>
-              <span>
-                <span className="config-section-action-title">{t('config_rate_app')}</span>
-                <span className="config-section-action-desc">{t('config_rate_desc')}</span>
-              </span>
-              <span className="config-section-pill">{t('config_coming_soon')}</span>
-            </button>
-            <button type="button" className="config-section-action" disabled>
-              <span className="config-section-action-icon" aria-hidden="true">📤</span>
-              <span>
-                <span className="config-section-action-title">{t('config_invite_friend')}</span>
-                <span className="config-section-action-desc">{t('config_invite_desc')}</span>
-              </span>
-              <span className="config-section-pill">{t('config_coming_soon')}</span>
-            </button>
-            <button type="button" className="config-section-action" disabled>
-              <span className="config-section-action-icon" aria-hidden="true">💡</span>
-              <span>
-                <span className="config-section-action-title">{t('config_send_suggestion')}</span>
-                <span className="config-section-action-desc">{t('config_feedback_desc')}</span>
-              </span>
-              <span className="config-section-pill">{t('config_coming_soon')}</span>
-            </button>
-          </div>
-        </article>
-
-        <article className="config-section-card">
           <h2>{t('config_legal')}</h2>
           <div className="config-section-row">
             <span>{t('config_terms')}</span>
@@ -59,6 +29,16 @@ export function AcercaPage() {
           </div>
           <div className="config-section-row">
             <span>{t('config_privacy_policy')}</span>
+            <span className="config-section-pill">{t('config_coming_soon')}</span>
+          </div>
+        </article>
+
+        {/* menu-ajustes S7 — Plan/Suscripción placeholder lives here (not in
+            Cuenta y seguridad); no subscription flow is implemented yet. */}
+        <article className="config-section-card">
+          <h2>{t('settings_entry_plan_subscription')}</h2>
+          <div className="config-section-row">
+            <span>{t('settings_entry_plan_subscription_desc')}</span>
             <span className="config-section-pill">{t('config_coming_soon')}</span>
           </div>
         </article>

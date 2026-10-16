@@ -64,9 +64,8 @@ function deepFreeze<T>(value: T): T {
 }
 
 // ── Shared entries ─────────────────────────────────────────────────────────
-// S11/S12 — Ayuda y soporte is identical in both modes.
-// T1 renders report_issue / my_reports through the hub; guided_tour is declared
-// here for the spec contract and gets its row in T2 (S11).
+// S11/S12 — Ayuda y soporte is identical in both modes. T2 wired all three
+// rows through the hub: report_issue, my_reports and the guided tour.
 const HELP_SUPPORT_GROUP: SettingsMenuGroup = {
   id: 'help_support',
   titleKey: 'settings_group_help_support',
@@ -91,6 +90,27 @@ const HELP_SUPPORT_GROUP: SettingsMenuGroup = {
   ],
 }
 
+// S7 — Acerca de keeps Versión + Legal (existing AcercaPage interior) and
+// declares the Plan/Suscripción placeholder. Like Carga y registro, it renders
+// as a single row (its target) until its leaves are wired; declaring the leaf
+// keeps the spec contract in the tree.
+const ABOUT_GROUP: SettingsMenuGroup = {
+  id: 'about',
+  titleKey: 'settings_entry_about',
+  descKey: 'config_about_desc',
+  target: 'target:/configuracion/acerca',
+  items: [
+    {
+      // S7 — placeholder only: the subscription feature is out of this phase.
+      id: 'plan_subscription',
+      titleKey: 'settings_entry_plan_subscription',
+      descKey: 'settings_entry_plan_subscription_desc',
+      target: null,
+      soon: true,
+    },
+  ],
+}
+
 const APPLICATION_GROUP: SettingsMenuGroup = {
   id: 'application',
   titleKey: 'settings_group_application',
@@ -101,13 +121,8 @@ const APPLICATION_GROUP: SettingsMenuGroup = {
       titleKey: 'settings_entry_maintenance',
       target: 'component:MantenimientoAppCard',
     },
-    {
-      id: 'about',
-      titleKey: 'settings_entry_about',
-      descKey: 'config_about_desc',
-      target: 'target:/configuracion/acerca',
-    },
   ],
+  groups: [ABOUT_GROUP],
 }
 
 // S8 — root entries, disabled until the feature exists.

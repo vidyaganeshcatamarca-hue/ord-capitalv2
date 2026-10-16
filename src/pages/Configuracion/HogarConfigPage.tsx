@@ -7,8 +7,9 @@ import './ConfigSectionPage.css'
 export function HogarConfigPage() {
   return (
     <main className="page config-page" aria-labelledby="hogar-config-title">
-      {/* Back → preferencias operativas (no a /configuracion) */}
-      <ConfigBackButton to="/configuracion/operativas" />
+      {/* S14 — Hogar lives under Datos y operaciones now: back goes to the
+        * Ajustes root. ConfigBackButton defaults to /configuracion. */}
+      <ConfigBackButton />
 
       <header className="config-page-header">
         <h1 id="hogar-config-title">{t('config_hogar')}</h1>

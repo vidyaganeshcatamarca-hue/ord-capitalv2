@@ -18,14 +18,6 @@ import './ConfiguracionHub.css'
 
 const BASE_CERO_HOME_KEY = 'base_cero_como_inicio'
 
-/**
- * Entries declared by settingsMenu that the hub does NOT wire yet.
- *   - report_issue / my_reports: T2 (S12) — the ConfiguracionPage support rows
- *     still own them and the rename lands with that group work.
- *   - guided_tour: T2 (S11).
- */
-const DEFERRED_ENTRY_IDS = new Set(['report_issue', 'my_reports', 'guided_tour'])
-
 /** Icon of every row the hub renders from a `target:` destination. */
 const ROW_ICONS: Record<string, ReactNode> = {
   region_format: '🌍',
@@ -33,6 +25,19 @@ const ROW_ICONS: Record<string, ReactNode> = {
   home_config: '👥',
   import_export: <FileSpreadsheet size={22} />,
   about: '📱',
+  report_issue: '🐞',
+  my_reports: '📋',
+  guided_tour: '🧭',
+}
+
+/**
+ * Router state some rows carry so their destination still knows where the
+ * user came from (report flows). Preserved from the support rows that used to
+ * live in ConfiguracionPage before T2 wired them into the tree.
+ */
+const ROW_STATE: Record<string, Record<string, unknown>> = {
+  report_issue: { origen: '/configuracion' },
+  my_reports: { origen: '/configuracion' },
 }
 
 interface ConfigLinkCardProps {
@@ -40,12 +45,17 @@ interface ConfigLinkCardProps {
   titleKey: string
   descKey?: string
   to: string
+  state?: Record<string, unknown>
 }
 
-function ConfigLinkCard({ icon, titleKey, descKey, to }: ConfigLinkCardProps) {
+function ConfigLinkCard({ icon, titleKey, descKey, to, state }: ConfigLinkCardProps) {
   const navigate = useNavigate()
   return (
-    <button type="button" className="config-hub-card" onClick={() => navigate(to)}>
+    <button
+      type="button"
+      className="config-hub-card"
+      onClick={() => navigate(to, state ? { state } : undefined)}
+    >
       <span className="config-hub-card-icon" aria-hidden="true">{icon}</span>
       <div className="config-hub-card-content">
         <h3>{t(titleKey)}</h3>
@@ -157,9 +167,8 @@ function ComponentSlot({ slot, userId }: { slot: string; userId: string | undefi
   }
 }
 
-/** Renders one entry of the resolved tree, or null while it is deferred. */
+/** Renders one entry of the resolved tree. */
 function SettingsEntry({ item, userId }: { item: SettingsMenuItem; userId: string | undefined }) {
-  if (DEFERRED_ENTRY_IDS.has(item.id)) return null
   if (item.soon || item.disabled) return <ConfigSoonCard item={item} />
   if (!item.target) return null
   if (item.target.startsWith('mode:')) return <ModeSwitchRow item={item} />
@@ -173,6 +182,7 @@ function SettingsEntry({ item, userId }: { item: SettingsMenuItem; userId: strin
         titleKey={item.titleKey}
         descKey={item.descKey}
         to={item.target.slice('target:'.length)}
+        state={ROW_STATE[item.id]}
       />
     )
   }
@@ -196,7 +206,6 @@ function SettingsSubgroup({ group }: { group: SettingsMenuGroup }) {
 }
 
 function isRenderable(item: SettingsMenuItem): boolean {
-  if (DEFERRED_ENTRY_IDS.has(item.id)) return false
   return item.soon === true || item.disabled === true || item.target !== null
 }
 

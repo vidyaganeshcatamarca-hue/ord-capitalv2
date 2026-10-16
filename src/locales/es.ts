@@ -2348,6 +2348,8 @@ export const inversiones = {
   settings_entry_install_app: "Instalar la app",
   settings_entry_maintenance: "Mantenimiento",
   settings_entry_about: "Acerca de",
+  settings_entry_plan_subscription: "Plan o suscripción",
+  settings_entry_plan_subscription_desc: "Gestioná tu plan y tu suscripción.",
   settings_action_go_advanced: "Pasar a Avanzado",
   settings_action_go_advanced_desc: "Activá funciones avanzadas de carga, automatización y datos.",
   settings_action_back_to_simple: "Volver a Simple",

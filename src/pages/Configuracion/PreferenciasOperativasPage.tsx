@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
 import { ToggleSwitch } from '@/components/configuracion/ToggleSwitch'
 import { useToast } from '@/contexts/ToastContext'
@@ -36,7 +35,6 @@ const DEFAULT_PREFS: OperationalPrefs = {
 }
 
 export function PreferenciasOperativasPage() {
-  const navigate = useNavigate()
   const { showToast } = useToast()
   const [wallets, setWallets] = useState<WalletOption[]>([])
   const [prefs, setPrefs] = useState<OperationalPrefs>(DEFAULT_PREFS)
@@ -123,37 +121,6 @@ export function PreferenciasOperativasPage() {
       </header>
 
       <section className="config-section-list" aria-label={t('config_section_operational')}>
-
-        {/* Atajos de navegación */}
-        <article className="config-section-card">
-          <h2>{t('config_operational_shortcuts')}</h2>
-          <div className="config-section-actions">
-            <button type="button" className="config-section-action" onClick={() => navigate('/billeteras?backTo=/configuracion/operativas')}>
-              <span className="config-section-action-icon" aria-hidden="true">💳</span>
-              <span>
-                <span className="config-section-action-title">{t('config_billeteras')}</span>
-                <span className="config-section-action-desc">{t('config_billeteras_desc')}</span>
-              </span>
-              <span aria-hidden="true">›</span>
-            </button>
-            <button type="button" className="config-section-action" onClick={() => navigate('/billeteras?tab=categorias_egresos&backTo=/configuracion/operativas')}>
-              <span className="config-section-action-icon" aria-hidden="true">🏷️</span>
-              <span>
-                <span className="config-section-action-title">{t('config_categorias')}</span>
-                <span className="config-section-action-desc">{t('config_categorias_desc')}</span>
-              </span>
-              <span aria-hidden="true">›</span>
-            </button>
-            <button type="button" className="config-section-action" onClick={() => navigate('/configuracion/hogar')}>
-              <span className="config-section-action-icon" aria-hidden="true">👥</span>
-              <span>
-                <span className="config-section-action-title">{t('config_hogar')}</span>
-                <span className="config-section-action-desc">{t('config_hogar_desc')}</span>
-              </span>
-              <span aria-hidden="true">›</span>
-            </button>
-          </div>
-        </article>
 
         {/* Billeteras predeterminadas */}
         <article className="config-section-card">
@@ -261,14 +228,6 @@ export function PreferenciasOperativasPage() {
             <ToggleSwitch
               checked={prefs.voz_activada}
               onChange={(v) => updatePref('voz_activada', v)}
-            />
-          </div>
-
-          <div className="config-section-inline" style={{ marginTop: 10 }}>
-            <span style={{ color: 'var(--text)', fontSize: 'calc(0.9rem * var(--font-scale))' }}>{t('config_ocr_auto_approve')}</span>
-            <ToggleSwitch
-              checked={prefs.ocr_auto_aprobar}
-              onChange={(v) => updatePref('ocr_auto_aprobar', v)}
             />
           </div>
         </article>
