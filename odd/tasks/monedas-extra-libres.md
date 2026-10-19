@@ -302,3 +302,10 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
   d6e6e2f; tsc limpio, onboarding 118/118, i18n 28/28. Punto 4 (scroll) del peer;
   punto 7 (keys actividad): fuente = src/lib/transferTitles.ts + HomePage
   parseTransferDetalle (keys en es.ts).
+- **L23** (integración tanda 3, 2026-10-19): peer mergeó b1ac9bc (suites 324/324 con
+  currency-label 8/8) y ya había corregido él el punto 7 (e88075c): el título de
+  actividad resuelve el JSON con el código crudo ('Compra de ARS') y el detalle/sufijo
+  conserva el nombre humano ('Compra de peso argentino', mi parseTransferDetalle con
+  currencyName en HomePage ~1740) — división exacta del punto 2 del dueño (código en
+  títulos/selectores, nombre en sufijos). Los 3 clones a b1ac9bc. Pendiente: consulta
+  al dueño (RPC nueva para nombres de moneda garantizados cross-engine).
