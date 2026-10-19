@@ -3,7 +3,7 @@ import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { translateDetalle } from '@/lib/transferTitles'
-import { movementAmount, movementSign } from '@/lib/walletMovementRows'
+import { movementAmount, movementSign, movementTitleSource } from '@/lib/walletMovementRows'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { WalletIcon } from '@/components/WalletIcon'
 import './BilleteraDetailModal.css'
@@ -101,9 +101,14 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
                 const sign = movementSign(m)
                 const amount = movementAmount(m)
                 const isOut = sign === '-'
-                const title = m.nombre_categoria
-                  ? translateDetalle(String(m.nombre_categoria), (key, params) => t(key, { ...params }))
-                  : m.billetera_contraria || t('movement_category_general')
+                const title = (() => {
+                  // Owner tanda-5: a generic bucket ('no_category' for a
+                  // cross-currency transfer) yields to the movement's own
+                  // detalle, which carries the real label.
+                  const source = movementTitleSource(m)
+                  if (source) return translateDetalle(source, (key, params) => t(key, { ...params }))
+                  return m.billetera_contraria || t('movement_category_general')
+                })()
 
                 return (
                   <div key={i} className="movimiento-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'var(--surface)', borderRadius: '8px' }}>

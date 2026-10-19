@@ -32,3 +32,27 @@ export function movementSign(row: { monto?: number | string | null } | null | un
 export function movementIsOutflow(row: { monto?: number | string | null } | null | undefined): boolean {
   return movementSign(row) === '-'
 }
+
+/** Generic buckets a category CASE can produce when the real label lives in `detalle`. */
+const GENERIC_CATEGORIES = new Set(['', 'no_category', 'no_detail', 'type_transfer'])
+
+/**
+ * Which string the row must render as its title.
+ *
+ * Owner bug (tanda 5): fn_reporte_movimientos_por_billetera builds
+ * `nombre_categoria` as COALESCE(category, tipo CASE) and never inspects
+ * `detalle`, so cross-currency transfers arrive as 'no_category' even though
+ * the movement carries its real label as a JSON payload, and openings as
+ * 'initial_balance'. A specific detalle wins over a generic bucket; a real
+ * category always wins over the detalle.
+ */
+export function movementTitleSource(
+  row: { nombre_categoria?: string | null; detalle?: string | null } | null | undefined,
+): string {
+  const category = String(row?.nombre_categoria ?? '').trim()
+  const detalle = String(row?.detalle ?? '').trim()
+  const isPayload = detalle.startsWith('{')
+  if (isPayload) return detalle
+  if (GENERIC_CATEGORIES.has(category) && detalle) return detalle
+  return category
+}

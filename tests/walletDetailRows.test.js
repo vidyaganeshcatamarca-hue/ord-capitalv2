@@ -9,7 +9,7 @@ import fs from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { movementAmount, movementSign, movementIsOutflow } from '../src/lib/walletMovementRows.ts'
+import { movementAmount, movementSign, movementIsOutflow, movementTitleSource } from '../src/lib/walletMovementRows.ts'
 
 test('the amount comes from the signed `monto` of the RPC', () => {
   assert.equal(movementAmount({ monto: -20000 }), 20000)
@@ -45,6 +45,41 @@ test('the sheet reads the RPC contract, not the fields that never existed', () =
     assert.ok(!src.includes(ghost), `the sheet must not read ${ghost}: fn_reporte_movimientos_por_billetera does not return it`)
   }
   assert.match(src, /movementSign|movementAmount/, 'amount and sign come from the pure row helpers')
-  assert.match(src, /translateDetalle\(\s*(?:String\()?\s*m\.nombre_categoria/, 'the title resolves nombre_categoria (transfer payload included)')
+  assert.match(src, /translateDetalle\(\s*source/, 'the title translates the chosen label (transfer payload included)')
   assert.ok(!/\|\|\s*m\.tipo\b/.test(src), 'the raw tipo is never the visible title')
+})
+
+// ── Owner tanda 5, bug 2: the sheet showed "no_category" for cross-currency
+// transfers. fn_reporte_movimientos_por_billetera derives nombre_categoria with
+// COALESCE(categoria, tipo CASE) and never looks at `detalle`, which IS the real
+// label: a JSON transfer payload or 'initial_balance'. The row must prefer that
+// specific label over a generic bucket.
+
+test('a generic category yields to the specific detalle label', () => {
+  const payload = JSON.stringify({ key: 'transfer_compra_moneda', params: { moneda: 'BRL' } })
+  assert.equal(movementTitleSource({ nombre_categoria: 'no_category', detalle: payload }), payload)
+  assert.equal(movementTitleSource({ nombre_categoria: 'type_transfer', detalle: payload }), payload)
+  assert.equal(movementTitleSource({ nombre_categoria: '', detalle: 'initial_balance' }), 'initial_balance')
+})
+
+test('a real category wins over the detalle', () => {
+  assert.equal(
+    movementTitleSource({ nombre_categoria: 'cat_transport', detalle: 'initial_balance' }),
+    'cat_transport',
+  )
+})
+
+test('a generic bucket with no detalle stays as the safe label', () => {
+  assert.equal(movementTitleSource({ nombre_categoria: 'no_category', detalle: null }), 'no_category')
+  assert.equal(movementTitleSource({ nombre_categoria: 'cat_food_home', detalle: '' }), 'cat_food_home')
+  assert.equal(movementTitleSource({}), '')
+})
+
+test('the sheet resolves the chosen label through translateDetalle', () => {
+  const src = fs.readFileSync(
+    new URL('../src/components/BilleteraDetailModal/BilleteraDetailModal.tsx', import.meta.url),
+    'utf-8',
+  )
+  assert.match(src, /movementTitleSource/, 'the row asks the helper which label to show')
+  assert.match(src, /translateDetalle\(/, 'and translates it (never prints the raw key)')
 })
