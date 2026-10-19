@@ -17,6 +17,7 @@
 //   * sin moneda local / datos incompletos -> 'transfer_entre_cuentas'
 //     (default seguro, igual que el backend legado)
 
+import fs from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
@@ -90,4 +91,17 @@ test('destino = la moneda local con origen extranjero distinto de USD: venta del
     JSON.parse(buildTransferDetalle('ARS', 'EUR', 'EUR')),
     { key: 'transfer_venta_moneda', params: { moneda: 'ARS' } }
   )
+})
+// ── Owner tanda-3: the ACTIVITY RECENT title was rendering the raw JSON
+// (t(nombre_categoria) with nombre_categoria carrying the transfer payload).
+// The title now resolves the payload with the raw currency CODE ('Compra de
+// ARS'); the human name ('peso argentino') stays in the suffix renderer.
+
+test('activity title resolves the transfer payload with the raw currency code (owner tanda-3)', () => {
+  const home = fs.readFileSync(new URL('../../src/pages/Home/HomePage.tsx', import.meta.url), 'utf-8')
+  const categoryTitleIdx = home.indexOf('timeline-item-category')
+  const windowStart = Math.max(0, categoryTitleIdx - 150)
+  const titleRow = home.slice(windowStart, categoryTitleIdx + 700)
+  assert.match(titleRow, /parseTransferDetalle/, 'the title must resolve the JSON payload like the suffix does')
+  assert.ok(!titleRow.includes('currencyName'), 'the title keeps the currency CODE; the human name lives in the suffix')
 })

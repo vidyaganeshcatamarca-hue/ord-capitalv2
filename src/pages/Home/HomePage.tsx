@@ -1701,7 +1701,14 @@ export function HomePage() {
                         </div>
                         <div className="timeline-item-details">
                           <div className="timeline-item-title-row">
-                            <span className="timeline-item-category">{m.nombre_categoria ? t(m.nombre_categoria) : t('movement_category_general')}</span>
+                            <span className="timeline-item-category">{m.nombre_categoria ? (() => {
+                              // Owner tanda-3: the transfer legs carry the JSON title payload
+                              // (nombre_categoria === detalle); the title resolves it with the
+                              // raw currency CODE ('Compra de ARS') — the human name stays
+                              // in the suffix ('Compra de peso argentino'). Plain keys pass
+                              // through untouched.
+                              return parseTransferDetalle(m.nombre_categoria, (key, params) => t(key, { ...params }))
+                            })() : t('movement_category_general')}</span>
                             <span className={`timeline-item-amount ${esEgreso ? 'negative' : 'positive'}`}>
                               {m.monto > 0 ? '+' : ''}
                               {formatAmount(m.monto, moneda)}
