@@ -545,6 +545,29 @@ test('Pasar a Avanzado opens a confirmation modal before activating (S9/L15)', (
     'back to simple stays one-tap (no confirmation)',
   )
 })
+/** Bug-10 (owner, 2026-10-19): Borrado de datos y cuentas becomes its own
+ *  collapsible branch inside Cuenta y seguridad; expanding it reveals the two
+ *  sub-options (delete data / delete account) that ConfiguracionBorradoCard renders. */
+test('Borrado opens as a collapsed branch revealing the two deletion sub-options (bug 10)', () => {
+  const hub = fs.readFileSync(HUB_PATH, 'utf-8')
+  assert.match(hub, /function\s+DeletionInlineCard\s*\(/, 'the hub must define the deletion inline wrapper')
+  assert.match(
+    hub,
+    /item\.id === 'data_deletion'\)\s+return <DeletionInlineCard/,
+    'the data_deletion entry must be intercepted and rendered as the collapsible branch',
+  )
+  const wrapper = hub.slice(hub.indexOf('function DeletionInlineCard'), hub.indexOf('function SettingsSubgroup'))
+  assert.ok(
+    wrapper.includes('<SettingsCollapsible') && wrapper.includes('<ConfiguracionBorradoCard />'),
+    'the branch must wrap ConfiguracionBorradoCard in a collapsible',
+  )
+  assert.ok(
+    wrapper.includes('titleKey={item.titleKey}'),
+    'the branch must render the entry title through the i18n key of the tree',
+  )
+  const es = fs.readFileSync(ES_PATH, 'utf-8')
+  assert.match(es, /settings_entry_data_deletion:\s*"Borrado de datos y cuentas"/, 'the branch title must read Borrado de datos y cuentas')
+})
 test('the hub renders Acerca de inline and the legal rows open LegalDocModal (U2/S4)', () => {
   const hub = fs.readFileSync(HUB_PATH, 'utf-8')
   assert.match(hub, /function\s+AboutInlineCard\s*\(/, 'the hub must define the about inline card')

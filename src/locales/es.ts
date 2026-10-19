@@ -2389,7 +2389,7 @@ export const inversiones = {
   settings_currencies_third_label: "Tercera moneda",
   settings_currencies_third_desc: "Config pendiente.",
   // S15 — deletion entry (T3): both options share the 10-day + PIN rule.
-  settings_entry_data_deletion: "Borrado",
+  settings_entry_data_deletion: "Borrado de datos y cuentas",
   settings_delete_title: "Borrado de datos y cuenta",
   settings_delete_help: "Desde acá podés borrar tus datos o eliminar tu cuenta. Ambas acciones son permanentes y piden confirmación.",
   settings_delete_option_data_title: "Borrar mis datos",

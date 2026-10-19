@@ -227,6 +227,25 @@ function RegionInlineCard({ item }: { item: SettingsMenuItem }) {
 }
 
 /**
+ * Bug 10 (owner, 2026-10-19) — Borrado de datos y cuentas: the entry renders as
+ * a collapsed branch; expanding it reveals the two sub-options (delete data /
+ * delete account) ConfiguracionBorradoCard renders. The card keeps owning its
+ * 10-day + PIN gate and both confirmation flows.
+ */
+function DeletionInlineCard({ item }: { item: SettingsMenuItem }) {
+  return (
+    <SettingsCollapsible
+      id="config-inline-deletion"
+      icon={ROW_ICONS[item.id] ?? '🗑️'}
+      titleKey={item.titleKey}
+      descKey={item.descKey}
+    >
+      <ConfiguracionBorradoCard />
+    </SettingsCollapsible>
+  )
+}
+
+/**
  * U2 (S4) — Acerca de opens inline too. Same interception by subgroup id: its
  * body (Versión, Legal with LegalDocModal, Plan placeholder) renders inside the
  * card instead of navigating to the retired page.
@@ -249,6 +268,9 @@ function SettingsEntry({ item, userId }: { item: SettingsMenuItem; userId: strin
   if (item.soon || item.disabled) return <ConfigSoonCard item={item} />
   // U2 (S3): Región y formato never navigates; it expands inline.
   if (item.id === 'region_format') return <RegionInlineCard item={item} />
+  // Bug 10 (owner): Borrado de datos y cuentas is a collapsible branch; the two
+  // deletion sub-options reveal inside it instead of rendering always-open.
+  if (item.id === 'data_deletion') return <DeletionInlineCard item={item} />
   if (!item.target) return null
   if (item.target.startsWith('mode:')) return <ModeSwitchRow item={item} />
   if (item.target.startsWith('component:')) {
