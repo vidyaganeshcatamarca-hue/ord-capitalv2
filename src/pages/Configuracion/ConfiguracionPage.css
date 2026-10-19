@@ -1,12 +1,15 @@
 .config-page {
-  min-height: 100vh;
+  /* Owner bug (tanda 4): NO min-height:100vh here. This element is the scroll
+     container (.page); 100vh is the LARGE mobile viewport, so the box grew past
+     its clip parent and the bottom padding + last row became unreachable —
+     `overflow-y:auto` clips content, not the box. flex:1 already fills. */
   /* Owner bug (tanda 4): with min-height:100vh the default align-content:
      stretch spread the leftover height across the auto rows, so the gaps
      ballooned and the action button fell behind the fixed bottom nav — even
      though the screen had empty space. Rows start at the top now. */
   align-content: start;
   padding: 24px 16px;
-  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + var(--space-4));
+  padding-bottom: var(--nav-clearance);
   background: var(--bg);
   color: var(--text);
   display: grid;

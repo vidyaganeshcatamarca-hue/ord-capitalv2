@@ -99,6 +99,11 @@
 
   /* ─── Layout ─── */
   --nav-height:  64px;
+  /* Owner bug (tanda 4): every scrollable screen must reserve the real nav
+     height (menu + gesture bar). A flat px value under-clears on devices with
+     --safe-bottom and the last row disappears behind the menu. One token, so
+     screens cannot drift. */
+  --nav-clearance: calc(var(--nav-height) + var(--safe-bottom) + var(--space-4));
   --header-height: 60px;
   --max-width:   430px;
 }
@@ -554,7 +559,7 @@ input::placeholder, textarea::placeholder {
   overflow-y: auto;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + var(--space-4));
+  padding-bottom: var(--nav-clearance);
   padding-top: var(--safe-top);
   scrollbar-width: none;
 }

@@ -1,5 +1,7 @@
 .notif-page {
-  padding-bottom: 80px;
+  /* Owner bug (tanda 4): the flat 80px under-cleared the real nav on devices
+     with a gesture bar, so the last row sat behind the menu. */
+  padding-bottom: var(--nav-clearance);
 }
 
 .notif-section {

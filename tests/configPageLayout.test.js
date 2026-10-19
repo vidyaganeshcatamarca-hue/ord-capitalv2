@@ -31,8 +31,8 @@ test('the section page keeps the bottom-nav clearance', () => {
   const page = block('.config-page')
   assert.match(
     page,
-    /padding-bottom:\s*calc\([^)]*--nav-height[^)]*\)/,
-    'the bottom padding must clear the fixed nav (nav-height + safe area)',
+    /padding-bottom:\s*var\(--nav-clearance\)/,
+    'the bottom padding must use the shared nav clearance (nav-height + safe area)',
   )
   assert.doesNotMatch(page, /padding:\s*[^;]*\b96px\b/, 'a flat 96px overrides the shared clearance')
 })
