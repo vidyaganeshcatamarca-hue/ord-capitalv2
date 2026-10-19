@@ -594,6 +594,39 @@ test('top-level settings groups collapse each other (exclusive accordion)', () =
     'SettingsCollapsible must accept onOpenChange',
   )
 })
+/** Bug 12 (owner, tanda 2): inside the deletion branch, each of the two options
+ *  (delete data / delete account) is ALSO a collapsed item: the title and the
+ *  explanatory text are always visible; only after user tap does the destructive
+ *  UI show (confirmation input / schedule button). */
+test('deletion sub-options are collapsed items revealing destructive UI on tap (bug 12)', () => {
+  const card = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'components', 'configuracion', 'ConfiguracionBorradoCard.tsx'),
+    'utf-8',
+  )
+  assert.match(
+    card,
+    /const\s+\[dataOpen/,
+    'the data option must own an expanded state (collapsed by default)',
+  )
+  assert.match(
+    card,
+    /const\s+\[accountOpen/,
+    'the account option must own an expanded state (collapsed by default)',
+  )
+  // The destructive input and the run button must only render when expanded:
+  // find the input that appears AFTER the dataOpen toggle, not before.
+  const dataToggle = card.indexOf('setDataOpen')
+  const dataInput = card.indexOf('privacidad-delete-input', dataToggle)
+  assert.ok(dataToggle !== -1 && dataInput > dataToggle, 'the confirmation input must live inside the expanded body')
+  assert.match(
+    card,
+    /DeleteAccountCard\s+embedded|<DeleteAccountCard\s+embedded=/,
+    'the account card must render embedded (no second header) inside the expanded body',
+  )
+  const accountToggle = card.indexOf('setAccountOpen')
+  const accountCard = card.indexOf('<DeleteAccountCard', accountToggle)
+  assert.ok(accountToggle !== -1 && accountCard > accountToggle, 'the account destructive UI must live inside its expanded body')
+})
 test('the hub renders Acerca de inline and the legal rows open LegalDocModal (U2/S4)', () => {
   const hub = fs.readFileSync(HUB_PATH, 'utf-8')
   assert.match(hub, /function\s+AboutInlineCard\s*\(/, 'the hub must define the about inline card')

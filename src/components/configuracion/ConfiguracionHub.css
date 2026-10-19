@@ -226,7 +226,9 @@ article.presupuesto-ciclo-card.config-hub-card {
   line-height: 1.4;
 }
 
-/* One option box per S15 option (delete data / delete account) */
+/* One option box per S15 option (delete data / delete account). Bug 12: each
+   option is a collapsed item — the header is a tappable toggle (title + text
+   always visible), the destructive UI only renders expanded. */
 .config-delete-option {
   display: grid;
   gap: 6px;
@@ -234,6 +236,39 @@ article.presupuesto-ciclo-card.config-hub-card {
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--bg-2);
+}
+
+.config-delete-option-head {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: left;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+
+.config-delete-option-head h4::after {
+  content: '›';
+  float: right;
+  color: var(--text-3);
+  transform: rotate(90deg);
+}
+
+.config-delete-option-body {
+  display: grid;
+  gap: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
+.privacidad-delete--embedded {
+  padding: 0;
+  border: 0;
+  background: none;
 }
 
 .config-delete-option--disabled {

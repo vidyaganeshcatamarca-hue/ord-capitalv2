@@ -9,7 +9,13 @@ import './DeleteAccountCard.css'
 
 const CONFIRMATION_TEXT = 'ELIMINAR'
 
-export function DeleteAccountCard() {
+interface DeleteAccountCardProps {
+  /** When embedded (bug 12), the card renders withOUT its own header/help: the
+   *  host option already shows title + explanatory text (collapsed in Ajustes). */
+  embedded?: boolean
+}
+
+export function DeleteAccountCard({ embedded = false }: DeleteAccountCardProps) {
   const { showToast } = useToast()
   const { signOut } = useAuth()
   const [confirmText, setConfirmText] = useState('')
@@ -49,10 +55,8 @@ export function DeleteAccountCard() {
     }
   }
 
-  return (
-    <section className="privacidad-delete" aria-labelledby="privacidad-delete-title">
-      <h2 id="privacidad-delete-title">{t('privacidad_section_delete')}</h2>
-      <p>{t('privacidad_delete_help')}</p>
+  const inner = (
+    <>
       {scheduledAt ? (
         <p className="privacidad-delete-scheduled">{scheduledAt}</p>
       ) : (
@@ -85,6 +89,18 @@ export function DeleteAccountCard() {
         onConfirm={handleSubmit}
         onCancel={() => setShowConfirm(false)}
       />
+    </>
+  )
+
+  if (embedded) {
+    return <div className="privacidad-delete privacidad-delete--embedded">{inner}</div>
+  }
+
+  return (
+    <section className="privacidad-delete" aria-labelledby="privacidad-delete-title">
+      <h2 id="privacidad-delete-title">{t('privacidad_section_delete')}</h2>
+      <p>{t('privacidad_delete_help')}</p>
+      {inner}
     </section>
   )
 }

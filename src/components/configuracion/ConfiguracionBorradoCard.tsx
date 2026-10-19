@@ -47,6 +47,9 @@ export function ConfiguracionBorradoCard() {
   const gate = resolveDeletionGate({ signupAt, pinConfigured, now })
 
   // S15/T5c — "borrar mis datos": the account stays, the data resets to zero.
+  // Bug 12: the two sub-options start collapsed (bug-12 owner rule).
+  const [dataOpen, setDataOpen] = useState(false)
+  const [accountOpen, setAccountOpen] = useState(false)
   const [showDataConfirm, setShowDataConfirm] = useState(false)
   const [dataConfirmText, setDataConfirmText] = useState('')
   const [deletingData, setDeletingData] = useState(false)
@@ -99,40 +102,66 @@ export function ConfiguracionBorradoCard() {
         </div>
       ) : (
         <>
+          {/* Bug 12 (owner, tanda 2): each sub-option is a collapsed item — the
+              title + explanatory text stay visible; tapping reveals the
+              destructive UI (input / schedule button). */}
           <div
             className={`config-delete-option${dataOptionDisabled ? ' config-delete-option--disabled' : ''}`}
             aria-disabled={dataOptionDisabled}
           >
-            <h4>{t('settings_delete_option_data_title')}</h4>
-            <p>{t('settings_delete_option_data_desc')}</p>
-            {dataOptionDisabled && (
-              <p className="config-delete-option-reason">
-                {t('settings_delete_option_data_unavailable')}
-              </p>
-            )}
-            <input
-              className="privacidad-delete-input"
-              type="text"
-              placeholder={t('privacidad_delete_placeholder')}
-              value={dataConfirmText}
-              onChange={(e) => setDataConfirmText(e.target.value.toUpperCase())}
-              autoComplete="off"
-              aria-label={t('settings_delete_option_data_title')}
-            />
             <button
               type="button"
-              className="config-delete-option-run"
-              disabled={dataOptionDisabled || deletingData || dataConfirmText !== DELETE_DATA_CONFIRMATION_TEXT}
-              onClick={() => setShowDataConfirm(true)}
+              className="config-delete-option-head"
+              aria-expanded={dataOpen}
+              onClick={() => { if (!dataOptionDisabled) setDataOpen(!dataOpen) }}
+              disabled={dataOptionDisabled}
             >
-              {deletingData ? '…' : t('settings_delete_option_data_run')}
+              <h4>{t('settings_delete_option_data_title')}</h4>
+              <p>{t('settings_delete_option_data_desc')}</p>
+              {dataOptionDisabled && (
+                <p className="config-delete-option-reason">
+                  {t('settings_delete_option_data_unavailable')}
+                </p>
+              )}
             </button>
+            {dataOpen && (
+              <div className="config-delete-option-body">
+                <input
+                  className="privacidad-delete-input"
+                  type="text"
+                  placeholder={t('privacidad_delete_placeholder')}
+                  value={dataConfirmText}
+                  onChange={(e) => setDataConfirmText(e.target.value.toUpperCase())}
+                  autoComplete="off"
+                  aria-label={t('settings_delete_option_data_title')}
+                />
+                <button
+                  type="button"
+                  className="config-delete-option-run"
+                  disabled={deletingData || dataConfirmText !== DELETE_DATA_CONFIRMATION_TEXT}
+                  onClick={() => setShowDataConfirm(true)}
+                >
+                  {deletingData ? '…' : t('settings_delete_option_data_run')}
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="config-delete-option">
-            <h4>{t('settings_delete_option_account_title')}</h4>
-            <p>{t('settings_delete_option_account_desc')}</p>
-            <DeleteAccountCard />
+            <button
+              type="button"
+              className="config-delete-option-head"
+              aria-expanded={accountOpen}
+              onClick={() => setAccountOpen(!accountOpen)}
+            >
+              <h4>{t('settings_delete_option_account_title')}</h4>
+              <p>{t('settings_delete_option_account_desc')}</p>
+            </button>
+            {accountOpen && (
+              <div className="config-delete-option-body">
+                <DeleteAccountCard embedded />
+              </div>
+            )}
           </div>
         </>
       )}
