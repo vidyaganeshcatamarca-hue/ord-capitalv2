@@ -9,6 +9,9 @@ import './AparienciaCard.css'
 
 interface AparienciaCardProps {
   userId: string | undefined
+  /** Bug 21 (owner): when rendered on its own settings page (L17), the card skips
+   *  its collapsed intermediate step and opens with the body visible. */
+  defaultOpen?: boolean
 }
 
 type AppTheme = 'dark' | 'warm-light'
@@ -20,9 +23,9 @@ function applyTheme(theme: AppTheme) {
   localStorage.setItem(THEME_KEY, theme)
 }
 
-export function AparienciaCard({ userId }: AparienciaCardProps) {
+export function AparienciaCard({ userId, defaultOpen = false }: AparienciaCardProps) {
   const { showToast } = useToast()
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(defaultOpen)
   const { isPersistentHide, updatePersistentHide } = useHideAmounts(userId)
   const [theme, setTheme] = useState<AppTheme>('dark')
   // Misterio: ON = visible, OFF = hidden

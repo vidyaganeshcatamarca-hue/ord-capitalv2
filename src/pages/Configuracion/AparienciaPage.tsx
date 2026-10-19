@@ -13,7 +13,7 @@ export function AparienciaPage() {
   return (
     <div className="config-section-page" aria-label={t('settings_entry_appearance')}>
       <ConfigBackButton />
-      <AparienciaCard userId={userId} />
+      <AparienciaCard userId={userId} defaultOpen />
     </div>
   )
 }
