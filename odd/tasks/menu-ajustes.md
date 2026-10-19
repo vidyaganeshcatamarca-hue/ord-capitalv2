@@ -17,7 +17,8 @@ Ajustes (Simple)
 │  ├─ Perfil (interior actual: nombre, correo, cerrar sesión)
 │  └─ Borrado: Borrar mis datos / Borrar la cuenta (regla S15)
 ├─ Preferencias
-│  ├─ Región y formato (interior intacto + bloque Monedas reservado · S18)
+│  ├─ Región y formato (interior intacto + bloque Monedas reservado · S18)  — L15: + Carga y registro abajo
+│  ├─ Carga y registro (L15: dueño 2026-10-19 — visible TAMBIÉN en Simple)
 │  └─ Apariencia (interior intacto)
 ├─ Ayuda y soporte
 │  ├─ Reportar un problema o sugerencia
@@ -27,10 +28,14 @@ Ajustes (Simple)
 │  ├─ Instalar la app
 │  ├─ Mantenimiento
 │  └─ Acerca de (Versión · Legal · Plan/Suscripción ✦)
-├─ Pasar a Avanzado (oculto si avanzado_disponible = false)
+├─ Pasar a Avanzado (oculto si avanzado_disponible = false · L15: con modal de confirmación)
 ├─ Invitar a un amigo (deshabilitada · Próximamente)
 └─ Calificar ORD (deshabilitada · Próximamente)
 ```
+
+**L15 (2026-10-19, verbatim, dos correcciones del dueño durante el test):**
+1. "lo que tienes como carga y registro, aparece en modo avanzado, pero deberia estar en modo simpole" → S2: Carga y registro entra al árbol Simple.
+2. "pasar a avanzado merece una confirmacion que evite pasar por error" → S9: la activación pasa por ConfirmModal.
 
 ### S3 — Árbol Avanzado
 ```text
@@ -195,3 +200,4 @@ Ajustes (Avanzado)
 - **L12** (eliminación /privacidad + backup de usuario, decisión del dueño): los backups pasan a nivel de administración (respaldo de base completa en Supabase, restauración de users desde admin); NO es feature de usuario y además no existe restauración en la app (verificado: decryptJSON solo consulta el visor; no hay import de .backup ni RPC f_restaurar). Eliminado de la rama feat/menu-ajustes: ruta /privacidad (App.tsx), PrivacidadPage (+css), BackupExportCard (+css), BackupViewer (+css) y su entrada de telemetría. DeleteAccountCard SE CONSERVA: lo reutiliza ConfiguracionBorradoCard (gate 15 días/PIN) — el borrado de cuenta queda accesible solo por Ajustes; gap /privacidad resuelto por eliminación. Legales ya viven en Acerca de; export CSV de movimientos sigue en Importar/exportar. Deuda huérfana ligada (fuera de scope, a decidir): PerfilPage (sin ruta) y DatosCard (sin render) aún navegan a /privacidad — URL muerta. RPC fn_exportar_backup_maestro queda (no se toca backend). Verificación: 3 suites + regionCurrenciesBlock verde, tsc limpio, i18n sin violaciones nuevas (20 hardcodeados = baseline; dead keys +16 privacidad_* esperados).
 - **L13** (T5 backend ejecutado con OK del dueño: "ejecuta a, b, c y d"): (a) UPDATE `app_feature_flags` — `menu_carga_voz` y `menu_cuarentena` a `modo_minimo='simple'`, `pref_key=NULL` (2 filas; verificado after; nivel `intermedio` queda sin uso). (b) UPDATE `p_preferencias_usuario` — `ocr_auto_aprobar=false` (1 fila afectada: user 3; 0 activos after). (c) RPC nueva `fn_borrar_datos_usuario(text)` creada: borrado de DATOS (cuenta permanece), confirmación `BORRAR DATOS`, guardia backend de 15 días (defensa en profundidad), SECURITY DEFINER con `auth.uid()`, 21 tablas `p_*` limpiadas por user_id en orden de dependencias, retorno jsonb con detalle. Test transaccional `tests/sql/run_borrar_datos_test.js` **3/3 PASS** (identidad fail-closed, orden de validación, existencia) con ROLLBACK; runner y RPC de testing DROPeados post-run (verificado 0 residuos). Espejo `funcionesSQL/fn_borrar_datos_usuario.md`. Índice **260**. (d) Espejos verificados byte-exacto contra producción: `fn_eliminar_cuenta_usuario`, `fn_registrar_movimiento_caja`, `fn_aprobar_cuarentena_v2`, `fn_titulo_transferencia`; `fn_obtener_modo_app` actualizado con encabezado RECONSTRUIDO (2° cp: daño menor de prosa anotado en el incidente; aprendido: preservar prosa). Pendiente de validación humana: ejecución end-to-end de la limpieza real (sesión real del dueño). El front (feat/menu-ajustes) y (a) van juntos a producción.
 - **L14** (integración multi-peer, pedido del dueño: "merge de pi2 y merge de pi3 tambien"): (1) **pi/sesion-3 (P3) mergeada** sin conflictos (trae backend formato por moneda overridees jsonb + RPCs y su front T4-T8); dedup de claves i18n posterior (`error_formato_moneda_*` duplicadas por ambos lados; la sección errors queda dueña, commit 44454c1). (2) **feat/pin-huella (PI2) mergeada** — conflicto puntual en App.tsx resuelto manteniendo la retirada de `/configuracion/region` (U2) e ingresando `/configuracion/proteccion` (a0014d0). (3) **Flip aplicado**: `pin_protection` `soon:false` + `target:'target:/configuracion/proteccion'` en el árbol avanzado. (4) **Swap del gate**: `ConfiguracionBorradoCard` consume `useAppLock().lockState === 'activa'` (fuente única de PI2); `PIN_CONFIGURED_FALLBACK` queda como fallback legacy exportado. (5) **Unlock de "Borrar mis datos"**: `DELETE_DATA_BACKEND_AVAILABLE=true` y la opción cableada a `fn_borrar_datos_usuario` (input tipo 'BORRAR DATOS' estilo DeleteAccountCard + ConfirmModal danger + reload al terminar, la cuenta queda con onboarding fresco). Verificación final integrada: 4 suites settings/gate/monedas/format 100% verde, tsc limpio, i18n 0 violaciones nuevas (249 USED-NOT-DEFINED = deuda preexistente familia/hogar + 2 nuevas legítimas resueltas). Confirmed commits: 44454c1 (dedup), a0014d0 (merge PI2), 0818880 (flip+swap+unlock).
+- **L16** (bug 10, dueño con captura 60f9cce5, 2026-10-19): "Dentro de cuenta y seguridad tenemos perfil que es una rama colapsada y después tenemos borrado de datos y cuentas, debería ser otra rama colapsable en donde tenemos dos ítems que es el borrado de datos y el borrado de la cuenta como dos sub-ítems de borrado de datos y cuentas. Entonces colapsamos todo dentro de borrado de datos y cuentas y al expandir se nos abre la posibilidad de ver borrado de mis datos y borrado de la cuenta." Efecto: commit `0698096` — data_deletion interceptado por `DeletionInlineCard` (SettingsCollapsible colapsada con ConfiguracionBorradoCard adentro, gate 15 días/PIN intacto); título de entrada `settings_entry_data_deletion` = "Borrado de datos y cuentas". Test RED→GREEN (36/36). Verificado: tsc limpio, i18n sin violaciones nuevas.
