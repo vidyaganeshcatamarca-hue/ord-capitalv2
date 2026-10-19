@@ -21,7 +21,7 @@ import fs from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { buildTransferDetalle } from '../../src/lib/transferTitles.ts'
+import { buildTransferDetalle, translateDetalle } from '../../src/lib/transferTitles.ts'
 
 test('misma moneda: transferencia entre cuentas', () => {
   assert.equal(buildTransferDetalle('ARS', 'ARS', 'ARS'), 'transfer_entre_cuentas')
@@ -102,6 +102,37 @@ test('activity title resolves the transfer payload with the raw currency code (o
   const categoryTitleIdx = home.indexOf('timeline-item-category')
   const windowStart = Math.max(0, categoryTitleIdx - 150)
   const titleRow = home.slice(windowStart, categoryTitleIdx + 700)
-  assert.match(titleRow, /parseTransferDetalle/, 'the title must resolve the JSON payload like the suffix does')
+  assert.match(titleRow, /translateDetalle/, 'the title must resolve the JSON payload like the suffix does')
   assert.ok(!titleRow.includes('currencyName'), 'the title keeps the currency CODE; the human name lives in the suffix')
+})
+
+// ── Owner tanda 5: the tanda-3 title fix regressed every PLAIN label. The
+// renderers passed nombre_categoria/detalle through parseTransferDetalle, whose
+// non-JSON branch returns the string untouched — so `type_opening`,
+// `cat_clothing`, `initial_balance` rendered as raw keys. translateDetalle is
+// the single entry point: JSON payload -> params resolved; plain key -> t().
+
+test('a plain key is translated, never returned raw', () => {
+  const calls = []
+  const translate = (key, params) => {
+    calls.push([key, params])
+    return `T(${key})`
+  }
+  assert.equal(translateDetalle('cat_clothing', translate), 'T(cat_clothing)')
+  assert.equal(translateDetalle('type_opening', translate), 'T(type_opening)')
+  assert.equal(translateDetalle('initial_balance', translate), 'T(initial_balance)')
+  assert.equal(translateDetalle('cat_transport - Subte', translate), 'T(cat_transport - Subte)')
+})
+
+test('a JSON payload keeps resolving its params through the translator', () => {
+  const translate = (key, params) => `${key}:${JSON.stringify(params)}`
+  assert.equal(
+    translateDetalle(JSON.stringify({ key: 'transfer_compra_moneda', params: { moneda: 'BRL' } }), translate),
+    'transfer_compra_moneda:{"moneda":"BRL"}'
+  )
+})
+
+test('an unknown key still passes through the translator (t is a passthrough)', () => {
+  assert.equal(translateDetalle('', (key) => key), '')
+  assert.equal(translateDetalle(undefined, (key) => key), '')
 })

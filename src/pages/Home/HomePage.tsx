@@ -14,7 +14,7 @@ import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { useMonedasExtra } from '@/hooks/useMonedasExtra'
 import { buildHeroLines } from '@/lib/patrimonioHero'
 import { currencyName } from '@/lib/countryCatalog'
-import { parseTransferDetalle } from '@/lib/transferTitles'
+import { translateDetalle } from '@/lib/transferTitles'
 import { useCountUp } from '@/hooks/useCountUp'
 import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { generateColorShade } from '@/lib/colorUtils'
@@ -1702,12 +1702,12 @@ export function HomePage() {
                         <div className="timeline-item-details">
                           <div className="timeline-item-title-row">
                             <span className="timeline-item-category">{m.nombre_categoria ? (() => {
-                              // Owner tanda-3: the transfer legs carry the JSON title payload
-                              // (nombre_categoria === detalle); the title resolves it with the
-                              // raw currency CODE ('Compra de ARS') — the human name stays
-                              // in the suffix ('Compra de peso argentino'). Plain keys pass
-                              // through untouched.
-                              return parseTransferDetalle(m.nombre_categoria, (key, params) => t(key, { ...params }))
+                              // Owner tanda-3/5: transfer legs carry a JSON title payload
+                              // (nombre_categoria === detalle) resolved with the raw currency
+                              // CODE ('Compra de ARS'); every plain label is an i18n KEY and
+                              // goes through t() — returning it raw printed type_opening/
+                              // cat_clothing on screen.
+                              return translateDetalle(m.nombre_categoria, (key, params) => t(key, { ...params }))
                             })() : t('movement_category_general')}</span>
                             <span className={`timeline-item-amount ${esEgreso ? 'negative' : 'positive'}`}>
                               {m.monto > 0 ? '+' : ''}
@@ -1737,7 +1737,7 @@ export function HomePage() {
                                   // because the backend cannot know the user's language.
                                   // Plain keys (legacy USD compra/venta, same-currency,
                                   // card_summary…) keep the exact same path as before.
-                                  const rendered = parseTransferDetalle(
+                                  const rendered = translateDetalle(
                                     m.detalle,
                                     (key, params) => t(key, {
                                       ...params,

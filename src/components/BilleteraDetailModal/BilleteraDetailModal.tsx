@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
-import { parseTransferDetalle } from '@/lib/transferTitles'
+import { translateDetalle } from '@/lib/transferTitles'
 import { movementAmount, movementSign } from '@/lib/walletMovementRows'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { WalletIcon } from '@/components/WalletIcon'
@@ -102,7 +102,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
                 const amount = movementAmount(m)
                 const isOut = sign === '-'
                 const title = m.nombre_categoria
-                  ? parseTransferDetalle(String(m.nombre_categoria), (key, params) => t(key, { ...params }))
+                  ? translateDetalle(String(m.nombre_categoria), (key, params) => t(key, { ...params }))
                   : m.billetera_contraria || t('movement_category_general')
 
                 return (

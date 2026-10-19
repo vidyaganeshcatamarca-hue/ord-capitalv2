@@ -75,6 +75,25 @@ export function buildTransferDetalle(
 }
 
 /**
+ * Single entry point for every surface that renders a movement title.
+ *
+ * Plain labels (`cat_clothing`, `type_opening`, `initial_balance`, …) are i18n
+ * KEYS and must be translated; only a JSON payload carries its own key plus
+ * params. Owner bug (tanda 5): the renderers called parseTransferDetalle
+ * directly, whose non-JSON branch returns the string untouched — every plain
+ * category rendered as a raw key.
+ */
+export function translateDetalle(
+  detalle: string | null | undefined,
+  translate: (key: string, params: Record<string, string>) => string
+): string {
+  const value = String(detalle ?? '')
+  if (!value) return ''
+  if (!value.startsWith('{')) return translate(value, {})
+  return parseTransferDetalle(value, translate)
+}
+
+/**
  * Renderer-side helper for any surface that shows `detalle` through t().
  * Plain keys (legacy + same-currency) pass through untouched; a JSON payload
  * built by buildTransferDetalle resolves its `moneda` CODE through the

@@ -45,6 +45,6 @@ test('the sheet reads the RPC contract, not the fields that never existed', () =
     assert.ok(!src.includes(ghost), `the sheet must not read ${ghost}: fn_reporte_movimientos_por_billetera does not return it`)
   }
   assert.match(src, /movementSign|movementAmount/, 'amount and sign come from the pure row helpers')
-  assert.match(src, /parseTransferDetalle\(\s*(?:String\()?\s*m\.nombre_categoria/, 'the title resolves nombre_categoria (transfer payload included)')
+  assert.match(src, /translateDetalle\(\s*(?:String\()?\s*m\.nombre_categoria/, 'the title resolves nombre_categoria (transfer payload included)')
   assert.ok(!/\|\|\s*m\.tipo\b/.test(src), 'the raw tipo is never the visible title')
 })
