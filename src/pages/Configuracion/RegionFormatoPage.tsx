@@ -136,7 +136,12 @@ function normalizeFormatMap(
     separador_decimal: prefs.separador_decimal,
   }
   if (local && !out[local]) out[local] = legacy
-  if (local !== 'USD' && !out.USD) {
+  // U3 mirror of rev.79 (owner rule): the map carries ONLY the user's
+  // currencies. USD is the second-coin default ONLY when the extras set is
+  // EMPTY (nothing chosen beyond the local); chosen extras are never padded
+  // with a phantom USD. Same inheritance as the backend: decimales_segunda_moneda.
+  const userSetCount = Object.keys(out).filter((code) => code !== local).length
+  if (userSetCount === 0 && local !== 'USD' && !out.USD) {
     out.USD = { ...legacy, decimales: prefs.decimales_segunda_moneda }
   }
   return out

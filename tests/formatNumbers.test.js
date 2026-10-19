@@ -295,6 +295,29 @@ test('the cards below the format card remain and no CurrenciesBlock placeholder 
   )
 })
 
+// ── U3 follow-up (rev.79 mirror, 2026-10-19) ───────────────────────────────
+// The backend now returns ONLY the user's currencies (deploy 79): USD is the
+// second-coin default ONLY when the extras set is EMPTY. The front fallback
+// must mirror that rule, never reintroduce the phantom USD.
+
+test('the front USD fallback mirrors the 79 rule: only when the set is empty', () => {
+  assert.ok(
+    !pageSource.includes("if (local !== 'USD' && !out.USD)"),
+    'the phantom USD fallback must be conditioned on the empty extras set (79 rule)',
+  )
+  const fallback = pageSource.slice(pageSource.indexOf('function normalizeFormatMap'))
+  assert.match(
+    fallback,
+    /decimales_segunda_moneda/,
+    'the empty-set USD default keeps the second-coin inheritance',
+  )
+  assert.match(
+    fallback,
+    /extras are empty|set is empty|userSetCount|remaining === 0/,
+    'the fallback must be gated on the empty-user-set condition (79)',
+  )
+})
+
 test('es.ts ships the new per-currency keys and keeps the legacy ones', () => {
   const keys = definedEsKeys()
   const missing = NEW_KEYS.filter((key) => !keys.has(key))
