@@ -26,9 +26,30 @@ function normalize(code: unknown): string {
 }
 
 /**
+ * Label for a currency in lists/inputs ("name · CODE", or "name (CODE)").
+ * Tanda 3: when the resolved name adds nothing (an engine without full ICU
+ * returns the code itself, e.g. 'BOB' -> 'BOB'), the label is JUST the code —
+ * never the duplicated 'BOB · BOB' the owner circled. joiner: '·' (block and
+ * wallet lists) or 'parens' (Billeteras).
+ */
+export function formatCurrencyLabel(
+  name: string | null | undefined,
+  code: string | null | undefined,
+  joiner: string
+): string {
+  const normalizedCode = normalize(code)
+  const normalizedName = String(name ?? '').trim()
+  if (!normalizedCode && !normalizedName) return ''
+  if (!normalizedName || normalizedName.toUpperCase() === normalizedCode) {
+    return normalizedCode
+  }
+  if (!normalizedCode) return normalizedName
+  return joiner === 'parens' ? `${normalizedName} (${normalizedCode})` : `${normalizedName} ${joiner} ${normalizedCode}`
+}
+
+/**
  * The wallet-currency options for the picker: local currency first, then the
  * configured extras (deduped, normalized, without ever repeating the local).
- *
  * A missing local currency is not an error state the function hides: it just
  * returns the extras — the caller decides what an unusable empty list means
  * (the region RPC failed, no region confirmed, ...). Nothing is invented.

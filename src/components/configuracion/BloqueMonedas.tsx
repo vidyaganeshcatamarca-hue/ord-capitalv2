@@ -3,15 +3,16 @@
 // The "Monedas" block of Región y formato (S18 peer / S13-S15 dueño).
 //
 // Three slots: the local currency (read-only, derived from the country), the
-// second currency and the third one — both user-configurable over the QUOTED
-// catalog only (S9: no rate, no option). Slot 2 starts preselected as USD
-// (S13); slot 3 starts empty. The persisted source of truth is
+// second and the third one. Tanda 3 (owner): NO dropdown and NO separate
+// button — each slot renders as an editable-looking field that itself opens
+// the country picker modal; the assigned value shows currency name + code.
+// The persisted source of truth is
 // fn_configurar_monedas_extra(text[]) (T1), which enforces: catalog check,
 // not-local, no duplicates, max 2, and the removal guard (S14) that blocks
 // dropping an extra with active wallets — its error message shows the culprit.
 // Decimales por moneda (S22) stay in the existing number-format sliders until
 // the per-currency preference migration lands (T8b).
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { useToast } from '@/contexts/ToastContext'
@@ -21,10 +22,8 @@ import { CountrySearchModal } from '@/components/onboarding/CountrySearchModal'
 import { type Country } from '@/lib/countryCatalog'
 import { useMonedasExtra } from '@/hooks/useMonedasExtra'
 import { parseJsonbStringArray } from '@/lib/jsonbRpc'
-import { buildWalletCurrencyOptions } from '@/lib/monedasExtra'
-import { useDivisasCotizadas } from '@/hooks/useDivisasCotizadas'
 import { currencyName } from '@/lib/countryCatalog'
-import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { formatCurrencyLabel } from '@/lib/monedasExtra'
 
 interface BloqueMonedasProps {
   localCurrency: string
@@ -37,9 +36,8 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
   // reload: tras guardar, refetch real del hook (los componentes ya montados
   // en otra pantalla no ven el invalidate() solo: necesita un attempt++).
   const { extras, loading: extrasLoading, reload } = useMonedasExtra()
-  const { divisas, loading: divisasLoading } = useDivisasCotizadas()
-  // BUG4 del dueño: elegir por PAÍS en modal (país+moneda, sin nomenclatura).
-  // Reutiliza el CountrySearchModal del onboarding y el catálogo cacheado.
+  // Tanda 3 (owner): the field itself is the trigger — clicking it opens the
+  // country picker modal (CountrySearchModal + the cached country catalog).
   const { index, loading: catalogLoading } = useCountryCatalog()
   const [pickerSlot, setPickerSlot] = useState<2 | 3 | null>(null)
 
@@ -47,13 +45,21 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
   const [slot3, setSlot3] = useState('')
   const [saving, setSaving] = useState(false)
 
-  // El país elegido manda su moneda: mismo camino que el select manual pero
-  // sin tener que saberse el código ISO (BUG4: "elijo por país").
+  // The picked country brings its currency through the same persist path the
+  // old select had (save + sync from the response + rollback on failure).
   const handleCountryPicked = (country: Country) => {
     const monedaPais = (country.localCurrency || '').toUpperCase()
     setPickerSlot(null)
-    if (!monedaPais || monedaPais === localCurrency.toUpperCase()) return
-    if (pickerSlot === 2) {
+    if (!monedaPais) return
+    if (monedaPais === localCurrency.toUpperCase()) {
+      // The local currency is never an extra (S10): say it instead of the old
+      // silent ignore.
+      showToast(t('monedas_extras_pais_local'), 'error')
+      return
+    }
+  // If the slot already took slot 3's value, slot 3 frees up: same swap rule
+  // the old select had.
+  if (pickerSlot === 2) {
       const next3 = monedaPais === slot3 ? slot2 : slot3
       if (monedaPais === slot3 && slot3) setSlot3('')
       setSlot2(monedaPais)
@@ -76,18 +82,6 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
     setSlot2(extras[0] ?? '')
     setSlot3(extras[1] ?? '')
   }, [extras])
-
-  // Option list per slot: empty first (slot 3 may stay unset; slot 2 has the
-  // "remove" option), then the quoted catalog minus what the OTHER slot holds.
-  // The local currency is never an extra (S10): buildWalletCurrencyOptions
-  // filters it inside slot sets but here both slots are pure extras slots, so
-  // the local exclusion happens explicitly.
-  const catalogoFiltrado = useMemo(() => {
-    const skip = new Set([localCurrency.toUpperCase()])
-    const other = slot2 || slot3
-    if (other) skip.add(other.toUpperCase())
-    return divisas.filter((c) => !skip.has(c.toUpperCase()))
-  }, [divisas, localCurrency, slot2, slot3])
 
   const handleSave = async (orig2: string, orig3: string, next2: string, next3: string) => {
     const nextArr = [next2, next3].filter(Boolean).filter((c, i, arr) => arr.indexOf(c) === i)
@@ -117,7 +111,7 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
     }
   }
 
-  if (extrasLoading || divisasLoading) return null
+  if (extrasLoading) return null
 
   return (
     <>
@@ -133,66 +127,54 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
       </div>
       <div className="config-section-row">
         <span>{t('config_currency_secondary')}</span>
-        <select
-          className="config-section-select"
-          aria-label={t('config_currency_secondary')}
-          value={slot2}
-          onChange={(e) => {
-            const next = e.target.value
-            // Swap rule: if slot takes slot 3's value, slot 3 frees up.
-            const next3 = next === slot3 ? slot2 : slot3
-            if (next && next === slot3) setSlot3(slot2)
-            setSlot2(next)
-            void handleSave(slot2, slot3, next, next3)
-          }}
-          disabled={saving}
-        >
-          <option value="">{t('monedas_extras_vacia')}</option>
-          {(slot2 ? [slot2, ...catalogoFiltrado] : [localCurrency, ...catalogoFiltrado]).map(
-            (code) => (
-              <option key={code} value={code}>
-                {flaglessName(code, lang)}
-              </option>
-            )
-          )}
-        </select>
+        {/* Tanda 3 (owner): a tappable field instead of a dropdown — the field
+            itself opens the picker modal; the assigned value keeps showing
+            currency name + code. */}
         <button
           type="button"
-          className="currencies-block-picker-toggle"
+          className="config-section-select-trigger"
+          aria-haspopup="dialog"
+          aria-label={t('config_currency_secondary')}
           onClick={() => setPickerSlot(2)}
           disabled={saving || catalogLoading}
-          title={t('monedas_extras_elegir_por_pais')}
         >
-          {t('monedas_extras_elegir_por_pais')}
+          {slot2 ? flaglessName(slot2, lang) : t('monedas_extras_vacia')}
         </button>
+        {slot2 && (
+          <button
+            type="button"
+            className="config-section-clear"
+            aria-label={t('monedas_extras_limpiar')}
+            onClick={() => void handleSave(slot2, slot3, '', slot3)}
+            disabled={saving}
+          >
+            ✕
+          </button>
+        )}
       </div>
       <div className="config-section-row">
         <span>{t('config_tercera_moneda')}</span>
-        <select
-          className="config-section-select"
-          aria-label={t('config_tercera_moneda')}
-          value={slot3}
-          onChange={(e) => {
-            void handleSave(slot2, slot3, slot2, e.target.value)
-          }}
-          disabled={saving}
-        >
-          <option value="">{t('monedas_extras_vacia')}</option>
-          {(slot3 ? [slot3, ...catalogoFiltrado] : catalogoFiltrado).map((code) => (
-            <option key={code} value={code}>
-              {flaglessName(code, lang)}
-            </option>
-          ))}
-        </select>
         <button
           type="button"
-          className="currencies-block-picker-toggle"
+          className="config-section-select-trigger"
+          aria-haspopup="dialog"
+          aria-label={t('config_tercera_moneda')}
           onClick={() => setPickerSlot(3)}
           disabled={saving || catalogLoading}
-          title={t('monedas_extras_elegir_por_pais')}
         >
-          {t('monedas_extras_elegir_por_pais')}
+          {slot3 ? flaglessName(slot3, lang) : t('monedas_extras_vacia')}
         </button>
+        {slot3 && (
+          <button
+            type="button"
+            className="config-section-clear"
+            aria-label={t('monedas_extras_limpiar')}
+            onClick={() => void handleSave(slot2, slot3, slot2, '')}
+            disabled={saving}
+          >
+            ✕
+          </button>
+        )}
       </div>
       <CountrySearchModal
         open={pickerSlot !== null}
@@ -206,5 +188,7 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
 }
 
 function flaglessName(code: string, lang: string): string {
-  return `${currencyName(code, lang)} · ${code}`
+  // "franco suizo · CHF"; when the engine cannot resolve the name the label
+  // degrades to the code alone (never 'BOB · BOB').
+  return formatCurrencyLabel(currencyName(code, lang), code, '·')
 }

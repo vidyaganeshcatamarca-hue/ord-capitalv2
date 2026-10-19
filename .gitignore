@@ -38,6 +38,7 @@ tests/onboarding/*
 !tests/onboarding/country-suggestion.test.js
 !tests/onboarding/currency-conversion.test.js
 !tests/onboarding/monedas-extra.test.js
+!tests/onboarding/currency-label.test.js
 !tests/onboarding/transfer-titles.test.js
 !tests/onboarding/patrimonio-hero.test.js
 !tests/onboarding/formato-moneda-local.test.js

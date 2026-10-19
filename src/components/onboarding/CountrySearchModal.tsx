@@ -157,8 +157,11 @@ export function CountrySearchModal({ open, index, lang, onClose, onSelect }: Cou
               <span aria-hidden="true" style={{ fontSize: '24px', lineHeight: 1 }}>
                 {flagEmoji(country.code)}
               </span>
-              <span style={{ flex: 1, textAlign: 'left' }}>{regionName(country.code, lang)}</span>
-              <span style={{ color: 'var(--text-3)' }}>{country.localCurrency}</span>
+              {/* Tanda 3 (owner): rows read "PAIS — CODE"; the currency NAME
+                  belongs in the selection field, not here. */}
+              <span style={{ flex: 1, textAlign: 'left' }}>
+                {regionName(country.code, lang)} — {country.localCurrency}
+              </span>
             </button>
           ))}
         </div>
