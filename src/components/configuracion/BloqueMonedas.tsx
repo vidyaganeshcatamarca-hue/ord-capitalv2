@@ -30,7 +30,9 @@ interface BloqueMonedasProps {
 export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
   const { showToast } = useToast()
   const { lang } = useLanguage()
-  const { extras, loading: extrasLoading } = useMonedasExtra()
+  // reload: tras guardar, refetch real del hook (los componentes ya montados
+  // en otra pantalla no ven el invalidate() solo: necesita un attempt++).
+  const { extras, loading: extrasLoading, reload } = useMonedasExtra()
   const { divisas, loading: divisasLoading } = useDivisasCotizadas()
 
   const [slot2, setSlot2] = useState('')
@@ -55,14 +57,33 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
     return divisas.filter((c) => !skip.has(c.toUpperCase()))
   }, [divisas, localCurrency, slot2, slot3])
 
-  const handleSave = async (next2: string, next3: string) => {
+  const handleSave = async (orig2: string, orig3: string, next2: string, next3: string) => {
     const nextArr = [next2, next3].filter(Boolean).filter((c, i, arr) => arr.indexOf(c) === i)
     setSaving(true)
     try {
-      await rpc('fn_configurar_monedas_extra', { p_monedas: nextArr })
+      // fn_configurar_monedas_extra DEVUELVE el set normalizado persistido: los
+      // slots se sincronizan con la respuesta real del backend (no con el
+      // estado optimista), y reload() refresca el cache del hook para el resto
+      // de la app. BUG 1b del dueño: sin esto, la página abierta seguía
+      // mostrando las extras viejas ('no la está trayendo del lugar correcto').
+      const res = await rpc<unknown[]>('fn_configurar_monedas_extra', { p_monedas: nextArr })
+      const row = Array.isArray(res) ? res[0] : res
+      const persisted =
+        Array.isArray(row)
+          ? row.map((x) => String(x ?? ''))
+          : row && typeof row === 'object'
+            ? ((row as Record<string, unknown>).fn_configurar_monedas_extra as unknown[] | undefined) ?? []
+            : []
+      const codes = Array.isArray(persisted) ? persisted.map((x) => String(x ?? '')) : []
+      setSlot2(codes[0] ?? '')
+      setSlot3(codes[1] ?? '')
       showToast(t('monedas_extras_guardado'), 'success')
       onSaved()
+      reload()
     } catch (err) {
+      // Los slots vuelven al estado REAL persistido: la UI no miente.
+      setSlot2(orig2)
+      setSlot3(orig3)
       showToast(parseError(err), 'error')
     } finally {
       setSaving(false)
@@ -81,9 +102,10 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
           onChange={(e) => {
             const next = e.target.value
             // Swap rule: if slot takes slot 3's value, slot 3 frees up.
+            const next3 = next === slot3 ? slot2 : slot3
             if (next && next === slot3) setSlot3(slot2)
             setSlot2(next)
-            void handleSave(next, next === slot3 ? slot2 : slot3)
+            void handleSave(slot2, slot3, next, next3)
           }}
           disabled={saving}
         >
@@ -103,8 +125,7 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
           aria-label={t('config_tercera_moneda')}
           value={slot3}
           onChange={(e) => {
-            setSlot3(e.target.value)
-            void handleSave(slot2, e.target.value)
+            void handleSave(slot2, slot3, slot2, e.target.value)
           }}
           disabled={saving}
         >

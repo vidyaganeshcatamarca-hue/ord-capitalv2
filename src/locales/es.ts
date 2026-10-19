@@ -1976,6 +1976,7 @@ export const inversiones = {
   config_currency: "Moneda",
   config_currency_main: "Moneda principal",
   config_currency_secondary: "Segunda moneda",
+  config_currency_locked: "Fijo (no configurable)", // TEMPORAL: la consume la TARJETA VIEJA 'Moneda' de RegionFormatoPage (peer la elimina en su limpieza); tras eso queda sin consumidor
   config_tercera_moneda: "Tercera moneda",
   monedas_extras_vacia: "— Sin moneda —",
   monedas_extras_guardado: "Monedas actualizadas",
