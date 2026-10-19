@@ -176,6 +176,31 @@ export function buildCountryIndex(countries: Country[]): CountryIndex {
 }
 
 /**
+ * The starter examples of the picker: the first `limit` countries in
+ * alphabetical order of their LOCALIZED name.
+ *
+ * Owner rule (tanda 4): an empty picker must not be a blank box — it opens with
+ * five examples, and the moment the user types those five become the closest
+ * matches (searchCountries, same limit). Ties fall back to the ISO code so the
+ * list is deterministic across engines.
+ */
+export function exampleCountries(index: CountryIndex, locale: string, limit = 5): Country[] {
+  const countries = [...(index?.countries ?? [])]
+  if (countries.length === 0) return []
+
+  const collator = new Intl.Collator(locale || undefined, { sensitivity: 'base' })
+  countries.sort((a, b) => {
+    const nameA = regionName(a.code, locale)
+    const nameB = regionName(b.code, locale)
+    const byName = collator.compare(nameA, nameB)
+    if (byName !== 0) return byName
+    return toTrimmedText(a.code).toUpperCase().localeCompare(toTrimmedText(b.code).toUpperCase())
+  })
+
+  return countries.slice(0, limit)
+}
+
+/**
  * Searches the index. Returns an empty list for an empty query: the picker
  * must never show the full catalog up front. Prefix matches rank before
  * substring matches, and the result is capped at `limit`.

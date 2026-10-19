@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { t } from '@/locales/i18n'
 import {
   currencyName,
+  exampleCountries,
   flagEmoji,
   regionName,
   searchCountries,
@@ -101,10 +102,20 @@ const emptyStyle: CSSProperties = {
   color: 'var(--text-3)',
 }
 
+const hintStyle: CSSProperties = {
+  margin: '0 0 12px',
+  padding: '0 4px',
+  color: 'var(--text-2)',
+  fontSize: 'calc(13px * var(--font-scale))',
+  lineHeight: 1.35,
+}
+
 /**
- * Country picker. The list stays empty until the user types: no full catalog,
- * no recents, no favorites, no regions. At most 8 rows (the default limit of
- * `searchCountries`), with internal scroll for the overflow.
+ * Country picker for choosing the currency of a wallet.
+ *
+ * Owner rule (tanda 4): it opens with five alphabetical examples and, the
+ * moment the user types, those five become the closest matches — never a blank
+ * box, never the full catalog. Copy states what the picker is for.
  */
 export function CountrySearchModal({ open, index, lang, onClose, onSelect }: CountrySearchModalProps) {
   const [query, setQuery] = useState('')
@@ -118,8 +129,13 @@ export function CountrySearchModal({ open, index, lang, onClose, onSelect }: Cou
   }, [open])
 
   const results = useMemo(
-    () => (open ? searchCountries(index, query) : []),
-    [open, index, query]
+    () =>
+      open
+        ? query.trim() === ''
+          ? exampleCountries(index, lang, 5)
+          : searchCountries(index, query, 5)
+        : [],
+    [open, index, lang, query]
   )
 
   if (!open) return null
@@ -143,6 +159,8 @@ export function CountrySearchModal({ open, index, lang, onClose, onSelect }: Cou
         </div>
 
         <div style={listStyle}>
+          <p style={hintStyle}>{t('onboarding_country_picker_hint')}</p>
+
           {query.trim() !== '' && results.length === 0 && (
             <p style={emptyStyle}>{t('onboarding_country_empty')}</p>
           )}

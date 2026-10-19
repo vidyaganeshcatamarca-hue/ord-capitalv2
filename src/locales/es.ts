@@ -596,6 +596,9 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   onboarding_country_change: "Elegir otro país",
   onboarding_country_search_placeholder: "Buscar país",
   onboarding_country_empty: "No encontramos ese país. Probá con otro nombre o con el código de dos letras.",
+  // Owner (tanda 4): the wallet country picker must say what it is for, not just
+  // "search country".
+  onboarding_country_picker_hint: "Elige la moneda seleccionando el país de origen.",
   onboarding_country_unsupported: "Todavía no llegamos a tu país. Elegí el país donde usás tu dinero.",
   onboarding_country_error: "No pudimos cargar la lista de países.",
   onboarding_country_retry: "Reintentar",
