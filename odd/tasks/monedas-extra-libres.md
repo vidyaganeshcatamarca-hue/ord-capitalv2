@@ -283,3 +283,8 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
   `966ad6c`: picker por país (CountrySearchModal del onboarding reutilizado; el país
   manda su moneda; bordes S10/swap). Peer notificado para merge + espejo de
   fn_obtener_formato_moneda cambiado por el 79.
+- **L21** (U3 del peer, 2026-10-19): peer cierra su U3 (`f5400ed` sobre 36dda01): el
+  fallback offline/PWA de `normalizeFormatMap` espeja el 79 — USD 2ª default SOLO con
+  set de extras vacío (`userSetCount===0`), cero fantasma en el camino front. Suites
+  317/317, tsc limpio, RED->GREEN. Feature completo + tanda 2 + U3: TODO en
+  36dda01->f5400ed; queda SOLO la re-prueba del dueño.
