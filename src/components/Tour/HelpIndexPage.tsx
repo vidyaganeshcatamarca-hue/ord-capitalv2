@@ -55,14 +55,14 @@ function HelpTourCard({
   const isOnTargetScreen = pathname === tourPath;
 
   const handleStartTour = async () => {
-    if (isOnTargetScreen) {
-      await startTour();
-    } else {
+    if (!isOnTargetScreen) {
+      // Owner bug (tanda 6): a fixed delay raced the render, so the tour was
+      // built from whatever was mounted (the FAB in the bottom nav) and seemed
+      // to start at its last step. startTour now waits for its own first
+      // target, so navigating is enough.
       navigate(tourPath);
-      setTimeout(() => {
-        void startTour();
-      }, 350);
     }
+    await startTour();
   };
 
   return (

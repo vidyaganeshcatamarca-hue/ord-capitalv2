@@ -4,6 +4,11 @@ import { useTourProgress } from './useTourProgress';
 import { loadTour } from '@/tours/registry';
 import { resolveStepI18n } from '@/tours/core/i18nResolver';
 import { createTourDriver, resolveTourElement } from '@/tours/core/shepherdWrapper';
+import {
+  TOUR_READY_POLL_MS,
+  TOUR_READY_TIMEOUT_MS,
+  tourReadiness,
+} from '@/tours/core/tourReadiness';
 import type { Tour as ShepherdTour } from 'shepherd.js';
 
 const CINEMATIC_BODY_CLASS = 'ord-tour-cinematic';
@@ -82,6 +87,24 @@ export function useTour(screenId: TourScreenId) {
         intraElement?: boolean;
         arrowSignalTo?: string;
       }> = [];
+
+      // Owner bug (tanda 6): the tour used to be built immediately, and the
+      // builder silently drops every target that is not in the DOM yet. Launched
+      // from Ayuda (after a fixed delay) that left ONLY the FAB step — which
+      // lives in the bottom nav and is always mounted — so the tour appeared to
+      // start at its last step. Wait for the first target instead.
+      const firstTarget = isCinematicTourScreen(screenId)
+        ? CINEMATIC_STEP_TARGETS[0]
+        : tour.steps[0]?.target;
+      if (firstTarget) {
+        const startedAt = Date.now();
+        for (;;) {
+          const exists = resolveTourElement(firstTarget) != null;
+          const decision = tourReadiness(exists, Date.now() - startedAt, TOUR_READY_TIMEOUT_MS);
+          if (decision !== 'wait') break;
+          await new Promise((resolve) => setTimeout(resolve, TOUR_READY_POLL_MS));
+        }
+      }
 
       // For the cinematic pilot we filter to ONLY the configured targets.
       // The full JSON keeps the rest of the steps for the next iteration
