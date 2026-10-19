@@ -61,3 +61,32 @@ test('the picker shows the examples and the purpose copy, capping both lists at 
     'the owner copy is defined verbatim',
   )
 })
+
+// ── Owner tanda 5, bug 6: with the keyboard open the picker sat vertically
+// centred, so only the first country was visible. It must hang from the top and
+// cap its height with a dynamic viewport unit, otherwise the keyboard covers
+// the list again on Android.
+
+test('the picker hangs from the top and caps its height dynamically', () => {
+  const src = fs.readFileSync(
+    new URL('../../src/components/onboarding/CountrySearchModal.tsx', import.meta.url),
+    'utf-8',
+  )
+  const overlay = src.slice(src.indexOf('const overlayStyle'), src.indexOf('const headerStyle'))
+  assert.match(overlay, /alignItems:\s*'flex-start'/, 'the sheet must start at the top, not be centred')
+  assert.doesNotMatch(overlay, /alignItems:\s*'center'/, 'centring is what hid the list behind the keyboard')
+
+  const card = src.slice(src.indexOf('const cardStyle'), src.indexOf('const headerStyle'))
+  assert.match(card, /dvh/, 'the height cap must use the dynamic viewport (keyboard aware)')
+})
+
+test('the example rows stay compact so five of them fit above the keyboard', () => {
+  const src = fs.readFileSync(
+    new URL('../../src/components/onboarding/CountrySearchModal.tsx', import.meta.url),
+    'utf-8',
+  )
+  const row = src.slice(src.indexOf('const rowStyle'), src.indexOf('const emptyStyle'))
+  const padding = /padding:\s*'(\d+)px (\d+)px'/.exec(row)
+  assert.ok(padding, 'the row padding must be explicit')
+  assert.ok(Number(padding[1]) <= 10, 'rows must be tight enough to show five examples')
+})

@@ -21,6 +21,11 @@ interface CountrySearchModalProps {
 
 // Inline styles: this component has no stylesheet of its own and must not
 // reach outside its file. The overlay reuses the app's surface tokens.
+//
+// Owner bug (tanda 5): the sheet used to be vertically centred, so the moment
+// the keyboard opened only the first country stayed visible. It now hangs from
+// the top and caps its height with the DYNAMIC viewport unit, which shrinks when
+// the keyboard appears (vh does not on Android).
 const overlayStyle: CSSProperties = {
   position: 'fixed',
   inset: 0,
@@ -28,15 +33,16 @@ const overlayStyle: CSSProperties = {
   backdropFilter: 'blur(8px)',
   zIndex: 1100,
   display: 'flex',
-  alignItems: 'center',
+  alignItems: 'flex-start',
   justifyContent: 'center',
-  padding: '16px',
+  padding: '12px 16px',
 }
 
 const cardStyle: CSSProperties = {
   width: '100%',
   maxWidth: '480px',
-  maxHeight: '80vh',
+  /* Keyboard aware: dvh follows the visible viewport, vh does not. */
+  maxHeight: 'min(80vh, calc(100dvh - 96px))',
   background: 'var(--surface)',
   border: '1px solid var(--border)',
   borderRadius: '16px',
@@ -50,7 +56,7 @@ const headerStyle: CSSProperties = {
   display: 'flex',
   alignItems: 'center',
   gap: '8px',
-  padding: '16px',
+  padding: '12px',
   borderBottom: '1px solid var(--border)',
 }
 
@@ -87,13 +93,13 @@ const rowStyle: CSSProperties = {
   alignItems: 'center',
   gap: '12px',
   width: '100%',
-  padding: '12px',
+  padding: '8px 10px',
   background: 'none',
   border: 'none',
   borderRadius: '10px',
   color: 'var(--text)',
   cursor: 'pointer',
-  fontSize: 'calc(16px * var(--font-scale))',
+  fontSize: 'calc(15px * var(--font-scale))',
 }
 
 const emptyStyle: CSSProperties = {
@@ -103,11 +109,11 @@ const emptyStyle: CSSProperties = {
 }
 
 const hintStyle: CSSProperties = {
-  margin: '0 0 12px',
+  margin: '0 0 8px',
   padding: '0 4px',
   color: 'var(--text-2)',
-  fontSize: 'calc(13px * var(--font-scale))',
-  lineHeight: 1.35,
+  fontSize: 'calc(12px * var(--font-scale))',
+  lineHeight: 1.3,
 }
 
 /**
