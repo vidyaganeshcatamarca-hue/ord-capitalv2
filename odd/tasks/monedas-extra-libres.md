@@ -288,3 +288,17 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
   set de extras vacío (`userSetCount===0`), cero fantasma en el camino front. Suites
   317/317, tsc limpio, RED->GREEN. Feature completo + tanda 2 + U3: TODO en
   36dda01->f5400ed; queda SOLO la re-prueba del dueño.
+- **L22** (TANDA 3, mía, 2026-10-19): del dueño vía peer — puntos 2 y 3 + labels.
+  (P2) filas del picker en formato 'PAÍS — CÓDIGO' (el nombre de la moneda vive en el
+  campo de selección, no en las filas). (P3) FUERA los botones 'Elegir por país' y el
+  dropdown: el slot es un campo editable (estilo field del design system, aria-haspopup)
+  que por sí mismo abre el CountrySearchModal; el valor asignado sigue mostrando
+  'franco suizo · CHF' (formatCurrencyLabel). Despeje de slot con ✕ (la remoción pasa
+  por fn_configurar_monedas_extra + S14; toast si el backend rechaza). País con moneda
+  local ahora avisa en toast en vez de ignorarse (S10). BUG BOB·BOB: Intl sin ICU
+  completo devuelve el código como nombre → dedupe (helper puro formatCurrencyLabel,
+  8/8 tests, RED->GREEN) en BloqueMonedas y Billeteras; p_divisas.nombre guarda el
+  código (sin fuente SQL de nombres; mejoras futuras posibles solo con deploy). Commit
+  d6e6e2f; tsc limpio, onboarding 118/118, i18n 28/28. Punto 4 (scroll) del peer;
+  punto 7 (keys actividad): fuente = src/lib/transferTitles.ts + HomePage
+  parseTransferDetalle (keys en es.ts).
