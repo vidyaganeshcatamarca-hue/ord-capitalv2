@@ -493,19 +493,27 @@ test('U1 scope guard: leaf rows are never wrapped in a second accordion (U1/S1)'
 // App.tsx, the page bodies survive as exported components (ConfigRegionBody /
 // ConfigAboutBody) and the Legal rows open the shared LegalDocModal.
 
-test('the hub renders Región y formato as an inline card backed by ConfigRegionBody (U2/S3)', () => {
+// ── L17 contract (owner, tanda 2, 2026-10-19) ──────────────────────────────
+// Every settings submenu (except Perfil) opens a NEW SCREEN; going back returns
+// to the hub with the parent section still expanded (expanded-state memory).
+
+test('the hub routes Región y formato to its screen (L17)', () => {
   const hub = fs.readFileSync(HUB_PATH, 'utf-8')
-  assert.match(hub, /function\s+RegionInlineCard\s*\(/, 'the hub must define the region inline card')
   assert.ok(
-    hub.includes("from '@/pages/Configuracion/RegionFormatoPage'"),
-    'the hub must import ConfigRegionBody from RegionFormatoPage',
+    !/function\s+RegionInlineCard\s*\(/.test(hub) && !/DeletionInlineCard/.test(hub),
+    'the inline wrappers (region/deletion) are retired: submenus are screens now',
   )
-  assert.ok(hub.includes('<ConfigRegionBody />'), 'the region card must mount ConfigRegionBody')
-  assert.match(
-    hub,
-    /item\.id === 'region_format'[\s\S]*?<RegionInlineCard/,
-    'the region_format entry must dispatch to the inline card before the generic target branch',
-  )
+  const tree = fs.readFileSync(TREE_PATH, 'utf-8')
+  for (const [id, route] of [
+    ['region_format', '/configuracion/region'],
+    ['data_deletion', '/configuracion/borrado'],
+  ]) {
+    assert.match(
+      new RegExp(String.raw`id: '${id}',[\s\S]{0,400}?target: 'target:${route}'`),
+      tree,
+      `${id} must open its own screen ${route}`,
+    )
+  }
 })
 
 test('RegionFormatoPage exports the inline body (no CurrenciesBlock placeholder) (U2/S3)', () => {
@@ -516,9 +524,47 @@ test('RegionFormatoPage exports the inline body (no CurrenciesBlock placeholder)
     'the retired placeholder, its coordination pointer and its title key must NOT survive the extraction (bug-1)',
   )
   assert.match(page, /<BloqueMonedas/, 'the live editable BloqueMonedas (P3) must stay mounted')
-  assert.ok(
-    !page.includes('ConfigBackButton'),
-    'the inline body must not keep the page-level back button',
+  assert.match(
+    page.replace(/[
+]/g, ' '),
+    /function RegionFormatoPage\(\)\s*\{\s*return\s*\(\s*<ConfigBackButton/,
+    'the standalone page is back (L17): it renders the back button + the body',
+  )
+})
+
+test('the other submenu targets are screens too (L17)', () => {
+  const tree = fs.readFileSync(TREE_PATH, 'utf-8')
+  for (const [id, route] of [
+    ['appearance', '/configuracion/apariencia'],
+    ['notifications', '/configuracion/notificaciones'],
+    ['install_app', '/configuracion/instalar'],
+    ['maintenance', '/configuracion/mantenimiento'],
+  ]) {
+    assert.match(
+      new RegExp(String.raw`id: '${id}',[\s\S]{0,400}?target: 'target:${route}'`),
+      tree,
+      `${id} must open its own screen ${route}`,
+    )
+  }
+  const app = fs.readFileSync(APP_PATH, 'utf-8')
+  for (const route of [
+    '/configuracion/region',
+    '/configuracion/borrado',
+    '/configuracion/apariencia',
+    '/configuracion/instalar',
+    '/configuracion/mantenimiento',
+    '/configuracion/acerca',
+  ]) {
+    assert.ok(app.includes(`"${route}"`) || app.includes(`'${route}'`), `App.tsx must mount ${route}`)
+  }
+})
+
+test('the hub remembers the expanded section across navigation (L17 memory)', () => {
+  const hub = fs.readFileSync(HUB_PATH, 'utf-8')
+  assert.match(
+    hub,
+    /config-hub\.open-group-id/,
+    'the hub must persist the open section id (sessionStorage) so back returns expanded',
   )
 })
 /** S9 + L15 — the switch to advanced requires a confirmation modal before the
@@ -627,21 +673,17 @@ test('deletion sub-options are collapsed items revealing destructive UI on tap (
   const accountCard = card.indexOf('<DeleteAccountCard', accountToggle)
   assert.ok(accountToggle !== -1 && accountCard > accountToggle, 'the account destructive UI must live inside its expanded body')
 })
-test('the hub renders Acerca de inline and the legal rows open LegalDocModal (U2/S4)', () => {
-  const hub = fs.readFileSync(HUB_PATH, 'utf-8')
-  assert.match(hub, /function\s+AboutInlineCard\s*\(/, 'the hub must define the about inline card')
-  assert.ok(
-    hub.includes("from '@/pages/Configuracion/AcercaPage'"),
-    'the hub must import ConfigAboutBody from AcercaPage',
-  )
-  assert.ok(hub.includes('<ConfigAboutBody />'), 'the about card must mount ConfigAboutBody')
+test('the legal rows still open LegalDocModal and the legal modal copy survives (U2/S4 + L17)', () => {
+  const about = fs.readFileSync(ABOUT_PAGE_PATH, 'utf-8')
+  assert.match(about, /ConfigAboutBody/, 'the about body keeps its content')
+  assert.match(about, /LegalDocModal/, 'the legal rows must still open LegalDocModal')
   assert.match(
-    hub,
-    /group\.id === 'about'[\s\S]*?<AboutInlineCard/,
-    'the about subgroup must dispatch to the inline card',
+    about.replace(/[
+]/g, ' '),
+    /export function AcercaPage\(\)\s*\{\s*return\s*\(\s*<ConfigBackButton/,
+    'AcercaPage is a screen again (L17) with its own back button',
   )
 })
-
 test('AcercaPage exports ConfigAboutBody and wires LegalDocModal on both legal rows (U2/S4)', () => {
   const about = fs.readFileSync(ABOUT_PAGE_PATH, 'utf-8')
   assert.match(about, /export\s+function\s+ConfigAboutBody\s*\(/, 'ConfigAboutBody must be exported')

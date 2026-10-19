@@ -1599,7 +1599,7 @@ export const inversiones = {
   modo_simple: "Simple",
   modo_avanzado: "Avanzado",
   btn_activar_avanzado: "Activar modo Avanzado",
-  btn_volver_simple: "Volver a Simple",
+  btn_volver_simple: "Volver a Modo Simple",
 
   // Privacidad y datos (Fase 12)
   privacidad_title: "Privacidad y datos",
@@ -2374,9 +2374,9 @@ export const inversiones = {
   settings_action_go_advanced: "Pasar a Avanzado",
   settings_action_go_advanced_desc: "Activá funciones avanzadas de carga, automatización y datos.",
   settings_confirm_go_advanced_title: "¿Pasar al modo avanzado?",
-  settings_confirm_go_advanced_message: "Vas a activar funciones avanzadas de carga, automatización y datos. Podés volver al modo simple cuando quieras.",
+  settings_confirm_go_advanced_message: "Vas a activar funciones avanzadas. Podés volver al modo simple cuando quieras desde el menú Datos-Operaciones.",
   settings_confirm_go_advanced_confirm: "Activar avanzado",
-  settings_action_back_to_simple: "Volver a Simple",
+  settings_action_back_to_simple: "Volver a Modo Simple",
   settings_action_back_to_simple_desc: "Volvé a la experiencia simple de Ajustes.",
   settings_action_invite_friend: "Invitar a un amigo",
   settings_action_rate_app: "Calificar ORD",
