@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { rpc } from '@/lib/supabase'
 import { t, parseError } from '@/locales/i18n'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
+import { parseTransferDetalle } from '@/lib/transferTitles'
+import { movementAmount, movementSign } from '@/lib/walletMovementRows'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { WalletIcon } from '@/components/WalletIcon'
 import './BilleteraDetailModal.css'
@@ -91,33 +93,32 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
           ) : (
             <div className="movimientos-list" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {movimientos.map((m, i) => {
-                // Determinar si fue ingreso o egreso relativo a la billetera en caso de transferencias
-                let displayType = m.tipo
-                let amount = m.tipo === 'expense' ? m.valor_egreso : m.valor_ingreso
-                if (m.tipo === 'transfer') {
-                  if (m.billetera_origen_id === billetera.billetera_id) {
-                    displayType = 'expense'
-                    amount = m.valor_egreso
-                  } else {
-                    displayType = 'income'
-                    amount = m.valor_ingreso
-                  }
-                }
-                
+                // Owner bug (tanda 4): fn_reporte_movimientos_por_billetera returns
+                // `monto` already signed for this wallet (negative = out) and
+                // `nombre_categoria`; the old code read valor_egreso/valor_ingreso
+                // and nombre_cuenta_historico, which the RPC never sends, so the
+                // rows showed 'income'/'expense' and an empty amount.
+                const sign = movementSign(m)
+                const amount = movementAmount(m)
+                const isOut = sign === '-'
+                const title = m.nombre_categoria
+                  ? parseTransferDetalle(String(m.nombre_categoria), (key, params) => t(key, { ...params }))
+                  : m.billetera_contraria || t('movement_category_general')
+
                 return (
                   <div key={i} className="movimiento-item" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', background: 'var(--surface)', borderRadius: '8px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div style={{ width: '40px', height: '40px', background: 'var(--surface-2)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {displayType === 'expense' ? '➖' : displayType === 'income' ? '➕' : '↔️'}
+                        {isOut ? '➖' : sign === '+' ? '➕' : '↔️'}
                       </div>
                       <div>
-                        <p style={{ margin: 0, fontWeight: 'bold', fontSize: 'calc(14px * var(--font-scale))' }}>{catalogDisplayName(m.nombre_cuenta_historico) || m.descripcion || m.tipo}</p>
+                        <p style={{ margin: 0, fontWeight: 'bold', fontSize: 'calc(14px * var(--font-scale))' }}>{catalogDisplayName(title) || title}</p>
                         <p style={{ margin: 0, fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>{new Date(m.fecha).toLocaleDateString('es-AR')}</p>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <p style={{ margin: 0, fontWeight: 'bold', color: displayType === 'expense' ? 'var(--coral)' : displayType === 'income' ? 'var(--mint)' : 'var(--blue)' }}>
-                        {displayType === 'expense' ? '-' : '+'}{formatAmount(amount, billetera.moneda)}
+                      <p style={{ margin: 0, fontWeight: 'bold', color: isOut ? 'var(--coral)' : 'var(--mint)' }}>
+                        {sign}{formatAmount(amount, billetera.moneda)}
                       </p>
                     </div>
                   </div>
