@@ -17,6 +17,7 @@ import { parseError, t } from '@/locales/i18n'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/locales/LanguageProvider'
 import { useMonedasExtra } from '@/hooks/useMonedasExtra'
+import { parseJsonbStringArray } from '@/lib/jsonbRpc'
 import { buildWalletCurrencyOptions } from '@/lib/monedasExtra'
 import { useDivisasCotizadas } from '@/hooks/useDivisasCotizadas'
 import { currencyName } from '@/lib/countryCatalog'
@@ -66,15 +67,10 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
       // estado optimista), y reload() refresca el cache del hook para el resto
       // de la app. BUG 1b del dueño: sin esto, la página abierta seguía
       // mostrando las extras viejas ('no la está trayendo del lugar correcto').
-      const res = await rpc<unknown[]>('fn_configurar_monedas_extra', { p_monedas: nextArr })
-      const row = Array.isArray(res) ? res[0] : res
-      const persisted =
-        Array.isArray(row)
-          ? row.map((x) => String(x ?? ''))
-          : row && typeof row === 'object'
-            ? ((row as Record<string, unknown>).fn_configurar_monedas_extra as unknown[] | undefined) ?? []
-            : []
-      const codes = Array.isArray(persisted) ? persisted.map((x) => String(x ?? '')) : []
+      // RETURN jsonb: el parse puro cubre las 4 formas (tanda 2/BUG3: el
+      // parser viejo asumía wrapper y con array puro dejaba los slots vacíos).
+      const res = await rpc<unknown>('fn_configurar_monedas_extra', { p_monedas: nextArr })
+      const codes = parseJsonbStringArray(res, 'fn_configurar_monedas_extra') ?? []
       setSlot2(codes[0] ?? '')
       setSlot3(codes[1] ?? '')
       showToast(t('monedas_extras_guardado'), 'success')
@@ -94,9 +90,20 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
 
   return (
     <>
+      {/* Primera moneda: READ-ONLY arriba del todo (la pide el dueño — la
+          derivada del país; el resto son las dos extras configurables). */}
+      <div className="config-section-row">
+        <span>{t('config_currency_main')}</span>
+        <span>
+          {localCurrency || '—'}
+          {localCurrency ? ` · ${currencyName(localCurrency, lang)}` : ''}
+          <span className="config-section-action-desc">{t('settings_currencies_local_desc')}</span>
+        </span>
+      </div>
       <div className="config-section-row">
         <span>{t('config_currency_secondary')}</span>
         <select
+          className="config-section-select"
           aria-label={t('config_currency_secondary')}
           value={slot2}
           onChange={(e) => {
@@ -122,6 +129,7 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
       <div className="config-section-row">
         <span>{t('config_tercera_moneda')}</span>
         <select
+          className="config-section-select"
           aria-label={t('config_tercera_moneda')}
           value={slot3}
           onChange={(e) => {

@@ -301,3 +301,16 @@
   font-size: calc(1.25rem * var(--font-scale));
   line-height: 1;
 }
+
+/* Solicitud tanda-2: selects del bloque Monedas con el estilo del design system (mismo look que los selects de config-section-field) */
+.config-section-select {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 10px 32px 10px 12px;
+  font: inherit;
+  appearance: auto;
+  cursor: pointer;
+}
