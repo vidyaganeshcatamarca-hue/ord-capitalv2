@@ -1989,8 +1989,9 @@ export const inversiones = {
   // S22 (formato por moneda): retorno del backend del 78.
   error_formato_moneda_moneda_invalida: "{currency} no es una de tus monedas configuradas.",
   error_formato_moneda_decimales: "Los decimales deben estar entre 0 y 4.",
-  // BUG4 (tanda 2): elegir la extra por PAÍS (país + moneda, sin nomenclatura).
-  monedas_extras_elegir_por_pais: "Elegir por país",
+  // Tanda 3: the slot is an editable field that opens the country picker.
+  monedas_extras_pais_local: "La moneda de ese país ya es tu moneda local.",
+  monedas_extras_limpiar: "Quitar moneda",
   config_format_numbers: "Formato de números",
   config_decimals_local: "Decimales (moneda local)",
   config_decimals_usd: "Decimales (USD)",

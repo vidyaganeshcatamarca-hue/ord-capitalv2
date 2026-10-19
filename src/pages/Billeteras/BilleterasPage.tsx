@@ -5,7 +5,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useBilleteras } from '@/hooks/useBilleteras'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { useMonedasExtra } from '@/hooks/useMonedasExtra'
-import { buildWalletCurrencyOptions } from '@/lib/monedasExtra'
+import { buildWalletCurrencyOptions, formatCurrencyLabel } from '@/lib/monedasExtra'
 import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { Billetera } from '@/types/Billetera'
 import { rpc } from '@/lib/supabase'
@@ -100,7 +100,9 @@ export function BilleterasPage() {
   // Single source for a currency label. The wallet list used to switch between
   // two hardcoded keys, so a EUR wallet came out labelled as Argentine pesos.
   const currencyLabel = useCallback(
-    (code: string) => `${currencyName(code, locale)} (${code})`,
+    // Tanda 3: when the engine cannot resolve the name the label is the code
+    // alone (never the duplicated 'BOB (BOB)').
+    (code: string) => formatCurrencyLabel(currencyName(code, locale), code, 'parens'),
     [locale]
   )
 
