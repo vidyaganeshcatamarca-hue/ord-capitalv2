@@ -45,6 +45,14 @@ BEGIN
   v_err := CASE WHEN v_ok THEN NULL ELSE 'ARS=' || COALESCE((v_mapa -> 'ARS')::text, 'NULL') END;
   v_resultados := v_resultados || jsonb_build_object('assertion','3. Override de la local prioriza sobre prefs (config por moneda de la UI nueva)','ok',v_ok,'error',v_err);
 
+  -- 4. Regla del dueño: set VACÍO -> USD vuelve como 2ª por defecto (S13).
+  PERFORM public.fn_configurar_monedas_extra(ARRAY[]::text[]);
+  v_mapa := public.fn_obtener_formato_moneda();
+  v_ok := (v_mapa ? 'USD') AND (v_mapa ? 'ARS') AND (NOT (v_mapa ? 'EUR'))
+      AND ((v_mapa -> 'USD' ->> 'decimales')::smallint IS NOT NULL);
+  v_err := CASE WHEN v_ok THEN NULL ELSE 'mapa=' || COALESCE(v_mapa::text, 'NULL') END;
+  v_resultados := v_resultados || jsonb_build_object('assertion','4. Set vacío -> USD default de segunda (decimales_segunda_moneda), regla del dueño','ok',v_ok,'error',v_err);
+
   DECLARE
     v_fallos int;
   BEGIN

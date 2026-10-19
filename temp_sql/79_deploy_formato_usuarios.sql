@@ -23,6 +23,7 @@ DECLARE
     v_extra text;
     v_entry jsonb;
     v_cat_decimales smallint;
+    v_extras_count int := 0;
     v_out jsonb := '{}'::jsonb;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
@@ -64,6 +65,7 @@ BEGIN
         SELECT x FROM jsonb_array_elements_text(public.fn_obtener_monedas_extra()) AS t(x)
     LOOP
         IF v_extra = v_local OR v_out ? v_extra THEN CONTINUE; END IF;
+        v_extras_count := v_extras_count + 1;
         v_entry := v_overrides -> v_extra;
         IF v_entry IS NULL OR NOT (v_entry ? 'decimales') THEN
             IF v_extra = 'USD' THEN
@@ -85,6 +87,22 @@ BEGIN
         END IF;
         v_out := jsonb_set(v_out, ARRAY[v_extra], v_entry);
     END LOOP;
+
+    -- Regla del dueño (tanda 2): 'USD es default de segunda moneda cuando no
+    -- hay otra elegida'. Si el set quedó VACÍO el usuario no eligió nada:
+    -- USD vuelve como 2ª con la herencia histórica
+    -- decimales_segunda_moneda (S13). Si eligió OTRAS (con o sin USD), no
+    -- hay fantasma: el mapa refleja exactamente lo elegido.
+    IF v_extras_count = 0 AND v_local <> 'USD' THEN
+        v_entry := v_overrides -> 'USD';
+        IF v_entry IS NULL OR NOT (v_entry ? 'decimales') THEN
+            v_entry := jsonb_build_object(
+                'decimales', COALESCE(v_dec_2a, 2),
+                'separador_miles', COALESCE(v_sep_miles, '.'),
+                'separador_decimal', COALESCE(v_sep_dec, ','));
+        END IF;
+        v_out := jsonb_set(v_out, ARRAY['USD'], v_entry);
+    END IF;
 
     RETURN v_out;
 END;
