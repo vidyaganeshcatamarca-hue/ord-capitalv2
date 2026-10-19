@@ -30,3 +30,32 @@
     padding: 32px 28px 72px;
   }
 }
+
+/* Owner bug (tanda 2, PIN screen): the action buttons had no CSS at all —
+   they rendered as bare text and the screen bottom collided with the nav.
+   Design system look: traditional green primary buttons, full width. */
+.config-action-button {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  background: var(--mint-gradient, linear-gradient(135deg, #00B127 0%, #116014 100%));
+  color: #ffffff;
+  font-size: calc(0.95rem * var(--font-scale));
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+.config-action-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.config-action-button:not(:disabled):hover {
+  filter: brightness(1.06);
+}
+
+/* Same owner report: the last action was clipped by the bottom nav — the page
+   needs the nav-height clearance like every other screen. */
+.config-page {
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + var(--space-4));
+}
