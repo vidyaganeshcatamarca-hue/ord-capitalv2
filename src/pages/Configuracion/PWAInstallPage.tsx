@@ -9,10 +9,10 @@ import './ConfigSectionPage.css'
 
 export function PWAInstallPage() {
   return (
-    <div className="config-section-page" aria-label={t('settings_entry_install_app')}>
+    <main className="page config-page" aria-label={t('settings_entry_install_app')}>
       <ConfigBackButton />
       <PWACard />
-    </div>
+    </main>
   )
 }
 

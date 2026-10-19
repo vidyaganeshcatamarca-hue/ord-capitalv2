@@ -320,10 +320,10 @@ function languageLabel(lang: string): string {
 // button + the shared body. The hub links here instead of unfolding inline.
 export function RegionFormatoPage() {
   return (
-    <>
+    <main className="page config-page" aria-label={t('settings_entry_region_format')}>
       <ConfigBackButton />
       <ConfigRegionBody />
-    </>
+        </main>
   )
 }
 

@@ -9,10 +9,10 @@ import './ConfigSectionPage.css'
 
 export function MantenimientoPage() {
   return (
-    <div className="config-section-page" aria-label={t('settings_entry_maintenance')}>
+    <main className="page config-page" aria-label={t('settings_entry_maintenance')}>
       <ConfigBackButton />
       <MantenimientoAppCard />
-    </div>
+    </main>
   )
 }
 

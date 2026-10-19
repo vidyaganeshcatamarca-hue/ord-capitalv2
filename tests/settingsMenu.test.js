@@ -741,3 +741,25 @@ test('every config section page imports the section stylesheet and the page styl
     assert.ok(s.includes('./ConfiguracionPage.css') || s.includes('NotificacionesPage.css'), rel + ' must import a page stylesheet')
   }
 })
+
+// ── Bug 20/22 (owner, tanda 3): every new settings screen wraps the body in
+// main.page config-page — the scroll container + bottom-nav clearance pattern
+// of Reportar un problema (the owner-validated reference). No bare fragments.
+
+test('every new settings screen uses the page scroll container with clearance (bug 20/22)', () => {
+  for (const [file, fn, label] of [
+    ['RegionFormatoPage.tsx', 'RegionFormatoPage', 'settings_entry_region_format'],
+    ['BorradoPage.tsx', 'BorradoPage', 'settings_entry_data_deletion'],
+    ['AparienciaPage.tsx', 'AparienciaPage', 'settings_entry_appearance'],
+    ['PWAInstallPage.tsx', 'PWAInstallPage', 'settings_entry_install_app'],
+    ['MantenimientoPage.tsx', 'MantenimientoPage', 'settings_entry_maintenance'],
+    ['AcercaPage.tsx', 'AcercaPage', 'settings_entry_about'],
+  ]) {
+    const flat = fs.readFileSync(path.join(__dirname, '..', 'src', 'pages', 'Configuracion', file), 'utf-8').replace(new RegExp(String.fromCharCode(92) + "s+", "g"), " ")
+    assert.ok(
+      flat.includes('return ( <main className="page config-page"') || flat.includes('page config-page'),
+      file + ' must wrap its content in main.page config-page (scroll + clearance)',
+    )
+    assert.ok(!flat.includes('config-section-page'), file + ' must not keep the unscrollable wrapper')
+  }
+})

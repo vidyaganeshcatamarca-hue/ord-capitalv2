@@ -9,10 +9,10 @@ import './ConfigSectionPage.css'
 
 export function BorradoPage() {
   return (
-    <div className="config-section-page" aria-label={t('settings_entry_data_deletion')}>
+    <main className="page config-page" aria-label={t('settings_entry_data_deletion')}>
       <ConfigBackButton />
       <ConfiguracionBorradoCard />
-    </div>
+    </main>
   )
 }
 

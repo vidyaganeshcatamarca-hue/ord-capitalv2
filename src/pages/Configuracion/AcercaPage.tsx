@@ -74,10 +74,10 @@ export function ConfigAboutBody() {
 // button + the shared body; the hub links here instead of unfolding inline.
 export function AcercaPage() {
   return (
-    <>
+    <main className="page config-page" aria-label={t('settings_entry_about')}>
       <ConfigBackButton />
       <ConfigAboutBody />
-    </>
+        </main>
   )
 }
 

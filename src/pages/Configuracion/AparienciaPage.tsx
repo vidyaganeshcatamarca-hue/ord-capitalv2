@@ -11,10 +11,10 @@ import './ConfigSectionPage.css'
 export function AparienciaPage() {
   const userId = useOptionalAuth()?.session?.user?.id ?? ''
   return (
-    <div className="config-section-page" aria-label={t('settings_entry_appearance')}>
+    <main className="page config-page" aria-label={t('settings_entry_appearance')}>
       <ConfigBackButton />
       <AparienciaCard userId={userId} defaultOpen />
-    </div>
+    </main>
   )
 }
 
