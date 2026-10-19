@@ -13,6 +13,7 @@
 // later mount (or reloadMonedasExtra) can retry.
 import { useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
+import { parseJsonbStringArray } from '@/lib/jsonbRpc'
 import { useOptionalAuth } from '@/contexts/AuthContext'
 
 let extrasPromise: Promise<string[] | null> | null = null
@@ -24,20 +25,13 @@ export function invalidateMonedasExtraCache(): void {
 
 function fetchMonedasExtra(): Promise<string[] | null> {
   if (!extrasPromise) {
-    extrasPromise = rpc<unknown[]>('fn_obtener_monedas_extra')
+    extrasPromise = rpc<unknown>('fn_obtener_monedas_extra')
       .then((data) => {
-        const row = Array.isArray(data) ? data[0] : data
-        // fn_obtener_monedas_extra RETURNS jsonb: PostgREST delivers either the
-        // bare array (["USD"]) or [{fn_obtener_monedas_extra: [...]}], depending
-        // on the REST shape. Both fold into string[]; anything else is null.
-        const raw =
-          row == null
-            ? null
-            : typeof row === 'object' && !Array.isArray(row)
-              ? (row as Record<string, unknown>).fn_obtener_monedas_extra
-              : row
-        const list = Array.isArray(raw) ? raw.map((x) => String(x ?? '')) : null
-        return list
+        // RETURN jsonb: la forma que llega NO es fija (array puro, wrapper con
+        // la key del fn, o fila-objeto con alias). El parser puro cubre las 4
+        // formas; el bug tanda-2 (BUG3) asumía wrapper y leía [] con array
+        // puro — persistencia OK y UI siempre 'Sin moneda'.
+        return parseJsonbStringArray(data, 'fn_obtener_monedas_extra')
       })
       .catch(() => {
         extrasPromise = null

@@ -16,7 +16,11 @@ import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { useToast } from '@/contexts/ToastContext'
 import { useLanguage } from '@/locales/LanguageProvider'
+import { useCountryCatalog } from '@/lib/useCountryCatalog'
+import { CountrySearchModal } from '@/components/onboarding/CountrySearchModal'
+import { type Country } from '@/lib/countryCatalog'
 import { useMonedasExtra } from '@/hooks/useMonedasExtra'
+import { parseJsonbStringArray } from '@/lib/jsonbRpc'
 import { buildWalletCurrencyOptions } from '@/lib/monedasExtra'
 import { useDivisasCotizadas } from '@/hooks/useDivisasCotizadas'
 import { currencyName } from '@/lib/countryCatalog'
@@ -34,11 +38,39 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
   // en otra pantalla no ven el invalidate() solo: necesita un attempt++).
   const { extras, loading: extrasLoading, reload } = useMonedasExtra()
   const { divisas, loading: divisasLoading } = useDivisasCotizadas()
+  // BUG4 del dueño: elegir por PAÍS en modal (país+moneda, sin nomenclatura).
+  // Reutiliza el CountrySearchModal del onboarding y el catálogo cacheado.
+  const { index, loading: catalogLoading } = useCountryCatalog()
+  const [pickerSlot, setPickerSlot] = useState<2 | 3 | null>(null)
 
   const [slot2, setSlot2] = useState('')
   const [slot3, setSlot3] = useState('')
   const [saving, setSaving] = useState(false)
 
+  // El país elegido manda su moneda: mismo camino que el select manual pero
+  // sin tener que saberse el código ISO (BUG4: "elijo por país").
+  const handleCountryPicked = (country: Country) => {
+    const monedaPais = (country.localCurrency || '').toUpperCase()
+    setPickerSlot(null)
+    if (!monedaPais || monedaPais === localCurrency.toUpperCase()) return
+    if (pickerSlot === 2) {
+      const next3 = monedaPais === slot3 ? slot2 : slot3
+      if (monedaPais === slot3 && slot3) setSlot3('')
+      setSlot2(monedaPais)
+      void handleSave(slot2, slot3, monedaPais, next3)
+    } else {
+      if (monedaPais === slot2) {
+        // Si el país aporta la moneda que ya es 2ª, la 2ª se libera para la 3ª:
+        // mismo swap que el select manual.
+        setSlot3(slot2)
+        setSlot2('')
+        void handleSave(slot2, slot3, '', slot2)
+        return
+      }
+      setSlot3(monedaPais)
+      void handleSave(slot2, slot3, slot2, monedaPais)
+    }
+  }
   // Local state mirrors the persisted extras; resets when they load/refresh.
   useEffect(() => {
     setSlot2(extras[0] ?? '')
@@ -66,15 +98,10 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
       // estado optimista), y reload() refresca el cache del hook para el resto
       // de la app. BUG 1b del dueño: sin esto, la página abierta seguía
       // mostrando las extras viejas ('no la está trayendo del lugar correcto').
-      const res = await rpc<unknown[]>('fn_configurar_monedas_extra', { p_monedas: nextArr })
-      const row = Array.isArray(res) ? res[0] : res
-      const persisted =
-        Array.isArray(row)
-          ? row.map((x) => String(x ?? ''))
-          : row && typeof row === 'object'
-            ? ((row as Record<string, unknown>).fn_configurar_monedas_extra as unknown[] | undefined) ?? []
-            : []
-      const codes = Array.isArray(persisted) ? persisted.map((x) => String(x ?? '')) : []
+      // RETURN jsonb: el parse puro cubre las 4 formas (tanda 2/BUG3: el
+      // parser viejo asumía wrapper y con array puro dejaba los slots vacíos).
+      const res = await rpc<unknown>('fn_configurar_monedas_extra', { p_monedas: nextArr })
+      const codes = parseJsonbStringArray(res, 'fn_configurar_monedas_extra') ?? []
       setSlot2(codes[0] ?? '')
       setSlot3(codes[1] ?? '')
       showToast(t('monedas_extras_guardado'), 'success')
@@ -94,9 +121,20 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
 
   return (
     <>
+      {/* Primera moneda: READ-ONLY arriba del todo (la pide el dueño — la
+          derivada del país; el resto son las dos extras configurables). */}
+      <div className="config-section-row">
+        <span>{t('config_currency_main')}</span>
+        <span>
+          {localCurrency || '—'}
+          {localCurrency ? ` · ${currencyName(localCurrency, lang)}` : ''}
+          <span className="config-section-action-desc">{t('settings_currencies_local_desc')}</span>
+        </span>
+      </div>
       <div className="config-section-row">
         <span>{t('config_currency_secondary')}</span>
         <select
+          className="config-section-select"
           aria-label={t('config_currency_secondary')}
           value={slot2}
           onChange={(e) => {
@@ -118,10 +156,20 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
             )
           )}
         </select>
+        <button
+          type="button"
+          className="currencies-block-picker-toggle"
+          onClick={() => setPickerSlot(2)}
+          disabled={saving || catalogLoading}
+          title={t('monedas_extras_elegir_por_pais')}
+        >
+          {t('monedas_extras_elegir_por_pais')}
+        </button>
       </div>
       <div className="config-section-row">
         <span>{t('config_tercera_moneda')}</span>
         <select
+          className="config-section-select"
           aria-label={t('config_tercera_moneda')}
           value={slot3}
           onChange={(e) => {
@@ -136,7 +184,23 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          className="currencies-block-picker-toggle"
+          onClick={() => setPickerSlot(3)}
+          disabled={saving || catalogLoading}
+          title={t('monedas_extras_elegir_por_pais')}
+        >
+          {t('monedas_extras_elegir_por_pais')}
+        </button>
       </div>
+      <CountrySearchModal
+        open={pickerSlot !== null}
+        index={index}
+        lang={lang}
+        onClose={() => setPickerSlot(null)}
+        onSelect={handleCountryPicked}
+      />
     </>
   )
 }
