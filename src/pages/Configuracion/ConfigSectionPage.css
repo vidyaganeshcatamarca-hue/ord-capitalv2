@@ -321,7 +321,7 @@
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface-2);
-  color: var(--text-1);
+  color: var(--text);
   padding: 8px 12px;
   font-size: 13px;
   font-weight: 500;
@@ -331,7 +331,7 @@
   appearance: auto;
 }
 .config-section-select-trigger:hover {
-  border-color: var(--border-strong, var(--border));
+  border-color: var(--border-light, var(--border));
 }
 .config-section-select-trigger:disabled {
   cursor: default;
@@ -348,5 +348,5 @@
   padding: 4px 6px;
 }
 .config-section-clear:hover {
-  color: var(--text-1);
+  color: var(--text);
 }

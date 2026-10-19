@@ -1,4 +1,11 @@
-/* src/components/AppLockGate/AppLockGate.css — lock overlay (feature: pin-huella). */
+/* src/components/AppLockGate/AppLockGate.css — lock overlay + embedded PIN panel
+   (feature: pin-huella).
+   Owner bug (tanda 7): the file used three tokens that this design system does
+   NOT define (`--text-primary`, `--text-secondary`, `--border-color`). An
+   undefined custom property falls back to the literal, and those literals were
+   white — invisible in light mode. Every colour now comes from a real token
+   (see [data-theme='warm-light'] in src/styles/index.css):
+   --text, --text-2, --border, --surface, --surface-2, --mint-gradient, --coral. */
 
 .app-lock-gate {
   position: fixed;
@@ -7,15 +14,17 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--surface-backdrop, rgba(15, 18, 22, 0.6));
+  /* A lock veil stays dark in both themes: it hides whatever is behind. */
+  background: rgba(15, 18, 22, 0.6);
   backdrop-filter: blur(6px);
   padding: 1.5rem;
 }
 
 .app-lock-card {
   width: min(22rem, 100%);
-  background: var(--surface-bg, #171b21);
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
   border-radius: 14px;
   padding: 1.75rem 1.5rem;
   text-align: center;
@@ -25,12 +34,13 @@
 .app-lock-title {
   margin: 0 0 0.4rem;
   font-size: calc(1.05rem * var(--font-scale, 1));
+  color: var(--text);
 }
 
 .app-lock-subtitle {
   margin: 0 0 1.1rem;
   font-size: calc(0.9rem * var(--font-scale, 1));
-  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  color: var(--text-2);
 }
 
 .app-lock-actions {
@@ -49,14 +59,14 @@
 }
 
 .app-lock-primary-action {
-  background: var(--primary-bg, #3d5afe);
-  color: #fff;
+  background: var(--mint-gradient);
+  color: #ffffff;
 }
 
 .app-lock-secondary-action {
   background: transparent;
-  color: var(--text-primary, #fff);
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.2));
+  color: var(--text);
+  border: 1px solid var(--border);
 }
 
 .app-lock-primary-action:disabled,
@@ -84,11 +94,11 @@
   width: 0.7rem;
   height: 0.7rem;
   border-radius: 50%;
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.35));
+  border: 1px solid var(--border);
 }
 
 .app-lock-dot--filled {
-  background: var(--text-primary, #fff);
+  background: var(--text);
   border-color: transparent;
 }
 
@@ -101,9 +111,9 @@
 }
 
 .app-lock-key {
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.14));
-  background: transparent;
-  color: var(--text-primary, #fff);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
   border-radius: 10px;
   padding: 0.75rem 0;
   font-size: calc(1.05rem * var(--font-scale, 1));
@@ -112,6 +122,7 @@
 
 .app-lock-key--spacer {
   border: none;
+  background: transparent;
   pointer-events: none;
 }
 
@@ -122,19 +133,20 @@
 }
 
 .app-lock-hint {
-  color: var(--text-secondary, rgba(255, 255, 255, 0.7));
+  color: var(--text-2);
 }
 
 .app-lock-error {
-  color: var(--error-color, #ff6b6b);
+  color: var(--coral);
 }
 
 .app-lock-cooldown-ends {
   margin: 0.4rem 0 0;
   font-size: calc(0.95rem * var(--font-scale, 1));
   font-weight: 600;
-  color: var(--text-primary, #fff);
+  color: var(--text);
 }
+
 /* Owner bug (tanda 5): the PIN panel embedded in Ajustes must enter the screen
    in one piece, without scrolling and without the cancel/confirm footer (the
    keypad auto-submits on the fourth digit). Compact geometry: shorter keys and
