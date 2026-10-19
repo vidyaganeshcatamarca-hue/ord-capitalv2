@@ -318,6 +318,10 @@ interface SettingsCollapsibleProps {
   titleKey: string
   descKey?: string
   children: ReactNode
+  /** Bug 9 — controlled mode: the hub owns the single open state so opening
+   *  one top-level section collapses all others (exclusive accordion). */
+  open?: boolean
+  onOpenChange?: (next: boolean) => void
 }
 
 /**
@@ -327,8 +331,13 @@ interface SettingsCollapsibleProps {
  * chevron). Leaf rows and the cards that already own their internal state are
  * not wrapped by it; U2 mounts the two inline cards (region / about) through it.
  */
-function SettingsCollapsible({ id, icon, titleKey, descKey, children }: SettingsCollapsibleProps) {
-  const [open, setOpen] = useState(false)
+function SettingsCollapsible({ id, icon, titleKey, descKey, children, open: controlledOpen, onOpenChange }: SettingsCollapsibleProps) {
+  const [internalOpen, setInternalOpen] = useState(false)
+  const open = controlledOpen ?? internalOpen
+  const setOpen = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next)
+    else setInternalOpen(next)
+  }
   const titleId = `${id}-title`
   const bodyId = `${id}-body`
   return (
@@ -336,7 +345,7 @@ function SettingsCollapsible({ id, icon, titleKey, descKey, children }: Settings
       <button
         type="button"
         className="config-hub-collapsible-header"
-        onClick={() => setOpen((value) => !value)}
+        onClick={() => setOpen(!open)}
         aria-expanded={open}
         aria-controls={bodyId}
       >
@@ -359,7 +368,9 @@ function SettingsCollapsible({ id, icon, titleKey, descKey, children }: Settings
   )
 }
 
-function SettingsGroupSection({ group, userId }: { group: SettingsMenuGroup; userId: string | undefined }) {
+/** Bug 9 — exclusive accordion: the hub owns a single open-section id; opening
+ *  a section replaces it, so all other expanded top-level sections collapse. */
+function SettingsGroupSection({ group, userId, openGroupId, onOpenGroup }: { group: SettingsMenuGroup; userId: string | undefined; openGroupId: string | null; onOpenGroup: (id: string | null) => void }) {
   const subgroups = group.groups ?? []
   const rendered = group.items.filter(isRenderable)
   const renderedSubgroups = subgroups.filter((sub) => sub.target?.startsWith('target:'))
@@ -371,6 +382,8 @@ function SettingsGroupSection({ group, userId }: { group: SettingsMenuGroup; use
       id={`config-group-${group.id}`}
       icon={GROUP_ICONS[group.id] ?? '⚙️'}
       titleKey={group.titleKey}
+      open={openGroupId === group.id}
+      onOpenChange={(next) => onOpenGroup(next ? group.id : null)}
     >
       <div className="config-hub-group-cards">
         {rendered.map((item) => (
@@ -386,6 +399,8 @@ export function ConfiguracionHub() {
   const { user } = useAuth()
   const { modo, proDisponible } = useModoApp()
   const tree = resolveSettingsMenu(modo)
+  // Bug 9 — one shared open-section state: opening a section collapses the rest.
+  const [openGroupId, setOpenGroupId] = useState<string | null>(null)
 
   // S8/S9 — mode switch and placeholder entries live at the primary menu level.
   const rootEntries = tree.rootEntries.filter(
@@ -395,7 +410,7 @@ export function ConfiguracionHub() {
   return (
     <div className="config-hub">
       {tree.groups.map((group) => (
-        <SettingsGroupSection key={group.id} group={group} userId={user?.id} />
+        <SettingsGroupSection key={group.id} group={group} userId={user?.id} openGroupId={openGroupId} onOpenGroup={setOpenGroupId} />
       ))}
       {rootEntries.map((entry) => (
         <SettingsEntry key={entry.id} item={entry} userId={user?.id} />

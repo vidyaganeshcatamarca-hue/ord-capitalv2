@@ -568,6 +568,32 @@ test('Borrado opens as a collapsed branch revealing the two deletion sub-options
   const es = fs.readFileSync(ES_PATH, 'utf-8')
   assert.match(es, /settings_entry_data_deletion:\s*"Borrado de datos y cuentas"/, 'the branch title must read Borrado de datos y cuentas')
 })
+/** Bug 9 (owner, 2026-10-19): exclusive accordion — when the user opens one
+ *  top-level settings section, the other expanded sections all collapse. */
+test('top-level settings groups collapse each other (exclusive accordion)', () => {
+  const hub = fs.readFileSync(HUB_PATH, 'utf-8')
+  assert.match(
+    hub,
+    /openGroupId/,
+    'the hub must own a single open-section state for the exclusive accordion',
+  )
+  const section = hub.slice(hub.indexOf('function SettingsGroupSection'), hub.indexOf('export function ConfiguracionHub'))
+  assert.ok(
+    section.includes('open') && section.includes('onOpenChange'),
+    'each top-level group must be a controlled SettingsCollapsible',
+  )
+  const collapsible = hub.slice(hub.indexOf('interface SettingsCollapsibleProps'), hub.indexOf('function SettingsGroupSection'))
+  assert.match(
+    collapsible,
+    /open\?:\s*boolean/,
+    'SettingsCollapsible must accept controlled open',
+  )
+  assert.match(
+    collapsible,
+    /onOpenChange\?:\s*\(next:\s*boolean\)\s*=>\s*void/,
+    'SettingsCollapsible must accept onOpenChange',
+  )
+})
 test('the hub renders Acerca de inline and the legal rows open LegalDocModal (U2/S4)', () => {
   const hub = fs.readFileSync(HUB_PATH, 'utf-8')
   assert.match(hub, /function\s+AboutInlineCard\s*\(/, 'the hub must define the about inline card')
