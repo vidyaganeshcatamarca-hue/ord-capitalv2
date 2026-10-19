@@ -719,3 +719,25 @@ test('the new screens carry the back button (L17)', () => {
     'the about page must render the back button',
   )
 })
+
+test('every config section page imports the section stylesheet and the page stylesheet (bug 19)', () => {
+  const pages = [
+    'src/pages/Configuracion/ProteccionPage.tsx',
+    'src/pages/Configuracion/RegionFormatoPage.tsx',
+    'src/pages/Configuracion/BorradoPage.tsx',
+    'src/pages/Configuracion/AparienciaPage.tsx',
+    'src/pages/Configuracion/PWAInstallPage.tsx',
+    'src/pages/Configuracion/MantenimientoPage.tsx',
+    'src/pages/Configuracion/AcercaPage.tsx',
+    'src/pages/Configuracion/NotificacionesPage.tsx',
+    'src/pages/Configuracion/PreferenciasOperativasPage.tsx',
+    'src/pages/Configuracion/ImportarExportarPage.tsx',
+    'src/pages/Configuracion/HogarConfigPage.tsx',
+    'src/pages/Configuracion/PresupuestoCicloPage.tsx',
+  ]
+  for (const rel of pages) {
+    const s = fs.readFileSync(path.join(__dirname, '..', rel), 'utf-8')
+    assert.ok(s.includes('./ConfigSectionPage.css'), rel + ' must import the section stylesheet')
+    assert.ok(s.includes('./ConfiguracionPage.css') || s.includes('NotificacionesPage.css'), rel + ' must import a page stylesheet')
+  }
+})

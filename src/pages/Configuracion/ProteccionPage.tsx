@@ -11,6 +11,10 @@ import { useState, useEffect, useCallback } from 'react'
 import { t } from '@/locales/i18n'
 import ConfigBackButton from '@/components/configuracion/ConfigBackButton'
 import './ConfiguracionPage.css'
+// Owner bug (tanda 3): the back button/card/row styles live in the section
+// stylesheet — without it the page rendered unstyled (back button centered by
+// the browser default, no card, concatenated rows).
+import './ConfigSectionPage.css'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAppLock } from '@/contexts/AppLockContext'
 import {
