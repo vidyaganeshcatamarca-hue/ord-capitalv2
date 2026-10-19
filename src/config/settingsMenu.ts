@@ -171,6 +171,24 @@ const APPEARANCE_ENTRY: SettingsMenuItem = {
   target: 'component:AparienciaCard',
 }
 
+// L15 — Carga y registro (ex Preferencias operativas, renombre funcional)
+// shared by BOTH trees (owner: it belongs in Simple too). The subgroup renders
+// as one row pointing to the operativas page; the leaves decompose inside it.
+const LOAD_REGISTRY_GROUP: SettingsMenuGroup = {
+  id: 'load_registry',
+  titleKey: 'settings_entry_load_registry',
+  descKey: 'settings_entry_load_registry_desc',
+  target: 'target:/configuracion/operativas',
+  items: [
+    { id: 'default_wallets', titleKey: 'settings_entry_default_wallets', target: 'target:/configuracion/operativas' },
+    { id: 'default_movement', titleKey: 'settings_entry_default_movement', target: 'target:/configuracion/operativas' },
+    { id: 'wallet_order', titleKey: 'settings_entry_wallet_order', target: 'target:/configuracion/operativas' },
+    { id: 'ocr', titleKey: 'settings_entry_ocr', target: 'target:/configuracion/operativas' },
+    { id: 'voice', titleKey: 'settings_entry_voice', target: 'target:/configuracion/operativas' },
+    // S5: OCR auto-approval is gone on purpose. Do not re-add it.
+  ],
+}
+
 // ── S2 — Simple tree ───────────────────────────────────────────────────────
 const SIMPLE_TREE: SettingsMenuTree = {
   modo: 'simple',
@@ -187,6 +205,9 @@ const SIMPLE_TREE: SettingsMenuTree = {
       id: 'preferences',
       titleKey: 'settings_group_preferences',
       items: [REGION_FORMAT_ENTRY, APPEARANCE_ENTRY],
+      // L15 (owner, 2026-10-19): Carga y registro is no longer advanced-only;
+      // the same subgroup renders in Simple, pointing to the same page.
+      groups: [LOAD_REGISTRY_GROUP],
     },
     HELP_SUPPORT_GROUP,
     APPLICATION_GROUP,
@@ -240,24 +261,7 @@ const ADVANCED_TREE: SettingsMenuTree = {
           target: 'component:NotificacionesCard',
         },
       ],
-      groups: [
-        {
-          id: 'load_registry',
-          titleKey: 'settings_entry_load_registry',
-          descKey: 'settings_entry_load_registry_desc',
-          // T1 renders the subgroup as one row into the current page; T2/T4
-          // decompose it into the five leaves declared below.
-          target: 'target:/configuracion/operativas',
-          items: [
-            { id: 'default_wallets', titleKey: 'settings_entry_default_wallets', target: 'target:/configuracion/operativas' },
-            { id: 'default_movement', titleKey: 'settings_entry_default_movement', target: 'target:/configuracion/operativas' },
-            { id: 'wallet_order', titleKey: 'settings_entry_wallet_order', target: 'target:/configuracion/operativas' },
-            { id: 'ocr', titleKey: 'settings_entry_ocr', target: 'target:/configuracion/operativas' },
-            { id: 'voice', titleKey: 'settings_entry_voice', target: 'target:/configuracion/operativas' },
-            // S5: OCR auto-approval is gone on purpose. Do not re-add it.
-          ],
-        },
-      ],
+      groups: [LOAD_REGISTRY_GROUP],
     },
     {
       id: 'data_operations',

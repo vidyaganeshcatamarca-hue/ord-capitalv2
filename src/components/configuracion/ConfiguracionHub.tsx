@@ -9,6 +9,7 @@ import { t } from '@/locales/i18n'
 import { resolveSettingsMenu } from '@/config/settingsMenu'
 import type { SettingsMenuGroup, SettingsMenuItem } from '@/config/settingsMenu'
 import { ToggleSwitch } from './ToggleSwitch'
+import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { MiCuentaCard } from './MiCuentaCard'
 import { AparienciaCard } from './AparienciaCard'
 import { NotificacionesCard } from './NotificacionesCard'
@@ -92,24 +93,50 @@ function ConfigSoonCard({ item }: { item: SettingsMenuItem }) {
   )
 }
 
-/** S9 — the asymmetric Simple/Avanzado switch (same logic as ModoAppCard). */
+/** S9 + L15 — the asymmetric Simple/Avanzado switch. Switching TO advanced asks
+ *  for confirmation first (owner: avoid accidental mode changes); going back to
+ *  simple stays one-tap. */
 function ModeSwitchRow({ item }: { item: SettingsMenuItem }) {
   const { activarModoAvanzado, desactivarModoAvanzado, loading } = useModoApp()
   const goAdvanced = item.target === 'mode:to_advanced'
+  const [confirming, setConfirming] = useState(false)
   return (
-    <button
-      type="button"
-      className={`config-hub-card${item.featured ? ' config-hub-card--featured' : ''}`}
-      onClick={() => { void (goAdvanced ? activarModoAvanzado() : desactivarModoAvanzado()) }}
-      disabled={loading}
-    >
-      <span className="config-hub-card-icon" aria-hidden="true">{goAdvanced ? '🚀' : '↩️'}</span>
-      <div className="config-hub-card-content">
-        <h3>{t(item.titleKey)}</h3>
-        {item.descKey && <p>{t(item.descKey)}</p>}
-      </div>
-      <span className="config-hub-card-chevron" aria-hidden="true">›</span>
-    </button>
+    <>
+      <button
+        type="button"
+        className={`config-hub-card${item.featured ? ' config-hub-card--featured' : ''}`}
+        onClick={() => {
+          if (goAdvanced) {
+            setConfirming(true)
+          } else {
+            void desactivarModoAvanzado()
+          }
+        }}
+        disabled={loading}
+      >
+        <span className="config-hub-card-icon" aria-hidden="true">{goAdvanced ? '🚀' : '↩️'}</span>
+        <div className="config-hub-card-content">
+          <h3>{t(item.titleKey)}</h3>
+          {item.descKey && <p>{t(item.descKey)}</p>}
+        </div>
+        <span className="config-hub-card-chevron" aria-hidden="true">›</span>
+      </button>
+      {goAdvanced && (
+        <ConfirmModal
+          isOpen={confirming}
+          type="primary"
+          title={t('settings_confirm_go_advanced_title')}
+          message={t('settings_confirm_go_advanced_message')}
+          confirmText={t('settings_confirm_go_advanced_confirm')}
+          cancelText={t('btn_cancel')}
+          onConfirm={() => {
+            setConfirming(false)
+            void activarModoAvanzado()
+          }}
+          onCancel={() => setConfirming(false)}
+        />
+      )}
+    </>
   )
 }
 
