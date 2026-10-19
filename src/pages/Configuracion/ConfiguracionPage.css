@@ -1,6 +1,12 @@
 .config-page {
   min-height: 100vh;
-  padding: 24px 16px 96px;
+  /* Owner bug (tanda 4): with min-height:100vh the default align-content:
+     stretch spread the leftover height across the auto rows, so the gaps
+     ballooned and the action button fell behind the fixed bottom nav — even
+     though the screen had empty space. Rows start at the top now. */
+  align-content: start;
+  padding: 24px 16px;
+  padding-bottom: calc(var(--nav-height) + var(--safe-bottom) + var(--space-4));
   background: var(--bg);
   color: var(--text);
   display: grid;
