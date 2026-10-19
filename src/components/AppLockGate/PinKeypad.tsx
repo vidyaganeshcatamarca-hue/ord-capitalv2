@@ -8,13 +8,18 @@ import { t } from '@/locales/i18n'
 interface PinKeypadProps {
   disabled: boolean
   hint: string | null
-  /** Called once with a complete 4-digit PIN. */
+  /** Called once with a complete 4-digit PIN (the fourth digit submits). */
   onSubmit: (pin: string) => void
+  /**
+   * Compact geometry for the embedded Ajustes panel: the whole PIN flow has to
+   * fit above the bottom nav without scrolling (owner, tanda 5).
+   */
+  compact?: boolean
 }
 
 const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'back'] as const
 
-export function PinKeypad({ disabled, hint, onSubmit }: PinKeypadProps) {
+export function PinKeypad({ disabled, hint, onSubmit, compact = false }: PinKeypadProps) {
   const [pin, setPin] = useState('')
 
   const push = (digit: string) => {
@@ -36,7 +41,7 @@ export function PinKeypad({ disabled, hint, onSubmit }: PinKeypadProps) {
   }
 
   return (
-    <div className="app-lock-keypad">
+    <div className={`app-lock-keypad${compact ? ' app-lock-keypad--compact' : ''}`}>
       <div className="app-lock-dots" aria-live="polite" aria-label={t('app_lock_pin_entry')}>
         {[0, 1, 2, 3].map((i) => (
           <span key={i} className={`app-lock-dot${i < pin.length ? ' app-lock-dot--filled' : ''}`} />

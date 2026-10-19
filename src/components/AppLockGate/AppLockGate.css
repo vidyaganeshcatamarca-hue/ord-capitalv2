@@ -135,3 +135,32 @@
   font-weight: 600;
   color: var(--text-primary, #fff);
 }
+/* Owner bug (tanda 5): the PIN panel embedded in Ajustes must enter the screen
+   in one piece, without scrolling and without the cancel/confirm footer (the
+   keypad auto-submits on the fourth digit). Compact geometry: shorter keys and
+   tighter dots, centred. */
+.app-lock-keypad--compact {
+  gap: 0.4rem;
+}
+
+.app-lock-keypad--compact .app-lock-dots {
+  min-height: 1rem;
+  gap: 0.4rem;
+}
+
+.app-lock-keypad--compact .app-lock-dot {
+  width: 0.55rem;
+  height: 0.55rem;
+}
+
+.app-lock-keypad--compact .app-lock-keys {
+  max-width: 13rem;
+  gap: 0.3rem;
+}
+
+.app-lock-keypad--compact .app-lock-key {
+  padding: 0.5rem 0;
+  min-height: 2.6rem;
+  font-size: calc(0.95rem * var(--font-scale, 1));
+  border-radius: 8px;
+}

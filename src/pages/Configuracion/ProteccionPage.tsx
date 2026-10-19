@@ -24,6 +24,12 @@ import {
 } from '@/lib/biometricAppLock'
 import { PinKeypad } from '@/components/AppLockGate/PinKeypad'
 import { validatePin } from '@/lib/pinFormat'
+import {
+  pinConfirmationOutcome,
+  pinFailureKey,
+  pinInstructionKey,
+  type PinPanelStep,
+} from '@/lib/pinPanelFlow'
 import type { PinVerifyResult } from '@/contexts/AppLockContext'
 
 type PanelMode = 'idle' | 'activar' | 'cambiar_actual' | 'cambiar_nueva' | 'baja'
@@ -56,6 +62,7 @@ export function ProteccionPage() {
     setBiometriaEnDispositivo,
     definePin,
     deactivatePin,
+    verifyPin,
     unlockWithBiometria,
   } = useAppLock()
 
@@ -118,11 +125,6 @@ export function ProteccionPage() {
   const pinActivado = lockState != null && lockState.kind !== 'sin_pin'
   const huellaHabilitable = pinActivado && dispositivoSoporta !== false
 
-  const cerrarPanel = useCallback(() => {
-    setPanelMode('idle')
-    setMensajeKey(null)
-  }, [])
-
   return (
     <main className="page config-page" aria-labelledby="proteccion-title">
       <ConfigBackButton />
@@ -179,44 +181,48 @@ export function ProteccionPage() {
 
           {panelMode === 'activar' && (
             <NuevoPinPanel
-              tituloKey="proteccion_activar"
-              disabled={false}
-              onCancel={cerrarPanel}
+              messageKey={mensajeKey}
+              onMessage={setMensajeKey}
               onConfirm={(pin) => void activarPin(pin)}
             />
           )}
           {panelMode === 'cambiar_actual' && (
             <PinActualPanel
-              disabled={false}
-              onCancel={cerrarPanel}
-              onConfirm={(pinActual) => {
+              messageKey={mensajeKey}
+              onConfirm={async (pinActual) => {
+                // Verify BEFORE asking for the new PIN: a wrong current PIN has
+                // to say so right here, not after the whole flow (owner, tanda 5).
+                const check = await verifyPin(pinActual)
+                if (!check.ok) {
+                  setMensajeKey(pinFailureKey(check.reason))
+                  return
+                }
                 setMensajeKey(null)
-                setPanelMode('cambiar_nueva')
-                // guardar el PIN actual para el paso siguiente:
                 pinActualRef.current = pinActual
+                setPanelMode('cambiar_nueva')
               }}
             />
           )}
           {panelMode === 'cambiar_nueva' && (
             <NuevoPinPanel
-              tituloKey="proteccion_cambiar_pin"
-              disabled={false}
-              onCancel={cerrarPanel}
-              onConfirm={(pinNuevo) => {
-                setMensajeKey(null)
-                void cambiarPin(pinActualRef.current ?? '', pinNuevo)
-              }}
+              messageKey={mensajeKey}
+              onMessage={setMensajeKey}
+              onConfirm={(pinNuevo) => void cambiarPin(pinActualRef.current ?? '', pinNuevo)}
             />
           )}
           {panelMode === 'baja' && (
             <PinActualPanel
-              disabled={false}
-              onCancel={cerrarPanel}
+              messageKey={mensajeKey}
               onConfirm={(pinActual) => void desactivarPin(pinActual)}
             />
           )}
 
-          {mensajeKey && <p className="config-section-note" role="status">{t(mensajeKey)}</p>}
+          {/* One message zone: panels own it while a PIN step is open; the
+              section only reports outcomes of the idle actions (biometry,
+              activation result). */}
+          {panelMode === 'idle' && mensajeKey && (
+            <p className="config-section-note" role="status">{t(mensajeKey)}</p>
+          )}
         </article>
       </section>
     </main>
@@ -227,64 +233,69 @@ export function ProteccionPage() {
 // página vive unida, así el ref no trasciende el archivo.
 const pinActualRef: { current?: string } = { current: undefined }
 
-/** Doble entrada del PIN nuevo (activar / cambio). */
+/**
+ * Doble entrada del PIN nuevo (activar / cambio).
+ *
+ * Owner (tanda 5): the keypad executes on the fourth digit, so the panel has no
+ * accept/cancel footer; and it shows ONE message that changes with the step, so
+ * an error never sits next to a stale instruction. A mismatched confirmation
+ * stays on the confirmation step — that is what makes the warning visible.
+ */
 function NuevoPinPanel({
-  tituloKey,
-  disabled,
-  onCancel,
+  messageKey,
+  onMessage,
   onConfirm,
 }: {
-  tituloKey: string
-  disabled: boolean
-  onCancel: () => void
+  messageKey: string | null
+  onMessage: (key: string | null) => void
   onConfirm: (pin: string) => void
 }) {
   const [primero, setPrimero] = useState<string | null>(null)
-  const [mismatch, setMismatch] = useState(false)
-  if (primero == null) {
-    return (
-      <>
-        <p className="config-section-note">{t('app_lock_reset_subtitle')}</p>
-        <PinKeypad disabled={disabled} hint={null} onSubmit={(pin) => { setPrimero(pin); setMismatch(false) }} />
-        <button type="button" className="config-action-button" onClick={onCancel}>{t('proteccion_cancelar')}</button>
-      </>
-    )
-  }
+  const step: PinPanelStep = primero == null ? 'activar_nuevo' : 'activar_confirmar'
+  const instruction = pinInstructionKey(step, messageKey)
+
   return (
     <>
-      <p className="config-section-note">{t('app_lock_reset_confirm_subtitle')}</p>
+      {instruction && (
+        <p className="config-section-note" role={messageKey ? 'alert' : undefined}>{t(instruction)}</p>
+      )}
       <PinKeypad
-        disabled={disabled}
-        hint={mismatch ? t('app_lock_pin_mismatch') : null}
+        compact
+        disabled={false}
+        hint={null}
         onSubmit={(pin) => {
-          if (pin === primero) {
-            onConfirm(pin)
-          } else {
-            setMismatch(true)
-            setPrimero(null)
+          if (primero == null) {
+            setPrimero(pin)
+            onMessage(null)
+            return
           }
+          if (pinConfirmationOutcome(primero, pin) !== 'match') {
+            onMessage('app_lock_pin_mismatch')
+            return
+          }
+          onMessage(null)
+          onConfirm(pin)
         }}
       />
-      <button type="button" className="config-action-button" onClick={onCancel}>{t('proteccion_cancelar')}</button>
     </>
   )
 }
 
 /** Entrada única del PIN actual (cambio / desactivar). */
 function PinActualPanel({
-  disabled,
-  onCancel,
+  messageKey,
   onConfirm,
 }: {
-  disabled: boolean
-  onCancel: () => void
+  messageKey: string | null
   onConfirm: (pinActual: string) => void
 }) {
+  const instruction = pinInstructionKey('cambiar_actual', messageKey)
   return (
     <>
-      <p className="config-section-note">{t('proteccion_pedir_pin_actual')}</p>
-      <PinKeypad disabled={disabled} hint={null} onSubmit={onConfirm} />
-      <button type="button" className="config-action-button" onClick={onCancel}>{t('proteccion_cancelar')}</button>
+      {instruction && (
+        <p className="config-section-note" role={messageKey ? 'alert' : undefined}>{t(instruction)}</p>
+      )}
+      <PinKeypad compact disabled={false} hint={null} onSubmit={onConfirm} />
     </>
   )
 }
