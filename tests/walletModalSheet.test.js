@@ -38,3 +38,13 @@ test('edit-wallet modal uses the same scrollable structure (bug 8)', () => {
   assert.match(edit, /className="wallet-modal-body"/)
   assert.match(edit, /className="wallet-modal-actions"/)
 })
+test('the actions footer stacks its groups instead of laying them in a row (owner tanda 4 bug 4)', () => {
+  // The edit sheet carries TWO blocks in the footer (Cancelar/Guardar and the
+  // destructive Archivar). Both declare width:100%, so a row layout pushed the
+  // archive button half outside the sheet: unreachable.
+  const css = fs.readFileSync(path.join(__dirname, '..', 'src', 'styles', 'index.css'), 'utf-8')
+  const start = css.indexOf('.wallet-modal-sheet .wallet-modal-actions {')
+  assert.ok(start !== -1, 'the footer rule must exist')
+  const rule = css.slice(start, css.indexOf('}', start))
+  assert.match(rule, /flex-direction:\s*column/, 'stacked groups cannot overflow horizontally')
+})

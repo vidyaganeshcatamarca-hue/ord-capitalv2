@@ -826,6 +826,10 @@ input::placeholder, textarea::placeholder {
 .wallet-modal-sheet .wallet-modal-actions {
   flex: 0 0 auto !important;
   display: flex !important;
+  /* Owner bug (tanda 4): the edit sheet carries TWO blocks here (Cancelar/
+     Guardar and the destructive Archivar, each width:100%). A row layout
+     pushed the archive button outside the sheet, unreachable. */
+  flex-direction: column !important;
   gap: 12px !important;
   padding: var(--space-3) var(--space-2) !important;
   padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px)) !important;
