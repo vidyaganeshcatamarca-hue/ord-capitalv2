@@ -2607,6 +2607,10 @@ export const tour = {
   app_lock_reset_subtitle: "Define un nuevo PIN de 4 dígitos para volver a entrar.",
   app_lock_reset_confirm_subtitle: "Confirmá el nuevo PIN.",
   app_lock_pin_mismatch: "Los PIN no coinciden. Empezá de nuevo.",
+  // Owner (tanda 6): a failed confirmation asks for the SAME PIN again and says
+  // exactly that; only after three tries does the panel send the user back.
+  app_lock_pin_confirm_retry: "La confirmación no coincide. Volvé a ingresar el mismo PIN.",
+  app_lock_pin_confirm_failed: "Los PIN no coinciden. Volvé a empezar.",
   app_lock_error_generico: "No se pudo completar. Probá de nuevo.",
   app_lock_pin_entry: "Tu PIN de 4 dígitos",
   app_lock_keypad: "Teclado de PIN",

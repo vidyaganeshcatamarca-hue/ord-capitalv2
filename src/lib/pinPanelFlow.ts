@@ -69,3 +69,31 @@ export function pinFailureKey(reason: string | null | undefined): string {
       return 'app_lock_error_generico'
   }
 }
+
+/** Confirmation retries allowed before the panel sends the user back. */
+export const PIN_CONFIRM_MAX_ATTEMPTS = 3
+
+export interface ConfirmationAttemptResult {
+  /** Total failed confirmations after this one. */
+  attempts: number
+  /** True when the panel must return to the previous screen. */
+  exhausted: boolean
+  /** Copy to show right now. */
+  messageKey: string
+}
+
+/**
+ * Owner rule (tanda 6): a failed confirmation says so plainly and asks for the
+ * SAME PIN again. On the third failure the panel goes back to the previous
+ * screen with "los PIN no coinciden" — the old behaviour kept the user trapped
+ * in the confirmation forever with no way out.
+ */
+export function nextConfirmationAttempt(previousAttempts: number): ConfirmationAttemptResult {
+  const attempts = (Number.isFinite(previousAttempts) ? Math.max(0, previousAttempts) : 0) + 1
+  const exhausted = attempts >= PIN_CONFIRM_MAX_ATTEMPTS
+  return {
+    attempts,
+    exhausted,
+    messageKey: exhausted ? 'app_lock_pin_confirm_failed' : 'app_lock_pin_confirm_retry',
+  }
+}

@@ -25,6 +25,7 @@ import {
 import { PinKeypad } from '@/components/AppLockGate/PinKeypad'
 import { validatePin } from '@/lib/pinFormat'
 import {
+  nextConfirmationAttempt,
   pinConfirmationOutcome,
   pinFailureKey,
   pinInstructionKey,
@@ -184,6 +185,10 @@ export function ProteccionPage() {
               messageKey={mensajeKey}
               onMessage={setMensajeKey}
               onConfirm={(pin) => void activarPin(pin)}
+              onAbort={(key) => {
+                setMensajeKey(key)
+                setPanelMode('idle')
+              }}
             />
           )}
           {panelMode === 'cambiar_actual' && (
@@ -208,6 +213,12 @@ export function ProteccionPage() {
               messageKey={mensajeKey}
               onMessage={setMensajeKey}
               onConfirm={(pinNuevo) => void cambiarPin(pinActualRef.current ?? '', pinNuevo)}
+              onAbort={(key) => {
+                // Previous screen of this flow: the current-PIN entry.
+                pinActualRef.current = undefined
+                setMensajeKey(key)
+                setPanelMode('cambiar_actual')
+              }}
             />
           )}
           {panelMode === 'baja' && (
@@ -245,12 +256,16 @@ function NuevoPinPanel({
   messageKey,
   onMessage,
   onConfirm,
+  onAbort,
 }: {
   messageKey: string | null
   onMessage: (key: string | null) => void
   onConfirm: (pin: string) => void
+  /** Returns to the previous screen after the retries are exhausted. */
+  onAbort: (messageKey: string) => void
 }) {
   const [primero, setPrimero] = useState<string | null>(null)
+  const [intentos, setIntentos] = useState(0)
   const step: PinPanelStep = primero == null ? 'activar_nuevo' : 'activar_confirmar'
   const instruction = pinInstructionKey(step, messageKey)
 
@@ -265,16 +280,28 @@ function NuevoPinPanel({
         hint={null}
         onSubmit={(pin) => {
           if (primero == null) {
+            // A fresh first entry restarts the confirmation retries.
             setPrimero(pin)
+            setIntentos(0)
             onMessage(null)
             return
           }
-          if (pinConfirmationOutcome(primero, pin) !== 'match') {
-            onMessage('app_lock_pin_mismatch')
+          if (pinConfirmationOutcome(primero, pin) === 'match') {
+            onMessage(null)
+            onConfirm(pin)
             return
           }
-          onMessage(null)
-          onConfirm(pin)
+          // Owner (tanda 6): say the confirmation did not match and ask for the
+          // SAME pin again; on the third failure leave the panel, otherwise the
+          // user is trapped here forever.
+          const next = nextConfirmationAttempt(intentos)
+          setIntentos(next.attempts)
+          if (next.exhausted) {
+            setPrimero(null)
+            onAbort(next.messageKey)
+            return
+          }
+          onMessage(next.messageKey)
         }}
       />
     </>
