@@ -104,6 +104,35 @@ export function retryBackoffSeconds(failedAttempts: number): number | null {
 }
 
 /**
+ * How a server-status refresh was requested.
+ *
+ * - `arm`: the caller WANTS the lock to come back if the server says the PIN is
+ *   enforcing (cold start, return from background).
+ * - `silent`: pure data refresh after a resolution already succeeded (PIN
+ *   verified, PIN defined, biometry unlocked). It must NEVER re-arm the lock.
+ *
+ * The distinction is the whole point: reading the status again after a correct
+ * PIN returns `estado='activa'` (the PIN *is* active — that is what protects
+ * the app), and mapping that back to `locked` trapped the user on the overlay
+ * forever (owner tanda 4, bug 1).
+ */
+export type StatusRefreshMode = 'arm' | 'silent'
+
+/**
+ * Decides whether a status refresh may present the lock overlay.
+ *
+ * Only an `arm` refresh on an enforcing state locks. A `silent` refresh never
+ * does, whatever the server says, so a successful resolution stays resolved.
+ */
+export function statusRefreshArmsLock(
+  mode: StatusRefreshMode,
+  estado: PinServerState | string | null | undefined,
+): boolean {
+  if (mode !== 'arm') return false
+  return estado === 'activa' || estado === 'en_cooldown'
+}
+
+/**
  * S3/S6/S7 — maps the server-side PIN state to what the lock UI should show.
  *
  * The server clears `bloqueado_hasta`/PIN at the end of the window; the client

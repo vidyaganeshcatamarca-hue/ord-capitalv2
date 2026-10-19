@@ -22,9 +22,11 @@ import { rpc } from '@/lib/supabase'
 import {
   backgroundReturnLocks,
   resolveLockState,
+  statusRefreshArmsLock,
   retryBackoffSeconds,
   type LockState,
   type PinServerState,
+  type StatusRefreshMode,
 } from '@/lib/appLock'
 import {
   biometriaHabilitadaEnEsteDispositivo,
@@ -78,7 +80,7 @@ interface AppLockState {
   waitingBackoffSeconds: number | null
   /** Biometry enabled on THIS device (per-device opt-in, S4). */
   biometriaEnDispositivo: boolean
-  refreshStatus: () => Promise<void>
+  refreshStatus: (options?: { mode?: StatusRefreshMode }) => Promise<void>
   verifyPin: (pin: string) => Promise<PinVerifyResult>
   /** Define/activate a new PIN; when the old one is active it must be passed. */
   definePin: (pin: string, pinActual?: string | null) => Promise<PinVerifyResult>
@@ -109,7 +111,7 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
   // Guard against visibility fires before the first status fetch resolves.
   const estadoRef = useRef<PinServerState | null>(null)
 
-  const refreshStatus = useCallback(async () => {
+  const refreshStatus = useCallback(async (options?: { mode?: StatusRefreshMode }) => {
     if (!session) {
       setServerEstado(null)
       setBloqueadoHasta(null)
@@ -124,19 +126,25 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
       setServerEstado(estado)
       setBloqueadoHasta(row?.bloqueado_hasta ?? null)
       // S5 — cold start with a session and an enforcing state: present the lock.
-      if (estado === 'activa' || estado === 'en_cooldown') setLocked(true)
-      if (estado === 'activa' || estado === 'en_cooldown') setAttempts(0)
+      // A silent refresh (issued after a correct PIN) must NOT re-arm it, or the
+      // overlay comes back right after unlocking and the user is trapped.
+      if (statusRefreshArmsLock(options?.mode ?? 'arm', estado)) {
+        setLocked(true)
+        setAttempts(0)
+      }
     } catch {
-      // Fail closed (lib contract): unknown server response → locked.
+      // Fail closed (lib contract): unknown server response → locked. A silent
+      // refresh keeps the resolution: the server already accepted that PIN, so a
+      // status hiccup must not throw the user back to the lock screen.
       estadoRef.current = 'activa'
       setServerEstado('activa')
-      setLocked(true)
+      if (statusRefreshArmsLock(options?.mode ?? 'arm', 'activa')) setLocked(true)
     }
   }, [session])
 
   useEffect(() => {
     setBiometriaEnDispositivo(biometriaHabilitadaEnEsteDispositivo())
-    void refreshStatus()
+    void refreshStatus({ mode: 'arm' })
     return () => {
       goneBackgroundAt.current = null
       estadoRef.current = null
@@ -177,17 +185,19 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
           setAttempts(0)
           setWaitingBackoffSeconds(null)
           setLocked(false)
-          await refreshStatus()
+          // Silent: the PIN was just accepted, refreshing the status must not
+          // re-arm the overlay (estado stays 'activa' — that is the point).
+          await refreshStatus({ mode: 'silent' })
           return { ok: true, reason: null }
         }
         const estado = row?.estado ?? 'activa'
         const total = Number(row?.intentos_fallidos) || 0
         if (estado === 'en_cooldown') {
-          await refreshStatus()
+          await refreshStatus({ mode: 'arm' })
           return { ok: false, reason: 'en_cooldown', attempts: total, lockout: true }
         }
         if (estado === 'restaurar') {
-          await refreshStatus()
+          await refreshStatus({ mode: 'arm' })
           return { ok: false, reason: 'reset_pending' }
         }
         setAttempts(total)
@@ -196,7 +206,7 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
         return { ok: false, reason: 'pin_incorrecto', attempts: total, backoffSeconds: backoff, lockout: backoff == null }
       } catch (err: any) {
         // RAISE paths: unauthorized / no pin / misuse format.
-        await refreshStatus()
+        await refreshStatus({ mode: 'arm' })
         return { ok: false, reason: 'error' }
       }
     },
@@ -212,7 +222,7 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
         setAttempts(0)
         setWaitingBackoffSeconds(null)
         setLocked(false)
-        await refreshStatus()
+        await refreshStatus({ mode: 'silent' })
         return { ok: true, reason: null }
       } catch (err: any) {
         const message = String(err?.message ?? '')
@@ -223,11 +233,11 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
           return { ok: false, reason: 'pin_debil' }
         }
         if (message.includes('en_cooldown')) {
-          await refreshStatus()
+          await refreshStatus({ mode: 'arm' })
           return { ok: false, reason: 'en_cooldown', lockout: true }
         }
         if (message.includes('pin_nuevo_requerido')) {
-          await refreshStatus()
+          await refreshStatus({ mode: 'arm' })
           return { ok: false, reason: 'reset_pending' }
         }
         return { ok: false, reason: 'error' }
@@ -243,7 +253,7 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
         await rpc(RPC_PIN_DESACTIVAR, { p_pin_actual: pinActual })
         setAttempts(0)
         setWaitingBackoffSeconds(null)
-        await refreshStatus()
+        await refreshStatus({ mode: 'silent' })
         return { ok: true, reason: null }
       } catch (err: any) {
         const message = String(err?.message ?? '')
@@ -251,11 +261,11 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
           return { ok: false, reason: 'pin_actual_incorrecto' }
         }
         if (message.includes('en_cooldown')) {
-          await refreshStatus()
+          await refreshStatus({ mode: 'arm' })
           return { ok: false, reason: 'en_cooldown', lockout: true }
         }
         if (message.includes('pin_nuevo_requerido')) {
-          await refreshStatus()
+          await refreshStatus({ mode: 'arm' })
           return { ok: false, reason: 'reset_pending' }
         }
         return { ok: false, reason: 'error' }
@@ -273,7 +283,7 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
     try {
       // S7 — biometric success proves the owner on this device: re-arm the PIN.
       await rpc(RPC_PIN_REACTIVAR)
-      await refreshStatus()
+      await refreshStatus({ mode: 'silent' })
       return { ok: true, reason: null }
     } catch {
       return { ok: false, reason: 'error' }
