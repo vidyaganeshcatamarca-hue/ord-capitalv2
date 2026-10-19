@@ -269,3 +269,17 @@ patrimonio/voz/inversiones; **el módulo tarjetas no se toca**. Rama de trabajo:
   producción** (deploys 74/75/77/78 con OK del dueño). Espejos peer al día (entradas 256-263).
   Pendientes inter-sesiones: swap del data-layer U3 del peer (su tarea), prueba end-to-end del
   dueño.
+
+- **L20** (TANDA 2 CERRADA + deploy 79, 2026-10-19): la tanda 2 del dueño (vía peer
+  orquestador) se cerró en MI dominio con 4 commits: (1) **BUG3 raíz** `5308128`: el
+  parse de jsonb — persistencia OK (user 198 = ["CHF"]), el front tenía extras=[] SIEMPRE
+  porque el parse asumía wrapper y PostgREST entrega array puro; parseJsonbStringArray
+  puro (8/8) + wiring; además fila moneda local read-only en el bloque + selects con
+  estilo design system. (2) **79** `8ee04ed`+`57958a2`: mapa de formato SIN USD fantasma,
+  matizado con las palabras del dueño: "USD es default de segunda moneda cuando no hay
+  otra elegida" → set vacío devuelve USD como 2ª (herencia decimales_segunda_moneda);
+  con otras elegidas el mapa refleja SOLO lo elegido. Test 4/4, DEPLOY REAL con OK del
+  dueño; smoke: mapa del user 198 = {GBP local, CHF elegida} sin USD. (3) **BUG4**
+  `966ad6c`: picker por país (CountrySearchModal del onboarding reutilizado; el país
+  manda su moneda; bordes S10/swap). Peer notificado para merge + espejo de
+  fn_obtener_formato_moneda cambiado por el 79.
