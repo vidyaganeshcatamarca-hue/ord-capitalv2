@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { t } from '@/locales/i18n'
 import { LegalDocModal } from '@/components/LegalDocModal/LegalDocModal'
+import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
 import './ConfiguracionPage.css'
 import './ConfigSectionPage.css'
 
@@ -68,3 +69,16 @@ export function ConfigAboutBody() {
     </>
   )
 }
+
+// L17 (owner, tanda 2): the acerca submenu is a screen again — its own back
+// button + the shared body; the hub links here instead of unfolding inline.
+export function AcercaPage() {
+  return (
+    <>
+      <ConfigBackButton />
+      <ConfigAboutBody />
+    </>
+  )
+}
+
+export default AcercaPage

@@ -72,6 +72,12 @@ const ProteccionPage = lazy(() => import('@/pages/Configuracion/ProteccionPage')
 const PresupuestoCicloPage = lazy(() => import('@/pages/Configuracion/PresupuestoCicloPage').then(module => ({ default: module.PresupuestoCicloPage })))
 const PreferenciasOperativasPage = lazy(() => import('@/pages/Configuracion/PreferenciasOperativasPage').then(module => ({ default: module.PreferenciasOperativasPage })))
 const ImportarExportarPage = lazy(() => import('@/pages/Configuracion/ImportarExportarPage').then(module => ({ default: module.ImportarExportarPage })))
+const RegionFormatoPage = lazy(() => import('@/pages/Configuracion/RegionFormatoPage').then(module => ({ default: module.RegionFormatoPage })))
+const AcercaPage = lazy(() => import('@/pages/Configuracion/AcercaPage').then(module => ({ default: module.AcercaPage })))
+const BorradoPage = lazy(() => import('@/pages/Configuracion/BorradoPage').then(module => ({ default: module.BorradoPage })))
+const AparienciaPage = lazy(() => import('@/pages/Configuracion/AparienciaPage').then(module => ({ default: module.AparienciaPage })))
+const PWAInstallPage = lazy(() => import('@/pages/Configuracion/PWAInstallPage').then(module => ({ default: module.PWAInstallPage })))
+const MantenimientoPage = lazy(() => import('@/pages/Configuracion/MantenimientoPage').then(module => ({ default: module.MantenimientoPage })))
 const AyudaPage = lazy(() => import('@/pages/Ayuda/AyudaPage').then(module => ({ default: module.AyudaPage })))
 const ReportarProblemaPage = lazy(() => import('@/pages/Reportes/ReportarProblemaPage').then(module => ({ default: module.ReportarProblemaPage })))
 const MisReportesPage = lazy(() => import('@/pages/Reportes/MisReportesPage').then(module => ({ default: module.MisReportesPage })))
@@ -185,6 +191,12 @@ function AppLayout() {
           <Route path="/configuracion/importar-exportar" element={<ImportarExportarPage />} />
           <Route path="/configuracion/presupuesto" element={<PresupuestoCicloPage />} />
           <Route path="/configuracion/notificaciones" element={<NotificacionesPage />} />
+          <Route path="/configuracion/region" element={<RegionFormatoPage />} />
+          <Route path="/configuracion/acerca" element={<AcercaPage />} />
+          <Route path="/configuracion/borrado" element={<BorradoPage />} />
+          <Route path="/configuracion/apariencia" element={<AparienciaPage />} />
+          <Route path="/configuracion/instalar" element={<PWAInstallPage />} />
+          <Route path="/configuracion/mantenimiento" element={<MantenimientoPage />} />
           <Route path="/configuracion/operativas" element={<PreferenciasOperativasPage />} />
           <Route path="/configuracion/categorias" element={<CategoriasConfigPage />} />
           <Route path="/configuracion/hogar" element={<HogarConfigPage />} />

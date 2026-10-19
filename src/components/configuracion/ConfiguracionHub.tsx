@@ -11,16 +11,11 @@ import type { SettingsMenuGroup, SettingsMenuItem } from '@/config/settingsMenu'
 import { ToggleSwitch } from './ToggleSwitch'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { MiCuentaCard } from './MiCuentaCard'
-import { AparienciaCard } from './AparienciaCard'
-import { NotificacionesCard } from './NotificacionesCard'
-import { PWACard } from './PWACard'
-import { MantenimientoAppCard } from './MantenimientoAppCard'
-import { ConfiguracionBorradoCard } from './ConfiguracionBorradoCard'
-import { ConfigRegionBody } from '@/pages/Configuracion/RegionFormatoPage'
-import { ConfigAboutBody } from '@/pages/Configuracion/AcercaPage'
 import './ConfiguracionHub.css'
 
 const BASE_CERO_HOME_KEY = 'base_cero_como_inicio'
+// L17 — persisted open-section id: back from a submenu screen returns expanded.
+const OPEN_GROUP_STORAGE_KEY = 'config-hub.open-group-id'
 
 /** Icon of every row the hub renders from a `target:` destination. */
 const ROW_ICONS: Record<string, ReactNode> = {
@@ -140,137 +135,22 @@ function ModeSwitchRow({ item }: { item: SettingsMenuItem }) {
   )
 }
 
-function PresupuestoCicloCard() {
-  const navigate = useNavigate()
-  const [isBaseCero, setIsBaseCero] = useState(false)
-  const [baseCeroComoInicio, setBaseCeroComoInicio] = useState(
-    () => localStorage.getItem(BASE_CERO_HOME_KEY) === 'true'
-  )
-
-  useEffect(() => {
-    let cancelled = false
-    rpc<Array<{ modo_presupuesto: string }>>('fn_obtener_preferencias_usuario')
-      .then((data) => {
-        if (cancelled) return
-        const row = Array.isArray(data) ? data[0] : data
-        if (row?.modo_presupuesto === 'base_cero') setIsBaseCero(true)
-      })
-      .catch(() => {})
-    return () => { cancelled = true }
-  }, [])
-
-  const toggleBaseCeroInicio = (val: boolean) => {
-    setBaseCeroComoInicio(val)
-    localStorage.setItem(BASE_CERO_HOME_KEY, String(val))
-    window.dispatchEvent(new Event('base-cero-home-changed'))
-  }
-
-  return (
-    <article className="config-hub-card presupuesto-ciclo-card" aria-labelledby="presupuesto-ciclo-title">
-      <button
-        type="button"
-        className="presupuesto-ciclo-header"
-        onClick={() => navigate('/presupuesto?openConfig=1&returnTo=configuracion')}
-        aria-label={t('config_presupuesto_config_btn')}
-      >
-        <span className="config-hub-card-icon" aria-hidden="true">💰</span>
-        <div className="config-hub-card-content">
-          <h3 id="presupuesto-ciclo-title">{t('config_section_budget')}</h3>
-          <p>{t('config_budget_desc')}</p>
-        </div>
-        <span className="config-hub-card-chevron" aria-hidden="true">›</span>
-      </button>
-
-      {isBaseCero && (
-        <div className="presupuesto-ciclo-toggle">
-          <div className="presupuesto-ciclo-toggle-label">
-            <span>{t('config_base_cero_home_toggle')}</span>
-            <p>{t('config_base_cero_home_toggle_desc')}</p>
-          </div>
-          <ToggleSwitch checked={baseCeroComoInicio} onChange={toggleBaseCeroInicio} />
-        </div>
-      )}
-    </article>
-  )
-}
-
 function ComponentSlot({ slot, userId }: { slot: string; userId: string | undefined }) {
   switch (slot) {
+    // L17 (owner, tanda 2): Perfil is the ONLY in-situ component left; every
+    // other submenu navigates to its own screen.
     case 'MiCuentaCard': return <MiCuentaCard />
-    case 'AparienciaCard': return <AparienciaCard userId={userId} />
-    case 'NotificacionesCard': return <NotificacionesCard />
-    case 'PWACard': return <PWACard />
-    case 'MantenimientoAppCard': return <MantenimientoAppCard />
-    case 'PresupuestoCicloCard': return <PresupuestoCicloCard />
-    // T3 (S15) — the deletion entry (both modes) owns its own 10-day + PIN gate.
-    case 'ConfiguracionBorradoCard': return <ConfiguracionBorradoCard />
     default: return null
   }
 }
 
 /**
- * U2 (S3) — Región y formato opens inline. The leaf is intercepted here by id
- * instead of changing the frozen settingsMenu tree, so its `target:` route data
- * stays intact while the hub mounts the page body inside the card.
+ * L17: Perfil stays in situ (the ONLY in-situ component); Borrado de datos y
+ * cuentas navigates to its screen, where the card owns the bug-12 collapsed
+ * sub-options, the 10-day + PIN gate and both confirmation flows.
  */
-function RegionInlineCard({ item }: { item: SettingsMenuItem }) {
-  return (
-    <SettingsCollapsible
-      id="config-inline-region"
-      icon={ROW_ICONS[item.id] ?? '🌍'}
-      titleKey={item.titleKey}
-      descKey={item.descKey}
-    >
-      <ConfigRegionBody />
-    </SettingsCollapsible>
-  )
-}
-
-/**
- * Bug 10 (owner, 2026-10-19) — Borrado de datos y cuentas: the entry renders as
- * a collapsed branch; expanding it reveals the two sub-options (delete data /
- * delete account) ConfiguracionBorradoCard renders. The card keeps owning its
- * 10-day + PIN gate and both confirmation flows.
- */
-function DeletionInlineCard({ item }: { item: SettingsMenuItem }) {
-  return (
-    <SettingsCollapsible
-      id="config-inline-deletion"
-      icon={ROW_ICONS[item.id] ?? '🗑️'}
-      titleKey={item.titleKey}
-      descKey={item.descKey}
-    >
-      <ConfiguracionBorradoCard />
-    </SettingsCollapsible>
-  )
-}
-
-/**
- * U2 (S4) — Acerca de opens inline too. Same interception by subgroup id: its
- * body (Versión, Legal with LegalDocModal, Plan placeholder) renders inside the
- * card instead of navigating to the retired page.
- */
-function AboutInlineCard({ group }: { group: SettingsMenuGroup }) {
-  return (
-    <SettingsCollapsible
-      id="config-inline-about"
-      icon={ROW_ICONS[group.id] ?? '📱'}
-      titleKey={group.titleKey}
-      descKey={group.descKey}
-    >
-      <ConfigAboutBody />
-    </SettingsCollapsible>
-  )
-}
-
-/** Renders one entry of the resolved tree. */
 function SettingsEntry({ item, userId }: { item: SettingsMenuItem; userId: string | undefined }) {
   if (item.soon || item.disabled) return <ConfigSoonCard item={item} />
-  // U2 (S3): Región y formato never navigates; it expands inline.
-  if (item.id === 'region_format') return <RegionInlineCard item={item} />
-  // Bug 10 (owner): Borrado de datos y cuentas is a collapsible branch; the two
-  // deletion sub-options reveal inside it instead of rendering always-open.
-  if (item.id === 'data_deletion') return <DeletionInlineCard item={item} />
   if (!item.target) return null
   if (item.target.startsWith('mode:')) return <ModeSwitchRow item={item} />
   if (item.target.startsWith('component:')) {
@@ -295,8 +175,6 @@ function SettingsEntry({ item, userId }: { item: SettingsMenuItem; userId: strin
  * (T2/T4); the leaves are already declared by settingsMenu.
  */
 function SettingsSubgroup({ group }: { group: SettingsMenuGroup }) {
-  // U2 (S4): Acerca de never navigates; it expands inline.
-  if (group.id === 'about') return <AboutInlineCard group={group} />
   if (!group.target?.startsWith('target:')) return null
   return (
     <ConfigLinkCard
@@ -400,7 +278,16 @@ export function ConfiguracionHub() {
   const { modo, proDisponible } = useModoApp()
   const tree = resolveSettingsMenu(modo)
   // Bug 9 — one shared open-section state: opening a section collapses the rest.
-  const [openGroupId, setOpenGroupId] = useState<string | null>(null)
+  // L17 — the state persists in sessionStorage: returning from a submenu screen
+  // remounts the hub and the parent section comes back expanded.
+  const [openGroupId, setOpenGroupIdState] = useState<string | null>(
+    () => sessionStorage.getItem(OPEN_GROUP_STORAGE_KEY),
+  )
+  const setOpenGroupId = (id: string | null) => {
+    setOpenGroupIdState(id)
+    if (id === null) sessionStorage.removeItem(OPEN_GROUP_STORAGE_KEY)
+    else sessionStorage.setItem(OPEN_GROUP_STORAGE_KEY, id)
+  }
 
   // S8/S9 — mode switch and placeholder entries live at the primary menu level.
   const rootEntries = tree.rootEntries.filter(

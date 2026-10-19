@@ -111,11 +111,12 @@ const APPLICATION_GROUP: SettingsMenuGroup = {
   id: 'application',
   titleKey: 'settings_group_application',
   items: [
-    { id: 'install_app', titleKey: 'settings_entry_install_app', target: 'component:PWACard' },
+    { id: 'install_app', titleKey: 'settings_entry_install_app', target: 'target:/configuracion/instalar' },
     {
       id: 'maintenance',
       titleKey: 'settings_entry_maintenance',
-      target: 'component:MantenimientoAppCard',
+      // L17: its own screen.
+      target: 'target:/configuracion/mantenimiento',
     },
   ],
   groups: [ABOUT_GROUP],
@@ -154,21 +155,26 @@ const PROFILE_ENTRY: SettingsMenuItem = {
 const DATA_DELETION_ENTRY: SettingsMenuItem = {
   id: 'data_deletion',
   titleKey: 'settings_entry_data_deletion',
-  target: 'component:ConfiguracionBorradoCard',
+  descKey: 'settings_delete_help',
+  // L17 (owner, tanda 2): the deletion detail is its own screen; the two
+  // sub-options inside it are collapsed items (bug 12).
+  target: 'target:/configuracion/borrado',
 }
 
 const REGION_FORMAT_ENTRY: SettingsMenuItem = {
   id: 'region_format',
   titleKey: 'settings_entry_region_format',
   descKey: 'config_region_desc',
-  target: 'target:/configuracion/region',
   // S18 (T7): the reserved Monedas block lives inside Región y formato.
+  // L17 (owner, tanda 2): the entry opens its screen again; back keeps memory.
+  target: 'target:/configuracion/region',
 }
 
 const APPEARANCE_ENTRY: SettingsMenuItem = {
   id: 'appearance',
   titleKey: 'settings_entry_appearance',
-  target: 'component:AparienciaCard',
+  // L17: its own screen.
+  target: 'target:/configuracion/apariencia',
 }
 
 // L15 — Carga y registro (ex Preferencias operativas, renombre funcional)
@@ -258,7 +264,8 @@ const ADVANCED_TREE: SettingsMenuTree = {
         {
           id: 'notifications',
           titleKey: 'settings_entry_notifications',
-          target: 'component:NotificacionesCard',
+          // L17: its own screen.
+          target: 'target:/configuracion/notificaciones',
         },
       ],
       groups: [LOAD_REGISTRY_GROUP],
@@ -277,7 +284,8 @@ const ADVANCED_TREE: SettingsMenuTree = {
           id: 'budget_cycle',
           titleKey: 'settings_entry_budget_cycle',
           descKey: 'config_budget_desc',
-          target: 'component:PresupuestoCicloCard',
+          // L17: its own screen.
+          target: 'target:/configuracion/presupuesto',
         },
         {
           id: 'import_export',

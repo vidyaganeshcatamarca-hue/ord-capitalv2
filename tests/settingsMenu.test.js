@@ -18,9 +18,17 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const MODULE_PATH = path.join(__dirname, '..', 'src', 'config', 'settingsMenu.ts')
 const ES_PATH = path.join(__dirname, '..', 'src', 'locales', 'es.ts')
 const HUB_PATH = path.join(__dirname, '..', 'src', 'components', 'configuracion', 'ConfiguracionHub.tsx')
+const TREE_PATH = path.join(
+  __dirname,
+  '..',
+  'src',
+  'config',
+  'settingsMenu.ts',
+)
+const APP_PATH = path.join(__dirname, '..', 'src', 'App.tsx')
 const REGION_PAGE_PATH = path.join(__dirname, '..', 'src', 'pages', 'Configuracion', 'RegionFormatoPage.tsx')
 const ABOUT_PAGE_PATH = path.join(__dirname, '..', 'src', 'pages', 'Configuracion', 'AcercaPage.tsx')
-const APP_PATH = path.join(__dirname, '..', 'src', 'App.tsx')
+const BORRADO_PAGE_PATH = path.join(__dirname, '..', 'src', 'pages', 'Configuracion', 'BorradoPage.tsx')
 
 // S2 — Simple tree group order.
 const SIMPLE_GROUP_IDS = ['account_security', 'preferences', 'help_support', 'application']
@@ -356,19 +364,21 @@ test('both modes expose the same live deletion entry in Cuenta y seguridad (S15)
   for (const tree of [settingsMenu.simple, settingsMenu.full]) {
     const entry = groupById(tree, 'account_security').items.find((item) => item.id === 'data_deletion')
     assert.ok(entry, `data_deletion is missing from the ${tree.modo} tree`)
-    assert.equal(entry.target, DELETION_SLOT)
+    // L17: the deletion entry opens its own screen now.
+    assert.equal(entry.target, 'target:/configuracion/borrado')
     assert.notEqual(entry.soon, true, 'the deletion entry is live, not a Próximamente placeholder')
     assert.notEqual(entry.disabled, true, 'the entry is enabled; the gate lives inside the card')
     assert.equal(entry.titleKey, 'settings_entry_data_deletion')
   }
 })
 
-test('the hub routes the deletion slot to ConfiguracionBorradoCard (T3)', () => {
-  const hubSource = fs.readFileSync(HUB_PATH, 'utf-8')
-  assert.ok(
-    hubSource.includes("case 'ConfiguracionBorradoCard'"),
-    'the hub must resolve the ConfiguracionBorradoCard component slot',
+test('the deletion screen mounts ConfiguracionBorradoCard (T3 + L17)', () => {
+  const page = fs.readFileSync(
+    path.join(__dirname, '..', 'src', 'pages', 'Configuracion', 'BorradoPage.tsx'),
+    'utf-8',
   )
+  assert.ok(page.includes('<ConfiguracionBorradoCard />'), 'BorradoPage must mount the deletion card')
+  assert.ok(page.includes('<ConfigBackButton'), 'BorradoPage must have the back button')
 })
 
 // ── U1 contract (menu-ajustes-ui-refinements, S1) ───────────────────────────
@@ -493,30 +503,7 @@ test('U1 scope guard: leaf rows are never wrapped in a second accordion (U1/S1)'
 // App.tsx, the page bodies survive as exported components (ConfigRegionBody /
 // ConfigAboutBody) and the Legal rows open the shared LegalDocModal.
 
-// ── L17 contract (owner, tanda 2, 2026-10-19) ──────────────────────────────
-// Every settings submenu (except Perfil) opens a NEW SCREEN; going back returns
-// to the hub with the parent section still expanded (expanded-state memory).
-
-test('the hub routes Región y formato to its screen (L17)', () => {
-  const hub = fs.readFileSync(HUB_PATH, 'utf-8')
-  assert.ok(
-    !/function\s+RegionInlineCard\s*\(/.test(hub) && !/DeletionInlineCard/.test(hub),
-    'the inline wrappers (region/deletion) are retired: submenus are screens now',
-  )
-  const tree = fs.readFileSync(TREE_PATH, 'utf-8')
-  for (const [id, route] of [
-    ['region_format', '/configuracion/region'],
-    ['data_deletion', '/configuracion/borrado'],
-  ]) {
-    assert.match(
-      new RegExp(String.raw`id: '${id}',[\s\S]{0,400}?target: 'target:${route}'`),
-      tree,
-      `${id} must open its own screen ${route}`,
-    )
-  }
-})
-
-test('RegionFormatoPage exports the inline body (no CurrenciesBlock placeholder) (U2/S3)', () => {
+test('RegionFormatoPage ships the screen body with no CurrenciesBlock placeholder (U2/S3 + L17)', () => {
   const page = fs.readFileSync(REGION_PAGE_PATH, 'utf-8')
   assert.match(page, /export\s+function\s+ConfigRegionBody\s*\(/, 'ConfigRegionBody must be exported')
   assert.ok(
@@ -524,48 +511,6 @@ test('RegionFormatoPage exports the inline body (no CurrenciesBlock placeholder)
     'the retired placeholder, its coordination pointer and its title key must NOT survive the extraction (bug-1)',
   )
   assert.match(page, /<BloqueMonedas/, 'the live editable BloqueMonedas (P3) must stay mounted')
-  assert.match(
-    page.replace(/[
-]/g, ' '),
-    /function RegionFormatoPage\(\)\s*\{\s*return\s*\(\s*<ConfigBackButton/,
-    'the standalone page is back (L17): it renders the back button + the body',
-  )
-})
-
-test('the other submenu targets are screens too (L17)', () => {
-  const tree = fs.readFileSync(TREE_PATH, 'utf-8')
-  for (const [id, route] of [
-    ['appearance', '/configuracion/apariencia'],
-    ['notifications', '/configuracion/notificaciones'],
-    ['install_app', '/configuracion/instalar'],
-    ['maintenance', '/configuracion/mantenimiento'],
-  ]) {
-    assert.match(
-      new RegExp(String.raw`id: '${id}',[\s\S]{0,400}?target: 'target:${route}'`),
-      tree,
-      `${id} must open its own screen ${route}`,
-    )
-  }
-  const app = fs.readFileSync(APP_PATH, 'utf-8')
-  for (const route of [
-    '/configuracion/region',
-    '/configuracion/borrado',
-    '/configuracion/apariencia',
-    '/configuracion/instalar',
-    '/configuracion/mantenimiento',
-    '/configuracion/acerca',
-  ]) {
-    assert.ok(app.includes(`"${route}"`) || app.includes(`'${route}'`), `App.tsx must mount ${route}`)
-  }
-})
-
-test('the hub remembers the expanded section across navigation (L17 memory)', () => {
-  const hub = fs.readFileSync(HUB_PATH, 'utf-8')
-  assert.match(
-    hub,
-    /config-hub\.open-group-id/,
-    'the hub must persist the open section id (sessionStorage) so back returns expanded',
-  )
 })
 /** S9 + L15 — the switch to advanced requires a confirmation modal before the
  *  mode change: the hub must open it on click (goAdvanced), the confirm action
@@ -591,26 +536,11 @@ test('Pasar a Avanzado opens a confirmation modal before activating (S9/L15)', (
     'back to simple stays one-tap (no confirmation)',
   )
 })
-/** Bug-10 (owner, 2026-10-19): Borrado de datos y cuentas becomes its own
- *  collapsible branch inside Cuenta y seguridad; expanding it reveals the two
- *  sub-options (delete data / delete account) that ConfiguracionBorradoCard renders. */
-test('Borrado opens as a collapsed branch revealing the two deletion sub-options (bug 10)', () => {
-  const hub = fs.readFileSync(HUB_PATH, 'utf-8')
-  assert.match(hub, /function\s+DeletionInlineCard\s*\(/, 'the hub must define the deletion inline wrapper')
-  assert.match(
-    hub,
-    /item\.id === 'data_deletion'\)\s+return <DeletionInlineCard/,
-    'the data_deletion entry must be intercepted and rendered as the collapsible branch',
-  )
-  const wrapper = hub.slice(hub.indexOf('function DeletionInlineCard'), hub.indexOf('function SettingsSubgroup'))
-  assert.ok(
-    wrapper.includes('<SettingsCollapsible') && wrapper.includes('<ConfiguracionBorradoCard />'),
-    'the branch must wrap ConfiguracionBorradoCard in a collapsible',
-  )
-  assert.ok(
-    wrapper.includes('titleKey={item.titleKey}'),
-    'the branch must render the entry title through the i18n key of the tree',
-  )
+// ── L17 (owner, tanda 2): Borrado de datos y cuentas opens its own screen; the
+// bug-12 collapsed sub-options live inside ConfiguracionBorradoCard on it.
+test('the deletion branch opens the BorradoPage screen with the two collapsed sub-options', () => {
+  const page = fs.readFileSync(BORRADO_PAGE_PATH, 'utf-8')
+  assert.ok(page.includes('<ConfiguracionBorradoCard />'), 'BorradoPage must mount the deletion card')
   const es = fs.readFileSync(ES_PATH, 'utf-8')
   assert.match(es, /settings_entry_data_deletion:\s*"Borrado de datos y cuentas"/, 'the branch title must read Borrado de datos y cuentas')
 })
@@ -673,17 +603,6 @@ test('deletion sub-options are collapsed items revealing destructive UI on tap (
   const accountCard = card.indexOf('<DeleteAccountCard', accountToggle)
   assert.ok(accountToggle !== -1 && accountCard > accountToggle, 'the account destructive UI must live inside its expanded body')
 })
-test('the legal rows still open LegalDocModal and the legal modal copy survives (U2/S4 + L17)', () => {
-  const about = fs.readFileSync(ABOUT_PAGE_PATH, 'utf-8')
-  assert.match(about, /ConfigAboutBody/, 'the about body keeps its content')
-  assert.match(about, /LegalDocModal/, 'the legal rows must still open LegalDocModal')
-  assert.match(
-    about.replace(/[
-]/g, ' '),
-    /export function AcercaPage\(\)\s*\{\s*return\s*\(\s*<ConfigBackButton/,
-    'AcercaPage is a screen again (L17) with its own back button',
-  )
-})
 test('AcercaPage exports ConfigAboutBody and wires LegalDocModal on both legal rows (U2/S4)', () => {
   const about = fs.readFileSync(ABOUT_PAGE_PATH, 'utf-8')
   assert.match(about, /export\s+function\s+ConfigAboutBody\s*\(/, 'ConfigAboutBody must be exported')
@@ -695,7 +614,11 @@ test('AcercaPage exports ConfigAboutBody and wires LegalDocModal on both legal r
   assert.ok(about.includes("setLegalDoc('privacidad')"), 'Política must open the privacidad document')
   assert.ok(about.includes("t('config_terms')"), 'the Términos label key stays')
   assert.ok(about.includes("t('config_privacy_policy')"), 'the Política label key stays')
-  assert.ok(!about.includes('ConfigBackButton'), 'the inline body must not keep the back button')
+  // L17: AcercaPage is a screen again — the back button lives in the page wrapper.
+  assert.ok(
+    flatSource(about).includes('export function AcercaPage() { return (') &&
+    flatSource(about).slice(flatSource(about).indexOf('function AcercaPage')).includes('<ConfigBackButton'),
+  )
 })
 
 test('the legal rows no longer render the Próximamente pill (U2/S4)', () => {
@@ -705,10 +628,94 @@ test('the legal rows no longer render the Próximamente pill (U2/S4)', () => {
   assert.equal(pills.length, 1, 'the Legal rows must not keep a Próximamente pill')
 })
 
-test('App.tsx drops the retired region and about routes (U2/S3/S4)', () => {
+// ── L17 contract (owner, tanda 2, 2026-10-19) ──────────────────────────────
+// Every settings submenu (except Perfil) opens a NEW SCREEN; going back returns
+// to the hub with the parent section still expanded (expanded-state memory).
+// The U2 inline wrappers (region / about / deletion) are retired by this rule.
+
+function flatSource(value) {
+  return value.replace(new RegExp(String.fromCharCode(92)+"s+", "g"), " ")
+}
+
+test('submenu targets are screens (L17)', () => {
+  const tree = fs.readFileSync(TREE_PATH, 'utf-8')
+  for (const [id, route] of [
+    ['region_format', '/configuracion/region'],
+    ['data_deletion', '/configuracion/borrado'],
+    ['appearance', '/configuracion/apariencia'],
+    ['notifications', '/configuracion/notificaciones'],
+    ['install_app', '/configuracion/instalar'],
+    ['maintenance', '/configuracion/mantenimiento'],
+  ]) {
+    const needle = 'id: ' + JSON.stringify(id + '')
+    const start = tree.indexOf("id: '" + id + "'")
+    assert.ok(start !== -1, `entry ${id} must exist in the tree`)
+    const chunk = tree.slice(start, start + 400)
+    assert.ok(
+      chunk.includes(`target: 'target:${route}'`),
+      `${id} must open its own screen ${route}`,
+    )
+  }
   const app = fs.readFileSync(APP_PATH, 'utf-8')
-  assert.ok(!app.includes('/configuracion/region'), 'the /configuracion/region route must be gone')
-  assert.ok(!app.includes('/configuracion/acerca'), 'the /configuracion/acerca route must be gone')
-  assert.ok(!app.includes('RegionFormatoPage'), 'the region lazy import must be gone')
-  assert.ok(!app.includes('AcercaPage'), 'the about lazy import must be gone')
+  for (const route of [
+    '/configuracion/region',
+    '/configuracion/borrado',
+    '/configuracion/apariencia',
+    '/configuracion/instalar',
+    '/configuracion/mantenimiento',
+    '/configuracion/acerca',
+    '/configuracion/notificaciones',
+  ]) {
+    assert.ok(app.includes(`path="${route}"`), `App.tsx must mount ${route}`)
+  }
+})
+
+test('the hub has no inline wrappers left and keeps Perfil in situ (L17)', () => {
+  const hub = fs.readFileSync(HUB_PATH, 'utf-8')
+  for (const retired of ['RegionInlineCard', 'DeletionInlineCard', 'AboutInlineCard']) {
+    assert.ok(!hub.includes(retired), `${retired} wrapper must be retired (L17)`)
+  }
+  assert.ok(hub.includes("case 'MiCuentaCard'"), 'Perfil stays the only in-situ card')
+})
+
+test('the hub remembers the expanded section across navigation (L17 memory)', () => {
+  const hub = fs.readFileSync(HUB_PATH, 'utf-8')
+  assert.match(
+    hub,
+    /config-hub\.open-group-id/,
+    'the hub must persist the open section id (sessionStorage) so back returns expanded',
+  )
+})
+
+test('the new screens carry the back button (L17)', () => {
+  const app = fs.readFileSync(APP_PATH, 'utf-8')
+  for (const page of [
+    ['BorradoPage', 'src/pages/Configuracion/BorradoPage.tsx'],
+    ['AparienciaPage', 'src/pages/Configuracion/AparienciaPage.tsx'],
+    ['PWAInstallPage', 'src/pages/Configuracion/PWAInstallPage.tsx'],
+    ['MantenimientoPage', 'src/pages/Configuracion/MantenimientoPage.tsx'],
+  ]) {
+    const source = flatSource(fs.readFileSync(path.join(__dirname, '..', page[1]), 'utf-8'))
+    assert.match(source, /<ConfigBackButton/, `${page[0]} must render the back button`)
+  }
+  const region = flatSource(fs.readFileSync(REGION_PAGE_PATH, 'utf-8'))
+  assert.match(
+    region,
+    /function RegionFormatoPage\(\) \{ return \(/,
+    'the region page is a screen again (L17) with its own body',
+  )
+  assert.ok(
+    region.slice(region.indexOf('function RegionFormatoPage')).includes('<ConfigBackButton'),
+    'the region page must render the back button',
+  )
+  const about = flatSource(fs.readFileSync(ABOUT_PAGE_PATH, 'utf-8'))
+  assert.match(
+    about,
+    /export function AcercaPage\(\) \{ return \(/,
+    'AcercaPage is a screen again (L17) with its own body',
+  )
+  assert.ok(
+    about.slice(about.indexOf('function AcercaPage')).includes('<ConfigBackButton'),
+    'the about page must render the back button',
+  )
 })

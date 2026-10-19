@@ -8,6 +8,7 @@ import { useOptionalAuth } from '@/contexts/AuthContext'
 import { clearPrefsSnapshot, writePrefsSnapshot, writeRegionSnapshot } from '@/lib/regionSnapshot'
 import { currencyName, flagEmoji, regionName } from '@/lib/countryCatalog'
 import { BloqueMonedas } from '@/components/configuracion/BloqueMonedas'
+import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
 import { invalidateMonedasExtraCache } from '@/hooks/useMonedasExtra'
 import { invalidateRegionCache } from '@/hooks/useNumberFormat'
 import './ConfiguracionPage.css'
@@ -310,8 +311,15 @@ function languageLabel(lang: string): string {
   }
 }
 
+// L17 (owner, tanda 2): the región submenu is a screen again — its own back
+// button + the shared body. The hub links here instead of unfolding inline.
 export function RegionFormatoPage() {
-  return <ConfigRegionBody />
+  return (
+    <>
+      <ConfigBackButton />
+      <ConfigRegionBody />
+    </>
+  )
 }
 
 /**

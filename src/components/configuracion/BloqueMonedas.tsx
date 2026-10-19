@@ -121,8 +121,8 @@ export function BloqueMonedas({ localCurrency, onSaved }: BloqueMonedasProps) {
 
   return (
     <>
-      {/* Primera moneda: READ-ONLY arriba del todo (la pide el dueño — la
-          derivada del país; el resto son las dos extras configurables). */}
+      {/* Primera moneda: READ-ONLY arriba del todo (the owner asked for this
+          row; the rest are the two selectable extra slots). */}
       <div className="config-section-row">
         <span>{t('config_currency_main')}</span>
         <span>
