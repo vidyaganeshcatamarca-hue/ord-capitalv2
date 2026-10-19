@@ -264,6 +264,14 @@
   background: var(--border);
 }
 
+/* Bug 2 (owner rule): thousands and decimal separator share one row, title +
+   edit side by side; the swap between them is handled in the page handlers. */
+.config-section-fmt-separators {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
 /* The divider replaces the group title row's own top border, so the boundary
    between two currencies reads as one line instead of two. */
 .config-section-fmt-group > .config-section-row:first-of-type {

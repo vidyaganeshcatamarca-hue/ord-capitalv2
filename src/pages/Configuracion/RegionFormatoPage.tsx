@@ -71,6 +71,17 @@ type CurrencyFormatMap = Record<string, CurrencyFormatEntry>
 // the owner uses today.
 const DECIMALS_VALUES = [0, 1, 2]
 const THOUSANDS_SEPARATOR_VALUES = ['.', ',', ' ']
+const DECIMAL_SEPARATOR_VALUES = ['.', ',', ' ']
+
+/** Bug 2 (owner rule, 2026-10-19): the two separators never share a symbol.
+ *  When the user changes one separator to a real symbol, the other one flips
+ *  immediately to the counterpart ('.' <-> ','). Choosing ' ' is the owner's
+ *  explicit exception: it does NOT trigger an automatic flip. */
+export function counterpartSeparator(next: string): string | null {
+  if (next === '.') return ','
+  if (next === ',') return '.'
+  return null
+}
 
 /**
  * 0-2 is the range the legacy block offered, but a catalog currency can come
@@ -221,19 +232,52 @@ function NumberFormatByCurrency({
                     ))}
                   </select>
                 </div>
-                <div className="config-section-field">
-                  <label htmlFor={`fmt-sep-${item.key}`}>{t('config_thousands_separator')}</label>
-                  <select
-                    id={`fmt-sep-${item.key}`}
-                    value={entry.separador_miles}
-                    onChange={(e) => onUpdate(code, { separador_miles: e.target.value })}
-                  >
-                    {THOUSANDS_SEPARATOR_VALUES.map((value) => (
-                      <option key={value} value={value}>
-                        {value === ' ' ? t('config_separator_space') : value}
-                      </option>
-                    ))}
-                  </select>
+                {/* Bug 2 (owner rule): thousands and decimal side by side in one
+                    row, and changing either one swaps the other immediately
+                    ('.' <-> ','); ' ' keeps the other unchanged. */}
+                <div className="config-section-fmt-separators">
+                  <div className="config-section-field">
+                    <label htmlFor={`fmt-sep-${item.key}`}>{t('config_thousands_separator')}</label>
+                    <select
+                      id={`fmt-sep-${item.key}`}
+                      value={entry.separador_miles}
+                      onChange={(e) => {
+                        const miles = e.target.value
+                        const decimal = counterpartSeparator(miles)
+                        onUpdate(code, {
+                          separador_miles: miles,
+                          ...(decimal !== null ? { separador_decimal: decimal } : {}),
+                        })
+                      }}
+                    >
+                      {THOUSANDS_SEPARATOR_VALUES.map((value) => (
+                        <option key={value} value={value}>
+                          {value === ' ' ? t('config_separator_space') : value}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="config-section-field">
+                    <label htmlFor={`fmt-decc-${item.key}`}>{t('config_decimal_separator')}</label>
+                    <select
+                      id={`fmt-decc-${item.key}`}
+                      value={entry.separador_decimal}
+                      onChange={(e) => {
+                        const decimal = e.target.value
+                        const miles = counterpartSeparator(decimal)
+                        onUpdate(code, {
+                          separador_decimal: decimal,
+                          ...(miles !== null ? { separador_miles: miles } : {}),
+                        })
+                      }}
+                    >
+                      {DECIMAL_SEPARATOR_VALUES.map((value) => (
+                        <option key={value} value={value}>
+                          {value === ' ' ? t('config_separator_space') : value}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
                 <div className="config-section-row">
                   <span>{t('config_preview')}</span>
