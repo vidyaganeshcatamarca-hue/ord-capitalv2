@@ -436,86 +436,90 @@ export function BilleterasPage() {
           <div className="bottom-sheet-overlay" onClick={() => setShowCreateModal(false)} />
           <div className="bottom-sheet wallet-modal-sheet">
             <div className="bottom-sheet-handle" />
-            <form onSubmit={handleCreate} style={{ padding: 'var(--space-2) var(--space-2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+            {/* Bug 8: scrollable body + fixed actions footer (the sheet keeps
+                overflow:hidden; .wallet-modal-body scrolls internally). */}
+            <form onSubmit={handleCreate} className="modal-content-wrap">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 'var(--space-2) var(--space-2) var(--space-3)' }}>
                 <h3 className="font-display" style={{ fontSize: 'calc(18px * var(--font-scale))', margin: 0 }}>{t('wallets.modal_nueva_title')}</h3>
                 <button type="button" className="text-xs text-muted" onClick={() => setShowCreateModal(false)}>{t('wallets.btn_cerrar_x')}</button>
               </div>
 
-              <div className="form-group mb-3">
-                <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_nombre')}</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder={t('wallets.placeholder_nombre')}
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
-                  required
-                  enterKeyHint="next"
-                />
-              </div>
+              <div className="wallet-modal-body">
+                <div className="form-group mb-3">
+                  <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_nombre')}</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    placeholder={t('wallets.placeholder_nombre')}
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+                    required
+                    enterKeyHint="next"
+                  />
+                </div>
 
-              <div className="form-group mb-3">
-                <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_saldo_apertura')}</label>
-                <input
-                  type="number"
-                  step="0.01"
-                  className="form-control font-mono"
-                  value={newSaldoApertura}
-                  onChange={(e) => setNewSaldoApertura(e.target.value)}
-                  onFocus={(e) => { if (e.target.value === '0') setNewSaldoApertura('') }}
-                  onBlur={(e) => { if (e.target.value.trim() === '') setNewSaldoApertura('0') }}
-                  required
-                />
-              </div>
+                <div className="form-group mb-3">
+                  <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_saldo_apertura')}</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="form-control font-mono"
+                    value={newSaldoApertura}
+                    onChange={(e) => setNewSaldoApertura(e.target.value)}
+                    onFocus={(e) => { if (e.target.value === '0') setNewSaldoApertura('') }}
+                    onBlur={(e) => { if (e.target.value.trim() === '') setNewSaldoApertura('0') }}
+                    required
+                  />
+                </div>
 
-              <div className="form-group mb-3">
-                <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_moneda')}</label>
-                <select
-                  className="form-control"
-                  value={newMoneda}
-                  onChange={(e) => setNewMoneda(e.target.value)}
-                  disabled={regionLoading || regionError || currencyOptions.length === 0}
-                  required
-                >
-                  {currencyOptions.map((option) => (
-                    <option key={option.code} value={option.code}>{option.label}</option>
-                  ))}
-                </select>
-                {regionError && (
-                  <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span className="text-xs" style={{ color: 'var(--coral)' }}>{t('error_generic')}</span>
-                    <button
-                      type="button"
-                      className="text-xs font-semibold"
-                      style={{ color: 'var(--coral)' }}
-                      onClick={reloadRegion}
-                    >
-                      {t('btn_retry')}
-                    </button>
+                <div className="form-group mb-3">
+                  <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_moneda')}</label>
+                  <select
+                    className="form-control"
+                    value={newMoneda}
+                    onChange={(e) => setNewMoneda(e.target.value)}
+                    disabled={regionLoading || regionError || currencyOptions.length === 0}
+                    required
+                  >
+                    {currencyOptions.map((option) => (
+                      <option key={option.code} value={option.code}>{option.label}</option>
+                    ))}
+                  </select>
+                  {regionError && (
+                    <div style={{ marginTop: 4, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span className="text-xs" style={{ color: 'var(--coral)' }}>{t('error_generic')}</span>
+                      <button
+                        type="button"
+                        className="text-xs font-semibold"
+                        style={{ color: 'var(--coral)' }}
+                        onClick={reloadRegion}
+                      >
+                        {t('btn_retry')}
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div className="form-group mb-4">
+                  <label className="text-xs text-muted mb-2 block font-semibold">{t('wallets.label_icono')}</label>
+                  <div className="emojis-picker-grid">
+                    {WALLET_ICONS.map((icon) => (
+                      <button
+                        key={icon}
+                        type="button"
+                        className={`emoji-select-btn ${newIcono === icon ? 'active' : ''}`}
+                        onClick={() => setNewIcono(icon)}
+                        aria-label={icon}
+                      >
+                        <CategoryIcon name={icon} size={28} />
+                      </button>
+                    ))}
                   </div>
-                )}
-              </div>
-
-              <div className="form-group mb-4">
-                <label className="text-xs text-muted mb-2 block font-semibold">{t('wallets.label_icono')}</label>
-                <div className="emojis-picker-grid">
-                  {WALLET_ICONS.map((icon) => (
-                    <button
-                      key={icon}
-                      type="button"
-                      className={`emoji-select-btn ${newIcono === icon ? 'active' : ''}`}
-                      onClick={() => setNewIcono(icon)}
-                      aria-label={icon}
-                    >
-                      <CategoryIcon name={icon} size={28} />
-                    </button>
-                  ))}
                 </div>
               </div>
 
-              <div className="flex gap-3">
+              <div className="wallet-modal-actions">
                 <button type="button" className="btn btn-secondary flex-1" onClick={() => setShowCreateModal(false)}>
                   {t('wallets.btn_cancelar')}
                 </button>
@@ -534,44 +538,46 @@ export function BilleterasPage() {
           <div className="bottom-sheet-overlay" onClick={() => setShowEditModal(false)} />
           <div className="bottom-sheet wallet-modal-sheet">
             <div className="bottom-sheet-handle" />
-            <form onSubmit={handleEdit} style={{ padding: 'var(--space-2) var(--space-2)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+            <form onSubmit={handleEdit} className="modal-content-wrap">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: 'var(--space-2) var(--space-2) var(--space-3)' }}>
                 <h3 className="font-display" style={{ fontSize: 'calc(18px * var(--font-scale))', margin: 0 }}>{t('wallets.modal_editar_title', { nombre: selectedBilletera.nombre })}</h3>
                 <button type="button" className="text-xs text-muted" onClick={() => setShowEditModal(false)}>{t('wallets.btn_cerrar_x')}</button>
               </div>
 
-              <div className="form-group mb-3">
-                <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_nombre')}</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
-                  required
-                  enterKeyHint="done"
-                />
-              </div>
+              <div className="wallet-modal-body">
+                <div className="form-group mb-3">
+                  <label className="text-xs text-muted mb-1 block font-semibold">{t('wallets.label_nombre')}</label>
+                  <input
+                    type="text"
+                    className="form-control"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') e.currentTarget.blur() }}
+                    required
+                    enterKeyHint="done"
+                  />
+                </div>
 
-              <div className="form-group mb-4">
-                <label className="text-xs text-muted mb-2 block font-semibold">{t('wallets.label_icono')}</label>
-                <div className="emojis-picker-grid">
-                  {WALLET_ICONS.map((icon) => (
-                    <button
-                      key={icon}
-                      type="button"
-                      className={`emoji-select-btn ${editIcono === icon ? 'active' : ''}`}
-                      onClick={() => setEditIcono(icon)}
-                      aria-label={icon}
-                    >
-                      <CategoryIcon name={icon} size={28} />
-                    </button>
-                  ))}
+                <div className="form-group mb-4">
+                  <label className="text-xs text-muted mb-2 block font-semibold">{t('wallets.label_icono')}</label>
+                  <div className="emojis-picker-grid">
+                    {WALLET_ICONS.map((icon) => (
+                      <button
+                        key={icon}
+                        type="button"
+                        className={`emoji-select-btn ${editIcono === icon ? 'active' : ''}`}
+                        onClick={() => setEditIcono(icon)}
+                        aria-label={icon}
+                      >
+                        <CategoryIcon name={icon} size={28} />
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
-                <div className="flex gap-3">
+              <div className="wallet-modal-actions">
+                <div className="flex gap-3" style={{ width: '100%', display: 'flex' }}>
                   <button type="button" className="btn btn-secondary flex-1" onClick={() => setShowEditModal(false)}>
                     {t('wallets.btn_cancelar')}
                   </button>
@@ -584,6 +590,7 @@ export function BilleterasPage() {
                   onClick={handleArchivar}
                   className="btn btn-secondary"
                   style={{
+                    width: '100%',
                     background: 'rgba(255, 107, 107, 0.08)',
                     color: 'var(--coral)',
                     borderColor: 'rgba(255, 107, 107, 0.25)',
