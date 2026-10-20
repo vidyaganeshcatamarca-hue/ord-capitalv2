@@ -12,10 +12,12 @@
 // borrado de los datos y de la cuenta" — the grace window is now 15.
 //
 // Since the pi2 app-lock merge, the PIN source is the peer-owned single truth:
-// useAppLock().lockState === 'activa' (AppLockContext). The gate stays PURE:
-// callers pass the resolved boolean as `pinConfigured`. PIN_CONFIGURED_FALLBACK
-// is kept exported only as a migration-era fallback for call sites that have
-// not swapped to the context yet (the settings card has).
+// useAppLock().lockState (AppLockContext). Resolve it with
+// pinConfiguredFromLockState — the resolved state is an OBJECT (`{kind}`), not
+// the server string 'activa'. The gate stays PURE: callers pass the resolved
+// boolean as `pinConfigured`. PIN_CONFIGURED_FALLBACK is kept exported only as
+// a migration-era fallback for call sites that have not swapped to the context
+// yet (the settings card has).
 //
 // Deletion is dangerous, so every unknown is fail-closed (locked).
 
@@ -24,7 +26,7 @@ export const DAY_GRACE_WINDOW = 15
 
 /**
  * S6/T5 legacy fallback — only for call sites not wired to AppLockContext yet.
- * The settings card now uses useAppLock().lockState === 'activa' instead.
+ * The settings card now uses pinConfiguredFromLockState(useAppLock().lockState).
  */
 export const PIN_CONFIGURED_FALLBACK = false
 
@@ -36,6 +38,36 @@ export const PIN_CONFIGURED_FALLBACK = false
 export const DELETE_DATA_BACKEND_AVAILABLE = true
 
 export type DeletionGateReason = 'pin_required' | 'unknown_signup'
+
+/**
+ * Structural view of `LockState` (src/lib/appLock.ts, pi2-owned). It is a
+ * discriminated UNION OF OBJECTS: `{ kind: 'locked' }`, `{ kind: 'cooldown' }`,
+ * and so on. It is NOT a string, and the server vocabulary ('activa') is not a
+ * value of it — `resolveLockState` maps server → presentation.
+ *
+ * Owner bug (tanda 7): the settings card compared `lockState === 'activa'`
+ * after casting it to string. The comparison was always false, so every user
+ * past the grace window with a working PIN was told to configure one.
+ */
+export interface ResolvedLockKind {
+  kind: 'sin_pin' | 'locked' | 'cooldown' | 'reset_pending'
+}
+
+/**
+ * Does this user have a PIN that we could ask for right now?
+ *
+ *   locked        → yes, the PIN is active
+ *   cooldown      → yes, the PIN exists but the attempt window is running
+ *   reset_pending → no: the server already cleared it after a lockout
+ *   sin_pin       → no
+ *   null          → not known yet: fail closed
+ */
+export function pinConfiguredFromLockState(
+  lockState: ResolvedLockKind | null | undefined,
+): boolean {
+  if (lockState == null) return false
+  return lockState.kind === 'locked' || lockState.kind === 'cooldown'
+}
 
 export interface DeletionGateInput {
   /** `session.user.created_at` (auth signup date) — the only anchor available. */
@@ -50,6 +82,13 @@ export interface DeletionGateResult {
   locked: boolean
   /** null when the gate is open. */
   reason: DeletionGateReason | null
+  /**
+   * S15 verbatim: past the grace window "el usuario para borrar los datos
+   * tiene que PONER el pin". Having a PIN is not enough — the destructive UI
+   * stays hidden until the server accepts the PIN. Inside the grace window the
+   * owner's rule is "puede hacer sin pin", so this is false there.
+   */
+  requiresPin: boolean
 }
 
 const DAY_MS = 86_400_000
@@ -74,10 +113,10 @@ export function resolveDeletionGate({
     typeof signupAt === 'string' && signupAt.trim() !== '' ? Date.parse(signupAt) : Number.NaN
   const nowMs = now instanceof Date ? now.getTime() : Number.NaN
   if (!Number.isFinite(signupMs) || !Number.isFinite(nowMs)) {
-    return { locked: true, reason: 'unknown_signup' }
+    return { locked: true, reason: 'unknown_signup', requiresPin: true }
   }
   const elapsedDays = Math.floor((nowMs - signupMs) / DAY_MS)
-  if (elapsedDays <= DAY_GRACE_WINDOW) return { locked: false, reason: null }
-  if (!pinConfigured) return { locked: true, reason: 'pin_required' }
-  return { locked: false, reason: null }
+  if (elapsedDays <= DAY_GRACE_WINDOW) return { locked: false, reason: null, requiresPin: false }
+  if (!pinConfigured) return { locked: true, reason: 'pin_required', requiresPin: true }
+  return { locked: false, reason: null, requiresPin: true }
 }

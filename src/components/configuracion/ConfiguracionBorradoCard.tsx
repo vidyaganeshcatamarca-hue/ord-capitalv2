@@ -3,9 +3,18 @@
 //
 // Two options under ONE access rule (S15/L10: first 15 days no PIN, then the
 // PIN configured in mode Avanzado). Since the pi2 app-lock merge, the PIN
-// source is the peer-owned single truth: useAppLock().lockState === 'activa'
-// (AppLockContext). Before that merge the card used PIN_CONFIGURED_FALLBACK.
-// Owner revision L10 raised the grace window 10 -> 15 days.
+// source is the peer-owned single truth: useAppLock().lockState, resolved by
+// pinConfiguredFromLockState. Before that merge the card used
+// PIN_CONFIGURED_FALLBACK. Owner revision L10 raised the grace window 10 -> 15.
+//
+// Owner bug (tanda 7): the card compared `lockState === 'activa'`, but the
+// resolved state is an object (`{ kind: 'locked' }`) and 'activa' is server
+// vocabulary. The cast to string made TypeScript accept a comparison that was
+// always false: every user past day 15 with a working PIN was told to configure
+// one, which is why Proteccion said "Activada" while this card said otherwise.
+//
+// S15 also says the user has to PUT the PIN, not merely have it: past the grace
+// window the destructive UI stays hidden until fn_verificar_pin accepts it.
 //
 //   - "Borrar mis datos": account stays, data restarts from zero. Its RPC does
 //     not exist yet (T5 gated), so the option renders disabled with a reason.
@@ -26,8 +35,11 @@ import { useToast } from '@/contexts/ToastContext'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { haptics } from '@/lib/haptics'
 import { DeleteAccountCard } from '@/components/privacidad/DeleteAccountCard'
+import { PinKeypad } from '@/components/AppLockGate/PinKeypad'
+import { pinFailureKey } from '@/lib/pinPanelFlow'
 import {
   DELETE_DATA_BACKEND_AVAILABLE,
+  pinConfiguredFromLockState,
   resolveDeletionGate,
 } from '@/lib/accountDeletionGate'
 import './ConfiguracionHub.css'
@@ -37,14 +49,39 @@ const DELETE_DATA_CONFIRMATION_TEXT = 'BORRAR DATOS'
 export function ConfiguracionBorradoCard() {
   const { session } = useAuth()
   const { showToast } = useToast()
-  // PI2 single truth for hasPinConfigured (peer import contract): 'activa'.
-  // Comparing against a literal requires a string view of the union LockState.
-  const { lockState } = useAppLock()
-  const pinConfigured = (lockState as string | null) === 'activa'
+  // PI2 single truth for "has a PIN": the resolved state is a discriminated
+  // union of objects. Never compare it against server vocabulary ('activa').
+  const { lockState, verifyPin } = useAppLock()
+  const pinConfigured = pinConfiguredFromLockState(lockState)
   // One clock read per mount: the gate only needs the account age at render time.
   const now = useMemo(() => new Date(), [])
   const signupAt = session?.user?.created_at ?? null
   const gate = resolveDeletionGate({ signupAt, pinConfigured, now })
+
+  // S15 — past the grace window the PIN must be entered before anything
+  // destructive exists in the DOM. The server verifies; this flag only mirrors
+  // that one accepted attempt for the current mount.
+  const [pinUnlocked, setPinUnlocked] = useState(false)
+  const [pinMessageKey, setPinMessageKey] = useState<string | null>(null)
+  const [verifyingPin, setVerifyingPin] = useState(false)
+  const needsPin = !gate.locked && gate.requiresPin && !pinUnlocked
+
+  const handlePin = async (pin: string) => {
+    setVerifyingPin(true)
+    try {
+      const result = await verifyPin(pin)
+      if (result.ok) {
+        setPinUnlocked(true)
+        setPinMessageKey(null)
+        haptics.success()
+        return
+      }
+      setPinMessageKey(pinFailureKey(result.reason))
+      haptics.error()
+    } finally {
+      setVerifyingPin(false)
+    }
+  }
 
   // S15/T5c — "borrar mis datos": the account stays, the data resets to zero.
   // Bug 12: the two sub-options start collapsed (bug-12 owner rule).
@@ -86,7 +123,11 @@ export function ConfiguracionBorradoCard() {
         </div>
       </header>
 
-      {gate.locked ? (
+      {lockState == null ? (
+        // The PIN state is still loading. Rendering the locked notice here would
+        // flash "configure your PIN" at users who already have one.
+        <div className="config-delete-locked" aria-busy="true" />
+      ) : gate.locked ? (
         // Locked: no destructive UI at all, just the notice and the way out.
         <div className="config-delete-locked">
           <p>
@@ -99,6 +140,23 @@ export function ConfiguracionBorradoCard() {
           {gate.reason === 'pin_required' && (
             <p className="config-delete-locked-hint">{t('settings_delete_locked_hint')}</p>
           )}
+        </div>
+      ) : needsPin ? (
+        // S15 — a PIN exists, but the user has to enter it before the two
+        // destructive options are rendered at all.
+        <div className="config-delete-pin">
+          <p
+            className="config-delete-pin-prompt"
+            role={pinMessageKey ? 'alert' : undefined}
+          >
+            {t(pinMessageKey ?? 'settings_delete_pin_prompt')}
+          </p>
+          <PinKeypad
+            compact
+            disabled={verifyingPin}
+            hint={null}
+            onSubmit={(pin) => { void handlePin(pin) }}
+          />
         </div>
       ) : (
         <>

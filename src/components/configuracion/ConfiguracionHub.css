@@ -320,3 +320,23 @@ article.presupuesto-ciclo-card.config-hub-card {
   color: var(--mint);
   font-weight: 600;
 }
+
+/* Owner bug (tanda 7, S15) — past the grace window the deletion entry asks for
+   the security PIN before rendering the two destructive options. Reuses the
+   shared compact keypad, so only the panel frame and its copy live here. */
+.config-delete-pin {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px dashed var(--border);
+  border-radius: 14px;
+}
+
+.config-delete-pin-prompt {
+  margin: 0;
+  color: var(--text-2);
+  font-size: calc(0.85rem * var(--font-scale));
+  line-height: 1.45;
+  text-align: center;
+}
