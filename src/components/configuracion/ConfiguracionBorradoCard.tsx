@@ -152,7 +152,7 @@ export function ConfiguracionBorradoCard() {
             {t(pinMessageKey ?? 'settings_delete_pin_prompt')}
           </p>
           <PinKeypad
-            compact
+            size="comfortable"
             disabled={verifyingPin}
             hint={null}
             onSubmit={(pin) => { void handlePin(pin) }}

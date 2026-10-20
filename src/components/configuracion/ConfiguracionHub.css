@@ -229,13 +229,17 @@ article.presupuesto-ciclo-card.config-hub-card {
 /* One option box per S15 option (delete data / delete account). Bug 12: each
    option is a collapsed item — the header is a tappable toggle (title + text
    always visible), the destructive UI only renders expanded. */
+/* Owner bug (tanda 8, light mode): this used --bg-2, which the light theme never
+   overrides — it is the dark BOTTOM-NAV surface (#1c2128). In light mode the two
+   options rendered as dark blocks with dark text. A card surface must come from
+   --surface-2, which both themes define. */
 .config-delete-option {
   display: grid;
   gap: 6px;
   padding: 12px 14px;
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: var(--bg-2);
+  background: var(--surface-2);
 }
 
 .config-delete-option-head {

@@ -98,3 +98,81 @@ test('no settings stylesheet references a token this app never defines', () => {
 
   assert.deepEqual(offenders, [], `undefined tokens fall back to literals (white in light mode):\n${offenders.join('\n')}`)
 })
+
+test('the deletion PIN prompt offers comfortable touch targets (owner tanda 8)', () => {
+  const css = stripComments(read('src/components/AppLockGate/AppLockGate.css'))
+  /** Read one CSS rule by its exact selector (`.app-lock-key` is a prefix of `.app-lock-keys`). */
+  const rule = (selector) => {
+    const start = css.indexOf(`${selector} {`)
+    assert.ok(start >= 0, `missing rule ${selector}`)
+    return css.slice(start, css.indexOf('}', start))
+  }
+  const keyRule = rule('.app-lock-keypad--comfortable .app-lock-key')
+  const minHeight = Number(/(?:min-height|height):\s*([\d.]+)rem/.exec(keyRule)?.[1])
+  assert.ok(minHeight >= 3, `keys must be at least 3rem tall, got ${minHeight}rem`)
+  const keysRule = rule('.app-lock-keypad--comfortable .app-lock-keys')
+  const maxWidth = Number(/(?:max-)?width:\s*([\d.]+)rem/.exec(keysRule)?.[1])
+  assert.ok(maxWidth >= 16, `the grid must be wider than the compact 13rem, got ${maxWidth}rem`)
+
+  const card = read('src/components/configuracion/ConfiguracionBorradoCard.tsx')
+  assert.match(card, /size="comfortable"/, 'the deletion card uses the comfortable preset')
+})
+
+// ── Regression: owner bug tanda 8 ────────────────────────────────────────────
+// `.config-delete-option` painted its surface with `--bg-2`, a token the light
+// theme never overrides: it belongs to the dark bottom nav (#1c2128). In light
+// mode the two deletion options were dark blocks with dark text. The guard has
+// to be "is this COLOR token redefined by the light theme?", not merely "does
+// the token exist somewhere" — existing in :root is exactly the trap.
+
+/** Color-looking tokens whose only definition is the dark :root palette. */
+function darkOnlyColorTokens() {
+  const root = theme.slice(theme.indexOf(':root'), theme.indexOf('}', theme.indexOf(':root')))
+  const light = theme.slice(theme.indexOf("[data-theme='warm-light']"))
+  const lightBlock = light.slice(0, light.indexOf('}'))
+  const isColor = (v) => /#[0-9a-f]{3,8}|rgba?\(|hsla?\(|linear-gradient/i.test(v)
+  const declared = (block) =>
+    new Map([...block.matchAll(/--([a-z0-9-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]))
+
+  const rootTokens = declared(root)
+  const lightTokens = declared(lightBlock)
+  const darkOnly = new Set()
+  for (const [name, value] of rootTokens) {
+    if (isColor(value) && !lightTokens.has(name)) darkOnly.add(name)
+  }
+  return darkOnly
+}
+
+test('the settings surface never paints itself with a dark-only colour token', () => {
+  const darkOnly = darkOnlyColorTokens()
+  assert.ok(darkOnly.has('bg-2'), 'sanity: --bg-2 is the dark nav surface the light theme skips')
+
+  // Plain reds read on both backgrounds; surfaces and text colours do not.
+  const allowed = new Set(['red', 'red-dim'])
+  const roots = [
+    'src/components/configuracion/',
+    'src/pages/Configuracion/',
+    'src/components/privacidad/',
+    'src/components/AppLockGate/',
+  ]
+  const offenders = []
+  for (const root of roots) {
+    for (const file of fs.readdirSync(new URL(`../${root}`, import.meta.url))) {
+      if (!file.endsWith('.css')) continue
+      const css = stripComments(read(`${root}${file}`))
+      const used = new Set([...css.matchAll(/var\(--([a-z0-9-]+)/g)].map((m) => m[1]))
+      const bad = [...used].filter((t) => darkOnly.has(t) && !allowed.has(t))
+      if (bad.length) offenders.push(`${root}${file}: ${bad.join(', ')}`)
+    }
+  }
+  assert.deepEqual(offenders, [], `these tokens stay dark in the light theme: ${offenders.join(' | ')}`)
+})
+
+test('the deletion options are plain surfaced cards in both themes (owner tanda 8)', () => {
+  const css = stripComments(read('src/components/configuracion/ConfiguracionHub.css'))
+  const start = css.indexOf('.config-delete-option {')
+  assert.ok(start >= 0, 'missing .config-delete-option')
+  const optionRule = css.slice(start, css.indexOf('}', start))
+  assert.match(optionRule, /background:\s*var\(--surface-2\)/, 'options use a themed surface')
+  assert.ok(!/var\(--bg-2\)/.test(optionRule), '--bg-2 is the dark nav surface, never a card')
+})

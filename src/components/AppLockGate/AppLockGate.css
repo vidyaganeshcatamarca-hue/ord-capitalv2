@@ -176,3 +176,32 @@
   font-size: calc(0.95rem * var(--font-scale, 1));
   border-radius: 8px;
 }
+
+/* Owner bug (tanda 8): inside the short deletion card the compact keys were too
+   small to hit comfortably. Same flow as compact, bigger touch targets — the
+   card has vertical room the Proteccion panel does not. */
+.app-lock-keypad--comfortable {
+  gap: 0.6rem;
+}
+
+.app-lock-keypad--comfortable .app-lock-dots {
+  min-height: 1.2rem;
+  gap: 0.5rem;
+}
+
+.app-lock-keypad--comfortable .app-lock-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+.app-lock-keypad--comfortable .app-lock-keys {
+  max-width: 17.5rem;
+  gap: 0.5rem;
+}
+
+.app-lock-keypad--comfortable .app-lock-key {
+  min-height: 3.4rem;
+  padding: 0.85rem 0;
+  font-size: calc(1.25rem * var(--font-scale, 1));
+  border-radius: 12px;
+}
