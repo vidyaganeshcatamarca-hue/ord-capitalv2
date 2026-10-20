@@ -108,12 +108,13 @@ imperativo seco. Nada de calcos: "podés" → "you can", no "you can" tampoco fo
 
 | ID | Specs | Tarea | Ruta | Commit |
 |----|-------|-------|------|--------|
-| T1 | S4, S3 | Test de paridad `es.ts`↔`en.ts` (mismas claves, mismos placeholders, sin español filtrado) + test de locale sin hardcodes. **RED primero.** | `tests/i18n/en-dictionary-parity.test.js`, `tests/i18n/locale-follows-language.test.js` | — |
-| T2 | S1, S3, S4 | `src/locales/en.ts`: diccionario inglés completo (2288 claves, 10 secciones), placeholders migrados tal cual | `src/locales/en.ts` | `feat(i18n)` |
-| T3 | S1, S2 | Cableado: `SUPPORTED = ['es','en']`, `dictionaries = { es, en }`, `DEFAULT_LANG` sigue `'es'` | `src/locales/language.ts`, `src/locales/i18n.ts` | `feat(i18n)` |
-| T4 | S1 | Normalización de locale: los 28 hardcodes `'es-AR'` de 15 archivos siguen el idioma activo | 15 archivos de `src/` + `src/hooks/useActiveLocale.ts` | `fix(i18n)` |
-| T5 | S3 | El selector de idioma muestra las dos opciones; `apariencia_idioma` deja de decir "próximamente" | `src/locales/en.ts`, `src/locales/es.ts` (solo esa key), `src/pages/Configuracion/RegionFormatoPage.tsx` | `feat(i18n)` |
-| T6 | — | Verificación: `npx tsc --noEmit`, suite completa, `node scripts/check-i18n.mjs`, tests de paridad y de locale | — | — |
+| T1 | S4, S3 | Test de paridad `es.ts`↔`en.ts` (mismas claves, mismos placeholders, sin español filtrado) + test de locale sin hardcodes. **RED primero.** | `tests/i18n/en-dictionary-parity.test.js`, `tests/i18n/locale-follows-language.test.js`, `tests/i18n/support/i18n-harness.mjs` | `a050411` |
+| T2 | S1, S3, S4 | `src/locales/en.ts`: diccionario inglés completo (2288 claves, 10 secciones), placeholders migrados tal cual | `src/locales/en.ts` | `07f527d` |
+| T3 | S1, S2 | Cableado: `SUPPORTED = ['es','en']`, `dictionaries = { es, en }`, `DEFAULT_LANG` sigue `'es'` | `src/locales/language.ts`, `src/locales/i18n.ts` | `07f527d` |
+| T4 | S1 | Normalización de locale: los 28 hardcodes `'es-AR'` de 15 archivos siguen el idioma activo | 15 archivos de `src/` + `src/hooks/useActiveLocale.ts` | `07f527d` |
+| T5 | S3 | El selector de idioma muestra las dos opciones; `apariencia_idioma` deja de decir "próximamente" | `src/locales/en.ts`, `src/locales/es.ts` (solo esa key), `src/pages/Configuracion/RegionFormatoPage.tsx` | `07f527d` |
+| T6 | — | Verificación: `npx tsc --noEmit`, suite completa, `node scripts/check-i18n.mjs`, tests de paridad y de locale | — | `a050411` (tests) |
+| T7 | S3 | Refutación adversarial de las 106 claves dudosas + acuerdo de términos + aplicación de las correcciones acordadas | `src/locales/en.ts` | pendiente |
 
 ## Archivos que toca esta entrega (lista exacta)
 
@@ -220,3 +221,33 @@ imperativo seco. Nada de calcos: "podés" → "you can", no "you can" tampoco fo
   inglés hablaría en inglés y la IA transcribiría en español. Requiere backend.
   `public/legal/tyc.html` y `public/legal/privacidad.html` son HTML estático en español.
   `public/manifest.json` tiene los shortcuts en español. Ninguno pasa por `t()`.
+- **L10** (decisión del dueño, 2026-10-20): "atencion en tarjetas, consultame, porque las
+  unicas monedas disponibles para tarjetas son la local y USD". Verificado: los casts
+  `as 'ARS'|'USD'` (10) NO se tocaron, y las monedas siguen siendo local + USD. Pero mi
+  migración de `fmtUSD` a `formatCurrency(x, 'USD')` introducía un cambio de
+  comportamiento: pasaba de 2 decimales fijos a los configurados por el usuario
+  (`decimales_segunda_moneda`). El dueño eligió **"Mantener 2 decimales fijos (idéntico a
+  hoy)"**: `fmtUSD` quedó como un formatter propio con el locale activo y 2 decimales
+  fijos, en `PagarModal` (era un componente separado sin acceso al `locale` del padre).
+- **L11** (hallazgo, 2026-10-20): `src/components/supervivencia/RadarAsfixiaDetalle.tsx`
+  tenía `DIAS_SEMANA` y `MESES_CORTOS` como arrays hardcodeados en español **a nivel de
+  módulo**, y los `DIAS_SEMANA` usaban `t('day_short_lu')` sobre keys que **no existen
+  en `es.ts`** (caían siempre al `defaultValue` español). Ahora salen de `Intl` con el
+  locale activo. Bug preexistente corregido de paso.
+- **L12** (hallazgo, 2026-10-20): `saneamiento_calendario_vacio_desc` usa el placeholder
+  `{días}` **con tilde**, que el regex `\{(\w+)\}` del `format()` de `t()` no matchea
+  (`\w` no incluye `í`): ese placeholder **nunca se sustituye**, ya en español. Bug
+  preexistente, **no corregido** (fuera del alcance de esta entrega): tocar `es.ts` con
+  esa key habría roto la coordinación con PI2.
+- **L13** (hallazgo, 2026-10-20): `src/lib/formatoMonedaLocal.ts` tiene la firma
+  `formatMoneyLocal(v, localCurrency = 'ARS', locale = 'es-AR')` — la **moneda** va en
+  2º lugar. Pasar el locale ahí rompe la moneda. Los 9 archivos de supervivencia
+  (y `RadarAsfixiaDetalle`) usan `formatMoneyARS(x, 'ARS', locale)`.
+- **L14** (verificación, 2026-10-20): la suite completa da **476 tests, 4 fallos**. Los 4
+  son preexistentes, verificado con `git stash`: los mismos 3 de `tests/i18n/`
+  (`budget-modal-select-action` con import path roto, `consent-v2-i18n` e
+  `i18n-nested-keys` por copy viejo) y `tests/sql/run_transfer_insufficient_balance`
+  (faltan `SUPABASE_URL` / `SUPABASE_SECRET_KEY` en el entorno). `check-i18n` da los
+  mismos números que el baseline (248 sin definir, 20 hardcodes). **Cero regresiones.**
+  Los DEAD-KEY pasaron de 934 a 935: es `apariencia_idioma`, que dejó de llamarse
+  porque decía "próximamente" y ahora el idioma es real.
