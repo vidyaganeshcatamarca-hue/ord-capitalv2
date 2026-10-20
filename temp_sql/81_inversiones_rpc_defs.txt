@@ -1,0 +1,823 @@
+### fn_crear_inversion
+
+CREATE OR REPLACE FUNCTION public.fn_crear_inversion(p_nombre_activo text, p_monto numeric, p_tasa_anual_tna numeric DEFAULT 0, p_billetera_origen_id bigint DEFAULT NULL::bigint, p_moneda text DEFAULT 'ARS'::text, p_tipo_activo text DEFAULT 'plazo_fijo'::text)
+ RETURNS bigint
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_user_id bigint;
+    v_inversion_id bigint;
+    v_categoria_inversion_id bigint;
+    v_caja_id bigint;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    IF p_monto <= 0 THEN
+        RAISE EXCEPTION '{"key": "error_investment_amount_zero", "params": {}}';
+    END IF;
+
+    IF p_tipo_activo NOT IN ('plazo_fijo', 'cripto', 'cedear', 'acciones', 'otro') THEN
+        RAISE EXCEPTION '{"key": "error_investment_type_invalid", "params": {}}';
+    END IF;
+
+    IF p_tipo_activo = 'plazo_fijo' AND p_tasa_anual_tna <= 0 THEN
+        RAISE EXCEPTION '{"key": "error_investment_fixed_term_requires_tna", "params": {}}';
+    END IF;
+
+    IF p_tipo_activo IN ('cripto','cedear','acciones','otro') AND p_tasa_anual_tna > 0 THEN
+        RAISE EXCEPTION '{"key": "error_investment_variable_must_have_zero_tna", "params": {}}';
+    END IF;
+
+    SELECT estructura_id INTO v_categoria_inversion_id
+    FROM p_estructuras_egresos
+    WHERE user_id = v_user_id AND nombre_cuenta = 'cat_investments' AND tipo_cupo = 'investment';
+
+    IF v_categoria_inversion_id IS NULL THEN
+        INSERT INTO p_estructuras_egresos (nombre_cuenta, descripcion, user_id, tipo_cupo, icono, color)
+        VALUES ('cat_investments', 'desc_blocked_capital', v_user_id, 'investment', '📈', '#059669')
+        RETURNING estructura_id INTO v_categoria_inversion_id;
+    END IF;
+
+    INSERT INTO p_inversiones (
+        user_id, billetera_origen_id, nombre_activo, monto_invertido_original,
+        tasa_anual_tna, fecha_inicio, estado, moneda, valor_mercado_actual
+    ) VALUES (
+        v_user_id, p_billetera_origen_id, p_nombre_activo, p_monto,
+        p_tasa_anual_tna, CURRENT_DATE, 'activa', p_moneda, p_monto
+    )
+    RETURNING inversion_id INTO v_inversion_id;
+
+    IF p_billetera_origen_id IS NOT NULL THEN
+        INSERT INTO p_caja (
+            user_id, tipo, billetera_origen_id, valor_egreso,
+            estructura_egreso_id, fecha, detalle, metadata
+        ) VALUES (
+            v_user_id, 'expense', p_billetera_origen_id, p_monto,
+            v_categoria_inversion_id, CURRENT_DATE,
+            'investment_prefix: ' || p_nombre_activo,
+            jsonb_build_object('inversion_id', v_inversion_id, 'tipo_activo', p_tipo_activo)
+        )
+        RETURNING p_caja_id INTO v_caja_id;
+    END IF;
+
+    RETURN v_inversion_id;
+END;
+$function$
+
+
+### fn_actualizar_valor_inversion
+
+CREATE OR REPLACE FUNCTION public.fn_actualizar_valor_inversion(p_inversion_id bigint, p_nuevo_valor numeric)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE v_user_id bigint;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    IF p_nuevo_valor < 0 THEN
+        RAISE EXCEPTION '{"key": "error_investment_value_negative", "params": {}}';
+    END IF;
+
+    UPDATE p_inversiones
+    SET valor_mercado_actual = p_nuevo_valor,
+        ultima_conciliacion = CURRENT_DATE
+    WHERE inversion_id = p_inversion_id AND user_id = v_user_id;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION '{"key": "error_investment_not_found", "params": {}}';
+    END IF;
+
+    RETURN jsonb_build_object(
+        'success_key', 'success_investment_value_updated',
+        'params', '{}'::jsonb
+    );
+END;
+$function$
+
+
+### fn_liquidar_inversion
+
+CREATE OR REPLACE FUNCTION public.fn_liquidar_inversion(p_inversion_id bigint, p_monto_total_retirado numeric, p_billetera_destino_id bigint)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_inversion RECORD;
+    v_ganancia_perdida numeric;
+    v_categoria_inversion_id bigint;
+    v_user_id bigint;
+    v_ingreso_id bigint;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    SELECT * INTO v_inversion
+    FROM p_inversiones
+    WHERE inversion_id = p_inversion_id AND user_id = v_user_id;
+
+    IF v_inversion.inversion_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_investment_not_found", "params": {}}';
+    END IF;
+
+    IF v_inversion.estado = 'finalizada' THEN
+        RAISE EXCEPTION '{"key": "error_investment_already_liquidated", "params": {}}';
+    END IF;
+
+    SELECT estructura_id INTO v_categoria_inversion_id
+    FROM p_estructuras_egresos
+    WHERE user_id = v_user_id AND nombre_cuenta = 'cat_investments' AND tipo_cupo = 'investment'
+    LIMIT 1;
+
+    -- Devolver capital como ingreso
+    INSERT INTO p_caja (
+        user_id, tipo, billetera_origen_id, valor_ingreso,
+        estructura_egreso_id, fecha, detalle, metadata
+    ) VALUES (
+        v_user_id, 'income', p_billetera_destino_id, v_inversion.monto_invertido_original,
+        v_categoria_inversion_id, CURRENT_DATE,
+        'liquidation_capital_recovery: ' || v_inversion.nombre_activo,
+        jsonb_build_object('inversion_id', p_inversion_id, 'es_rescate', true)
+    )
+    RETURNING p_caja_id INTO v_ingreso_id;
+
+    v_ganancia_perdida := p_monto_total_retirado - v_inversion.monto_invertido_original;
+    IF v_ganancia_perdida > 0 THEN
+        INSERT INTO p_caja (
+            user_id, tipo, billetera_origen_id, valor_ingreso,
+            estructura_egreso_id, fecha, detalle, metadata
+        ) VALUES (
+            v_user_id, 'income', p_billetera_destino_id, v_ganancia_perdida,
+            v_categoria_inversion_id, CURRENT_DATE,
+            'liquidation_gain: ' || v_inversion.nombre_activo,
+            jsonb_build_object('inversion_id', p_inversion_id, 'es_ganancia', true)
+        );
+    ELSIF v_ganancia_perdida < 0 THEN
+        INSERT INTO p_caja (
+            user_id, tipo, billetera_origen_id, valor_egreso,
+            estructura_egreso_id, fecha, detalle, metadata
+        ) VALUES (
+            v_user_id, 'expense', p_billetera_destino_id, ABS(v_ganancia_perdida),
+            v_categoria_inversion_id, CURRENT_DATE,
+            'liquidation_loss: ' || v_inversion.nombre_activo,
+            jsonb_build_object('inversion_id', p_inversion_id, 'es_perdida', true)
+        );
+    END IF;
+
+    UPDATE p_inversiones
+    SET estado = 'finalizada',
+        monto_liquidado = p_monto_total_retirado,
+        fecha_liquidacion = CURRENT_DATE,
+        valor_mercado_actual = p_monto_total_retirado
+    WHERE inversion_id = p_inversion_id;
+
+    RETURN jsonb_build_object(
+        'ganancia_perdida', v_ganancia_perdida,
+        'monto_total_retirado', p_monto_total_retirado
+    );
+END;
+$function$
+
+
+### fn_rescatar_inversion
+
+CREATE OR REPLACE FUNCTION public.fn_rescatar_inversion(p_inversion_id bigint, p_monto numeric, p_billetera_destino_id bigint, p_fecha date DEFAULT CURRENT_DATE)
+ RETURNS bigint
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_inversion RECORD;
+    v_user_id bigint;
+    v_categoria_inversion_id bigint;
+    v_monto_restante numeric;
+    v_movimiento_id bigint;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    IF p_monto <= 0 THEN
+        RAISE EXCEPTION '{"key": "error_investment_amount_zero", "params": {}}';
+    END IF;
+
+    SELECT * INTO v_inversion
+    FROM p_inversiones
+    WHERE inversion_id = p_inversion_id AND user_id = v_user_id;
+
+    IF v_inversion.inversion_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_investment_not_found", "params": {}}';
+    END IF;
+
+    IF v_inversion.estado = 'finalizada' THEN
+        RAISE EXCEPTION '{"key": "error_investment_already_liquidated", "params": {}}';
+    END IF;
+
+    v_monto_restante := COALESCE(v_inversion.monto_invertido_original, 0) - COALESCE(v_inversion.monto_liquidado, 0);
+    IF p_monto > v_monto_restante THEN
+        RAISE EXCEPTION '{"key": "error_investment_rescue_exceeds_balance", "params": {}}';
+    END IF;
+
+    SELECT estructura_id INTO v_categoria_inversion_id
+    FROM p_estructuras_egresos
+    WHERE user_id = v_user_id AND nombre_cuenta = 'cat_investments' AND tipo_cupo = 'investment'
+    LIMIT 1;
+
+    INSERT INTO p_caja (
+        user_id, tipo, billetera_origen_id, valor_ingreso,
+        estructura_egreso_id, fecha, detalle, metadata
+    ) VALUES (
+        v_user_id, 'income', p_billetera_destino_id, p_monto,
+        v_categoria_inversion_id, p_fecha,
+        'rescate_inversion: ' || v_inversion.nombre_activo,
+        jsonb_build_object('inversion_id', p_inversion_id, 'es_rescate_parcial', true)
+    )
+    RETURNING p_caja_id INTO v_movimiento_id;
+
+    UPDATE p_inversiones
+    SET monto_liquidado = COALESCE(monto_liquidado, 0) + p_monto,
+        valor_mercado_actual = GREATEST(0, COALESCE(valor_mercado_actual, monto_invertido_original) - p_monto),
+        estado = CASE
+            WHEN (COALESCE(monto_liquidado, 0) + p_monto) >= monto_invertido_original THEN 'finalizada'
+            ELSE estado
+        END,
+        fecha_liquidacion = CASE
+            WHEN (COALESCE(monto_liquidado, 0) + p_monto) >= monto_invertido_original THEN p_fecha
+            ELSE fecha_liquidacion
+        END
+    WHERE inversion_id = p_inversion_id;
+
+    RETURN v_movimiento_id;
+END;
+$function$
+
+
+### fn_reporte_cartera_inversiones
+
+CREATE OR REPLACE FUNCTION public.fn_reporte_cartera_inversiones()
+ RETURNS TABLE(inversion_id bigint, nombre_activo text, tipo_activo text, monto_invertido_original numeric, valor_actual_teorico numeric, rendimiento_nominal numeric, rendimiento_real numeric, dias_desde_conciliacion integer, estado_semaforo_key text, estado_inversion text, tasa_anual_tna numeric, moneda text, fecha_inicio date, ultima_conciliacion date)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE v_user_id bigint;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    RETURN QUERY
+    SELECT
+        i.inversion_id,
+        i.nombre_activo,
+        CASE
+            WHEN i.tasa_anual_tna > 0 THEN 'plazo_fijo'::text
+            ELSE 'variable'::text
+        END AS tipo_activo,
+        i.monto_invertido_original,
+        CASE
+            WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+            WHEN i.tasa_anual_tna > 0 THEN
+                i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+            ELSE i.monto_invertido_original
+        END::numeric AS valor_actual_teorico,
+        CASE
+            WHEN i.monto_invertido_original > 0 THEN
+                ROUND(
+                    (((CASE
+                        WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+                        WHEN i.tasa_anual_tna > 0 THEN
+                            i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+                        ELSE i.monto_invertido_original
+                    END) - i.monto_invertido_original) / i.monto_invertido_original) * 100, 2)
+            ELSE 0
+        END::numeric AS rendimiento_nominal,
+        NULL::numeric AS rendimiento_real,
+        (CURRENT_DATE - i.ultima_conciliacion)::int AS dias_desde_conciliacion,
+        CASE
+            WHEN (CURRENT_DATE - i.ultima_conciliacion) <= 30 THEN 'green'::text
+            WHEN (CURRENT_DATE - i.ultima_conciliacion) <= 45 THEN 'yellow'::text
+            ELSE 'red'::text
+        END AS estado_semaforo_key,
+        i.estado AS estado_inversion,
+        i.tasa_anual_tna,
+        COALESCE(i.moneda, 'ARS') AS moneda,
+        i.fecha_inicio,
+        i.ultima_conciliacion
+    FROM p_inversiones i
+    WHERE i.user_id = v_user_id
+    ORDER BY
+        CASE
+            WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+            WHEN i.tasa_anual_tna > 0 THEN
+                i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+            ELSE i.monto_invertido_original
+        END DESC;
+END;
+$function$
+
+
+### fn_reporte_patrimonio_inversiones
+
+CREATE OR REPLACE FUNCTION public.fn_reporte_patrimonio_inversiones(p_cotizacion_usd numeric DEFAULT 1)
+ RETURNS TABLE(total_pesos numeric, total_dolares numeric)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+BEGIN
+    -- Sincronización explícita agregada con los tipos de salida de fn_reporte_estado_inversiones
+    RETURN QUERY
+    SELECT 
+        COALESCE(SUM(valor_actual_teorico), 0)::numeric as total_pesos,
+        COALESCE(SUM(valor_actual_teorico / p_cotizacion_usd), 0)::numeric as total_dolares
+    FROM public.fn_reporte_estado_inversiones();
+END; $function$
+
+
+### fn_reporte_rendimiento_vs_inflacion
+
+CREATE OR REPLACE FUNCTION public.fn_reporte_rendimiento_vs_inflacion()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_user_id bigint;
+    v_total_actual numeric := 0;
+    v_total_original numeric := 0;
+    v_rendimiento_nominal numeric := 0;
+    v_inflacion_6m numeric := 0;
+    v_rendimiento_real numeric := 0;
+    v_config_inflacion RECORD;
+    v_inflacion_disponible boolean := false;
+    v_mensaje_key text;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    SELECT
+        COALESCE(SUM(
+            CASE
+                WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+                WHEN i.tasa_anual_tna > 0 THEN
+                    i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+                ELSE i.monto_invertido_original
+            END
+        ), 0),
+        COALESCE(SUM(i.monto_invertido_original), 0)
+    INTO v_total_actual, v_total_original
+    FROM p_inversiones i
+    WHERE i.user_id = v_user_id AND i.estado = 'activa';
+
+    IF v_total_original = 0 THEN
+        RETURN jsonb_build_object(
+            'sin_inversiones', true,
+            'mensaje_key', 'msg_no_investments'
+        );
+    END IF;
+
+    v_rendimiento_nominal := ((v_total_actual - v_total_original) / v_total_original) * 100;
+
+    BEGIN
+        SELECT * INTO v_config_inflacion FROM p_config_inflacion WHERE user_id = v_user_id;
+    EXCEPTION WHEN OTHERS THEN
+        v_config_inflacion := NULL;
+    END;
+
+    IF v_config_inflacion IS NOT NULL
+       AND v_config_inflacion.fuente_inflacion IS NOT NULL
+       AND v_config_inflacion.fuente_inflacion != 'desactivado'
+       AND COALESCE(v_config_inflacion.inflacion_acumulada_6m, 0) > 0
+    THEN
+        v_inflacion_disponible := true;
+        v_inflacion_6m := v_config_inflacion.inflacion_acumulada_6m;
+        v_rendimiento_real := ((1 + (v_rendimiento_nominal / 100)) / (1 + (v_inflacion_6m / 100)) - 1) * 100;
+    END IF;
+
+    IF NOT v_inflacion_disponible THEN
+        v_mensaje_key := 'msg_configure_inflation';
+    ELSIF v_rendimiento_real > 0 THEN
+        v_mensaje_key := 'msg_portfolio_beat_inflation';
+    ELSE
+        v_mensaje_key := 'msg_portfolio_lost_purchasing_power';
+    END IF;
+
+    RETURN jsonb_build_object(
+        'sin_inversiones', false,
+        'total_actual', ROUND(v_total_actual, 2),
+        'total_original', ROUND(v_total_original, 2),
+        'rendimiento_nominal', ROUND(v_rendimiento_nominal, 2),
+        'inflacion_disponible', v_inflacion_disponible,
+        'inflacion_6m', CASE WHEN v_inflacion_disponible THEN ROUND(v_inflacion_6m, 2) ELSE NULL END,
+        'rendimiento_real', CASE WHEN v_inflacion_disponible THEN ROUND(v_rendimiento_real, 2) ELSE NULL END,
+        'fuente_inflacion', COALESCE(v_config_inflacion.fuente_inflacion, 'desactivado'),
+        'mensaje_key', v_mensaje_key
+    );
+END;
+$function$
+
+
+### fn_reporte_detalle_inversion
+
+CREATE OR REPLACE FUNCTION public.fn_reporte_detalle_inversion(p_inversion_id bigint)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_user_id bigint;
+    v_inversion RECORD;
+    v_historial jsonb;
+    v_rendimiento_nominal numeric;
+    v_rendimiento_real numeric;
+    v_config_inflacion RECORD;
+    v_valor_actual_teorico numeric;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    SELECT * INTO v_inversion
+    FROM p_inversiones
+    WHERE inversion_id = p_inversion_id AND user_id = v_user_id;
+
+    IF v_inversion.inversion_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_investment_not_found", "params": {}}';
+    END IF;
+
+    v_valor_actual_teorico := CASE
+        WHEN v_inversion.valor_mercado_actual IS NOT NULL THEN v_inversion.valor_mercado_actual
+        WHEN v_inversion.tasa_anual_tna > 0 THEN
+            v_inversion.monto_invertido_original + (v_inversion.monto_invertido_original * (v_inversion.tasa_anual_tna / 100) * (CURRENT_DATE - v_inversion.fecha_inicio) / 365)
+        ELSE v_inversion.monto_invertido_original
+    END;
+
+    v_rendimiento_nominal := CASE
+        WHEN v_inversion.monto_invertido_original > 0
+        THEN ((v_valor_actual_teorico - v_inversion.monto_invertido_original) / v_inversion.monto_invertido_original) * 100
+        ELSE 0
+    END;
+
+    BEGIN
+        SELECT * INTO v_config_inflacion FROM p_config_inflacion WHERE user_id = v_user_id;
+    EXCEPTION WHEN OTHERS THEN
+        v_config_inflacion := NULL;
+    END;
+
+    IF v_config_inflacion IS NOT NULL
+       AND v_config_inflacion.fuente_inflacion IS NOT NULL
+       AND v_config_inflacion.fuente_inflacion != 'desactivado'
+       AND COALESCE(v_config_inflacion.inflacion_acumulada_6m, 0) > 0
+    THEN
+        v_rendimiento_real := ((1 + (v_rendimiento_nominal / 100)) / (1 + (v_config_inflacion.inflacion_acumulada_6m / 100)) - 1) * 100;
+    ELSE
+        v_rendimiento_real := NULL;
+    END IF;
+
+    SELECT COALESCE(jsonb_agg(row_to_json(mov)), '[]'::jsonb) INTO v_historial
+    FROM (
+        SELECT c.fecha,
+               c.detalle,
+               CASE
+                   WHEN c.tipo = 'expense' THEN -c.valor_egreso
+                   WHEN c.tipo = 'income' THEN c.valor_ingreso
+                   ELSE 0
+               END AS monto
+        FROM p_caja c
+        WHERE c.user_id = v_user_id
+          AND c.metadata->>'inversion_id' = p_inversion_id::text
+        ORDER BY c.fecha DESC
+    ) mov;
+
+    RETURN jsonb_build_object(
+        'inversion_id', v_inversion.inversion_id,
+        'nombre_activo', v_inversion.nombre_activo,
+        'tipo_activo', CASE WHEN v_inversion.tasa_anual_tna > 0 THEN 'plazo_fijo' ELSE 'variable' END,
+        'monto_invertido_original', v_inversion.monto_invertido_original,
+        'valor_actual_teorico', ROUND(v_valor_actual_teorico, 2),
+        'valor_mercado_actual', v_inversion.valor_mercado_actual,
+        'tasa_anual_tna', v_inversion.tasa_anual_tna,
+        'moneda', COALESCE(v_inversion.moneda, 'ARS'),
+        'ultima_conciliacion', v_inversion.ultima_conciliacion,
+        'dias_desde_conciliacion', (CURRENT_DATE - v_inversion.ultima_conciliacion)::int,
+        'estado_semaforo_key', CASE
+            WHEN (CURRENT_DATE - v_inversion.ultima_conciliacion) <= 30 THEN 'green'
+            WHEN (CURRENT_DATE - v_inversion.ultima_conciliacion) <= 45 THEN 'yellow'
+            ELSE 'red'
+        END,
+        'estado_inversion', v_inversion.estado,
+        'rendimiento_nominal', ROUND(v_rendimiento_nominal, 2),
+        'rendimiento_real', CASE WHEN v_rendimiento_real IS NOT NULL THEN ROUND(v_rendimiento_real, 2) ELSE NULL END,
+        'historial', v_historial
+    );
+END;
+$function$
+
+
+### fn_reporte_historial_inversiones
+
+CREATE OR REPLACE FUNCTION public.fn_reporte_historial_inversiones()
+ RETURNS TABLE(inversion_id bigint, nombre_activo text, monto_original numeric, monto_liquidado numeric, ganancia_perdida numeric, rendimiento_pct numeric, fecha_inicio date, fecha_liquidacion date, dias_mantenida integer)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE v_user_id bigint;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
+
+    RETURN QUERY
+    SELECT 
+        i.inversion_id,
+        i.nombre_activo,
+        i.monto_invertido_original,
+        i.monto_liquidado,
+        (i.monto_liquidado - i.monto_invertido_original)::numeric,
+        CASE 
+            WHEN i.monto_invertido_original > 0 THEN 
+                ROUND(((i.monto_liquidado - i.monto_invertido_original) / i.monto_invertido_original) * 100, 2)
+            ELSE 0 
+        END::numeric,
+        i.fecha_inicio,
+        i.fecha_liquidacion,
+        (i.fecha_liquidacion - i.fecha_inicio)::integer
+    FROM p_inversiones i
+    WHERE i.user_id = v_user_id AND i.estado = 'finalizada'
+    ORDER BY i.fecha_liquidacion DESC;
+END;
+$function$
+
+
+### fn_reporte_distribucion_activos
+
+CREATE OR REPLACE FUNCTION public.fn_reporte_distribucion_activos()
+ RETURNS TABLE(tipo_activo text, cantidad integer, valor_total numeric, porcentaje_valor numeric)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_user_id bigint;
+    v_total_general numeric;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    SELECT COALESCE(SUM(
+        CASE
+            WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+            WHEN i.tasa_anual_tna > 0 THEN
+                i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+            ELSE i.monto_invertido_original
+        END
+    ), 0) INTO v_total_general
+    FROM p_inversiones i
+    WHERE i.user_id = v_user_id AND i.estado = 'activa';
+
+    RETURN QUERY
+    SELECT
+        CASE WHEN i.tasa_anual_tna > 0 THEN 'plazo_fijo'::text ELSE 'variable'::text END AS tipo_activo,
+        COUNT(*)::int AS cantidad,
+        COALESCE(SUM(
+            CASE
+                WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+                WHEN i.tasa_anual_tna > 0 THEN
+                    i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+                ELSE i.monto_invertido_original
+            END
+        ), 0)::numeric AS valor_total,
+        CASE
+            WHEN v_total_general > 0
+            THEN ROUND((SUM(
+                CASE
+                    WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+                    WHEN i.tasa_anual_tna > 0 THEN
+                        i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+                    ELSE i.monto_invertido_original
+                END
+            ) / v_total_general) * 100, 2)
+            ELSE 0
+        END::numeric AS porcentaje_valor
+    FROM p_inversiones i
+    WHERE i.user_id = v_user_id AND i.estado = 'activa'
+    GROUP BY (CASE WHEN i.tasa_anual_tna > 0 THEN 'plazo_fijo' ELSE 'variable' END)
+    ORDER BY valor_total DESC;
+END;
+$function$
+
+
+### fn_configurar_inflacion
+
+CREATE OR REPLACE FUNCTION public.fn_configurar_inflacion(p_pais text, p_fuente_inflacion text)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_user_id bigint;
+    v_inflacion_6m numeric := 0;
+    v_inflacion_12m numeric := 0;
+    v_variacion_mensual_pct numeric := 0;
+    v_moneda_pais text;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    IF p_fuente_inflacion NOT IN ('api_automatica', 'proxy_dolar', 'desactivado') THEN
+        RAISE EXCEPTION '{"key": "error_inflation_source_invalid", "params": {}}';
+    END IF;
+
+    IF p_fuente_inflacion = 'proxy_dolar' THEN
+        -- Moneda local del pais desde el catalogo. Antes: CASE hardcodeado con ELSE 'ARS',
+        -- que mandaba a un usuario de Espana a la cotizacion del peso argentino.
+        SELECT p.moneda_local::text INTO v_moneda_pais
+        FROM public.p_paises p
+        WHERE p.codigo = p_pais AND p.soportado = true;
+
+        IF v_moneda_pais IS NULL THEN
+            RAISE EXCEPTION '{"key": "error_country_not_supported", "params": {}}';
+        END IF;
+
+        -- Fuente real: historico de cotizaciones. La tabla p_cotizaciones_dolar que consultaba
+        -- la version anterior NO EXISTE en la base, asi que esto fallaba con 42P01 en runtime.
+        v_variacion_mensual_pct := COALESCE(
+            public.fn_calcular_inflacion_mensual(
+                v_moneda_pais,
+                EXTRACT(YEAR  FROM CURRENT_DATE)::int,
+                EXTRACT(MONTH FROM CURRENT_DATE)::int),
+            0
+        );
+
+        IF v_variacion_mensual_pct > 0 THEN
+            v_inflacion_6m  := (POWER(1 + (v_variacion_mensual_pct / 100), 6)  - 1) * 100;
+            v_inflacion_12m := (POWER(1 + (v_variacion_mensual_pct / 100), 12) - 1) * 100;
+        END IF;
+    END IF;
+
+    INSERT INTO p_config_inflacion (user_id, pais, fuente_inflacion, inflacion_acumulada_6m, inflacion_acumulada_12m)
+    VALUES (v_user_id, p_pais, p_fuente_inflacion, v_inflacion_6m, v_inflacion_12m)
+    ON CONFLICT (user_id) DO UPDATE SET
+        pais = EXCLUDED.pais,
+        fuente_inflacion = EXCLUDED.fuente_inflacion,
+        inflacion_acumulada_6m = EXCLUDED.inflacion_acumulada_6m,
+        inflacion_acumulada_12m = EXCLUDED.inflacion_acumulada_12m,
+        actualizado_at = now();
+
+    RETURN jsonb_build_object('success_key', 'success_inflation_configured', 'params', '{}'::jsonb);
+END;
+$function$
+
+
+### fn_calcular_rendimiento_plazo_fijo
+
+CREATE OR REPLACE FUNCTION public.fn_calcular_rendimiento_plazo_fijo(p_inversion_id bigint)
+ RETURNS numeric
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+AS $function$
+DECLARE 
+    v_rendimiento numeric;
+    v_user_id bigint;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+
+    SELECT (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+    INTO v_rendimiento
+    FROM public.p_inversiones i
+    WHERE i.inversion_id = p_inversion_id AND i.user_id = v_user_id;
+    
+    RETURN COALESCE(v_rendimiento, 0);
+END; $function$
+
+
+### fn_calcular_inflacion_mensual
+
+CREATE OR REPLACE FUNCTION public.fn_calcular_inflacion_mensual(p_moneda_iso text, p_anio integer, p_mes integer)
+ RETURNS numeric
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_valor_inicio numeric;
+    v_valor_fin numeric;
+BEGIN
+    SELECT valor_por_usd INTO v_valor_inicio
+    FROM public.p_cotizaciones_historico
+    WHERE moneda_iso = p_moneda_iso
+      AND fecha < make_date(p_anio, p_mes, 1)
+    ORDER BY fecha DESC
+    LIMIT 1;
+
+    SELECT valor_por_usd INTO v_valor_fin
+    FROM public.p_cotizaciones_historico
+    WHERE moneda_iso = p_moneda_iso
+      AND fecha >= make_date(p_anio, p_mes, 1)
+      AND fecha < make_date(p_anio, p_mes, 1) + INTERVAL '1 month'
+    ORDER BY fecha DESC
+    LIMIT 1;
+
+    IF v_valor_inicio IS NULL OR v_valor_fin IS NULL OR v_valor_inicio = 0 THEN
+        RETURN NULL;
+    END IF;
+
+    RETURN ROUND(((v_valor_fin - v_valor_inicio) / v_valor_inicio) * 100, 2);
+END;
+$function$
+
+
+### fn_reporte_estado_inversiones
+
+CREATE OR REPLACE FUNCTION public.fn_reporte_estado_inversiones()
+ RETURNS TABLE(inversion_id bigint, nombre_activo text, tipo_activo text, monto_original numeric, valor_actual_teorico numeric, ganancia_acumulada numeric, estado_key text)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE v_user_id bigint;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
+
+    RETURN QUERY
+    SELECT 
+        i.inversion_id, 
+        i.nombre_activo, 
+        CASE 
+            WHEN i.tasa_anual_tna > 0 THEN 'fixed_term'::text 
+            ELSE 'variable'::text 
+        END AS tipo_activo,
+        i.monto_invertido_original AS monto_original,
+        CASE 
+            WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+            WHEN i.tasa_anual_tna > 0 THEN 
+                (i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365))
+            ELSE i.monto_invertido_original 
+        END::numeric AS valor_actual_teorico,
+        (CASE 
+            WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+            WHEN i.tasa_anual_tna > 0 THEN 
+                (i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365))
+            ELSE i.monto_invertido_original 
+        END - i.monto_invertido_original)::numeric AS ganancia_acumulada,
+        -- ⭐ CORRECCIÓN I18N: Normalización de estado
+        CASE 
+            WHEN i.estado = 'activa' THEN 'active'::text
+            WHEN i.estado = 'finalizada' THEN 'completed'::text
+            ELSE i.estado::text
+        END AS estado_key
+    FROM public.p_inversiones i
+    WHERE i.user_id = v_user_id;
+END;
+$function$
+
+
+=== Cron jobs (pg_cron) ===
+- #1 [activo] update-currency-rates-daily (0 12 * * *): 
+    select
+      net.http_post(
+        url:='https://bjszdmheddcxjdhcvibi.supabase.co/functions/v1/get_currency',
+
+- #2 [activo] limpieza-cuentas-eliminadas (0 3 * * *): SELECT public.fn_limpieza_cuentas_eliminadas();
+- #3 [activo] send-personal-reminders-hourly (0 * * * *): 
+  SELECT
+    net.http_post(
+      url := 'https://bjszdmheddcxjdhcvibi.supabase.co/functions/v1/send-personal-remind
+- #4 [activo] send-daily-expenses-hourly (0 * * * *): 
+  SELECT
+    net.http_post(
+      url := 'https://bjszdmheddcxjdhcvibi.supabase.co/functions/v1/daily-expenses-remin
+- #7 [activo] telemetry-refresh-metrics (0 13 * * *): SELECT public.fn_telemetry_refresh_user_metrics()
+- #8 [activo] telemetry-cps-snapshot-weekly (0 14 * * 1): SELECT public.fn_telemetry_cps_snapshot_weekly()
+- #9 [activo] limpia-media-reportes (0 4 * * *): SELECT private.fn_limpia_media_cron();
+- #12 [activo] ord-plan-trial-expiry (15 13 * * *): SELECT public.fn_plan_trial_expiry();
+
+=== Tablas p_activos / tipos ===
