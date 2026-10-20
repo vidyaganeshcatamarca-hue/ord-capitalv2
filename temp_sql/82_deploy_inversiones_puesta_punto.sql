@@ -558,4 +558,47 @@ BEGIN
         'ya_retirado', v_ya_retirado
     );
 END;
+$function$;-- ============================================================================
+-- T5 — fn_obtener_config_inflacion: LECTURA de la config del usuario (S6.8)
+--   El tab "Inflación" no precargaba nada: siempre mostraba AR/proxy_dolar
+--   aunque el dueño hubiera guardado otra cosa (no existía RPC de lectura).
+--   Contrato: {pais, fuente_inflacion, inflacion_6m, inflacion_12m, configurado}
+--   Sin config previa → configurado=false y los defaults de la UI.
+--   Sin escritura, sin efectos secundarios: es un GET.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.fn_obtener_config_inflacion()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_user_id bigint;
+    v_config RECORD;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    SELECT * INTO v_config FROM public.p_config_inflacion WHERE user_id = v_user_id;
+
+    IF v_config IS NULL THEN
+        RETURN jsonb_build_object(
+            'pais', NULL,
+            'fuente_inflacion', 'proxy_dolar',
+            'inflacion_6m', NULL,
+            'inflacion_12m', NULL,
+            'configurado', false
+        );
+    END IF;
+
+    RETURN jsonb_build_object(
+        'pais', v_config.pais,
+        'fuente_inflacion', COALESCE(v_config.fuente_inflacion, 'proxy_dolar'),
+        'inflacion_6m', v_config.inflacion_acumulada_6m,
+        'inflacion_12m', v_config.inflacion_acumulada_12m,
+        'configurado', true
+    );
+END;
 $function$;
