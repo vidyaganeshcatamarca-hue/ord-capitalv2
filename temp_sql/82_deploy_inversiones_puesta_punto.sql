@@ -193,3 +193,256 @@ BEGIN
     ORDER BY i.fecha_liquidacion DESC;
 END;
 $function$;
+-- ============================================================================
+-- T3 — patrimonio multimoneda + rendimiento/distribución en moneda local (S2/S3)
+--   * fn_reporte_patrimonio_inversiones: NUEVO CONTRATO jsonb:
+--       {moneda_local, total_moneda_local, totales_por_moneda[], monedas_sin_cotizacion[]}
+--     Solo inversiones activas (las liquidadas ya devolvieron el dinero a la
+--     billetera). Conversión por fn_valor_a_moneda_local (pivote p_divisas,
+--     nunca inventa: moneda sin cotización queda fuera del total local y
+--     listada en monedas_sin_cotizacion). Sin ARS/USD hardcodeados.
+--     ATENCIÓN: el front VIEJO llama con p_cotizacion_usd y espera
+--     total_pesos/total_dolares → deployar SQL y frontend juntos.
+--   * fn_reporte_rendimiento_vs_inflacion: agrega convertido a moneda local
+--     (antes sumaba monedas mezcladas; el % era ficción con 2+ monedas).
+--   * fn_reporte_distribucion_activos: valor_total y porcentaje en moneda
+--     local + columna moneda_local para que el front formatee bien.
+-- ============================================================================
+CREATE OR REPLACE FUNCTION public.fn_reporte_patrimonio_inversiones()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_user_id bigint;
+    v_moneda_local text;
+    v_total_local numeric := 0;
+    v_convertido numeric;
+    v_totales jsonb := '[]'::jsonb;
+    v_sin_cotizacion text[] := ARRAY[]::text[];
+    r RECORD;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    -- Moneda local del país confirmado; sin configuración regional, ARS (histórico).
+    SELECT COALESCE(r.moneda_default, 'ARS') INTO v_moneda_local
+    FROM public.p_config_region r WHERE r.user_id = v_user_id;
+    v_moneda_local := COALESCE(v_moneda_local, 'ARS');
+
+    FOR r IN
+        SELECT COALESCE(i.moneda, 'ARS') AS moneda,
+               COALESCE(SUM(
+                   CASE
+                       WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+                       WHEN i.tasa_anual_tna > 0 THEN
+                           i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+                       ELSE i.monto_invertido_original
+                   END
+               ), 0) AS total
+        FROM p_inversiones i
+        WHERE i.user_id = v_user_id AND i.estado = 'activa'
+        GROUP BY COALESCE(i.moneda, 'ARS')
+        ORDER BY (COALESCE(i.moneda, 'ARS') = v_moneda_local) DESC, COALESCE(i.moneda, 'ARS')
+    LOOP
+        v_totales := v_totales || jsonb_build_object('moneda', r.moneda, 'total', r.total);
+        v_convertido := NULL;
+        IF r.total <> 0 THEN
+            SELECT c.valor INTO v_convertido FROM fn_valor_a_moneda_local(r.total, r.moneda, v_user_id) c;
+            IF v_convertido IS NOT NULL THEN
+                v_total_local := v_total_local + v_convertido;
+            ELSE
+                v_sin_cotizacion := v_sin_cotizacion || r.moneda;
+            END IF;
+        END IF;
+    END LOOP;
+
+    RETURN jsonb_build_object(
+        'moneda_local', v_moneda_local,
+        'total_moneda_local', ROUND(v_total_local, 2),
+        'totales_por_moneda', v_totales,
+        'monedas_sin_cotizacion', to_jsonb(v_sin_cotizacion)
+    );
+END;
+$function$;
+
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.fn_reporte_rendimiento_vs_inflacion()
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_user_id bigint;
+    v_moneda_local text;
+    v_total_actual numeric := 0;
+    v_total_original numeric := 0;
+    v_conv_actual numeric;
+    v_conv_original numeric;
+    v_rendimiento_nominal numeric := 0;
+    v_inflacion_6m numeric := 0;
+    v_rendimiento_real numeric := 0;
+    v_config_inflacion RECORD;
+    v_inflacion_disponible boolean := false;
+    v_mensaje_key text;
+    r RECORD;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    SELECT COALESCE(cfg.moneda_default, 'ARS') INTO v_moneda_local
+    FROM public.p_config_region cfg WHERE cfg.user_id = v_user_id;
+    v_moneda_local := COALESCE(v_moneda_local, 'ARS');
+
+    -- Totales en MONEDA LOCAL: la inflación acumulada está expresada en la
+    -- moneda local, así que el rendimiento solo es coherente convertido.
+    -- Moneda sin cotización: queda fuera de ambos totales (nunca inventar).
+    FOR r IN
+        SELECT COALESCE(i.moneda, 'ARS') AS moneda,
+               COALESCE(SUM(
+                   CASE
+                       WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+                       WHEN i.tasa_anual_tna > 0 THEN
+                           i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+                       ELSE i.monto_invertido_original
+                   END
+               ), 0) AS total_actual,
+               COALESCE(SUM(i.monto_invertido_original), 0) AS total_original
+        FROM p_inversiones i
+        WHERE i.user_id = v_user_id AND i.estado = 'activa'
+        GROUP BY COALESCE(i.moneda, 'ARS')
+    LOOP
+        v_conv_actual := NULL;
+        v_conv_original := NULL;
+        SELECT c.valor INTO v_conv_actual FROM fn_valor_a_moneda_local(r.total_actual, r.moneda, v_user_id) c;
+        SELECT c.valor INTO v_conv_original FROM fn_valor_a_moneda_local(r.total_original, r.moneda, v_user_id) c;
+        IF v_conv_actual IS NOT NULL THEN v_total_actual := v_total_actual + v_conv_actual; END IF;
+        IF v_conv_original IS NOT NULL THEN v_total_original := v_total_original + v_conv_original; END IF;
+    END LOOP;
+
+    IF v_total_original = 0 THEN
+        RETURN jsonb_build_object(
+            'sin_inversiones', true,
+            'moneda_local', v_moneda_local,
+            'mensaje_key', 'msg_no_investments'
+        );
+    END IF;
+
+    v_rendimiento_nominal := ((v_total_actual - v_total_original) / v_total_original) * 100;
+
+    BEGIN
+        SELECT * INTO v_config_inflacion FROM p_config_inflacion WHERE user_id = v_user_id;
+    EXCEPTION WHEN OTHERS THEN
+        v_config_inflacion := NULL;
+    END;
+
+    IF v_config_inflacion IS NOT NULL
+       AND v_config_inflacion.fuente_inflacion IS NOT NULL
+       AND v_config_inflacion.fuente_inflacion != 'desactivado'
+       AND COALESCE(v_config_inflacion.inflacion_acumulada_6m, 0) > 0
+    THEN
+        v_inflacion_disponible := true;
+        v_inflacion_6m := v_config_inflacion.inflacion_acumulada_6m;
+        v_rendimiento_real := ((1 + (v_rendimiento_nominal / 100)) / (1 + (v_inflacion_6m / 100)) - 1) * 100;
+    END IF;
+
+    IF NOT v_inflacion_disponible THEN
+        v_mensaje_key := 'msg_configure_inflation';
+    ELSIF v_rendimiento_real > 0 THEN
+        v_mensaje_key := 'msg_portfolio_beat_inflation';
+    ELSE
+        v_mensaje_key := 'msg_portfolio_lost_purchasing_power';
+    END IF;
+
+    RETURN jsonb_build_object(
+        'sin_inversiones', false,
+        'moneda_local', v_moneda_local,
+        'total_actual', ROUND(v_total_actual, 2),
+        'total_original', ROUND(v_total_original, 2),
+        'rendimiento_nominal', ROUND(v_rendimiento_nominal, 2),
+        'inflacion_disponible', v_inflacion_disponible,
+        'inflacion_6m', CASE WHEN v_inflacion_disponible THEN ROUND(v_inflacion_6m, 2) ELSE NULL END,
+        'rendimiento_real', CASE WHEN v_inflacion_disponible THEN ROUND(v_rendimiento_real, 2) ELSE NULL END,
+        'fuente_inflacion', COALESCE(v_config_inflacion.fuente_inflacion, 'desactivado'),
+        'mensaje_key', v_mensaje_key
+    );
+END;
+$function$;
+
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION public.fn_reporte_distribucion_activos()
+ RETURNS TABLE(tipo_activo text, cantidad integer, valor_total numeric, porcentaje_valor numeric, moneda_local text)
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+    v_user_id bigint;
+    v_moneda_local text;
+    v_total_general numeric;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
+    END IF;
+
+    SELECT COALESCE(r.moneda_default, 'ARS') INTO v_moneda_local
+    FROM public.p_config_region r WHERE r.user_id = v_user_id;
+    v_moneda_local := COALESCE(v_moneda_local, 'ARS');
+
+    -- Valor de cada inversión convertido a moneda local (pivote p_divisas);
+    -- moneda sin cotización aporta NULL y queda fuera del total (nunca inventar).
+    SELECT COALESCE(SUM(
+        (SELECT c.valor FROM fn_valor_a_moneda_local(
+            CASE
+                WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+                WHEN i.tasa_anual_tna > 0 THEN
+                    i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+                ELSE i.monto_invertido_original
+            END,
+            COALESCE(i.moneda, 'ARS'), v_user_id) c)
+    ), 0) INTO v_total_general
+    FROM p_inversiones i
+    WHERE i.user_id = v_user_id AND i.estado = 'activa';
+
+    RETURN QUERY
+    SELECT
+        CASE WHEN i.tasa_anual_tna > 0 THEN 'plazo_fijo'::text ELSE 'variable'::text END AS tipo_activo,
+        COUNT(*)::int AS cantidad,
+        COALESCE(SUM(
+            (SELECT c.valor FROM fn_valor_a_moneda_local(
+                CASE
+                    WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+                    WHEN i.tasa_anual_tna > 0 THEN
+                        i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+                    ELSE i.monto_invertido_original
+                END,
+                COALESCE(i.moneda, 'ARS'), v_user_id) c)
+        ), 0)::numeric AS valor_total,
+        CASE
+            WHEN v_total_general > 0
+            THEN ROUND((SUM(
+                (SELECT c.valor FROM fn_valor_a_moneda_local(
+                    CASE
+                        WHEN i.valor_mercado_actual IS NOT NULL THEN i.valor_mercado_actual
+                        WHEN i.tasa_anual_tna > 0 THEN
+                            i.monto_invertido_original + (i.monto_invertido_original * (i.tasa_anual_tna / 100) * (CURRENT_DATE - i.fecha_inicio) / 365)
+                        ELSE i.monto_invertido_original
+                    END,
+                    COALESCE(i.moneda, 'ARS'), v_user_id) c)
+            ) / v_total_general) * 100, 2)
+            ELSE 0
+        END::numeric AS porcentaje_valor,
+        v_moneda_local AS moneda_local
+    FROM p_inversiones i
+    WHERE i.user_id = v_user_id AND i.estado = 'activa'
+    GROUP BY (CASE WHEN i.tasa_anual_tna > 0 THEN 'plazo_fijo'::text ELSE 'variable'::text END), v_moneda_local
+    ORDER BY valor_total DESC;
+END;
+$function$;
