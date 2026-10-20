@@ -1278,7 +1278,7 @@ export const saneamiento = {
   saneamiento_proximos_vencimientos: "Próximos Vencimientos",
   saneamiento_marcar_pagado: "Marcar Pagado",
   saneamiento_calendario_vacio_titulo: "¡Calendario limpio!",
-  saneamiento_calendario_vacio_desc: "No hay vencimientos en los próximos {días} días.",
+  saneamiento_calendario_vacio_desc: "No hay vencimientos en los próximos {dias} días.",
   saneamiento_calendario_recurrente_info: "Los gastos recurrentes se registran desde el botón +.",
   saneamiento_tipo_cuota_prestamo: "Cuota préstamo",
   saneamiento_tipo_vencimiento_tarjeta: "Tarjeta de crédito",
