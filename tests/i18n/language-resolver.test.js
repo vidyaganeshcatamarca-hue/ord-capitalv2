@@ -110,8 +110,15 @@ test('resolveLanguage ignores an unsupported stored value', () => {
 })
 
 test('resolveLanguage reads device locales in preference order', () => {
+  // The browser's first usable language wins. English is now a shipped
+  // dictionary, so an English device resolves to English.
   assert.deepEqual(
     resolveLanguage({ deviceLocales: ['fr-FR', 'en-US', 'es-PY'] }),
+    { lang: 'en', source: 'device' }
+  )
+  // With no English in the list, the first supported tag still wins.
+  assert.deepEqual(
+    resolveLanguage({ deviceLocales: ['fr-FR', 'es-PY'] }),
     { lang: 'es', source: 'device' }
   )
 })
@@ -124,8 +131,15 @@ test('resolveLanguage prefers the device locale over the country suggestion', ()
 })
 
 test('resolveLanguage uses the country suggestion when the device has nothing usable', () => {
+  // A stored 'en' is a supported language now, so it is honoured instead of
+  // being ignored as an unsupported value.
   assert.deepEqual(
     resolveLanguage({ stored: 'en', deviceLocales: ['fr-FR'], countrySuggested: 'es' }),
+    { lang: 'en', source: 'stored' }
+  )
+  // A stored language that is NOT shipped still falls through to the country.
+  assert.deepEqual(
+    resolveLanguage({ stored: 'pt', deviceLocales: ['fr-FR'], countrySuggested: 'es' }),
     { lang: 'es', source: 'country' }
   )
 })
@@ -133,23 +147,27 @@ test('resolveLanguage uses the country suggestion when the device has nothing us
 test('resolveLanguage ends at DEFAULT_LANG when no signal is supported', () => {
   assert.deepEqual(resolveLanguage({}), { lang: DEFAULT_LANG, source: 'default' })
   assert.deepEqual(
-    resolveLanguage({ stored: 'en', deviceLocales: ['fr-FR'], countrySuggested: 'de' }),
+    resolveLanguage({ stored: 'pt', deviceLocales: ['fr-FR'], countrySuggested: 'de' }),
     { lang: DEFAULT_LANG, source: 'default' }
   )
 })
 
 test('isSupported narrows to the shipped languages only', () => {
   assert.equal(isSupported('es'), true)
-  assert.equal(isSupported('en'), false)
+  assert.equal(isSupported('en'), true)
   assert.equal(isSupported('ES'), false)
   assert.equal(isSupported(''), false)
   assert.equal(isSupported(null), false)
   assert.equal(isSupported(undefined), false)
+  // A language with no shipped dictionary is not supported.
+  assert.equal(isSupported('fr'), false)
+  assert.equal(isSupported('pt'), false)
 })
 
 test('fallbackChain starts at the requested language and ends at DEFAULT_LANG', () => {
   assert.deepEqual(fallbackChain('es'), ['es'])
-  assert.deepEqual(fallbackChain('en'), ['es'])
+  // English falls back to Spanish, so a key missing from en.ts still renders.
+  assert.deepEqual(fallbackChain('en'), ['en', 'es'])
   assert.deepEqual(fallbackChain('zz'), ['es'])
   assert.deepEqual(fallbackChain(''), ['es'])
 })
