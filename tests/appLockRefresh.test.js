@@ -51,7 +51,11 @@ test('every post-resolution status refresh is silent (context contract)', () => 
     { fn: 'verifyPin', unlocksExplicitly: true },
     { fn: 'definePin', unlocksExplicitly: true },
     { fn: 'deactivatePin', unlocksExplicitly: false },
-    { fn: 'unlockWithBiometria', unlocksExplicitly: false },
+    // Owner bug (tanda 9): biometry accepted the fingerprint but never dropped
+    // the overlay — the silent refresh deliberately leaves `locked` alone, so
+    // the user was trapped in the same accepted-again-and-again loop the PIN hit
+    // in tanda 4. It must drop the overlay explicitly, like verifyPin.
+    { fn: 'unlockWithBiometria', unlocksExplicitly: true },
   ]
   for (const { fn, unlocksExplicitly } of resolutions) {
     const start = ctx.indexOf(`const ${fn} = useCallback`)

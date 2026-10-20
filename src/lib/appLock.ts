@@ -133,6 +133,39 @@ export function statusRefreshArmsLock(
 }
 
 /**
+ * Owner (tanda 9, spec S4 revision): when biometry is registered on this device
+ * it is the ONLY way in — the lock screen must not ask "PIN or fingerprint?".
+ * The PIN appears only as a fallback, after biometry has failed this many times
+ * in a row (owner: "a menos que la huella no se pueda detectar por algún
+ * problema de tres veces, ahí recién le podemos pedir un PIN").
+ */
+export const BIOMETRIC_MAX_ATTEMPTS = 3
+
+/** Which entry the lock screen presents. */
+export type LockEntryMode = 'biometria' | 'pin'
+
+/**
+ * Resolves the entry mode for the lock overlay.
+ *
+ *   no biometry on this device      → pin
+ *   biometry, fewer than 3 failures → biometria
+ *   biometry, 3+ failures           → pin (the only remaining way in)
+ *
+ * Garbage failure counts fail closed to the PIN: it is the path that cannot be
+ * blocked by a broken sensor or a cancelled platform prompt.
+ */
+export function lockEntryMode(
+  biometriaEnDispositivo: boolean,
+  biometricFailures: number,
+): LockEntryMode {
+  if (!biometriaEnDispositivo) return 'pin'
+  const failures = Number.isFinite(biometricFailures)
+    ? Math.max(0, Math.trunc(biometricFailures))
+    : BIOMETRIC_MAX_ATTEMPTS
+  return failures >= BIOMETRIC_MAX_ATTEMPTS ? 'pin' : 'biometria'
+}
+
+/**
  * S3/S6/S7 — maps the server-side PIN state to what the lock UI should show.
  *
  * The server clears `bloqueado_hasta`/PIN at the end of the window; the client

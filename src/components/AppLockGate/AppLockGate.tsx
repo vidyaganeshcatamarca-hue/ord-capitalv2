@@ -3,8 +3,10 @@
 //
 // Rendered once by AppLockProvider; while there is nothing to enforce it is
 // an inert null. Three presented states (src/lib/appLock.ts mapping):
-//   locked        → resolve the lock: biometry (if enabled on this device) or
-//                   explicit "Usar PIN" (S4: o PIN o huella, no cascade).
+//   locked        → resolve the lock. Owner revision (tanda 9, S4): if biometry
+//                   is registered on this device it is the ONLY way in; the PIN
+//                   is never offered as a choice and appears only after three
+//                   biometric failures (lockEntryMode).
 //   cooldown      → the 24 h lockout window (S6/owner "24 horas"): shows when
 //                   access can be restored; nothing can be entered meanwhile.
 //   reset_pending → the lockout cleared the PIN (S7): define a new 4-digit PIN
@@ -13,10 +15,9 @@
 import { useMemo, useState, useEffect } from 'react'
 import { useAppLock } from '@/contexts/AppLockContext'
 import { t } from '@/locales/i18n'
+import { lockEntryMode } from '@/lib/appLock'
 import { PinKeypad } from './PinKeypad'
 import './AppLockGate.css'
-
-type EntryMode = 'choose' | 'pin' | 'biometria'
 
 export function AppLockGate() {
   const {
@@ -30,15 +31,19 @@ export function AppLockGate() {
     unlockWithBiometria,
   } = useAppLock()
 
-  const [mode, setMode] = useState<EntryMode>('choose')
+  const [bioFailures, setBioFailures] = useState(0)
   const [errorKey, setErrorKey] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
 
-  // Reset the presented mode each time the overlay opens or the lock state
+  // Owner (tanda 9): biometrics first when the device has it. The counter lives
+  // here so a fresh attempt after the overlay reopens starts clean.
+  const entry = lockEntryMode(biometriaEnDispositivo, bioFailures)
+
+  // Reset the presented state each time the overlay opens or the lock state
   // crosses categories (cooldown → reset changes the whole panel).
   useEffect(() => {
     if (locked) {
-      setMode(biometriaEnDispositivo ? 'choose' : 'pin')
+      setBioFailures(0)
       setErrorKey(null)
     }
   }, [locked, biometriaEnDispositivo, (lockState as { kind?: string } | null)?.kind])
@@ -65,9 +70,9 @@ export function AppLockGate() {
         )}
         {lock.kind === 'locked' && (
           <LockedPanel
-            mode={mode}
-            setMode={setMode}
-            biometriaEnDispositivo={biometriaEnDispositivo}
+            entry={entry}
+            bioFailures={bioFailures}
+            onBiometricFailure={() => setBioFailures((n) => n + 1)}
             busy={busy}
             errorKey={errorKey}
             setErrorKey={setErrorKey}
@@ -84,9 +89,9 @@ export function AppLockGate() {
 }
 
 function LockedPanel({
-  mode,
-  setMode,
-  biometriaEnDispositivo,
+  entry,
+  bioFailures,
+  onBiometricFailure,
   busy,
   errorKey,
   setErrorKey,
@@ -96,9 +101,9 @@ function LockedPanel({
   setBusy,
   unlockWithBiometria,
 }: {
-  mode: EntryMode
-  setMode: (m: EntryMode) => void
-  biometriaEnDispositivo: boolean
+  entry: 'biometria' | 'pin'
+  bioFailures: number
+  onBiometricFailure: () => void
   busy: boolean
   errorKey: string | null
   setErrorKey: (k: string | null) => void
@@ -139,7 +144,12 @@ function LockedPanel({
     setBusy(true)
     const result = await unlockWithBiometria()
     setBusy(false)
-    if (!result.ok) setErrorKey('app_lock_biometria_error')
+    if (!result.ok) {
+      // A cancelled platform prompt counts as a failure on purpose: after three
+      // the PIN appears, so a broken sensor can never lock the user out.
+      onBiometricFailure()
+      setErrorKey('app_lock_biometria_error')
+    }
   }
 
   return (
@@ -147,8 +157,9 @@ function LockedPanel({
       <h1 className="app-lock-title">{t('app_lock_title')}</h1>
       <p className="app-lock-subtitle">{t('app_lock_subtitle')}</p>
 
-      {mode === 'choose' && (
+      {entry === 'biometria' && (
         <div className="app-lock-actions">
+          {/* Owner (tanda 9): biometry registered → no method chooser, no PIN. */}
           <button
             type="button"
             className="app-lock-primary-action"
@@ -157,18 +168,10 @@ function LockedPanel({
           >
             {t('app_lock_use_biometria')}
           </button>
-          <button
-            type="button"
-            className="app-lock-secondary-action"
-            onClick={() => setMode('pin')}
-            disabled={busy || showBackoff > 0}
-          >
-            {t('app_lock_use_pin')}
-          </button>
         </div>
       )}
 
-      {mode === 'pin' && (
+      {entry === 'pin' && (
         <PinKeypad
           disabled={busy || showBackoff > 0}
           hint={attempts > 0 ? t('app_lock_wrong_pin') : null}
@@ -180,6 +183,10 @@ function LockedPanel({
         <p className="app-lock-hint" role="status">
           {t('app_lock_backoff', { segundos: showBackoff })}
         </p>
+      )}
+      {/* Why the PIN showed up: biometry failed three times in a row. */}
+      {entry === 'pin' && bioFailures >= 3 && showBackoff === 0 && (
+        <p className="app-lock-hint" role="status">{t('app_lock_biometria_fallback')}</p>
       )}
       {errorKey && showBackoff === 0 && <p className="app-lock-error" role="alert">{t(errorKey)}</p>}
     </>

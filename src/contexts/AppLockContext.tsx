@@ -283,6 +283,14 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
     try {
       // S7 — biometric success proves the owner on this device: re-arm the PIN.
       await rpc(RPC_PIN_REACTIVAR)
+      // Owner bug (tanda 9): this used to rely on the status refresh to drop the
+      // overlay, but a silent refresh deliberately does NOT touch `locked` — so
+      // the accepted fingerprint left the lock screen up and every new attempt
+      // re-ran into it ("ingresa la huella y vuelve a quedar trabado"). Same
+      // trap as tanda 4 bug 1, on the biometry path.
+      setAttempts(0)
+      setWaitingBackoffSeconds(null)
+      setLocked(false)
       await refreshStatus({ mode: 'silent' })
       return { ok: true, reason: null }
     } catch {
