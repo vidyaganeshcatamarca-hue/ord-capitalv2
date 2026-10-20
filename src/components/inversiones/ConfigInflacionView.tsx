@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { supabase } from '@/lib/supabase'
+import { rpc, supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import './ConfigInflacionView.css'
@@ -11,6 +11,15 @@ export interface ConfigInflacionViewProps {
 
 type Pais = 'AR' | 'MX' | 'BR' | 'CL' | 'CO' | 'UY' | 'PY' | 'BO' | 'PE'
 type FuenteInflacion = 'proxy_dolar' | 'desactivado' | 'api_automatica'
+
+/** Contrato de fn_obtener_config_inflacion (T5). */
+interface ConfigInflacionActual {
+  pais: string | null
+  fuente_inflacion: string | null
+  inflacion_6m: number | null
+  inflacion_12m: number | null
+  configurado: boolean
+}
 
 const PAISES: { value: Pais; key: string }[] = [
   { value: 'AR', key: 'country_argentina' },
@@ -37,10 +46,45 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [configurado, setConfigurado] = useState(false)
 
+  // T5/T8: precargar la config REAL del usuario. Antes no existía RPC de
+  // lectura y el tab siempre mostraba AR/proxy_dolar, aunque el dueño ya
+  // hubiera guardado otra cosa.
   useEffect(() => {
-    setLoading(false)
-  }, [])
+    let cancelled = false
+
+    async function loadConfig() {
+      setLoading(true)
+      try {
+        const res = await rpc<ConfigInflacionActual>('fn_obtener_config_inflacion')
+        if (cancelled) return
+        const actual = res || null
+        const paisGuardado = String(actual?.pais ?? '').trim().toUpperCase()
+        if (paisGuardado && PAISES.some((p) => p.value === paisGuardado)) {
+          setPais(paisGuardado as Pais)
+        }
+        const fuenteGuardada = String(actual?.fuente_inflacion ?? '').trim()
+        if (fuenteGuardada && FUENTES.some((f) => f.value === fuenteGuardada)) {
+          setFuente(fuenteGuardada as FuenteInflacion)
+        }
+        setConfigurado(Boolean(actual?.configurado))
+      } catch (err) {
+        if (!cancelled) {
+          // La config previa no es crítica: se sigue con los defaults.
+          const message = parseError(err) || t('error_generic')
+          showToast(message, 'error')
+        }
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
+    loadConfig()
+    return () => {
+      cancelled = true
+    }
+  }, [showToast])
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -57,6 +101,7 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
 
       if (rpcError) throw rpcError
 
+      setConfigurado(true)
       showToast(t('msg_inflation_configured'), 'success')
       onSaved?.()
     } catch (err) {
@@ -79,7 +124,15 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
           <p className="config-inflacion-eyebrow">{t('label_inflation_source')}</p>
           <h2 className="config-inflacion-title">{t('modal_config_inflation_title')}</h2>
         </div>
-        <span className="config-inflacion-pill">{t('inflation_source_proxy_dolar')}</span>
+        <span className="config-inflacion-pill">
+          {!configurado
+            ? t('inflation_source_not_configured')
+            : t(fuente === 'api_automatica'
+              ? 'inflation_source_api_automatica'
+              : fuente === 'desactivado'
+              ? 'inflation_source_desactivado'
+              : 'inflation_source_proxy_dolar')}
+        </span>
       </header>
 
       {loading ? (
