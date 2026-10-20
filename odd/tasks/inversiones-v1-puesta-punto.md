@@ -61,11 +61,48 @@ hecho; origin/main está 537 commits atrás).
 | T2 | S6.3, S6.4 | SQL: cartera solo `activas` + columna `monto_liquidado`; historial con columna `moneda` | inline | `821f217` |
 | T3 | S3, S2, S6.9 | SQL: `fn_reporte_patrimonio_inversiones` → jsonb `{moneda_local, total_moneda_local, totales_por_moneda}` (solo activas, conversión por pivote); `fn_reporte_rendimiento_vs_inflacion` y `fn_reporte_distribucion_activos` agregan convertido a moneda local | inline | `432c13e` |
 | T4 | S6.5 | SQL: `fn_liquidar_inversion` acredita solo lo no rescatado (`p_monto_total_retirado - monto_liquidado`), sin re-acreditar capital; labels capital/ganancia/pérdida sobre saldos restantes | inline | `a510ee5` |
-| T5 | S6.8 | SQL: nueva `fn_obtener_config_inflacion` (GET país+fuente del usuario) | inline | — |
-| T6 | S3, S2, S6.9 | Front: `RendimientoRealWidget` consume el contrato nuevo: total en moneda local + una línea por moneda con saldo ≠ 0 (patrón hero Home); fuera la fila USD hardcodeada | inline | — |
-| T7 | S6.6, S6.7 | Front: 15+ keys i18n en `src/locales/es.ts` (sección inversiones) + resolver de labels `prefix: nombre` en `DetalleInversionView` (vía `t()`, sin tocar datos históricos) | inline | — |
-| T8 | S6.8 | Front: `ConfigInflacionView` precarga país+fuente vía T5; el pill refleja la fuente real | inline | — |
-| T9 | S2 | Verificación: sonda SQL post-deploy (contratos), tests aplicables del runner, checklist de estreno manual para el dueño | inline | — |
+| T5 | S6.8 | SQL: nueva `fn_obtener_config_inflacion` (GET país+fuente del usuario) | inline | `fcdf40e` |
+| T6 | S3, S2, S6.9 | Front: `RendimientoRealWidget` consume el contrato nuevo: total en moneda local + una línea por moneda con saldo ≠ 0 (patrón hero Home); fuera la fila USD hardcodeada | inline | `ff02727` |
+| T7 | S6.6, S6.7 | Front: 18 keys i18n en `src/locales/es.ts` (sección inversiones) + resolver de labels `key: valor` (`src/lib/inversionesLabels.ts`) cableado en `translateDetalle` (billetera, Home, detalle) | inline | `5412071` |
+| T8 | S6.8 | Front: `ConfigInflacionView` precarga país+fuente vía T5; el pill refleja la fuente real (o "sin configurar") | inline | `549f709` |
+| T9 | S2 | Verificación: test de contrato front↔SQL (9 tests, con mutación probada), postcheck de deploy, checklist de estreno manual para el dueño | inline | `<T9>` |
+
+## Checklist de estreno (para el dueño, después del deploy)
+
+El módulo **nunca fue probado en la app**. Este es el recorrido a mano, en orden, con
+lo que hay que mirar. Si algo falla, es un hallazgo nuevo: anotarlo y pasarlo.
+
+**Antes de empezar**: deploy con autorización → `node temp_sql/82_deploy_real.mjs`
+→ después `node temp_sql/82_postcheck.mjs` (debe imprimir 8 ✓ y salir con 0).
+El front y el SQL salen **en la misma ventana** (T3 cambió el contrato del patrimonio).
+
+1. **Header**: el número grande es tu moneda local; debajo, una línea por cada moneda
+   con saldo (0 = sin línea; negativa = aparece). Si tu país no es Argentina, el número
+   NO debe salir en pesos.
+2. **Nueva inversión** → Plazo Fijo con TNA: al crearla, el semáforo debe verse
+   **verde** ("Actualizado"), no rojo. El valor actual debe ser mayor al capital
+   (devenga por TNA) y crecer al día siguiente.
+3. **Nueva inversión** → Cripto (variable): nace en capital, sin TNA, y no puede
+   llevar TNA (el backend lo rechaza: "Los activos variables no pueden tener tasa fija").
+4. **Cartera**: la inversión liquidada NO debe seguir apareciendo acá (solo en Historial).
+5. **Actualizar Valor**: cambiar el valor → el semáforo vuelve a verde, el rendimiento
+   nominal se recalcula y el detalle muestra el valor nuevo.
+6. **Liquidar (total)**: el saldo de la billetera **suma exactamente** lo que retiraste
+   (ni más ni menos). Repetir la liquidación debe ser imposible.
+7. **Rescate parcial**: retirar una parte → la tarjeta muestra el saldo restante
+   (no el valor completo). Liquidar después: la billetera suma **solo** la parte que
+   faltaba, no el capital entero (este era el doble conteo).
+8. **Historial**: las inversiones liquidadas aparecen con su moneda real (si liquidaste
+   en USD, los montos se muestran en USD, no en la moneda por defecto).
+9. **Distribución**: el donut y la tabla suman el total de la cartera, en tu moneda local.
+10. **Tab Inflación**: al abrirlo, el país y la fuente muestran **lo que guardaste**
+    (no AR/proxy_dolar de fábrica). Guardar y reabrir: sigue igual. El pill dice
+    "Sin configurar" si nunca guardaste.
+11. **Movimientos**: en la billetera y en el detalle de la inversión, el movimiento dice
+    "Inversión: Bitcoin", "Ganancia por liquidación: GGAL" — nunca la key cruda.
+12. **Toasts**: ningún error debe mostrar una key tipo `error_investment_...`; sale el
+    texto en español.
+
 
 **Deploy**: T1–T5 son SQL contra producción → UN deploy real con autorización explícita
 del dueño (convención temp_sql, scripts numerados + dump de verificación). El front
@@ -111,3 +148,12 @@ del dueño (convención temp_sql, scripts numerados + dump de verificación). El
   el archivo desde el commit de T2 (`git show 821f217:...`) y re-agregando T3 con el
   editor de archivos. Lección: para bloques SQL grandes, escribir el fragmento con la
   herramienta de archivos y concatenar con `cat`, nunca heredoc en bash.
+- **L5** (2026-10-20, reanudación): el dueño dijo "continua" → se retoma desde T5.
+  Se completaron T5–T9 (`fcdf40e` T5, `ff02727` T6, `549f709` T8, `5412071` T7) y se
+  preparó T9. Coordinación con PI1 resuelta (obs #663): PI1 crea `en.ts` y NO toca
+  `es.ts` → T7 quedó libre; mi `es.ts` quedó con 22 líneas agregadas en la sección
+  `inversiones` y nada más. Verificación: 82 tests pasan (9 contrato front↔SQL con
+  mutación probada, 9 labels, 10 patrimonio, 18 transfer-titles, 8 hero, 28 i18n),
+  `tsc -b` limpio. **Sigue sin deploy** (esperando autorización del dueño).
+  Pendiente de T9: post-deploy (`temp_sql/82_postcheck.mjs`) y el checklist manual
+  de 12 puntos (ya escrito en el doc).

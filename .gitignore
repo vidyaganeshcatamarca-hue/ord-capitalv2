@@ -48,6 +48,7 @@ tests/onboarding/*
 tests/inversiones/*
 !tests/inversiones/patrimonio-inversiones.test.js
 !tests/inversiones/labels-movimientos.test.js
+!tests/inversiones/contrato-rpc.test.js
 !tests/keypad_decimal_separator.test.js
 scratch/
 walkthrough.md
