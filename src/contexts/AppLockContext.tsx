@@ -13,7 +13,7 @@
 //                              (RAISE only on misuse; the attempt counter is a
 //                              returned row, never an exception)
 //   fn_configurar_pin(p, a?) → void (RAISE on wrong current PIN / weak / format)
-//   fn_reactivar_pin()       → void (biometry cancels an ACTIVE window, S7)
+//   fn_reactivar_pin()       → void (kept server-side; unused by PIN-only UI)
 //   fn_desactivar_pin(a)     → void (RAISE unless the current PIN matches, S8)
 
 import { createContext, useContext, useCallback, useEffect, useMemo, useRef, useState, ReactNode } from 'react'
@@ -28,10 +28,20 @@ import {
   type PinServerState,
   type StatusRefreshMode,
 } from '@/lib/appLock'
-import {
-  biometriaHabilitadaEnEsteDispositivo,
-  desbloquearConBiometria,
-} from '@/lib/biometricAppLock'
+/**
+ * Owner (tanda 12): the app lock is PIN-only, so the per-device biometric
+ * credential is dead weight. The key is purged once per load so a device that had
+ * fingerprints registered stops holding a stray credential.
+ */
+const LEGACY_BIOMETRIA_KEY = 'app_lock_biometria_credencial'
+
+function purgeLegacyBiometria(): void {
+  try {
+    localStorage.removeItem(LEGACY_BIOMETRIA_KEY)
+  } catch {
+    // Private mode or no storage: nothing to clean.
+  }
+}
 
 /**
  * T5 sentinel — the PIN RPCs are deployed and smoke-verified (owner-authorized
@@ -78,17 +88,12 @@ interface AppLockState {
   attempts: number
   /** Non-null while the caller must wait before the next PIN attempt. */
   waitingBackoffSeconds: number | null
-  /** Biometry enabled on THIS device (per-device opt-in, S4). */
-  biometriaEnDispositivo: boolean
   refreshStatus: (options?: { mode?: StatusRefreshMode }) => Promise<void>
   verifyPin: (pin: string) => Promise<PinVerifyResult>
   /** Define/activate a new PIN; when the old one is active it must be passed. */
   definePin: (pin: string, pinActual?: string | null) => Promise<PinVerifyResult>
   /** S8 — quit the protection; demands the current PIN (server-verified). */
   deactivatePin: (pinActual: string) => Promise<PinVerifyResult>
-  /** Register biometry for this device (local credential; S4). */
-  setBiometriaEnDispositivo: (enabled: boolean) => void
-  unlockWithBiometria: () => Promise<PinVerifyResult>
 }
 
 const AppLockContext = createContext<AppLockState | null>(null)
@@ -106,7 +111,6 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
   const [locked, setLocked] = useState(false)
   const [attempts, setAttempts] = useState(0)
   const [waitingBackoffSeconds, setWaitingBackoffSeconds] = useState<number | null>(null)
-  const [biometriaEnDispositivo, setBiometriaEnDispositivo] = useState(false)
   const goneBackgroundAt = useRef<number | null>(null)
   // Guard against visibility fires before the first status fetch resolves.
   const estadoRef = useRef<PinServerState | null>(null)
@@ -143,7 +147,7 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
   }, [session])
 
   useEffect(() => {
-    setBiometriaEnDispositivo(biometriaHabilitadaEnEsteDispositivo())
+    purgeLegacyBiometria()
     void refreshStatus({ mode: 'arm' })
     return () => {
       goneBackgroundAt.current = null
@@ -274,30 +278,6 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
     [session, refreshStatus],
   )
 
-  const unlockWithBiometria = useCallback(async (): Promise<PinVerifyResult> => {
-    if (!session || !PIN_BACKEND_ENABLED || !biometriaHabilitadaEnEsteDispositivo()) {
-      return { ok: false, reason: 'unavailable' }
-    }
-    const verified = await desbloquearConBiometria()
-    if (!verified) return { ok: false, reason: 'error' }
-    try {
-      // S7 — biometric success proves the owner on this device: re-arm the PIN.
-      await rpc(RPC_PIN_REACTIVAR)
-      // Owner bug (tanda 9): this used to rely on the status refresh to drop the
-      // overlay, but a silent refresh deliberately does NOT touch `locked` — so
-      // the accepted fingerprint left the lock screen up and every new attempt
-      // re-ran into it ("ingresa la huella y vuelve a quedar trabado"). Same
-      // trap as tanda 4 bug 1, on the biometry path.
-      setAttempts(0)
-      setWaitingBackoffSeconds(null)
-      setLocked(false)
-      await refreshStatus({ mode: 'silent' })
-      return { ok: true, reason: null }
-    } catch {
-      return { ok: false, reason: 'error' }
-    }
-  }, [session, refreshStatus])
-
   const lockState = useMemo<LockState | null>(() => {
     if (!session || serverEstado == null) return null
     return resolveLockState(serverEstado, bloqueadoHasta, new Date())
@@ -309,15 +289,12 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
       locked: locked && serverEstado != null,
       attempts,
       waitingBackoffSeconds,
-      biometriaEnDispositivo,
       refreshStatus,
       verifyPin,
       definePin,
       deactivatePin,
-      setBiometriaEnDispositivo: (enabled: boolean) => setBiometriaEnDispositivo(enabled),
-      unlockWithBiometria,
     }),
-    [lockState, locked, attempts, waitingBackoffSeconds, biometriaEnDispositivo, refreshStatus, verifyPin, definePin, deactivatePin, unlockWithBiometria],
+    [lockState, locked, attempts, waitingBackoffSeconds, refreshStatus, verifyPin, definePin, deactivatePin],
   )
 
   return <AppLockContext.Provider value={value}>{children}</AppLockContext.Provider>

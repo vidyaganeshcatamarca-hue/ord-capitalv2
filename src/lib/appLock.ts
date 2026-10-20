@@ -132,61 +132,6 @@ export function statusRefreshArmsLock(
   return estado === 'activa' || estado === 'en_cooldown'
 }
 
-/**
- * Owner (tanda 9, revised in tanda 11): when biometry is registered on this
- * device it is the ONLY way in — the lock screen must not ask "PIN or
- * fingerprint?". The PIN is the fallback and appears as soon as biometry fails.
- *
- * The owner's reasoning for lowering this from 3 to 1: every extra fingerprint
- * try inside the single OS prompt is a chance for the platform to offer its own
- * pattern/PIN fallback, and when that happens the OS reports success and the app
- * opens. Failing fast keeps the app PIN as the gate instead of the device
- * credential. Residual, and NOT fixable from JavaScript: the platform owns that
- * prompt, so a user who fails the fingerprint several times *inside* it can still
- * reach the system pattern — WebAuthn returns a boolean and never says which
- * modality verified.
- */
-export const BIOMETRIC_MAX_ATTEMPTS = 1
-
-/** Which entry the lock screen presents. */
-export type LockEntryMode = 'biometria' | 'pin'
-
-/**
- * Resolves the entry mode for the lock overlay.
- *
- *   no biometry on this device      → pin
- *   biometry, no failures yet       → biometria
- *   biometry, any failure           → pin (the only remaining way in)
- *
- * Garbage failure counts fail closed to the PIN: it is the path that cannot be
- * blocked by a broken sensor or a cancelled platform prompt.
- */
-export function lockEntryMode(
-  biometriaEnDispositivo: boolean,
-  biometricFailures: number,
-): LockEntryMode {
-  if (!biometriaEnDispositivo) return 'pin'
-  const failures = Number.isFinite(biometricFailures)
-    ? Math.max(0, Math.trunc(biometricFailures))
-    : BIOMETRIC_MAX_ATTEMPTS
-  return failures >= BIOMETRIC_MAX_ATTEMPTS ? 'pin' : 'biometria'
-}
-
-/**
- * Owner (tanda 10): the lock screen must OPEN the platform prompt on its own.
- * "No tiene que hacer esa pregunta, simplemente tiene que abrir el modal del
- * desbloqueo con huella" — no tap-to-authorize button.
- *
- * It fires once per presentation: re-opening the prompt automatically after a
- * failure would spam the system sheet and burn the three attempts the PIN
- * fallback depends on.
- */
-export function shouldAutoPromptBiometria(
-  entry: LockEntryMode,
-  alreadyAttempted: boolean,
-): boolean {
-  return entry === 'biometria' && !alreadyAttempted
-}
 
 /**
  * S3/S6/S7 — maps the server-side PIN state to what the lock UI should show.

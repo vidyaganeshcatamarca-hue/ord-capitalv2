@@ -1,13 +1,18 @@
 // src/pages/Configuracion/ProteccionPage.tsx
-// PIN/biometry protection configuration (feature: pin-huella, tasks T4 + T5).
+// PIN protection configuration (feature: pin-huella, tasks T4 + T5).
 //
-// Specs covered: S2 (entry lives in Cuenta y seguridad, advanced tree only —
-// the tree entry is wired by the settingsMenu flip at integration), S4
-// (biometry is a per-device opt-in registered here), S8 (enable/disable/
-// change demand the current PIN or biometry — server-verified), S11 (copy
+// Owner decision (tanda 12): the app lock is PIN-ONLY. The biometrics option was
+// removed from this screen and from the lock overlay, because the platform
+// WebAuthn prompt is the DEVICE unlock: after a few failed fingerprints
+// Android/Chrome offers the phone's pattern, and an accepted pattern returns a
+// plain success. The app receives a boolean and cannot tell which modality
+// verified, so fingerprints could never be a stricter gate than the phone itself.
+//
+// Specs covered: S2 (entry lives in Cuenta y seguridad, advanced tree only), S8
+// (enable/disable/change demand the current PIN — server-verified), S11 (copy
 // through i18n), S12 (flat route).
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { t } from '@/locales/i18n'
 import ConfigBackButton from '@/components/configuracion/ConfigBackButton'
 import './ConfiguracionPage.css'
@@ -17,11 +22,6 @@ import './ConfiguracionPage.css'
 import './ConfigSectionPage.css'
 import { useAuth } from '@/contexts/AuthContext'
 import { useAppLock } from '@/contexts/AppLockContext'
-import {
-  biometriaDisponible,
-  registrarBiometriaUsuario,
-  borrarBiometriaDispositivo,
-} from '@/lib/biometricAppLock'
 import { PinKeypad } from '@/components/AppLockGate/PinKeypad'
 import { validatePin } from '@/lib/pinFormat'
 import {
@@ -57,29 +57,10 @@ function reasonKey(result: PinVerifyResult): string {
 
 export function ProteccionPage() {
   const { session, nombreUsuario } = useAuth()
-  const {
-    lockState,
-    biometriaEnDispositivo,
-    setBiometriaEnDispositivo,
-    definePin,
-    deactivatePin,
-    verifyPin,
-    unlockWithBiometria,
-  } = useAppLock()
+  const { lockState, definePin, deactivatePin, verifyPin } = useAppLock()
 
-  const [dispositivoSoporta, setDispositivoSoporta] = useState<boolean | null>(null)
   const [mensajeKey, setMensajeKey] = useState<string | null>(null)
   const [panelMode, setPanelMode] = useState<PanelMode>('idle')
-
-  useEffect(() => {
-    let alive = true
-    void biometriaDisponible().then((ok) => {
-      if (alive) setDispositivoSoporta(ok)
-    })
-    return () => {
-      alive = false
-    }
-  }, [])
 
   const run = useCallback(
     async (action: () => Promise<PinVerifyResult>, okKey: string) => {
@@ -108,23 +89,7 @@ export function ProteccionPage() {
   )
   const desactivarPin = useCallback((pinActual: string) => run(() => deactivatePin(pinActual), 'proteccion_pin_desactivado'), [deactivatePin, run])
 
-  const activarHuella = useCallback(async () => {
-    if (!session) return
-    setMensajeKey(null)
-    const label = nombreUsuario || session.user.email || session.user.id
-    const ok = await registrarBiometriaUsuario(session.user.id, typeof label === 'string' ? label : 'ORD')
-    setMensajeKey(ok ? 'proteccion_huella_registrada' : 'app_lock_biometria_error')
-    setBiometriaEnDispositivo(ok)
-  }, [session, nombreUsuario, setBiometriaEnDispositivo])
-
-  const desactivarHuella = useCallback(() => {
-    borrarBiometriaDispositivo()
-    setBiometriaEnDispositivo(false)
-    setMensajeKey('proteccion_huella_eliminada')
-  }, [setBiometriaEnDispositivo])
-
   const pinActivado = lockState != null && lockState.kind !== 'sin_pin'
-  const huellaHabilitable = pinActivado && dispositivoSoporta !== false
 
   return (
     <main className="page config-page" aria-labelledby="proteccion-title">
@@ -141,16 +106,6 @@ export function ProteccionPage() {
             <span>{t('proteccion_estado_pin')}</span>
             <span>{pinActivado ? t('proteccion_estado_activo') : t('proteccion_estado_inactivo')}</span>
           </div>
-          <div className="config-section-row">
-            <span>{t('proteccion_estado_huella')}</span>
-            <span>
-              {dispositivoSoporta === false
-                ? t('proteccion_huella_no_soportada')
-                : biometriaEnDispositivo
-                  ? t('proteccion_estado_activo')
-                  : t('proteccion_estado_inactivo')}
-            </span>
-          </div>
 
           {panelMode === 'idle' && (
             <div className="config-section-list" style={{ marginTop: '1rem' }}>
@@ -166,15 +121,6 @@ export function ProteccionPage() {
               ) : (
                 <button type="button" className="config-action-button" onClick={() => { setMensajeKey(null); setPanelMode('activar') }}>
                   {t('proteccion_activar')}
-                </button>
-              )}
-              {huellaHabilitable && (
-                <button
-                  type="button"
-                  className="config-action-button"
-                  onClick={() => void (biometriaEnDispositivo ? desactivarHuella() : activarHuella())}
-                >
-                  {biometriaEnDispositivo ? t('proteccion_desactivar_huella') : t('proteccion_activar_huella')}
                 </button>
               )}
             </div>
@@ -229,8 +175,7 @@ export function ProteccionPage() {
           )}
 
           {/* One message zone: panels own it while a PIN step is open; the
-              section only reports outcomes of the idle actions (biometry,
-              activation result). */}
+              section only reports the outcome of the last idle action. */}
           {panelMode === 'idle' && mensajeKey && (
             <p className="config-section-note" role="status">{t(mensajeKey)}</p>
           )}

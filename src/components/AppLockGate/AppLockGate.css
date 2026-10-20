@@ -46,39 +46,6 @@
   color: var(--text-2);
 }
 
-.app-lock-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.app-lock-primary-action,
-.app-lock-secondary-action {
-  border: none;
-  border-radius: 10px;
-  padding: 0.7rem 1rem;
-  font-size: calc(0.95rem * var(--font-scale, 1));
-  cursor: pointer;
-}
-
-.app-lock-primary-action {
-  background: var(--mint-gradient);
-  color: #ffffff;
-}
-
-.app-lock-secondary-action {
-  background: transparent;
-  color: var(--text);
-  border: 1px solid var(--border);
-}
-
-.app-lock-primary-action:disabled,
-.app-lock-secondary-action:disabled,
-.app-lock-key:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
 .app-lock-keypad {
   display: flex;
   flex-direction: column;
@@ -207,4 +174,9 @@
   padding: 0.85rem 0;
   font-size: calc(1.25rem * var(--font-scale, 1));
   border-radius: 12px;
+}
+
+.app-lock-key:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
