@@ -3,6 +3,7 @@ import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { formatInversionDetalle } from '@/lib/inversionesLabels'
 import './DetalleInversionView.css'
 
 export interface HistorialItem {
@@ -262,7 +263,9 @@ export function DetalleInversionView({
                     {formatDate(mov.fecha)}
                   </span>
                   <span className="detalle-history-detalle">
-                    {mov.detalle || t('detail_movement_label')}
+                    {mov.detalle
+                      ? formatInversionDetalle(mov.detalle, (key) => t(key))
+                      : t('detail_movement_label')}
                   </span>
                 </div>
                 <span

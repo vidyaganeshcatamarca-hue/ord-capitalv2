@@ -136,3 +136,28 @@ test('an unknown key still passes through the translator (t is a passthrough)', 
   assert.equal(translateDetalle('', (key) => key), '')
   assert.equal(translateDetalle(undefined, (key) => key), '')
 })
+
+test('an investment movement title resolves its key and keeps the asset name', () => {
+  // The backend writes the detalle as 'key: value' for investments
+  // ('liquidation_gain: GGAL'). Translating it as a plain key printed the raw
+  // 'liquidation_gain: GGAL' in the wallet movements and the investment detail.
+  const translate = (key) => `T(${key})`
+  assert.equal(
+    translateDetalle('liquidation_gain: GGAL', translate),
+    'T(liquidation_gain): GGAL'
+  )
+  assert.equal(
+    translateDetalle('investment_prefix: Bitcoin', translate),
+    'T(investment_prefix): Bitcoin'
+  )
+})
+
+test('a non-investment detalle with a colon is NOT reinterpreted', () => {
+  // 'cat_comida: Almuerzo' is another module's business: it keeps flowing
+  // through the plain-key path, exactly as before.
+  const translate = (key) => `T(${key})`
+  assert.equal(
+    translateDetalle('cat_comida: Almuerzo', translate),
+    'T(cat_comida: Almuerzo)'
+  )
+})

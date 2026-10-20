@@ -1507,6 +1507,9 @@ export const inversiones = {
   msg_configure_inflation: "Configurá tu fuente de inflación para ver el rendimiento real",
   msg_beat_inflation: "¡Ganaste poder adquisitivo real!",
   msg_lost_purchasing_power: "Perdiste poder adquisitivo real",
+  // El backend (fn_reporte_rendimiento_vs_inflacion) devuelve estas dos.
+  msg_portfolio_beat_inflation: "¡Ganaste poder adquisitivo real!",
+  msg_portfolio_lost_purchasing_power: "Perdiste poder adquisitivo real",
   msg_investment_created: "Inversión creada con éxito",
   msg_investment_updated: "Valor actualizado con éxito",
   msg_investment_liquidated: "Inversión liquidada con éxito",
@@ -1581,6 +1584,25 @@ export const inversiones = {
   inflation_source_proxy_dolar: "Proxy Dólar (recomendado)",
   inflation_source_api_automatica: "API Automática",
   inflation_source_desactivado: "Desactivado (solo nominal)",
+  inflation_source_not_configured: "Sin configurar",
+
+  // Errores y aciertos del backend de inversiones (T7)
+  error_investment_already_liquidated: "Esta inversión ya fue liquidada",
+  error_investment_rescue_exceeds_balance: "El monto supera el saldo disponible de la inversión",
+  error_investment_type_invalid: "Tipo de activo inválido",
+  error_investment_variable_must_have_zero_tna: "Los activos variables no pueden tener tasa fija",
+  error_investment_value_negative: "El valor no puede ser negativo",
+  error_investment_amount_zero: "El monto debe ser mayor a 0",
+  success_investment_value_updated: "Valor de la inversión actualizado",
+  success_inflation_configured: "Configuración de inflación guardada",
+
+  // Labels de movimientos de inversión (T7) — el backend escribe 'key: valor'
+  investment_prefix: "Inversión",
+  liquidation_capital_recovery: "Recuperación de capital",
+  liquidation_gain: "Ganancia por liquidación",
+  liquidation_loss: "Pérdida por liquidación",
+  rescate_inversion: "Rescate de inversión",
+  desc_blocked_capital: "Capital bloqueado en inversiones",
 
   // Detalle (Task 7)
   detail_history_title: "Historial de movimientos",
