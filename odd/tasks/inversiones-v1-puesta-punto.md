@@ -65,7 +65,7 @@ hecho; origin/main está 537 commits atrás).
 | T6 | S3, S2, S6.9 | Front: `RendimientoRealWidget` consume el contrato nuevo: total en moneda local + una línea por moneda con saldo ≠ 0 (patrón hero Home); fuera la fila USD hardcodeada | inline | `ff02727` |
 | T7 | S6.6, S6.7 | Front: 18 keys i18n en `src/locales/es.ts` (sección inversiones) + resolver de labels `key: valor` (`src/lib/inversionesLabels.ts`) cableado en `translateDetalle` (billetera, Home, detalle) | inline | `5412071` |
 | T8 | S6.8 | Front: `ConfigInflacionView` precarga país+fuente vía T5; el pill refleja la fuente real (o "sin configurar") | inline | `549f709` |
-| T9 | S2 | Verificación: test de contrato front↔SQL (9 tests, con mutación probada), postcheck de deploy, checklist de estreno manual para el dueño | inline | `<T9>` |
+| T9 | S2 | Verificación: test de contrato front↔SQL (9 tests, con mutación probada), postcheck de deploy, checklist de estreno manual para el dueño | inline | `86aad03` |
 
 ## Checklist de estreno (para el dueño, después del deploy)
 
