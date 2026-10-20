@@ -10,11 +10,19 @@ export interface RendimientoData {
   inflacion_disponible: boolean
   mensaje_key: string
   fuente_inflacion: 'api_automatica' | 'proxy_dolar' | 'desactivado'
+  moneda_local?: string
+}
+
+/** Una línea de subtotal por moneda (patrón del hero del Home). */
+export interface PortfolioLine {
+  moneda: string
+  total: number
 }
 
 interface RendimientoRealWidgetProps {
-  totalPesos: number
-  totalDolares: number
+  totalMonedaLocal: number
+  monedaLocal: string
+  lineasPorMoneda: PortfolioLine[]
   rendimiento: RendimientoData
   loading?: boolean
   onConfigureInflation?: () => void
@@ -46,8 +54,9 @@ function verdictKeyFor(value: number | null | undefined, fallbackKey: string): s
 }
 
 export function RendimientoRealWidget({
-  totalPesos,
-  totalDolares,
+  totalMonedaLocal,
+  monedaLocal,
+  lineasPorMoneda,
   rendimiento,
   loading,
   onConfigureInflation,
@@ -69,16 +78,22 @@ export function RendimientoRealWidget({
       <div className="rendimiento-real-row rendimiento-real-row--title">
         <h2 className="rendimiento-real-title">{t('title')}</h2>
         <span className="rendimiento-real-total-ars">
-          {formatCurrency(totalPesos)}
+          {formatCurrency(totalMonedaLocal, monedaLocal)}
         </span>
       </div>
 
-      <div className="rendimiento-real-row rendimiento-real-row--usd">
-        <span className="rendimiento-real-total-usd-label">USD</span>
-        <span className="rendimiento-real-total-usd">
-          {formatCurrency(totalDolares, 'USD')}
-        </span>
-      </div>
+      {lineasPorMoneda.length > 0 && (
+        <div className="rendimiento-real-row rendimiento-real-row--usd">
+          {lineasPorMoneda.map((linea) => (
+            <span key={linea.moneda} className="rendimiento-real-moneda-line">
+              <span className="rendimiento-real-total-usd-label">{linea.moneda}</span>
+              <span className="rendimiento-real-total-usd">
+                {formatCurrency(linea.total, linea.moneda)}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="rendimiento-real-row rendimiento-real-row--yields">
         {inflacion_disponible ? (

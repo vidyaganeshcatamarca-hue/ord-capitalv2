@@ -44,6 +44,9 @@ tests/onboarding/*
 !tests/onboarding/formato-moneda-local.test.js
 !tests/onboarding/jsonb-rpc-array.test.js
 !tests/onboarding/format-context.test.js
+!tests/inversiones/
+tests/inversiones/*
+!tests/inversiones/patrimonio-inversiones.test.js
 !tests/keypad_decimal_separator.test.js
 scratch/
 walkthrough.md

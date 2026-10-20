@@ -47,10 +47,18 @@
 }
 
 .rendimiento-real-row--usd {
-  gap: var(--space-2, 8px);
+  gap: var(--space-3, 12px);
   color: var(--text-3, #8b949e);
   font-size: calc(12px * var(--font-scale));
   font-family: var(--font-body, system-ui, sans-serif);
+  flex-wrap: wrap;
+}
+
+.rendimiento-real-moneda-line {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2, 8px);
+  white-space: nowrap;
 }
 
 .rendimiento-real-row--yields {

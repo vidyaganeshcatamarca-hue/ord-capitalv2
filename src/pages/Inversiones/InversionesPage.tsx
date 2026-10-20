@@ -11,6 +11,11 @@ import { DetalleInversionView } from '@/components/inversiones/DetalleInversionV
 import { TrackRecordView } from '@/components/inversiones/TrackRecordView'
 import { DistribucionView } from '@/components/inversiones/DistribucionView'
 import { ConfigInflacionView } from '@/components/inversiones/ConfigInflacionView'
+import {
+  buildPortfolioLines,
+  resolveTotalLocal,
+  type PortfolioTotalRow,
+} from '@/lib/inversionesPatrimonio'
 import './InversionesPage.css'
 
 export type ActiveTab = 'cartera' | 'track' | 'distribucion' | 'inflacion'
@@ -35,9 +40,16 @@ export interface Inversion extends InversionResumen {
 
 export type RendimientoVsInflacion = RendimientoData
 
+/**
+ * Contrato nuevo de fn_reporte_patrimonio_inversiones (jsonb, T3):
+ * total en la moneda local del usuario + subtotales por moneda. Cero
+ * monedas hardcodeadas: la moneda local viene de p_config_region.
+ */
 interface PatrimonioInversiones {
-  total_pesos: number
-  total_dolares: number
+  moneda_local: string
+  total_moneda_local: number
+  totales_por_moneda: PortfolioTotalRow[]
+  monedas_sin_cotizacion: string[]
 }
 
 type WalletRpcRow = BilleteraResumen & {
@@ -52,6 +64,13 @@ const EMPTY_RENDIMIENTO: RendimientoVsInflacion = {
   inflacion_disponible: false,
   mensaje_key: 'msg_configure_inflation',
   fuente_inflacion: 'desactivado',
+}
+
+const EMPTY_PATRIMONIO: PatrimonioInversiones = {
+  moneda_local: 'ARS',
+  total_moneda_local: 0,
+  totales_por_moneda: [],
+  monedas_sin_cotizacion: [],
 }
 
 function normalizeInversion(row: Partial<InversionResumen> & { monto_liquidado?: number | null }): Inversion {
@@ -78,8 +97,12 @@ function normalizeInversion(row: Partial<InversionResumen> & { monto_liquidado?:
 
 function normalizePatrimonio(row: Partial<PatrimonioInversiones> | null): PatrimonioInversiones {
   return {
-    total_pesos: Number(row?.total_pesos ?? 0),
-    total_dolares: Number(row?.total_dolares ?? 0),
+    moneda_local: row?.moneda_local || 'ARS',
+    total_moneda_local: Number(row?.total_moneda_local ?? 0),
+    totales_por_moneda: Array.isArray(row?.totales_por_moneda) ? row.totales_por_moneda : [],
+    monedas_sin_cotizacion: Array.isArray(row?.monedas_sin_cotizacion)
+      ? row.monedas_sin_cotizacion
+      : [],
   }
 }
 
@@ -128,7 +151,7 @@ export function InversionesPage() {
     try {
       const [carteraRes, patrimonioRes, rendimientoRes] = await Promise.all([
         rpc<Inversion[]>('fn_reporte_cartera_inversiones'),
-        rpc<PatrimonioInversiones>('fn_reporte_patrimonio_inversiones', { p_cotizacion_usd: 1 }),
+        rpc<PatrimonioInversiones>('fn_reporte_patrimonio_inversiones'),
         rpc<RendimientoVsInflacion>('fn_reporte_rendimiento_vs_inflacion'),
       ])
 
@@ -262,8 +285,17 @@ export function InversionesPage() {
   return (
     <main className="inversiones-page page">
       <RendimientoRealWidget
-        totalPesos={patrimonio?.total_pesos ?? 0}
-        totalDolares={patrimonio?.total_dolares ?? 0}
+        totalMonedaLocal={resolveTotalLocal(
+          patrimonio?.moneda_local,
+          patrimonio?.total_moneda_local,
+          patrimonio?.totales_por_moneda
+        )}
+        monedaLocal={patrimonio?.moneda_local || 'ARS'}
+        lineasPorMoneda={buildPortfolioLines(
+          patrimonio?.moneda_local,
+          patrimonio?.totales_por_moneda,
+          patrimonio?.monedas_sin_cotizacion
+        )}
         rendimiento={rendimiento ?? EMPTY_RENDIMIENTO}
         loading={loading}
         onConfigureInflation={() => selectTab('inflacion')}
