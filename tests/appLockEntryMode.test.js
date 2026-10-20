@@ -31,15 +31,18 @@ test('without biometry on this device the lock asks for the PIN', () => {
 })
 
 test('with biometry registered the lock goes straight to the fingerprint', () => {
-  assert.equal(BIOMETRIC_MAX_ATTEMPTS, 3, 'owner: three failures, then the PIN')
   assert.equal(lockEntryMode(true, 0), 'biometria', 'never asks which method first')
-  assert.equal(lockEntryMode(true, 1), 'biometria')
-  assert.equal(lockEntryMode(true, 2), 'biometria')
 })
 
-test('the PIN appears only after three biometric failures', () => {
-  assert.equal(lockEntryMode(true, 3), 'pin')
-  assert.equal(lockEntryMode(true, 4), 'pin')
+test('the FIRST biometric failure hands over to the PIN (owner tanda 11)', () => {
+  // Owner: "luego del primer fallo de la huella, tenemos posibilidad de activar
+  // inmediatamente el PIN y de esa manera no esperamos a que se active el patrón".
+  // Every extra try inside the OS prompt is another chance for the platform to
+  // offer its pattern fallback, which reports success and opens the app.
+  assert.equal(BIOMETRIC_MAX_ATTEMPTS, 1, 'one try, then the app PIN')
+  assert.equal(lockEntryMode(true, 1), 'pin')
+  assert.equal(lockEntryMode(true, 2), 'pin')
+  assert.equal(lockEntryMode(true, 99), 'pin')
 })
 
 test('a garbage failure count fails closed to the PIN', () => {
@@ -67,7 +70,15 @@ test('the gate has no method chooser and derives the entry from the rule', () =>
   )
   assert.ok(
     gate.includes('app_lock_biometria_fallback'),
-    'the keypad explains why it appeared after three failures',
+    'the keypad explains why it appeared',
+  )
+  assert.ok(
+    gate.includes('BIOMETRIC_MAX_ATTEMPTS'),
+    'the threshold comes from the policy constant, never a hardcoded number',
+  )
+  assert.ok(
+    !/bioFailures >= 3/.test(gate),
+    'no hardcoded three-failure threshold left in the gate',
   )
 })
 

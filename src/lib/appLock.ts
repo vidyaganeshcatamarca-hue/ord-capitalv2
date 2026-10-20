@@ -133,13 +133,20 @@ export function statusRefreshArmsLock(
 }
 
 /**
- * Owner (tanda 9, spec S4 revision): when biometry is registered on this device
- * it is the ONLY way in — the lock screen must not ask "PIN or fingerprint?".
- * The PIN appears only as a fallback, after biometry has failed this many times
- * in a row (owner: "a menos que la huella no se pueda detectar por algún
- * problema de tres veces, ahí recién le podemos pedir un PIN").
+ * Owner (tanda 9, revised in tanda 11): when biometry is registered on this
+ * device it is the ONLY way in — the lock screen must not ask "PIN or
+ * fingerprint?". The PIN is the fallback and appears as soon as biometry fails.
+ *
+ * The owner's reasoning for lowering this from 3 to 1: every extra fingerprint
+ * try inside the single OS prompt is a chance for the platform to offer its own
+ * pattern/PIN fallback, and when that happens the OS reports success and the app
+ * opens. Failing fast keeps the app PIN as the gate instead of the device
+ * credential. Residual, and NOT fixable from JavaScript: the platform owns that
+ * prompt, so a user who fails the fingerprint several times *inside* it can still
+ * reach the system pattern — WebAuthn returns a boolean and never says which
+ * modality verified.
  */
-export const BIOMETRIC_MAX_ATTEMPTS = 3
+export const BIOMETRIC_MAX_ATTEMPTS = 1
 
 /** Which entry the lock screen presents. */
 export type LockEntryMode = 'biometria' | 'pin'
@@ -148,8 +155,8 @@ export type LockEntryMode = 'biometria' | 'pin'
  * Resolves the entry mode for the lock overlay.
  *
  *   no biometry on this device      → pin
- *   biometry, fewer than 3 failures → biometria
- *   biometry, 3+ failures           → pin (the only remaining way in)
+ *   biometry, no failures yet       → biometria
+ *   biometry, any failure           → pin (the only remaining way in)
  *
  * Garbage failure counts fail closed to the PIN: it is the path that cannot be
  * blocked by a broken sensor or a cancelled platform prompt.

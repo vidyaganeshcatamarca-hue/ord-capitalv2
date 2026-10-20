@@ -15,7 +15,7 @@
 import { useMemo, useState, useEffect, useRef } from 'react'
 import { useAppLock } from '@/contexts/AppLockContext'
 import { t } from '@/locales/i18n'
-import { lockEntryMode, shouldAutoPromptBiometria } from '@/lib/appLock'
+import { BIOMETRIC_MAX_ATTEMPTS, lockEntryMode, shouldAutoPromptBiometria } from '@/lib/appLock'
 import { PinKeypad } from './PinKeypad'
 import './AppLockGate.css'
 
@@ -198,10 +198,14 @@ function LockedPanel({
         </p>
       )}
       {/* Why the PIN showed up: biometry failed three times in a row. */}
-      {entry === 'pin' && bioFailures >= 3 && showBackoff === 0 && (
+      {entry === 'pin' && bioFailures >= BIOMETRIC_MAX_ATTEMPTS && showBackoff === 0 && (
         <p className="app-lock-hint" role="status">{t('app_lock_biometria_fallback')}</p>
       )}
-      {errorKey && showBackoff === 0 && <p className="app-lock-error" role="alert">{t(errorKey)}</p>}
+      {/* A failure already flips the panel to the PIN; there the hint explains
+          the reason, so the error line would only repeat it. */}
+      {errorKey && showBackoff === 0 && entry === 'biometria' && (
+        <p className="app-lock-error" role="alert">{t(errorKey)}</p>
+      )}
     </>
   )
 }
