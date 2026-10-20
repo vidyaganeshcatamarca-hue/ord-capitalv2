@@ -5,6 +5,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
 import { formatMoneyARS } from '@/lib/bcgUtils'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import './BCGBuzonModal.css'
 
 interface Billetera {
@@ -27,6 +28,7 @@ interface BCGBuzonModalProps {
 export function BCGBuzonModal({ isOpen, onClose, onSuccess, buzonId, buzonNombre, monto }: BCGBuzonModalProps) {
   const { showToast } = useToast()
   const navigate = useNavigate()
+  const locale = useActiveLocale()
   const [billeteras, setBilleteras] = useState<Billetera[]>([])
   const [origenId, setOrigenId] = useState<number | null>(null)
   const [nota, setNota] = useState('')
@@ -112,7 +114,7 @@ export function BCGBuzonModal({ isOpen, onClose, onSuccess, buzonId, buzonNombre
         <div className="bcg-buzon-body">
           <div className="bcg-buzon-info">
             <span>{t('bcg_hormiga_estado_transfer_titulo', { monto: '' })}</span>
-            <strong>{formatMoneyARS(monto)}</strong>
+            <strong>{formatMoneyARS(monto, locale)}</strong>
             <small>→ {buzonNombre}</small>
           </div>
 
@@ -126,7 +128,7 @@ export function BCGBuzonModal({ isOpen, onClose, onSuccess, buzonId, buzonNombre
               <option value="">--</option>
               {billeteras.map((b) => (
                 <option key={b.billetera_id} value={b.billetera_id}>
-                  {t(b.nombre)} ({b.moneda}) — {formatMoneyARS(b.saldo_actual)}
+                  {t(b.nombre)} ({b.moneda}) — {formatMoneyARS(b.saldo_actual, locale)}
                 </option>
               ))}
             </select>

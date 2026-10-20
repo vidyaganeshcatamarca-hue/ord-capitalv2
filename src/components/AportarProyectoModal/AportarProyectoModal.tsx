@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { haptics } from '@/lib/haptics'
 import './AportarProyectoModal.css'
 
@@ -21,8 +22,8 @@ interface AportarProyectoModalProps {
   proyectoNombre: string
 }
 
-const formatMoney = (value: number) =>
-  new Intl.NumberFormat('es-AR', {
+const formatMoney = (value: number, locale: string) =>
+  new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'ARS',
     maximumFractionDigits: 0,
@@ -36,6 +37,8 @@ export function AportarProyectoModal({
   proyectoNombre,
 }: AportarProyectoModalProps) {
   const { showToast } = useToast()
+  // The amounts follow the language the user is reading in.
+  const locale = useActiveLocale()
   const [monto, setMonto] = useState('')
   const [nota, setNota] = useState('')
   const [billeteraOrigenId, setBilleteraOrigenId] = useState<number | null>(null)
@@ -107,7 +110,7 @@ export function AportarProyectoModal({
       const { error: rpcError } = await supabase.rpc('fn_registrar_movimiento_caja', params)
       if (rpcError) throw rpcError
 
-      showToast(t('proyecto_aportar_success', { monto: formatMoney(montoNum) }), 'success')
+      showToast(t('proyecto_aportar_success', { monto: formatMoney(montoNum, locale) }), 'success')
       haptics.success()
       window.dispatchEvent(new CustomEvent('movement-added'))
       onSuccess?.()
@@ -160,7 +163,7 @@ export function AportarProyectoModal({
               <option value="">--</option>
               {billeteras.map((b) => (
                 <option key={b.billetera_id} value={b.billetera_id}>
-                  {t(b.nombre)} ({b.moneda}) — {formatMoney(b.saldo_actual)}
+                  {t(b.nombre)} ({b.moneda}) — {formatMoney(b.saldo_actual, locale)}
                 </option>
               ))}
             </select>

@@ -1,4 +1,5 @@
 import * as es from './es.js';
+import * as en from './en.js';
 import { DEFAULT_LANG, fallbackChain, isSupported } from './language.js';
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry';
 
@@ -22,7 +23,8 @@ function trackAppError(errorCode: string) {
 
 // Adding a language is one line here plus its `xx.ts` import above.
 const dictionaries: Record<string, any> = {
-  es
+  es,
+  en
 };
 
 let currentLang: string = DEFAULT_LANG;

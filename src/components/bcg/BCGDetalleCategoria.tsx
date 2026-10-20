@@ -6,6 +6,7 @@ import { parseError, t } from '@/locales/i18n'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { haptics } from '@/lib/haptics'
 import { BCG_CUADRANTES, classifyCuadrante, formatMoneyARS } from '@/lib/bcgUtils'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import type { BCGPoint } from './BCGScatterPlot'
 import './BCGDetalleCategoria.css'
@@ -17,6 +18,7 @@ export function BCGDetalleCategoria() {
   const location = useLocation()
   const navigate = useNavigate()
   const { showToast } = useToast()
+  const locale = useActiveLocale()
 
   const point: BCGPoint | undefined = (location.state as any)?.point
 
@@ -132,7 +134,7 @@ export function BCGDetalleCategoria() {
         <div className="bcg-detalle-stats-grid">
           <div>
             <span>{t('bcg_detalle_total_label')}</span>
-            <strong>{formatMoneyARS(0 /* se llenaría con datos reales de la subcuenta */)}</strong>
+            <strong>{formatMoneyARS(0 /* se llenaría con datos reales de la subcuenta */, locale)}</strong>
           </div>
           <div>
             <span>{t('bcg_detalle_frecuencia_label')}</span>
@@ -141,7 +143,7 @@ export function BCGDetalleCategoria() {
           <div>
             <span>{t('bcg_detalle_promedio_label')}</span>
             <strong>
-              {point.coordenada_x > 0 ? formatMoneyARS(0) : '—'}
+              {point.coordenada_x > 0 ? formatMoneyARS(0, locale) : '—'}
             </strong>
           </div>
           <div>

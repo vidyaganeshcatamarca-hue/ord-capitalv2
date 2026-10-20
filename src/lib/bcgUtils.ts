@@ -33,20 +33,26 @@ export const BCG_FRECUENCIA_ALTA = 4
 export const BCG_PLACER_ALTO = 5
 
 /**
- * Formatea un número como moneda ARS (es-AR, sin decimales).
+ * Formatea un número como moneda ARS (sin decimales).
  * Puro: no depende de Intl del runtime del navegador.
+ *
+ * El `locale` sigue al idioma activo. El default reproduce el comportamiento
+ * historico (es-AR) para los call sites que no lo pasan.
  */
-export function formatMoneyARS(value: number | string | null | undefined): string {
+export function formatMoneyARS(
+  value: number | string | null | undefined,
+  locale: string = 'es-AR'
+): string {
   const n = Number(value ?? 0)
   if (!isFinite(n)) return '$0'
   try {
-    return new Intl.NumberFormat('es-AR', {
+    return new Intl.NumberFormat(locale, {
       style: 'currency',
       currency: 'ARS',
       maximumFractionDigits: 0,
     }).format(n)
   } catch {
-    return `$${Math.round(n).toLocaleString('es-AR')}`
+    return `$${Math.round(n).toLocaleString(locale)}`
   }
 }
 
@@ -70,14 +76,20 @@ export function dominioX(maxFrecuencia: number): number {
 }
 
 /**
- * Etiqueta de mes corto en es-AR (ej: "May 2026").
+ * Etiqueta de mes corto (ej: "May 2026").
  * Acepta Date o string YYYY-MM-DD.
+ *
+ * El `locale` sigue al idioma activo; el default reproduce el comportamiento
+ * historico (es-AR) para los call sites que no lo pasan.
  */
-export function formatMesCorto(input: Date | string | null | undefined): string {
+export function formatMesCorto(
+  input: Date | string | null | undefined,
+  locale: string = 'es-AR'
+): string {
   if (!input) return ''
   const d = typeof input === 'string' ? new Date(input) : input
   if (isNaN(d.getTime())) return ''
-  return new Intl.DateTimeFormat('es-AR', { month: 'short', year: 'numeric' }).format(d)
+  return new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(d)
 }
 
 /**

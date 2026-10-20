@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
 import { t } from '@/locales/i18n'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { haptics } from '@/lib/haptics'
 import type { RadarData } from '@/pages/Supervivencia/SupervivenciaPage'
 import './RadarAsfixiaDetalle.css'
@@ -10,11 +11,30 @@ interface RadarAsfixiaDetalleProps {
 }
 
 
-const DIAS_SEMANA = [t('day_short_lu', {defaultValue:'Lu'}), t('day_short_ma', {defaultValue:'Ma'}), t('day_short_mi', {defaultValue:'Mi'}), t('day_short_ju', {defaultValue:'Ju'}), t('day_short_vi', {defaultValue:'Vi'}), t('day_short_sa', {defaultValue:'Sá'}), t('day_short_do', {defaultValue:'Do'})]
-const MESES_CORTOS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
+// Los nombres de los dias y de los meses salen de Intl con el locale
+// activo. Antes eran arrays hardcodeados en espanol ("Lu", "Ma", "Ene"),
+// que ni siquiera cambiaban con el idioma.
 
 export function RadarAsfixiaDetalle({ radar }: RadarAsfixiaDetalleProps) {
   const [diaSeleccionado, setDiaSeleccionado] = useState<RadarData | null>(null)
+  // The dates follow the language the user is reading in, so the month and
+  // weekday names come from Intl instead of a hardcoded Spanish array.
+  const locale = useActiveLocale()
+  const mesesCORTOS = useMemo(
+    () =>
+      Array.from({ length: 12 }, (_, month) =>
+        new Intl.DateTimeFormat(locale, { month: 'short' }).format(new Date(2020, month, 1))
+      ),
+    [locale]
+  )
+  // La semana arranca en domingo como en el calendario de la app.
+  const diasSemana = useMemo(
+    () =>
+      Array.from({ length: 7 }, (_, day) =>
+        new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(new Date(2020, 5, 3 + day))
+      ),
+    [locale]
+  )
 
   const diasCriticos = useMemo(
     () => radar.filter((r) => r.estado_dia === 'red'),
@@ -24,8 +44,8 @@ export function RadarAsfixiaDetalle({ radar }: RadarAsfixiaDetalleProps) {
   const mesActual = useMemo(() => {
     if (radar.length === 0) return ''
     const primerDia = new Date(radar[0].dia)
-    return `${MESES_CORTOS[primerDia.getMonth()]} ${primerDia.getFullYear()}`
-  }, [radar])
+    return `${mesesCORTOS[primerDia.getMonth()]} ${primerDia.getFullYear()}`
+  }, [radar, mesesCORTOS])
 
   if (radar.length === 0) {
     return (
@@ -50,7 +70,7 @@ export function RadarAsfixiaDetalle({ radar }: RadarAsfixiaDetalleProps) {
 
       <div className="radar-heatmap" role="grid" aria-label={t("radar_heatmap_aria")}>
         <div className="radar-heatmap-dow">
-          {DIAS_SEMANA.map((d) => (
+          {diasSemana.map((d) => (
             <span key={d} className="radar-heatmap-dow-cell">{d}</span>
           ))}
         </div>
@@ -65,13 +85,13 @@ export function RadarAsfixiaDetalle({ radar }: RadarAsfixiaDetalleProps) {
                 type="button"
                 className={`radar-cell radar-cell-${dia.estado_dia} ${diaSeleccionado?.dia === dia.dia ? 'seleccionado' : ''}`}
                 onClick={() => handleClickDia(dia)}
-                title={`${dayNum} - Saldo: ${formatMoneyARS(dia.saldo_proyectado)}`}
+                title={`${dayNum} - Saldo: ${formatMoneyARS(dia.saldo_proyectado, 'ARS', locale)}`}
               >
                 <span className="radar-cell-num">{dayNum}</span>
                 {dia.ingreso_esperado > 0 && <span className="radar-cell-icon radar-icon-ingreso">💰</span>}
                 {dia.egreso_tarjeta > 0 && <span className="radar-cell-icon radar-icon-tarjeta">💳</span>}
                 {isFirstOfMonth && (
-                  <span className="radar-cell-mes">{MESES_CORTOS[date.getMonth()]}</span>
+                  <span className="radar-cell-mes">{mesesCORTOS[date.getMonth()]}</span>
                 )}
               </button>
             )
@@ -111,7 +131,7 @@ export function RadarAsfixiaDetalle({ radar }: RadarAsfixiaDetalleProps) {
             <button className="radar-detalle-close" onClick={() => setDiaSeleccionado(null)}>×</button>
             <h3>{t('war_radar_detalle_titulo')}</h3>
             <p className="radar-detalle-fecha">
-              {new Date(diaSeleccionado.dia).toLocaleDateString('es-AR', {
+              {new Date(diaSeleccionado.dia).toLocaleDateString(locale, {
                 weekday: 'long',
                 day: 'numeric',
                 month: 'long',
@@ -120,24 +140,24 @@ export function RadarAsfixiaDetalle({ radar }: RadarAsfixiaDetalleProps) {
             <div className="radar-detalle-saldo">
               <span>{t('war_radar_detalle_saldo')}</span>
               <strong className={diaSeleccionado.saldo_proyectado < 0 ? 'negativo' : 'positivo'}>
-                {formatMoneyARS(diaSeleccionado.saldo_proyectado)}
+                {formatMoneyARS(diaSeleccionado.saldo_proyectado, 'ARS', locale)}
               </strong>
             </div>
             {diaSeleccionado.ingreso_esperado > 0 && (
               <div className="radar-detalle-row">
                 <span>{t('war_radar_leyenda_ingreso')}</span>
-                <strong>{formatMoneyARS(diaSeleccionado.ingreso_esperado)}</strong>
+                <strong>{formatMoneyARS(diaSeleccionado.ingreso_esperado, 'ARS', locale)}</strong>
               </div>
             )}
             {diaSeleccionado.egreso_tarjeta > 0 && (
               <div className="radar-detalle-row">
                 <span>{t('war_radar_leyenda_tarjeta')}</span>
-                <strong>{formatMoneyARS(diaSeleccionado.egreso_tarjeta)}</strong>
+                <strong>{formatMoneyARS(diaSeleccionado.egreso_tarjeta, 'ARS', locale)}</strong>
               </div>
             )}
             <div className="radar-detalle-row">
               <span>{t('war_radar_detalle_gasto_diario')}</span>
-              <strong>{formatMoneyARS(diaSeleccionado.egreso_goteo)}</strong>
+              <strong>{formatMoneyARS(diaSeleccionado.egreso_goteo, 'ARS', locale)}</strong>
             </div>
           </div>
         </div>
@@ -156,13 +176,13 @@ export function RadarAsfixiaDetalle({ radar }: RadarAsfixiaDetalleProps) {
                 onClick={() => handleClickDia(dia)}
               >
                 <span className="radar-critico-fecha">
-                  {new Date(dia.dia).toLocaleDateString('es-AR', {
+                  {new Date(dia.dia).toLocaleDateString(locale, {
                     weekday: 'short',
                     day: 'numeric',
                     month: 'short',
                   })}
                 </span>
-                <span className="radar-critico-saldo">{formatMoneyARS(dia.saldo_proyectado)}</span>
+                <span className="radar-critico-saldo">{formatMoneyARS(dia.saldo_proyectado, 'ARS', locale)}</span>
               </li>
             ))}
           </ul>

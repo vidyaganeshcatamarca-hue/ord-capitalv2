@@ -10,6 +10,7 @@ import {
   diasAntesMeta,
   diasExtraEscudo,
 } from '@/lib/bcgUtils'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import './BCGPodora.css'
 
 export interface PodoraCandidatoFE {
@@ -49,6 +50,7 @@ type DestinoSimulador = 'supervivencia' | 'meta'
 
 export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidatoClick }: BCGPodoraProps) {
   const navigate = useNavigate()
+  const locale = useActiveLocale()
   const [sliders, setSliders] = useState<Record<number, number>>({})
   const [destino, setDestino] = useState<DestinoSimulador>('supervivencia')
 
@@ -107,7 +109,7 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
                   <div className="bcg-podora-cand-stats">
                     <span>{t('bcg_podora_placer_label')}: <strong>{c.utilidad_placer}/10</strong></span>
                     <span>{t('bcg_podora_flex_label')}: <strong>{c.flexibilidad_recorte}/10</strong></span>
-                    <span className="bcg-podora-cand-mensual">{t('bcg_podora_gasto_por_mes', { monto: formatMoneyARS(c.gasto_prom_90d) })}</span>
+                    <span className="bcg-podora-cand-mensual">{t('bcg_podora_gasto_por_mes', { monto: formatMoneyARS(c.gasto_prom_90d, locale) })}</span>
                   </div>
                 </div>
                 <button
@@ -135,7 +137,7 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
                 />
                 <strong className="bcg-podora-cand-pct">{pct}%</strong>
                 <span className="bcg-podora-cand-ahorro">
-                  {ahorro > 0 ? t('bcg_podora_ahorro_por_mes', { monto: formatMoneyARS(ahorro) }) : '—'}
+                  {ahorro > 0 ? t('bcg_podora_ahorro_por_mes', { monto: formatMoneyARS(ahorro, locale) }) : '—'}
                 </span>
               </div>
             </article>
@@ -149,11 +151,11 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
         <div className="bcg-podora-impacto-grid">
           <div>
             <span>{t('bcg_podora_ahorras_label')}</span>
-            <strong>{formatMoneyARS(totalMensual)}</strong>
+            <strong>{formatMoneyARS(totalMensual, locale)}</strong>
           </div>
           <div>
             <span>{t("bcg_per_year")}</span>
-            <strong>{formatMoneyARS(totalAnual)}</strong>
+            <strong>{formatMoneyARS(totalAnual, locale)}</strong>
           </div>
         </div>
 
@@ -210,7 +212,7 @@ export function BCGPodora({ candidatos, metas, tieneMetas, lineaBase, onCandidat
               ) : (
                 <span className="bcg-podora-muted">—</span>
               )}
-              <small>{metaPrioritaria.nombre} · {formatMoneyARS(metaPrioritaria.saldo_actual)} / {formatMoneyARS(metaPrioritaria.monto_meta)}</small>
+              <small>{metaPrioritaria.nombre} · {formatMoneyARS(metaPrioritaria.saldo_actual, locale)} / {formatMoneyARS(metaPrioritaria.monto_meta, locale)}</small>
             </div>
           ) : (
             <div className="bcg-podora-impacto-detalle bcg-podora-sin-metas">

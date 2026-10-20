@@ -1,5 +1,6 @@
 import type { SafeData } from '@/pages/Supervivencia/SupervivenciaPage'
 import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { t } from '@/locales/i18n'
 import { WarWidgetCard } from './WarWidgetCard'
 
@@ -22,6 +23,7 @@ function luzKeyToLabel(key: SafeData['estado_semaforo_key']): string {
 }
 
 export function SafeToSpendWidget({ safe, onDetalle }: SafeToSpendWidgetProps) {
+  const locale = useActiveLocale()
   if (!safe) {
     return (
       <WarWidgetCard
@@ -61,7 +63,7 @@ export function SafeToSpendWidget({ safe, onDetalle }: SafeToSpendWidgetProps) {
       onDetalle={onDetalle}
     >
       <div className="safe-numero-grande">
-        <span className="safe-monto">{formatMoneyARS(diario)}</span>
+        <span className="safe-monto">{formatMoneyARS(diario, 'ARS', locale)}</span>
         <span className="safe-luz">{labelLuz}</span>
       </div>
       <p className="safe-mensaje">{t(safe.mensaje_sistema_key, { defaultValue: '' })}</p>

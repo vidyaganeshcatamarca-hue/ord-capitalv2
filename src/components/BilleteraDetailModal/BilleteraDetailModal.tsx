@@ -5,6 +5,7 @@ import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { translateDetalle } from '@/lib/transferTitles'
 import { movementAmount, movementSign, movementTitleSource } from '@/lib/walletMovementRows'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { WalletIcon } from '@/components/WalletIcon'
 import './BilleteraDetailModal.css'
 
@@ -40,6 +41,8 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
   }, [billetera.billetera_id])
 
   const { formatMonto } = useNumberFormat()
+  // The date of each movement follows the language the user is reading in.
+  const locale = useActiveLocale()
   const formatAmount = (monto: number, moneda?: string) => formatMonto(monto, moneda)
 
   return (
@@ -118,7 +121,7 @@ export function BilleteraDetailModal({ billetera, onClose, onConciliar, onTransf
                       </div>
                       <div>
                         <p style={{ margin: 0, fontWeight: 'bold', fontSize: 'calc(14px * var(--font-scale))' }}>{catalogDisplayName(title) || title}</p>
-                        <p style={{ margin: 0, fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>{new Date(m.fecha).toLocaleDateString('es-AR')}</p>
+                        <p style={{ margin: 0, fontSize: 'calc(12px * var(--font-scale))', color: 'var(--text-3)' }}>{new Date(m.fecha).toLocaleDateString(locale)}</p>
                       </div>
                     </div>
                     <div style={{ textAlign: 'right' }}>

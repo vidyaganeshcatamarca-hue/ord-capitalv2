@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { t } from '@/locales/i18n'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { BCG_CUADRANTES, classifyCuadrante, formatMoneyARS } from '@/lib/bcgUtils'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { haptics } from '@/lib/haptics'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import type { BCGPoint } from './BCGScatterPlot'
@@ -16,6 +17,7 @@ interface BCGCuadranteAcordeonProps {
 
 export function BCGCuadranteAcordeon({ cuadranteKey, items, onItemClick, defaultOpen = false }: BCGCuadranteAcordeonProps) {
   const [open, setOpen] = useState(defaultOpen)
+  const locale = useActiveLocale()
   const c = classifyCuadrante(cuadranteKey)
   const total = items.reduce((acc, it) => acc + (Number(it.monto_total) || 0), 0)
 
@@ -36,7 +38,7 @@ export function BCGCuadranteAcordeon({ cuadranteKey, items, onItemClick, default
         <span className="bcg-acordeon-emoji" aria-hidden="true">{c?.emoji ?? '📊'}</span>
         <span className="bcg-acordeon-label">{c ? t(c.labelKey) : cuadranteKey}</span>
         <span className="bcg-acordeon-count">{t('bcg_lista_count', { count: items.length })}</span>
-        <span className="bcg-acordeon-total">{formatMoneyARS(total)}</span>
+        <span className="bcg-acordeon-total">{formatMoneyARS(total, locale)}</span>
       </button>
 
       {open && (
@@ -76,7 +78,7 @@ export function BCGCuadranteAcordeon({ cuadranteKey, items, onItemClick, default
                   <span>{t('bcg_acordeon_placer_label')}: <strong>{it.coordenada_y}/10</strong></span>
                   <span>{t('bcg_acordeon_frec_label')}: <strong>{t('bcg_acordeon_frec_valor', { frec: it.coordenada_x })}</strong></span>
                 </div>
-                <span className="bcg-acordeon-item-monto">{formatMoneyARS(it.monto_total)}</span>
+                <span className="bcg-acordeon-item-monto">{formatMoneyARS(it.monto_total, locale)}</span>
               </li>
             ))
           )}

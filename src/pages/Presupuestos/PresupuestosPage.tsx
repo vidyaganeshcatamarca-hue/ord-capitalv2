@@ -59,8 +59,8 @@ const getMesPeriodo = (offset: number = 0): Date => {
   return d
 }
 
-const formatMesLabel = (d: Date) =>
-  d.toLocaleDateString('es-AR', { month: 'short', year: 'numeric' })
+const formatMesLabel = (d: Date, locale: string) =>
+  d.toLocaleDateString(locale, { month: 'short', year: 'numeric' })
     .replace(/^\w/, c => c.toUpperCase())
 
 const TIPO_CUPO_META: Record<string, { label: string; icono: string }> = {
@@ -92,7 +92,7 @@ export function PresupuestosPage() {
   const [returnToConfig, setReturnToConfig] = useState(false)
 
   // Montos en la moneda local del contexto, 0 decimales (montos redondeados como antes).
-  const { formatMonto: formatMontoCtx } = useNumberFormat()
+  const { formatMonto: formatMontoCtx, locale } = useNumberFormat()
   const formatMonto = useCallback(
     (n: number) => formatMontoCtx(n, undefined, 0),
     [formatMontoCtx]

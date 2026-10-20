@@ -1,5 +1,6 @@
 import type { LicuadoraData } from '@/pages/Supervivencia/SupervivenciaPage'
 import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { t } from '@/locales/i18n'
 import { WarWidgetCard } from './WarWidgetCard'
 
@@ -23,6 +24,7 @@ function formatPct(v: number): string {
 
 
 export function LicuadoraWidget({ licuadora, onDetalle }: LicuadoraWidgetProps) {
+  const locale = useActiveLocale()
   if (!licuadora) {
     return (
       <WarWidgetCard
@@ -66,7 +68,7 @@ export function LicuadoraWidget({ licuadora, onDetalle }: LicuadoraWidgetProps) 
       </div>
       <div className="licuadora-detail-row">
         <span>{t('war_licuadora_label_patrimonio')}</span>
-        <strong>{formatMoneyARS(licuadora.actual.patrimonio_neto_ars)}</strong>
+        <strong>{formatMoneyARS(licuadora.actual.patrimonio_neto_ars, 'ARS', locale)}</strong>
       </div>
       <div className="licuadora-detail-row">
         <span>{t('war_licuadora_label_nominal')}</span>

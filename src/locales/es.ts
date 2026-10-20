@@ -1708,7 +1708,7 @@ export const inversiones = {
   mi_cuenta_email_label: "Email",
   mi_cuenta_signout: "Cerrar sesión",
   apariencia_ocultar_montos: "Ocultar montos en toda la app",
-  apariencia_idioma: "Idioma (próximamente)",
+  apariencia_idioma: "Idioma",
   apariencia_font_size: "Tamaño de fuente",
   apariencia_font_size_chico: "Chico",
   apariencia_font_size_mediano: "Mediano",

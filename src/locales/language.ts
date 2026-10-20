@@ -8,13 +8,15 @@
 // free of every import. Keep React, the DOM and Supabase out of here.
 
 /** Languages with a shipped dictionary. Adding a language = one string here + its `xx.ts`. */
-export const SUPPORTED = ['es'] as const
+export const SUPPORTED = ['es', 'en'] as const
 
 export type Lang = (typeof SUPPORTED)[number]
 
-// Spanish is the fallback on purpose while `en.ts` does not exist. The day a
-// complete English dictionary ships, this constant becomes 'en' and nothing
-// else in the codebase moves.
+// Spanish stays the fallback and the default on purpose: switching this to
+// 'en' would silently change the language of every user who never picked one,
+// which is a product decision, not a technical one. The user picks English in
+// Settings → Region and format; the choice is persisted in localStorage and
+// in `p_config_region.idioma_default`.
 export const DEFAULT_LANG: Lang = 'es'
 
 /** Narrows an arbitrary runtime value to a shipped language code. */

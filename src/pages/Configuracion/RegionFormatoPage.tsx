@@ -305,14 +305,19 @@ function NumberFormatByCurrency({
 /**
  * Language names come from Intl, the same way country names do, so shipping a
  * new language needs no new key in es.ts.
+ *
+ * The name is rendered in the language ITSELF ("Español", "English"), not in
+ * the language the user is reading in, so the option is recognizable no
+ * matter which language the app is currently in. `Intl.DisplayNames` takes
+ * the locale of the NAME, not the locale of the reader.
  */
 function languageLabel(lang: string): string {
   try {
     const display = new Intl.DisplayNames([lang], { type: 'language' })
-    return display.of(lang) ?? t('config_language_spanish')
+    return display.of(lang) ?? lang.toUpperCase()
   } catch {
     // Engines built without full ICU have no Intl.DisplayNames.
-    return t('config_language_spanish')
+    return lang.toUpperCase()
   }
 }
 

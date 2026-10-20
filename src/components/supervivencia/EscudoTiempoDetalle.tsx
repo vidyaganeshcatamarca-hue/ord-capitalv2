@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { t } from '@/locales/i18n'
@@ -76,6 +77,7 @@ function mapearEscenarios(s: SimuladorResponse): Escenario[] {
 
 export function EscudoTiempoDetalle({ escudo, onRecargar, showToast }: EscudoTiempoDetalleProps) {
   const navigate = useNavigate()
+  const locale = useActiveLocale()
   const [simulador, setSimulador] = useState<Escenario[]>([])
   const [datosBase, setDatosBase] = useState<SimuladorResponse['datos_base'] | null>(null)
   const [showConfig, setShowConfig] = useState(false)
@@ -120,15 +122,15 @@ export function EscudoTiempoDetalle({ escudo, onRecargar, showToast }: EscudoTie
       <ul className="escudo-detalle-lista">
         <li>
           <span>💰 {t('war_escudo_label_liquidez')}</span>
-          <strong>{formatMoneyARS(escudo.arsenal_total)}</strong>
+          <strong>{formatMoneyARS(escudo.arsenal_total, 'ARS', locale)}</strong>
         </li>
         <li>
           <span>💳 {t('war_escudo_label_deuda')}</span>
-          <strong>{formatMoneyARS(escudo.deuda_total)}</strong>
+          <strong>{formatMoneyARS(escudo.deuda_total, 'ARS', locale)}</strong>
         </li>
         <li>
           <span>📉 {t('war_escudo_detalle_burn_supervivencia')}</span>
-          <strong>{formatMoneyARS(escudo.burn_rate_supervivencia)}{t("shield_per_day")}</strong>
+          <strong>{formatMoneyARS(escudo.burn_rate_supervivencia, 'ARS', locale)}{t("shield_per_day")}</strong>
         </li>
         <li>
           <span>📅 {t('war_escudo_detalle_ventana', { dias: escudo.ventana_dias_usada })}</span>
@@ -150,7 +152,7 @@ export function EscudoTiempoDetalle({ escudo, onRecargar, showToast }: EscudoTie
       {datosBase && datosBase.gastos_fijos_mensuales > 0 && escudo.dias_supervivencia_deuda_total < 180 && (
         <p className="escudo-recomendacion">
           {t('war_escudo_recomendacion', {
-            monto: formatMoneyARS(datosBase.gastos_fijos_mensuales * 6),
+            monto: formatMoneyARS(datosBase.gastos_fijos_mensuales * 6, 'ARS', locale),
           })}
         </p>
       )}

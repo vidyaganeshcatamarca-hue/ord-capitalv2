@@ -1,5 +1,6 @@
 import { t } from '@/locales/i18n'
 import { formatMoneyARS, BCG_CUADRANTES } from '@/lib/bcgUtils'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import './BCGResumenCuadrantes.css'
 
 export interface ResumenCuadrante {
@@ -31,6 +32,7 @@ const MESSAGES: Record<ResumenCuadrante['cuadrante_key'], (monto: string) => str
 }
 
 export function BCGResumenCuadrantes({ resumen, onCardClick }: BCGResumenCuadrantesProps) {
+  const locale = useActiveLocale()
   const order: ResumenCuadrante[] = CUADRANTE_ORDER.map((key) => {
     return resumen.find((r) => r.cuadrante_key === key) ?? {
       cuadrante_key: key,
@@ -45,7 +47,7 @@ export function BCGResumenCuadrantes({ resumen, onCardClick }: BCGResumenCuadran
       {order.map((r) => {
         const bcgKey = CUADRANTE_TO_BCG[r.cuadrante_key]
         const c = BCG_CUADRANTES[bcgKey]
-        const montoFmt = formatMoneyARS(r.monto_total)
+        const montoFmt = formatMoneyARS(r.monto_total, locale)
         return (
           <button
             key={r.cuadrante_key}

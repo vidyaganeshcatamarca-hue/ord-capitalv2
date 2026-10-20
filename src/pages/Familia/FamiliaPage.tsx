@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { useHogar } from '@/contexts/HogarContext'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { SaldarBalanceModal } from '@/components/SaldarBalanceModal/SaldarBalanceModal'
 import { DetalleBalanceModal } from '@/components/DetalleBalanceModal/DetalleBalanceModal'
 import { ProyectoFormModal } from '@/components/ProyectoFormModal/ProyectoFormModal'
@@ -46,8 +47,8 @@ interface ProyectoHogar {
   estado_alerta_key: string
 }
 
-const formatMoney = (value: number) =>
-  new Intl.NumberFormat('es-AR', {
+const formatMoney = (value: number, locale: string) =>
+  new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'ARS',
     maximumFractionDigits: 0,
@@ -63,6 +64,8 @@ const getEventoLabel = (tipoEvento: string) => {
 export function FamiliaPage() {
   const { estado, loading: loadingHogar } = useHogar()
   const { showToast } = useToast()
+  // The amounts follow the language the user is reading in.
+  const locale = useActiveLocale()
 
   const [activeTab, setActiveTab] = useState<FamiliaTab>('dashboard')
   const [balances, setBalances] = useState<BalanceHogar[]>([])
@@ -176,7 +179,7 @@ export function FamiliaPage() {
             <span className="familia-card-label">{t('hogar_saldar_deuda_actual')}</span>
             {balancePrincipal && balancePrincipal.monto_deuda > 0 ? (
               <>
-                <strong>{formatMoney(balancePrincipal.monto_deuda)}</strong>
+                <strong>{formatMoney(balancePrincipal.monto_deuda, locale)}</strong>
                 <p>{t('familia_balance_line', {
                   deudor: balancePrincipal.deudor_nombre || t('familia_integrante_generico'),
                   acreedor: balancePrincipal.acreedor_nombre || t('familia_integrante_generico'),
@@ -211,7 +214,7 @@ export function FamiliaPage() {
                       <strong>{evento.descripcion || evento.rubro || getEventoLabel(evento.tipo_evento)}</strong>
                       <p>{evento.pagado_por ? t('hogar_timeline_pagado_por', { nombre: evento.pagado_por }) : evento.nombre_proyecto}</p>
                     </div>
-                    <span className="familia-feed-amount">{formatMoney(evento.monto)}</span>
+                    <span className="familia-feed-amount">{formatMoney(evento.monto, locale)}</span>
                   </div>
                 ))}
               </div>
@@ -241,11 +244,11 @@ export function FamiliaPage() {
                       <div className="familia-proyecto-title">
                         <strong>{proyecto.nombre_proyecto}</strong>
                         <p>
-                          {formatMoney(proyecto.total_aportado)} / {formatMoney(proyecto.presupuesto_meta)}
+                          {formatMoney(proyecto.total_aportado, locale)} / {formatMoney(proyecto.presupuesto_meta, locale)}
                         </p>
                         <p className="familia-proyecto-aportes">
-                          {t('hogar_integrantes_creador')}: {formatMoney(proyecto.aportes_creador)} ·{' '}
-                          {t('hogar_integrantes_invitado')}: {formatMoney(proyecto.aportes_invitado)}
+                          {t('hogar_integrantes_creador')}: {formatMoney(proyecto.aportes_creador, locale)} ·{' '}
+                          {t('hogar_integrantes_invitado')}: {formatMoney(proyecto.aportes_invitado, locale)}
                         </p>
                       </div>
                       <span className={semaforoClass} aria-hidden="true" />

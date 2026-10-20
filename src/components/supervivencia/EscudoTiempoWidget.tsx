@@ -1,5 +1,6 @@
 import type { EscudoData } from '@/pages/Supervivencia/SupervivenciaPage'
 import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { t } from '@/locales/i18n'
 import { WarWidgetCard } from './WarWidgetCard'
 
@@ -16,6 +17,7 @@ function semaforoFromEscudo(e: EscudoData): 'verde' | 'amarillo' | 'rojo' {
 
 
 export function EscudoTiempoWidget({ escudo, onDetalle }: EscudoTiempoWidgetProps) {
+  const locale = useActiveLocale()
   if (!escudo) {
     return (
       <WarWidgetCard
@@ -49,15 +51,15 @@ export function EscudoTiempoWidget({ escudo, onDetalle }: EscudoTiempoWidgetProp
       </div>
       <div className="escudo-detail-row">
         <span>{t('war_escudo_label_liquidez')}</span>
-        <strong>{formatMoneyARS(escudo.arsenal_total)}</strong>
+        <strong>{formatMoneyARS(escudo.arsenal_total, 'ARS', locale)}</strong>
       </div>
       <div className="escudo-detail-row">
         <span>{t('war_escudo_label_deuda')}</span>
-        <strong>{formatMoneyARS(escudo.deuda_total)}</strong>
+        <strong>{formatMoneyARS(escudo.deuda_total, 'ARS', locale)}</strong>
       </div>
       <div className="escudo-detail-row">
         <span>{t('war_escudo_label_quemado')}</span>
-        <strong>{formatMoneyARS(escudo.burn_rate_supervivencia)}{t("shield_per_day")}</strong>
+        <strong>{formatMoneyARS(escudo.burn_rate_supervivencia, 'ARS', locale)}{t("shield_per_day")}</strong>
       </div>
       {escudo.capital_real <= 0 && (
         <p className="escudo-alerta-roja">⚠️ {t('war_room_sin_liquidez')}</p>

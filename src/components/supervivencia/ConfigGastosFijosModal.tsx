@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { supabase } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
@@ -41,6 +42,7 @@ export function ConfigGastosFijosModal({
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [vacio, setVacio] = useState(false)
+  const locale = useActiveLocale()
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -169,7 +171,7 @@ export function ConfigGastosFijosModal({
                       <strong>{String(original?.nombre ?? `Cat #${item.estructura_id}`)}</strong>
                       <span className="cfg-item-promedio">
                         {t('war_escudo_config_label_promedio', {
-                          monto: formatMoneyARS(item.monto_mensual),
+                          monto: formatMoneyARS(item.monto_mensual, 'ARS', locale),
                         })}
                       </span>
                     </div>

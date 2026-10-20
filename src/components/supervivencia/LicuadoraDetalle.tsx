@@ -1,5 +1,6 @@
 import { t } from '@/locales/i18n'
 import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import type { LicuadoraData } from '@/pages/Supervivencia/SupervivenciaPage'
 import './LicuadoraDetalle.css'
 
@@ -15,6 +16,7 @@ function formatPct(v: number): string {
 }
 
 export function LicuadoraDetalle({ licuadora, onIrAInversiones }: LicuadoraDetalleProps) {
+  const locale = useActiveLocale()
   const evo = licuadora.evolucion
   const nominal = evo.variacion_nominal_12m
   const inflacion = evo.inflacion_acumulada_12m
@@ -43,7 +45,7 @@ export function LicuadoraDetalle({ licuadora, onIrAInversiones }: LicuadoraDetal
       <div className="lic-tarjetas">
         <div className="lic-tarjeta">
           <span className="lic-tarjeta-label">{t('war_licuadora_label_patrimonio')}</span>
-          <strong className="lic-tarjeta-valor">{formatMoneyARS(licuadora.actual.patrimonio_neto_ars)}</strong>
+          <strong className="lic-tarjeta-valor">{formatMoneyARS(licuadora.actual.patrimonio_neto_ars, 'ARS', locale)}</strong>
         </div>
         <div className="lic-tarjeta">
           <span className="lic-tarjeta-label">{t('war_licuadora_label_nominal')}</span>

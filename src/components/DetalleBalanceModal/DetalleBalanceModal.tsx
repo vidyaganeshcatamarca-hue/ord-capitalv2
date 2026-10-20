@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import './DetalleBalanceModal.css'
@@ -25,8 +26,8 @@ interface DetalleBalanceModalProps {
   onClose: () => void
 }
 
-const formatMoney = (value: number) =>
-  new Intl.NumberFormat('es-AR', {
+const formatMoney = (value: number, locale: string) =>
+  new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'ARS',
     maximumFractionDigits: 0,
@@ -42,6 +43,8 @@ const getSemaforo = (diferencia: number, total: number): 'verde' | 'amarillo' | 
 
 export function DetalleBalanceModal({ isOpen, onClose }: DetalleBalanceModalProps) {
   const { showToast } = useToast()
+  // The amounts follow the language the user is reading in.
+  const locale = useActiveLocale()
   const [categorias, setCategorias] = useState<DesgloseCategoria[]>([])
   const [loading, setLoading] = useState(false)
 
@@ -120,7 +123,7 @@ export function DetalleBalanceModal({ isOpen, onClose }: DetalleBalanceModalProp
                   <div>
                     <span className="detalle-balance-resumen-key">{t('familia_detalle_total')}</span>
                     <strong className="detalle-balance-resumen-value">
-                      {formatMoney(totales.total)}
+                      {formatMoney(totales.total, locale)}
                     </strong>
                   </div>
                   <div>
@@ -128,7 +131,7 @@ export function DetalleBalanceModal({ isOpen, onClose }: DetalleBalanceModalProp
                       {t('hogar_integrantes_creador')}
                     </span>
                     <strong className="detalle-balance-resumen-value">
-                      {formatMoney(totales.pagado_creador)}
+                      {formatMoney(totales.pagado_creador, locale)}
                     </strong>
                   </div>
                   <div>
@@ -136,7 +139,7 @@ export function DetalleBalanceModal({ isOpen, onClose }: DetalleBalanceModalProp
                       {t('hogar_integrantes_invitado')}
                     </span>
                     <strong className="detalle-balance-resumen-value">
-                      {formatMoney(totales.pagado_invitado)}
+                      {formatMoney(totales.pagado_invitado, locale)}
                     </strong>
                   </div>
                 </div>
@@ -145,13 +148,13 @@ export function DetalleBalanceModal({ isOpen, onClose }: DetalleBalanceModalProp
                     <span className="detalle-balance-resumen-key">
                       {t('familia_detalle_esperado_creador')}
                     </span>
-                    <strong>{formatMoney(totales.esperado_creador)}</strong>
+                    <strong>{formatMoney(totales.esperado_creador, locale)}</strong>
                   </div>
                   <div>
                     <span className="detalle-balance-resumen-key">
                       {t('familia_detalle_esperado_invitado')}
                     </span>
-                    <strong>{formatMoney(totales.esperado_invitado)}</strong>
+                    <strong>{formatMoney(totales.esperado_invitado, locale)}</strong>
                   </div>
                 </div>
                 <div className="detalle-balance-diferencia">
@@ -163,8 +166,8 @@ export function DetalleBalanceModal({ isOpen, onClose }: DetalleBalanceModalProp
                       className={difCreadorGlobal >= 0 ? 'positivo' : 'negativo'}
                     >
                       {difCreadorGlobal >= 0
-                        ? `+${formatMoney(difCreadorGlobal)}`
-                        : formatMoney(difCreadorGlobal)}
+                        ? `+${formatMoney(difCreadorGlobal, locale)}`
+                        : formatMoney(difCreadorGlobal, locale)}
                     </strong>
                   </div>
                   <div>
@@ -175,8 +178,8 @@ export function DetalleBalanceModal({ isOpen, onClose }: DetalleBalanceModalProp
                       className={difInvitadoGlobal >= 0 ? 'positivo' : 'negativo'}
                     >
                       {difInvitadoGlobal >= 0
-                        ? `+${formatMoney(difInvitadoGlobal)}`
-                        : formatMoney(difInvitadoGlobal)}
+                        ? `+${formatMoney(difInvitadoGlobal, locale)}`
+                        : formatMoney(difInvitadoGlobal, locale)}
                     </strong>
                   </div>
                 </div>
@@ -202,7 +205,7 @@ export function DetalleBalanceModal({ isOpen, onClose }: DetalleBalanceModalProp
                           <div className="detalle-balance-item-title">
                             <strong>{catalogDisplayName(cat.nombre_categoria)}</strong>
                             <span>
-                              {t('familia_detalle_total')}: {formatMoney(cat.total_categoria)}
+                              {t('familia_detalle_total')}: {formatMoney(cat.total_categoria, locale)}
                             </span>
                           </div>
                           <span className={`detalle-semaforo detalle-semaforo-${semaforo}`} />
@@ -211,20 +214,20 @@ export function DetalleBalanceModal({ isOpen, onClose }: DetalleBalanceModalProp
                           <div className="detalle-balance-item-row">
                             <span>{t('hogar_integrantes_creador')}</span>
                             <span>
-                              {formatMoney(cat.pagado_creador)}{' '}
+                              {formatMoney(cat.pagado_creador, locale)}{' '}
                               <small>
                                 ({t('familia_detalle_esperado_label')}{' '}
-                                {formatMoney(cat.esperado_creador)})
+                                {formatMoney(cat.esperado_creador, locale)})
                               </small>
                             </span>
                           </div>
                           <div className="detalle-balance-item-row">
                             <span>{t('hogar_integrantes_invitado')}</span>
                             <span>
-                              {formatMoney(cat.pagado_invitado)}{' '}
+                              {formatMoney(cat.pagado_invitado, locale)}{' '}
                               <small>
                                 ({t('familia_detalle_esperado_label')}{' '}
-                                {formatMoney(cat.esperado_invitado)})
+                                {formatMoney(cat.esperado_invitado, locale)})
                               </small>
                             </span>
                           </div>
@@ -234,10 +237,10 @@ export function DetalleBalanceModal({ isOpen, onClose }: DetalleBalanceModalProp
                             >
                               {cat.diferencia_creador > 0
                                 ? t('familia_detalle_dif_positiva_creador', {
-                                    monto: formatMoney(cat.diferencia_creador),
+                                    monto: formatMoney(cat.diferencia_creador, locale),
                                   })
                                 : t('familia_detalle_dif_negativa_creador', {
-                                    monto: formatMoney(Math.abs(cat.diferencia_creador)),
+                                    monto: formatMoney(Math.abs(cat.diferencia_creador), locale),
                                   })}
                             </div>
                           )}

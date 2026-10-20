@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { useHogar } from '@/contexts/HogarContext'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { haptics } from '@/lib/haptics'
 import './ConfigHogar.css'
 
@@ -18,6 +19,8 @@ interface InvitacionData {
 export function ConfigHogar({ onChange }: ConfigHogarProps) {
   const { showToast } = useToast()
   const { estado, refresh } = useHogar()
+  // The expiry date follows the language the user is reading in.
+  const locale = useActiveLocale()
   const [pctCreador, setPctCreador] = useState(50)
   const [pctInvitado, setPctInvitado] = useState(50)
   const [loadingPorcentaje, setLoadingPorcentaje] = useState(false)
@@ -228,7 +231,7 @@ export function ConfigHogar({ onChange }: ConfigHogarProps) {
                 {codigo.expira_at && (
                   <span className="config-hogar-codigo-expira">
                     {t('hogar_codigo_expira', {
-                      fecha: new Date(codigo.expira_at).toLocaleDateString('es-AR'),
+                      fecha: new Date(codigo.expira_at).toLocaleDateString(locale),
                     })}
                   </span>
                 )}
@@ -317,7 +320,7 @@ export function ConfigHogar({ onChange }: ConfigHogarProps) {
               {codigo.expira_at && (
                 <span className="config-hogar-codigo-expira">
                   {t('hogar_codigo_expira', {
-                    fecha: new Date(codigo.expira_at).toLocaleDateString('es-AR'),
+                    fecha: new Date(codigo.expira_at).toLocaleDateString(locale),
                   })}
                 </span>
               )}

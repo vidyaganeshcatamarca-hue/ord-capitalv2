@@ -1068,7 +1068,7 @@ export function HomePage() {
 
   const visibleBilleteras = homeFilters.billeteraId === null
     ? (ordenBilleterasVisibles === 'alfabetico'
-        ? [...billeteras].sort((a, b) => t(a.nombre).localeCompare(t(b.nombre), 'es', { sensitivity: 'base' }))
+        ? [...billeteras].sort((a, b) => t(a.nombre).localeCompare(t(b.nombre), locale, { sensitivity: 'base' }))
         : billeteras)
     : billeteras.filter((b) => b.billetera_id === homeFilters.billeteraId)
 
@@ -1242,7 +1242,7 @@ export function HomePage() {
                         {billeteras.length > 0 && (
                           <optgroup label={t('group_wallets')}>
                             {[...billeteras]
-                              .sort((a, b) => t(a.nombre).localeCompare(t(b.nombre), 'es', { sensitivity: 'base' }))
+                              .sort((a, b) => t(a.nombre).localeCompare(t(b.nombre), locale, { sensitivity: 'base' }))
                               .map((b) => (
                               <option key={`b_${b.billetera_id}`} value={`b_${b.billetera_id}`}>
                             {t(b.nombre)}
@@ -1755,7 +1755,7 @@ export function HomePage() {
                              <span>{(() => {
                                const parts = m.fecha.split('-');
                                const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
-                               return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' });
+                               return d.toLocaleDateString(locale, { day: '2-digit', month: 'short' });
                              })()}</span>
                           </div>
                         </div>

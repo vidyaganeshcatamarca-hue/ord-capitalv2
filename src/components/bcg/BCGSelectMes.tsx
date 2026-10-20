@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { t } from '@/locales/i18n'
 import { getStoredMes, setStoredMes, formatMesCorto } from '@/lib/bcgUtils'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import './BCGSelectMes.css'
 
 interface BCGSelectMesProps {
@@ -20,6 +21,7 @@ function buildOptions(): string[] {
 }
 
 export function BCGSelectMes({ value, onChange }: BCGSelectMesProps) {
+  const locale = useActiveLocale()
   const [internal, setInternal] = useState<string | null>(value ?? getStoredMes())
 
   useEffect(() => {
@@ -44,7 +46,7 @@ export function BCGSelectMes({ value, onChange }: BCGSelectMesProps) {
           const d = new Date(y, m - 1, 1)
           return (
             <option key={opt} value={opt}>
-              {formatMesCorto(d)}
+              {formatMesCorto(d, locale)}
             </option>
           )
         })}

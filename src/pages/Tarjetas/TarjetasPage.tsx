@@ -3,6 +3,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
 import { useLanguage } from '@/locales/LanguageProvider'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { formatCurrency } from '@/lib/format'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
@@ -126,18 +127,10 @@ const CARD_COLORS = [
   '#F4511E', '#6D4C41', '#757575', '#546E7A', '#000000'
 ]
 
-const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 })
-const fmtUSD = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 })
-
 // fmtARS/fmtMoneda: importes en moneda LOCAL del usuario (contexto inyectado
 // por useNumberFormat); las llaves *_ars del backend ya significan "moneda local".
 function fmtARS(n: number) { return formatCurrency(n) }
 function fmtMoneda(n: number, moneda?: string) { return formatCurrency(n, moneda) }
-
-function getMonthName(dateStr: string) {
-  const d = new Date(dateStr + 'T00:00:00')
-  return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
-}
 
 function getUsoPct(total: number, disponible: number): number {
   if (!total || total === 0) return 0
@@ -224,6 +217,9 @@ function getDiasParaProximoVencimiento(card: MapaTarjeta): number {
 export function TarjetasPage() {
   const { showToast } = useToast()
   const { lang } = useLanguage()
+  // The locale for every date and currency rendered on this screen. It
+  // follows the language the user is reading in, not a fixed Argentine one.
+  const locale = useActiveLocale()
   const { localCurrency } = useNumberFormat()
 
   // â”€â”€ Data â”€â”€
@@ -373,7 +369,7 @@ const handleLegacySubmit = async () => {
       })
       showToast(t('card_legacy_created_toast', {
         cantidad,
-        fecha: new Intl.DateTimeFormat(lang === 'es' ? 'es-AR' : 'en-US', { month: 'long', year: 'numeric' }).format(new Date(mesInicio + 'T12:00:00')) }), 'success')
+        fecha: new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(new Date(mesInicio + 'T12:00:00')) }), 'success')
       setShowLegacyModal(false)
       await fetchDetalle(selectedCard.tarjeta_id)
       void fetchData()
@@ -1028,7 +1024,7 @@ const handleLegacySubmit = async () => {
               <div className="historial-list">
                 {(() => { const totalPorCarga = new Map<number, number>(); cuotasActivas.forEach(c => { if (c.carga_id != null && !c.pagado) totalPorCarga.set(c.carga_id, (totalPorCarga.get(c.carga_id) ?? 0) + 1) }); return cuotasActivas.filter(c => !c.pagado).map((c: any, idx: number) => {
                   const parts = c.fecha_estimada_pago ? c.fecha_estimada_pago.split('-') : []
-                  const dueDateStr = parts[1] ? new Date(c.fecha_estimada_pago + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'long', year: 'numeric' }) : '--'
+                  const dueDateStr = parts[1] ? new Date(c.fecha_estimada_pago + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) : '--'
                   return (
                     <div key={c.cuota_id} className="historial-item" style={{ alignItems: 'center' }}>
                       <div className="historial-item-info">
@@ -1082,7 +1078,7 @@ const handleLegacySubmit = async () => {
                 {historial.slice(0, 10).map(h => {
                   const parts = h.fecha ? h.fecha.split('-') : []
                   const day = parts[2] || '--'
-                  const month = parts[1] ? new Date(h.fecha + 'T00:00:00').toLocaleDateString('es-AR', { month: 'short' }) : '--'
+                  const month = parts[1] ? new Date(h.fecha + 'T00:00:00').toLocaleDateString(locale, { month: 'short' }) : '--'
                   return (
                     <div key={h.pago_id} className="historial-item">
                       <div className="historial-item-date">
@@ -1158,7 +1154,7 @@ const handleLegacySubmit = async () => {
                     aria-label={t('card_legacy_field_mes')}
                   >
                     {Array.from({ length: 12 }, (_, m) => {
-                      const nombre = new Intl.DateTimeFormat(lang === 'es' ? 'es-AR' : 'en-US', { month: 'long' }).format(new Date(2026, m, 1))
+                      const nombre = new Intl.DateTimeFormat(locale, { month: 'long' }).format(new Date(2026, m, 1))
                       return <option key={m + 1} value={String(m + 1).padStart(2, '0')}>{nombre}</option>
                     })}
                   </select>
@@ -1545,7 +1541,7 @@ const handleLegacySubmit = async () => {
                                 style={{ height: Math.max(4, (Number(x.total_ciclo) / serieMax) * 76) }}
                               />
                               <div className="comparativa-bar-label">
-                                {new Date(`${x.fecha_inicio}T00:00:00`).toLocaleDateString('es-AR', { month: 'short' })}
+                                {new Date(`${x.fecha_inicio}T00:00:00`).toLocaleDateString(locale, { month: 'short' })}
                               </div>
                               {pctMedia !== null && (
                                 <span className="comparativa-bar-mediapct">
@@ -1893,6 +1889,21 @@ export function PagarModal({
   // user de Rumania); el literal 'ARS' fue hardcodeo de la era monounaria.
   const { localCurrency } = useNumberFormat()
   const localMon = localCurrency || 'ARS'
+  // El locale activo: los montos y las fechas de este modal siguen el idioma
+  // que el usuario está leyendo.
+  const locale = useActiveLocale()
+  // El equivalente en USD se muestra SIEMPRE con 2 decimales, como antes de
+  // existir el segundo idioma. No usa `formatCurrency` a propósito: ese helper
+  // respeta los decimales que el usuario configuró para USD, y este número
+  // (el equivalente de un pago en pesos) tiene su propia regla. Solo cambia el
+  // locale: el separador y el símbolo siguen al idioma activo.
+  const fmtUSD = (n: number) =>
+    new Intl.NumberFormat(locale, {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(Number(n))
   const nextLineIdRef = useRef(2)
   const allLines = useMemo(() => [...pagarLineas, ...pagarLineasUsd], [pagarLineas, pagarLineasUsd])
   // Totales separados por moneda según la vía elegida para las cuotas USD.
@@ -2464,12 +2475,12 @@ export function PagarModal({
                           />
                           {payInPesos && montoNum > 0 && (
                             <div className="pay-multi-usd-preview">
-                              {t('pay_resumen_usd_equiv_preview', { monto: fmtUSD.format(equivalenteUsd) })}
+                              {t('pay_resumen_usd_equiv_preview', { monto: fmtUSD(equivalenteUsd) })}
                             </div>
                           )}
                           {emptyPrefillSuggestion && (
                             <div className="pay-multi-usd-preview pay-multi-usd-preview--suggested">
-                              {t('pay_resumen_usd_equiv_suggested', { ars: (refNecesitoUSDSug * cotizacion).toFixed(2), usd: fmtUSD.format(refNecesitoUSDSug) })}
+                              {t('pay_resumen_usd_equiv_suggested', { ars: (refNecesitoUSDSug * cotizacion).toFixed(2), usd: fmtUSD(refNecesitoUSDSug) })}
                             </div>
                           )}
                         </>
@@ -2670,7 +2681,7 @@ export function PagarModal({
                               const cuotaId = Number(c.cuota_id)
                               const selected = selectedCuotasAdelantar.includes(cuotaId)
                               const dueDateStr = c.fecha_estimada_pago
-                                ? new Date(c.fecha_estimada_pago + 'T00:00:00').toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
+                                ? new Date(c.fecha_estimada_pago + 'T00:00:00').toLocaleDateString(locale, { day: 'numeric', month: 'short' })
                                 : '--'
                               return (
                                 <button

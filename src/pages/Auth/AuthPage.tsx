@@ -4,6 +4,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { t, parseError } from '@/locales/i18n'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { ConsentCheckbox } from '@/components/ConsentCheckbox/ConsentCheckbox'
 import { ConsentGate } from '@/components/ConsentGate/ConsentGate'
 import { LegalDocModal } from '@/components/LegalDocModal/LegalDocModal'
@@ -154,6 +155,8 @@ export function AuthPage() {
   const navigate = useNavigate()
   const { session, setOnboardingCompleto, signOut } = useAuth()
   const { showToast, setToastPlacement } = useToast()
+  // The month names in the billing-cycle preview follow the active language.
+  const locale = useActiveLocale()
 
   // Onboarding Slides (1 a 6: bienvenida, auth, pais, billetera, dia ancla, modo)
   const [slide, setSlide] = useState(1)
@@ -566,16 +569,19 @@ export function AuthPage() {
 
 
   // --- PREVIEW RANGO DE DÍA ANCLA (SLIDE 5) ---
+  // El nombre del mes sigue al idioma activo: antes era siempre 'es-ES',
+  // asi que un lector en ingles veia "septiembre" en medio de una pantalla
+  // en ingles.
   const getCyclePreviewText = () => {
     const today = new Date()
-    const currentMonth = today.toLocaleString('es-ES', { month: 'long' })
+    const currentMonth = today.toLocaleString(locale, { month: 'long' })
     
     if (anchorDay === 1) {
       const lastDayCurrent = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate()
       return t('auth_cycle_preview_same_month', { currentMonth, lastDay: lastDayCurrent })
     } else {
       const nextMonthDate = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-      const nextMonth = nextMonthDate.toLocaleString('es-ES', { month: 'long' })
+      const nextMonth = nextMonthDate.toLocaleString(locale, { month: 'long' })
       const endDay = anchorDay - 1
       return t('auth_cycle_preview_diff_month', { startDay: anchorDay, currentMonth, endDay, nextMonth })
     }

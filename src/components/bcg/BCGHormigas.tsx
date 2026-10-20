@@ -4,6 +4,7 @@ import { t } from '@/locales/i18n'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
 import { haptics } from '@/lib/haptics'
 import { formatMoneyARS } from '@/lib/bcgUtils'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { BCGBuzonModal } from './BCGBuzonModal'
 import './BCGHormigas.css'
@@ -53,6 +54,7 @@ function maxBar(m: number, a: number, b: number): number {
 
 export function BCGHormigas({ hormigas, reto, onCategoriaClick }: BCGHormigasProps) {
   const navigate = useNavigate()
+  const locale = useActiveLocale()
   const [showBuzonModal, setShowBuzonModal] = useState(false)
 
   if (!reto || (reto.cantidad_hormigas === 0 && hormigas.length === 0)) {
@@ -82,7 +84,7 @@ export function BCGHormigas({ hormigas, reto, onCategoriaClick }: BCGHormigasPro
         <div className="bcg-hormigas-grid">
           <div>
             <span>{t('bcg_hormiga_total_label')}</span>
-            <strong>{formatMoneyARS(reto.total_hormigas_mes)}</strong>
+            <strong>{formatMoneyARS(reto.total_hormigas_mes, locale)}</strong>
           </div>
           <div>
             <span>{t('bcg_hormiga_cantidad_label')}</span>
@@ -99,21 +101,21 @@ export function BCGHormigas({ hormigas, reto, onCategoriaClick }: BCGHormigasPro
             <div className="bcg-hormigas-bar-track">
               <div className="bcg-hormigas-bar-fill" style={{ width: `${anchoAntepasado}%` }} />
             </div>
-            <strong>{formatMoneyARS(reto.comparativa.mes_antepasado)}</strong>
+            <strong>{formatMoneyARS(reto.comparativa.mes_antepasado, locale)}</strong>
           </div>
           <div className="bcg-hormigas-bar-row">
             <span>{t('bcg_hormiga_mes_anterior')}</span>
             <div className="bcg-hormigas-bar-track">
               <div className="bcg-hormigas-bar-fill" style={{ width: `${anchoAnterior}%` }} />
             </div>
-            <strong>{formatMoneyARS(reto.comparativa.mes_anterior)}</strong>
+            <strong>{formatMoneyARS(reto.comparativa.mes_anterior, locale)}</strong>
           </div>
           <div className="bcg-hormigas-bar-row bcg-hormigas-bar-actual">
             <span>{t('bcg_hormiga_mes_actual')}</span>
             <div className="bcg-hormigas-bar-track">
               <div className="bcg-hormigas-bar-fill" style={{ width: `${anchoActual}%` }} />
             </div>
-            <strong>{formatMoneyARS(reto.total_hormigas_mes)}</strong>
+            <strong>{formatMoneyARS(reto.total_hormigas_mes, locale)}</strong>
           </div>
         </div>
         <div className={`bcg-hormigas-tendencia bcg-hormigas-tendencia-${reto.comparativa.tendencia_key}`}>
@@ -155,11 +157,11 @@ export function BCGHormigas({ hormigas, reto, onCategoriaClick }: BCGHormigasPro
                   <strong>{catalogDisplayName(h.nombre_cuenta)}</strong>
                   <span>
                     {t('bcg_hormiga_frecuencia_label', { count: h.frecuencia_mensual })} ·{' '}
-                    {t('bcg_hormiga_promedio_label', { monto: formatMoneyARS(h.gasto_mensual_estimado / Math.max(h.frecuencia_mensual, 1)) })}
+                    {t('bcg_hormiga_promedio_label', { monto: formatMoneyARS(h.gasto_mensual_estimado / Math.max(h.frecuencia_mensual, 1), locale) })}
                   </span>
-                  <small>{t('bcg_hormiga_impacto_anual', { monto: formatMoneyARS(h.impacto_anual) })}</small>
+                  <small>{t('bcg_hormiga_impacto_anual', { monto: formatMoneyARS(h.impacto_anual, locale) })}</small>
                 </div>
-                <span className="bcg-hormigas-item-monto">{formatMoneyARS(h.gasto_mensual_estimado)}</span>
+                <span className="bcg-hormigas-item-monto">{formatMoneyARS(h.gasto_mensual_estimado, locale)}</span>
               </li>
             ))}
           </ul>
@@ -171,7 +173,7 @@ export function BCGHormigas({ hormigas, reto, onCategoriaClick }: BCGHormigasPro
 
         <div className="bcg-hormigas-proyeccion">
           <span>{t('bcg_hormiga_proyeccion_label')}</span>
-          <strong>{formatMoneyARS(reto.proyeccion_6_meses)}</strong>
+          <strong>{formatMoneyARS(reto.proyeccion_6_meses, locale)}</strong>
         </div>
 
         {reto.mensaje_key === 'msg_challenge_zero_ants' ? (
@@ -181,7 +183,7 @@ export function BCGHormigas({ hormigas, reto, onCategoriaClick }: BCGHormigasPro
           </div>
         ) : reto.mensaje_key === 'msg_challenge_no_piggybank' ? (
           <div className="bcg-hormigas-card bcg-hormigas-card-no-buzon">
-            <h3>{t('bcg_hormiga_estado_no_buzon_titulo', { monto: formatMoneyARS(reto.total_hormigas_mes) })}</h3>
+            <h3>{t('bcg_hormiga_estado_no_buzon_titulo', { monto: formatMoneyARS(reto.total_hormigas_mes, locale) })}</h3>
             <p>{t('bcg_hormiga_estado_no_buzon_desc')}</p>
             <button
               type="button"
@@ -193,11 +195,11 @@ export function BCGHormigas({ hormigas, reto, onCategoriaClick }: BCGHormigasPro
           </div>
         ) : (
           <div className="bcg-hormigas-card bcg-hormigas-card-transfer">
-            <h3>{t('bcg_hormiga_estado_transfer_titulo', { monto: formatMoneyARS(reto.total_hormigas_mes) })}</h3>
+            <h3>{t('bcg_hormiga_estado_transfer_titulo', { monto: formatMoneyARS(reto.total_hormigas_mes, locale) })}</h3>
             <p>
               {t('bcg_hormiga_estado_transfer_desc', {
                 buzon: reto.buzon_nombre ?? t('mailbox'),
-                saldo: formatMoneyARS(reto.buzon_saldo_actual ?? 0),
+                saldo: formatMoneyARS(reto.buzon_saldo_actual ?? 0, locale),
               })}
             </p>
             <button

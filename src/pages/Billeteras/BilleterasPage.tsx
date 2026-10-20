@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/contexts/ToastContext'
 import { useBilleteras } from '@/hooks/useBilleteras'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { useMonedasExtra } from '@/hooks/useMonedasExtra'
 import { buildWalletCurrencyOptions, formatCurrencyLabel } from '@/lib/monedasExtra'
 import { useHideAmounts } from '@/hooks/useHideAmounts'
@@ -363,7 +364,7 @@ export function BilleterasPage() {
             ) : (
               <div className="billeteras-list">
                 {(ordenBilleteras === 'alfabetico'
-                  ? [...billeteras].sort((a, b) => t(a.nombre).localeCompare(t(b.nombre), 'es', { sensitivity: 'base' }))
+                  ? [...billeteras].sort((a, b) => t(a.nombre).localeCompare(t(b.nombre), locale, { sensitivity: 'base' }))
                   : billeteras
                 ).map((b) => {
                   const sem = getSemaforoDetails(b.ultima_conciliacion_at)
@@ -665,6 +666,9 @@ function IncomeSourcesDonut({ hideAmounts }: { hideAmounts: boolean }) {
   const [periodo, setPeriodo] = useState<IncomePeriodo>('mes_actual')
   const [data, setData] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  // The donut renders raw numbers, so it needs the locale itself: the
+  // separator and the grouping follow the language the user is reading in.
+  const locale = useActiveLocale()
 
   const fetchData = useCallback(async (p: IncomePeriodo) => {
     setLoading(true)
@@ -744,7 +748,7 @@ function IncomeSourcesDonut({ hideAmounts }: { hideAmounts: boolean }) {
                   </span>
                 </div>
                 <span className="font-mono" style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--text-secondary)', flexShrink: 0 }}>
-                  {hideAmounts ? '***' : `$${Number(item.total_ingresado).toLocaleString('es-AR', { maximumFractionDigits: 0 })}`} · {Number(item.porcentaje_del_total).toFixed(1)}%
+                  {hideAmounts ? '***' : `$${Number(item.total_ingresado).toLocaleString(locale, { maximumFractionDigits: 0 })}`} · {Number(item.porcentaje_del_total).toFixed(1)}%
                 </span>
               </div>
             ))}

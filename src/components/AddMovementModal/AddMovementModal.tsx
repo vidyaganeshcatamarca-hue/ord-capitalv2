@@ -291,7 +291,7 @@ interface AddMovementModalProps {
 
 export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', initialBilleteraId, onOpenVoice }: AddMovementModalProps) {
   const { showToast } = useToast()
-  const { formatMonto, localCurrency, currencySymbol, prefs } = useNumberFormat()
+  const { formatMonto, localCurrency, currencySymbol, prefs, locale } = useNumberFormat()
 
   // ── Estado global del formulario ──
   const [tipo, setTipo] = useState<TipoMovimiento>(defaultTipo)
@@ -479,11 +479,11 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
         return childName.includes(normalizedCategoryQuery) || combinedName.includes(normalizedCategoryQuery)
       })
     })
-    .sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es', { sensitivity: 'base' }))
+    .sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), locale, { sensitivity: 'base' }))
     .map((rubro) => ({
       ...rubro,
       hijos: [...(rubro.hijos ?? [])].sort((a, b) =>
-        t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es', { sensitivity: 'base' })
+        t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), locale, { sensitivity: 'base' })
       ),
     }))
   
@@ -495,7 +495,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
       const rubr = await rpc<Rubro[]>('fn_obtener_arbol_categorias')
       cachedRubros = filterUserEditableCategories(rubr ?? [])
         .map(r => ({ ...r, hijos: (r.hijos ?? []).filter(h => isUserEditableCategory(h)) }))
-        .sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es', { sensitivity: 'base' }))
+        .sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), locale, { sensitivity: 'base' }))
       setRubros(cachedRubros)
     } catch (e) {
       console.error('Error reloading categories:', e)
@@ -547,7 +547,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
         cachedBilleteras = bill ?? []
         cachedRubros = filterUserEditableCategories(rubr ?? [])
           .map(r => ({ ...r, hijos: (r.hijos ?? []).filter(h => isUserEditableCategory(h)) }))
-          .sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), 'es', { sensitivity: 'base' }))
+          .sort((a, b) => t(a.nombre_cuenta).localeCompare(t(b.nombre_cuenta), locale, { sensitivity: 'base' }))
         cachedCatIngresos = ingrCat ?? []
         cachedTarjetas = tarj ?? []
         cachedUsd = resUsd ?? null

@@ -3,6 +3,7 @@ import { WalletIcon } from '@/components/WalletIcon'
 import { CategoryIcon } from '@/components/CategoryIcon'
 import { ChevronDown, X } from 'lucide-react'
 import { t } from '@/locales/i18n'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 
 export interface WalletOptionItem {
   billetera_id: number
@@ -45,6 +46,8 @@ export function WalletDropdownSelect({
   className
 }: WalletDropdownSelectProps) {
   const [isOpen, setIsOpen] = useState(false)
+  // The fallback amount follows the language the user is reading in.
+  const locale = useActiveLocale()
 
   // Prevent background scrolling when centered modal is open
   useEffect(() => {
@@ -63,7 +66,7 @@ export function WalletDropdownSelect({
 
   const fmt = (val: number, moneda: string) => {
     if (formatMonto) return formatMonto(val.toString(), moneda)
-    return `${val.toLocaleString('es-AR')} ${moneda}`
+    return `${val.toLocaleString(locale)} ${moneda}`
   }
 
   return (

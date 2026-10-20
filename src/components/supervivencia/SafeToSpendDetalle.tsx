@@ -1,5 +1,6 @@
 import { t } from '@/locales/i18n'
 import { formatMoneyLocal as formatMoneyARS } from '@/lib/formatoMonedaLocal'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import type { SafeData } from '@/pages/Supervivencia/SupervivenciaPage'
 import './SafeToSpendDetalle.css'
 
@@ -9,6 +10,7 @@ interface SafeToSpendDetalleProps {
 
 
 export function SafeToSpendDetalle({ safe }: SafeToSpendDetalleProps) {
+  const locale = useActiveLocale()
   return (
     <section className="safe-detalle">
       <header className="safe-detalle-header">
@@ -17,7 +19,7 @@ export function SafeToSpendDetalle({ safe }: SafeToSpendDetalleProps) {
       </header>
 
       <div className="safe-numero-gigante">
-        <span className="safe-numero-gigante-monto">{formatMoneyARS(safe.safe_to_spend_diario)}</span>
+        <span className="safe-numero-gigante-monto">{formatMoneyARS(safe.safe_to_spend_diario, 'ARS', locale)}</span>
         <span
           className={`safe-numero-gigante-semaforo safe-semaforo-${safe.estado_semaforo_key}`}
         >
@@ -34,19 +36,19 @@ export function SafeToSpendDetalle({ safe }: SafeToSpendDetalleProps) {
         <ul>
           <li>
             <span>💰 {t('war_safe_label_saldo')}</span>
-            <strong>{formatMoneyARS(safe.saldo_operativo)}</strong>
+            <strong>{formatMoneyARS(safe.saldo_operativo, 'ARS', locale)}</strong>
           </li>
           <li>
             <span>🛡️ {t('war_safe_label_fijos')}</span>
-            <strong className="negativo">−{formatMoneyARS(safe.blindaje_fijos_7d)}</strong>
+            <strong className="negativo">−{formatMoneyARS(safe.blindaje_fijos_7d, 'ARS', locale)}</strong>
           </li>
           <li>
             <span>💳 {t('war_safe_label_deudas')}</span>
-            <strong className="negativo">−{formatMoneyARS(safe.blindaje_deudas_7d)}</strong>
+            <strong className="negativo">−{formatMoneyARS(safe.blindaje_deudas_7d, 'ARS', locale)}</strong>
           </li>
           <li className="safe-destacado">
             <span>= {t('war_safe_label_disponible')}</span>
-            <strong>{formatMoneyARS(safe.capital_libre_semana)}</strong>
+            <strong>{formatMoneyARS(safe.capital_libre_semana, 'ARS', locale)}</strong>
           </li>
           <li>
             <span>📅 {t('war_safe_label_dias')}</span>
@@ -54,7 +56,7 @@ export function SafeToSpendDetalle({ safe }: SafeToSpendDetalleProps) {
           </li>
           <li className="safe-destacado safe-final">
             <span>= {t('war_safe_label_diario')}</span>
-            <strong>{formatMoneyARS(safe.safe_to_spend_diario)}</strong>
+            <strong>{formatMoneyARS(safe.safe_to_spend_diario, 'ARS', locale)}</strong>
           </li>
         </ul>
       </section>

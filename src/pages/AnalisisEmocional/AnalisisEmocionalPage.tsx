@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { useHogar } from '@/contexts/HogarContext'
 import { parseError, t } from '@/locales/i18n'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { haptics } from '@/lib/haptics'
 import { BCGScatterPlot, type BCGPoint } from '@/components/bcg/BCGScatterPlot'
 import { BCGCuadranteAcordeon } from '@/components/bcg/BCGCuadranteAcordeon'
@@ -66,6 +67,8 @@ export function AnalisisEmocionalPage() {
   const { showToast } = useToast()
   const { estado, loading: loadingHogar } = useHogar()
   const navigate = useNavigate()
+  // The amounts follow the language the user is reading in.
+  const locale = useActiveLocale()
   const [tab, setTab] = useState<BcgTab>('matriz')
 
   // Estado Vista 1
@@ -294,7 +297,7 @@ export function AnalisisEmocionalPage() {
                   <div className="bcg-hormigas-widget">
                     <span className="bcg-hormigas-icon">🐜</span>
                     <strong>
-                      {t('bcg_hormiga_total_label')}: {formatMoneyARSLocal(retoHormigas.total_hormigas_mes)} ({retoHormigas.cantidad_hormigas})
+                      {t('bcg_hormiga_total_label')}: {formatMoneyARSLocal(retoHormigas.total_hormigas_mes, locale)} ({retoHormigas.cantidad_hormigas})
                     </strong>
                     <button
                       type="button"
@@ -356,11 +359,11 @@ export function AnalisisEmocionalPage() {
   )
 }
 
-function formatMoneyARSLocal(v: number): string {
+function formatMoneyARSLocal(v: number, locale: string): string {
   try {
-    return new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(v ?? 0))
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(v ?? 0))
   } catch {
-    return `$${Math.round(Number(v ?? 0)).toLocaleString('es-AR')}`
+    return `$${Math.round(Number(v ?? 0)).toLocaleString(locale)}`
   }
 }
 

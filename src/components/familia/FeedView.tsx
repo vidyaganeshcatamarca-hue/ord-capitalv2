@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
+import { useActiveLocale } from '@/hooks/useActiveLocale'
 import './FeedView.css'
 
 type FiltroTipo = 'todos' | 'gasto' | 'abono' | 'conciliacion'
@@ -20,19 +21,19 @@ interface EventoHogar {
 
 const PAGE_SIZE = 15
 
-function formatMoney(value: number) {
-  return new Intl.NumberFormat('es-AR', {
+function formatMoney(value: number, locale: string) {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency: 'ARS',
     maximumFractionDigits: 0,
   }).format(Number(value || 0))
 }
 
-function formatFecha(iso: string): string {
+function formatFecha(iso: string, locale: string): string {
   if (!iso) return ''
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
-  return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short', year: 'numeric' })
+  return d.toLocaleDateString(locale, { day: '2-digit', month: 'short', year: 'numeric' })
 }
 
 function eventoLabel(tipo: string) {
@@ -55,6 +56,8 @@ interface FeedViewProps {
 
 export function FeedView({ eventosIniciales }: FeedViewProps) {
   const { showToast } = useToast()
+  // The amounts and dates follow the language the user is reading in.
+  const locale = useActiveLocale()
   const [eventos, setEventos] = useState<EventoHogar[]>(eventosIniciales ?? [])
   const [loading, setLoading] = useState(!eventosIniciales)
   const [filtro, setFiltro] = useState<FiltroTipo>('todos')
@@ -141,11 +144,11 @@ export function FeedView({ eventosIniciales }: FeedViewProps) {
               <div className="familia-feed-item-info">
                 <strong>{ev.descripcion || ev.rubro || eventoLabel(ev.tipo_evento)}</strong>
                 <p>
-                  {formatFecha(ev.fecha)}
+                  {formatFecha(ev.fecha, locale)}
                   {ev.pagado_por ? ` · ${ev.pagado_por}` : ev.nombre_proyecto ? ` · ${ev.nombre_proyecto}` : ''}
                 </p>
               </div>
-              <span className="familia-feed-item-amount">{formatMoney(ev.monto)}</span>
+              <span className="familia-feed-item-amount">{formatMoney(ev.monto, locale)}</span>
             </div>
           ))}
         </div>
