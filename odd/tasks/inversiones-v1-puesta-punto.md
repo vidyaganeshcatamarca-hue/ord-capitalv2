@@ -57,10 +57,10 @@ hecho; origin/main está 537 commits atrás).
 
 | ID | Specs | Tarea | Ruta | Commit |
 |----|-------|-------|------|--------|
-| T1 | S6.1, S6.2 | SQL: `fn_crear_inversion` setea `ultima_conciliacion = CURRENT_DATE` y deja `valor_mercado_actual` NULL para plazo fijo (devengo vivo); variable sigue naciendo en capital | inline | — |
-| T2 | S6.3, S6.4 | SQL: cartera solo `activas` + columna `monto_liquidado`; historial con columna `moneda` | inline | — |
-| T3 | S3, S2, S6.9 | SQL: `fn_reporte_patrimonio_inversiones` → jsonb `{moneda_local, total_moneda_local, totales_por_moneda}` (solo activas, conversión por pivote); `fn_reporte_rendimiento_vs_inflacion` y `fn_reporte_distribucion_activos` agregan convertido a moneda local | inline | — |
-| T4 | S6.5 | SQL: `fn_liquidar_inversion` acredita solo lo no rescatado (`p_monto_total_retirado - monto_liquidado`), sin re-acreditar capital; labels capital/ganancia/pérdida sobre saldos restantes | inline | — |
+| T1 | S6.1, S6.2 | SQL: `fn_crear_inversion` setea `ultima_conciliacion = CURRENT_DATE` y deja `valor_mercado_actual` NULL para plazo fijo (devengo vivo); variable sigue naciendo en capital | inline | `38de600` |
+| T2 | S6.3, S6.4 | SQL: cartera solo `activas` + columna `monto_liquidado`; historial con columna `moneda` | inline | `821f217` |
+| T3 | S3, S2, S6.9 | SQL: `fn_reporte_patrimonio_inversiones` → jsonb `{moneda_local, total_moneda_local, totales_por_moneda}` (solo activas, conversión por pivote); `fn_reporte_rendimiento_vs_inflacion` y `fn_reporte_distribucion_activos` agregan convertido a moneda local | inline | `432c13e` |
+| T4 | S6.5 | SQL: `fn_liquidar_inversion` acredita solo lo no rescatado (`p_monto_total_retirado - monto_liquidado`), sin re-acreditar capital; labels capital/ganancia/pérdida sobre saldos restantes | inline | `a510ee5` |
 | T5 | S6.8 | SQL: nueva `fn_obtener_config_inflacion` (GET país+fuente del usuario) | inline | — |
 | T6 | S3, S2, S6.9 | Front: `RendimientoRealWidget` consume el contrato nuevo: total en moneda local + una línea por moneda con saldo ≠ 0 (patrón hero Home); fuera la fila USD hardcodeada | inline | — |
 | T7 | S6.6, S6.7 | Front: 15+ keys i18n en `src/locales/es.ts` (sección inversiones) + resolver de labels `prefix: nombre` en `DetalleInversionView` (vía `t()`, sin tocar datos históricos) | inline | — |
@@ -70,6 +70,15 @@ hecho; origin/main está 537 commits atrás).
 **Deploy**: T1–T5 son SQL contra producción → UN deploy real con autorización explícita
 del dueño (convención temp_sql, scripts numerados + dump de verificación). El front
 (T6–T8) se mergea después del deploy.
+
+> **⏸️ PAUSADO por el dueño (2026-10-20, L4).** Estado al pausar: T1–T4 commiteadas
+> (SQL redactado y versionado en `temp_sql/82_deploy_inversiones_puesta_punto.sql`),
+> **NADA desplegado en producción** — el SQL nunca corrió contra la base viva.
+> Reanudar por T5 (`fn_obtener_config_inflacion`) y seguir con T6–T8 (frontend).
+> OJO AL REANUDAR: T3 cambió el contrato de `fn_reporte_patrimonio_inversiones`
+> (jsonb, sin `p_cotizacion_usd`) → el frontend viejo rompe; desplegar SQL y
+> frontend juntos. La rama `pi/inversiones-v1-puesta-punto` ya está creada desde
+> `feat/pin-huella`; no falta crearla.
 
 ## Log
 
@@ -91,3 +100,14 @@ del dueño (convención temp_sql, scripts numerados + dump de verificación). El
   documentación. Backlog diferido: migración tipo_activo (S4), api_automatica de
   inflación, notificaciones del módulo, filtros activas/liquidadas en UI,
   fn_calcular_rendimiento_plazo_fijo (código muerto), inclusiones en Home (S5).
+- **L4** (2026-10-20, pausa del dueño): "arranca la tanda, crea una rama nueva, avisa
+  al agente PI1 que estas por tocar es.ts (esta trabajando alli), esta en otra sesion, lo
+  haces con engram" → rama `pi/inversiones-v1-puesta-punto` creada desde `feat/pin-huella`;
+  aviso a PI1 publicado en Engram (obs #662, pineado) con la lista de archivos que toca
+  esta tanda y el protocolo anti-wipe de es.ts. Después: "stop cuando puedas" → cierre de
+  sesión con T1–T4 commiteadas (`38de600`, `821f217`, `432c13e`, `a510ee5`) y **sin
+  deploy a producción**. Nota de incidente: un heredoc truncó a mitad el append del
+  bloque T3 en `temp_sql/82_deploy_inversiones_puesta_punto.sql`; se reparó restaurando
+  el archivo desde el commit de T2 (`git show 821f217:...`) y re-agregando T3 con el
+  editor de archivos. Lección: para bloques SQL grandes, escribir el fragmento con la
+  herramienta de archivos y concatenar con `cat`, nunca heredoc en bash.
