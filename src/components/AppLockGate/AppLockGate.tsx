@@ -12,10 +12,10 @@
 //   reset_pending → the lockout cleared the PIN (S7): define a new 4-digit PIN
 //                   to continue (server verifies the window is really over).
 
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useState, useEffect, useRef } from 'react'
 import { useAppLock } from '@/contexts/AppLockContext'
 import { t } from '@/locales/i18n'
-import { lockEntryMode } from '@/lib/appLock'
+import { lockEntryMode, shouldAutoPromptBiometria } from '@/lib/appLock'
 import { PinKeypad } from './PinKeypad'
 import './AppLockGate.css'
 
@@ -152,6 +152,18 @@ function LockedPanel({
     }
   }
 
+  // Owner (tanda 10): open the platform prompt by ourselves — the lock screen
+  // must not ask "do you want to unlock with your fingerprint?". One automatic
+  // attempt per presentation; retries after a failure are explicit so the
+  // system sheet is never spammed and the three-attempt budget stays honest.
+  const autoTried = useRef(false)
+  useEffect(() => {
+    if (!shouldAutoPromptBiometria(entry, autoTried.current)) return
+    autoTried.current = true
+    void tryBiometria()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entry])
+
   return (
     <>
       <h1 className="app-lock-title">{t('app_lock_title')}</h1>
@@ -159,14 +171,15 @@ function LockedPanel({
 
       {entry === 'biometria' && (
         <div className="app-lock-actions">
-          {/* Owner (tanda 9): biometry registered → no method chooser, no PIN. */}
+          {/* Owner (tanda 10): the first attempt runs on its own (effect above).
+              This button is only the retry after a failure — never the gate. */}
           <button
             type="button"
-            className="app-lock-primary-action"
+            className="app-lock-secondary-action"
             onClick={tryBiometria}
             disabled={busy || showBackoff > 0}
           >
-            {t('app_lock_use_biometria')}
+            {t('app_lock_biometria_retry')}
           </button>
         </div>
       )}

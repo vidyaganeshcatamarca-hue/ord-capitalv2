@@ -166,6 +166,22 @@ export function lockEntryMode(
 }
 
 /**
+ * Owner (tanda 10): the lock screen must OPEN the platform prompt on its own.
+ * "No tiene que hacer esa pregunta, simplemente tiene que abrir el modal del
+ * desbloqueo con huella" — no tap-to-authorize button.
+ *
+ * It fires once per presentation: re-opening the prompt automatically after a
+ * failure would spam the system sheet and burn the three attempts the PIN
+ * fallback depends on.
+ */
+export function shouldAutoPromptBiometria(
+  entry: LockEntryMode,
+  alreadyAttempted: boolean,
+): boolean {
+  return entry === 'biometria' && !alreadyAttempted
+}
+
+/**
  * S3/S6/S7 — maps the server-side PIN state to what the lock UI should show.
  *
  * The server clears `bloqueado_hasta`/PIN at the end of the window; the client

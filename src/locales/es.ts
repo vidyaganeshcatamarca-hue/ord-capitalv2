@@ -2604,6 +2604,7 @@ export const tour = {
   app_lock_backoff: "Esperá {segundos} segundos antes de insistir.",
   app_lock_biometria_error: "La huella no se pudo validar. Probá de nuevo.",
   app_lock_biometria_fallback: "La huella no se pudo validar 3 veces. Ingresá tu PIN para destrabar.",
+  app_lock_biometria_retry: "Volver a intentar con la huella",
   app_lock_cooldown_message: "Demasiados intentos inválidos. El acceso se podrá restaurar:",
   app_lock_reset_title: "Restaurar el acceso",
   app_lock_reset_subtitle: "Define un nuevo PIN de 4 dígitos para volver a entrar.",

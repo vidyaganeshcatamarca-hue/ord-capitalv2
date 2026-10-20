@@ -15,7 +15,11 @@ import fs from 'node:fs'
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { BIOMETRIC_MAX_ATTEMPTS, lockEntryMode } from '../src/lib/appLock.ts'
+import {
+  BIOMETRIC_MAX_ATTEMPTS,
+  lockEntryMode,
+  shouldAutoPromptBiometria,
+} from '../src/lib/appLock.ts'
 
 const stripComments = (s) =>
   s.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
@@ -65,4 +69,35 @@ test('the gate has no method chooser and derives the entry from the rule', () =>
     gate.includes('app_lock_biometria_fallback'),
     'the keypad explains why it appeared after three failures',
   )
+})
+
+test('the lock opens the biometric prompt by itself, once per presentation', () => {
+  assert.equal(shouldAutoPromptBiometria('biometria', false), true, 'no tap-to-authorize step')
+  assert.equal(
+    shouldAutoPromptBiometria('biometria', true),
+    false,
+    'never re-open the system sheet on its own: it would spam and burn the 3 attempts',
+  )
+  assert.equal(shouldAutoPromptBiometria('pin', false), false, 'the PIN path has nothing to auto-open')
+  assert.equal(shouldAutoPromptBiometria('pin', true), false)
+
+  const gate = stripComments(
+    fs.readFileSync(new URL('../src/components/AppLockGate/AppLockGate.tsx', import.meta.url), 'utf-8'),
+  )
+  assert.ok(gate.includes('shouldAutoPromptBiometria('), 'the gate wires the pure rule')
+  assert.ok(/useEffect\(/.test(gate), 'the attempt is fired from an effect, not from a click')
+  assert.ok(
+    !/app_lock_use_biometria/.test(gate),
+    'the old "Desbloquear con la huella" gate button is gone',
+  )
+})
+
+test('the lock copy sits above the platform biometric sheet (owner tanda 10)', () => {
+  const css = stripComments(
+    fs.readFileSync(new URL('../src/components/AppLockGate/AppLockGate.css', import.meta.url), 'utf-8'),
+  )
+  const start = css.indexOf('.app-lock-gate {')
+  const rule = css.slice(start, css.indexOf('}', start))
+  assert.match(rule, /align-items:\s*flex-start/, 'a centred card hid behind the OS prompt')
+  assert.match(rule, /padding:[^;]*4\.5rem/, 'top clearance keeps the copy off the status bar')
 })
