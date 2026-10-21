@@ -53,37 +53,48 @@ function placeholders(value) {
 const esFlat = flatKeys(es)
 
 /**
- * Words that only make sense in Rioplatense Spanish. A single one of these
- * in a dictionary means a line was copied over instead of translated.
- * Matched case-insensitively on word boundaries.
- */
-const SPANISH_MARKERS = [
-  'vos', 'tenés', 'tenes', 'podés', 'podes', 'querés', 'queres', 'hacés',
-  'haces', 'elegí', 'elegi', 'elegílo', 'ingresá', 'ingresa', 'salí', 'sali',
-  'buscá', 'busca', 'tocá', 'toca', 'guardá', 'guarda', 'cargá', 'carga',
-  'enviá', 'envia', 'borrá', 'borra', 'agregá', 'agrega', 'sincronizá',
-  'sincroniza', 'limpiá', 'limpia', 'atacá', 'ataca', 'atrapá', 'atrapa',
-  'armá', 'arma', 'quedá', 'queda', 'faltá', 'falta', 'entrás', 'entras',
-  'salís', 'salis', 'revisá', 'revisa', 'reconciliá', 'concilia',
-  'hacé', 'hace', 'recomendá', 'recomienda', 'usá', 'usa', 'acá', 'aca',
-  'allá', 'alla', 'más', 'mas', 'menos', 'sabés', 'sabes', 'querés',
-  'necesitás', 'necesitas', 'entendé', 'entiende', 'medí', 'medí',
-  'vosotros', 'acá', 'fijate', 'fijate', 'anotá', 'anota',
-]
-
-/**
- * The languages that need their own leftovers checked, on top of the
- * Spanish markers. Each list holds the words that are unmistakably from
- * that language and would be a copied line rather than a translation.
+ * The languages that need their own leftovers checked. Each list holds the
+ * words that are unmistakably from that language and would be a copied line
+ * rather than a translation.
+ *
+ * There is no shared "Spanish markers" list applied to every language: most
+ * of its entries are common function words that Brazilian Portuguese also
+ * uses ("agrega", "falta", "usa", "menos", "concilia", "carga", "guarda",
+ * "busca"). Applying it to `pt` flagged correct Portuguese. Each language
+ * therefore carries the markers that are specific to the language it is
+ * supposed to have left behind.
  */
 const LANGUAGE_MARKERS = {
   en: [
+    // Rioplatense Spanish that survived.
+    'vos', 'tenés', 'tenes', 'podés', 'podes', 'querés', 'queres', 'hacés',
+    'haces', 'elegí', 'elegi', 'ingresá', 'ingresa', 'salí', 'sali', 'buscá',
+    'tocá', 'guardá', 'cargá', 'enviá', 'borrá', 'agregá', 'sincronizá',
+    'limpiá', 'atacá', 'atrapá', 'armá', 'quedá', 'faltá', 'entrás', 'entras',
+    'salís', 'salis', 'revisá', 'revisa', 'reconciliá', 'hacé', 'hace',
+    'recomendá', 'usá', 'acá', 'aca', 'allá', 'alla', 'más', 'sabés',
+    'necesitás', 'entendé', 'medí', 'anotá', 'fijate', 'vosotros',
+    'movimiento', 'billetera', 'presupuesto', 'tarjeta', 'cuenta',
+    'ahorro', 'conciliación', 'cuota', 'ingreso', 'egreso',
+    // English typos and chat abbreviations.
     'youre', 'dont', 'cant', 'wont', 'youve', 'theese', 'theres', 'alot',
     'wich', 'teh', 'adn', 'waht', 'savings account', 'recieve', 'seperate',
   ],
   pt: [
-    'vc', 'tb', 'tbm', 'hj', 'qdo', 'nda', 'nenhum', 'vc nao', 'vc na',
-    'celular', 'salario', 'aluguel', 'saque', 'cota', 'extrato', 'fatura',
+    // Rioplatense Spanish that survived.
+    'tenés', 'podés', 'querés', 'hacés', 'elegí', 'ingresá', 'salí', 'buscá',
+    'tocá', 'guardá', 'enviá', 'borrá', 'agregá', 'sincronizá', 'limpiá',
+    'atacá', 'atrapá', 'armá', 'quedá', 'entrás', 'salís',
+    'reconciliá', 'hacé', 'recomendá', 'acá', 'allá', 'sabés', 'necesitás',
+    'entendé', 'medí', 'anotá', 'fijate', 'vosotros',
+    // Spanish left in place, unmistakably. These must not be words that
+    // Brazilian Portuguese also uses.
+    'movimiento', 'billetera', 'presupuesto', 'tarjeta', 'categoría',
+    'conciliación', 'almacén', 'carnicería', 'verdulería',
+    // European Portuguese, not Brazilian.
+    'telemóvel', 'levantamento', 'fatura', 'averbamento', 'bolsa',
+    // Chat abbreviations that no UI copy uses.
+    'vc', 'tb', 'tbm', 'hj', 'qdo', 'nda', 'vc nao', 'vc na',
   ],
 }
 
@@ -108,7 +119,7 @@ for (const lang of SUPPORTED) {
 
   const dict = dictionaries.get(lang)
   const flat = flatKeys(dict)
-  const markers = [...SPANISH_MARKERS, ...(LANGUAGE_MARKERS[lang] ?? [])]
+  const markers = LANGUAGE_MARKERS[lang] ?? []
 
   test(`the ${lang} dictionary ships every section the Spanish one has`, () => {
     const esSections = Object.keys(es).sort()
