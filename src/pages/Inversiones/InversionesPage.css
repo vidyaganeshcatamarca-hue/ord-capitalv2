@@ -75,13 +75,15 @@
 
 .inversiones-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin: 0 0 20px;
-  overflow-x: auto;
-  overflow-y: hidden;
   padding: 4px 0 8px;
   scrollbar-width: none;
-  /* The strip scrolls sideways, but it must never widen the page. */
+  /* B1 (2026-10-21): la tira se DESBORDA en movil y la cuarta pestana
+     ("Inflacion") quedaba cortada, lo que se lee como un error. Con 4
+     pestanas no entran en una fila de 360px: ahora envuelven a dos lineas y
+     todas se ven completas. */
   max-width: 100%;
   min-width: 0;
 }

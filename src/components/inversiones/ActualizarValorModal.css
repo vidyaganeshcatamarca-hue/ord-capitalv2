@@ -23,14 +23,14 @@
   max-width: 440px;
   max-height: 90vh;
   overflow-y: auto;
-  background: var(--surface, #2D2D2D);
-  border: 1px solid var(--border, #3D3D3D);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 20px 20px 0 0;
   padding: 20px;
-  box-shadow: var(--shadow-xl, 0 10px 40px rgba(0, 0, 0, 0.5));
+  box-shadow: var(--shadow-xl);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
   animation: actualizar-valor-slide-up var(--transition-fast, 150ms) ease-out;
 }
 
@@ -51,7 +51,7 @@
   margin: 0;
   font-size: calc(18px * var(--font-scale));
   font-weight: 700;
-  color: var(--text-primary, #FFFFFF);
+  color: var(--text-primary, var(--text));
 }
 
 .actualizar-valor-modal-close {
@@ -60,7 +60,7 @@
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary, #FFFFFF);
+  color: var(--text-primary, var(--text));
   font-size: calc(22px * var(--font-scale));
   line-height: 1;
   cursor: pointer;
@@ -81,7 +81,7 @@
   padding: 14px;
   border-radius: 12px;
   background: var(--bg, #1A1A1A);
-  border: 1px solid var(--border, #3D3D3D);
+  border: 1px solid var(--border);
 }
 
 .actualizar-valor-modal-summary-row {
@@ -93,12 +93,12 @@
 }
 
 .actualizar-valor-modal-summary-label {
-  color: var(--text-secondary, #A0A0A0);
+  color: var(--text-secondary, var(--text-3));
   font-weight: 500;
 }
 
 .actualizar-valor-modal-summary-value {
-  color: var(--text-primary, #FFFFFF);
+  color: var(--text-primary, var(--text));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: right;
@@ -110,7 +110,7 @@
 .actualizar-valor-modal-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
 }
 
 .actualizar-valor-modal-actions {

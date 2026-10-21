@@ -1,14 +1,14 @@
 .inversion-card {
   display: flex;
   flex-direction: column;
-  background: var(--surface, #161b22);
-  border: 1px solid var(--border, #30363d);
-  border-radius: var(--radius-lg, 16px);
-  padding: var(--space-4, 16px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
   min-height: 220px;
-  transition: transform var(--transition-fast, 150ms ease),
-              box-shadow var(--transition-fast, 150ms ease),
-              border-color var(--transition-fast, 150ms ease);
+  transition: transform var(--transition-fast),
+              box-shadow var(--transition-fast),
+              border-color var(--transition-fast);
 }
 
 .inversion-card[role="button"] {
@@ -17,12 +17,12 @@
 
 .inversion-card[role="button"]:hover {
   transform: translateY(-2px);
-  border-color: var(--mint, var(--mint, #00B127));
+  border-color: var(--mint);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
 .inversion-card[role="button"]:focus-visible {
-  outline: 2px solid var(--mint, var(--mint, #00B127));
+  outline: 2px solid var(--mint);
   outline-offset: 2px;
 }
 
@@ -30,14 +30,14 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-2, 8px);
-  margin-bottom: var(--space-4, 16px);
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .inversion-card-title {
   margin: 0;
-  color: var(--text, #e6edf3);
-  font-family: var(--font-display, system-ui, sans-serif);
+  color: var(--text);
+  font-family: var(--font-display);
   font-size: calc(16px * var(--font-scale));
   font-weight: 700;
   line-height: 1.3;
@@ -50,7 +50,7 @@
   display: inline-flex;
   align-items: center;
   padding: 2px 8px;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   font-size: calc(11px * var(--font-scale));
   font-weight: 700;
   white-space: nowrap;
@@ -61,7 +61,7 @@
 
 .inversion-card-badge--pf {
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint, var(--mint, #00B127));
+  color: var(--mint);
 }
 
 .inversion-card-badge--var {
@@ -70,35 +70,35 @@
 }
 
 .inversion-card-badge--other {
-  background: var(--surface-2, #21262d);
-  color: var(--text-3, #8b949e);
+  background: var(--surface-2);
+  color: var(--text-3);
 }
 
 .inversion-card-metrics {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2, 8px);
+  gap: var(--space-2);
   flex: 1;
-  margin-bottom: var(--space-3, 12px);
+  margin-bottom: var(--space-3);
 }
 
 .inversion-card-metric {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-2, 8px);
+  gap: var(--space-2);
 }
 
 .inversion-card-label {
-  color: var(--text-3, #8b949e);
-  font-family: var(--font-body, system-ui, sans-serif);
+  color: var(--text-3);
+  font-family: var(--font-body);
   font-size: calc(12px * var(--font-scale));
   font-weight: 500;
 }
 
 .inversion-card-amount {
-  color: var(--text, #e6edf3);
-  font-family: var(--font-display, system-ui, sans-serif);
+  color: var(--text);
+  font-family: var(--font-display);
   font-size: calc(14px * var(--font-scale));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -106,24 +106,24 @@
 }
 
 .inversion-card-amount--positive {
-  color: var(--mint, var(--mint, #00B127));
+  color: var(--mint);
 }
 
 .inversion-card-amount--negative {
-  color: var(--coral, #E63946);
+  color: var(--coral);
 }
 
 .inversion-card-amount--zero {
-  color: var(--text-3, #8b949e);
+  color: var(--text-3);
 }
 
 .inversion-card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3, 12px);
-  padding-top: var(--space-3, 12px);
-  border-top: 1px solid var(--border, #30363d);
+  gap: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
   flex-wrap: wrap;
 }
 
@@ -145,8 +145,8 @@
 }
 
 .inversion-card-days {
-  color: var(--text-3, #8b949e);
-  font-family: var(--font-body, system-ui, sans-serif);
+  color: var(--text-3);
+  font-family: var(--font-body);
   font-size: calc(12px * var(--font-scale));
   font-weight: 500;
   white-space: nowrap;
@@ -157,19 +157,19 @@
 
 .inversion-card-actions {
   display: flex;
-  gap: var(--space-2, 8px);
+  gap: var(--space-2);
   flex-shrink: 0;
 }
 
 .inversion-card-btn {
   padding: 6px 10px;
   border: none;
-  border-radius: var(--radius-sm, 8px);
-  font-family: var(--font-body, system-ui, sans-serif);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
   font-size: calc(12px * var(--font-scale));
   font-weight: 600;
   cursor: pointer;
-  transition: opacity var(--transition-fast, 150ms ease);
+  transition: opacity var(--transition-fast);
   white-space: nowrap;
 }
 
@@ -179,19 +179,19 @@
 
 .inversion-card-btn--update {
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint, var(--mint, #00B127));
+  color: var(--mint);
 }
 
 .inversion-card-btn--liquidate {
   background: var(--coral-dim, rgba(230, 57, 70, 0.12));
-  color: var(--coral, #E63946);
+  color: var(--coral);
 }
 
 @media (max-width: 480px) {
   .inversion-card-footer {
     flex-direction: column;
     align-items: stretch;
-    gap: var(--space-2, 8px);
+    gap: var(--space-2);
   }
 
   .inversion-card-actions {

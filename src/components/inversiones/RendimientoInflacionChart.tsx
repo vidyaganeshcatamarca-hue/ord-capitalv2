@@ -12,7 +12,7 @@ export interface RendimientoVsInflacion {
   inflacion_disponible?: boolean
   inflacion_6m?: number | null
   rendimiento_real?: number | null
-  fuente_inflacion?: 'api_automatica' | 'proxy_dolar' | 'desactivado'
+  fuente_inflacion?: 'proxy_dolar' | 'manual' | 'desactivado'
   mensaje_key: string
 }
 
@@ -57,8 +57,10 @@ function barClassFor(value: number): string {
 }
 
 function sourceKeyFor(source: RendimientoVsInflacion['fuente_inflacion']): string {
-  if (source === 'api_automatica') return 'inflation_source_api_automatica'
+  // 'api_automatica' se elimino (nunca estuvo implementada). Las tres
+  // fuentes validas son proxy_dolar, manual y desactivado.
   if (source === 'proxy_dolar') return 'inflation_source_proxy_dolar'
+  if (source === 'manual') return 'inflation_source_manual'
   return 'inflation_source_desactivado'
 }
 
@@ -121,7 +123,13 @@ export function RendimientoInflacionChart({ className }: RendimientoInflacionCha
     return (
       <section className={`${rootClass} rendimiento-chart--empty`}>
         <h3 className="rendimiento-chart-empty-title">{t('label_real_yield')}</h3>
-        <p className="rendimiento-chart-cta-note">{t('msg_configure_inflation')}</p>
+        {/* B3b: si el usuario desactivo la inflacion a proposito, no hay que
+            pedirle que la configure: se le dice que no hay rendimiento real. */}
+        <p className="rendimiento-chart-cta-note">
+          {data.fuente_inflacion === 'desactivado'
+            ? t('msg_inflation_disabled')
+            : t('msg_configure_inflation')}
+        </p>
       </section>
     )
   }

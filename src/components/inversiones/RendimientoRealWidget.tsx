@@ -9,7 +9,7 @@ export interface RendimientoData {
   rendimiento_real: number | null
   inflacion_disponible: boolean
   mensaje_key: string
-  fuente_inflacion: 'api_automatica' | 'proxy_dolar' | 'desactivado'
+  fuente_inflacion: 'proxy_dolar' | 'manual' | 'desactivado'
   moneda_local?: string
 }
 
@@ -69,9 +69,13 @@ export function RendimientoRealWidget({
     )
   }
 
-  const { rendimiento_nominal, rendimiento_real, inflacion_disponible, mensaje_key } = rendimiento
+  const { rendimiento_nominal, rendimiento_real, inflacion_disponible, mensaje_key, fuente_inflacion } = rendimiento
   const verdictKey = verdictKeyFor(rendimiento_real, mensaje_key)
   const verdictIsPositive = rendimiento_real !== null && rendimiento_real > 0
+  // B3b (2026-10-21): con la fuente 'desactivado' el rendimiento real no
+  // existe por decision del usuario: no se le pide que la configure. Cuando
+  // no hay config, si se le ofrece el atajo.
+  const inflacionDesactivada = fuente_inflacion === 'desactivado'
 
   return (
     <header className="rendimiento-real-widget">
@@ -124,6 +128,17 @@ export function RendimientoRealWidget({
               {t(verdictKey)}
             </span>
           </>
+        ) : inflacionDesactivada ? (
+          // B3b: el usuario desactivo la inflacion a proposito. No se le pide
+          // que la configure: se le dice que no hay rendimiento real.
+          <div className="rendimiento-real-yield-block">
+            <span className="rendimiento-real-yield-label">
+              {t('label_real_yield')}
+            </span>
+            <span className="rendimiento-real-yield rendimiento-real-yield--na">
+              {t('msg_inflation_disabled')}
+            </span>
+          </div>
         ) : (
           <button
             type="button"

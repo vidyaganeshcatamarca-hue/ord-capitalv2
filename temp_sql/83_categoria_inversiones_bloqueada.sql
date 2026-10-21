@@ -89,6 +89,22 @@ BEGIN
         WHERE estructura_id = OLD.estructura_id;
 
         IF v_es_inversion THEN
+            -- EXCEPCION UNICA: la migracion 84 renombra la fila de una vez
+            -- (cat_investments -> cat_investments_portfolio). Ese UPDATE es de
+            -- la propia migracion, no del usuario: se permite SOLO ese cambio
+            -- de nombre y nada mas (mismo tipo_cupo, mismo usuario, sin tocar
+            -- descripcion/icono/color). Cualquier otro cambio se rechaza.
+            IF OLD.nombre_cuenta = 'cat_investments'
+               AND NEW.nombre_cuenta = 'cat_investments_portfolio'
+               AND NEW.tipo_cupo IS NOT DISTINCT FROM OLD.tipo_cupo
+               AND NEW.descripcion IS NOT DISTINCT FROM OLD.descripcion
+               AND NEW.icono IS NOT DISTINCT FROM OLD.icono
+               AND NEW.color IS NOT DISTINCT FROM OLD.color
+               AND NEW.padre_id IS NOT DISTINCT FROM OLD.padre_id
+               AND NEW.user_id IS NOT DISTINCT FROM OLD.user_id THEN
+                RETURN NEW;
+            END IF;
+
             RAISE EXCEPTION '{"key": "error_category_system_locked", "params": {}}';
         END IF;
 

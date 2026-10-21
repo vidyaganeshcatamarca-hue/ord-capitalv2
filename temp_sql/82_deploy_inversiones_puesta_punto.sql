@@ -109,6 +109,10 @@ $function$;
 --   * fn_reporte_historial_inversiones: devuelve moneda (el track record
 --     formateaba todo como ARS).
 -- ============================================================================
+-- Postgres no permite cambiar el tipo de retorno de una funcion existente:
+-- hay que eliminarla primero (T2: cartera solo activas + columna monto_liquidado).
+DROP FUNCTION IF EXISTS public.fn_reporte_cartera_inversiones();
+
 CREATE OR REPLACE FUNCTION public.fn_reporte_cartera_inversiones()
  RETURNS TABLE(inversion_id bigint, nombre_activo text, tipo_activo text, monto_invertido_original numeric, valor_actual_teorico numeric, rendimiento_nominal numeric, rendimiento_real numeric, dias_desde_conciliacion integer, estado_semaforo_key text, estado_inversion text, tasa_anual_tna numeric, moneda text, fecha_inicio date, ultima_conciliacion date, monto_liquidado numeric)
  LANGUAGE plpgsql
@@ -175,6 +179,10 @@ END;
 $function$;
 
 -- ----------------------------------------------------------------------------
+-- Postgres no permite cambiar el tipo de retorno de una funcion existente:
+-- hay que eliminarla primero (T2: historial con columna moneda).
+DROP FUNCTION IF EXISTS public.fn_reporte_historial_inversiones();
+
 CREATE OR REPLACE FUNCTION public.fn_reporte_historial_inversiones()
  RETURNS TABLE(inversion_id bigint, nombre_activo text, moneda text, monto_original numeric, monto_liquidado numeric, ganancia_perdida numeric, rendimiento_pct numeric, fecha_inicio date, fecha_liquidacion date, dias_mantenida integer)
  LANGUAGE plpgsql
@@ -222,6 +230,14 @@ $function$;
 --   * fn_reporte_distribucion_activos: valor_total y porcentaje en moneda
 --     local + columna moneda_local para que el front formatee bien.
 -- ============================================================================
+-- Postgres no permite cambiar el tipo de retorno de una funcion existente:
+-- hay que eliminarla primero (T3: nuevo contrato jsonb multimoneda).
+DROP FUNCTION IF EXISTS public.fn_reporte_patrimonio_inversiones();
+-- El overload viejo (con p_cotizacion_usd) queda huerfano al cambiar el
+-- contrato: sin este drop conviven dos firmas de la misma funcion y el front
+-- puede pegarle a la equivocada.
+DROP FUNCTION IF EXISTS public.fn_reporte_patrimonio_inversiones(numeric);
+
 CREATE OR REPLACE FUNCTION public.fn_reporte_patrimonio_inversiones()
  RETURNS jsonb
  LANGUAGE plpgsql
@@ -235,7 +251,7 @@ DECLARE
     v_convertido numeric;
     v_totales jsonb := '[]'::jsonb;
     v_sin_cotizacion text[] := ARRAY[]::text[];
-    r RECORD;
+    v_fila RECORD;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
     IF v_user_id IS NULL THEN
@@ -247,7 +263,7 @@ BEGIN
     FROM public.p_config_region r WHERE r.user_id = v_user_id;
     v_moneda_local := COALESCE(v_moneda_local, 'ARS');
 
-    FOR r IN
+    FOR v_fila IN
         SELECT COALESCE(i.moneda, 'ARS') AS moneda,
                COALESCE(SUM(
                    CASE
@@ -262,14 +278,14 @@ BEGIN
         GROUP BY COALESCE(i.moneda, 'ARS')
         ORDER BY (COALESCE(i.moneda, 'ARS') = v_moneda_local) DESC, COALESCE(i.moneda, 'ARS')
     LOOP
-        v_totales := v_totales || jsonb_build_object('moneda', r.moneda, 'total', r.total);
+        v_totales := v_totales || jsonb_build_object('moneda', v_fila.moneda, 'total', v_fila.total);
         v_convertido := NULL;
-        IF r.total <> 0 THEN
-            SELECT c.valor INTO v_convertido FROM fn_valor_a_moneda_local(r.total, r.moneda, v_user_id) c;
+        IF v_fila.total <> 0 THEN
+            SELECT c.valor INTO v_convertido FROM fn_valor_a_moneda_local(v_fila.total, v_fila.moneda, v_user_id) c;
             IF v_convertido IS NOT NULL THEN
                 v_total_local := v_total_local + v_convertido;
             ELSE
-                v_sin_cotizacion := v_sin_cotizacion || r.moneda;
+                v_sin_cotizacion := v_sin_cotizacion || v_fila.moneda;
             END IF;
         END IF;
     END LOOP;
@@ -303,7 +319,7 @@ DECLARE
     v_config_inflacion RECORD;
     v_inflacion_disponible boolean := false;
     v_mensaje_key text;
-    r RECORD;
+    v_fila RECORD;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
     IF v_user_id IS NULL THEN
@@ -317,7 +333,7 @@ BEGIN
     -- Totales en MONEDA LOCAL: la inflación acumulada está expresada en la
     -- moneda local, así que el rendimiento solo es coherente convertido.
     -- Moneda sin cotización: queda fuera de ambos totales (nunca inventar).
-    FOR r IN
+    FOR v_fila IN
         SELECT COALESCE(i.moneda, 'ARS') AS moneda,
                COALESCE(SUM(
                    CASE
@@ -334,8 +350,8 @@ BEGIN
     LOOP
         v_conv_actual := NULL;
         v_conv_original := NULL;
-        SELECT c.valor INTO v_conv_actual FROM fn_valor_a_moneda_local(r.total_actual, r.moneda, v_user_id) c;
-        SELECT c.valor INTO v_conv_original FROM fn_valor_a_moneda_local(r.total_original, r.moneda, v_user_id) c;
+        SELECT c.valor INTO v_conv_actual FROM fn_valor_a_moneda_local(v_fila.total_actual, v_fila.moneda, v_user_id) c;
+        SELECT c.valor INTO v_conv_original FROM fn_valor_a_moneda_local(v_fila.total_original, v_fila.moneda, v_user_id) c;
         IF v_conv_actual IS NOT NULL THEN v_total_actual := v_total_actual + v_conv_actual; END IF;
         IF v_conv_original IS NOT NULL THEN v_total_original := v_total_original + v_conv_original; END IF;
     END LOOP;
@@ -390,6 +406,10 @@ END;
 $function$;
 
 -- ----------------------------------------------------------------------------
+-- Postgres no permite cambiar el tipo de retorno de una funcion existente:
+-- hay que eliminarla primero (T3: valor en moneda local + columna moneda_local).
+DROP FUNCTION IF EXISTS public.fn_reporte_distribucion_activos();
+
 CREATE OR REPLACE FUNCTION public.fn_reporte_distribucion_activos()
  RETURNS TABLE(tipo_activo text, cantidad integer, valor_total numeric, porcentaje_valor numeric, moneda_local text)
  LANGUAGE plpgsql

@@ -23,15 +23,15 @@
   max-width: 480px;
   max-height: 90vh;
   overflow-y: auto;
-  background: var(--surface, #2D2D2D);
-  border: 1px solid var(--border, #3D3D3D);
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: 20px 20px 0 0;
   padding: 20px;
-  box-shadow: var(--shadow-xl, 0 10px 40px rgba(0, 0, 0, 0.5));
+  box-shadow: var(--shadow-xl);
   animation: nueva-inversion-slide-up var(--transition-fast, 150ms) ease-out;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
 }
 
 @media (min-width: 640px) {
@@ -51,7 +51,7 @@
   margin: 0;
   font-size: calc(18px * var(--font-scale));
   font-weight: 700;
-  color: var(--text-primary, #FFFFFF);
+  color: var(--text-primary, var(--text));
 }
 
 .nueva-inversion-modal-close {
@@ -60,7 +60,7 @@
   border-radius: 50%;
   border: none;
   background: rgba(255, 255, 255, 0.08);
-  color: var(--text-primary, #FFFFFF);
+  color: var(--text-primary, var(--text));
   font-size: calc(22px * var(--font-scale));
   line-height: 1;
   cursor: pointer;
@@ -77,7 +77,7 @@
 .nueva-inversion-modal-form {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
 }
 
 .nueva-inversion-tipo-group,
@@ -95,8 +95,8 @@
   padding: 10px 12px;
   border-radius: 10px;
   background: var(--bg, #1A1A1A);
-  border: 1px solid var(--border, #3D3D3D);
-  color: var(--text-secondary, #A0A0A0);
+  border: 1px solid var(--border);
+  color: var(--text-secondary, var(--text-3));
   cursor: pointer;
   font-size: calc(13px * var(--font-scale));
   font-weight: 600;
@@ -105,16 +105,16 @@
 
 .nueva-inversion-tipo-option--active,
 .nueva-inversion-moneda-option--active {
-  border-color: var(--mint, var(--mint, #00B127));
+  border-color: var(--mint);
   background: rgba(78, 205, 196, 0.1);
-  color: var(--text-primary, #FFFFFF);
+  color: var(--text-primary, var(--text));
 }
 
 .nueva-inversion-tipo-option input,
 .nueva-inversion-moneda-option input {
   width: auto;
   margin: 0;
-  accent-color: var(--mint, var(--mint, #00B127));
+  accent-color: var(--mint);
 }
 
 .nueva-inversion-modal-disclaimer {

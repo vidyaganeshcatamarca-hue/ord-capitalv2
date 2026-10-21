@@ -50,6 +50,7 @@ tests/inversiones/*
 !tests/inversiones/labels-movimientos.test.js
 !tests/inversiones/contrato-rpc.test.js
 !tests/inversiones/categoria-bloqueada.test.js
+!tests/inversiones/reglas-negocio.test.js
 !tests/keypad_decimal_separator.test.js
 scratch/
 walkthrough.md

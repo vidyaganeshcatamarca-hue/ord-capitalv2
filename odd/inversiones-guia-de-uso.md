@@ -122,8 +122,9 @@ llenás:
    que hayas configurado. **No hay monedas fijas**: si dejás de usar el dólar como
    segunda moneda, desaparece de acá.
 6. **Billetera de origen** — de qué cuenta salió el dinero. Solo te muestra las
-   billeteras **en la misma moneda** que elegiste (no podés "invertir pesos" desde
-   una billetera en dólares: no hay conversión automática).
+   billeteras **en la misma moneda** que elegiste **y con saldo suficiente para
+   ese monto** (no podés "invertir pesos" desde una billetera en dólares: no hay
+   conversión automática, y tampoco podés invertir más de lo que tenés).
 
 Al guardar, pasan tres cosas:
 
@@ -142,7 +143,9 @@ Al guardar, pasan tres cosas:
 
 > **Sobre las billeteras:** si no tenés ninguna billetera activa en la moneda que
 > elegiste, el módulo te avisa ("No tenés billeteras activas en esta moneda") y no
-> te deja guardar. Primero creá la billetera, después invertí.
+> te deja guardar. Primero creá la billetera, después invertí. Y si escribís un
+> monto que supera el saldo de todas tus billeteras de esa moneda, tampoco te
+> deja guardar: no se puede invertir plata que no tenés.
 
 ### 5.2 La Cartera: tus inversiones activas
 
@@ -219,6 +222,24 @@ confirmás. Entonces:
 > **No se puede deshacer.** Si liquidás por error, no hay "deshacer" desde la app.
 > El modal te lo advierte antes de confirmar.
 
+### 5.5b Si te equivocaste al cargarla: cómo anularla
+
+A veces cargás una inversión mal (el nombre, el monto, la billetera). Para
+corregirla no hace falta que borres todo: **borrás el movimiento desde Actividad
+Reciente** (Home) y la app se ocupa del resto.
+
+Al borrar ese movimiento:
+
+- **La plata vuelve a la billetera** (como con cualquier movimiento).
+- **La inversión desaparece de la Cartera** y de todos lados: no queda viva una
+  inversión a la que ya le devolviste el dinero. Antes pasaba exactamente eso: la
+  plata estaba en la cuenta *y* la inversión seguía en la cartera, y la app te
+  estaba contando plata que ya tenés.
+
+Los rescates o liquidaciones que hayas hecho sobre esa inversión también se
+borran con ella, para no dejar movimientos apuntando a una inversión que ya no
+existe.
+
 ### 5.6 Rescate parcial (retirar una parte)
 
 En el mismo modal de liquidación hay un modo **parcial**: no cerrás la inversión,
@@ -277,22 +298,29 @@ estado vacío claro.
 La pestaña **Inflación** es la configuración que hace posible el rendimiento real.
 Ahí definís:
 
-- **País** — el tuyo (Argentina, México, Brasil, Chile, Colombia, Uruguay, Paraguay,
-  Bolivia o Perú).
-- **Fuente de inflación**:
-  - **Proxy Dólar (recomendado)**: usa el movimiento del dólar de tu país como
-    aproximación de la inflación local. Es simple, automático y no necesita
-    conexión a nada.
-  - **Desactivado (solo nominal)**: si preferís ver solo el rendimiento nominal.
-  - **API Automática**: **todavía no está disponible** — aparece deshabilitada con
-    la etiqueta "Próximamente". Es el próximo paso natural del módulo.
+- **País** — el tuyo. El selector usa **el catálogo real de países** de la app y
+  viene precargado con el país que elegiste en tu configuración regional (si sos
+  de Reino Unido, aparece Reino Unido, no Argentina).
+- **Fuente de inflación** — tres opciones, y solo tres:
+  - **Proxy Dólar** (es la que viene por defecto): usa el movimiento del dólar de
+    tu país como aproximación de la inflación local. Es automático y no tenés que
+    cargar nada.
+  - **Manual**: cargás vos la **inflación anual acumulada hasta hoy** (por
+    ejemplo, 35 si este año la inflación acumulada va por 35%). Con ese valor la
+    app calcula tu rendimiento real.
+  - **Desactivado**: solo se muestra el rendimiento nominal. El rendimiento real
+    **desaparece** del header, del detalle de cada inversión y del gráfico de
+    comparación: no se muestra ni un 0% que simule un dato.
 
-Al guardar, la app recalcula tu rendimiento real y el veredicto del header.
+Cuando guardás, la app recalcula tu rendimiento real y el veredicto del header.
 
-**Y un detalle de la corrección:** esta pestaña ahora **recuerda lo que configuraste**.
-Antes siempre te mostraba Argentina y "Proxy Dólar" de fábrica, aunque habías
-guardado otra cosa. Ahora abre con tus valores reales; si nunca configuraste nada,
-lo dice honestamente ("Sin configurar") en lugar de fingir una elección.
+**Dos detalles de la corrección:**
+- El botón **Guardar** solo aparece cuando hay algo que guardar. Si no tocaste
+  nada, no está: no hay botón que no hace nada.
+- Esta pestaña ahora **recuerda lo que configuraste**. Antes siempre te mostraba
+  Argentina y "Proxy Dólar" de fábrica, aunque hubieras guardado otra cosa. Ahora
+  abre con tus valores reales; si nunca configuraste nada, lo dice honestamente
+  ("Sin configurar") en lugar de fingir una elección.
 
 ---
 
@@ -395,7 +423,7 @@ mentira.
 | Historial y distribución | Completo |
 | Cotizaciones automáticas de activos | **Pendiente** (hoy las cargás vos) |
 | Distribución por tipo fino (cripto/cedear/acciones por separado) | **Pendiente** (hoy agrupa en dos familias) |
-| Fuente de inflación por API | **Pendiente** (deshabilitada, "Próximamente") |
+| Fuente de inflación por API | **Retirada** (no estaba implementada; ahora hay carga manual) |
 | Notificaciones de conciliación vencida | **Pendiente** (configuradas, no emitidas) |
 | Simulador de rendimientos | **Pendiente** (el botón existe, no hace nada) |
 | Integración con el balance de Inicio | **Fuera de alcance por decisión** |

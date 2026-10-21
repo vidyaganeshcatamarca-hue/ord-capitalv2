@@ -1506,6 +1506,7 @@ export const inversiones = {
   // Messages
   msg_no_investments: "No tienes inversiones activas",
   msg_configure_inflation: "Configurá tu fuente de inflación para ver el rendimiento real",
+  msg_inflation_disabled: "Desactivada",
   msg_beat_inflation: "¡Ganaste poder adquisitivo real!",
   msg_lost_purchasing_power: "Perdiste poder adquisitivo real",
   // El backend (fn_reporte_rendimiento_vs_inflacion) devuelve estas dos.
@@ -1582,10 +1583,21 @@ export const inversiones = {
   field_required: "Campo obligatorio",
   semaphore_updated_to_green: "Semáforo actualizado a verde",
   inflation_6m_placeholder: "Sin datos de inflación",
-  inflation_source_proxy_dolar: "Proxy Dólar (recomendado)",
-  inflation_source_api_automatica: "API Automática",
-  inflation_source_desactivado: "Desactivado (solo nominal)",
+  inflation_source_proxy_dolar: "Proxy Dólar",
+  inflation_source_proxy_dolar_desc: "Por defecto. Usa el movimiento del dólar de tu país como aproximación de la inflación local. Automático, no tenés que cargar nada.",
+  inflation_source_manual: "Manual",
+  inflation_source_manual_desc: "Cargás vos la inflación anual acumulada hasta hoy. Se usa para calcular tu rendimiento real.",
+  inflation_source_desactivado: "Desactivado",
+  inflation_source_desactivado_desc: "Solo rendimiento nominal. El rendimiento real deja de mostrarse en la cartera, el historial y el detalle.",
   inflation_source_not_configured: "Sin configurar",
+  label_inflation_manual_value: "Inflación anual acumulada (%)",
+  placeholder_inflation_manual: "Ej: 35",
+  inflation_manual_help: "Es el porcentaje de inflación acumulada desde enero hasta hoy, no la variación de un solo mes.",
+  error_inflation_manual_value_required: "Ingresá la inflación anual acumulada",
+  error_inflation_manual_value_invalid: "El valor debe ser mayor a 0",
+  error_investment_insufficient_balance: "La billetera no tiene saldo suficiente para esa inversión",
+  error_no_wallets_with_balance: "Ninguna billetera de esta moneda tiene saldo suficiente para ese monto",
+  error_wallet_insufficient_balance: "sin saldo suficiente",
 
   // Errores y aciertos del backend de inversiones (T7)
   error_investment_already_liquidated: "Esta inversión ya fue liquidada",
