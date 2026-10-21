@@ -52,6 +52,17 @@ hecho; origin/main está 537 commits atrás).
      `p_cotizacion_usd=1` hardcodeado desde el front (total "USD" falso);
      `fn_reporte_rendimiento_vs_inflacion` y `fn_reporte_distribucion_activos` también
      agregan monedas mezcladas.
+- **S7** (categoría de Inversiones intocable, 2026-10-20, L6, verbatim): "Debe tener en
+  cuenta que esa categoría que se crea no debe ser accesible desde el menú de
+  categorías. No se le puede cambiar el nombre, es una categoría del sistema y no
+  puede tener subcategorías. Tampoco se puede hacer una transacción manual a esa
+  categoría de inversiones. Solo se accede a través de las operaciones del módulo de
+  inversión. Deberíamos bloquear todo acceso por fuera de este módulo a esa
+  categoría."
+- **S8** (UX del módulo en móvil, 2026-10-20, L6, a partir de capturas del dueño): el
+  módulo completo no entra en pantalla (header, pestañas y estado vacío se salen por
+  la derecha); el botón "Ver Inversiones" de Supervivencia llevaba a billeteras; en
+  Actividad Reciente aparece la key cruda `investment_prefix`.
 
 ## Tasks
 
@@ -157,3 +168,24 @@ del dueño (convención temp_sql, scripts numerados + dump de verificación). El
   `tsc -b` limpio. **Sigue sin deploy** (esperando autorización del dueño).
   Pendiente de T9: post-deploy (`temp_sql/82_postcheck.mjs`) y el checklist manual
   de 12 puntos (ya escrito en el doc).
+- **L6** (2026-10-20, con capturas del dueño): tres hallazgos. (1) El botón
+  "Ver Inversiones" de Supervivencia navegaba a `/billeteras` → corregido a
+  `/inversiones` (T10). (2) "todo el UI de inversiones esta desfasado, no entra en
+  pantalla": causa raíz = `.inversiones-page` es un flex item de `#root` (column
+  flexbox) y conservaba el `min-width: auto` por defecto, así que su min-content
+  (el número grande con `nowrap` + la tira de pestañas) lo empujaba MÁS ANCHO que
+  la pantalla, y el clip global de `.page` caía fuera de vista. Segunda causa: la
+  página re-declaraba `padding` y pisaba el `.page` global, perdiendo
+  `--nav-clearance` y `--safe-top`. Fix: `min-width: 0` + `width: 100%` en la página
+  y en cada vista hija, `min-width: 0` + `overflow: hidden` en el header sticky, y
+  solo padding horizontal encima del global (T10). (3) La captura de Actividad
+  Reciente muestra `Efectivo · investment_prefix: Bitcoin`: es una build sin el
+  fix de T7 — `translateDetalle` ya resuelve esa key (verificado en node:
+  `investment_prefix: Bitcoin` → `Inversión: Bitcoin`) y llega al usuario al
+  publicar la rama. (4) Nueva spec S7: la categoría de Inversiones es intocable
+  (T11). Nota de diseño: en el backend se usaron TRIGGERS y no reescritura de
+  RPCs — reemitir ~450 líneas de `fn_registrar_movimiento_caja` y compañía es
+  una regresión silenciosa esperando; un trigger es aditivo y además cubre voz,
+  importación y RPCs futuras. El marker `metadata->>'inversion_id'` es fiable
+  porque `fn_registrar_movimiento_caja` NO expone `metadata` como parámetro: el
+  cliente no puede forjarlo.

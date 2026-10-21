@@ -134,6 +134,12 @@ Al guardar, pasan tres cosas:
   que no se te mezcle con tus gastos del mes. Esto es lo que se llama **Base Cero**:
   el capital invertido no se gasta, queda bloqueado y separado.
 
+> **Esa categoría es del sistema y es intocable.** No aparece en el editor de
+> Categorías, no se le puede cambiar el nombre ni el ícono, no admite
+> subcategorías, no se puede borrar y no admite movimientos manuales: el único
+> modo de escribarle es el módulo de Inversiones. Si la vieras o quisieras
+> editarla, es un error.
+
 > **Sobre las billeteras:** si no tenés ninguna billetera activa en la moneda que
 > elegiste, el módulo te avisa ("No tenés billeteras activas en esta moneda") y no
 > te deja guardar. Primero creá la billetera, después invertí.
@@ -299,7 +305,7 @@ Conviene ser claro, porque es la diferencia entre "no funciona" y "no está hech
   Integrar cotizaciones automáticas es un trabajo futuro.
 - **No es un broker.** No compra ni vende nada. No hay conexión con tu banco.
 - **No calcula impuestos.** No hay retención, ni ganancias de capital, ni
- técnico. Tus movimientos quedan registrados en tu historial financiero, pero
+ cálculo técnico. Tus movimientos quedan registrados en tu historial financiero, pero
   el módulo no hace declaraciones fiscales.
 - **No aparece en tu balance de gastos.** El capital invertido no es un gasto: se
   separa en su propia categoría ("Inversiones") para que no contamine tu Base Cero
