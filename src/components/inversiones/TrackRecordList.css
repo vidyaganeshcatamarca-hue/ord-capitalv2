@@ -1,5 +1,8 @@
 .track-record-list {
   width: 100%;
+  /* Owner bug (2026-10-20): never let the content's min-content width push
+     the page sideways on a phone. */
+  min-width: 0;
 }
 
 .track-record-list--loading {

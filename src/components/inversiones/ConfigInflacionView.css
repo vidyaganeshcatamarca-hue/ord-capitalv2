@@ -1,5 +1,8 @@
 .config-inflacion-view {
   width: 100%;
+  /* Owner bug (2026-10-20): never let the content's min-content width push
+     the page sideways on a phone. */
+  min-width: 0;
   padding: var(--space-5, 20px);
   border: 1px solid rgba(255, 230, 109, 0.18);
   border-radius: var(--radius-lg, 16px);

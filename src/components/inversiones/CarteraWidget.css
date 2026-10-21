@@ -1,6 +1,8 @@
 .cartera-widget {
   min-height: 60vh;
   width: 100%;
+  /* Never let the content's min-content width push the page sideways. */
+  min-width: 0;
 }
 
 .cartera-widget--loading {
@@ -88,6 +90,7 @@
   grid-template-columns: 1fr;
   gap: var(--space-4, 16px);
   width: 100%;
+  min-width: 0;
 }
 
 @media (min-width: 640px) {

@@ -1,9 +1,27 @@
+/*
+ * Owner bug (2026-10-20): the whole module overflowed the phone width —
+ * the header, the tab strip and the empty state all ran off the right edge.
+ * Three causes, all fixed here:
+ *   1. `min-width: auto` (the flex default) let the page grow to its content's
+ *      min-content width. As a flex item of #root (a column flexbox) the page
+ *      was pushed WIDER than the viewport, so the global `.page` overflow
+ *      clip happened off-screen and the content looked cut in half. The fix
+ *      is `min-width: 0` plus an explicit `width: 100%`.
+ *   2. `.inversiones-page` re-declared `padding`, which overrode the global
+ *      `.page` rule: the bottom nav clearance (--nav-clearance) and the top
+ *      safe area (--safe-top) were lost, so the last row sat under the nav.
+ *   3. It had a max-width but no width, so nothing stopped it from growing.
+ * The global `.page` padding stays untouched: only horizontal padding is added
+ * on top of it.
+ */
 .inversiones-page {
+  width: 100%;
+  min-width: 0;
   max-width: 1180px;
   margin: 0 auto;
   min-height: 100vh;
-  padding: 16px;
-  padding-bottom: 100px;
+  padding-left: 16px;
+  padding-right: 16px;
   color: var(--text-primary, #FFFFFF);
 }
 
@@ -11,8 +29,8 @@
   .inversiones-page {
     margin-left: var(--sidebar-width);
     margin-right: auto;
-    padding: 24px;
-    padding-bottom: 48px;
+    padding-left: 24px;
+    padding-right: 24px;
   }
 }
 
@@ -52,6 +70,7 @@
   display: flex;
   justify-content: flex-end;
   margin: 16px 0;
+  min-width: 0;
 }
 
 .inversiones-tabs {
@@ -59,8 +78,12 @@
   gap: 8px;
   margin: 0 0 20px;
   overflow-x: auto;
+  overflow-y: hidden;
   padding: 4px 0 8px;
   scrollbar-width: none;
+  /* The strip scrolls sideways, but it must never widen the page. */
+  max-width: 100%;
+  min-width: 0;
 }
 
 .inversiones-tabs::-webkit-scrollbar {
@@ -95,12 +118,14 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 @media (max-width: 480px) {
   .inversiones-page {
-    padding: 12px;
-    padding-bottom: 96px;
+    padding-left: 12px;
+    padding-right: 12px;
   }
 
   .inversiones-toolbar {
