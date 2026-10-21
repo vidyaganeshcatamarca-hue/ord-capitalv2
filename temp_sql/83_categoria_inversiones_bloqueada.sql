@@ -9,9 +9,9 @@
 --   acceso por fuera de este módulo a esa categoría."
 --
 --   La categoría se identifica por tipo_cupo = 'investment' (la crea
---   fn_crear_inversion con nombre_cuenta = 'cat_investments'). El bloqueo es
---   por tipo_cupo, no por nombre: si un usuario ya tiene la fila con otro
---   nombre, sigue protegida.
+--   fn_crear_inversion). El bloqueo es por tipo_cupo, NO por nombre: si un
+--   usuario ya tiene la fila con otro nombre, sigue protegida, y el nombre
+--   (una key de i18n) puede cambiar sin romper el bloqueo (ver 84).
 --
 --   POR QUÉ TRIGGERS Y NO REESCRIBIR LAS RPCs
 --   Reescribir fn_registrar_movimiento_caja / fn_editar_movimiento_caja /
@@ -61,10 +61,11 @@ BEGIN
     IF TG_OP = 'INSERT' THEN
         -- (5) Y no se puede fabricar una categoria de inversiones desde afuera.
         --     Solo fn_crear_inversion puede crearla, y lo hace UNA vez por
-        --     usuario; el trigger la reconoce por su nombre de sistema y la
-        --     deja pasar. Cualquier otra fila con tipo_cupo='investment' es
-        --     una impostura y se rechaza.
+        --     usuario (indice unico parcial, ver 84); el trigger la reconoce
+        --     por su nombre de sistema y la deja pasar. Cualquier otra fila
+        --     con tipo_cupo='investment' es una impostura y se rechaza.
         IF COALESCE(NEW.tipo_cupo, '') = 'investment'
+           AND NEW.nombre_cuenta IS DISTINCT FROM 'cat_investments_portfolio'
            AND NEW.nombre_cuenta IS DISTINCT FROM 'cat_investments' THEN
             RAISE EXCEPTION '{"key": "error_category_system_locked", "params": {}}';
         END IF;

@@ -49,14 +49,28 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_investment_variable_must_have_zero_tna", "params": {}}';
     END IF;
 
+    -- La categoria de Inversiones se busca por tipo_cupo, NO por nombre: el
+    -- nombre es una key de i18n que puede cambiar (84 la paso a
+    -- 'cat_investments_portfolio') y una busqueda por nombre dejaria los
+    -- movimientos sin categoria.
     SELECT estructura_id INTO v_categoria_inversion_id
     FROM p_estructuras_egresos
-    WHERE user_id = v_user_id AND nombre_cuenta = 'cat_investments' AND tipo_cupo = 'investment';
+    WHERE user_id = v_user_id AND tipo_cupo = 'investment'
+    ORDER BY estructura_id LIMIT 1;
 
     IF v_categoria_inversion_id IS NULL THEN
         INSERT INTO p_estructuras_egresos (nombre_cuenta, descripcion, user_id, tipo_cupo, icono, color)
-        VALUES ('cat_investments', 'desc_blocked_capital', v_user_id, 'investment', '📈', '#059669')
+        VALUES ('cat_investments_portfolio', 'desc_blocked_capital', v_user_id, 'investment', '📈', '#059669')
+        ON CONFLICT (user_id) WHERE COALESCE(tipo_cupo, '') = 'investment' DO NOTHING
         RETURNING estructura_id INTO v_categoria_inversion_id;
+
+        -- Si otra llamada concurrente gano la carrera, se usa la fila que quedo.
+        IF v_categoria_inversion_id IS NULL THEN
+            SELECT estructura_id INTO v_categoria_inversion_id
+            FROM p_estructuras_egresos
+            WHERE user_id = v_user_id AND tipo_cupo = 'investment'
+            ORDER BY estructura_id LIMIT 1;
+        END IF;
     END IF;
 
     INSERT INTO p_inversiones (
@@ -496,10 +510,12 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_investment_rescue_exceeds_balance", "params": {}}';
     END IF;
 
+    -- Busqueda por tipo_cupo y no por nombre: el nombre es una key de i18n y
+    -- puede cambiar sin que este flujo se rompa (ver 84).
     SELECT estructura_id INTO v_categoria_inversion_id
     FROM p_estructuras_egresos
-    WHERE user_id = v_user_id AND nombre_cuenta = 'cat_investments' AND tipo_cupo = 'investment'
-    LIMIT 1;
+    WHERE user_id = v_user_id AND tipo_cupo = 'investment'
+    ORDER BY estructura_id LIMIT 1;
 
     -- Parte del capital que NO se había retirado antes (el resto ya volvió
     -- a la billetera con los rescates parciales).

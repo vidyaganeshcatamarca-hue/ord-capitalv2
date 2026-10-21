@@ -7,8 +7,8 @@
 // informacion relevante.
 //
 // La categoria "Inversiones" (S7) es de sistema por decision del dueno: la crea
-// `fn_crear_inversion` con nombre_cuenta = 'cat_investments' y tipo_cupo =
-// 'investment'. Es EXCLUSIVA del modulo de Inversiones:
+// `fn_crear_inversion` con nombre_cuenta = 'cat_investments_portfolio' y
+// tipo_cupo = 'investment'. Es EXCLUSIVA del modulo de Inversiones:
 //   - no se renombra ni se edita desde el menu de Categorias;
 //   - no admite subcategorias;
 //   - no admite transacciones manuales (alta, edicion, cuarentena);
@@ -17,7 +17,9 @@
 // lo blinda con triggers (temp_sql/83_categoria_inversiones_bloqueada.sql).
 //
 // OJO: el filtro compara por NOMBRE. La fila puede llegar con el nombre en
-// `nombre_cuenta` o en `nombre_categoria` (se chequean ambos).
+// `nombre_cuenta` o en `nombre_categoria` (se chequean ambos). La key vieja
+// 'cat_investments' sigue en la lista a proposito: hay filas creadas antes del
+// renombre (migracion 84) y la ventana entre deploys debe estar cubierta.
 
 /**
  * Lista canonica de nombres / claves i18n que identifican a las categorias
@@ -37,7 +39,10 @@ export const SYSTEM_CATEGORY_NAMES: readonly string[] = [
   'type_adjustment_mystery',
   'cat_card_diff',
   'type_adjustment_card_diff',
-  // Exclusiva del modulo de Inversiones (S7).
+  // Exclusiva del modulo de Inversiones (S7). La key vigente es
+  // 'cat_investments_portfolio'; la vieja sigue bloqueada mientras haya filas
+  // con ella (migracion 84).
+  'cat_investments_portfolio',
   'cat_investments',
 ] as const
 
