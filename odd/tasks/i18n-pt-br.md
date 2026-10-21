@@ -186,3 +186,84 @@ módulo); emoji; placeholders (`{monto}`, `{dias}`, …) — **byte a byte**.
   un usuario que busca "portugues" no encuentra el país. **Riesgo bajo**:
   `Intl.DisplayNames` devuelve "Brasil" y "Portugal" en los tres idiomas, así que
   los nombres ya indexados coinciden. Queda anotado como deuda menor.
+- **L6** (hallazgo, 2026-10-21): el maestro `es.ts` no tiene una key propia para
+  el placeholder de confirmacion del borrado de DATOS. `ConfiguracionBorradoCard`
+  exige escribir `BORRAR DATOS` (`DELETE_DATA_CONFIRMATION_TEXT`) pero pinta
+  `t('privacidad_delete_placeholder')`, que en español dice "Escribe ELIMINAR".
+  El input hace `toUpperCase()`, así que el placeholder no depende del idioma.
+  **Preexistente**: el inglés copió el mismo desajuste. No es parte de esta
+  entrega; queda anotado como deuda visible.
+- **L7** (hallazgo, 2026-10-21): el **inglés está partido** en el concepto
+  "subcuenta": `unit_subaccounts_singular` dice "subcategory" pero
+  `subcat_form_title_edit` dice "Subaccount". El español dice "Subcuenta" en las
+  7 keys. El portugués heredó la partición ("Subcategoria" x20 vs "Subconta"
+  x6). Cuando la referencia está rota, el término se decide desde el español y
+  el modelo de datos, no desde el inglés.
+- **L8** (hallazgo, 2026-10-21): `src/lib/bcgUtils.ts` es la fuente de verdad
+  del vocabulario del BCG: cada cuadrante tiene su emoji
+  (`bcg_dog: { emoji: '🐕' }`). El "Perro" del español es el cuadrante DOG del
+  framework, o sea "Cão" en portugués de Brasil. El subagente que tradujo el
+  chunk `bcg` llegó a la misma conclusión verificando el emoji.
+- **L9** (hallazgo, 2026-10-21): "Buzón de Deseos" NO es terminología: es el
+  nombre por defecto de un buzón que el usuario puede renombrar
+  (`reto.buzon_nombre ?? t('mailbox')` en `src/components/bcg/BCGHormigas.tsx:201`).
+  Se traduce como nombre propio, no como término de glosario.
+- **L10** (hallazgo, 2026-10-21): los marcadores de "sobrante" del test de
+  paridad no pueden ser palabras que el portugués de Brasil también usa
+  (`celular`, `nenhum`, `extrato`, `cota`): el test hace match por palabra
+  completa, así que un término válido haría fallar el test. Los marcadores de
+  `pt` quedan reducidos a términos inequívocamente ajenos o de Portugal.
+- **L11** (hallazgo, 2026-10-21): la lista de marcadores del español **no se
+  puede aplicar a todos los idiomas**. Sus entradas son palabras funcionales
+  que el portugués de Brasil también usa (`agrega`, `falta`, `usa`, `menos`,
+  `concilia`, `carga`, `guarda`, `busca`): marcaron 48 valores portugueses
+  correctos. Cada idioma lleva ahora sus propios marcadores, y el inglés
+  conserva la lista completa del español más sus propios typos.
+- **L12** (hallazgo, 2026-10-21): el voseo español sobrevive pegado al
+  pronombre enclítico ("revisá-las"), y el test de paridad **no puede
+  detectarlo**: matchea por palabra completa y "revisá-las" es una sola
+  palabra. El defecto real era de GÉNERO (el español dice "revisarlos", por
+  "los documentos legales"). Corregido.
+- **L13** (hallazgo, 2026-10-21, arbitraje de la ronda 2): el revisor B
+  reportó "Contas principais" para \`config_ie_summary_cats_parent_created\`
+  porque así dice el español. **El español es el que está mal**: el código
+  renderiza \`result.parentsCreated\` y \`result.subsCreated\`, y el inglés
+  dice "Parent categories" / "Subcategories". La traducción portuguesa sigue
+  al inglés, que es lo correcto.
+- **L14** (hallazgo, 2026-10-21, arbitraje de la ronda 2): el revisor B
+  propuso "Saldo transportado" para el carryover. El código lo renderiza
+  siempre con signo negativo (\`-{fmt(arrastre)}\`), así que "Saldo negativo"
+  es correcto y "transportado" perdería el signo.
+- **L15** (hallazgo, 2026-10-21, arbitraje de la ronda 2): el revisor B
+  reportó "Buzo de Desejos" (sin tilde). El archivo real tiene "Buzão"
+  (5 ocurrencias, 0 sin tilde): el reporte leyó mal el archivo.
+- **L16** (hallazgo, 2026-10-21, ronda 2, aplicado): el ticket/recibo estaba
+  partido en dos palabras para un mismo concepto. El español dice "Ticket" en
+  5 keys y el inglés lo unificó como "Receipt". Se unifica en
+  **"comprovante"** (6 keys, el término financiero de Brasil y el que ya
+  usaban las keys de OCR). Y el nombre de la sección de carga queda como
+  **"Lançamento"** en las 4 keys de `reports` más \`settings_entry_load_registry\`.
+- **L17** (hallazgo, 2026-10-21, ronda 2, aplicado): la jerarquía de categorías
+  se unifica como **"Subcategoria"** (38 keys, 0 "Subconta"). La evidencia es
+  el modelo de datos: la RPC es \`fn_crear_subcuenta_egreso\` con \`p_padre_id\`
+  y \`AddCategoryModal.tsx\` la llama "Campos para Subcategoría (Subcuenta
+  Hija)". "Subconta" en portugués es una palabra real (subcuenta bancaria) y
+  además el español mezcló los dos nombres.
+- **L18** (hallazgo, 2026-10-21, ronda 2, aplicado): "cupo" tiene DOS
+  significados en la app — el TIPO de categoría (Necesidad/Deseo/Ahorro) y el
+  LÍMITE presupuestario. El tipo pasa a **"tipo de alocação"** (la palabra
+  "cota" está prohibida por el glosario y "limite" colisionaba con el otro
+  significado); el límite sigue siendo "Limite".
+- **L19** (hallazgo, 2026-10-21, ronda 2, aplicado): el vocabulario de ingreso
+  sigue las DOS entradas separadas del glosario: **"fonte de renda"** para la
+  entidad nombrada y **"receita"** para el flujo de ingreso. Una unificación
+  previa a "fonte de receita" contradecía el brief y se revirtió.
+- **L20** (hallazgo, 2026-10-21, ronda 2, aplicado): un único hallazgo de
+  género, no de voseo: el español dice "revisarlos" (los documentos legales) y
+  el portugués decía "revisá-las", que apuntaba a "alterações".
+- **L21** (hallazgo, 2026-10-21): el revisor \`jd-judge-a\` no entregó informe
+  (123 turnos sin cerrar; se canceló y su trabajo se cubrió con los
+  detectores de \`scratch/\` y con el arbitraje documentado en
+  \`scratch/pt-arbitration.md\`). El revisor \`bug-fixer\` entregó 22 hallazgos:
+  7 se aplicaron, 3 se descartaron por falta de evidencia del repositorio, y
+  el resto eran observaciones menores de registro o longitud.
