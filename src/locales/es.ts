@@ -1633,7 +1633,7 @@ export const inversiones = {
   privacidad_viewer_empty: "Sin datos en esta sección.",
   privacidad_viewer_csv: "Exportar historial a CSV",
   privacidad_delete_help: "Eliminaremos tu cuenta de forma definitiva en 30 días. Hasta entonces puedes seguir entrando y revertir esta decisión.",
-  privacidad_delete_placeholder: "Escribe ELIMINAR para confirmar",
+  privacidad_delete_placeholder: "Escribe {palabra} para confirmar",
   privacidad_delete_button: "Programar eliminación en 30 días",
   privacidad_delete_confirm_title: "Programar eliminación de cuenta",
   privacidad_delete_confirm_body: "Esta acción programa el borrado definitivo de tu cuenta en 30 días.  ¿Deseas continuar?",
@@ -2410,6 +2410,7 @@ export const inversiones = {
   settings_delete_locked_unknown: "No pudimos verificar la antigüedad de tu cuenta, así que el borrado queda bloqueado por seguridad.",
   settings_delete_pin_prompt: "Confirmá tu PIN de seguridad para desbloquear el borrado.",
   settings_delete_option_data_run: "Borrar mis datos",
+  settings_delete_option_data_confirm_placeholder: "Escribe {palabra} para confirmar",
   settings_delete_data_success: "Tus datos fueron borrados. La app va a reiniciar con tus cuentas limpias.",
   // S2 (U3) — Formato de números por moneda. Copy neutral: el código y el nombre
   // reales de cada moneda llegan del mapa del backend (fn_obtener_formato_moneda).

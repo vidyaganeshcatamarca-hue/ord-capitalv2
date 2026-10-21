@@ -5,9 +5,10 @@ import { useToast } from '@/contexts/ToastContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { parseError, t } from '@/locales/i18n'
+import { DELETE_ACCOUNT_CONFIRMATION_TEXT } from '@/lib/deleteConfirmation'
 import './DeleteAccountCard.css'
 
-const CONFIRMATION_TEXT = 'ELIMINAR'
+const CONFIRMATION_TEXT = DELETE_ACCOUNT_CONFIRMATION_TEXT
 
 interface DeleteAccountCardProps {
   /** When embedded (bug 12), the card renders withOUT its own header/help: the
@@ -64,9 +65,11 @@ export function DeleteAccountCard({ embedded = false }: DeleteAccountCardProps) 
           <input
             className="privacidad-delete-input"
             type="text"
-            placeholder={t('privacidad_delete_placeholder')}
+            placeholder={t('privacidad_delete_placeholder', {
+              palabra: DELETE_ACCOUNT_CONFIRMATION_TEXT,
+            })}
             value={confirmText}
-            onChange={(e) => setConfirmText(e.target.value)}
+            onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
             autoComplete="off"
           />
           <button

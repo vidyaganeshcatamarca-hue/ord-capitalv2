@@ -5571,8 +5571,8 @@
         "to": "We will permanently delete your account in 30 days. Until then you can still sign in and reverse this decision."
       },
       "inversiones.privacidad_delete_placeholder": {
-        "from": "Escribe ELIMINAR para confirmar",
-        "to": "Type DELETE to confirm"
+        "from": "Escribe {palabra} para confirmar",
+        "to": "Type {palabra} to confirm"
       },
       "inversiones.privacidad_delete_button": {
         "from": "Programar eliminación en 30 días",
@@ -8405,6 +8405,10 @@
       "inversiones.settings_delete_option_data_run": {
         "from": "Borrar mis datos",
         "to": "Delete my data"
+      },
+      "inversiones.settings_delete_option_data_confirm_placeholder": {
+        "from": "Escribe {palabra} para confirmar",
+        "to": "Type {palabra} to confirm"
       },
       "inversiones.settings_delete_data_success": {
         "from": "Tus datos fueron borrados. La app va a reiniciar con tus cuentas limpias.",
@@ -14733,8 +14737,8 @@
         "to": "Excluiremos sua conta definitivamente em 30 dias. Até lá você pode continuar entrando e reverter esta decisão."
       },
       "inversiones.privacidad_delete_placeholder": {
-        "from": "Escribe ELIMINAR para confirmar",
-        "to": "Digite ELIMINAR para confirmar"
+        "from": "Escribe {palabra} para confirmar",
+        "to": "Digite {palabra} para confirmar"
       },
       "inversiones.privacidad_delete_button": {
         "from": "Programar eliminación en 30 días",
@@ -17567,6 +17571,10 @@
       "inversiones.settings_delete_option_data_run": {
         "from": "Borrar mis datos",
         "to": "Apagar meus dados"
+      },
+      "inversiones.settings_delete_option_data_confirm_placeholder": {
+        "from": "Escribe {palabra} para confirmar",
+        "to": "Digite {palabra} para confirmar"
       },
       "inversiones.settings_delete_data_success": {
         "from": "Tus datos fueron borrados. La app va a reiniciar con tus cuentas limpias.",

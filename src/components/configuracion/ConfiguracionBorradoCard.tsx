@@ -37,6 +37,7 @@ import { haptics } from '@/lib/haptics'
 import { DeleteAccountCard } from '@/components/privacidad/DeleteAccountCard'
 import { PinKeypad } from '@/components/AppLockGate/PinKeypad'
 import { pinFailureKey } from '@/lib/pinPanelFlow'
+import { DELETE_DATA_CONFIRMATION_TEXT } from '@/lib/deleteConfirmation'
 import {
   DELETE_DATA_BACKEND_AVAILABLE,
   pinConfiguredFromLockState,
@@ -44,7 +45,6 @@ import {
 } from '@/lib/accountDeletionGate'
 import './ConfiguracionHub.css'
 
-const DELETE_DATA_CONFIRMATION_TEXT = 'BORRAR DATOS'
 
 export function ConfiguracionBorradoCard() {
   const { session } = useAuth()
@@ -187,7 +187,9 @@ export function ConfiguracionBorradoCard() {
                 <input
                   className="privacidad-delete-input"
                   type="text"
-                  placeholder={t('privacidad_delete_placeholder')}
+                  placeholder={t('settings_delete_option_data_confirm_placeholder', {
+                    palabra: DELETE_DATA_CONFIRMATION_TEXT,
+                  })}
                   value={dataConfirmText}
                   onChange={(e) => setDataConfirmText(e.target.value.toUpperCase())}
                   autoComplete="off"

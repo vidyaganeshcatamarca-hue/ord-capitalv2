@@ -29,6 +29,11 @@ tests/*
 !tests/import_execute.test.js
 !tests/voice_codec.test.js
 !tests/voice_storage.test.js
+!tests/sql/
+tests/sql/*
+!tests/sql/run_delete_confirmation_test.js
+!tests/sql/fn_run_delete_confirmation_test.sql
+!tests/sql/apply_delete_confirmation_words.js
 !tests/i18n/
 tests/i18n/*
 !tests/i18n/language-resolver.test.js
@@ -37,6 +42,7 @@ tests/i18n/*
 !tests/i18n/locale-follows-language.test.js
 !tests/i18n/onboarding-language.test.js
 !tests/i18n/translation-ledger.test.js
+!tests/i18n/delete-confirmation.test.js
 !tests/i18n/support/
 !tests/i18n/support/i18n-harness.mjs
 !tests/onboarding/
