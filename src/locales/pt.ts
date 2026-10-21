@@ -571,6 +571,8 @@ export const errors = {
   onboarding_country_subtitle: "Escolhemos sua moeda e seus formatos de acordo com o país, para que seus números fiquem como você está acostumado.",
   onboarding_country_cta: "Continuar",
   onboarding_country_change: "Escolher outro país",
+  onboarding_language_label: "Idioma do app",
+  onboarding_language_hint: "Escolhemos o idioma do seu país. Você pode mudar quando quiser.",
   onboarding_country_search_placeholder: "Buscar país",
   onboarding_country_empty: "Não encontramos esse país. Tente outro nome ou o código de duas letras.",
   onboarding_country_picker_hint: "Escolha a moeda selecionando o país de origem.",

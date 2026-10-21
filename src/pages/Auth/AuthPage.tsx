@@ -72,6 +72,15 @@ interface FlowSnapshot {
   selectedIcon: string
   virtualCreated: boolean
   cashBalanceInput: string
+  /**
+   * The country picked on the country slide, as its ISO code.
+   *
+   * The provider remounts the whole subtree when the language changes (that
+   * is how every translated string is rebuilt), and the onboarding screen has
+   * the language picker right under the country. Without this the user picks
+   * a country, changes the language, and the country is gone.
+   */
+  countryCode: string
 }
 
 function flowStorageKey(userId: string): string {
@@ -100,6 +109,7 @@ function readFlowState(userId: string): FlowSnapshot | null {
       selectedIcon: typeof parsed.selectedIcon === 'string' ? parsed.selectedIcon : WALLET_ICONS[0],
       virtualCreated: parsed.virtualCreated === true,
       cashBalanceInput: typeof parsed.cashBalanceInput === 'string' ? parsed.cashBalanceInput : '0',
+      countryCode: typeof parsed.countryCode === 'string' ? parsed.countryCode : '',
     }
   } catch {
     return null
@@ -160,6 +170,16 @@ export function AuthPage() {
 
   // Onboarding Slides (1 a 6: bienvenida, auth, pais, billetera, dia ancla, modo)
   const [slide, setSlide] = useState(1)
+  /**
+   * The country picked on the country slide, as its ISO code.
+   *
+   * It lives here, in the parent of the slide, and not inside CountryStep:
+   * the provider remounts the whole subtree when the language changes, and
+   * the language picker sits right under the country. A country picked in the
+   * local state of the slide would be lost the moment the user changes the
+   * language.
+   */
+  const [pickedCountryCode, setPickedCountryCode] = useState('')
 
   // Toasts de creador de billeteras / cierre centrados: el toast bottom
   // tapaba los botones Cancelar/Continuar y habia que esperar 4.5s
@@ -285,8 +305,9 @@ export function AuthPage() {
       selectedIcon,
       virtualCreated,
       cashBalanceInput,
+      countryCode: pickedCountryCode,
     })
-  }, [userId, slide, showVirtualForm, walletName, calcInput, selectedIcon, virtualCreated, cashBalanceInput])
+  }, [userId, slide, showVirtualForm, walletName, calcInput, selectedIcon, virtualCreated, cashBalanceInput, pickedCountryCode])
 
   const checkExistingOnboarding = async (retries = 3, delay = 200) => {
     setLoading(true)
@@ -397,6 +418,7 @@ export function AuthPage() {
     setSelectedIcon(snapshot.selectedIcon)
     setVirtualCreated(snapshot.virtualCreated)
     setCashBalanceInput(snapshot.cashBalanceInput)
+    if (snapshot.countryCode) setPickedCountryCode(snapshot.countryCode)
   }
 
   const handleWelcomeBackContinue = () => {
@@ -846,6 +868,8 @@ export function AuthPage() {
       {/* SLIDE 3: PAÍS (OBLIGATORIO) */}
       {slide === 3 && (
         <CountryStep
+          initialCountryCode={pickedCountryCode}
+          onCountryPicked={(code) => setPickedCountryCode(code)}
           onConfirmed={(country) => {
             setLocalCountry(country)
             goToSlide(4)

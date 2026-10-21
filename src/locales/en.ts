@@ -571,6 +571,8 @@ export const errors = {
   onboarding_country_subtitle: "We set your currency and formats based on your country, so your numbers look the way you know them.",
   onboarding_country_cta: "Continue",
   onboarding_country_change: "Choose another country",
+  onboarding_language_label: "App language",
+  onboarding_language_hint: "We pick the language of your country. You can change it whenever you want.",
   onboarding_country_search_placeholder: "Search country",
   onboarding_country_empty: "We couldn't find that country. Try another name or the two-letter code.",
   onboarding_country_picker_hint: "Choose your currency by selecting your country of origin.",

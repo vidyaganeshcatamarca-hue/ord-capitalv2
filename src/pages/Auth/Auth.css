@@ -327,6 +327,27 @@
   color: var(--text);
 }
 
+/* ─── Onboarding: the language picker, right under the country ─── */
+.onboarding-language-row {
+  display: grid;
+  gap: 6px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.onboarding-language-row label {
+  color: var(--text);
+  font-weight: 650;
+  font-size: calc(14px * var(--font-scale));
+}
+
+.onboarding-language-hint {
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+  margin: 0;
+}
+
 /* ─── Slide 4: Día Ancla Slider ─── */
 .anchor-day-selector {
   display: flex;

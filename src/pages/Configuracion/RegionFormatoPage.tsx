@@ -2,8 +2,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
-import { isSupported, SUPPORTED } from '@/locales/language'
+import { isSupported } from '@/locales/language'
 import { useLanguage } from '@/locales/LanguageProvider'
+import { LanguageSelect } from '@/components/LanguageSelect/LanguageSelect'
 import { useOptionalAuth } from '@/contexts/AuthContext'
 import { clearPrefsSnapshot, writePrefsSnapshot, writeRegionSnapshot } from '@/lib/regionSnapshot'
 import { currencyName, flagEmoji, regionName } from '@/lib/countryCatalog'
@@ -304,22 +305,10 @@ function NumberFormatByCurrency({
 
 /**
  * Language names come from Intl, the same way country names do, so shipping a
- * new language needs no new key in es.ts.
- *
- * The name is rendered in the language ITSELF ("Español", "English"), not in
- * the language the user is reading in, so the option is recognizable no
- * matter which language the app is currently in. `Intl.DisplayNames` takes
- * the locale of the NAME, not the locale of the reader.
+ * new language needs no new key in es.ts. The helper lives in
+ * `src/locales/language.ts` so onboarding and Ajustes name the languages the
+ * same way.
  */
-function languageLabel(lang: string): string {
-  try {
-    const display = new Intl.DisplayNames([lang], { type: 'language' })
-    return display.of(lang) ?? lang.toUpperCase()
-  } catch {
-    // Engines built without full ICU have no Intl.DisplayNames.
-    return lang.toUpperCase()
-  }
-}
 
 // L17 (owner, tanda 2): the región submenu is a screen again — its own back
 // button + the shared body. The hub links here instead of unfolding inline.
@@ -479,15 +468,13 @@ export function ConfigRegionBody() {
           </div>
           <div className="config-section-field">
             <label htmlFor="idioma-default">{t('config_language')}</label>
-            <select
+            <LanguageSelect
               id="idioma-default"
+              label={t('config_language')}
               value={lang}
-              onChange={(e) => updateLanguage(e.target.value)}
-            >
-              {SUPPORTED.map((code) => (
-                <option key={code} value={code}>{languageLabel(code)}</option>
-              ))}
-            </select>
+              onChange={updateLanguage}
+              className="config-section-select"
+            />
           </div>
         </article>
 

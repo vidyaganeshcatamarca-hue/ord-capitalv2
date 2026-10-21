@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
-import { parseDeviceLocales, resolveRegionFromLocale } from '@/locales/language'
+import { parseDeviceLocales, resolveRegionFromLocale, suggestedLanguageFor } from '@/locales/language'
 import { useLanguage } from '@/locales/LanguageProvider'
 import { useOptionalAuth } from '@/contexts/AuthContext'
 import { Capacitor } from '@capacitor/core'
@@ -16,10 +16,22 @@ import {
   type Country,
 } from '@/lib/countryCatalog'
 import { CountrySearchModal } from './CountrySearchModal'
+import { LanguageSelect } from '@/components/LanguageSelect/LanguageSelect'
 
 interface CountryStepProps {
   /** Fired after the region is persisted. The parent advances the slide. */
   onConfirmed: (country: Country) => void
+  /**
+   * The country already picked, as its ISO code.
+   *
+   * The parent owns it because the provider remounts the whole subtree when
+   * the language changes, and the language picker sits right under the
+   * country: a country kept in this component's local state would vanish the
+   * moment the user changes the language.
+   */
+  initialCountryCode?: string
+  /** Fired whenever the country changes, so the parent can keep it. */
+  onCountryPicked?: (code: string) => void
 }
 
 type CountryOrigin = 'locale' | 'ip' | 'manual'
@@ -68,8 +80,8 @@ function fetchGeoCountry(): Promise<string | null> {
  * Order matters: this step persists the region BEFORE the wallet step exists,
  * so the initial wallets are created in the right currency.
  */
-export function CountryStep({ onConfirmed }: CountryStepProps) {
-  const { lang } = useLanguage()
+export function CountryStep({ onConfirmed, initialCountryCode = '', onCountryPicked }: CountryStepProps) {
+  const { lang, setLang } = useLanguage()
   const userId = useOptionalAuth()?.session?.user?.id ?? null
   const { countries, index, loading, error, reload } = useCountryCatalog()
 
@@ -115,6 +127,18 @@ export function CountryStep({ onConfirmed }: CountryStepProps) {
 
     didPreselect.current = true
 
+    // A country the user already picked wins over any detection: it is an
+    // explicit choice, and it is how the country survives the remount the
+    // provider does when the language changes.
+    if (initialCountryCode) {
+      const picked = findCountry(index, initialCountryCode)
+      if (picked) {
+        setSelected(picked)
+        setOrigin('manual')
+        return
+      }
+    }
+
     const suggestion = resolveCountrySuggestion({
       isNative: Capacitor.isNativePlatform(),
       ipCountry,
@@ -126,11 +150,12 @@ export function CountryStep({ onConfirmed }: CountryStepProps) {
     if (match) {
       setSelected(match)
       setOrigin(suggestion.source === 'ip' ? 'ip' : 'locale')
+      onCountryPicked?.(match.code)
     } else {
       // Detected country is not in the supported catalog (design D19).
       setUnsupported(true)
     }
-  }, [countries.length, index, deviceRegion, ipCountry])
+  }, [countries.length, index, deviceRegion, ipCountry, initialCountryCode])
 
   const handleSelect = (country: Country) => {
     setSelected(country)
@@ -138,6 +163,13 @@ export function CountryStep({ onConfirmed }: CountryStepProps) {
     setUnsupported(false)
     setSubmitError(null)
     setShowSearch(false)
+    onCountryPicked?.(country.code)
+    // The country brings its language with it: picking Brazil lands in
+    // Portuguese, picking Argentina in Spanish. A country whose language the
+    // app does not ship keeps the current one — the picker below shows every
+    // available language, so the user can still choose.
+    const suggested = suggestedLanguageFor(country.suggestedLanguage)
+    if (suggested) setLang(suggested)
   }
 
   const handleContinue = async () => {
@@ -213,6 +245,22 @@ export function CountryStep({ onConfirmed }: CountryStepProps) {
               >
                 {t('onboarding_country_change')}
               </button>
+              {/* The language sits right under the country, on the same screen:
+              the country decides the currency and the language, and both are
+              part of the same decision. The picker always offers every
+              language the app ships, so the suggestion is a default and not a
+              cage. */}
+              <div className="onboarding-language-row">
+                <label htmlFor="onboarding-language">{t('onboarding_language_label')}</label>
+                <LanguageSelect
+                  id="onboarding-language"
+                  label={t('onboarding_language_label')}
+                  value={lang}
+                  onChange={setLang}
+                  className="config-section-select"
+                />
+                <p className="onboarding-language-hint">{t('onboarding_language_hint')}</p>
+              </div>
             </>
           ) : loading || unsupported ? (
             <div className="card" style={{ padding: '16px', textAlign: 'center' }}>

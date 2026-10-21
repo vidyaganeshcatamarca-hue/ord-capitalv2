@@ -112,6 +112,39 @@ export function resolveLanguage(input: {
 }
 
 /**
+ * The name of a language, written in that language itself ("español",
+ * "English", "português").
+ *
+ * The name is rendered in the language of the NAME, not in the language the
+ * reader is using, so the option is recognizable no matter which language
+ * the app is currently in. `Intl.DisplayNames` takes the locale of the name,
+ * not the locale of the reader.
+ *
+ * Shipping a new language needs no new key in the dictionaries.
+ */
+export function languageLabel(lang: string): string {
+  try {
+    const display = new Intl.DisplayNames([lang], { type: 'language' })
+    return display.of(lang) ?? lang.toUpperCase()
+  } catch {
+    // Engines built without full ICU have no Intl.DisplayNames.
+    return lang.toUpperCase()
+  }
+}
+
+/**
+ * The language a country suggests, when the app has that language.
+ *
+ * `p_paises.idioma_sugerido` holds a two-letter code ('es', 'en', 'pt'), and
+ * the catalog lowercases it. A country whose suggested language the app does
+ * not ship returns null, and the caller shows the full list instead.
+ */
+export function suggestedLanguageFor(countrySuggested: string | null | undefined): Lang | null {
+  const suggested = typeof countrySuggested === 'string' ? countrySuggested.trim().toLowerCase() : ''
+  return isSupported(suggested) ? suggested : null
+}
+
+/**
  * Languages to try, in order, for a lookup. This is the single seam where a
  * secondary dictionary gets inserted once `en.ts` exists.
  */

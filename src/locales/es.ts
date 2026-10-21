@@ -594,6 +594,8 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
   onboarding_country_subtitle: "Elegimos tu moneda y tus formatos según el país, para que tus números se vean como los conocés.",
   onboarding_country_cta: "Continuar",
   onboarding_country_change: "Elegir otro país",
+  onboarding_language_label: "Idioma de la app",
+  onboarding_language_hint: "Elegimos el idioma de tu país. Podés cambiarlo cuando quieras.",
   onboarding_country_search_placeholder: "Buscar país",
   onboarding_country_empty: "No encontramos ese país. Probá con otro nombre o con el código de dos letras.",
   // Owner (tanda 4): the wallet country picker must say what it is for, not just
