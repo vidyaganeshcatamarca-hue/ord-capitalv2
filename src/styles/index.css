@@ -319,7 +319,20 @@ input, textarea, select {
   width: 100%;
   outline: none;
   transition: border-color var(--transition-fast);
+}
+/* `appearance: none` belongs to the range sliders (they draw their own
+   track and thumb), NOT to the selects. On a select it removed the native
+   arrow without replacing it, so the dropdown looked like a plain text field
+   and gave no signal that it could be opened. The select keeps the native
+   arrow; the padding on the right leaves room for it. */
+input {
   -webkit-appearance: none;
+}
+select {
+  appearance: auto;
+  -webkit-appearance: auto;
+  cursor: pointer;
+  padding-right: calc(var(--space-4) + 20px);
 }
 input:focus, textarea:focus, select:focus {
   border-color: var(--mint);
