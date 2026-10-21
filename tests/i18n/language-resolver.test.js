@@ -139,15 +139,20 @@ test('resolveLanguage uses the country suggestion when the device has nothing us
   )
   // A stored language that is NOT shipped still falls through to the country.
   assert.deepEqual(
-    resolveLanguage({ stored: 'pt', deviceLocales: ['fr-FR'], countrySuggested: 'es' }),
+    resolveLanguage({ stored: 'de', deviceLocales: ['fr-FR'], countrySuggested: 'es' }),
     { lang: 'es', source: 'country' }
+  )
+  // Portuguese is shipped, so a stored 'pt' is honoured too.
+  assert.deepEqual(
+    resolveLanguage({ stored: 'pt', deviceLocales: ['fr-FR'], countrySuggested: 'es' }),
+    { lang: 'pt', source: 'stored' }
   )
 })
 
 test('resolveLanguage ends at DEFAULT_LANG when no signal is supported', () => {
   assert.deepEqual(resolveLanguage({}), { lang: DEFAULT_LANG, source: 'default' })
   assert.deepEqual(
-    resolveLanguage({ stored: 'pt', deviceLocales: ['fr-FR'], countrySuggested: 'de' }),
+    resolveLanguage({ stored: 'de', deviceLocales: ['fr-FR'], countrySuggested: 'it' }),
     { lang: DEFAULT_LANG, source: 'default' }
   )
 })
@@ -155,13 +160,14 @@ test('resolveLanguage ends at DEFAULT_LANG when no signal is supported', () => {
 test('isSupported narrows to the shipped languages only', () => {
   assert.equal(isSupported('es'), true)
   assert.equal(isSupported('en'), true)
+  assert.equal(isSupported('pt'), true)
   assert.equal(isSupported('ES'), false)
   assert.equal(isSupported(''), false)
   assert.equal(isSupported(null), false)
   assert.equal(isSupported(undefined), false)
   // A language with no shipped dictionary is not supported.
   assert.equal(isSupported('fr'), false)
-  assert.equal(isSupported('pt'), false)
+  assert.equal(isSupported('de'), false)
 })
 
 test('fallbackChain starts at the requested language and ends at DEFAULT_LANG', () => {

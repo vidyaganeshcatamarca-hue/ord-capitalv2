@@ -30,7 +30,7 @@ tests/*
 tests/i18n/*
 !tests/i18n/language-resolver.test.js
 !tests/i18n/language-dictionary-coverage.test.js
-!tests/i18n/en-dictionary-parity.test.js
+!tests/i18n/dictionary-parity.test.js
 !tests/i18n/locale-follows-language.test.js
 !tests/i18n/support/
 !tests/i18n/support/i18n-harness.mjs

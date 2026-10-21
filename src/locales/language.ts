@@ -8,7 +8,7 @@
 // free of every import. Keep React, the DOM and Supabase out of here.
 
 /** Languages with a shipped dictionary. Adding a language = one string here + its `xx.ts`. */
-export const SUPPORTED = ['es', 'en'] as const
+export const SUPPORTED = ['es', 'en', 'pt'] as const
 
 export type Lang = (typeof SUPPORTED)[number]
 
