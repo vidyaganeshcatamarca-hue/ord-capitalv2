@@ -5,11 +5,25 @@
 // usuario en flujos de edicion ni en selectores de carga. Sigue aparecer en
 // widgets de reporte (HomePage misterio widget, reportes BCG, etc.) donde es
 // informacion relevante.
+//
+// La categoria "Inversiones" (S7) es de sistema por decision del dueno: la crea
+// `fn_crear_inversion` con nombre_cuenta = 'cat_investments' y tipo_cupo =
+// 'investment'. Es EXCLUSIVA del modulo de Inversiones:
+//   - no se renombra ni se edita desde el menu de Categorias;
+//   - no admite subcategorias;
+//   - no admite transacciones manuales (alta, edicion, cuarentena);
+//   - solo se escribe a traves de las operaciones del modulo de inversiones.
+// Este filtro es la primera linea de defensa del lado del cliente; el backend
+// lo blinda con triggers (temp_sql/83_categoria_inversiones_bloqueada.sql).
+//
+// OJO: el filtro compara por NOMBRE. La fila puede llegar con el nombre en
+// `nombre_cuenta` o en `nombre_categoria` (se chequean ambos).
 
 /**
- * Lista canonica de nombres / claves i18n que identifican a la categoria
- * de sistema "Misterio/Olvido". Comparada siempre en lowercase, sin
- * acentos (los nombres del RPC ya vienen en formato canonico).
+ * Lista canonica de nombres / claves i18n que identifican a las categorias
+ * de sistema que el usuario no puede editar ni elegir en un movimiento.
+ * Comparada siempre en lowercase, sin acentos (los nombres del RPC ya vienen
+ * en formato canonico).
  */
 export const SYSTEM_CATEGORY_NAMES: readonly string[] = [
   'misterio/olvido',
@@ -23,6 +37,8 @@ export const SYSTEM_CATEGORY_NAMES: readonly string[] = [
   'type_adjustment_mystery',
   'cat_card_diff',
   'type_adjustment_card_diff',
+  // Exclusiva del modulo de Inversiones (S7).
+  'cat_investments',
 ] as const
 
 /**

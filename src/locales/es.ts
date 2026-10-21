@@ -65,6 +65,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   error_movement_not_found: "Este movimiento ya no está disponible. La lista se actualizará al recargar.",
   error_category_in_use: "No se puede eliminar: la categoría está siendo usada por movimientos",
   error_category_has_children: "No se puede eliminar: la categoría tiene sub-categorías hijas",
+  error_category_system_locked: "Esta categoría es del sistema y solo se usa desde su propio módulo",
   error_invalid_params: "Parámetros inválidos para la operación.",
   menu_inicio: "Inicio",
   menu_cuentas: "Cuentas",
