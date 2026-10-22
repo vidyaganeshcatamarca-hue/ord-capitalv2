@@ -270,6 +270,59 @@ test('the update cycle ends with a ledger that says nothing is pending', () => {
   }
 })
 
+test('the apply keeps the mirror in the same order as the master', () => {
+  // A translation is the MIRROR of the master: the same keys in the same
+  // order. Without this, a new key lands at the end of its section and the
+  // two files stop lining up, which makes every diff noisier.
+  const sandbox = createSandbox()
+  const original = sandbox.read('es')
+
+  try {
+    // The new key goes in the MIDDLE of the section, not at the end.
+    sandbox.write(
+      'es',
+      original.replace(
+        /^( {2}onboarding_country_cta: "Continuar",\r?\n)/m,
+        '$1  mirror_order_probe: "Sonda de orden",\n'
+      )
+    )
+    sandbox.run('delta.mjs', ['pt'])
+    writeDelta(sandbox, 'pt', 'errors', {
+      mirror_order_probe: { es: 'Sonda de ordem', ph: [] },
+    })
+    sandbox.run('apply-delta.mjs', ['pt'])
+
+    const pt = sandbox.read('pt')
+    const lines = pt.split(/\r?\n/)
+    const cta = lines.findIndex((l) => l.includes('onboarding_country_cta:'))
+    const probe = lines.findIndex((l) => l.includes('mirror_order_probe:'))
+    const change = lines.findIndex((l) => l.includes('onboarding_country_change:'))
+
+    assert.ok(probe > cta, 'the new key must come after the one before it')
+    assert.ok(probe < change, 'the new key must come before the one after it')
+  } finally {
+    sandbox.cleanup()
+  }
+})
+
+test('the apply keeps the header of the dictionary', () => {
+  // The header is the only place the file says what it is. Replacing it
+  // with a generic one throws that away.
+  const sandbox = createSandbox()
+  const before = sandbox.read('pt')
+
+  try {
+    writeDelta(sandbox, 'pt', 'errors', {})
+    sandbox.run('apply-delta.mjs', ['pt'])
+
+    const after = sandbox.read('pt')
+    const headerOf = (text) => text.slice(0, text.search(/^export const /m))
+    assert.equal(headerOf(after), headerOf(before), 'the header must not change')
+  } finally {
+    sandbox.cleanup()
+  }
+})
+
 test('the toolchain is wired to package.json', () => {
   const pkg = JSON.parse(readFileSync(path.join(ROOT, 'package.json'), 'utf-8'))
   assert.ok(pkg.scripts['i18n:apply-delta'], 'npm run i18n:apply-delta must exist')

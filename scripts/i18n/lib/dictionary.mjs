@@ -80,7 +80,9 @@ export function placeholders(value) {
   return [...String(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1])
 }
 
-/** The order the sections are declared in a dictionary file. */
+/**
+ * The order of the sections in a dictionary file.
+ */
 export function sectionOrder(file) {
   const source = readFileSync(file, 'utf-8')
   const order = []
@@ -91,6 +93,40 @@ export function sectionOrder(file) {
 }
 
 /**
+ * The order of the keys inside every section, as { section: [key, ...] }.
+ *
+ * A translation is the MIRROR of the master: the same keys in the same
+ * order. Without this, a key added to the master lands at the END of its
+ * section in the translation, and the two files stop lining up — which
+ * makes every diff noisier than it needs to be.
+ */
+export function keyOrderOf(sections) {
+  const order = {}
+  for (const [section, entries] of Object.entries(sections)) {
+    order[section] = Object.keys(entries)
+  }
+  return order
+}
+
+/**
+ * The comment block at the top of a file, up to the first declaration.
+ *
+ * A dictionary has a header that explains what the file is. Rewriting the
+ * file must not replace that header with a generic one: the header is the
+ * only place the file says what it is.
+ *
+ * The trailing blank lines are NOT part of the header: the writer puts the
+ * separator itself, and a header that already ended in a newline would
+ * leave a doubled blank line in the file.
+ */
+export function readHeader(file) {
+  const source = readFileSync(file, 'utf-8')
+  const firstDecl = source.search(/^export const /m)
+  if (firstDecl < 0) return ''
+  return source.slice(0, firstDecl).replace(/\s+$/, '')
+}
+
+/**
  * Writes a dictionary file: the sections in the given order, the values
  * escaped.
  *
@@ -98,16 +134,23 @@ export function sectionOrder(file) {
  * out with CRLF on Windows and stores LF, so a writer that always emits LF
  * leaves every file looking modified to Git, with a diff that shows
  * nothing.
+ *
+ * `keyOrder` decides the order of the keys inside each section. The keys it
+ * does not mention go last, in the order they were added.
  */
-export function writeDictionary(file, sections, order, header = '') {
+export function writeDictionary(file, sections, order, header = '', keyOrder = null) {
   const out = []
-  if (header) out.push(header)
+  if (header) {
+    out.push(header)
+    // The blank line between the header and the first declaration.
+    out.push('')
+  }
   let total = 0
   for (const section of order) {
     const entries = sections[section]
     if (!entries) continue
     out.push(`export const ${section} = {`)
-    for (const [key, value] of Object.entries(entries)) {
+    for (const [key, value] of orderedEntries(entries, keyOrder?.[section])) {
       out.push(`  ${tsKey(key)}: ${tsString(value)},`)
       total++
     }
@@ -117,6 +160,19 @@ export function writeDictionary(file, sections, order, header = '') {
   const eol = detectEol(file)
   writeFileSync(file, out.join(eol), 'utf-8')
   return total
+}
+
+/**
+ * The entries of a section, in the order the master declares them.
+ *
+ * A key the master does not have goes last: it is a leftover, and the
+ * update has to take it out.
+ */
+function orderedEntries(entries, order) {
+  if (!order) return Object.entries(entries)
+  const wanted = order.filter((key) => key in entries)
+  const rest = Object.keys(entries).filter((key) => !wanted.includes(key))
+  return [...wanted, ...rest].map((key) => [key, entries[key]])
 }
 
 /**

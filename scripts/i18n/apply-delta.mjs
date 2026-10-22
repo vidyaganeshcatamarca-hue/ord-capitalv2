@@ -25,6 +25,8 @@ import {
   readDictionary,
   writeDictionary,
   sectionOrder,
+  keyOrderOf,
+  readHeader,
   placeholders,
 } from './lib/dictionary.mjs'
 
@@ -153,27 +155,20 @@ if (problems.length) {
 }
 
 // ── Write it back ─────────────────────────────────────────────────────
-const header = `// locales/${TARGET_LANG}.ts
-// ============================================
-// ${TARGET_LANG === 'en' ? 'English' : TARGET_LANG.toUpperCase()} dictionary — the mirror of \`${SOURCE_LANG}.ts\`.
-// ============================================
-//
-// Every key of the Spanish dictionary exists here, with the same
-// placeholders in the same order. A key added to \`es.ts\` without a
-// counterpart here simply falls back to Spanish at runtime, so this
-// dictionary can lag behind without breaking the UI.
-//
-// The section order mirrors \`es.ts\` on purpose: \`t()\` resolves a
-// duplicated key against the first section that declares it, and the
-// ES module namespace orders its exports alphabetically. Keeping the
-// same order keeps both languages pointing at the same string.
-`
+// The header of the file being replaced is kept: it is the only place the
+// file says what it is, and a generic replacement would throw that away.
+const header = readHeader(targetFile)
 
 const total = writeDictionary(
   targetFile,
   target,
   sectionOrder(path.join(SRC, `${SOURCE_LANG}.ts`)),
-  header
+  header,
+  // The master decides the order of the keys: a translation is the mirror
+  // of the Spanish, key for key and in the same order. Without this, a new
+  // key would land at the end of its section and the two files would stop
+  // lining up.
+  keyOrderOf(es)
 )
 
 console.log(`=== ${TARGET_LANG}: delta aplicado ===`)

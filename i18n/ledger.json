@@ -2226,6 +2226,10 @@
         "from": "Continuar",
         "to": "Continue"
       },
+      "errors.onboarding_country_fallback_hint": {
+        "from": "Si no ves tu país, elegí el que más se parezca y ajustá la moneda después.",
+        "to": "If you don't see your country, pick the closest match and adjust the currency later."
+      },
       "errors.onboarding_country_change": {
         "from": "Elegir otro país",
         "to": "Choose another country"
@@ -11391,6 +11395,10 @@
       "errors.onboarding_country_cta": {
         "from": "Continuar",
         "to": "Continuar"
+      },
+      "errors.onboarding_country_fallback_hint": {
+        "from": "Si no ves tu país, elegí el que más se parezca y ajustá la moneda después.",
+        "to": "Se você não encontrar seu país, escolha o mais parecido e ajuste a moeda depois."
       },
       "errors.onboarding_country_change": {
         "from": "Elegir otro país",

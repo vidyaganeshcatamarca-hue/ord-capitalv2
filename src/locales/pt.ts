@@ -570,6 +570,7 @@ export const errors = {
   onboarding_country_title: "Onde você usa seu dinheiro?",
   onboarding_country_subtitle: "Escolhemos sua moeda e seus formatos de acordo com o país, para que seus números fiquem como você está acostumado.",
   onboarding_country_cta: "Continuar",
+  onboarding_country_fallback_hint: "Se você não encontrar seu país, escolha o mais parecido e ajuste a moeda depois.",
   onboarding_country_change: "Escolher outro país",
   onboarding_language_label: "Idioma do app",
   onboarding_language_hint: "Escolhemos o idioma do seu país. Você pode mudar quando quiser.",
