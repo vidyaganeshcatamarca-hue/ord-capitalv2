@@ -8,61 +8,9 @@
 // translated": same keys, same placeholders, same order.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs'
 import path from 'node:path'
+import { readDictionary, placeholders } from './lib/dictionary.mjs'
 
 const SRC = path.resolve('src/locales')
-
-/** Reads a locale dictionary and returns { section: { key: value } }. */
-function readDictionary(file) {
-  const source = readFileSync(file, 'utf-8')
-  const sections = {}
-  const declRe = /export const (\w+)\s*=\s*\{/g
-  let m
-  while ((m = declRe.exec(source)) !== null) {
-    const bodyStart = m.index + m[0].length
-    let depth = 1
-    let j = bodyStart
-    while (j < source.length && depth > 0) {
-      const ch = source[j]
-      if (ch === '{') depth++
-      else if (ch === '}') depth--
-      j++
-    }
-    const body = source.slice(bodyStart, j - 1)
-    const entries = {}
-    const kv = /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(['"`])((?:[^\\]|\\.)*?)\2\s*,?/gm
-    let k
-    while ((k = kv.exec(body)) !== null) {
-      entries[k[1]] = k[3]
-    }
-    // Keys with dots are quoted in the source, so the plain-name regex above
-    // misses them. Recover them with a second pass.
-    const dotted = /^\s*('[^']+')\s*:\s*(['"`])((?:[^\\]|\\.)*?)\2\s*,?/gm
-    let d
-    while ((d = dotted.exec(body)) !== null) {
-      entries[d[1].slice(1, -1)] = d[3]
-    }
-    sections[m[1]] = entries
-  }
-  return sections
-}
-
-function placeholders(value) {
-  return [...String(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1])
-}
-
-/**
- * Undoes ONE level of TypeScript literal escaping.
- *
- * The extractor reads the raw source text, so a quote inside a string comes
- * out as backslash-quote. The chunk files are JSON, so that backslash has
- * to be decoded before the value is compared or written back: the runtime
- * value of `"¿Archivar \"{nombre}\"?"` is `¿Archivar "{nombre}"?`, and a
- * chunk that carries the backslash would make the English dictionary show
- * a visible backslash where the Spanish one shows a clean quote.
- */
-function unescapeLiteral(raw) {
-  return String(raw).replace(/\\(["'\\`])/g, '$1')
-}
 
 const mode = process.argv[2] ?? 'extract'
 
@@ -84,7 +32,7 @@ if (mode === 'extract') {
   for (const [section, entries] of Object.entries(es)) {
     manifest[section] = {}
     for (const [key, value] of Object.entries(entries)) {
-      manifest[section][key] = { es: unescapeLiteral(value), ph: placeholders(value) }
+      manifest[section][key] = { es: value, ph: placeholders(value) }
       total++
     }
   }

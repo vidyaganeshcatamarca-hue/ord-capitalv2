@@ -10,6 +10,8 @@
 // Output: src/locales/<target>.ts
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
+import { readDictionary, placeholders } from './lib/dictionary.mjs'
+import path from 'node:path'
 
 const ROOT = path.resolve('.')
 
@@ -24,40 +26,7 @@ const INPUT = path.join(ROOT, `scratch/${TARGET_LANG}-input`)
 const OUTPUT = path.join(ROOT, `scratch/${TARGET_LANG}-output`)
 const TARGET = path.join(ROOT, `src/locales/${TARGET_LANG}.ts`)
 
-/** Reads the Spanish dictionary so the assembly can be checked against it. */
-function readEsDictionary() {
-  const source = readFileSync(path.join(ROOT, `src/locales/${SOURCE_LANG}.ts`), 'utf-8')
-  const sections = {}
-  const declRe = /export const (\w+)\s*=\s*\{/g
-  let m
-  while ((m = declRe.exec(source)) !== null) {
-    const bodyStart = m.index + m[0].length
-    let depth = 1
-    let j = bodyStart
-    while (j < source.length && depth > 0) {
-      const ch = source[j]
-      if (ch === '{') depth++
-      else if (ch === '}') depth--
-      j++
-    }
-    const body = source.slice(bodyStart, j - 1)
-    const entries = {}
-    const kv = /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(['"`])((?:[^\\]|\\.)*?)\2\s*,?/gm
-    let k
-    while ((k = kv.exec(body)) !== null) entries[k[1]] = k[3]
-    const dotted = /^\s*('[^']+')\s*:\s*(['"`])((?:[^\\]|\\.)*?)\2\s*,?/gm
-    let d
-    while ((d = dotted.exec(body)) !== null) entries[d[1].slice(1, -1)] = d[3]
-    sections[m[1]] = entries
-  }
-  return sections
-}
-
-function placeholders(value) {
-  return [...String(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1])
-}
-
-const es = readEsDictionary()
+const es = readDictionary(path.join(ROOT, `src/locales/${SOURCE_LANG}.ts`))
 
 // ── Load the chunks ────────────────────────────────────────────────────
 const chunkFiles = readdirSync(INPUT).filter((f) => f.endsWith('.json'))

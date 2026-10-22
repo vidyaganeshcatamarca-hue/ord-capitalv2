@@ -675,12 +675,12 @@
         "to": "Archive card"
       },
       "errors.confirm_archive_card_msg_active": {
-        "from": "¿Archivar \\\"{nombre}\\\"? Esta acción es reversible desde ajustes.",
-        "to": "Archive \\\"{nombre}\\\"? This action is reversible from settings."
+        "from": "¿Archivar \"{nombre}\"? Esta acción es reversible desde ajustes.",
+        "to": "Archive \"{nombre}\"? This action is reversible from settings."
       },
       "errors.confirm_archive_card_msg_pending": {
-        "from": "¿Archivar \\\"{nombre}\\\"? Solo deberías hacerlo si no tiene compromisos pendientes.",
-        "to": "Archive \\\"{nombre}\\\"? You should only do this if it has no pending commitments."
+        "from": "¿Archivar \"{nombre}\"? Solo deberías hacerlo si no tiene compromisos pendientes.",
+        "to": "Archive \"{nombre}\"? You should only do this if it has no pending commitments."
       },
       "errors.btn_archive": {
         "from": "Archivar",
@@ -1851,8 +1851,8 @@
         "to": "Account created successfully"
       },
       "errors.confirm_archive_wallet_msg": {
-        "from": "¿Estás seguro de que deseas archivar la cuenta \\\"{nombre}\\\"? No aparecerá en el listado activo.",
-        "to": "Are you sure you want to archive the account \\\"{nombre}\\\"? It will no longer appear in the active list."
+        "from": "¿Estás seguro de que deseas archivar la cuenta \"{nombre}\"? No aparecerá en el listado activo.",
+        "to": "Are you sure you want to archive the account \"{nombre}\"? It will no longer appear in the active list."
       },
       "errors.detail_latest_movements": {
         "from": "Últimos Movimientos",
@@ -1887,8 +1887,8 @@
         "to": "No subcategories yet"
       },
       "errors.confirm_delete_category_msg": {
-        "from": "¿Estás seguro de que deseas eliminar la categoría \\\"{nombre}\\\"? No se podrá recuperar.",
-        "to": "Are you sure you want to delete the category \\\"{nombre}\\\"? It cannot be recovered."
+        "from": "¿Estás seguro de que deseas eliminar la categoría \"{nombre}\"? No se podrá recuperar.",
+        "to": "Are you sure you want to delete the category \"{nombre}\"? It cannot be recovered."
       },
       "errors.toast_category_deleted_success": {
         "from": "Categoría eliminada",
@@ -2087,8 +2087,8 @@
         "to": "Reject expense"
       },
       "errors.confirm_reject_item_msg": {
-        "from": "¿Eliminar definitivamente el gasto \\\"{desc}\\\"por {monto}? Esta acción no se puede deshacer.",
-        "to": "Delete the expense \\\"{desc}\\\" for {monto} permanently? This action cannot be undone."
+        "from": "¿Eliminar definitivamente el gasto \"{desc}\"por {monto}? Esta acción no se puede deshacer.",
+        "to": "Delete the expense \"{desc}\" for {monto} permanently? This action cannot be undone."
       },
       "errors.btn_reject_and_delete": {
         "from": "Rechazar y Eliminar",
@@ -2268,7 +2268,7 @@
       },
       "errors.onboarding_wallet_subtitle": {
         "from": "Solo la cuenta bancaria o billetera virtual que más usas para transaccionar. Podrás agregar otras luego. (Tambien se creará automáticamente una cuenta de 'Efectivo')",
-        "to": "Only the bank account or digital wallet you use most for transactions. You can add more later. (A \\\"Cash\\\" account will also be created automatically)"
+        "to": "Only the bank account or digital wallet you use most for transactions. You can add more later. (A \"Cash\" account will also be created automatically)"
       },
       "errors.onboarding_wallet_cash_title": {
         "from": "Tu billetera en efectivo",
@@ -3415,8 +3415,8 @@
         "to": "🐜 Your ants add up to {monto}"
       },
       "bcg.bcg_hormiga_estado_no_buzon_desc": {
-        "from": "Crea un Sobre de Ahorro llamado \\\"Buzón de Deseos\\\"para atraparlas.",
-        "to": "Create a Savings Envelope called \\\"Wish Mailbox\\\"to catch them."
+        "from": "Crea un Sobre de Ahorro llamado \"Buzón de Deseos\"para atraparlas.",
+        "to": "Create a Savings Envelope called \"Wish Mailbox\"to catch them."
       },
       "bcg.bcg_hormiga_estado_no_buzon_cta": {
         "from": "Crear Buzón de Deseos",
@@ -3427,8 +3427,8 @@
         "to": "🐜 We caught {monto} in ants"
       },
       "bcg.bcg_hormiga_estado_transfer_desc": {
-        "from": "¿Las transferimos a \\\"{buzon}\\\"? Saldo actual del buzón: {saldo}",
-        "to": "Shall we move them to \\\"{buzon}\\\"? Current mailbox balance: {saldo}"
+        "from": "¿Las transferimos a \"{buzon}\"? Saldo actual del buzón: {saldo}",
+        "to": "Shall we move them to \"{buzon}\"? Current mailbox balance: {saldo}"
       },
       "bcg.bcg_hormiga_estado_transfer_cta": {
         "from": "Transferir al Buzón",
@@ -4503,8 +4503,8 @@
         "to": "Dictate Expense"
       },
       "saneamiento.saneamiento_audio_hint": {
-        "from": "Grabá tu gasto en voz alta. Ej: \\\"Gasté 3500 en el supermercado\\\".",
-        "to": "Record your expense out loud. E.g.: \\\"I spent 3500 at the supermarket\\\"."
+        "from": "Grabá tu gasto en voz alta. Ej: \"Gasté 3500 en el supermercado\".",
+        "to": "Record your expense out loud. E.g.: \"I spent 3500 at the supermarket\"."
       },
       "saneamiento.saneamiento_audio_pausar": {
         "from": "Pausar",
@@ -6171,8 +6171,8 @@
         "to": "Amounts stay hidden across the app until you turn them back on. This is different from the eye icon on Home (which only hides them for the current session)."
       },
       "inversiones.config_base_cero_home_toggle": {
-        "from": "Hacer \\\"Base 0\\\"la pantalla de inicio",
-        "to": "Make \\\"Base 0\\\" the home screen"
+        "from": "Hacer \"Base 0\"la pantalla de inicio",
+        "to": "Make \"Base 0\" the home screen"
       },
       "inversiones.config_base_cero_home_toggle_desc": {
         "from": "Al abrir la app vas directo a Base 0. Inicio pasa a ser la segunda pantalla.",
@@ -6755,8 +6755,8 @@
         "to": "Add the app to your home screen to use it like a native app."
       },
       "inversiones.pwa_install_ios_hint": {
-        "from": "En iOS, usá Compartir y luego \\\"Agregar a pantalla de inicio\\\".",
-        "to": "On iOS, use Share and then \\\"Add to Home Screen\\\"."
+        "from": "En iOS, usá Compartir y luego \"Agregar a pantalla de inicio\".",
+        "to": "On iOS, use Share and then \"Add to Home Screen\"."
       },
       "inversiones.pwa_already_installed_or_unsupported": {
         "from": "La app ya está instalada o tu navegador no soporta esta función.",
@@ -6771,8 +6771,8 @@
         "to": "Samsung Internet generates an installer that Google Play Protect blocks. Open Chrome and access the app from there."
       },
       "inversiones.pwa_install_samsung_fallback": {
-        "from": "¿No tenés (ni vas a instalar) Chrome? Podés instalar desde Samsung Internet: ante el aviso de Google, tocá \\\"Instalar de todas formas\\\".",
-        "to": "Don't have Chrome (and are not going to install it)? You can install from Samsung Internet: when Google's warning appears, tap \\\"Install anyway\\\"."
+        "from": "¿No tenés (ni vas a instalar) Chrome? Podés instalar desde Samsung Internet: ante el aviso de Google, tocá \"Instalar de todas formas\".",
+        "to": "Don't have Chrome (and are not going to install it)? You can install from Samsung Internet: when Google's warning appears, tap \"Install anyway\"."
       },
       "inversiones.pwa_install_samsung_hint": {
         "from": "Samsung Internet bloquea la instalación de la app. Abrí ordcapital.app en Chrome (o instalá Chrome desde Play Store) y presioná Instalar ahí.",
@@ -7323,8 +7323,8 @@
         "to": "Not enough data for the analysis."
       },
       "inversiones.card_archive_confirm_pending": {
-        "from": "¿Archivar \\\"{name}\\\"? Solo deberías hacerlo si no tiene compromisos pendientes.",
-        "to": "Archive \\\"{name}\\\"? You should only do this if it has no pending commitments."
+        "from": "¿Archivar \"{name}\"? Solo deberías hacerlo si no tiene compromisos pendientes.",
+        "to": "Archive \"{name}\"? You should only do this if it has no pending commitments."
       },
       "inversiones.card_days_format": {
         "from": "{days} días",
@@ -7355,8 +7355,8 @@
         "to": "Excellent discipline! You reduced your usage by {pct}% this month."
       },
       "inversiones.card_archive_confirm_reversible": {
-        "from": "¿Archivar \\\"{name}\\\"? Esta acción es reversible desde ajustes.",
-        "to": "Archive \\\"{name}\\\"? This action is reversible from settings."
+        "from": "¿Archivar \"{name}\"? Esta acción es reversible desde ajustes.",
+        "to": "Archive \"{name}\"? This action is reversible from settings."
       },
       "inversiones.card_form_closing_day": {
         "from": "Día de Cierre",
@@ -7499,8 +7499,8 @@
         "to": "Theoretical Balance (App)"
       },
       "inversiones.confirm_archive_wallet": {
-        "from": "¿Estás seguro de que deseas archivar la cuenta \\\"{name}\\\"? No aparecerá en el listado activo.",
-        "to": "Are you sure you want to archive the account \\\"{name}\\\"? It will no longer appear in the active list."
+        "from": "¿Estás seguro de que deseas archivar la cuenta \"{name}\"? No aparecerá en el listado activo.",
+        "to": "Are you sure you want to archive the account \"{name}\"? It will no longer appear in the active list."
       },
       "inversiones.cat_need_label": {
         "from": "Necesidad",
@@ -7791,8 +7791,8 @@
         "to": "Delete Category"
       },
       "inversiones.confirm_delete_category": {
-        "from": "¿Estás seguro de que deseas eliminar la categoría \\\"{name}\\\"? No se podrá recuperar.",
-        "to": "Are you sure you want to delete the category \\\"{name}\\\"? This cannot be undone."
+        "from": "¿Estás seguro de que deseas eliminar la categoría \"{name}\"? No se podrá recuperar.",
+        "to": "Are you sure you want to delete the category \"{name}\"? This cannot be undone."
       },
       "inversiones.success_category_deleted": {
         "from": "Categoría eliminada",
@@ -7803,8 +7803,8 @@
         "to": "Migrate and delete category"
       },
       "inversiones.confirm_migrate_category": {
-        "from": "La categoría \\\"{name}\\\"tiene movimientos, presupuestos o gastos recurrentes asociados. Para no perder el historial, primero migra esos datos a otra categoría existente. Una vez migrados, la categoría \\\"{name}\\\"se eliminará.",
-        "to": "The category \\\"{name}\\\" has transactions, budgets or recurring expenses linked to it. To avoid losing your history, first migrate that data to another existing category. Once migrated, the category \\\"{name}\\\" will be deleted."
+        "from": "La categoría \"{name}\"tiene movimientos, presupuestos o gastos recurrentes asociados. Para no perder el historial, primero migra esos datos a otra categoría existente. Una vez migrados, la categoría \"{name}\"se eliminará.",
+        "to": "The category \"{name}\" has transactions, budgets or recurring expenses linked to it. To avoid losing your history, first migrate that data to another existing category. Once migrated, the category \"{name}\" will be deleted."
       },
       "inversiones.migrar_category_destino_label": {
         "from": "Categoría destino",
@@ -9841,12 +9841,12 @@
         "to": "Arquivar cartão"
       },
       "errors.confirm_archive_card_msg_active": {
-        "from": "¿Archivar \\\"{nombre}\\\"? Esta acción es reversible desde ajustes.",
-        "to": "Arquivar \\\"{nombre}\\\"? Esta ação pode ser desfeita nos ajustes."
+        "from": "¿Archivar \"{nombre}\"? Esta acción es reversible desde ajustes.",
+        "to": "Arquivar \"{nombre}\"? Esta ação pode ser desfeita nos ajustes."
       },
       "errors.confirm_archive_card_msg_pending": {
-        "from": "¿Archivar \\\"{nombre}\\\"? Solo deberías hacerlo si no tiene compromisos pendientes.",
-        "to": "Arquivar \\\"{nombre}\\\"? Só faça isso se não houver compromissos pendentes."
+        "from": "¿Archivar \"{nombre}\"? Solo deberías hacerlo si no tiene compromisos pendientes.",
+        "to": "Arquivar \"{nombre}\"? Só faça isso se não houver compromissos pendentes."
       },
       "errors.btn_archive": {
         "from": "Archivar",
@@ -11017,8 +11017,8 @@
         "to": "Conta criada com sucesso"
       },
       "errors.confirm_archive_wallet_msg": {
-        "from": "¿Estás seguro de que deseas archivar la cuenta \\\"{nombre}\\\"? No aparecerá en el listado activo.",
-        "to": "Tem certeza de que deseja arquivar a conta \\\"{nombre}\\\"? Ela não aparecerá na lista ativa."
+        "from": "¿Estás seguro de que deseas archivar la cuenta \"{nombre}\"? No aparecerá en el listado activo.",
+        "to": "Tem certeza de que deseja arquivar a conta \"{nombre}\"? Ela não aparecerá na lista ativa."
       },
       "errors.detail_latest_movements": {
         "from": "Últimos Movimientos",
@@ -11053,8 +11053,8 @@
         "to": "Sem subcategorias ainda"
       },
       "errors.confirm_delete_category_msg": {
-        "from": "¿Estás seguro de que deseas eliminar la categoría \\\"{nombre}\\\"? No se podrá recuperar.",
-        "to": "Tem certeza de que deseja excluir a categoria \\\"{nombre}\\\"? Ela não poderá ser recuperada."
+        "from": "¿Estás seguro de que deseas eliminar la categoría \"{nombre}\"? No se podrá recuperar.",
+        "to": "Tem certeza de que deseja excluir a categoria \"{nombre}\"? Ela não poderá ser recuperada."
       },
       "errors.toast_category_deleted_success": {
         "from": "Categoría eliminada",
@@ -11253,8 +11253,8 @@
         "to": "Rejeitar despesa"
       },
       "errors.confirm_reject_item_msg": {
-        "from": "¿Eliminar definitivamente el gasto \\\"{desc}\\\"por {monto}? Esta acción no se puede deshacer.",
-        "to": "Excluir definitivamente a despesa \\\"{desc}\\\" de {monto}? Esta ação não pode ser desfeita."
+        "from": "¿Eliminar definitivamente el gasto \"{desc}\"por {monto}? Esta acción no se puede deshacer.",
+        "to": "Excluir definitivamente a despesa \"{desc}\" de {monto}? Esta ação não pode ser desfeita."
       },
       "errors.btn_reject_and_delete": {
         "from": "Rechazar y Eliminar",
@@ -12581,8 +12581,8 @@
         "to": "🐜 Suas formigas somam {monto}"
       },
       "bcg.bcg_hormiga_estado_no_buzon_desc": {
-        "from": "Crea un Sobre de Ahorro llamado \\\"Buzón de Deseos\\\"para atraparlas.",
-        "to": "Crie um envelope de poupança chamado \\\"Buzão de Desejos\\\" para guardar essas formigas."
+        "from": "Crea un Sobre de Ahorro llamado \"Buzón de Deseos\"para atraparlas.",
+        "to": "Crie um envelope de poupança chamado \"Buzão de Desejos\" para guardar essas formigas."
       },
       "bcg.bcg_hormiga_estado_no_buzon_cta": {
         "from": "Crear Buzón de Deseos",
@@ -12593,8 +12593,8 @@
         "to": "🐜 Pegamos {monto} em formigas"
       },
       "bcg.bcg_hormiga_estado_transfer_desc": {
-        "from": "¿Las transferimos a \\\"{buzon}\\\"? Saldo actual del buzón: {saldo}",
-        "to": "Transferimos para \\\"{buzon}\\\"? Saldo atual do buzão: {saldo}"
+        "from": "¿Las transferimos a \"{buzon}\"? Saldo actual del buzón: {saldo}",
+        "to": "Transferimos para \"{buzon}\"? Saldo atual do buzão: {saldo}"
       },
       "bcg.bcg_hormiga_estado_transfer_cta": {
         "from": "Transferir al Buzón",
@@ -13669,8 +13669,8 @@
         "to": "Ditar Despesa"
       },
       "saneamiento.saneamiento_audio_hint": {
-        "from": "Grabá tu gasto en voz alta. Ej: \\\"Gasté 3500 en el supermercado\\\".",
-        "to": "Grave sua despesa em voz alta. Ex: \\\"Gastei 3500 no supermercado\\\"."
+        "from": "Grabá tu gasto en voz alta. Ej: \"Gasté 3500 en el supermercado\".",
+        "to": "Grave sua despesa em voz alta. Ex: \"Gastei 3500 no supermercado\"."
       },
       "saneamiento.saneamiento_audio_pausar": {
         "from": "Pausar",
@@ -15337,8 +15337,8 @@
         "to": "Os valores ficam ocultos em todo o app até você reativá-los. Diferente do olho do Início (oculta só na sessão atual)."
       },
       "inversiones.config_base_cero_home_toggle": {
-        "from": "Hacer \\\"Base 0\\\"la pantalla de inicio",
-        "to": "Definir \\\"Base 0\\\" como tela inicial"
+        "from": "Hacer \"Base 0\"la pantalla de inicio",
+        "to": "Definir \"Base 0\" como tela inicial"
       },
       "inversiones.config_base_cero_home_toggle_desc": {
         "from": "Al abrir la app vas directo a Base 0. Inicio pasa a ser la segunda pantalla.",
@@ -15921,8 +15921,8 @@
         "to": "Adicione o app à tela inicial para usá-lo como um app nativo."
       },
       "inversiones.pwa_install_ios_hint": {
-        "from": "En iOS, usá Compartir y luego \\\"Agregar a pantalla de inicio\\\".",
-        "to": "No iOS, use Compartilhar e depois \\\"Adicionar à Tela de Início\\\"."
+        "from": "En iOS, usá Compartir y luego \"Agregar a pantalla de inicio\".",
+        "to": "No iOS, use Compartilhar e depois \"Adicionar à Tela de Início\"."
       },
       "inversiones.pwa_already_installed_or_unsupported": {
         "from": "La app ya está instalada o tu navegador no soporta esta función.",
@@ -15937,8 +15937,8 @@
         "to": "O Samsung Internet gera um instalador bloqueado pelo Google Play Protect. Abra o Chrome e entre no app por ele."
       },
       "inversiones.pwa_install_samsung_fallback": {
-        "from": "¿No tenés (ni vas a instalar) Chrome? Podés instalar desde Samsung Internet: ante el aviso de Google, tocá \\\"Instalar de todas formas\\\".",
-        "to": "Não tem (nem vai instalar) o Chrome? Você pode instalar pelo Samsung Internet: quando aparecer o aviso do Google, toque em \\\"Instalar mesmo assim\\\"."
+        "from": "¿No tenés (ni vas a instalar) Chrome? Podés instalar desde Samsung Internet: ante el aviso de Google, tocá \"Instalar de todas formas\".",
+        "to": "Não tem (nem vai instalar) o Chrome? Você pode instalar pelo Samsung Internet: quando aparecer o aviso do Google, toque em \"Instalar mesmo assim\"."
       },
       "inversiones.pwa_install_samsung_hint": {
         "from": "Samsung Internet bloquea la instalación de la app. Abrí ordcapital.app en Chrome (o instalá Chrome desde Play Store) y presioná Instalar ahí.",
@@ -16489,8 +16489,8 @@
         "to": "Dados insuficientes para a análise."
       },
       "inversiones.card_archive_confirm_pending": {
-        "from": "¿Archivar \\\"{name}\\\"? Solo deberías hacerlo si no tiene compromisos pendientes.",
-        "to": "Arquivar \\\"{name}\\\"? Só faça isso se não houver compromissos pendentes."
+        "from": "¿Archivar \"{name}\"? Solo deberías hacerlo si no tiene compromisos pendientes.",
+        "to": "Arquivar \"{name}\"? Só faça isso se não houver compromissos pendentes."
       },
       "inversiones.card_days_format": {
         "from": "{days} días",
@@ -16521,8 +16521,8 @@
         "to": "Excelente disciplina! Você reduziu o uso em {pct}% neste mês."
       },
       "inversiones.card_archive_confirm_reversible": {
-        "from": "¿Archivar \\\"{name}\\\"? Esta acción es reversible desde ajustes.",
-        "to": "Arquivar \\\"{name}\\\"? Esta ação pode ser desfeita nos ajustes."
+        "from": "¿Archivar \"{name}\"? Esta acción es reversible desde ajustes.",
+        "to": "Arquivar \"{name}\"? Esta ação pode ser desfeita nos ajustes."
       },
       "inversiones.card_form_closing_day": {
         "from": "Día de Cierre",
@@ -16665,8 +16665,8 @@
         "to": "Saldo Teórico (App)"
       },
       "inversiones.confirm_archive_wallet": {
-        "from": "¿Estás seguro de que deseas archivar la cuenta \\\"{name}\\\"? No aparecerá en el listado activo.",
-        "to": "Tem certeza de que deseja arquivar a conta \\\"{name}\\\"? Ela não aparecerá na lista ativa."
+        "from": "¿Estás seguro de que deseas archivar la cuenta \"{name}\"? No aparecerá en el listado activo.",
+        "to": "Tem certeza de que deseja arquivar a conta \"{name}\"? Ela não aparecerá na lista ativa."
       },
       "inversiones.cat_need_label": {
         "from": "Necesidad",
@@ -16957,8 +16957,8 @@
         "to": "Excluir Categoria"
       },
       "inversiones.confirm_delete_category": {
-        "from": "¿Estás seguro de que deseas eliminar la categoría \\\"{name}\\\"? No se podrá recuperar.",
-        "to": "Tem certeza de que deseja excluir a categoria \\\"{name}\\\"? Ela não poderá ser recuperada."
+        "from": "¿Estás seguro de que deseas eliminar la categoría \"{name}\"? No se podrá recuperar.",
+        "to": "Tem certeza de que deseja excluir a categoria \"{name}\"? Ela não poderá ser recuperada."
       },
       "inversiones.success_category_deleted": {
         "from": "Categoría eliminada",
@@ -16969,8 +16969,8 @@
         "to": "Migrar e excluir categoria"
       },
       "inversiones.confirm_migrate_category": {
-        "from": "La categoría \\\"{name}\\\"tiene movimientos, presupuestos o gastos recurrentes asociados. Para no perder el historial, primero migra esos datos a otra categoría existente. Una vez migrados, la categoría \\\"{name}\\\"se eliminará.",
-        "to": "A categoria \\\"{name}\\\" tem transações, orçamentos ou despesas recorrentes associados. Para não perder o histórico, migre esses dados para outra categoria existente. Depois de migrados, a categoria \\\"{name}\\\" será excluída."
+        "from": "La categoría \"{name}\"tiene movimientos, presupuestos o gastos recurrentes asociados. Para no perder el historial, primero migra esos datos a otra categoría existente. Una vez migrados, la categoría \"{name}\"se eliminará.",
+        "to": "A categoria \"{name}\" tem transações, orçamentos ou despesas recorrentes associados. Para não perder o histórico, migre esses dados para outra categoria existente. Depois de migrados, a categoria \"{name}\" será excluída."
       },
       "inversiones.migrar_category_destino_label": {
         "from": "Categoría destino",

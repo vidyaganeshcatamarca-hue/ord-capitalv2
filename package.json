@@ -12,6 +12,7 @@
     "i18n:status": "node scripts/i18n/status.mjs",
     "i18n:ledger": "node scripts/i18n/ledger.mjs",
     "i18n:delta": "node scripts/i18n/delta.mjs",
+    "i18n:apply-delta": "node scripts/i18n/apply-delta.mjs",
     "i18n:assemble": "node scripts/i18n/assemble.mjs",
     "i18n:check": "node scripts/check-i18n.mjs",
     "cap:add:android": "cap add android",

@@ -16,6 +16,7 @@
 // assembler.
 import { readFileSync, writeFileSync, existsSync, mkdirSync, rmSync } from 'node:fs'
 import path from 'node:path'
+import { readDictionary, placeholders } from './lib/dictionary.mjs'
 
 const ROOT = path.resolve('.')
 const SRC = path.join(ROOT, 'src/locales')
@@ -27,37 +28,6 @@ if (!TARGET_LANG) {
   console.error('usage: node scripts/i18n/delta.mjs <lang>')
   process.exit(1)
 }
-
-/** Reads a locale dictionary into { section: { key: value } }. */
-function readDictionary(file) {
-  const source = readFileSync(file, 'utf-8')
-  const sections = {}
-  const declRe = /export const (\w+)\s*=\s*\{/g
-  let m
-  while ((m = declRe.exec(source)) !== null) {
-    const bodyStart = m.index + m[0].length
-    let depth = 1
-    let j = bodyStart
-    while (j < source.length && depth > 0) {
-      const ch = source[j]
-      if (ch === '{') depth++
-      else if (ch === '}') depth--
-      j++
-    }
-    const body = source.slice(bodyStart, j - 1)
-    const entries = {}
-    const kv = /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(['"`])((?:[^\\]|\\.)*?)\2\s*,?/gm
-    let k
-    while ((k = kv.exec(body)) !== null) entries[k[1]] = k[3]
-    const dotted = /^\s*('[^']+')\s*:\s*(['"`])((?:[^\\]|\\.)*?)\2\s*,?/gm
-    let d
-    while ((d = dotted.exec(body)) !== null) entries[d[1].slice(1, -1)] = d[3]
-    sections[m[1]] = entries
-  }
-  return sections
-}
-
-const placeholders = (value) => [...String(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1])
 
 if (!existsSync(LEDGER)) {
   console.error(`No ledger at ${LEDGER}. Run: node scripts/i18n/ledger.mjs build`)
@@ -106,6 +76,19 @@ for (const [section, entries] of Object.entries(es)) {
   }
 }
 
+// The keys that were REMOVED from the Spanish: the translation has to go
+// with them. The ledger knows which ones they were, because it recorded
+// every key it ever saw.
+const removed = []
+for (const id of Object.keys(recorded)) {
+  const dot = id.indexOf('.')
+  if (dot < 0) continue
+  const section = id.slice(0, dot)
+  const key = id.slice(dot + 1)
+  if (es[section] && key in es[section]) continue
+  if (target[section] && key in target[section]) removed.push({ section, key, id })
+}
+
 const total = Array.from(work.values()).reduce((a, list) => a + list.length, 0)
 
 // ── The chunk files, in the shape the translators already know ───────
@@ -132,6 +115,12 @@ const report = {
   target: TARGET_LANG,
   source: SOURCE_LANG,
   total,
+  // Every key the delta promises to cover, so the apply step can tell what
+  // nobody translated.
+  keys: Array.from(work.entries())
+    .flatMap(([section, items]) => items.map((item) => `${section}.${item.key}`))
+    .concat(removed.map((r) => r.id)),
+  removed: removed.map((r) => r.id),
   sections,
   reasons: total
     ? Array.from(work.values())

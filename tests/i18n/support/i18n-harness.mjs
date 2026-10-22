@@ -88,9 +88,17 @@ export async function loadI18n() {
   }
 }
 
-/** Loads a locale dictionary by file name (`es`, `en`) with no alias needs. */
-export async function loadDictionary(name) {
+/**
+ * Loads a locale dictionary by file name (`es`, `en`) with no alias needs.
+ *
+ * `bust: true` re-reads the file even if the module was already imported:
+ * Node caches `import()` by URL, so without the buster a second load returns
+ * the state the file had at the first import. A test that writes to a
+ * dictionary needs the file as it is on disk.
+ */
+export async function loadDictionary(name, { bust = false } = {}) {
   installHooks()
-  const mod = await import(pathToFileURL(path.join(SRC, 'locales', `${name}.ts`)).href)
+  const url = pathToFileURL(path.join(SRC, 'locales', `${name}.ts`)).href
+  const mod = await import(bust ? `${url}?bust=${Date.now()}` : url)
   return mod
 }

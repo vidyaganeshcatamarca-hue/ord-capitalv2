@@ -8,6 +8,12 @@ dist
 *.bak
 *.rar
 .agents/
+!/.agents/
+.agents/*
+!/.agents/skills/
+.agents/skills/*
+!/.agents/skills/i18n-update/
+!/.agents/skills/i18n-update/SKILL.md
 .opencode/
 .superpowers/
 docs/
@@ -42,9 +48,11 @@ tests/i18n/*
 !tests/i18n/locale-follows-language.test.js
 !tests/i18n/onboarding-language.test.js
 !tests/i18n/translation-ledger.test.js
+!tests/i18n/translation-update.test.js
 !tests/i18n/delete-confirmation.test.js
 !tests/i18n/support/
 !tests/i18n/support/i18n-harness.mjs
+!tests/i18n/support/sandbox.mjs
 !tests/onboarding/
 tests/onboarding/*
 !tests/onboarding/country-catalog.test.js

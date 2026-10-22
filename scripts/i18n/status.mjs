@@ -17,43 +17,17 @@
 //
 // The report is what the incremental update reads: only the missing and the
 // stale keys need work, not the whole dictionary.
-import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs'
+//
+// It also reports the keys the translation still carries that the Spanish no
+// longer has: those are the leftovers of a key that was removed, and the
+// update has to take them out.
+import { writeFileSync, existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
+import { readDictionary, placeholders } from './lib/dictionary.mjs'
 
 const ROOT = path.resolve('.')
 const SRC = path.join(ROOT, 'src/locales')
 const SOURCE_LANG = 'es'
-
-/** Reads a locale dictionary into { section: { key: value } }. */
-function readDictionary(file) {
-  const source = readFileSync(file, 'utf-8')
-  const sections = {}
-  const declRe = /export const (\w+)\s*=\s*\{/g
-  let m
-  while ((m = declRe.exec(source)) !== null) {
-    const bodyStart = m.index + m[0].length
-    let depth = 1
-    let j = bodyStart
-    while (j < source.length && depth > 0) {
-      const ch = source[j]
-      if (ch === '{') depth++
-      else if (ch === '}') depth--
-      j++
-    }
-    const body = source.slice(bodyStart, j - 1)
-    const entries = {}
-    const kv = /^\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*:\s*(['"`])((?:[^\\]|\\.)*?)\2\s*,?/gm
-    let k
-    while ((k = kv.exec(body)) !== null) entries[k[1]] = k[3]
-    const dotted = /^\s*('[^']+')\s*:\s*(['"`])((?:[^\\]|\\.)*?)\2\s*,?/gm
-    let d
-    while ((d = dotted.exec(body)) !== null) entries[d[1].slice(1, -1)] = d[3]
-    sections[m[1]] = entries
-  }
-  return sections
-}
-
-const placeholders = (value) => [...String(value).matchAll(/\{(\w+)\}/g)].map((m) => m[1])
 
 const es = readDictionary(path.join(SRC, `${SOURCE_LANG}.ts`))
 
@@ -79,6 +53,7 @@ for (const lang of languages) {
   const missing = []
   const stale = []
   const drifted = []
+  const removed = []
   let translated = 0
 
   for (const [section, entries] of Object.entries(es)) {
@@ -107,15 +82,28 @@ for (const lang of languages) {
     }
   }
 
+  // The keys the translation still has and the Spanish does not: the
+  // leftovers of a key that was removed from the Spanish master.
+  for (const [section, entries] of Object.entries(dict)) {
+    for (const key of Object.keys(entries)) {
+      if (!(section in es) || !(key in es[section])) {
+        removed.push(`${section}.${key}`)
+      }
+    }
+  }
+
   report.languages[lang] = {
-    status: missing.length === 0 && drifted.length === 0 ? 'complete' : 'incomplete',
+    status:
+      missing.length === 0 && drifted.length === 0 && removed.length === 0 ? 'complete' : 'incomplete',
     total: report.sourceKeys,
     translated,
     missing: missing.length,
     drifted: drifted.length,
+    removed: removed.length,
     untranslated: missing.length + drifted.length,
     missingKeys: missing,
     driftedKeys: drifted,
+    removedKeys: removed,
   }
 }
 
@@ -125,11 +113,11 @@ lines.push('# Translation status')
 lines.push('')
 lines.push(`Source dictionary: \`${SOURCE_LANG}.ts\` (${report.sourceKeys} keys)`)
 lines.push('')
-lines.push('| Language | Translated | Missing | Placeholder drift | Complete |')
-lines.push('|---|---|---|---|---|')
+lines.push('| Language | Translated | Missing | Placeholder drift | Removed | Complete |')
+lines.push('|---|---|---|---|---|---|')
 for (const [lang, info] of Object.entries(report.languages)) {
   lines.push(
-    `| ${lang} | ${info.translated}/${info.total} | ${info.missing ?? 0} | ${info.drifted ?? 0} | ${info.status === 'complete' ? 'yes' : 'NO'} |`
+    `| ${lang} | ${info.translated}/${info.total} | ${info.missing ?? 0} | ${info.drifted ?? 0} | ${info.removed ?? 0} | ${info.status === 'complete' ? 'yes' : 'NO'} |`
   )
 }
 lines.push('')
@@ -147,6 +135,12 @@ for (const [lang, info] of Object.entries(report.languages)) {
     lines.push(`Placeholder drift (${info.driftedKeys.length}):`)
     for (const k of info.driftedKeys.slice(0, 40)) lines.push(`- \`${k}\``)
     if (info.driftedKeys.length > 40) lines.push(`- ... and ${info.driftedKeys.length - 40} more`)
+  }
+  if (info.removedKeys?.length) {
+    lines.push('')
+    lines.push(`Removed from the Spanish (${info.removedKeys.length}):`)
+    for (const k of info.removedKeys.slice(0, 40)) lines.push(`- \`${k}\``)
+    if (info.removedKeys.length > 40) lines.push(`- ... and ${info.removedKeys.length - 40} more`)
   }
   lines.push('')
 }

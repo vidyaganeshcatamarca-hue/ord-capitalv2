@@ -4,15 +4,22 @@
 //   node scripts/i18n/ledger.mjs check      what changed since the last translation
 //   node scripts/i18n/ledger.mjs build      record the current state
 //   node scripts/i18n/delta.mjs <lang>      the keys that language still owes
+//   node scripts/i18n/apply-delta.mjs <lang>  apply a translated delta to the dictionary
 //   node scripts/i18n/assemble.mjs <lang>   build src/locales/<lang>.ts from the chunks
 //
-// The daily loop, when the Spanish dictionary grows:
+// The daily loop, when the Spanish dictionary changes:
 //
-//   1. node scripts/i18n/ledger.mjs build    record the new Spanish as the base
-//   2. node scripts/i18n/delta.mjs en        the keys English still owes
-//   3. translate the chunks in scratch/en-delta-output/
-//   4. node scripts/i18n/assemble.mjs en     rebuild src/locales/en.ts
-//   5. repeat for every other language
+//   1. node scripts/i18n/ledger.mjs check      see what changed
+//   2. node scripts/i18n/delta.mjs <lang>      the keys that language still owes
+//   3. translate the chunks in scratch/<lang>-delta-output/
+//   4. node scripts/i18n/apply-delta.mjs <lang>  apply them to the dictionary
+//   5. node scripts/i18n/ledger.mjs build      record the new translations
+//   6. repeat for every other language
+//
+// Step 1 comes BEFORE step 5, and that order matters: `build` records the
+// Spanish as the base of every translation, so building before translating
+// would erase the record of what still needs work. The `build` command
+// refuses to run while a language owes keys, for exactly that reason.
 //
 // Step 2 is the point of the whole thing: it hands the translator only the
 // keys that are new or that the Spanish moved under, never the whole
@@ -51,13 +58,18 @@ lines.push('ORD Capital Personal — translation toolchain')
 lines.push('')
 lines.push(`Languages: ${languages.join(', ')}`)
 lines.push('')
-lines.push('The loop when the Spanish dictionary grows:')
+lines.push('The loop when the Spanish dictionary changes:')
 lines.push('')
-lines.push('  1. node scripts/i18n/ledger.mjs build      record the new Spanish as the base')
-lines.push('  2. node scripts/i18n/delta.mjs <lang>      the keys that language still owes')
+lines.push('  1. node scripts/i18n/ledger.mjs check        see what changed')
+lines.push('  2. node scripts/i18n/delta.mjs <lang>        the keys that language still owes')
 lines.push('  3. translate the chunks in scratch/<lang>-delta-output/')
-lines.push('  4. node scripts/i18n/assemble.mjs <lang>   rebuild src/locales/<lang>.ts')
-lines.push('  5. node scripts/i18n/ledger.mjs build      record the new translations')
+lines.push('  4. node scripts/i18n/apply-delta.mjs <lang>  apply them to the dictionary')
+lines.push('  5. node scripts/i18n/ledger.mjs build        record the new translations')
+lines.push('  6. repeat for every other language')
+lines.push('')
+lines.push('The order matters: `build` records the Spanish as the base of every')
+lines.push('translation, so building before translating would erase the record of')
+lines.push('what still needs work. `build` refuses to run while a language owes keys.')
 lines.push('')
 lines.push('To see where every language stands:')
 lines.push('')
