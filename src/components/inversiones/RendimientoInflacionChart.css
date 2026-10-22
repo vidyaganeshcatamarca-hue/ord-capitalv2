@@ -90,8 +90,8 @@
 }
 
 .rendimiento-chart-verdict--positive {
-  background: var(--green-dim, rgba(82, 183, 136, 0.12));
-  color: var(--green, #52B788);
+  background: var(--mint-dim);
+  color: var(--mint);
 }
 
 .rendimiento-chart-verdict--negative {
@@ -149,7 +149,7 @@
 }
 
 .rendimiento-chart-bar--positive {
-  background: linear-gradient(180deg, var(--mint), var(--green, #52B788));
+  background: linear-gradient(180deg, var(--mint), var(--mint));
 }
 
 .rendimiento-chart-bar--negative {

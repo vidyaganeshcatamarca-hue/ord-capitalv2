@@ -51,6 +51,7 @@ tests/inversiones/*
 !tests/inversiones/contrato-rpc.test.js
 !tests/inversiones/categoria-bloqueada.test.js
 !tests/inversiones/reglas-negocio.test.js
+!tests/inversiones/contraste-y-layout.test.js
 !tests/keypad_decimal_separator.test.js
 scratch/
 walkthrough.md

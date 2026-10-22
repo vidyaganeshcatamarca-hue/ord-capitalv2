@@ -6,7 +6,7 @@
   /* Owner bug (2026-10-20): never let the content's min-content width push
      the page sideways on a phone. */
   min-width: 0;
-  padding: var(--space-4);
+  padding: var(--space-4) 0;
 }
 
 .distribucion-header {

@@ -700,6 +700,19 @@ input::placeholder, textarea::placeholder {
   font-size: calc(12px * var(--font-scale));
   color: var(--coral);
 }
+/*
+ * Ayuda de un campo: texto de ejemplo o aclaración, debajo del input.
+ * B4 (2026-10-21): el ejemplo del nombre del activo estaba como placeholder y
+ * parecía un valor ya escrito. El placeholder simula contenido; la ayuda
+ * informa.
+ */
+.form-hint {
+  display: block;
+  margin-top: var(--space-1);
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-3);
+  line-height: 1.35;
+}
 
 /* ─── Gradient Header ─── */
 .gradient-hero {

@@ -2,7 +2,11 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--bg-2);
+  /* B1/B2 (2026-10-21): el fondo usaba var(--bg), que SOLO existe en :root
+     con un valor oscuro (#1c2128). El tema claro (warm-light) no lo
+     redefinie, asi que el header quedaba negro sobre la pagina crema y su
+     texto no se leia. var(--bg) si existe en los dos temas. */
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
   padding: var(--space-4) var(--space-5) var(--space-3);
   display: flex;
@@ -179,8 +183,8 @@
 }
 
 .rendimiento-real-verdict--positive {
-  background: var(--green-dim);
-  color: var(--green);
+  background: var(--mint-dim);
+  color: var(--mint);
 }
 
 .rendimiento-real-verdict--negative {

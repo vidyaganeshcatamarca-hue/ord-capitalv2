@@ -3,7 +3,7 @@
   /* Owner bug (2026-10-20): never let the content's min-content width push
      the page sideways on a phone. */
   min-width: 0;
-  padding: var(--space-5);
+  padding: var(--space-5) var(--space-4);
   border: 1px solid rgba(255, 230, 109, 0.18);
   border-radius: var(--radius-lg);
   background:
@@ -24,7 +24,7 @@
 
 .config-inflacion-eyebrow {
   margin: 0 0 var(--space-1);
-  color: var(--amber, #FFE66D);
+  color: var(--amber);
   font-size: calc(11px * var(--font-scale));
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -33,10 +33,22 @@
 
 .config-inflacion-title {
   margin: 0;
-  color: var(--text, #FFFFFF);
+  color: var(--text);
   font-family: var(--font-display);
   font-size: calc(22px * var(--font-scale));
   font-weight: 800;
+}
+
+/*
+ * B5 (2026-10-21): la ayuda de la fuente de inflacion salia en blanco sobre
+ * el fondo claro: no tenia estilo (era una clase nueva) y heredaba el color
+ * por defecto. Ahora usa el color de texto secundario del tema.
+ */
+.config-inflacion-help {
+  margin: var(--space-1) 0 0;
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+  line-height: 1.4;
 }
 
 .config-inflacion-pill {
@@ -66,7 +78,7 @@
 }
 
 .config-inflacion-label {
-  color: var(--text-2, #D1D7DE);
+  color: var(--text-2);
   font-size: calc(13px * var(--font-scale));
   font-weight: 700;
 }
@@ -77,8 +89,8 @@
   padding: 0 12px;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--bg, #1A1A1A);
-  color: var(--text, #FFFFFF);
+  background: var(--bg);
+  color: var(--text);
   font-size: calc(14px * var(--font-scale));
   font-weight: 700;
   outline: none;
@@ -103,7 +115,7 @@
   border: 1px solid rgba(255, 107, 107, 0.28);
   border-radius: var(--radius-md);
   background: rgba(255, 107, 107, 0.1);
-  color: var(--coral, #FF6B6B);
+  color: var(--coral);
   font-size: calc(13px * var(--font-scale));
   font-weight: 700;
 }

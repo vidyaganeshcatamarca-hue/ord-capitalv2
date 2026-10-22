@@ -311,7 +311,7 @@ export function InversionesPage() {
         {([
           ['cartera', 'tab_cartera'],
           ['track', 'tab_track_record'],
-          ['distribucion', 'tab_distribucion'],
+          ['distribucion', 'tab_grafico'],
           ['inflacion', 'tab_inflacion'],
         ] as const).map(([tab, labelKey]) => (
           <button

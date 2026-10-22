@@ -19,10 +19,24 @@
   min-width: 0;
   max-width: 1180px;
   margin: 0 auto;
-  min-height: 100vh;
+  /* B5 (2026-10-21): patron .config-page (el que el proyecto ya valido con
+     el dueno en Ajustes). min-height:100vh aqui hace que la caja crezca mas
+     alla de su padre con overflow-y:auto, y el padding-bottom final queda
+     inalcanzable: el ultimo elemento (el boton Guardar) queda escondido
+     atras del bottom nav. Este elemento ES el contenedor de scroll: flex:1
+     (de .page) ya lo llena. */
   padding-left: 16px;
   padding-right: 16px;
-  color: var(--text-primary, #FFFFFF);
+  /* El clearance del bottom nav va explicito: el FAB sobresale por encima de
+     la barra y el ultimo boton no puede quedar debajo. */
+  padding-bottom: var(--nav-clearance);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  /* El equivalente flex de 'align-content: start' evita que el espacio
+     sobrante se reparta entre las filas y empuje el contenido contra el nav. */
+  justify-content: flex-start;
 }
 
 @media (min-width: 768px) {
@@ -48,14 +62,14 @@
 .inversiones-page--loading p,
 .inversiones-error p {
   margin: 0;
-  color: var(--text-secondary, #A0A0A0);
+  color: var(--text-3);
 }
 
 .inversiones-spinner {
   width: 40px;
   height: 40px;
   border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--mint, var(--mint, #00B127));
+  border-top-color: var(--mint, var(--mint));
   border-radius: 50%;
   animation: inversiones-spin 0.8s linear infinite;
 }
@@ -76,14 +90,13 @@
 .inversiones-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
   margin: 0 0 20px;
   padding: 4px 0 8px;
   scrollbar-width: none;
-  /* B1 (2026-10-21): la tira se DESBORDA en movil y la cuarta pestana
-     ("Inflacion") quedaba cortada, lo que se lee como un error. Con 4
-     pestanas no entran en una fila de 360px: ahora envuelven a dos lineas y
-     todas se ven completas. */
+  /* B3 (2026-10-21): el dueno quiere las CUATRO pestañas en una sola linea.
+     Con 'Distribución' (11 letras) no entran en 360px: se achicaron los
+     botones (padding y tipografia) y la pestaña se renombró a 'Gráfico'. */
   max-width: 100%;
   min-width: 0;
 }
@@ -94,25 +107,26 @@
 
 .inversiones-tab {
   flex: 0 0 auto;
-  padding: 10px 14px;
-  border: 1px solid var(--border, #3D3D3D);
+  /* B3: botones mas compactos para que las 4 pestañas entren en una linea. */
+  padding: 8px 10px;
+  border: 1px solid var(--border);
   border-radius: 999px;
-  background: var(--surface, #2D2D2D);
-  color: var(--text-secondary, #A0A0A0);
-  font-size: calc(13px * var(--font-scale));
+  background: var(--surface);
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
 }
 
 .inversiones-tab:hover {
-  color: var(--text-primary, #FFFFFF);
-  border-color: var(--mint, var(--mint, #00B127));
+  color: var(--text);
+  border-color: var(--mint, var(--mint));
 }
 
 .inversiones-tab--active {
-  background: var(--mint, var(--mint, #00B127));
-  border-color: var(--mint, var(--mint, #00B127));
+  background: var(--mint, var(--mint));
+  border-color: var(--mint, var(--mint));
   color: #000000;
 }
 

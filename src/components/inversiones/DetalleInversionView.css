@@ -74,7 +74,7 @@
 
 .detalle-back-btn:hover {
   background: var(--surface-2);
-  border-color: var(--border-light, #3d444d);
+  border-color: var(--border-light);
 }
 
 .detalle-back-btn:focus-visible {
@@ -129,7 +129,7 @@
 
 .detalle-badge--var {
   background: var(--amber-dim, rgba(255, 183, 3, 0.12));
-  color: var(--amber, #FFB703);
+  color: var(--amber);
 }
 
 .detalle-badge--other {
@@ -157,15 +157,15 @@
 }
 
 .detalle-semaforo-dot[data-semaforo="green"] {
-  background: var(--green, #52B788);
+  background: var(--mint);
 }
 
 .detalle-semaforo-dot[data-semaforo="yellow"] {
-  background: var(--yellow, #FFC72C);
+  background: var(--amber);
 }
 
 .detalle-semaforo-dot[data-semaforo="red"] {
-  background: var(--red, #E63946);
+  background: var(--coral);
 }
 
 .detalle-semaforo-label {
@@ -242,7 +242,7 @@
 }
 
 .detalle-yield--positive {
-  color: var(--green, #52B788);
+  color: var(--mint);
 }
 
 .detalle-yield--negative {
@@ -368,7 +368,7 @@
 }
 
 .detalle-history-amount--positive {
-  color: var(--green, #52B788);
+  color: var(--mint);
 }
 
 .detalle-history-amount--negative {
@@ -392,7 +392,7 @@
   background: linear-gradient(
     180deg,
     rgba(13, 17, 23, 0) 0%,
-    var(--bg, #0d1117) 30%
+    var(--bg) 30%
   );
 }
 

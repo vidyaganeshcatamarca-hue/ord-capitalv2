@@ -169,10 +169,13 @@ export function NuevaInversionModal({
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               onBlur={() => setTouched(true)}
-              placeholder={t('placeholder_active_name')}
               disabled={submitting}
               required
             />
+            {/* B4 (2026-10-21): el ejemplo estaba como placeholder y parecia
+                un valor ya escrito. Ahora va debajo, chiquito, donde antes
+                aparecia el error de campo obligatorio. */}
+            <span className="form-hint">{t('placeholder_active_name')}</span>
             {showNombreError && (
               <span className="form-error">{t('field_required')}</span>
             )}

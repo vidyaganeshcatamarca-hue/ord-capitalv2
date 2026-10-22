@@ -1456,6 +1456,10 @@ export const inversiones = {
   tab_cartera: "Cartera",
   tab_track_record: "Historial",
   tab_distribucion: "Distribución",
+  // B3 (2026-10-21): la pestaña se renombró a "Gráfico" para que las CUATRO
+  // pestañas entren en una sola linea en un movil de 360px. La key vieja se
+  // queda porque el titulo interno de la vista la sigue usando.
+  tab_grafico: "Gráfico",
   tab_inflacion: "Inflación",
 
   // Empty state

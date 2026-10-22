@@ -94,7 +94,7 @@ Cuatro pestañas:
 |---|---|
 | **Cartera** | ¿Qué tengo afuera ahora mismo? |
 | **Historial** | ¿Qué liquidé y cómo me fue? |
-| **Distribución** | ¿Cómo está repartida mi plata? |
+| **Gráfico** | ¿Cómo está repartida mi plata? |
 | **Inflación** | ¿Cómo se calcula mi rendimiento real? |
 
 ### 4.3 El botón "Nueva Inversión"
@@ -111,8 +111,9 @@ Es el corazón del módulo. Al presionarlo se abre un formulario con cinco cosas
 llenás:
 
 1. **Nombre del activo** — cómo lo querés llamar. Es libre: "Plazo Fijo Galicia",
-   "Bitcoin", "GGAL", "Fondo Común". Este texto es tuyo y el módulo nunca lotraduce
-   ni lo modifica.
+   "Bitcoin", "GGAL", "Fondo Común". Este texto es tuyo y el módulo nunca lo traduce
+   ni lo modifica. Debajo del campo hay un ejemplo en chiquito (no un texto
+   precargado: el campo arranca vacío).
 2. **Tipo de activo** — Plazo Fijo, Cripto, Cedear, Acciones u Otro.
 3. **Tasa Anual (TNA)** — solo si es Plazo Fijo, y es obligatoria. Es el interés
    anual pactado (por ejemplo 110% anual). **Si no la ponés, el módulo no te deja
@@ -275,9 +276,9 @@ un gráfico de barras que compara, de un vistazo, **tu rendimiento nominal contr
 rendimiento real**. Es la forma más rápida de ver la brecha entre "gané 12%" y
 "gané 12%, pero la inflación se comió 30%".
 
-### 5.8 La Distribución: cómo está repartida tu plata
+### 5.8 El Gráfico: cómo está repartida tu plata
 
-La pestaña **Distribución** responde "¿cómo tengo parado el riesgo?".
+La pestaña **Gráfico** (antes "Distribución") responde "¿cómo tengo parado el riesgo?".
 
 - Un **gráfico de torta (donut)** con el reparto por tipo de activo.
 - Una **tabla** debajo con, por tipo: cantidad de inversiones, valor total y

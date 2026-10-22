@@ -94,7 +94,7 @@
   gap: 8px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: var(--bg, #1A1A1A);
+  background: var(--bg);
   border: 1px solid var(--border);
   color: var(--text-secondary, var(--text-3));
   cursor: pointer;
@@ -123,7 +123,7 @@
   border-radius: 10px;
   background: rgba(255, 230, 109, 0.08);
   border: 1px solid rgba(255, 230, 109, 0.2);
-  color: var(--amber, #FFE66D);
+  color: var(--amber);
   font-size: calc(12px * var(--font-scale));
   line-height: 1.45;
 }
