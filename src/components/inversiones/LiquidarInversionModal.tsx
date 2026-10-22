@@ -176,7 +176,11 @@ export function LiquidarInversionModal({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="liquidar-inversion-modal-form">
+        <form
+          id="liquidar-inversion-form"
+          onSubmit={handleSubmit}
+          className="liquidar-inversion-modal-form"
+        >
           <div className="form-group">
             <label className="form-label">{t('label_type')}</label>
             <div className="liquidar-inversion-toggle-group">
@@ -293,24 +297,29 @@ export function LiquidarInversionModal({
             )}
           </div>
 
-          <div className="liquidar-inversion-modal-actions">
-            <button
-              type="button"
-              className="btn btn-ghost font-semibold"
-              onClick={onClose}
-              disabled={submitting}
-            >
-              {t('btn_cancel')}
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary font-semibold"
-              disabled={!isValid || submitting}
-            >
-              {submitting ? t('loading') : t('btn_save')}
-            </button>
-          </div>
         </form>
+
+        {/* S9: las acciones viven FUERA del form (que es el scroller) para
+            que "Guardar" quede siempre visible en el teléfono. El botón
+            sigue submits el form gracias al atributo form="...". */}
+        <div className="liquidar-inversion-modal-actions">
+          <button
+            type="button"
+            className="btn btn-ghost font-semibold"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            {t('btn_cancel')}
+          </button>
+          <button
+            type="submit"
+            form="liquidar-inversion-form"
+            className="btn btn-primary font-semibold"
+            disabled={!isValid || submitting}
+          >
+            {submitting ? t('loading') : t('btn_save')}
+          </button>
+        </div>
       </div>
     </div>
   )

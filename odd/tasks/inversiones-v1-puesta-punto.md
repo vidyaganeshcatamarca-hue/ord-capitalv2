@@ -63,6 +63,17 @@ hecho; origin/main está 537 commits atrás).
   módulo completo no entra en pantalla (header, pestañas y estado vacío se salen por
   la derecha); el botón "Ver Inversiones" de Supervivencia llevaba a billeteras; en
   Actividad Reciente aparece la key cruda `investment_prefix`.
+- **S9** (acciones de los modales siempre accesibles, 2026-10-20, L7, medido con
+  EgoLite en modo celular real — Pixel 7, 412x915): en los tres modales del módulo
+  (Nueva Inversión, Actualizar Valor, Liquidar) las acciones están al FINAL del
+  scroll dentro de la card (`max-height: 90vh; overflow-y: auto`), así que el botón
+  "Guardar" queda fuera de la pantalla hasta que el usuario scrollea dentro del
+  modal. Medido en "Nueva Inversión": card `scrollHeight` 867 vs `clientHeight` 822
+  (45px de scroll), botón Guardar en `top: 895 / bottom: 940` con viewport de 915 →
+  25px debajo del fold; recién tras scrollear queda en `bottom: 895`, pegado al
+  borde inferior. Con el teclado abierto (el modal tiene inputs) el botón es
+  inalcanzable. Requisito: las acciones quedan fijas al pie del modal, siempre
+  visibles, y solo los campos scrollean.
 
 ## Tasks
 
@@ -77,6 +88,9 @@ hecho; origin/main está 537 commits atrás).
 | T7 | S6.6, S6.7 | Front: 18 keys i18n en `src/locales/es.ts` (sección inversiones) + resolver de labels `key: valor` (`src/lib/inversionesLabels.ts`) cableado en `translateDetalle` (billetera, Home, detalle) | inline | `5412071` |
 | T8 | S6.8 | Front: `ConfigInflacionView` precarga país+fuente vía T5; el pill refleja la fuente real (o "sin configurar") | inline | `549f709` |
 | T9 | S2 | Verificación: test de contrato front↔SQL (9 tests, con mutación probada), postcheck de deploy, checklist de estreno manual para el dueño | inline | `86aad03` |
+| T10 | S8 | Front: la página y el header del módulo entran en la pantalla del teléfono; Supervivencia enlaza a `/inversiones`; en modo claro el header deja de ser negro; las cuatro pestañas entran en una línea; "Distribución" pasa a llamarse "Gráfico"; el ejemplo del nombre del activo pasa a ser texto de ayuda debajo del campo | inline | `ab6d82e`, `4efffb2` |
+| T11 | S7 | Categoría de Inversiones intocable: filtro en Categorías, triggers en backend (no renombrar, no borrar, no subcategorías, no movimientos manuales) y key/unicidad propias | inline | `e7ca268`, `f86b234` |
+| T12 | S9 | Front: en los tres modales del módulo, las acciones (Cancelar/Guardar) quedan fijas al pie y siempre visibles; solo los campos scrollean dentro del modal | inline | (pendiente) |
 
 ## Checklist de estreno (para el dueño, después del deploy)
 

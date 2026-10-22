@@ -22,11 +22,13 @@
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
-  overflow-y: auto;
+  /* S9: la card NO scrollea. Scrollea el form (los campos) y las acciones
+     quedan fijas al pie, siempre visibles en el teléfono. */
+  overflow: hidden;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 20px 20px 0 0;
-  padding: 20px;
+  padding: 20px 20px 0;
   box-shadow: var(--shadow-xl);
   display: flex;
   flex-direction: column;
@@ -45,6 +47,7 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 4px;
+  flex: 0 0 auto;
 }
 
 .liquidar-inversion-modal-title {
@@ -111,6 +114,12 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
+  /* S9: el form es el scroller. min-height: 0 le permite encogerse dentro
+     de la card para que el scroll quede dentro del modal. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 4px;
 }
 
 .liquidar-inversion-toggle-group {
@@ -190,6 +199,11 @@
   display: flex;
   gap: 12px;
   margin-top: 4px;
+  /* S9: fijas al pie del modal. No scrollean ni se encogen. */
+  flex: 0 0 auto;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 12px 0 calc(20px + env(safe-area-inset-bottom));
 }
 
 .liquidar-inversion-modal-actions .btn {

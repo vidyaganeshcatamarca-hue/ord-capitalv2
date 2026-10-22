@@ -161,7 +161,11 @@ export function NuevaInversionModal({
           </button>
         </header>
 
-        <form onSubmit={handleSubmit} className="nueva-inversion-modal-form">
+        <form
+          id="nueva-inversion-form"
+          onSubmit={handleSubmit}
+          className="nueva-inversion-modal-form"
+        >
           <div className="form-group">
             <label className="form-label">{t('label_active_name')}</label>
             <input
@@ -297,25 +301,29 @@ export function NuevaInversionModal({
           <p className="nueva-inversion-modal-disclaimer">
             {t('disclaimer_new_investment')}
           </p>
-
-          <div className="nueva-inversion-modal-actions">
-            <button
-              type="button"
-              className="btn btn-ghost font-semibold"
-              onClick={onClose}
-              disabled={submitting}
-            >
-              {t('btn_cancel')}
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary font-semibold"
-              disabled={!isValid || submitting}
-            >
-              {submitting ? t('loading') : t('btn_save')}
-            </button>
-          </div>
         </form>
+
+        {/* S9: las acciones viven FUERA del form (que es el scroller) para
+            que "Guardar" quede siempre visible en el teléfono. El botón
+            sigue submits el form gracias al atributo form="...". */}
+        <div className="nueva-inversion-modal-actions">
+          <button
+            type="button"
+            className="btn btn-ghost font-semibold"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            {t('btn_cancel')}
+          </button>
+          <button
+            type="submit"
+            form="nueva-inversion-form"
+            className="btn btn-primary font-semibold"
+            disabled={!isValid || submitting}
+          >
+            {submitting ? t('loading') : t('btn_save')}
+          </button>
+        </div>
       </div>
     </div>
   )
