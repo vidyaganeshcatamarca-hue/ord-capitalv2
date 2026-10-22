@@ -1,13 +1,16 @@
 .rendimiento-chart {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5, 20px);
+  gap: var(--space-5);
   width: 100%;
+  /* Owner bug (2026-10-20): never let the content's min-content width push
+     the page sideways on a phone. */
+  min-width: 0;
   min-height: 360px;
-  padding: var(--space-5, 20px);
-  background: var(--surface, #161b22);
-  border: 1px solid var(--border, #30363d);
-  border-radius: var(--radius-lg, 16px);
+  padding: var(--space-5);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
 .rendimiento-chart--loading,
@@ -20,12 +23,12 @@
 .rendimiento-chart-skeleton {
   width: 100%;
   height: 280px;
-  border-radius: var(--radius-lg, 16px);
+  border-radius: var(--radius-lg);
   background: linear-gradient(
     90deg,
-    var(--surface, #161b22) 0%,
-    var(--surface-2, #21262d) 50%,
-    var(--surface, #161b22) 100%
+    var(--surface) 0%,
+    var(--surface-2) 50%,
+    var(--surface) 100%
   );
   background-size: 200% 100%;
   animation: rendimiento-chart-shimmer 1.4s ease-in-out infinite;
@@ -39,8 +42,8 @@
 .rendimiento-chart-empty-title,
 .rendimiento-chart-title {
   margin: 0;
-  color: var(--text, #e6edf3);
-  font-family: var(--font-display, system-ui, sans-serif);
+  color: var(--text);
+  font-family: var(--font-display);
   font-size: calc(18px * var(--font-scale));
   font-weight: 700;
 }
@@ -48,8 +51,8 @@
 .rendimiento-chart-empty-text,
 .rendimiento-chart-cta-note,
 .rendimiento-chart-source {
-  margin: var(--space-2, 8px) 0 0;
-  color: var(--text-3, #8b949e);
+  margin: var(--space-2) 0 0;
+  color: var(--text-3);
   font-size: calc(14px * var(--font-scale));
 }
 
@@ -58,11 +61,11 @@
   align-items: center;
   justify-content: center;
   max-width: 520px;
-  padding: var(--space-3, 12px) var(--space-4, 16px);
+  padding: var(--space-3) var(--space-4);
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  border: 1px solid var(--mint, var(--mint, #00B127));
-  border-radius: var(--radius-md, 12px);
-  color: var(--mint, var(--mint, #00B127));
+  border: 1px solid var(--mint);
+  border-radius: var(--radius-md);
+  color: var(--mint);
   font-weight: 600;
 }
 
@@ -70,7 +73,7 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
 }
 
 .rendimiento-chart-verdict {
@@ -78,7 +81,7 @@
   align-items: center;
   justify-content: center;
   padding: 6px 12px;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   font-size: calc(11px * var(--font-scale));
   font-weight: 800;
   text-transform: uppercase;
@@ -87,23 +90,23 @@
 }
 
 .rendimiento-chart-verdict--positive {
-  background: var(--green-dim, rgba(82, 183, 136, 0.12));
-  color: var(--green, #52B788);
+  background: var(--mint-dim);
+  color: var(--mint);
 }
 
 .rendimiento-chart-verdict--negative {
   background: var(--coral-dim, rgba(230, 57, 70, 0.12));
-  color: var(--coral, #E63946);
+  color: var(--coral);
 }
 
 .rendimiento-chart-bars {
   position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(120px, 1fr));
-  gap: var(--space-5, 20px);
+  gap: var(--space-5);
   align-items: end;
   min-height: 240px;
-  padding: var(--space-5, 20px) var(--space-4, 16px) 0;
+  padding: var(--space-5) var(--space-4) 0;
 }
 
 .rendimiento-chart-axis {
@@ -112,7 +115,7 @@
   right: 0;
   top: 50%;
   height: 1px;
-  background: var(--border, #30363d);
+  background: var(--border);
 }
 
 .rendimiento-chart-bar-card {
@@ -121,7 +124,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-2, 8px);
+  gap: var(--space-2);
   min-width: 0;
 }
 
@@ -132,33 +135,33 @@
   width: 100%;
   max-width: 120px;
   height: 180px;
-  padding: 0 var(--space-3, 12px);
+  padding: 0 var(--space-3);
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid var(--border, #30363d);
-  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   overflow: hidden;
 }
 
 .rendimiento-chart-bar {
   width: 100%;
-  border-radius: var(--radius-sm, 8px) var(--radius-sm, 8px) 0 0;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   min-height: 8%;
 }
 
 .rendimiento-chart-bar--positive {
-  background: linear-gradient(180deg, var(--mint, var(--mint, #00B127)), var(--green, #52B788));
+  background: linear-gradient(180deg, var(--mint), var(--mint));
 }
 
 .rendimiento-chart-bar--negative {
-  background: linear-gradient(180deg, var(--coral, #E63946), #8b1e2d);
+  background: linear-gradient(180deg, var(--coral), #8b1e2d);
 }
 
 .rendimiento-chart-bar--zero {
-  background: var(--text-3, #8b949e);
+  background: var(--text-3);
 }
 
 .rendimiento-chart-bar-value {
-  color: var(--text, #e6edf3);
+  color: var(--text);
   font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
   font-size: calc(20px * var(--font-scale));
   font-weight: 800;
@@ -167,7 +170,7 @@
 
 .rendimiento-chart-bar-label,
 .rendimiento-chart-footer-label {
-  color: var(--text-3, #8b949e);
+  color: var(--text-3);
   font-size: calc(12px * var(--font-scale));
   font-weight: 700;
   text-align: center;
@@ -179,13 +182,13 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: var(--space-2, 8px);
-  padding-top: var(--space-3, 12px);
-  border-top: 1px solid var(--border, #30363d);
+  gap: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--border);
 }
 
 .rendimiento-chart-footer-value {
-  color: var(--text, #e6edf3);
+  color: var(--text);
   font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
   font-size: calc(14px * var(--font-scale));
   font-weight: 800;
@@ -193,7 +196,7 @@
 
 @media (max-width: 560px) {
   .rendimiento-chart {
-    padding: var(--space-4, 16px);
+    padding: var(--space-4);
   }
 
   .rendimiento-chart-header {
@@ -205,7 +208,7 @@
   }
 
   .rendimiento-chart-bars {
-    gap: var(--space-3, 12px);
+    gap: var(--space-3);
     padding-left: 0;
     padding-right: 0;
   }

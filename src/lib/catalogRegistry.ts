@@ -47,7 +47,7 @@ import { t } from '@/locales/i18n'
  *  - on-demand RPC/trigger rows: `no_detail`
  *    (`fn_crear_subcuenta_predeterminada`), `cat_card_diff`
  *    (`fn_registrar_ajuste_diferencia_tarjeta`,
- *    `fn_registrar_pago_tarjeta_multi`) and `cat_investments`
+ *    `fn_registrar_pago_tarjeta_multi`) and `cat_investments_portfolio`
  *    (`fn_crear_inversion`).
  */
 const SYSTEM_CATEGORY_NAMES: readonly string[] = [
@@ -72,6 +72,11 @@ const SYSTEM_CATEGORY_NAMES: readonly string[] = [
   'cat_finance_taxes',
   'cat_tech_electro',
   // Created on demand by RPCs.
+  'cat_investments_portfolio',
+  // Legacy name of the row above, before the key was made unique so it could
+  // not compete with a user category literally named "Investments". Rows
+  // created before the rename still carry it; the rename migration (84) moves
+  // them, but the key stays registered for the window in between.
   'cat_investments',
   'cat_tithe',
   // Legacy seed (rows already stored for users created before the seed was

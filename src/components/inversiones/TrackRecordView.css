@@ -1,29 +1,32 @@
 .track-record-view {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
   width: 100%;
-  padding: var(--space-4, 16px);
+  /* Owner bug (2026-10-20): never let the content's min-content width push
+     the page sideways on a phone. */
+  min-width: 0;
+  padding: var(--space-4) 0;
 }
 
 .track-record-view-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
 }
 
 .track-record-view-title {
   margin: 0;
-  color: var(--text, #e6edf3);
-  font-family: var(--font-display, system-ui, sans-serif);
+  color: var(--text);
+  font-family: var(--font-display);
   font-size: calc(22px * var(--font-scale));
   font-weight: 800;
 }
 
 .track-record-view-subtitle {
-  margin: var(--space-1, 4px) 0 0;
-  color: var(--text-3, #8b949e);
+  margin: var(--space-1) 0 0;
+  color: var(--text-3);
   font-size: calc(14px * var(--font-scale));
 }
 
@@ -32,39 +35,39 @@
   align-items: center;
   gap: 4px;
   padding: 4px;
-  background: var(--surface, #161b22);
-  border: 1px solid var(--border, #30363d);
-  border-radius: var(--radius-full, 9999px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
 .track-record-view-tab {
   border: none;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   padding: 8px 14px;
   background: transparent;
-  color: var(--text-3, #8b949e);
+  color: var(--text-3);
   cursor: pointer;
-  font-family: var(--font-body, system-ui, sans-serif);
+  font-family: var(--font-body);
   font-size: calc(13px * var(--font-scale));
   font-weight: 700;
-  transition: background var(--transition-fast, 150ms ease),
-              color var(--transition-fast, 150ms ease);
+  transition: background var(--transition-fast),
+              color var(--transition-fast);
   white-space: nowrap;
 }
 
 .track-record-view-tab:hover {
-  color: var(--text, #e6edf3);
+  color: var(--text);
 }
 
 .track-record-view-tab:focus-visible {
-  outline: 2px solid var(--mint, var(--mint, #00B127));
+  outline: 2px solid var(--mint);
   outline-offset: 2px;
 }
 
 .track-record-view-tab--active {
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint, var(--mint, #00B127));
+  color: var(--mint);
 }
 
 .track-record-view-panel {
@@ -73,7 +76,7 @@
 
 @media (max-width: 640px) {
   .track-record-view {
-    padding: var(--space-3, 12px);
+    padding: var(--space-3);
   }
 
   .track-record-view-header {

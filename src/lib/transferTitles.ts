@@ -7,6 +7,10 @@
 // Vite aliases (`@/...`) nor `.js`-to-`.ts` rewrites, so this file must stay
 // free of every import. Keep React, the DOM and Supabase out of here.
 //
+// NOTE: this file imports the sibling pure module `./inversionesLabels.ts`
+// (also import-free) to resolve investment movement titles — that import is
+// relative and type stripping keeps it working under the test runner.
+//
 // Why this module exists: the backend used to stamp a fixed CASE into
 // fn_registrar_movimiento_caja / fn_aprobar_cuarentena_v2 that only knew the
 // pair local<->USD ('transfer_compra_dolares' / 'transfer_venta_dolares') and
@@ -23,6 +27,8 @@
 // returned JSON string {"key","params"} carries the ISO CODE as `moneda`; the
 // caller resolves the human name with currencyName(code, lang). See
 // renderTransferDetalle in the renderer side.
+
+import { splitInversionDetalle } from './inversionesLabels.ts'
 
 const ENTRE_CUENTAS = 'transfer_entre_cuentas'
 const COMPRA_DOLARES = 'transfer_compra_dolares'
@@ -89,7 +95,18 @@ export function translateDetalle(
 ): string {
   const value = String(detalle ?? '')
   if (!value) return ''
-  if (!value.startsWith('{')) return translate(value, {})
+  if (!value.startsWith('{')) {
+    // Investment movements arrive as 'key: value' (the backend writes
+    // 'liquidation_gain: GGAL'). They are NOT a plain i18n key: translating
+    // them as one printed the raw 'liquidation_gain: GGAL' on screen.
+    const inversion = splitInversionDetalle(value)
+    if (inversion) {
+      const label = translate(inversion.key, {})
+      if (!label) return value
+      return `${label}: ${inversion.value}`
+    }
+    return translate(value, {})
+  }
   return parseTransferDetalle(value, translate)
 }
 

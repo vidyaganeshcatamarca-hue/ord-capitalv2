@@ -309,7 +309,7 @@ export function SupervivenciaPage() {
       )}
 
       {vista === 'licuadora' && licuadora && (
-        <LicuadoraDetalle licuadora={licuadora} onIrAInversiones={() => navigate('/billeteras')} />
+        <LicuadoraDetalle licuadora={licuadora} onIrAInversiones={() => navigate('/inversiones')} />
       )}
 
       {vista === 'radar' && (

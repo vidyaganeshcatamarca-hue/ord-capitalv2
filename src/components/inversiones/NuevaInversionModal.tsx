@@ -71,9 +71,19 @@ export function NuevaInversionModal({
       const inicial = localCurrency || monedasOptions[0] || ''
       if (inicial) setMoneda(inicial)
     }
+    // La billetera de origen se elige sola solo si hay una de la moneda: la
+    // que tenga MAS saldo (la que puede cubrir la inversion). Si no hay
+    // ninguna, el usuario tiene que crearla antes.
     if (moneda) {
-      const mismaMoneda = billeteras.find((b) => b.moneda === moneda)
-      if (mismaMoneda) setBilleteraId(String(mismaMoneda.billetera_id))
+      const candidatas = billeteras
+        .filter((b) => b.moneda === moneda)
+        .sort((a, b) => Number(b.saldo) - Number(a.saldo))
+      const actual = candidatas.find((b) => String(b.billetera_id) === billeteraId)
+      if (actual) {
+        setBilleteraId(String(actual.billetera_id))
+      } else if (candidatas.length > 0) {
+        setBilleteraId(String(candidatas[0].billetera_id))
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen, billeteras, moneda, localCurrency, monedasOptions])
@@ -83,7 +93,21 @@ export function NuevaInversionModal({
   const nombreOk = nombre.trim().length > 0
   const montoOk = montoNum > 0
   const tasaOk = tipo !== 'plazo_fijo' || tasaNum > 0
-  const billeteraOk = billeteraId !== ''
+
+  // B2 (2026-10-21): solo se ofrecen billeteras de la moneda elegida Y con
+  // saldo suficiente para el monto. Antes se listaban todas las de la moneda
+  // y el backend no validaba el saldo: se podia invertir 50.000 con 1.679 en
+  // la cuenta y la billetera quedaba en negativo.
+  const billeterasDeLaMoneda = billeteras.filter((b) => b.moneda === moneda)
+  const billeterasElegibles = montoNum > 0
+    ? billeterasDeLaMoneda.filter((b) => Number(b.saldo) >= montoNum)
+    : billeterasDeLaMoneda
+  const billeteraElegibleActual = billeteraId
+    ? billeterasElegibles.find((b) => String(b.billetera_id) === billeteraId) ?? null
+    : null
+  // Sin monto escrito todavia no hay saldo que comparar: no hay error.
+  const hayBilleterasDeLaMoneda = billeterasDeLaMoneda.length > 0
+  const billeteraOk = billeteraId !== '' && billeteraElegibleActual !== null
   const isValid = nombreOk && montoOk && tasaOk && billeteraOk
 
   const showNombreError = touched && !nombreOk
@@ -137,7 +161,11 @@ export function NuevaInversionModal({
           </button>
         </header>
 
-        <form onSubmit={handleSubmit} className="nueva-inversion-modal-form">
+        <form
+          id="nueva-inversion-form"
+          onSubmit={handleSubmit}
+          className="nueva-inversion-modal-form"
+        >
           <div className="form-group">
             <label className="form-label">{t('label_active_name')}</label>
             <input
@@ -145,10 +173,13 @@ export function NuevaInversionModal({
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               onBlur={() => setTouched(true)}
-              placeholder={t('placeholder_active_name')}
               disabled={submitting}
               required
             />
+            {/* B4 (2026-10-21): el ejemplo estaba como placeholder y parecia
+                un valor ya escrito. Ahora va debajo, chiquito, donde antes
+                aparecia el error de campo obligatorio. */}
+            <span className="form-hint">{t('placeholder_active_name')}</span>
             {showNombreError && (
               <span className="form-error">{t('field_required')}</span>
             )}
@@ -245,45 +276,54 @@ export function NuevaInversionModal({
             <select
               value={billeteraId}
               onChange={(e) => setBilleteraId(e.target.value)}
-              disabled={submitting || billeteras.length === 0}
+              disabled={submitting || billeterasElegibles.length === 0}
               required
             >
               <option value="" disabled>{t('placeholder_select_wallet')}</option>
-              {billeteras
-                .filter((b) => b.moneda === moneda)
-                .map((b) => (
-                  <option key={b.billetera_id} value={b.billetera_id}>
-                    {t(b.nombre)} — {formatCurrency(b.saldo, b.moneda)}
-                  </option>
-                ))}
+              {billeteraId && !billeteraElegibleActual && (
+                // La billetera elegida quedo sin saldo (o cambio el monto): se
+                // avisa en vez de dejarla seleccionada a ciegas.
+                <option value={billeteraId}>
+                  {t('label_source_wallet')} — {t('error_wallet_insufficient_balance')}
+                </option>
+              )}
+              {billeterasElegibles.map((b) => (
+                <option key={b.billetera_id} value={b.billetera_id}>
+                  {t(b.nombre)} — {formatCurrency(b.saldo, b.moneda)}
+                </option>
+              ))}
             </select>
-            {billeteras.filter((b) => b.moneda === moneda).length === 0 && (
-              <span className="form-error">{t('error_no_wallets_for_currency')}</span>
+            {billeteraElegibleActual === null && (
+              <span className="form-error">{t('error_no_wallets_with_balance')}</span>
             )}
           </div>
 
           <p className="nueva-inversion-modal-disclaimer">
             {t('disclaimer_new_investment')}
           </p>
-
-          <div className="nueva-inversion-modal-actions">
-            <button
-              type="button"
-              className="btn btn-ghost font-semibold"
-              onClick={onClose}
-              disabled={submitting}
-            >
-              {t('btn_cancel')}
-            </button>
-            <button
-              type="submit"
-              className="btn btn-primary font-semibold"
-              disabled={!isValid || submitting}
-            >
-              {submitting ? t('loading') : t('btn_save')}
-            </button>
-          </div>
         </form>
+
+        {/* S9: las acciones viven FUERA del form (que es el scroller) para
+            que "Guardar" quede siempre visible en el teléfono. El botón
+            sigue submits el form gracias al atributo form="...". */}
+        <div className="nueva-inversion-modal-actions">
+          <button
+            type="button"
+            className="btn btn-ghost font-semibold"
+            onClick={onClose}
+            disabled={submitting}
+          >
+            {t('btn_cancel')}
+          </button>
+          <button
+            type="submit"
+            form="nueva-inversion-form"
+            className="btn btn-primary font-semibold"
+            disabled={!isValid || submitting}
+          >
+            {submitting ? t('loading') : t('btn_save')}
+          </button>
+        </div>
       </div>
     </div>
   )

@@ -1,45 +1,48 @@
 .distribucion-view {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
   width: 100%;
-  padding: var(--space-4, 16px);
+  /* Owner bug (2026-10-20): never let the content's min-content width push
+     the page sideways on a phone. */
+  min-width: 0;
+  padding: var(--space-4) 0;
 }
 
 .distribucion-header {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1, 4px);
+  gap: var(--space-1);
 }
 
 .distribucion-title {
   margin: 0;
-  color: var(--text, #e6edf3);
-  font-family: var(--font-display, system-ui, sans-serif);
+  color: var(--text);
+  font-family: var(--font-display);
   font-size: calc(22px * var(--font-scale));
   font-weight: 800;
 }
 
 .distribucion-subtitle {
   margin: 0;
-  color: var(--text-3, #8b949e);
+  color: var(--text-3);
   font-size: calc(14px * var(--font-scale));
 }
 
 .distribucion-card,
 .distribucion-view--loading,
 .distribucion-view--empty {
-  background: var(--surface, #161b22);
-  border: 1px solid var(--border, #30363d);
-  border-radius: var(--radius-lg, 16px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
 }
 
 .distribucion-card {
   display: grid;
   grid-template-columns: minmax(220px, 0.72fr) minmax(0, 1.28fr);
-  gap: var(--space-5, 20px);
+  gap: var(--space-5);
   align-items: center;
-  padding: var(--space-5, 20px);
+  padding: var(--space-5);
 }
 
 .distribucion-chart-panel {
@@ -62,7 +65,7 @@
 }
 
 .distribucion-donut-label {
-  fill: var(--text, #e6edf3);
+  fill: var(--text);
   font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
   font-size: calc(28px * var(--font-scale));
   font-weight: 800;
@@ -82,12 +85,12 @@
 .distribucion-table th,
 .distribucion-table td {
   padding: 12px 10px;
-  border-bottom: 1px solid var(--border, #30363d);
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
 .distribucion-table th {
-  color: var(--text-3, #8b949e);
+  color: var(--text-3);
   font-size: calc(11px * var(--font-scale));
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -96,7 +99,7 @@
 }
 
 .distribucion-table td {
-  color: var(--text-2, #d1d7de);
+  color: var(--text-2);
   font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
   font-size: calc(14px * var(--font-scale));
   font-weight: 700;
@@ -121,16 +124,16 @@
 .distribucion-type-cell {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2, 8px);
-  color: var(--text, #e6edf3);
-  font-family: var(--font-body, system-ui, sans-serif);
+  gap: var(--space-2);
+  color: var(--text);
+  font-family: var(--font-body);
   font-weight: 700;
 }
 
 .distribucion-type-dot {
   width: 10px;
   height: 10px;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
@@ -149,17 +152,17 @@
 .distribucion-view--loading {
   display: grid;
   grid-template-columns: minmax(180px, 0.72fr) minmax(0, 1.28fr);
-  gap: var(--space-5, 20px);
+  gap: var(--space-5);
   align-items: center;
-  padding: var(--space-5, 20px);
+  padding: var(--space-5);
 }
 
 .distribucion-skeleton {
   background: linear-gradient(
     90deg,
-    var(--surface, #161b22) 0%,
-    var(--surface-2, #21262d) 50%,
-    var(--surface, #161b22) 100%
+    var(--surface) 0%,
+    var(--surface-2) 50%,
+    var(--surface) 100%
   );
   background-size: 200% 100%;
   animation: distribucion-shimmer 1.4s ease-in-out infinite;
@@ -169,18 +172,18 @@
   width: 180px;
   height: 180px;
   margin: 0 auto;
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
 }
 
 .distribucion-skeleton-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3, 12px);
+  gap: var(--space-3);
 }
 
 .distribucion-skeleton--row {
   height: 44px;
-  border-radius: var(--radius-md, 12px);
+  border-radius: var(--radius-md);
 }
 
 .distribucion-view--empty {
@@ -189,21 +192,21 @@
   align-items: center;
   justify-content: center;
   min-height: 300px;
-  padding: var(--space-6, 24px);
+  padding: var(--space-6);
   text-align: center;
 }
 
 .distribucion-empty-title {
-  margin: var(--space-4, 16px) 0 var(--space-2, 8px);
-  color: var(--text, #e6edf3);
-  font-family: var(--font-display, system-ui, sans-serif);
+  margin: var(--space-4) 0 var(--space-2);
+  color: var(--text);
+  font-family: var(--font-display);
   font-size: calc(18px * var(--font-scale));
   font-weight: 700;
 }
 
 .distribucion-empty-text {
   margin: 0;
-  color: var(--text-3, #8b949e);
+  color: var(--text-3);
   font-size: calc(14px * var(--font-scale));
 }
 
@@ -221,11 +224,11 @@
 
 @media (max-width: 640px) {
   .distribucion-view {
-    padding: var(--space-3, 12px);
+    padding: var(--space-3);
   }
 
   .distribucion-card,
   .distribucion-view--loading {
-    padding: var(--space-4, 16px);
+    padding: var(--space-4);
   }
 }

@@ -65,6 +65,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   error_movement_not_found: "Este movimiento ya no está disponible. La lista se actualizará al recargar.",
   error_category_in_use: "No se puede eliminar: la categoría está siendo usada por movimientos",
   error_category_has_children: "No se puede eliminar: la categoría tiene sub-categorías hijas",
+  error_category_system_locked: "Esta categoría es del sistema y solo se usa desde su propio módulo",
   error_invalid_params: "Parámetros inválidos para la operación.",
   menu_inicio: "Inicio",
   menu_cuentas: "Cuentas",
@@ -788,7 +789,7 @@ card_sumary_payment: "Pago de Resumen",
   cat_education: "Educación",
   cat_finance_taxes: "Finanzas e Impuestos",
   cat_tech_electro: "Tecnología/Electro",
-  cat_investments: "Inversiones",
+  cat_investments_portfolio: "Cartera de Inversiones",
   cat_dry_goods: "Almacén / Despensa",
   cat_dairy: "Lácteos",
   cat_butcher: "Carnicería",
@@ -1458,6 +1459,10 @@ export const inversiones = {
   tab_cartera: "Cartera",
   tab_track_record: "Historial",
   tab_distribucion: "Distribución",
+  // B3 (2026-10-21): la pestaña se renombró a "Gráfico" para que las CUATRO
+  // pestañas entren en una sola linea en un movil de 360px. La key vieja se
+  // queda porque el titulo interno de la vista la sigue usando.
+  tab_grafico: "Gráfico",
   tab_inflacion: "Inflación",
 
   // Empty state
@@ -1478,7 +1483,7 @@ export const inversiones = {
   label_current_value: "Valor actual",
   label_gain: "Ganancia",
   label_nominal_yield: "Rendimiento nominal",
-  label_real_yield: "Rendimiento real",
+  label_real_yield: "Rendimiento real (contempla la inflación)",
   label_inflation_6m: "Inflación 6m",
   label_last_conciliation: "Última conciliación",
   label_start_date: "Fecha de inicio",
@@ -1508,8 +1513,12 @@ export const inversiones = {
   // Messages
   msg_no_investments: "No tienes inversiones activas",
   msg_configure_inflation: "Configurá tu fuente de inflación para ver el rendimiento real",
+  msg_inflation_disabled: "Desactivada",
   msg_beat_inflation: "¡Ganaste poder adquisitivo real!",
   msg_lost_purchasing_power: "Perdiste poder adquisitivo real",
+  // El backend (fn_reporte_rendimiento_vs_inflacion) devuelve estas dos.
+  msg_portfolio_beat_inflation: "¡Ganaste poder adquisitivo real!",
+  msg_portfolio_lost_purchasing_power: "Perdiste poder adquisitivo real",
   msg_investment_created: "Inversión creada con éxito",
   msg_investment_updated: "Valor actualizado con éxito",
   msg_investment_liquidated: "Inversión liquidada con éxito",
@@ -1581,9 +1590,39 @@ export const inversiones = {
   field_required: "Campo obligatorio",
   semaphore_updated_to_green: "Semáforo actualizado a verde",
   inflation_6m_placeholder: "Sin datos de inflación",
-  inflation_source_proxy_dolar: "Proxy Dólar (recomendado)",
-  inflation_source_api_automatica: "API Automática",
-  inflation_source_desactivado: "Desactivado (solo nominal)",
+  inflation_source_proxy_dolar: "Proxy Dólar",
+  inflation_source_proxy_dolar_desc: "Por defecto. Usa el movimiento del dólar de tu país como aproximación de la inflación local. Automático, no tenés que cargar nada.",
+  inflation_source_manual: "Manual",
+  inflation_source_manual_desc: "Cargás vos la inflación anual acumulada hasta hoy. Se usa para calcular tu rendimiento real.",
+  inflation_source_desactivado: "Desactivado",
+  inflation_source_desactivado_desc: "Solo rendimiento nominal. El rendimiento real deja de mostrarse en la cartera, el historial y el detalle.",
+  inflation_source_not_configured: "Sin configurar",
+  label_inflation_manual_value: "Inflación anual acumulada (%)",
+  placeholder_inflation_manual: "Ej: 35",
+  inflation_manual_help: "Es el porcentaje de inflación acumulada desde enero hasta hoy, no la variación de un solo mes.",
+  error_inflation_manual_value_required: "Ingresá la inflación anual acumulada",
+  error_inflation_manual_value_invalid: "El valor debe ser mayor a 0",
+  error_investment_insufficient_balance: "La billetera no tiene saldo suficiente para esa inversión",
+  error_no_wallets_with_balance: "Ninguna billetera de esta moneda tiene saldo suficiente para ese monto",
+  error_wallet_insufficient_balance: "sin saldo suficiente",
+
+  // Errores y aciertos del backend de inversiones (T7)
+  error_investment_already_liquidated: "Esta inversión ya fue liquidada",
+  error_investment_rescue_exceeds_balance: "El monto supera el saldo disponible de la inversión",
+  error_investment_type_invalid: "Tipo de activo inválido",
+  error_investment_variable_must_have_zero_tna: "Los activos variables no pueden tener tasa fija",
+  error_investment_value_negative: "El valor no puede ser negativo",
+  error_investment_amount_zero: "El monto debe ser mayor a 0",
+  success_investment_value_updated: "Valor de la inversión actualizado",
+  success_inflation_configured: "Configuración de inflación guardada",
+
+  // Labels de movimientos de inversión (T7) — el backend escribe 'key: valor'
+  investment_prefix: "Inversión",
+  liquidation_capital_recovery: "Recuperación de capital",
+  liquidation_gain: "Ganancia por liquidación",
+  liquidation_loss: "Pérdida por liquidación",
+  rescate_inversion: "Rescate de inversión",
+  desc_blocked_capital: "Capital bloqueado en inversiones",
 
   // Detalle (Task 7)
   detail_history_title: "Historial de movimientos",

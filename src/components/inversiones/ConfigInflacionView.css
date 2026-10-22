@@ -1,27 +1,30 @@
 .config-inflacion-view {
   width: 100%;
-  padding: var(--space-5, 20px);
+  /* Owner bug (2026-10-20): never let the content's min-content width push
+     the page sideways on a phone. */
+  min-width: 0;
+  padding: var(--space-5) var(--space-4);
   border: 1px solid rgba(255, 230, 109, 0.18);
-  border-radius: var(--radius-lg, 16px);
+  border-radius: var(--radius-lg);
   background:
     radial-gradient(circle at top right, rgba(255, 230, 109, 0.08), transparent 34%),
-    var(--surface, #2D2D2D);
+    var(--surface);
   box-shadow: var(--shadow-lg, 0 8px 30px rgba(0, 0, 0, 0.35));
   display: flex;
   flex-direction: column;
-  gap: var(--space-5, 20px);
+  gap: var(--space-5);
 }
 
 .config-inflacion-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
 }
 
 .config-inflacion-eyebrow {
-  margin: 0 0 var(--space-1, 4px);
-  color: var(--amber, #FFE66D);
+  margin: 0 0 var(--space-1);
+  color: var(--amber);
   font-size: calc(11px * var(--font-scale));
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -30,10 +33,22 @@
 
 .config-inflacion-title {
   margin: 0;
-  color: var(--text, #FFFFFF);
-  font-family: var(--font-display, system-ui, sans-serif);
+  color: var(--text);
+  font-family: var(--font-display);
   font-size: calc(22px * var(--font-scale));
   font-weight: 800;
+}
+
+/*
+ * B5 (2026-10-21): la ayuda de la fuente de inflacion salia en blanco sobre
+ * el fondo claro: no tenia estilo (era una clase nueva) y heredaba el color
+ * por defecto. Ahora usa el color de texto secundario del tema.
+ */
+.config-inflacion-help {
+  margin: var(--space-1) 0 0;
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+  line-height: 1.4;
 }
 
 .config-inflacion-pill {
@@ -41,9 +56,9 @@
   max-width: 190px;
   padding: 8px 10px;
   border: 1px solid rgba(78, 205, 196, 0.28);
-  border-radius: var(--radius-full, 9999px);
+  border-radius: var(--radius-full);
   background: rgba(78, 205, 196, 0.1);
-  color: var(--mint, var(--mint, #00B127));
+  color: var(--mint);
   font-size: calc(12px * var(--font-scale));
   font-weight: 800;
   text-align: center;
@@ -52,18 +67,18 @@
 .config-inflacion-form {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
 }
 
 .config-inflacion-field {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2, 8px);
+  gap: var(--space-2);
   min-width: 0;
 }
 
 .config-inflacion-label {
-  color: var(--text-2, #D1D7DE);
+  color: var(--text-2);
   font-size: calc(13px * var(--font-scale));
   font-weight: 700;
 }
@@ -72,10 +87,10 @@
   width: 100%;
   min-height: 44px;
   padding: 0 12px;
-  border: 1px solid var(--border, #3D3D3D);
-  border-radius: var(--radius-md, 12px);
-  background: var(--bg, #1A1A1A);
-  color: var(--text, #FFFFFF);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text);
   font-size: calc(14px * var(--font-scale));
   font-weight: 700;
   outline: none;
@@ -84,7 +99,7 @@
 }
 
 .config-inflacion-field select:focus {
-  border-color: var(--mint, var(--mint, #00B127));
+  border-color: var(--mint);
   box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.14);
 }
 
@@ -98,9 +113,9 @@
   margin: 0;
   padding: 12px 14px;
   border: 1px solid rgba(255, 107, 107, 0.28);
-  border-radius: var(--radius-md, 12px);
+  border-radius: var(--radius-md);
   background: rgba(255, 107, 107, 0.1);
-  color: var(--coral, #FF6B6B);
+  color: var(--coral);
   font-size: calc(13px * var(--font-scale));
   font-weight: 700;
 }
@@ -113,12 +128,12 @@
 .config-inflacion-loading {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-4, 16px);
+  gap: var(--space-4);
 }
 
 .config-inflacion-skeleton {
   height: 44px;
-  border-radius: var(--radius-md, 12px);
+  border-radius: var(--radius-md);
   background: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.06) 0%,
@@ -147,7 +162,7 @@
 
 @media (max-width: 560px) {
   .config-inflacion-view {
-    padding: var(--space-4, 16px);
+    padding: var(--space-4);
   }
 
   .config-inflacion-header {

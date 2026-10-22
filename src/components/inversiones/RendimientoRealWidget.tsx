@@ -9,12 +9,20 @@ export interface RendimientoData {
   rendimiento_real: number | null
   inflacion_disponible: boolean
   mensaje_key: string
-  fuente_inflacion: 'api_automatica' | 'proxy_dolar' | 'desactivado'
+  fuente_inflacion: 'proxy_dolar' | 'manual' | 'desactivado'
+  moneda_local?: string
+}
+
+/** Una línea de subtotal por moneda (patrón del hero del Home). */
+export interface PortfolioLine {
+  moneda: string
+  total: number
 }
 
 interface RendimientoRealWidgetProps {
-  totalPesos: number
-  totalDolares: number
+  totalMonedaLocal: number
+  monedaLocal: string
+  lineasPorMoneda: PortfolioLine[]
   rendimiento: RendimientoData
   loading?: boolean
   onConfigureInflation?: () => void
@@ -46,8 +54,9 @@ function verdictKeyFor(value: number | null | undefined, fallbackKey: string): s
 }
 
 export function RendimientoRealWidget({
-  totalPesos,
-  totalDolares,
+  totalMonedaLocal,
+  monedaLocal,
+  lineasPorMoneda,
   rendimiento,
   loading,
   onConfigureInflation,
@@ -60,25 +69,35 @@ export function RendimientoRealWidget({
     )
   }
 
-  const { rendimiento_nominal, rendimiento_real, inflacion_disponible, mensaje_key } = rendimiento
+  const { rendimiento_nominal, rendimiento_real, inflacion_disponible, mensaje_key, fuente_inflacion } = rendimiento
   const verdictKey = verdictKeyFor(rendimiento_real, mensaje_key)
   const verdictIsPositive = rendimiento_real !== null && rendimiento_real > 0
+  // B3b (2026-10-21): con la fuente 'desactivado' el rendimiento real no
+  // existe por decision del usuario: no se le pide que la configure. Cuando
+  // no hay config, si se le ofrece el atajo.
+  const inflacionDesactivada = fuente_inflacion === 'desactivado'
 
   return (
     <header className="rendimiento-real-widget">
       <div className="rendimiento-real-row rendimiento-real-row--title">
         <h2 className="rendimiento-real-title">{t('title')}</h2>
         <span className="rendimiento-real-total-ars">
-          {formatCurrency(totalPesos)}
+          {formatCurrency(totalMonedaLocal, monedaLocal)}
         </span>
       </div>
 
-      <div className="rendimiento-real-row rendimiento-real-row--usd">
-        <span className="rendimiento-real-total-usd-label">USD</span>
-        <span className="rendimiento-real-total-usd">
-          {formatCurrency(totalDolares, 'USD')}
-        </span>
-      </div>
+      {lineasPorMoneda.length > 0 && (
+        <div className="rendimiento-real-row rendimiento-real-row--usd">
+          {lineasPorMoneda.map((linea) => (
+            <span key={linea.moneda} className="rendimiento-real-moneda-line">
+              <span className="rendimiento-real-total-usd-label">{linea.moneda}</span>
+              <span className="rendimiento-real-total-usd">
+                {formatCurrency(linea.total, linea.moneda)}
+              </span>
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="rendimiento-real-row rendimiento-real-row--yields">
         {inflacion_disponible ? (
@@ -109,6 +128,17 @@ export function RendimientoRealWidget({
               {t(verdictKey)}
             </span>
           </>
+        ) : inflacionDesactivada ? (
+          // B3b: el usuario desactivo la inflacion a proposito. No se le pide
+          // que la configure: se le dice que no hay rendimiento real.
+          <div className="rendimiento-real-yield-block">
+            <span className="rendimiento-real-yield-label">
+              {t('label_real_yield')}
+            </span>
+            <span className="rendimiento-real-yield rendimiento-real-yield--na">
+              {t('msg_inflation_disabled')}
+            </span>
+          </div>
         ) : (
           <button
             type="button"

@@ -3,6 +3,7 @@ import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { formatInversionDetalle } from '@/lib/inversionesLabels'
 import './DetalleInversionView.css'
 
 export interface HistorialItem {
@@ -26,6 +27,9 @@ export interface DetalleInversion {
   estado_inversion: string | null
   rendimiento_nominal: number | null
   rendimiento_real: number | null
+  /** B3b: false cuando la fuente esta desactivada (no es "falta configurar"). */
+  inflacion_disponible?: boolean
+  fuente_inflacion?: string | null
   historial: HistorialItem[] | null
 }
 
@@ -218,10 +222,18 @@ export function DetalleInversionView({
 
         <article className="detalle-metric-card">
           <span className="detalle-metric-label">{t('label_real_yield')}</span>
-          {data.rendimiento_real === null ? (
-            <span className="detalle-yield detalle-yield--na detalle-metric-helper">
-              {t('msg_configure_inflation')}
-            </span>
+          {data.rendimiento_real === null || data.rendimiento_real === undefined ? (
+            // B3b: si el usuario desactivo la inflacion a proposito, el valor
+            // real no existe (no es que falte configurarlo): se dice eso.
+            data.fuente_inflacion === 'desactivado' ? (
+              <span className="detalle-yield detalle-yield--na detalle-metric-helper">
+                {t('msg_inflation_disabled')}
+              </span>
+            ) : (
+              <span className="detalle-yield detalle-yield--na detalle-metric-helper">
+                {t('msg_configure_inflation')}
+              </span>
+            )
           ) : (
             <span className={yieldClassFor(data.rendimiento_real)}>
               {formatPercent(data.rendimiento_real)}
@@ -262,7 +274,9 @@ export function DetalleInversionView({
                     {formatDate(mov.fecha)}
                   </span>
                   <span className="detalle-history-detalle">
-                    {mov.detalle || t('detail_movement_label')}
+                    {mov.detalle
+                      ? formatInversionDetalle(mov.detalle, (key) => t(key))
+                      : t('detail_movement_label')}
                   </span>
                 </div>
                 <span

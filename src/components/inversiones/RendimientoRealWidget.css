@@ -2,13 +2,34 @@
   position: sticky;
   top: 0;
   z-index: 10;
-  background: var(--bg-2, #1c2128);
-  border-bottom: 1px solid var(--border, #30363d);
-  padding: var(--space-4, 16px) var(--space-5, 20px) var(--space-3, 12px);
+  /* B1/B2 (2026-10-21): el fondo usaba var(--bg), que SOLO existe en :root
+     con un valor oscuro (#1c2128). El tema claro (warm-light) no lo
+     redefinie, asi que el header quedaba negro sobre la pagina crema y su
+     texto no se leia. var(--bg) si existe en los dos temas. */
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: var(--space-4) var(--space-5) var(--space-3);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2, 8px);
-  box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.5));
+  gap: var(--space-2);
+  box-shadow: var(--shadow-sm);
+  /* Owner bug (2026-10-20): the sticky header pushed the page wider than the
+   * phone. A flex column does not shrink below its content by default, so the
+   * wide total and the currency lines forced the whole layout to overflow.
+   *
+   * B1/B6 (2026-10-21): 'overflow: hidden' recortaba en las DOS direcciones: el
+   * texto del mensaje de inflacion y los numeros de rendimiento quedaban
+   * cortados por abajo (se leian a medias).
+   *
+   * B6 (2026-10-21, 2do round): la tentativa de(clip) SOLO en horizontal
+   * ('overflow-x: hidden' + 'overflow-y: visible') no funciona: por regla de
+   * CSS, cuando un eje es visible y el otro no, el visible se computa a auto.
+   * El header se convertia en un contenedor de scroll propio: recortaba el
+   * total por abajo y el boton 'Nueva Inversión' se le superponia. Ahora el
+   * header NO recorta nada (overflow visible) y el desborde horizontal se
+   * controla con min-width: 0 en la cadena de flex, que ya esta hecho. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .rendimiento-real-widget--loading {
@@ -19,12 +40,12 @@
 
 .rendimiento-real-skeleton {
   height: 56px;
-  border-radius: var(--radius-md, 12px);
+  border-radius: var(--radius-md);
   background: linear-gradient(
     90deg,
-    var(--surface, #161b22) 0%,
-    var(--surface-2, #21262d) 50%,
-    var(--surface, #161b22) 100%
+    var(--surface) 0%,
+    var(--surface-2) 50%,
+    var(--surface) 100%
   );
   background-size: 200% 100%;
   animation: rendimiento-real-skeleton-shimmer 1.4s ease-in-out infinite;
@@ -38,8 +59,9 @@
 .rendimiento-real-row {
   display: flex;
   align-items: center;
-  gap: var(--space-3, 12px);
+  gap: var(--space-3);
   min-width: 0;
+  max-width: 100%;
 }
 
 .rendimiento-real-row--title {
@@ -47,23 +69,39 @@
 }
 
 .rendimiento-real-row--usd {
-  gap: var(--space-2, 8px);
-  color: var(--text-3, #8b949e);
+  gap: var(--space-3);
+  color: var(--text-3);
   font-size: calc(12px * var(--font-scale));
-  font-family: var(--font-body, system-ui, sans-serif);
+  font-family: var(--font-body);
+  flex-wrap: wrap;
+}
+
+.rendimiento-real-moneda-line {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.rendimiento-real-moneda-line .rendimiento-real-total-usd {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rendimiento-real-row--yields {
   flex-wrap: wrap;
   justify-content: flex-start;
-  gap: var(--space-3, 12px);
-  padding-top: var(--space-1, 4px);
+  gap: var(--space-3);
+  padding-top: var(--space-1);
 }
 
 .rendimiento-real-title {
   margin: 0;
-  color: var(--text, #e6edf3);
-  font-family: var(--font-display, system-ui, sans-serif);
+  color: var(--text);
+  font-family: var(--font-display);
   font-size: calc(14px * var(--font-scale));
   font-weight: 600;
   text-transform: uppercase;
@@ -72,13 +110,15 @@
 }
 
 .rendimiento-real-total-ars {
-  color: var(--text, #e6edf3);
-  font-family: var(--font-display, system-ui, sans-serif);
+  color: var(--text);
+  font-family: var(--font-display);
   font-size: calc(22px * var(--font-scale));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: right;
   min-width: 0;
+  /* The big number must never widen the row: it truncates instead. */
+  flex: 0 1 auto;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -97,20 +137,21 @@
 .rendimiento-real-yield-block {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2, 8px);
+  gap: var(--space-2);
   min-width: 0;
 }
 
 .rendimiento-real-yield-label {
-  color: var(--text-3, #8b949e);
-  font-family: var(--font-body, system-ui, sans-serif);
+  color: var(--text-3);
+  font-family: var(--font-body);
   font-size: calc(12px * var(--font-scale));
   font-weight: 500;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .rendimiento-real-yield {
-  font-family: var(--font-display, system-ui, sans-serif);
+  font-family: var(--font-display);
   font-size: calc(14px * var(--font-scale));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -118,68 +159,78 @@
 }
 
 .rendimiento-real-yield--positive {
-  color: var(--mint, var(--mint, #00B127));
+  color: var(--mint);
 }
 
 .rendimiento-real-yield--negative {
-  color: var(--coral, #E63946);
+  color: var(--coral);
 }
 
 .rendimiento-real-yield--zero {
-  color: var(--text-3, #8b949e);
+  color: var(--text-3);
 }
 
 .rendimiento-real-yield--na {
-  color: var(--text-3, #8b949e);
+  color: var(--text-3);
 }
 
 .rendimiento-real-verdict {
   display: inline-flex;
   align-items: center;
   padding: 4px 10px;
-  border-radius: var(--radius-full, 9999px);
-  font-family: var(--font-body, system-ui, sans-serif);
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
   font-size: calc(11px * var(--font-scale));
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   white-space: nowrap;
   margin-left: auto;
-}
-
-.rendimiento-real-verdict--positive {
-  background: var(--green-dim, rgba(82, 183, 136, 0.12));
-  color: var(--green, #52B788);
-}
-
-.rendimiento-real-verdict--negative {
-  background: var(--coral-dim, rgba(230, 57, 70, 0.12));
-  color: var(--coral, #E63946);
-}
-
-.rendimiento-real-cta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2, 8px);
-  padding: var(--space-2, 8px) var(--space-4, 16px);
-  background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint, var(--mint, #00B127));
-  border: 1px solid var(--mint, var(--mint, #00B127));
-  border-radius: var(--radius-md, 12px);
-  font-family: var(--font-body, system-ui, sans-serif);
-  font-size: calc(13px * var(--font-scale));
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity var(--transition-fast, 150ms ease),
-              background var(--transition-fast, 150ms ease);
-  white-space: nowrap;
+  /* B6: sin el recorte del header, un veredicto largo podria desbordar.
+     Se limita y se recorta con ellipsis en vez de empujar la pagina. */
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
+.rendimiento-real-verdict--positive {
+  background: var(--mint-dim);
+  color: var(--mint);
+}
+
+.rendimiento-real-verdict--negative {
+  background: var(--coral-dim);
+  color: var(--coral);
+}
+
+.rendimiento-real-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--mint-dim);
+  color: var(--mint);
+  border: 1px solid var(--mint);
+  border-radius: var(--radius-md);
+  font-family: var(--font-body);
+  font-size: calc(13px * var(--font-scale));
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity var(--transition-fast),
+              background var(--transition-fast);
+  /* B1 (2026-10-21): el mensaje "Configura tu fuente de inflacion..." quedaba
+     cortado a media frase: nowrap + overflow hidden lo truncaban. Ahora el
+     texto envuelve y el boton ocupa el ancho disponible. */
+  white-space: normal;
+  text-align: left;
+  line-height: 1.35;
+  max-width: 100%;
+  overflow: visible;
+  text-overflow: clip;
+}
+
 .rendimiento-real-cta:hover:not(:disabled) {
-  background: var(--mint, var(--mint, #00B127));
+  background: var(--mint);
   color: #0d1117;
 }
 
@@ -190,7 +241,7 @@
 
 @media (max-width: 480px) {
   .rendimiento-real-widget {
-    padding: var(--space-3, 12px) var(--space-4, 16px) var(--space-2, 8px);
+    padding: var(--space-3) var(--space-4) var(--space-2);
   }
 
   .rendimiento-real-total-ars {
@@ -200,7 +251,7 @@
   .rendimiento-real-row--yields {
     flex-direction: column;
     align-items: flex-start;
-    gap: var(--space-2, 8px);
+    gap: var(--space-2);
   }
 
   .rendimiento-real-verdict {
