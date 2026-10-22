@@ -14,6 +14,13 @@ dist
 .agents/skills/*
 !/.agents/skills/i18n-update/
 !/.agents/skills/i18n-update/SKILL.md
+!/.agents/skills/i18n-translate/
+!/.agents/skills/i18n-translate/SKILL.md
+!/.agents/skills/i18n-translate/references/
+!/.agents/skills/i18n-translate/references/translator-brief.md
+!/.agents/skills/i18n-translate/references/refuter-brief.md
+!/.agents/skills/i18n-translate/references/terminology.md
+!/.agents/skills/i18n-translate/references/traps.md
 .opencode/
 .superpowers/
 docs/
@@ -49,6 +56,7 @@ tests/i18n/*
 !tests/i18n/onboarding-language.test.js
 !tests/i18n/translation-ledger.test.js
 !tests/i18n/translation-update.test.js
+!tests/i18n/translate-pipeline.test.js
 !tests/i18n/delete-confirmation.test.js
 !tests/i18n/support/
 !tests/i18n/support/i18n-harness.mjs

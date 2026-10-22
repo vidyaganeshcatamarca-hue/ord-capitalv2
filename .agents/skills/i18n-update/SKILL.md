@@ -45,6 +45,8 @@ El dueño edita `src/locales/es.ts` a mano. Puede pasar cualquiera de estas tres
 
 También hay un cuarto caso, `drifted`: la traducción ya no calza con los placeholders del español (`{monto}` contra `{valor}`). Es un bug: en pantalla saldrían las llaves.
 
+**Esta skill es para los cambios sobre un idioma que YA existe.** Si el idioma no existe todavía, o hay que rehacer uno entero, la skill es **`i18n-translate`**: esa traduce la base completa desde cero, con chunks y refutación.
+
 ## El ciclo
 
 ```bash

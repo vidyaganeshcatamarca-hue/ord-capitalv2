@@ -11,7 +11,6 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { readDictionary, placeholders } from './lib/dictionary.mjs'
-import path from 'node:path'
 
 const ROOT = path.resolve('.')
 
