@@ -90,7 +90,10 @@ hecho; origin/main está 537 commits atrás).
 | T9 | S2 | Verificación: test de contrato front↔SQL (9 tests, con mutación probada), postcheck de deploy, checklist de estreno manual para el dueño | inline | `86aad03` |
 | T10 | S8 | Front: la página y el header del módulo entran en la pantalla del teléfono; Supervivencia enlaza a `/inversiones`; en modo claro el header deja de ser negro; las cuatro pestañas entran en una línea; "Distribución" pasa a llamarse "Gráfico"; el ejemplo del nombre del activo pasa a ser texto de ayuda debajo del campo | inline | `ab6d82e`, `4efffb2` |
 | T11 | S7 | Categoría de Inversiones intocable: filtro en Categorías, triggers en backend (no renombrar, no borrar, no subcategorías, no movimientos manuales) y key/unicidad propias | inline | `e7ca268`, `f86b234` |
-| T12 | S9 | Front: en los tres modales del módulo, las acciones (Cancelar/Guardar) quedan fijas al pie y siempre visibles; solo los campos scrollean dentro del modal | inline | (pendiente) |
+| T12 | S9 | Front: en los tres modales del módulo, las acciones (Cancelar/Guardar) quedan fijas al pie y siempre visibles; solo los campos scrollean dentro del modal | inline | `8d5cf56` |
+| T13 | S10 | Pendiente: contraste AA de los acentos del módulo en modo claro. Los textos de acento van sobre un fondo del mismo color al 12% (`--mint-dim`, `--amber-dim`, `--coral-dim`) y el color de texto es ese mismo acento: el contraste queda entre 3.16 y 3.76 (AA pide 4.5). Medido: badge "Plazo Fijo" 3.32, badge "Variable" 3.16, botón "Actualizar Valor" 3.32, botón "Liquidar" 3.76, CTA "Configurá tu fuente de inflación" 3.64. En modo oscuro todos pasan (4.88 / 7.81). Plan: tokens de tinta por tema (`--mint-ink`, `--amber-ink`, `--coral-ink`) y sustitución mecánica de `color: var(--mint)` → `color: var(--mint-ink, var(--mint))` en los CSS del módulo (la tinta solo mejora el contraste: nunca lo baja) | pendiente | — |
+| T14 | S9 | Pendiente: refinamientos que pidió el verificador independiente sobre T12. (a) `max-height: 90vh` → agregar `90dvh`: con el teclado abierto la barra fija queda detrás del teclado; el repo ya usa `dvh` en `AddMovementModal.css:26` y `VoiceRecorderModal.css:24`. (b) `env(safe-area-inset-bottom)` sin fallback `, 0px`: si `env()` es inválido se cae todo el `padding` de la barra. (c) el `border-top` de la barra no es full-bleed (queda dentro del padding de 20px de la card). (d) falta `-webkit-overflow-scrolling: touch` en el scroller nuevo. (e) el test no cubre que todos los campos sigan dentro del form ni que los ids sean únicos | pendiente | — |
+| T15 | S10 | Pendiente: confirmar el hover de la pestaña activa. En una medición la pestaña activa apareció con texto claro sobre fondo verde (ratio 2.43): `hover` tiene especificidad (0,2,0) y le gana a `--active` (0,1,0), así que al tocar la pestaña en el teléfono el texto volvería a `--text`. No se reprodujo con hover real (`page.hover` no aplica `:hover` bajo emulación; falta medir con `mouse.move`) | pendiente | — |
 
 ## Checklist de estreno (para el dueño, después del deploy)
 
@@ -225,3 +228,13 @@ del dueño (convención temp_sql, scripts numerados + dump de verificación). El
   `tests/inversiones/modales-acciones-fijas.test.js`. Nota: los 2 tests de
   `appLock` (PIN/huella) que fallan en la suite completa son preexistentes y
   ajenos a Inversiones (verificado con `git stash`).
+- **L8** (2026-10-22, cierre de la sesión a pedido del dueño — "stop cuando
+  puedas"): se cierra la tanda de chequeo. Estado: commits `8d5cf56` (T12, el
+  fix del modal) y `4b2c0fc` (docs). Working tree limpio; los scripts de
+  medición de EgoLite y las capturas se borraron (eran artefactos de la sesión).
+  El navegador quedó como el dueño lo tenía: tema oscuro y en `/inversiones`.
+  Sin deploy del front (lo decide el dueño) y sin tocar los datos de prueba.
+  Nota: el review nativo no pudo arrancar en este entorno (`native-status-
+  unavailable`, dos intentos, `next_action: stop`): no se creó autoridad ni se
+  mutó nada. El plan de riesgo alto se cubrió con auto-verificación (tests,
+  `tsc -b`, `vite build`, medición en navegador) + verificador independiente.
