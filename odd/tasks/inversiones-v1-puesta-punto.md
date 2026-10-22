@@ -202,4 +202,26 @@ del dueño (convención temp_sql, scripts numerados + dump de verificación). El
   una regresión silenciosa esperando; un trigger es aditivo y además cubre voz,
   importación y RPCs futuras. El marker `metadata->>'inversion_id'` es fiable
   porque `fn_registrar_movimiento_caja` NO expone `metadata` como parámetro: el
-  cliente no puede forjarlo.
+  cliente no puede forjarlo.- **L7** (2026-10-22, chequeo con EgoLite en modo celular real): el dueño pidió un
+  chequeo de la app con el navegador. Se emuló un teléfono real (UA Android Pixel
+  7, touch activo, 412x915, `desktopSidebar: false` → la app renderiza la versión
+  móvil) sobre el dev server local (`localhost:5173`, rama
+  `pi/inversiones-v1-puesta-punto`). Resultado: el módulo de Inversiones está
+  **verde** en modo claro y oscuro — contraste del header 18.02 (claro) y 16.02
+  (oscuro), texto de ayuda 10.09 y 5.62, header `sticky` sin recorte
+  (`scrollHeight == clientHeight`), sin solapamiento con el FAB, las cuatro
+  pestañas ("Cartera", "Historial", "Gráfico", "Inflación") en una sola línea y
+  alineadas a 12px, y ningún contenido tapado por el bottom nav (zona tapada desde
+  848). El botón Guardar de la pestaña Inflación aparece solo si hay cambios y
+  queda en `bottom: 748` (zona tapada: 848) ✓. **Un bug encontrado y corregido
+  (T12, S9)**: en los tres modales del módulo las acciones estaban al final del
+  scroll de la card, así que el botón "Guardar" de "Nueva Inversión" quedaba en
+  `bottom: 940` con un viewport de 915 → 25px debajo del fold (el scroll interno
+  del modal era de solo 45px); con el teclado abierto era inalcanzable. Fix: la
+  card no scrollea, el form es el scroller y las acciones quedan fijas al pie con
+  fondo opaco y safe-area; el botón sigue submits el form con `form="..."`.
+  Verificado en el mismo perfil móvil: el botón pasa a `bottom: 894`, visible sin
+  scrollear, en los tres modales. Commit `8d5cf56` (T12), con 12 tests nuevos en
+  `tests/inversiones/modales-acciones-fijas.test.js`. Nota: los 2 tests de
+  `appLock` (PIN/huella) que fallan en la suite completa son preexistentes y
+  ajenos a Inversiones (verificado con `git stash`).
