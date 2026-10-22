@@ -17,14 +17,19 @@
    * phone. A flex column does not shrink below its content by default, so the
    * wide total and the currency lines forced the whole layout to overflow.
    *
-   * B1/B6 (2026-10-21): 'overflow: hidden' recorte en las DOS direcciones: el
+   * B1/B6 (2026-10-21): 'overflow: hidden' recortaba en las DOS direcciones: el
    * texto del mensaje de inflacion y los numeros de rendimiento quedaban
-   * cortados por abajo (se leian a medias). Solo se recorta en horizontal,
-   * que es lo que evita que el header empuje la pagina. */
+   * cortados por abajo (se leian a medias).
+   *
+   * B6 (2026-10-21, 2do round): la tentativa de(clip) SOLO en horizontal
+   * ('overflow-x: hidden' + 'overflow-y: visible') no funciona: por regla de
+   * CSS, cuando un eje es visible y el otro no, el visible se computa a auto.
+   * El header se convertia en un contenedor de scroll propio: recortaba el
+   * total por abajo y el boton 'Nueva Inversión' se le superponia. Ahora el
+   * header NO recorta nada (overflow visible) y el desborde horizontal se
+   * controla con min-width: 0 en la cadena de flex, que ya esta hecho. */
   min-width: 0;
   max-width: 100%;
-  overflow-x: hidden;
-  overflow-y: visible;
 }
 
 .rendimiento-real-widget--loading {
@@ -142,6 +147,7 @@
   font-size: calc(12px * var(--font-scale));
   font-weight: 500;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .rendimiento-real-yield {
@@ -180,6 +186,11 @@
   letter-spacing: 0.04em;
   white-space: nowrap;
   margin-left: auto;
+  /* B6: sin el recorte del header, un veredicto largo podria desbordar.
+     Se limita y se recorta con ellipsis en vez de empujar la pagina. */
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rendimiento-real-verdict--positive {

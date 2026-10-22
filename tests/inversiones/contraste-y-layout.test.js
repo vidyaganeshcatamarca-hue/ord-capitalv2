@@ -149,3 +149,43 @@ test('el ejemplo del nombre del activo no es un placeholder', () => {
   const styles = read('src/styles/index.css')
   assert.ok(styles.includes('.form-hint'), 'debe existir el estilo .form-hint')
 })
+
+// ─────────────────────────── cabecera sticky (B6) ─────────────────────────────
+
+test('la cabecera sticky NO recorta su contenido', () => {
+  // 'overflow-x: hidden' + 'overflow-y: visible' NO recorta solo en
+  // horizontal: por regla de CSS el visible se computa a auto cuando el
+  // otro eje no es visible. El header se volvia contenedor de scroll propio,
+  // recortaba el total por abajo y el boton se le superponia.
+  const widget = read('src/components/inversiones/RendimientoRealWidget.css')
+  // Solo la regla del header: los comentarios mencionan 'overflow' y las
+  // lineas de moneda si lo necesitan (con ellipsis).
+  const i = widget.indexOf('.rendimiento-real-widget {')
+  const bloque = widget.slice(i, widget.indexOf('}', i))
+  const declaraciones = bloque
+    .split(String.fromCharCode(10))
+    .filter((l) => !l.trim().startsWith('*') && !l.trim().startsWith('/*'))
+    .filter((l) => /overflow/.test(l))
+  assert.deepEqual(
+    declaraciones, [],
+    `el header sticky no debe declarar overflow (lo computa a auto y recorta): ${declaraciones.join(' | ')}`
+  )
+})
+
+test('la cabecera sticky se pinta por encima del boton y las pestanas', () => {
+  const widget = read('src/components/inversiones/RendimientoRealWidget.css')
+  const page = read('src/pages/Inversiones/InversionesPage.css')
+  assert.ok(
+    /position:\s*sticky/.test(widget) && /z-index:\s*10/.test(widget),
+    'la cabecera debe ser sticky con z-index 10'
+  )
+  // El toolbar y las pestanas: position relative + z-index bajo.
+  for (const sel of ['.inversiones-toolbar', '.inversiones-tabs']) {
+    const i = page.indexOf(sel + ' {')
+    const bloque = page.slice(i, page.indexOf('}', i))
+    assert.ok(
+      /position:\s*relative/.test(bloque) && /z-index:\s*1/.test(bloque),
+      `${sel} debe tener position relative y z-index 1 para no tapar la cabecera`
+    )
+  }
+})

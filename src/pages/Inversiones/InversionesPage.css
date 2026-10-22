@@ -85,6 +85,11 @@
   justify-content: flex-end;
   margin: 16px 0;
   min-width: 0;
+  /* B6 (2026-10-21): el header sticky (z-index 10) tiene que quedar POR
+     ENCIMA de este boton al scrollear. Con position relative + z-index bajo,
+     el orden de pintado es explicito y no depende del orden del documento. */
+  position: relative;
+  z-index: 1;
 }
 
 .inversiones-tabs {
@@ -99,6 +104,9 @@
      botones (padding y tipografia) y la pestaña se renombró a 'Gráfico'. */
   max-width: 100%;
   min-width: 0;
+  /* B6: el header sticky se pinta sobre las pestañas al scrollear. */
+  position: relative;
+  z-index: 1;
 }
 
 .inversiones-tabs::-webkit-scrollbar {
