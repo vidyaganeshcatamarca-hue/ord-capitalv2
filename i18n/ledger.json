@@ -202,6 +202,10 @@
         "from": "No se puede eliminar: la categoría tiene sub-categorías hijas",
         "to": "Cannot delete: the category has subcategories"
       },
+      "errors.error_category_system_locked": {
+        "from": "Esta categoría es del sistema y solo se usa desde su propio módulo",
+        "to": "This category belongs to the system and is only used from its own module"
+      },
       "errors.error_invalid_params": {
         "from": "Parámetros inválidos para la operación.",
         "to": "Invalid parameters for this operation."
@@ -2902,9 +2906,9 @@
         "from": "Tecnología/Electro",
         "to": "Technology/Electronics"
       },
-      "category_keys.cat_investments": {
-        "from": "Inversiones",
-        "to": "Investments"
+      "category_keys.cat_investments_portfolio": {
+        "from": "Cartera de Inversiones",
+        "to": "Investment Portfolio"
       },
       "category_keys.cat_dry_goods": {
         "from": "Almacén / Despensa",
@@ -4982,6 +4986,10 @@
         "from": "Distribución",
         "to": "Distribution"
       },
+      "inversiones.tab_grafico": {
+        "from": "Gráfico",
+        "to": "Chart"
+      },
       "inversiones.tab_inflacion": {
         "from": "Inflación",
         "to": "Inflation"
@@ -5039,8 +5047,8 @@
         "to": "Nominal yield"
       },
       "inversiones.label_real_yield": {
-        "from": "Rendimiento real",
-        "to": "Real yield"
+        "from": "Rendimiento real (contempla la inflación)",
+        "to": "Real yield (inflation adjusted)"
       },
       "inversiones.label_inflation_6m": {
         "from": "Inflación 6m",
@@ -5134,11 +5142,23 @@
         "from": "Configurá tu fuente de inflación para ver el rendimiento real",
         "to": "Set up your inflation source to see the real yield"
       },
+      "inversiones.msg_inflation_disabled": {
+        "from": "Desactivada",
+        "to": "Disabled"
+      },
       "inversiones.msg_beat_inflation": {
         "from": "¡Ganaste poder adquisitivo real!",
         "to": "You gained real purchasing power!"
       },
       "inversiones.msg_lost_purchasing_power": {
+        "from": "Perdiste poder adquisitivo real",
+        "to": "You lost real purchasing power"
+      },
+      "inversiones.msg_portfolio_beat_inflation": {
+        "from": "¡Ganaste poder adquisitivo real!",
+        "to": "You gained real purchasing power!"
+      },
+      "inversiones.msg_portfolio_lost_purchasing_power": {
         "from": "Perdiste poder adquisitivo real",
         "to": "You lost real purchasing power"
       },
@@ -5395,16 +5415,120 @@
         "to": "No inflation data"
       },
       "inversiones.inflation_source_proxy_dolar": {
-        "from": "Proxy Dólar (recomendado)",
-        "to": "Dollar proxy (recommended)"
+        "from": "Proxy Dólar",
+        "to": "Dollar proxy"
       },
-      "inversiones.inflation_source_api_automatica": {
-        "from": "API Automática",
-        "to": "Automatic API"
+      "inversiones.inflation_source_proxy_dolar_desc": {
+        "from": "Por defecto. Usa el movimiento del dólar de tu país como aproximación de la inflación local. Automático, no tenés que cargar nada.",
+        "to": "By default. It uses the movement of your country’s dollar as an approximation of local inflation. Automatic, you don’t have to load anything."
+      },
+      "inversiones.inflation_source_manual": {
+        "from": "Manual",
+        "to": "Manual"
+      },
+      "inversiones.inflation_source_manual_desc": {
+        "from": "Cargás vos la inflación anual acumulada hasta hoy. Se usa para calcular tu rendimiento real.",
+        "to": "You enter the annual accumulated inflation up to today. It is used to calculate your real yield."
       },
       "inversiones.inflation_source_desactivado": {
-        "from": "Desactivado (solo nominal)",
-        "to": "Disabled (nominal only)"
+        "from": "Desactivado",
+        "to": "Disabled"
+      },
+      "inversiones.inflation_source_desactivado_desc": {
+        "from": "Solo rendimiento nominal. El rendimiento real deja de mostrarse en la cartera, el historial y el detalle.",
+        "to": "Nominal yield only. Real yield is no longer shown in the portfolio, the history and the detail."
+      },
+      "inversiones.inflation_source_not_configured": {
+        "from": "Sin configurar",
+        "to": "Not configured"
+      },
+      "inversiones.label_inflation_manual_value": {
+        "from": "Inflación anual acumulada (%)",
+        "to": "Annual accumulated inflation (%)"
+      },
+      "inversiones.placeholder_inflation_manual": {
+        "from": "Ej: 35",
+        "to": "E.g.: 35"
+      },
+      "inversiones.inflation_manual_help": {
+        "from": "Es el porcentaje de inflación acumulada desde enero hasta hoy, no la variación de un solo mes.",
+        "to": "It is the percentage of inflation accumulated since January until today, not the change of a single month."
+      },
+      "inversiones.error_inflation_manual_value_required": {
+        "from": "Ingresá la inflación anual acumulada",
+        "to": "Enter the annual accumulated inflation"
+      },
+      "inversiones.error_inflation_manual_value_invalid": {
+        "from": "El valor debe ser mayor a 0",
+        "to": "The value must be greater than 0"
+      },
+      "inversiones.error_investment_insufficient_balance": {
+        "from": "La billetera no tiene saldo suficiente para esa inversión",
+        "to": "The wallet does not have enough balance for that investment"
+      },
+      "inversiones.error_no_wallets_with_balance": {
+        "from": "Ninguna billetera de esta moneda tiene saldo suficiente para ese monto",
+        "to": "No wallet in this currency has enough balance for that amount"
+      },
+      "inversiones.error_wallet_insufficient_balance": {
+        "from": "sin saldo suficiente",
+        "to": "not enough balance"
+      },
+      "inversiones.error_investment_already_liquidated": {
+        "from": "Esta inversión ya fue liquidada",
+        "to": "This investment has already been liquidated"
+      },
+      "inversiones.error_investment_rescue_exceeds_balance": {
+        "from": "El monto supera el saldo disponible de la inversión",
+        "to": "The amount exceeds the available balance of the investment"
+      },
+      "inversiones.error_investment_type_invalid": {
+        "from": "Tipo de activo inválido",
+        "to": "Invalid asset type"
+      },
+      "inversiones.error_investment_variable_must_have_zero_tna": {
+        "from": "Los activos variables no pueden tener tasa fija",
+        "to": "Variable assets cannot have a fixed rate"
+      },
+      "inversiones.error_investment_value_negative": {
+        "from": "El valor no puede ser negativo",
+        "to": "The value cannot be negative"
+      },
+      "inversiones.error_investment_amount_zero": {
+        "from": "El monto debe ser mayor a 0",
+        "to": "The amount must be greater than 0"
+      },
+      "inversiones.success_investment_value_updated": {
+        "from": "Valor de la inversión actualizado",
+        "to": "Investment value updated"
+      },
+      "inversiones.success_inflation_configured": {
+        "from": "Configuración de inflación guardada",
+        "to": "Inflation settings saved"
+      },
+      "inversiones.investment_prefix": {
+        "from": "Inversión",
+        "to": "Investment"
+      },
+      "inversiones.liquidation_capital_recovery": {
+        "from": "Recuperación de capital",
+        "to": "Capital recovery"
+      },
+      "inversiones.liquidation_gain": {
+        "from": "Ganancia por liquidación",
+        "to": "Liquidation gain"
+      },
+      "inversiones.liquidation_loss": {
+        "from": "Pérdida por liquidación",
+        "to": "Liquidation loss"
+      },
+      "inversiones.rescate_inversion": {
+        "from": "Rescate de inversión",
+        "to": "Investment redemption"
+      },
+      "inversiones.desc_blocked_capital": {
+        "from": "Capital bloqueado en inversiones",
+        "to": "Capital locked in investments"
       },
       "inversiones.detail_history_title": {
         "from": "Historial de movimientos",
@@ -9372,6 +9496,10 @@
         "from": "No se puede eliminar: la categoría tiene sub-categorías hijas",
         "to": "Não é possível excluir: a categoria tem subcategorias"
       },
+      "errors.error_category_system_locked": {
+        "from": "Esta categoría es del sistema y solo se usa desde su propio módulo",
+        "to": "Esta categoria é do sistema e só é usada no próprio módulo dela"
+      },
       "errors.error_invalid_params": {
         "from": "Parámetros inválidos para la operación.",
         "to": "Parâmetros inválidos para a operação."
@@ -12072,9 +12200,9 @@
         "from": "Tecnología/Electro",
         "to": "Tecnologia/Eletro"
       },
-      "category_keys.cat_investments": {
-        "from": "Inversiones",
-        "to": "Investimentos"
+      "category_keys.cat_investments_portfolio": {
+        "from": "Cartera de Inversiones",
+        "to": "Carteira de Investimentos"
       },
       "category_keys.cat_dry_goods": {
         "from": "Almacén / Despensa",
@@ -14152,6 +14280,10 @@
         "from": "Distribución",
         "to": "Distribuição"
       },
+      "inversiones.tab_grafico": {
+        "from": "Gráfico",
+        "to": "Gráfico"
+      },
       "inversiones.tab_inflacion": {
         "from": "Inflación",
         "to": "Inflação"
@@ -14209,8 +14341,8 @@
         "to": "Rendimento nominal"
       },
       "inversiones.label_real_yield": {
-        "from": "Rendimiento real",
-        "to": "Rendimento real"
+        "from": "Rendimiento real (contempla la inflación)",
+        "to": "Rendimento real (considera a inflação)"
       },
       "inversiones.label_inflation_6m": {
         "from": "Inflación 6m",
@@ -14304,11 +14436,23 @@
         "from": "Configurá tu fuente de inflación para ver el rendimiento real",
         "to": "Configure sua fonte de inflação para ver o rendimento real"
       },
+      "inversiones.msg_inflation_disabled": {
+        "from": "Desactivada",
+        "to": "Desativada"
+      },
       "inversiones.msg_beat_inflation": {
         "from": "¡Ganaste poder adquisitivo real!",
         "to": "Você ganhou poder de compra real!"
       },
       "inversiones.msg_lost_purchasing_power": {
+        "from": "Perdiste poder adquisitivo real",
+        "to": "Você perdeu poder de compra real"
+      },
+      "inversiones.msg_portfolio_beat_inflation": {
+        "from": "¡Ganaste poder adquisitivo real!",
+        "to": "Você ganhou poder de compra real!"
+      },
+      "inversiones.msg_portfolio_lost_purchasing_power": {
         "from": "Perdiste poder adquisitivo real",
         "to": "Você perdeu poder de compra real"
       },
@@ -14565,16 +14709,120 @@
         "to": "Sem dados de inflação"
       },
       "inversiones.inflation_source_proxy_dolar": {
-        "from": "Proxy Dólar (recomendado)",
-        "to": "Proxy Dólar (recomendado)"
+        "from": "Proxy Dólar",
+        "to": "Proxy Dólar"
       },
-      "inversiones.inflation_source_api_automatica": {
-        "from": "API Automática",
-        "to": "API Automática"
+      "inversiones.inflation_source_proxy_dolar_desc": {
+        "from": "Por defecto. Usa el movimiento del dólar de tu país como aproximación de la inflación local. Automático, no tenés que cargar nada.",
+        "to": "Por padrão. Usa a variação do dólar do seu país como aproximação da inflação local. Automático, você não precisa carregar nada."
+      },
+      "inversiones.inflation_source_manual": {
+        "from": "Manual",
+        "to": "Manual"
+      },
+      "inversiones.inflation_source_manual_desc": {
+        "from": "Cargás vos la inflación anual acumulada hasta hoy. Se usa para calcular tu rendimiento real.",
+        "to": "Você informa a inflação anual acumulada até hoje. Ela é usada para calcular o seu rendimento real."
       },
       "inversiones.inflation_source_desactivado": {
-        "from": "Desactivado (solo nominal)",
-        "to": "Desativado (somente nominal)"
+        "from": "Desactivado",
+        "to": "Desativado"
+      },
+      "inversiones.inflation_source_desactivado_desc": {
+        "from": "Solo rendimiento nominal. El rendimiento real deja de mostrarse en la cartera, el historial y el detalle.",
+        "to": "Apenas rendimento nominal. O rendimento real deixa de aparecer na carteira, no histórico e no detalhe."
+      },
+      "inversiones.inflation_source_not_configured": {
+        "from": "Sin configurar",
+        "to": "Não configurado"
+      },
+      "inversiones.label_inflation_manual_value": {
+        "from": "Inflación anual acumulada (%)",
+        "to": "Inflação anual acumulada (%)"
+      },
+      "inversiones.placeholder_inflation_manual": {
+        "from": "Ej: 35",
+        "to": "Ex: 35"
+      },
+      "inversiones.inflation_manual_help": {
+        "from": "Es el porcentaje de inflación acumulada desde enero hasta hoy, no la variación de un solo mes.",
+        "to": "É a porcentagem de inflação acumulada desde janeiro até hoje, não a variação de um único mês."
+      },
+      "inversiones.error_inflation_manual_value_required": {
+        "from": "Ingresá la inflación anual acumulada",
+        "to": "Informe a inflação anual acumulada"
+      },
+      "inversiones.error_inflation_manual_value_invalid": {
+        "from": "El valor debe ser mayor a 0",
+        "to": "O valor deve ser maior que 0"
+      },
+      "inversiones.error_investment_insufficient_balance": {
+        "from": "La billetera no tiene saldo suficiente para esa inversión",
+        "to": "A carteira não tem saldo suficiente para esse investimento"
+      },
+      "inversiones.error_no_wallets_with_balance": {
+        "from": "Ninguna billetera de esta moneda tiene saldo suficiente para ese monto",
+        "to": "Nenhuma carteira desta moeda tem saldo suficiente para esse valor"
+      },
+      "inversiones.error_wallet_insufficient_balance": {
+        "from": "sin saldo suficiente",
+        "to": "sem saldo suficiente"
+      },
+      "inversiones.error_investment_already_liquidated": {
+        "from": "Esta inversión ya fue liquidada",
+        "to": "Este investimento já foi liquidado"
+      },
+      "inversiones.error_investment_rescue_exceeds_balance": {
+        "from": "El monto supera el saldo disponible de la inversión",
+        "to": "O valor excede o saldo disponível do investimento"
+      },
+      "inversiones.error_investment_type_invalid": {
+        "from": "Tipo de activo inválido",
+        "to": "Tipo de ativo inválido"
+      },
+      "inversiones.error_investment_variable_must_have_zero_tna": {
+        "from": "Los activos variables no pueden tener tasa fija",
+        "to": "Ativos variáveis não podem ter taxa fixa"
+      },
+      "inversiones.error_investment_value_negative": {
+        "from": "El valor no puede ser negativo",
+        "to": "O valor não pode ser negativo"
+      },
+      "inversiones.error_investment_amount_zero": {
+        "from": "El monto debe ser mayor a 0",
+        "to": "O valor deve ser maior que 0"
+      },
+      "inversiones.success_investment_value_updated": {
+        "from": "Valor de la inversión actualizado",
+        "to": "Valor do investimento atualizado"
+      },
+      "inversiones.success_inflation_configured": {
+        "from": "Configuración de inflación guardada",
+        "to": "Configuração de inflação salva"
+      },
+      "inversiones.investment_prefix": {
+        "from": "Inversión",
+        "to": "Investimento"
+      },
+      "inversiones.liquidation_capital_recovery": {
+        "from": "Recuperación de capital",
+        "to": "Recuperação de capital"
+      },
+      "inversiones.liquidation_gain": {
+        "from": "Ganancia por liquidación",
+        "to": "Ganho por liquidação"
+      },
+      "inversiones.liquidation_loss": {
+        "from": "Pérdida por liquidación",
+        "to": "Perda por liquidação"
+      },
+      "inversiones.rescate_inversion": {
+        "from": "Rescate de inversión",
+        "to": "Resgate de investimento"
+      },
+      "inversiones.desc_blocked_capital": {
+        "from": "Capital bloqueado en inversiones",
+        "to": "Capital bloqueado em investimentos"
       },
       "inversiones.detail_history_title": {
         "from": "Historial de movimientos",
