@@ -190,3 +190,29 @@ tipos de retorno no cambian):
   Sin residuos verificados después: 1 movimiento, inversión `activa`,
   `monto_liquidado` intacto, ninguna función temporal. **Pendiente**: que el
   front llegue a producción (lo publica PI1).
+- **L4** (2026-10-23, pedido del dueño sobre la inflación y los decimales): dos
+  agregados sobre la tanda cerrada.
+  (1) **Inflación anualizada**: la pestaña ahora muestra la acumulada con su
+  ventana y debajo "Inflación calculada: 12,62% anual". El backend la calcula en
+  `fn_inflacion_vigente` (`inflacion_anualizada`): con proxy dólar anualiza la
+  variación acumulada de la ventana real, `(1+acc)^(12/meses)-1`; con manual es
+  el valor anual que cargó el usuario. Se desplegó otra vez el 90 (BEGIN/COMMIT,
+  sin DROP) y el postcheck siguió 19/19: producción devuelve para el usuario 1
+  **3,22% acumulado en 3,2 meses → 12,62% anual**.
+  (2) **Separador decimal en los porcentajes**: el pedido fue "el % del módulo
+  debe usar el decimal elegido en configuración regional, para todo el módulo".
+  Causa: cada componente definía su `formatPercent` con `toFixed(2)`, que siempre
+  usa punto. Ahora `FormatContext` lleva `decimalSeparator` (lo publica
+  `useNumberFormat` desde `prefs.separador_decimal`), `@/lib/format` exporta un
+  único `formatPercent` que lo respeta y las cinco copias locales se borraron;
+  un test falla si alguna vuelve. Verificado en EgoLite con perfil celular
+  inyectando la preferencia por CDP (el valor real viene del backend y pisa el
+  cache): con coma el gráfico lee `86,36%` / `13,64%` y el detalle `+6,67%`; con
+  el separador del dueño (`.`) lee `86.36%` y `+6.67%`.
+  Commit `48ff5a8`. Suite: 548 pasan, 2 fallos preexistentes de `appLock`
+  (biometría), ajenos a Inversiones.
+  **Hallazgo aparte, sin tocar**: el *dinero* del módulo se formatea con
+  `formatCurrency`, que usa `Intl` con el locale y por lo tanto ignora
+  `separador_decimal`. Con la config del dueño (`.` como decimal) la plata sale
+  `1500,00 GBP` mientras los porcentajes salen `6.67%`. Es app-wide (22
+  archivos), no solo Inversiones; queda reportado para decidir.
