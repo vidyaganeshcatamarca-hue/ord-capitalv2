@@ -113,7 +113,6 @@ export function DistribucionView({ className }: DistribucionViewProps) {
             <thead>
               <tr>
                 <th scope="col">{t('label_type')}</th>
-                <th scope="col">{t('distribution_quantity')}</th>
                 <th scope="col">{t('distribution_total_value')}</th>
                 <th scope="col">{t('distribution_percentage')}</th>
               </tr>
@@ -122,12 +121,16 @@ export function DistribucionView({ className }: DistribucionViewProps) {
               {items.map((item) => (
                 <tr key={item.tipo_activo}>
                   <td>
+                    {/* S13: la cantidad pasó al lado del tipo. Como columna
+                        propia se comía el ancho que necesita el valor y hacía
+                        que "$ 350.000" se cortara en el teléfono. */}
                     <span className="distribucion-type-cell">
                       <span className={colorClassFor(item.tipo_activo)} aria-hidden="true" />
                       {t(typeTranslationKey(item.tipo_activo))}
+                      {' '}
+                      <span className="distribucion-type-count">({item.cantidad})</span>
                     </span>
                   </td>
-                  <td>{item.cantidad}</td>
                   <td>{formatCurrency(item.valor_total)}</td>
                   <td>{formatPercent(item.porcentaje_valor)}</td>
                 </tr>

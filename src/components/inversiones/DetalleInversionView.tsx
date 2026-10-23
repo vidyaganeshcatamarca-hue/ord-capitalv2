@@ -27,9 +27,14 @@ export interface DetalleInversion {
   estado_inversion: string | null
   rendimiento_nominal: number | null
   rendimiento_real: number | null
+  /** S16: lo ya retirado en rescates parciales. Un retiro no es una perdida. */
+  monto_liquidado?: number | null
   /** B3b: false cuando la fuente esta desactivada (no es "falta configurar"). */
   inflacion_disponible?: boolean
   fuente_inflacion?: string | null
+  /** S12: por que no hay inflacion, para no pedir "configurar" cuando lo que
+   *  falta es el dato de cotizaciones. */
+  motivo_inflacion?: 'ok' | 'desactivado' | 'sin_datos' | 'manual_sin_valor'
   historial: HistorialItem[] | null
 }
 
@@ -152,6 +157,9 @@ export function DetalleInversionView({
   const semaforoLabel = t(semaforoLabelKey(data.estado_semaforo_key))
   const moneda = data.moneda || 'ARS'
   const historial = data.historial || []
+  // S16: plata que ya volvio al usuario por rescates parciales. El nominal del
+  // backend ya la suma, pero la UI tiene que decirlo o el numero no se entiende.
+  const retirado = Number(data.monto_liquidado ?? 0)
 
   return (
     <div className="detalle-view">
@@ -211,6 +219,14 @@ export function DetalleInversionView({
           <span className="detalle-metric-value">
             {formatCurrency(data.valor_actual_teorico, moneda)}
           </span>
+          {/* S16: si hubo rescates parciales se dice explicitamente. Sin esta
+              linea, el "valor actual" mas bajo que el capital original se lee
+              como una perdida, cuando en realidad parte ya se retiro. */}
+          {retirado > 0 && (
+            <span className="detalle-metric-note">
+              {t('label_partial_withdrawal_note', { amount: formatCurrency(retirado, moneda) })}
+            </span>
+          )}
         </article>
 
         <article className="detalle-metric-card">
@@ -229,9 +245,16 @@ export function DetalleInversionView({
               <span className="detalle-yield detalle-yield--na detalle-metric-helper">
                 {t('msg_inflation_disabled')}
               </span>
-            ) : (
+            ) : data.motivo_inflacion === 'manual_sin_valor' ? (
               <span className="detalle-yield detalle-yield--na detalle-metric-helper">
                 {t('msg_configure_inflation')}
+              </span>
+            ) : (
+              // S12: ya esta configurado en proxy dolar (el default); si no hay
+              // numero es porque todavia no hay cotizaciones, no porque falte
+              // configurar nada.
+              <span className="detalle-yield detalle-yield--na detalle-metric-helper">
+                {t('msg_inflation_no_data')}
               </span>
             )
           ) : (

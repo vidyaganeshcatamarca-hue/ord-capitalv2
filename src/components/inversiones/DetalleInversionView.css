@@ -388,12 +388,15 @@
   display: flex;
   gap: var(--space-3);
   margin-top: var(--space-2);
-  padding: var(--space-3) 0;
-  background: linear-gradient(
-    180deg,
-    rgba(13, 17, 23, 0) 0%,
-    var(--bg) 30%
-  );
+  padding: var(--space-3) 0 calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  /* S16b (2026-10-22): antes era un degradado desde rgba(13,17,23,0) (oscuro
+     hardcodeado) y, al ser sticky, la tarjeta de rendimiento real se veia POR
+     DEBAJO de los botones. Ahora el fondo es opaco y del color del tema, asi
+     que la barra tapa lo que pasa por detras en vez de mezclarse con el texto. */
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  /* La ultima tarjeta tiene que poder scrollearse por encima de la barra. */
+  z-index: 2;
 }
 
 .detalle-action-btn {
@@ -436,4 +439,12 @@
 .detalle-action-btn--liquidate {
   background: var(--coral-dim, rgba(230, 57, 70, 0.12));
   color: var(--coral);
+}
+
+/* S16 (2026-10-22): nota bajo "Valor actual" que explica el retiro parcial. */
+.detalle-metric-note {
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 500;
+  line-height: 1.35;
 }

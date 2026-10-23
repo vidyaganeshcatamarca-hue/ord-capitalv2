@@ -1454,7 +1454,7 @@ export const wallets = {
 // ============================================
 export const inversiones = {
   // Header / navigation
-  title: "Mi Cartera",
+  title: "Mi Cartera (Total)",
   subtitle: "Inversiones y crecimiento patrimonial",
   tab_cartera: "Cartera",
   tab_track_record: "Historial",
@@ -1483,7 +1483,7 @@ export const inversiones = {
   label_current_value: "Valor actual",
   label_gain: "Ganancia",
   label_nominal_yield: "Rendimiento nominal",
-  label_real_yield: "Rendimiento real (contempla la inflación)",
+  label_real_yield: "Rendimiento real",
   label_inflation_6m: "Inflación 6m",
   label_last_conciliation: "Última conciliación",
   label_start_date: "Fecha de inicio",
@@ -1513,6 +1513,12 @@ export const inversiones = {
   // Messages
   msg_no_investments: "No tienes inversiones activas",
   msg_configure_inflation: "Configurá tu fuente de inflación para ver el rendimiento real",
+  msg_inflation_no_data: "Todavía no hay datos de inflación para tu moneda",
+  label_inflation_computed: "Inflación acumulada",
+  label_inflation_window_months: "últimos {months} meses",
+  label_partial_withdrawal_note: "Ya retiraste {amount} en rescates parciales; el rendimiento se calcula sobre el total, así que un retiro no es una pérdida.",
+  error_wallet_currency_mismatch: "La billetera de destino tiene que ser de la misma moneda que la inversión.",
+  error_wallet_not_found: "No encontramos esa billetera.",
   msg_inflation_disabled: "Desactivada",
   msg_beat_inflation: "¡Ganaste poder adquisitivo real!",
   msg_lost_purchasing_power: "Perdiste poder adquisitivo real",

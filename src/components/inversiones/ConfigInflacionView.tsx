@@ -2,9 +2,6 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
-import { useCountryCatalog } from '@/lib/useCountryCatalog'
-import { regionName } from '@/lib/countryCatalog'
-import { useLanguage } from '@/locales/LanguageProvider'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import './ConfigInflacionView.css'
 
@@ -27,7 +24,7 @@ type Pais = string
  */
 type FuenteInflacion = 'proxy_dolar' | 'manual' | 'desactivado'
 
-/** Contrato de fn_obtener_config_inflacion (T5 + 86). */
+/** Contrato de fn_obtener_config_inflacion (T5 + 86 + S12). */
 interface ConfigInflacionActual {
   pais: string | null
   fuente_inflacion: string | null
@@ -35,9 +32,12 @@ interface ConfigInflacionActual {
   inflacion_12m: number | null
   inflacion_manual_anual_pct: number | null
   configurado: boolean
+  /** S12: la inflacion se calcula en vivo; puede no haber datos todavia. */
+  disponible?: boolean
+  motivo?: 'ok' | 'desactivado' | 'sin_datos' | 'manual_sin_valor'
+  ventana_6m_meses?: number | null
+  ventana_12m_meses?: number | null
 }
-
-const PAISES: { value: Pais; key: string }[] = []
 
 const FUENTES: { value: FuenteInflacion; key: string; descKey: string }[] = [
   { value: 'proxy_dolar', key: 'inflation_source_proxy_dolar', descKey: 'inflation_source_proxy_dolar_desc' },
@@ -47,21 +47,13 @@ const FUENTES: { value: FuenteInflacion; key: string; descKey: string }[] = [
 
 export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewProps) {
   const { showToast } = useToast()
-  // B8 (2026-10-21): el selector de pais estaba HARDCODEADO (nueve paises
-  // con Argentina por defecto). Un usuario de Reino Unido veia "AR" y el
-  // catalogo real (p_paises) ni siquiera tenia GB en la lista. Ahora el
-  // catalogo viene de la base y el default es el pais del usuario.
-  const { countries } = useCountryCatalog()
+  // S14 (2026-10-22): el pais ya NO se elige aca. Es el pais de la configuracion
+  // regional (p_config_region.pais_codigo) y determina la moneda local; dejarlo
+  // como <select> era ofrecer un cambio que no corresponde a este modulo. El
+  // selector anterior ademas tenia un bug: su lista estaba vacia (PAISES = []),
+  // asi que la config guardada de pais nunca se aplicaba y siempre se pisaba con
+  // el pais regional.
   const { countryCode } = useNumberFormat()
-  const { lang } = useLanguage()
-  const paisesDisponibles = useMemo(
-    () =>
-      countries
-        .slice()
-        .sort((a, b) => a.code.localeCompare(b.code))
-        .map((c) => ({ value: c.code, nombre: regionName(c.code, lang) })),
-    [countries, lang]
-  )
   const [pais, setPais] = useState<Pais>('')
   const [fuente, setFuente] = useState<FuenteInflacion>('proxy_dolar')
   const [valorManual, setValorManual] = useState('')
@@ -69,6 +61,14 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [configurado, setConfigurado] = useState(false)
+  // S12/S17: lo que devuelve el backend sobre la inflacion vigente, para poder
+  // explicar en pantalla con que se calculo y sobre que ventana.
+  const [vigente, setVigente] = useState<{
+    disponible: boolean
+    motivo: string
+    inflacion6m: number | null
+    ventana6m: number | null
+  }>({ disponible: false, motivo: '', inflacion6m: null, ventana6m: null })
 
   // Lo que esta guardado en el backend: sirve para saber si hay cambios (B5).
   const [guardado, setGuardado] = useState<{
@@ -77,14 +77,11 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
     valorManual: number | null
   }>({ pais: null, fuente: 'proxy_dolar', valorManual: null })
 
-  // B8: cuando no hay config guardada, el pais por defecto es el del
-  // usuario (p_config_region.pais_codigo), no uno fijo.
+  // S14: el pais es el de la configuracion regional, no se elige aca.
   useEffect(() => {
     if (pais || !countryCode) return
-    if (paisesDisponibles.some((p) => p.value === countryCode)) {
-      setPais(countryCode)
-    }
-  }, [pais, countryCode, paisesDisponibles])
+    setPais(countryCode)
+  }, [pais, countryCode])
 
   // T5/T8: precargar la config REAL del usuario. Antes no existía RPC de
   // lectura y el tab siempre mostraba AR/proxy_dolar, aunque el dueño ya
@@ -102,9 +99,6 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
         const fuenteGuardada = String(actual?.fuente_inflacion ?? '').trim() as FuenteInflacion
         const valorGuardado = actual?.inflacion_manual_anual_pct ?? null
 
-        if (paisGuardado && PAISES.some((p) => p.value === paisGuardado)) {
-          setPais(paisGuardado as Pais)
-        }
         if (fuenteGuardada && FUENTES.some((f) => f.value === fuenteGuardada)) {
           setFuente(fuenteGuardada)
         }
@@ -112,6 +106,12 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
           setValorManual(String(valorGuardado))
         }
         setConfigurado(Boolean(actual?.configurado))
+        setVigente({
+          disponible: Boolean(actual?.disponible),
+          motivo: String(actual?.motivo ?? ''),
+          inflacion6m: actual?.inflacion_6m ?? null,
+          ventana6m: actual?.ventana_6m_meses ?? null,
+        })
         setGuardado({
           pais: paisGuardado || null,
           fuente: fuenteGuardada && FUENTES.some((f) => f.value === fuenteGuardada)
@@ -199,9 +199,7 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
           <h2 className="config-inflacion-title">{t('modal_config_inflation_title')}</h2>
         </div>
         <span className="config-inflacion-pill">
-          {!configurado
-            ? t('inflation_source_not_configured')
-            : t(fuenteSeleccionada?.key ?? 'inflation_source_proxy_dolar')}
+          {t(fuenteSeleccionada?.key ?? 'inflation_source_proxy_dolar')}
         </span>
       </header>
 
@@ -213,27 +211,8 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
         </div>
       ) : (
         <form className="config-inflacion-form" onSubmit={handleSubmit}>
-          <div className="config-inflacion-field">
-            <label className="config-inflacion-label" htmlFor="config-inflacion-pais">
-              {t('label_country')}
-            </label>
-            <select
-              id="config-inflacion-pais"
-              value={pais}
-              onChange={(event) => setPais(event.target.value as Pais)}
-              disabled={saving || paisesDisponibles.length === 0}
-            >
-              {paisesDisponibles.length === 0 && (
-                <option value="">{t('loading')}</option>
-              )}
-              {paisesDisponibles.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.value} - {option.nombre || option.value}
-                </option>
-              ))}
-            </select>
-          </div>
-
+          {/* S14: el pais no se muestra ni se elige: es el de la configuracion
+              regional. Solo se informa la moneda local con la que se calcula. */}
           <div className="config-inflacion-field">
             <label className="config-inflacion-label" htmlFor="config-inflacion-fuente">
               {t('label_inflation_source')}
@@ -252,6 +231,28 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
             </select>
             {fuenteSeleccionada && (
               <p className="config-inflacion-help">{t(fuenteSeleccionada.descKey)}</p>
+            )}
+          </div>
+
+          {/* S17: se explica con que se calculo y sobre que ventana, en vez de
+              dejar el numero sin contexto. */}
+          <div className="config-inflacion-vigente">
+            <span className="config-inflacion-vigente-label">{t('label_inflation_computed')}</span>
+            {vigente.disponible ? (
+              <span className="config-inflacion-vigente-value">
+                {vigente.inflacion6m === null ? '-' : `${vigente.inflacion6m.toFixed(2)}%`}
+                {vigente.ventana6m !== null && vigente.ventana6m !== undefined && (
+                  <span className="config-inflacion-vigente-window">
+                    {' '}· {t('label_inflation_window_months', { months: String(vigente.ventana6m) })}
+                  </span>
+                )}
+              </span>
+            ) : (
+              <span className="config-inflacion-vigente-value">
+                {vigente.motivo === 'desactivado'
+                  ? t('msg_inflation_disabled')
+                  : t('msg_inflation_no_data')}
+              </span>
             )}
           </div>
 

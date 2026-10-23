@@ -69,26 +69,35 @@
 }
 
 .rendimiento-real-row--usd {
-  gap: var(--space-3);
+  /* S11 (2026-10-22): el dueño quiere que los valores por moneda caigan en la
+     MISMA columna que el total. Para eso la fila es una grilla de dos
+     columnas: la moneda a la izquierda y el valor pegado a la derecha, que es
+     donde termina el total de arriba. */
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0 var(--space-3);
   color: var(--text-3);
   font-size: calc(12px * var(--font-scale));
   font-family: var(--font-body);
-  flex-wrap: wrap;
 }
 
 .rendimiento-real-moneda-line {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  white-space: nowrap;
-  min-width: 0;
-  max-width: 100%;
-  overflow: hidden;
+  /* Cada moneda ocupa la fila entera: label + valor alineado a la derecha. */
+  display: contents;
+}
+
+.rendimiento-real-moneda-line .rendimiento-real-total-usd-label {
+  grid-column: 1;
+  text-align: left;
 }
 
 .rendimiento-real-moneda-line .rendimiento-real-total-usd {
+  grid-column: 2;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rendimiento-real-row--yields {
@@ -139,6 +148,8 @@
   align-items: center;
   gap: var(--space-2);
   min-width: 0;
+  /* Cuando el bloque lleva un mensaje largo en vez de un número, se apila. */
+  flex-wrap: wrap;
 }
 
 .rendimiento-real-yield-label {
@@ -172,6 +183,14 @@
 
 .rendimiento-real-yield--na {
   color: var(--text-3);
+  /* Un mensaje explicativo ("Todavía no hay datos de inflación para tu
+     moneda") no es un número: tiene que envolver, no empujar la tarjeta fuera
+     de la pantalla. */
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-family: var(--font-body);
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .rendimiento-real-verdict {

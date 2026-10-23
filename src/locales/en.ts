@@ -1276,7 +1276,7 @@ export const wallets = {
 };
 
 export const inversiones = {
-  title: "My Portfolio",
+  title: "My Portfolio (Total)",
   subtitle: "Investments and net worth growth",
   tab_cartera: "Portfolio",
   tab_track_record: "History",
@@ -1296,7 +1296,7 @@ export const inversiones = {
   label_current_value: "Current value",
   label_gain: "Gain",
   label_nominal_yield: "Nominal yield",
-  label_real_yield: "Real yield (inflation adjusted)",
+  label_real_yield: "Real yield",
   label_inflation_6m: "Inflation 6m",
   label_last_conciliation: "Last reconciliation",
   label_start_date: "Start date",
@@ -1320,6 +1320,12 @@ export const inversiones = {
   badge_semaforo_red: "Outdated",
   msg_no_investments: "You have no active investments",
   msg_configure_inflation: "Set up your inflation source to see the real yield",
+  msg_inflation_no_data: "There is no inflation data for your currency yet",
+  label_inflation_computed: "Accumulated inflation",
+  label_inflation_window_months: "last {months} months",
+  label_partial_withdrawal_note: "You already withdrew {amount} in partial redemptions; the yield is calculated on the total, so a withdrawal is not a loss.",
+  error_wallet_currency_mismatch: "The destination wallet must use the same currency as the investment.",
+  error_wallet_not_found: "We could not find that wallet.",
   msg_inflation_disabled: "Disabled",
   msg_beat_inflation: "You gained real purchasing power!",
   msg_lost_purchasing_power: "You lost real purchasing power",

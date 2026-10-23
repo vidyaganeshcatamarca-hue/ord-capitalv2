@@ -67,18 +67,24 @@
 .distribucion-donut-label {
   fill: var(--text);
   font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
-  font-size: calc(28px * var(--font-scale));
+  /* S13: acompaña al donut de 168px (antes 28px sobre 220px). */
+  font-size: calc(20px * var(--font-scale));
   font-weight: 800;
 }
 
 .distribucion-table-wrap {
   min-width: 0;
-  overflow-x: auto;
+  /* S13 (2026-10-22): el dueño vio la tabla con la columna Valor cortada
+     ("$ 35" en lugar de "$ 350.000") y una barra de scroll horizontal. La
+     tabla tenía min-width: 520px y overflow-x: auto, o sea que en un teléfono
+     SIEMPRE desbordaba. Ahora entra: layout fijo, sin min-width y sin scroll. */
+  overflow-x: visible;
 }
 
 .distribucion-table {
   width: 100%;
-  min-width: 520px;
+  min-width: 0;
+  table-layout: fixed;
   border-collapse: collapse;
 }
 
@@ -91,19 +97,41 @@
 
 .distribucion-table th {
   color: var(--text-3);
-  font-size: calc(11px * var(--font-scale));
+  font-size: calc(10px * var(--font-scale));
   font-weight: 800;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   text-transform: uppercase;
-  white-space: nowrap;
+  /* Los encabezados ya no necesitan nowrap: con layout fijo tienen ancho
+     asignado y pueden cortar en dos líneas sin empujar la tabla. */
+  white-space: normal;
+  line-height: 1.2;
 }
 
 .distribucion-table td {
   color: var(--text-2);
   font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
-  font-size: calc(14px * var(--font-scale));
+  font-size: calc(13px * var(--font-scale));
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+}
+
+/* S13 (2026-10-22): tres columnas. La de "cantidad" se fue al lado del tipo
+   porque, como columna, le robaba el ancho que necesita el valor y el dueño
+   terminaba viendo "$ 35" en lugar de "$ 350.000". */
+.distribucion-table th:nth-child(2),
+.distribucion-table td:nth-child(2) {
+  width: 42%;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.distribucion-table th:nth-child(3),
+.distribucion-table td:nth-child(3) {
+  width: 22%;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .distribucion-table th:first-child,
@@ -128,6 +156,10 @@
   color: var(--text);
   font-family: var(--font-body);
   font-weight: 700;
+  min-width: 0;
+  /* S13: el nombre del tipo puede partirse en dos líneas antes que empujar la
+     tabla; el valor de la derecha es el que no se puede cortar. */
+  overflow-wrap: anywhere;
 }
 
 .distribucion-type-dot {
@@ -229,6 +261,35 @@
 
   .distribucion-card,
   .distribucion-view--loading {
-    padding: var(--space-4);
+    padding: var(--space-3);
+    /* S13: sin esto el gap de 24px entre donut y tabla se come el alto que
+       sobra en el teléfono y aparece un scroll inútil. */
+    gap: var(--space-3);
   }
+
+  .distribucion-title {
+    font-size: calc(20px * var(--font-scale));
+  }
+
+  /* S13: en un teléfono el número se achica un punto y se recorta el padding,
+     así "1.500,00 GBP" entra completo y la fila no scrollea de costado. */
+  .distribucion-table th,
+  .distribucion-table td {
+    padding: 10px 6px;
+  }
+
+  .distribucion-table td {
+    font-size: calc(12px * var(--font-scale));
+  }
+
+  .distribucion-table th {
+    font-size: calc(9.5px * var(--font-scale));
+  }
+}
+
+/* S13: la cantidad de inversiones de ese tipo acompaña al nombre, chiquita. */
+.distribucion-type-count {
+  margin-left: 4px;
+  color: var(--text-3);
+  font-weight: 600;
 }
