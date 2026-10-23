@@ -87,17 +87,24 @@ type CurrencyFormatMap = Record<
   { decimales?: number; separador_miles?: string; separador_decimal?: string }
 >
 
-/** Traduce el mapa del backend a lo único que necesita el formateador. */
-function toCurrencySeparators(
+/** Traduce el mapa del backend a lo que necesita el formateador. */
+function toCurrencyFormats(
   map: CurrencyFormatMap | null
-): Record<string, { group?: string; decimal?: string }> {
-  const out: Record<string, { group?: string; decimal?: string }> = {}
+): Record<string, { group?: string; decimal?: string; decimals?: number }> {
+  const out: Record<string, { group?: string; decimal?: string; decimals?: number }> = {}
   if (!map || typeof map !== 'object') return out
   for (const [code, entry] of Object.entries(map)) {
     if (!entry || typeof entry !== 'object') continue
     const group = typeof entry.separador_miles === 'string' ? entry.separador_miles : undefined
     const decimal = typeof entry.separador_decimal === 'string' ? entry.separador_decimal : undefined
-    if (code && (group || decimal)) out[code.toUpperCase()] = { group, decimal }
+    // Tanda 2 (S19): los decimales también son por moneda.
+    const decimals =
+      typeof entry.decimales === 'number' && Number.isFinite(entry.decimales)
+        ? Math.min(4, Math.max(0, Math.trunc(entry.decimales)))
+        : undefined
+    if (code && (group || decimal || decimals !== undefined)) {
+      out[code.toUpperCase()] = { group, decimal, decimals }
+    }
   }
   return out
 }
@@ -111,10 +118,10 @@ export function useNumberFormat() {
   const [regionError, setRegionError] = useState(false)
   const [regionAttempt, setRegionAttempt] = useState(0)
   const [hydratedFor, setHydratedFor] = useState<string | null>(null)
-  // Separadores por moneda (hasta tres): es lo que hace que la plata respete la
+  // Formato por moneda (hasta tres): es lo que hace que la plata respete la
   // elección del usuario en vez del default del locale.
-  const [currencySeparators, setCurrencySeparators] = useState<
-    Record<string, { group?: string; decimal?: string }>
+  const [currencyFormats, setCurrencyFormats] = useState<
+    Record<string, { group?: string; decimal?: string; decimals?: number }>
   >({})
 
   // First paint from the local snapshot. These values change rarely, so beating
@@ -188,7 +195,7 @@ export function useNumberFormat() {
     rpc<CurrencyFormatMap>('fn_obtener_formato_moneda')
       .then((map) => {
         if (cancelled) return
-        setCurrencySeparators(toCurrencySeparators(map))
+        setCurrencyFormats(toCurrencyFormats(map))
       })
       .catch(() => {
         // Si falla, el formateador cae al separador heredado: no se rompe nada.
@@ -212,10 +219,10 @@ export function useNumberFormat() {
       // El separador elegido viaja al contexto para que `formatPercent` lo use:
       // los porcentajes del modulo de Inversiones lo estaban ignorando.
       decimalSeparator: prefs.separador_decimal,
-      // Y el mapa por moneda para que `formatCurrency` use el de cada una.
-      currencySeparators,
+      // Y el mapa por moneda (separadores y decimales) para `formatCurrency`.
+      currencyFormats,
     })
-  }, [locale, region, prefs, currencySeparators])
+  }, [locale, region, prefs, currencyFormats])
 
   const reloadRegion = useCallback(() => {
     invalidateRegionCache()

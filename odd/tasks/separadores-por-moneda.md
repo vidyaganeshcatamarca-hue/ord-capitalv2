@@ -85,3 +85,22 @@ separador y los porcentajes con otro. La regla que fijó vale para toda la app.
   **Pendiente deliberado**: los decimales por moneda (tanda 2, S19). Hoy se
   siguen usando `decimales_moneda_local`/`decimales_segunda_moneda`; el mapa ya
   trae `decimales` pero no se aplica.
+
+- **L4** (2026-10-23, tanda 2 con el OK del dueño): **decimales por moneda**.
+  `CurrencyFormatEntry` suma `decimals`; `decimalsFor()` usa el del mapa cuando
+  existe y, si no, conserva la regla histórica (USD = decimales de la segunda
+  moneda, resto = decimales de la local), así ningún usuario ve cambiar sus
+  números. El campo `decimales` del RPC `fn_obtener_formato_moneda()` ya existía:
+  no hizo falta tocar el backend. Se recorta a 0..4.
+  Verificado en EgoLite: con la config real del dueño no cambia nada
+  (`1,736.92 GBP` / `1.600,00 BRL`), y con un mapa inyectado de BRL con 0
+  decimales la cartera pasa a `1.600 BRL` y `1.500 BRL` mientras GBP sigue con
+  `1,736.92` — o sea decimales por moneda reales y convergiendo en componentes ya
+  montados gracias a `useFormatRevision`.
+  Suite: **561 pasan**, los 2 de `appLock` preexistentes; `tsc -b` y `vite build`
+  limpios. Commit `(tanda 2)`.
+  Con esto el formateador del módulo ya cumple S18 y S19. Lo que queda fuera de
+  alcance, anotado: los ~18 archivos del resto de la app usan `formatCurrency`
+  pero no se suscriben a `useFormatRevision` (misma latencia de hidratación, no
+  es un error de formato); y `formatCurrency` sin moneda cae en la local, que es
+  lo correcto para los genéricos.

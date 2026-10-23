@@ -24,17 +24,26 @@ export interface FormatContext {
   /** Separador decimal elegido en la configuración regional (por defecto ','). */
   decimalSeparator: string
   /**
-   * Separadores por moneda, resueltos por `fn_obtener_formato_moneda()`.
+   * Formato por moneda, resuelto por `fn_obtener_formato_moneda()`.
    *
-   * El dueño definió la regla: cada moneda usa SU separador elegido, y los
-   * valores genéricos (porcentajes) usan el de la moneda local. Hasta ahora el
-   * dinero se formateaba con `Intl` y el separador salía del locale, así que un
-   * usuario con punto configurado veía coma en la plata y punto en los
-   * porcentajes. Este mapa es lo que hace que ambos coincidan.
+   * El dueño definió la regla: cada moneda usa SU formato elegido (separadores
+   * y decimales), y los valores genéricos (porcentajes) usan el de la moneda
+   * local. Hasta la tanda 1 el dinero se formateaba con `Intl` y los separadores
+   * salían del locale; hasta la tanda 2 los decimales salían de las preferencias
+   * globales (moneda local / segunda moneda).
    *
    * Vacío = nadie lo publicó todavía: se usa el comportamiento de siempre.
    */
-  currencySeparators: Record<string, { group?: string; decimal?: string }>
+  currencyFormats: Record<string, CurrencyFormatEntry>
+}
+
+export interface CurrencyFormatEntry {
+  /** Separador de miles elegido para esa moneda. */
+  group?: string
+  /** Separador decimal elegido para esa moneda. */
+  decimal?: string
+  /** Decimales elegidos para esa moneda (0..4). */
+  decimals?: number
 }
 
 const DEFAULT_CONTEXT: FormatContext = {
@@ -43,7 +52,7 @@ const DEFAULT_CONTEXT: FormatContext = {
   decimalsLocal: 0,
   decimalsSecondary: 1,
   decimalSeparator: ',',
-  currencySeparators: {},
+  currencyFormats: {},
 }
 
 let context: FormatContext = { ...DEFAULT_CONTEXT }
@@ -92,7 +101,17 @@ function normalizeCurrency(currency: string | null | undefined): string {
 
 /** Decimals are a property of the currency: the local one, or the second currency (USD). */
 function decimalsFor(currency: string): number {
-  return currency === 'USD' ? context.decimalsSecondary : context.decimalsLocal
+  const code = normalizeCurrency(currency)
+
+  // Tanda 2 (S19): si la moneda tiene decimales elegidos, mandan esos.
+  const propio = context.currencyFormats?.[code]
+  if (propio && typeof propio.decimals === 'number' && Number.isFinite(propio.decimals)) {
+    return Math.min(4, Math.max(0, Math.trunc(propio.decimals)))
+  }
+
+  // Sin entrada propia se mantiene la regla histórica (USD = segunda moneda),
+  // así ningún usuario ve cambiar sus números por este cambio.
+  return code === 'USD' ? context.decimalsSecondary : context.decimalsLocal
 }
 
 /**
@@ -108,10 +127,10 @@ function decimalsFor(currency: string): number {
  */
 function separatorsFor(currency: string): { group?: string; decimal?: string } {
   const code = normalizeCurrency(currency)
-  const propio = context.currencySeparators?.[code]
+  const propio = context.currencyFormats?.[code]
   if (propio && (propio.group || propio.decimal)) return propio
 
-  const local = context.currencySeparators?.[normalizeCurrency(context.localCurrency)]
+  const local = context.currencyFormats?.[normalizeCurrency(context.localCurrency)]
   if (local && (local.group || local.decimal)) return local
 
   return {}

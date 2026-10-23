@@ -33,21 +33,21 @@ const { formatCurrency, formatPercent, setFormatContext } = await import(
 )
 
 /** Deja el contexto como lo publica el hook. */
-function contexto({ locale = 'es-AR', local = 'ARS', separators = {}, decimal = ',' } = {}) {
+function contexto({ locale = 'es-AR', local = 'ARS', formats = {}, decimal = ',' } = {}) {
   setFormatContext({
     locale,
     localCurrency: local,
     decimalsLocal: 0,
     decimalsSecondary: 1,
     decimalSeparator: decimal,
-    currencySeparators: separators,
+    currencyFormats: formats,
   })
 }
 
 // ───────────── el test que protege lo ya escrito (26 archivos) ──────────────
 
 test('sin separadores configurados, la salida es la de siempre (locale puro)', () => {
-  contexto({ separators: {} })
+  contexto({ formats: {} })
 
   // Comparación directa contra Intl: antes formatCurrency era exactamente esto.
   const casos = [
@@ -80,7 +80,7 @@ test('cada moneda usa SU separador, no el de las demás', () => {
     decimalsLocal: 2,
     decimalsSecondary: 2,
     decimalSeparator: ',',
-    currencySeparators: {
+    currencyFormats: {
       ARS: { group: '.', decimal: ',' },
       USD: { group: ',', decimal: '.' },
       BRL: { group: '.', decimal: ',' },
@@ -105,7 +105,7 @@ test('una moneda sin entrada propia cae al separador de la moneda local', () => 
     decimalsLocal: 2,
     decimalsSecondary: 2,
     decimalSeparator: ',',
-    currencySeparators: { GBP: { group: ',', decimal: '.' } },
+    currencyFormats: { GBP: { group: ',', decimal: '.' } },
   })
   // EUR no tiene fila: se usa el de GBP.
   const eur = formatCurrency(1234.5, 'EUR')
@@ -113,7 +113,7 @@ test('una moneda sin entrada propia cae al separador de la moneda local', () => 
 })
 
 test('el símbolo, su posición y el signo no se tocan', () => {
-  contexto({ separators: { ARS: { group: '.', decimal: ',' } } })
+  contexto({ formats: { ARS: { group: '.', decimal: ',' } } })
   const negativo = formatCurrency(-1234.5, 'ARS')
   assert.ok(negativo.includes('-'), `debe conservar el signo: ${negativo}`)
   assert.ok(negativo.includes('$'), `debe conservar el símbolo: ${negativo}`)
@@ -133,11 +133,11 @@ test('sin valor no se inventa un número', () => {
 // ───────────────────────────── porcentajes ──────────────────────────────────
 
 test('los porcentajes usan el separador de la moneda local', () => {
-  contexto({ local: 'ARS', separators: { ARS: { group: '.', decimal: ',' } } })
+  contexto({ local: 'ARS', formats: { ARS: { group: '.', decimal: ',' } } })
   assert.equal(formatPercent(12.62, { signed: false }), '12,62%')
   assert.equal(formatPercent(6.665), '+6,67%')
 
-  contexto({ local: 'USD', separators: { USD: { group: ',', decimal: '.' } } })
+  contexto({ local: 'USD', formats: { USD: { group: ',', decimal: '.' } } })
   assert.equal(formatPercent(12.62, { signed: false }), '12.62%')
   assert.equal(formatPercent(6.665), '+6.67%')
 })
@@ -146,7 +146,7 @@ test('un porcentaje no toma el separador de la moneda del activo', () => {
   // El dueño lo dijo explícito: un porcentaje es genérico → moneda local.
   contexto({
     local: 'ARS',
-    separators: { ARS: { group: '.', decimal: ',' }, USD: { group: ',', decimal: '.' } },
+    formats: { ARS: { group: '.', decimal: ',' }, USD: { group: ',', decimal: '.' } },
   })
   assert.equal(formatPercent(12.62, { signed: false }), '12,62%')
 })
@@ -176,5 +176,77 @@ test('el hook publica el mapa por moneda del backend', () => {
     /fn_obtener_formato_moneda/,
     'el hook debe leer el formato por moneda que ya existe en el backend'
   )
-  assert.match(hook, /currencySeparators/, 'y publicarlo en el contexto de formato')
+  assert.match(hook, /currencyFormats/, 'y publicarlo en el contexto de formato')
+})
+
+// ─────────────────── tanda 2: decimales por moneda (S19) ───────────────────
+
+test('cada moneda usa SUS decimales', () => {
+  setFormatContext({
+    locale: 'es-AR',
+    localCurrency: 'GBP',
+    decimalsLocal: 2,
+    decimalsSecondary: 1,
+    decimalSeparator: '.',
+    currencyFormats: {
+      GBP: { group: ',', decimal: '.', decimals: 2 },
+      BRL: { group: '.', decimal: ',', decimals: 0 },
+      ARS: { group: '.', decimal: ',', decimals: 4 },
+    },
+  })
+
+  assert.ok(
+    formatCurrency(1500, 'GBP').includes('1,500.00'),
+    `GBP con 2 decimales: ${formatCurrency(1500, 'GBP')}`
+  )
+  assert.ok(
+    formatCurrency(1500, 'BRL').includes('1.500'),
+    `BRL con 0 decimales no debe llevar centavos: ${formatCurrency(1500, 'BRL')}`
+  )
+  assert.ok(
+    formatCurrency(1500.1234, 'ARS').includes('1.500,1234'),
+    `ARS con 4 decimales: ${formatCurrency(1500.1234, 'ARS')}`
+  )
+})
+
+test('una moneda sin decimales propios conserva la regla histórica', () => {
+  // Sin entrada en el mapa, USD sigue usando los decimales de la segunda
+  // moneda y el resto los de la local: nadie ve cambiar sus números.
+  setFormatContext({
+    locale: 'es-AR',
+    localCurrency: 'ARS',
+    decimalsLocal: 0,
+    decimalsSecondary: 1,
+    decimalSeparator: ',',
+    currencyFormats: {},
+  })
+  const usd = formatCurrency(200.35, 'USD')
+  assert.ok(usd.includes('200,4') || usd.includes('200.4'), `USD conserva 1 decimal: ${usd}`)
+
+  const ars = formatCurrency(1234.56, 'ARS')
+  assert.ok(!/,\d/.test(ars), `ARS conserva 0 decimales: ${ars}`)
+})
+
+test('los decimales fuera de rango se recortan a 0..4', () => {
+  setFormatContext({
+    locale: 'es-AR',
+    localCurrency: 'ARS',
+    decimalsLocal: 2,
+    decimalsSecondary: 2,
+    decimalSeparator: ',',
+    currencyFormats: { ARS: { group: '.', decimal: ',', decimals: 9 } },
+  })
+  const texto = formatCurrency(1.123456789, 'ARS')
+  const decimales = (texto.split(',')[1] || '').replace(/[^\d]/g, '')
+  assert.ok(decimales.length <= 4, `nunca más de 4 decimales: ${texto}`)
+})
+
+test('el mapa por moneda del backend trae los decimales elegidos', () => {
+  const hook = read('src/hooks/useNumberFormat.ts')
+  assert.match(hook, /decimales/, 'el hook debe leer el campo decimales del RPC')
+  assert.match(
+    hook,
+    /toCurrencyFormats/,
+    'el mapa tiene que incluir los decimales, no solo los separadores'
+  )
 })
