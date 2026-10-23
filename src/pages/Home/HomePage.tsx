@@ -944,17 +944,17 @@ export function HomePage() {
   // Semáforo con días detallados (Observación 3)
   const getSemaforoDetails = (ultimaConciliacionAt: string | null) => {
     if (!ultimaConciliacionAt) {
-      return { color: 'red', text: 'Sin conciliar', days: null }
+      return { color: 'red', text: t('sem_sin_conciliar'), days: null }
     }
     const diffTime = Math.abs(new Date().getTime() - new Date(ultimaConciliacionAt).getTime())
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
     if (diffDays < 5) {
-      return { color: 'green', text: 'Sincronizado', days: diffDays }
+      return { color: 'green', text: t('sem_sincronizado'), days: diffDays }
     }
     if (diffDays <= 10) {
-      return { color: 'yellow', text: 'Desactualizado', days: diffDays }
+      return { color: 'yellow', text: t('sem_desactualizado'), days: diffDays }
     }
-    return { color: 'red', text: 'Dato Dudoso', days: diffDays }
+    return { color: 'red', text: t('sem_dato_dudoso'), days: diffDays }
   }
 
   const openConciliacion = (billetera: any) => {
@@ -1282,7 +1282,7 @@ export function HomePage() {
                           <span style={{ fontSize: 'calc(10px * var(--font-scale))', fontWeight: 600, color: `var(--text-3)` }}>
                             {sem.text}
                           </span>
-                          <span className={`dot dot-${sem.color}`} title={`Conciliado: ${sem.text}`} />
+                          <span className={`dot dot-${sem.color}`} title={t('sem_estado_tooltip', { estado: sem.text })} />
                         </div>
                       </div>
                       <div className="billetera-card-main">

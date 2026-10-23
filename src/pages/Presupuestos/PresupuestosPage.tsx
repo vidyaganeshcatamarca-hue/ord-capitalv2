@@ -63,12 +63,16 @@ const formatMesLabel = (d: Date, locale: string) =>
   d.toLocaleDateString(locale, { month: 'short', year: 'numeric' })
     .replace(/^\w/, c => c.toUpperCase())
 
-const TIPO_CUPO_META: Record<string, { label: string; icono: string }> = {
-  need: { label: 'NECESIDADES', icono: '🏠' },
-  want: { label: 'DESEOS', icono: '✨' },
-  investment: { label: t('budget_label_saving_investment'), icono: '💎' },
-  saving: { label: t('budget_label_saving_investment'), icono: '💎' },
-  tithe: { label: 'DIEZMO', icono: '🙏' },
+// Solo se guarda la CLAVE de traduccion: si el texto traducido viviera aqui,
+// `t()` se evaluaria al importar el modulo y quedaria congelado en el idioma
+// de arranque (no reacciona al cambio de idioma). El texto se resuelve en el
+// render, donde el idioma ya es el vigente.
+const TIPO_CUPO_META: Record<string, { labelKey: string; icono: string }> = {
+  need: { labelKey: 'budget_tipo_need', icono: '🏠' },
+  want: { labelKey: 'budget_tipo_want', icono: '✨' },
+  investment: { labelKey: 'budget_label_saving_investment', icono: '💎' },
+  saving: { labelKey: 'budget_label_saving_investment', icono: '💎' },
+  tithe: { labelKey: 'budget_tipo_tithe', icono: '🙏' },
 }
 
 const getColorBarra = (estado: string) => {
@@ -157,10 +161,10 @@ export function PresupuestosPage() {
   const activeOffset = new Date().getDate() < diaAncla ? -1 : 0
 
   const getLabelForOffset = (offset: number) => {
-    if (offset === activeOffset) return `✅ Ciclo Actual`
-    if (offset === activeOffset - 1) return `Ciclo Anterior`
-    if (offset === activeOffset - 2) return `Doble Anterior`
-    return `Ciclo Actual`
+    if (offset === activeOffset) return t('budget_cycle_current_check')
+    if (offset === activeOffset - 1) return t('budget_cycle_previous')
+    if (offset === activeOffset - 2) return t('budget_cycle_double_previous')
+    return t('budget_cycle_current')
   }
 
   useEffect(() => {
@@ -252,8 +256,8 @@ export function PresupuestosPage() {
         }
       }
     } catch (err: any) {
-      console.error('Error cargando presupuestos:', err)
-      showToast('Error al cargar presupuestos', 'error')
+      console.error(t('budget_error_loading'), err)
+      showToast(t('budget_error_load'), 'error')
     } finally {
       setLoading(false)
     }
@@ -315,14 +319,14 @@ export function PresupuestosPage() {
     if (config?.modo_presupuesto === 'anticipado') return t('budget_projection_month')
     if (saldoAsignar === 0) return t('budget_zero_base_reached')
     if (saldoAsignar !== null && saldoAsignar < 0) return t('budget_over_allocation')
-    return 'DISPONIBLE PARA ASIGNAR'
+    return t('budget_available_to_assign_upper')
   }
 
   const getSubtextoDisponible = () => {
     if (config?.modo_presupuesto === 'anticipado') return t('budget_subtexto_anticipado')
     if (saldoAsignar !== null && saldoAsignar < 0) return t('budget_over_allocation_desc')
-    if (saldoAsignar === 0) return 'Cada peso tiene un destino asignado'
-    if (saldoAsignar !== null && saldoAsignar > 0) return 'Dinero esperando destino'
+    if (saldoAsignar === 0) return t('budget_every_peso_assigned')
+    if (saldoAsignar !== null && saldoAsignar > 0) return t('budget_money_waiting')
     return ''
   }
 
@@ -358,7 +362,7 @@ export function PresupuestosPage() {
     } catch (err: any) {
       const msg = err?.message?.includes('error_budget_insufficient_base_zero')
         ? t('budget_error_exceeds_available', { amount: formatMonto(saldoAsignar ?? 0) })
-        : 'Error al asignar presupuesto'
+        : t('budget_error_assign')
       showToast(msg, 'error')
     }
   }
@@ -426,7 +430,7 @@ export function PresupuestosPage() {
     return [
       ...(saldoAsignar !== null && saldoAsignar > 0 ? [{
         estructura_id: -999,
-        nombre_categoria: 'Disponible para Asignar',
+        nombre_categoria: 'budget_available_to_assign',
         icono: '💰',
         color: '',
         tipo_cupo: '',
@@ -511,8 +515,8 @@ export function PresupuestosPage() {
       await cargarDatos()
     } catch (err: any) {
       const msg = err?.message?.includes('error_insufficient_funds_in_envelope')
-        ? 'Fondos insuficientes en el sobre de origen'
-        : 'Error al transferir entre sobres'
+        ? t('budget_error_insufficient_source')
+        : t('budget_error_transfer')
       showToast(msg, 'error')
     } finally {
       setLoadingTransferir(false)
@@ -548,7 +552,7 @@ export function PresupuestosPage() {
 
   const handleGuardarReglas = async () => {
     if (!reglasValidas) {
-      showToast('Los porcentajes deben sumar 100%', 'error')
+      showToast(t('budget_error_percentages'), 'error')
       return
     }
     if (reglasForm.diaAncla < 1 || reglasForm.diaAncla > 31) {
@@ -633,7 +637,7 @@ export function PresupuestosPage() {
       setMontosEditados(iniciales)
       setPaso(2)
     } catch {
-      showToast('Error al obtener sugerencias', 'error')
+      showToast(t('budget_error_suggestions'), 'error')
     }
   }
 
@@ -668,7 +672,7 @@ export function PresupuestosPage() {
         navigate('/configuracion')
       }
     } catch {
-      showToast('Error al activar Modo Base Cero', 'error')
+      showToast(t('budget_error_enable_zero_base'), 'error')
     } finally {
       setLoadingActivar(false)
     }
@@ -683,7 +687,7 @@ export function PresupuestosPage() {
 
       {/* ── HEADER ── */}
       <div className="presupuestos-header">
-        <h1>Presupuestos</h1>
+        <h1>{t('budget_title')}</h1>
         <div className="mes-selector">
           <button
             className="mes-selector-btn"
@@ -715,7 +719,7 @@ export function PresupuestosPage() {
         <div className="header-actions">
           <button
             className="btn-icon"
-            title="Reglas de Oro"
+            title={t('budget_golden_rules_title')}
             onClick={() => setShowReglasModal(true)}
           >⚙️</button>
         </div>
@@ -745,7 +749,7 @@ export function PresupuestosPage() {
               className="btn-modo-disciplina"
               onClick={handleAbrirBaseCero}
             >
-              🔒 Activar Modo Disciplina
+              {t('budget_enable_discipline')}
             </button>
           </div>
         )}
@@ -846,7 +850,7 @@ export function PresupuestosPage() {
 
             {mostrando === 'opciones' ? (
               <div className="asignar-opciones">
-                <div className="asignar-opciones-label">{t('budget_modal_select_action') || 'Opciones de asignación:'}</div>
+                <div className="asignar-opciones-label">{t('budget_assign_options')}</div>
                 {config?.modo_presupuesto !== 'anticipado' && (
                   <div className="asignar-opcion" onClick={handleLlenarHueco}>
                     <span className="asignar-opcion-icono">💰</span>
@@ -1053,7 +1057,7 @@ export function PresupuestosPage() {
                   className={`modo-toggle-btn${modoForm === 'anticipado' ? ' activo' : ''}`}
                   onClick={() => setModoForm('anticipado')}
                 >
-                  🕊️ Anticipado
+                  {t('budget_mode_libertad_short')}
                 </button>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
@@ -1062,7 +1066,7 @@ export function PresupuestosPage() {
                   className={`modo-toggle-btn${modoForm === 'base_cero' ? ' activo' : ''}`}
                   onClick={() => setModoForm('base_cero')}
                 >
-                  🔒 Base Cero
+                  {t('budget_mode_base_cero_locked_short')}
                 </button>
               </div>
             </div>
@@ -1070,14 +1074,14 @@ export function PresupuestosPage() {
             {/* Sliders */}
             <div className="reglas-slider-grupo">
               {([
-                { key: 'necesidades', emoji: '🏠', label: 'Necesidades' },
-                { key: 'deseos', emoji: '✨', label: 'Deseos' },
-                { key: 'ahorro', emoji: '💎', label: t('budget_rule_ahorro') },
-                { key: 'diezmo', emoji: '🙏', label: 'Diezmo' },
-              ] as const).map(({ key, emoji, label }) => (
+                { key: 'necesidades', emoji: '🏠', labelKey: 'budget_needs' },
+                { key: 'deseos', emoji: '✨', labelKey: 'budget_rule_deseos' },
+                { key: 'ahorro', emoji: '💎', labelKey: 'budget_rule_ahorro' },
+                { key: 'diezmo', emoji: '🙏', labelKey: 'budget_rule_diezmo' },
+              ] as const).map(({ key, emoji, labelKey }) => (
                 <div className="regla-item" key={key}>
                   <div className="regla-item-header">
-                    <span className="regla-item-label">{emoji} {label}</span>
+                    <span className="regla-item-label">{emoji} {t(labelKey)}</span>
                     <input
                       className="regla-pct-input"
                       type="number"
@@ -1101,7 +1105,7 @@ export function PresupuestosPage() {
             <div className={`reglas-suma-display ${reglasValidas ? 'ok' : 'error'}`}>
               {reglasValidas
                 ? t('budget_rules_total_perfect')
-                : `⚠️ Total: ${sumaReglas.toFixed(0)}% — Debe ser exactamente 100%`}
+                : t('budget_total_must_be_100', { total: sumaReglas.toFixed(0) })}
             </div>
 
             {/* Día ancla */}
@@ -1118,14 +1122,14 @@ export function PresupuestosPage() {
 
             <div className="modal-btns">
               <button className="btn-cancelar" onClick={closeBudgetSettings}>
-                Cancelar
+                {t('btn_cancel')}
               </button>
               <button
                 className="btn-primario"
                 onClick={handleGuardarReglas}
                 disabled={!reglasValidas || loadingReglas}
               >
-                {loadingReglas ? 'Guardando...' : 'Guardar Reglas'}
+                {loadingReglas ? t('btn_saving') : t('btn_save_rules')}
               </button>
             </div>
           </div>
@@ -1140,7 +1144,7 @@ export function PresupuestosPage() {
           <div className="modal-sheet centrado-modal" onClick={e => e.stopPropagation()}>
             {paso === 1 ? (
               <>
-                <div className="modal-titulo">🔒 Activar Modo Disciplina de Hierro</div>
+                <div className="modal-titulo">{t('budget_enable_discipline_iron')}</div>
                 <div className="modal-subtitulo">{t("budget_golden_rules_modal_subtitle")}</div>
 
                 <div className="contrato-lista">
@@ -1171,14 +1175,14 @@ export function PresupuestosPage() {
 
                 <div className="modal-btns">
                   <button className="btn-cancelar" onClick={closeBudgetSettings}>
-                    Cancelar
+                    {t('btn_cancel')}
                   </button>
                   <button
                     className="btn-primario peligro"
                     onClick={handlePasar2}
                     disabled={acepto.trim().toUpperCase() !== 'ACEPTO'}
                   >
-                    Activar Disciplina
+                    {t('btn_activate_discipline_confirm')}
                   </button>
                 </div>
               </>
@@ -1258,7 +1262,7 @@ interface GrupoProps {
 }
 
 function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, modoPresupuesto, fmt }: GrupoProps) {
-  const meta = TIPO_CUPO_META[tipo] ?? { label: tipo.toUpperCase(), icono: '📦' }
+  const meta = TIPO_CUPO_META[tipo] ?? { labelKey: tipo.toUpperCase(), icono: '📦' }
   const totalAsignado = items.reduce((s, i) => s + Number(i.monto_asignado ?? 0), 0)
 
   return (
@@ -1266,7 +1270,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, modoPresupue
       <div className="acord-grupo-header" onClick={onToggle}>
         <div className="acord-grupo-left">
           <span className="acord-grupo-icono"><CategoryIcon name={meta.icono} size={18} /></span>
-          <span className="acord-grupo-titulo">{meta.label}</span>
+          <span className="acord-grupo-titulo">{t(meta.labelKey)}</span>
         </div>
         <div className="acord-grupo-right">
           <span className="acord-grupo-total">
@@ -1327,7 +1331,7 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto, fmt }: FilaSobre
     <div className="sobre-fila" style={isLast ? { borderBottom: 'none' } : {}}>
       {/* Botón asignar */}
       <button className="sobre-btn-asignar" onClick={e => { e.stopPropagation(); onAsignar() }}>
-        + Asignar
+        {t('budget_assign_btn')}
       </button>
 
       {/* Nombre */}
@@ -1359,16 +1363,16 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto, fmt }: FilaSobre
       {/* Stats */}
       <div className="sobre-stats">
         <span className="sobre-stat">
-          <span className="sobre-stat-label">Asig: </span>
+          <span className="sobre-stat-label">{t('budget_stat_assigned')} </span>
           <span className="sobre-stat-val">{fmt(Number(sobre.monto_asignado))}</span>
         </span>
         <span className="sobre-stat">
-          <span className="sobre-stat-label">Gast: </span>
+          <span className="sobre-stat-label">{t('budget_stat_spent')} </span>
           <span className="sobre-stat-val">{fmt(Number(sobre.monto_gastado))}</span>
         </span>
         {!sinDatos && (
           <span className="sobre-stat">
-            <span className="sobre-stat-label">Avance: </span>
+            <span className="sobre-stat-label">{t('budget_stat_progress')} </span>
             <span className="sobre-stat-val">{pct}%</span>
           </span>
         )}
@@ -1447,8 +1451,8 @@ function EmptyState() {
       <div className="empty-icono">💰</div>
       <h3>{t("budget_empty_state_title")}</h3>
       <p>
-        {t("budget_empty_state_desc1")}
-        en la sección de <strong>{t("menu_categorias")}</strong> para empezar a presupuestar.
+        {t("budget_empty_state_desc1")}{' '}
+        {t("budget_empty_state_desc2", { categoria: t("title_categories") })}
       </p>
     </div>
   )

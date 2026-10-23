@@ -113,13 +113,20 @@ if (MODE === 'build') {
       if (!existsSync(file)) continue
       const result = assess(lang, readDictionary(file), recorded)
       const work = [...result.missing, ...result.stale, ...result.drifted]
-      if (work.length) pending.push({ lang, work, extra: result.extra })
+      if (work.length) pending.push({ lang, work, result, extra: result.extra })
     }
 
     if (pending.length) {
       console.error('REFUSING TO BUILD — there is pending work that the rebuild would erase:')
       for (const p of pending) {
-        console.error(`  ${p.lang}: ${p.work.length} key(s) not translated yet`)
+        // Decir CUAL es el motivo: 'missing' y 'stale' piden acciones distintas.
+        // Antes decia 'not translated yet' para los tres casos, que era enganoso
+        // cuando el diccionario ya tenia la traduccion y solo faltaba el registro.
+        const parts = []
+        if (p.result.missing.length) parts.push(`${p.result.missing.length} missing`)
+        if (p.result.stale.length) parts.push(`${p.result.stale.length} stale`)
+        if (p.result.drifted.length) parts.push(`${p.result.drifted.length} drifted`)
+        console.error(`  ${p.lang}: ${parts.join(', ')}`)
         for (const id of p.work.slice(0, 12)) console.error(`    ${id}`)
         if (p.work.length > 12) console.error(`    ... and ${p.work.length - 12} more`)
       }

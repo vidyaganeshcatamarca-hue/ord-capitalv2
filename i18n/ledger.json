@@ -770,6 +770,118 @@
         "from": "+ Crear Tarjeta",
         "to": "+ Create Card"
       },
+      "errors.cards_error_load": {
+        "from": "Error al cargar tarjetas: ",
+        "to": "Error loading cards: "
+      },
+      "errors.cards_error_detail": {
+        "from": "Error al cargar detalle: ",
+        "to": "Error loading details: "
+      },
+      "errors.cards_error_reactivate": {
+        "from": "Error al reactivar tarjeta: ",
+        "to": "Error reactivating card: "
+      },
+      "errors.cards_name_required": {
+        "from": "Ingresa el nombre de la tarjeta",
+        "to": "Enter the card name"
+      },
+      "errors.cards_no_bank": {
+        "from": "Sin banco",
+        "to": "No bank"
+      },
+      "errors.cards_created_success": {
+        "from": "Tarjeta creada correctamente",
+        "to": "Card created successfully"
+      },
+      "errors.cards_updated_success": {
+        "from": "Tarjeta actualizada",
+        "to": "Card updated"
+      },
+      "errors.cards_archived_success": {
+        "from": "Tarjeta archivada",
+        "to": "Card archived"
+      },
+      "errors.cards_usage_high": {
+        "from": "Alto",
+        "to": "High"
+      },
+      "errors.cards_usage_medium": {
+        "from": "Moderado",
+        "to": "Moderate"
+      },
+      "errors.cards_usage_healthy": {
+        "from": "Saludable",
+        "to": "Healthy"
+      },
+      "errors.cards_available_label": {
+        "from": "Disponible",
+        "to": "Available"
+      },
+      "errors.cards_installments_label": {
+        "from": "Cuotas",
+        "to": "Installments"
+      },
+      "errors.cards_pending_installments": {
+        "from": "Cuotas Pendientes",
+        "to": "Pending Installments"
+      },
+      "errors.cards_payment_history": {
+        "from": "Historial de Pagos",
+        "to": "Payment History"
+      },
+      "errors.cards_archive": {
+        "from": "Archivar tarjeta",
+        "to": "Archive card"
+      },
+      "errors.cards_new_btn": {
+        "from": "+ Nueva",
+        "to": "+ New"
+      },
+      "errors.cards_debt_total": {
+        "from": "Deuda Total en Cuotas",
+        "to": "Total Installment Debt"
+      },
+      "errors.cards_active_one": {
+        "from": "{count} tarjeta activa",
+        "to": "{count} active card"
+      },
+      "errors.cards_active_other": {
+        "from": "{count} tarjetas activas",
+        "to": "{count} active cards"
+      },
+      "errors.cards_tab_comparison": {
+        "from": "Comparativa",
+        "to": "Comparison"
+      },
+      "errors.cards_no_comparison_data": {
+        "from": "Sin datos comparativos",
+        "to": "No comparison data"
+      },
+      "errors.cards_installment_due": {
+        "from": "Cuota {position} de {total} - Vence el {date}",
+        "to": "Installment {position} of {total} - Due {date}"
+      },
+      "errors.cards_no_pending_installments": {
+        "from": "No tienes compras en cuotas pendientes para esta tarjeta.",
+        "to": "You have no pending installment purchases for this card."
+      },
+      "errors.cards_no_payments_recorded": {
+        "from": "Sin pagos registrados para esta tarjeta",
+        "to": "No payments recorded for this card"
+      },
+      "errors.cards_saving": {
+        "from": "Guardando...",
+        "to": "Saving..."
+      },
+      "errors.cards_save_changes": {
+        "from": "Guardar cambios",
+        "to": "Save changes"
+      },
+      "errors.cards_create_btn": {
+        "from": "+ Crear Tarjeta",
+        "to": "+ Create Card"
+      },
       "errors.pay_resumen_title": {
         "from": "Pagar Resumen",
         "to": "Pay Statement"
@@ -4778,6 +4890,10 @@
         "from": "(hace {days}d)",
         "to": "({days}d ago)"
       },
+      "wallets.sem_estado_tooltip": {
+        "from": "Conciliado: {estado}",
+        "to": "Reconciled: {estado}"
+      },
       "wallets.moneda_ars": {
         "from": "ARS (Moneda local)",
         "to": "ARS (Local currency)"
@@ -7255,8 +7371,8 @@
         "to": "Create categories with an allocation type (Need / Want / Savings)"
       },
       "inversiones.budget_empty_state_desc2": {
-        "from": "en la sección de <strong>Categorías</strong> para empezar a presupuestar.",
-        "to": "in the <strong>Categories</strong> section to start budgeting."
+        "from": "en la sección de {categoria} para empezar a presupuestar.",
+        "to": "in the {categoria} section to start budgeting."
       },
       "inversiones.btn_understood": {
         "from": "Entendido",
@@ -7273,6 +7389,126 @@
       "inversiones.budget_prev_month_spent": {
         "from": "Gastado mes anterior",
         "to": "Spent last month"
+      },
+      "inversiones.budget_tipo_need": {
+        "from": "NECESIDADES",
+        "to": "NEEDS"
+      },
+      "inversiones.budget_tipo_want": {
+        "from": "DESEOS",
+        "to": "WANTS"
+      },
+      "inversiones.budget_tipo_tithe": {
+        "from": "DIEZMO",
+        "to": "TITHING"
+      },
+      "inversiones.budget_cycle_current_check": {
+        "from": "✅ Ciclo Actual",
+        "to": "✅ Current Cycle"
+      },
+      "inversiones.budget_cycle_current": {
+        "from": "Ciclo Actual",
+        "to": "Current Cycle"
+      },
+      "inversiones.budget_cycle_previous": {
+        "from": "Ciclo Anterior",
+        "to": "Previous Cycle"
+      },
+      "inversiones.budget_cycle_double_previous": {
+        "from": "Doble Anterior",
+        "to": "Two Cycles Back"
+      },
+      "inversiones.budget_available_to_assign": {
+        "from": "Disponible para Asignar",
+        "to": "Available to Assign"
+      },
+      "inversiones.budget_available_to_assign_upper": {
+        "from": "DISPONIBLE PARA ASIGNAR",
+        "to": "AVAILABLE TO ASSIGN"
+      },
+      "inversiones.budget_every_peso_assigned": {
+        "from": "Cada peso tiene un destino asignado",
+        "to": "Every peso has an assigned destination"
+      },
+      "inversiones.budget_money_waiting": {
+        "from": "Dinero esperando destino",
+        "to": "Money waiting for a destination"
+      },
+      "inversiones.budget_golden_rules_title": {
+        "from": "Reglas de Oro",
+        "to": "Golden Rules"
+      },
+      "inversiones.budget_enable_discipline": {
+        "from": "🔒 Activar Modo Disciplina",
+        "to": "🔒 Enable Discipline Mode"
+      },
+      "inversiones.budget_enable_discipline_iron": {
+        "from": "🔒 Activar Modo Disciplina de Hierro",
+        "to": "🔒 Enable Iron Discipline Mode"
+      },
+      "inversiones.budget_mode_base_cero_locked_short": {
+        "from": "🔒 Base Cero",
+        "to": "🔒 Zero Base"
+      },
+      "inversiones.budget_assign_options": {
+        "from": "Opciones de asignación:",
+        "to": "Assignment options:"
+      },
+      "inversiones.budget_needs": {
+        "from": "Necesidades",
+        "to": "Needs"
+      },
+      "inversiones.budget_assign_btn": {
+        "from": "+ Asignar",
+        "to": "+ Assign"
+      },
+      "inversiones.budget_stat_assigned": {
+        "from": "Asig:",
+        "to": "Assigned:"
+      },
+      "inversiones.budget_stat_spent": {
+        "from": "Gast:",
+        "to": "Spent:"
+      },
+      "inversiones.budget_stat_progress": {
+        "from": "Avance:",
+        "to": "Progress:"
+      },
+      "inversiones.budget_total_must_be_100": {
+        "from": "⚠️ Total: {total}% — Debe ser exactamente 100%",
+        "to": "⚠️ Total: {total}% — Must be exactly 100%"
+      },
+      "inversiones.budget_error_loading": {
+        "from": "Error cargando presupuestos:",
+        "to": "Error loading budgets:"
+      },
+      "inversiones.budget_error_load": {
+        "from": "Error al cargar presupuestos",
+        "to": "Error loading budgets"
+      },
+      "inversiones.budget_error_assign": {
+        "from": "Error al asignar presupuesto",
+        "to": "Error assigning budget"
+      },
+      "inversiones.budget_error_insufficient_source": {
+        "from": "Fondos insuficientes en el sobre de origen",
+        "to": "Insufficient funds in the source envelope"
+      },
+      "inversiones.budget_error_transfer": {
+        "from": "Error al transferir entre sobres",
+        "to": "Error transferring between envelopes"
+      },
+      "inversiones.budget_error_percentages": {
+        "from": "Los porcentajes deben sumar 100%",
+        "to": "The percentages must add up to 100%"
+      },
+      "inversiones.budget_error_enable_zero_base": {
+        "from": "Error al activar Modo Base Cero",
+        "to": "Error enabling Zero Base Mode"
+      },
+      "inversiones.budget_error_suggestions": {
+        "from": "Error al obtener sugerencias",
+        "to": "Error retrieving suggestions"
       },
       "inversiones.card_status_healthy": {
         "from": "Saludable",
@@ -10061,6 +10297,118 @@
         "to": "Salvar alterações"
       },
       "errors.btn_create_card": {
+        "from": "+ Crear Tarjeta",
+        "to": "+ Criar Cartão"
+      },
+      "errors.cards_error_load": {
+        "from": "Error al cargar tarjetas: ",
+        "to": "Erro ao carregar cartões: "
+      },
+      "errors.cards_error_detail": {
+        "from": "Error al cargar detalle: ",
+        "to": "Erro ao carregar detalhes: "
+      },
+      "errors.cards_error_reactivate": {
+        "from": "Error al reactivar tarjeta: ",
+        "to": "Erro ao reativar cartão: "
+      },
+      "errors.cards_name_required": {
+        "from": "Ingresa el nombre de la tarjeta",
+        "to": "Informe o nome do cartão"
+      },
+      "errors.cards_no_bank": {
+        "from": "Sin banco",
+        "to": "Sem banco"
+      },
+      "errors.cards_created_success": {
+        "from": "Tarjeta creada correctamente",
+        "to": "Cartão criado com sucesso"
+      },
+      "errors.cards_updated_success": {
+        "from": "Tarjeta actualizada",
+        "to": "Cartão atualizado"
+      },
+      "errors.cards_archived_success": {
+        "from": "Tarjeta archivada",
+        "to": "Cartão arquivado"
+      },
+      "errors.cards_usage_high": {
+        "from": "Alto",
+        "to": "Alto"
+      },
+      "errors.cards_usage_medium": {
+        "from": "Moderado",
+        "to": "Moderado"
+      },
+      "errors.cards_usage_healthy": {
+        "from": "Saludable",
+        "to": "Saudável"
+      },
+      "errors.cards_available_label": {
+        "from": "Disponible",
+        "to": "Disponível"
+      },
+      "errors.cards_installments_label": {
+        "from": "Cuotas",
+        "to": "Parcelas"
+      },
+      "errors.cards_pending_installments": {
+        "from": "Cuotas Pendientes",
+        "to": "Parcelas Pendentes"
+      },
+      "errors.cards_payment_history": {
+        "from": "Historial de Pagos",
+        "to": "Histórico de Pagamentos"
+      },
+      "errors.cards_archive": {
+        "from": "Archivar tarjeta",
+        "to": "Arquivar cartão"
+      },
+      "errors.cards_new_btn": {
+        "from": "+ Nueva",
+        "to": "+ Novo"
+      },
+      "errors.cards_debt_total": {
+        "from": "Deuda Total en Cuotas",
+        "to": "Dívida Total em Parcelas"
+      },
+      "errors.cards_active_one": {
+        "from": "{count} tarjeta activa",
+        "to": "{count} cartão ativo"
+      },
+      "errors.cards_active_other": {
+        "from": "{count} tarjetas activas",
+        "to": "{count} cartões ativos"
+      },
+      "errors.cards_tab_comparison": {
+        "from": "Comparativa",
+        "to": "Comparativo"
+      },
+      "errors.cards_no_comparison_data": {
+        "from": "Sin datos comparativos",
+        "to": "Sem dados comparativos"
+      },
+      "errors.cards_installment_due": {
+        "from": "Cuota {position} de {total} - Vence el {date}",
+        "to": "Parcela {position} de {total} - Vence em {date}"
+      },
+      "errors.cards_no_pending_installments": {
+        "from": "No tienes compras en cuotas pendientes para esta tarjeta.",
+        "to": "Você não tem compras parceladas pendentes para este cartão."
+      },
+      "errors.cards_no_payments_recorded": {
+        "from": "Sin pagos registrados para esta tarjeta",
+        "to": "Sem pagamentos registrados para este cartão"
+      },
+      "errors.cards_saving": {
+        "from": "Guardando...",
+        "to": "Salvando..."
+      },
+      "errors.cards_save_changes": {
+        "from": "Guardar cambios",
+        "to": "Salvar alterações"
+      },
+      "errors.cards_create_btn": {
         "from": "+ Crear Tarjeta",
         "to": "+ Criar Cartão"
       },
@@ -14072,6 +14420,10 @@
         "from": "(hace {days}d)",
         "to": "(há {days}d)"
       },
+      "wallets.sem_estado_tooltip": {
+        "from": "Conciliado: {estado}",
+        "to": "Conciliado: {estado}"
+      },
       "wallets.moneda_ars": {
         "from": "ARS (Moneda local)",
         "to": "ARS (Moeda local)"
@@ -16549,8 +16901,8 @@
         "to": "Crie categorias com tipo de alocação (Necessidade / Desejo / Poupança)"
       },
       "inversiones.budget_empty_state_desc2": {
-        "from": "en la sección de <strong>Categorías</strong> para empezar a presupuestar.",
-        "to": "na seção de <strong>Categorias</strong> para começar a orçar."
+        "from": "en la sección de {categoria} para empezar a presupuestar.",
+        "to": "na seção de {categoria} para começar a orçar."
       },
       "inversiones.btn_understood": {
         "from": "Entendido",
@@ -16567,6 +16919,126 @@
       "inversiones.budget_prev_month_spent": {
         "from": "Gastado mes anterior",
         "to": "Gasto no mês anterior"
+      },
+      "inversiones.budget_tipo_need": {
+        "from": "NECESIDADES",
+        "to": "NECESSIDADES"
+      },
+      "inversiones.budget_tipo_want": {
+        "from": "DESEOS",
+        "to": "DESEJOS"
+      },
+      "inversiones.budget_tipo_tithe": {
+        "from": "DIEZMO",
+        "to": "DÍZIMO"
+      },
+      "inversiones.budget_cycle_current_check": {
+        "from": "✅ Ciclo Actual",
+        "to": "✅ Ciclo Atual"
+      },
+      "inversiones.budget_cycle_current": {
+        "from": "Ciclo Actual",
+        "to": "Ciclo Atual"
+      },
+      "inversiones.budget_cycle_previous": {
+        "from": "Ciclo Anterior",
+        "to": "Ciclo Anterior"
+      },
+      "inversiones.budget_cycle_double_previous": {
+        "from": "Doble Anterior",
+        "to": "Dois Ciclos Atrás"
+      },
+      "inversiones.budget_available_to_assign": {
+        "from": "Disponible para Asignar",
+        "to": "Disponível para Atribuir"
+      },
+      "inversiones.budget_available_to_assign_upper": {
+        "from": "DISPONIBLE PARA ASIGNAR",
+        "to": "DISPONÍVEL PARA ATRIBUIR"
+      },
+      "inversiones.budget_every_peso_assigned": {
+        "from": "Cada peso tiene un destino asignado",
+        "to": "Cada real tem um destino atribuído"
+      },
+      "inversiones.budget_money_waiting": {
+        "from": "Dinero esperando destino",
+        "to": "Dinheiro esperando um destino"
+      },
+      "inversiones.budget_golden_rules_title": {
+        "from": "Reglas de Oro",
+        "to": "Regras de Ouro"
+      },
+      "inversiones.budget_enable_discipline": {
+        "from": "🔒 Activar Modo Disciplina",
+        "to": "🔒 Ativar Modo Disciplina"
+      },
+      "inversiones.budget_enable_discipline_iron": {
+        "from": "🔒 Activar Modo Disciplina de Hierro",
+        "to": "🔒 Ativar Modo Disciplina de Ferro"
+      },
+      "inversiones.budget_mode_base_cero_locked_short": {
+        "from": "🔒 Base Cero",
+        "to": "🔒 Base zero"
+      },
+      "inversiones.budget_assign_options": {
+        "from": "Opciones de asignación:",
+        "to": "Opções de atribuição:"
+      },
+      "inversiones.budget_needs": {
+        "from": "Necesidades",
+        "to": "Necessidades"
+      },
+      "inversiones.budget_assign_btn": {
+        "from": "+ Asignar",
+        "to": "+ Atribuir"
+      },
+      "inversiones.budget_stat_assigned": {
+        "from": "Asig:",
+        "to": "Atribuído:"
+      },
+      "inversiones.budget_stat_spent": {
+        "from": "Gast:",
+        "to": "Gasto:"
+      },
+      "inversiones.budget_stat_progress": {
+        "from": "Avance:",
+        "to": "Avanço:"
+      },
+      "inversiones.budget_total_must_be_100": {
+        "from": "⚠️ Total: {total}% — Debe ser exactamente 100%",
+        "to": "⚠️ Total: {total}% — Deve ser exatamente 100%"
+      },
+      "inversiones.budget_error_loading": {
+        "from": "Error cargando presupuestos:",
+        "to": "Erro ao carregar orçamentos:"
+      },
+      "inversiones.budget_error_load": {
+        "from": "Error al cargar presupuestos",
+        "to": "Erro ao carregar orçamentos"
+      },
+      "inversiones.budget_error_assign": {
+        "from": "Error al asignar presupuesto",
+        "to": "Erro ao atribuir orçamento"
+      },
+      "inversiones.budget_error_insufficient_source": {
+        "from": "Fondos insuficientes en el sobre de origen",
+        "to": "Fundos insuficientes no envelope de origem"
+      },
+      "inversiones.budget_error_transfer": {
+        "from": "Error al transferir entre sobres",
+        "to": "Erro ao transferir entre envelopes"
+      },
+      "inversiones.budget_error_percentages": {
+        "from": "Los porcentajes deben sumar 100%",
+        "to": "As porcentagens devem somar 100%"
+      },
+      "inversiones.budget_error_enable_zero_base": {
+        "from": "Error al activar Modo Base Cero",
+        "to": "Erro ao ativar o Modo Base zero"
+      },
+      "inversiones.budget_error_suggestions": {
+        "from": "Error al obtener sugerencias",
+        "to": "Erro ao obter sugestões"
       },
       "inversiones.card_status_healthy": {
         "from": "Saludable",

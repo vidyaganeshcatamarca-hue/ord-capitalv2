@@ -321,7 +321,7 @@ export function TarjetasPage() {
       setArchivedCards(archivedRes || [])
       setSerieTarjetas(serieRes || [])
     } catch (err: any) {
-      showToast('Error al cargar tarjetas: ' + parseError(err), 'error')
+      showToast(t('cards_error_load') + parseError(err), 'error')
     } finally {
       setLoading(false)
     }
@@ -413,7 +413,7 @@ const handleLegacySubmit = async () => {
         return !card || h.tarjeta_nombre === card.nombre_tarjeta
       }))
     } catch (err: any) {
-      showToast('Error al cargar detalle: ' + parseError(err), 'error')
+      showToast(t('cards_error_detail') + parseError(err), 'error')
     } finally {
       setLoadingDetalle(false)
     }
@@ -574,19 +574,22 @@ const handleLegacySubmit = async () => {
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
   const handleCreate = async () => {
-    if (!formNombre.trim()) { showToast('Ingresa el nombre de la tarjeta', 'error'); return }
+    if (!formNombre.trim()) { showToast(t('cards_name_required'), 'error'); return }
     try {
       setFormSubmitting(true)
       await rpc('fn_crear_tarjeta_credito', {
         p_nombre_tarjeta: formNombre.trim(),
-        p_banco: formBanco.trim() || 'Sin banco',
+        // No persistir texto localizado: el banco vacio se guarda como null y la
+        // UI lo oculta. Antes escribia t('cards_no_bank'), o sea que el dato en
+        // la base dependia del idioma activo en ese momento.
+        p_banco: formBanco.trim() || null,
         p_dia_vencimiento: parseInt(formDiaVenc) || 10,
         p_dia_cierre: parseInt(formDiaCierre) || 5,
         p_limite_un_pago: formLimiteUnPago ? parseFloat(formLimiteUnPago) : null,
         p_limite_cuotas: formLimiteCuotas ? parseFloat(formLimiteCuotas) : null,
         p_color: formColor,
       })
-      showToast('Tarjeta creada correctamente', 'success')
+      showToast(t('cards_created_success'), 'success')
       setShowCreateModal(false)
       resetForm()
       fetchData()
@@ -612,7 +615,7 @@ const handleLegacySubmit = async () => {
         p_color: formColor || null,
         p_recargo_dolar_pct: null,
       })
-      showToast('Tarjeta actualizada', 'success')
+      showToast(t('cards_updated_success'), 'success')
       setShowEditModal(false)
       fetchData()
       if (selectedCard?.tarjeta_id === targetCard.tarjeta_id) {
@@ -771,7 +774,7 @@ const handleLegacySubmit = async () => {
     if (!targetCard) return
     try {
       await rpc('fn_archivar_tarjeta_credito', { p_tarjeta_id: targetCard.tarjeta_id })
-      showToast('Tarjeta archivada', 'success')
+      showToast(t('cards_archived_success'), 'success')
       setShowArchiveConfirm(false)
       if (selectedCard?.tarjeta_id === targetCard.tarjeta_id) setSelectedCard(null)
       fetchData()
@@ -787,7 +790,7 @@ const handleLegacySubmit = async () => {
       showToast(t('card_reactivated_success'), 'success')
       fetchData()
     } catch (err: any) {
-      showToast('Error al reactivar tarjeta: ' + parseError(err), 'error')
+      showToast(t('cards_error_reactivate') + parseError(err), 'error')
     } finally {
       setLoading(false)
     }
@@ -804,7 +807,7 @@ const handleLegacySubmit = async () => {
 
     // Semáforo simple basado en uso
     const semaforoClass = usoPct >= 90 ? 'semaforo-red' : usoPct >= 70 ? 'semaforo-yellow' : 'semaforo-green'
-    const semaforoLabel = usoPct >= 90 ? 'Alto' : usoPct >= 70 ? 'Moderado' : 'Saludable'
+    const semaforoLabel = usoPct >= 90 ? t('cards_usage_high') : usoPct >= 70 ? t('cards_usage_medium') : t('cards_usage_healthy')
     const semaforoIcon = usoPct >= 90 ? 'TriangleAlert' : usoPct >= 70 ? 'BarChart3' : 'CircleDollarSign'
 
     const isConfigRequired = tc.estado_config === 'requires_configuration'
@@ -857,10 +860,10 @@ const handleLegacySubmit = async () => {
 
             <div className="tarjeta-card-footer">
               <div className="tarjeta-footer-item">
-                <CategoryIcon name="CircleDollarSign" size={14} /> Disponible: <b>{fmtARS(tc.un_pago_disponible)}</b>
+                <CategoryIcon name="CircleDollarSign" size={14} /> {t('cards_available_label')}: <b>{fmtARS(tc.un_pago_disponible)}</b>
               </div>
               <div className="tarjeta-footer-item">
-                <CategoryIcon name="ClipboardList" size={14} /> Cuotas: <b>{fmtARS(tc.cuotas_disponible)}</b>
+                <CategoryIcon name="ClipboardList" size={14} /> {t('cards_installments_label')}: <b>{fmtARS(tc.cuotas_disponible)}</b>
               </div>
             </div>
           </>
@@ -1005,7 +1008,7 @@ const handleLegacySubmit = async () => {
           {/* Cuotas Activas */}
           <div className="tarjeta-detalle-section">
             <div className="tarjeta-detalle-section-title" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span><CategoryIcon name="ShoppingBag" size={13} /> Cuotas Pendientes</span>
+              <span><CategoryIcon name="ShoppingBag" size={13} /> {t('cards_pending_installments')}</span>
               <button
                 className="tarjetas-btn-new"
                 style={{ width: 'auto', padding: '0 14px', height: 36, fontSize: 'calc(13px * var(--font-scale))', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
@@ -1018,7 +1021,7 @@ const handleLegacySubmit = async () => {
               <div className="tarjeta-skeleton" style={{ height: 80 }} />
             ) : cuotasActivas.filter(c => !c.pagado).length === 0 ? (
               <div style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--color-text-muted)', textAlign: 'center', padding: '12px 0' }}>
-                No tienes compras en cuotas pendientes para esta tarjeta.
+                {t('cards_no_pending_installments')}
               </div>
             ) : (
               <div className="historial-list">
@@ -1032,7 +1035,10 @@ const handleLegacySubmit = async () => {
                           {(!c.caja_id && !c.descripcion) ? t('msg_refinanciacion_pago_minimo') : (c.descripcion || c.detalle_movimiento) ? (
                             <>
                               {c.descripcion
-                                ? (String(c.descripcion).startsWith('cat_') ? t(String(c.descripcion)) : c.descripcion)
+                                // La categoria puede llegar como clave ('cat_x') o como
+                                // compuesto ('padre › hijo'). Se traduce cada parte por
+                                // separado; una parte que ya venga en texto plano queda igual.
+                                ? String(c.descripcion).split(' › ').map((part: string) => t(part.trim())).join(' › ')
                                 : c.detalle_movimiento}
                               {c.descripcion && !!c.detalle_movimiento && (
                                 <span style={{ fontSize: '0.85em', color: 'var(--color-text-muted)' }}> ({c.detalle_movimiento})</span>
@@ -1040,7 +1046,7 @@ const handleLegacySubmit = async () => {
                             </>
                           ) : t('msg_compra_en_cuotas_default')}
                         </div>
-                        <div className="historial-item-source">Cuota {c.posicion_cuota} de {c.total_cuotas} - Vence el {dueDateStr}</div>
+                        <div className="historial-item-source">{t('cards_installment_due', { position: c.posicion_cuota, total: c.total_cuotas, date: dueDateStr })}</div>
                       </div>
                       <div className="historial-item-monto" style={{ color: 'var(--coral)' }}>
                         {fmtMoneda(c.monto_cuota, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
@@ -1066,12 +1072,12 @@ const handleLegacySubmit = async () => {
 
           {/* Historial de Pagos */}
           <div className="tarjeta-detalle-section">
-            <div className="tarjeta-detalle-section-title"><CategoryIcon name="ScrollText" size={13} /> Historial de Pagos</div>
+            <div className="tarjeta-detalle-section-title"><CategoryIcon name="ScrollText" size={13} /> {t('cards_payment_history')}</div>
             {loadingDetalle ? (
               <div className="tarjeta-skeleton" style={{ height: 80 }} />
             ) : historial.length === 0 ? (
               <div style={{ fontSize: 'calc(13px * var(--font-scale))', color: 'var(--color-text-muted)', textAlign: 'center', padding: '12px 0' }}>
-                Sin pagos registrados para esta tarjeta
+                {t('cards_no_payments_recorded')}
               </div>
             ) : (
               <div className="historial-list">
@@ -1266,9 +1272,9 @@ const handleLegacySubmit = async () => {
         {showArchiveConfirm && (
           <ConfirmModal
             isOpen={showArchiveConfirm}
-            title="Archivar tarjeta"
+            title={t('cards_archive')}
             message={`t("card_archive_confirm_pending", { name: targetCard?.nombre_tarjeta })`}
-            confirmText="Archivar"
+            confirmText={t('btn_archive')}
             type="danger"
             onConfirm={handleArchive}
             onCancel={() => setShowArchiveConfirm(false)}
@@ -1286,9 +1292,9 @@ const handleLegacySubmit = async () => {
     <div className="page tarjetas-view">
       {/* Header */}
       <div className="tarjetas-view-header">
-        <div className="tarjetas-view-title"><CategoryIcon name="CreditCard" size={22} /> Mis Tarjetas</div>
+        <div className="tarjetas-view-title"><CategoryIcon name="CreditCard" size={22} /> {t('cards_title')}</div>
         <button className="tarjetas-btn-new" onClick={() => { resetForm(); setShowCreateModal(true) }}>
-          + Nueva
+          {t('cards_new_btn')}
         </button>
       </div>
 
@@ -1300,9 +1306,9 @@ const handleLegacySubmit = async () => {
         ) : (
           <div className="tarjetas-debt-widget">
             <div>
-              <div className="tarjetas-debt-label">Deuda Total en Cuotas</div>
+              <div className="tarjetas-debt-label">{t('cards_debt_total')}</div>
               <div className="tarjetas-debt-amount">{fmtARS(totalPasivo)}</div>
-              <div className="tarjetas-debt-meta">{tarjetas.length} tarjeta{tarjetas.length !== 1 ? 's' : ''} activa{tarjetas.length !== 1 ? 's' : ''}</div>
+              <div className="tarjetas-debt-meta">{tarjetas.length === 1 ? t('cards_active_one', { count: tarjetas.length }) : t('cards_active_other', { count: tarjetas.length })}</div>
             </div>
             <div className="tarjetas-debt-icon"><CategoryIcon name="CreditCard" size={36} /></div>
           </div>
@@ -1397,10 +1403,10 @@ const handleLegacySubmit = async () => {
         {/* Tabs */}
         <div className="tarjetas-tabs">
           <button className={`tarjetas-tab ${activeTab === 'lista' ? 'active' : ''}`} onClick={() => setActiveTab('lista')}>
-            Mis Tarjetas
+            {t('cards_title')}
           </button>
           <button className={`tarjetas-tab ${activeTab === 'comparativa' ? 'active' : ''}`} onClick={() => setActiveTab('comparativa')}>
-            <CategoryIcon name="BarChart3" size={13} /> Comparativa
+            <CategoryIcon name="BarChart3" size={13} /> {t('cards_tab_comparison')}
           </button>
         </div>
 
@@ -1473,7 +1479,7 @@ const handleLegacySubmit = async () => {
             ) : comparativa.length === 0 ? (
               <div className="tarjetas-empty">
                 <div className="tarjetas-empty-icon"><CategoryIcon name="BarChart3" size={56} /></div>
-                <h3>Sin datos comparativos</h3>
+                <h3>{t('cards_no_comparison_data')}</h3>
                 <p>{t("card_need_full_cycle_comparative")}</p>
               </div>
             ) : (
@@ -1662,9 +1668,9 @@ resumenEstimado={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_tot
         {showArchiveConfirm && (
           <ConfirmModal
             isOpen={showArchiveConfirm}
-            title="Archivar tarjeta"
+            title={t('cards_archive')}
             message={`t("card_archive_confirm_reversible", { name: targetCard?.nombre_tarjeta })`}
-            confirmText="Archivar"
+            confirmText={t('btn_archive')}
             type="danger"
             onConfirm={handleArchive}
             onCancel={() => setShowArchiveConfirm(false)}
@@ -1754,33 +1760,33 @@ export function TarjetaFormModal({
     <div className="tarjeta-modal-overlay" onClick={onClose}>
       <div className="tarjeta-modal" onClick={e => e.stopPropagation()}>
         <div className="tarjeta-modal-header">
-          <span className="tarjeta-modal-title">{isEdit ? <><CategoryIcon name="Pencil" size={18} /> Editar Tarjeta</> : <><CategoryIcon name="CreditCard" size={18} /> Nueva Tarjeta</>}</span>
+          <span className="tarjeta-modal-title">{isEdit ? <><CategoryIcon name="Pencil" size={18} /> {t('card_form_title_edit')}</> : <><CategoryIcon name="CreditCard" size={18} /> {t('card_form_title_new')}</>}</span>
           <button className="tarjeta-modal-close" onClick={onClose}><CategoryIcon name="CircleX" size={18} /></button>
         </div>
 
         <div className="tarjeta-modal-form">
           <div>
-            <label className="tarjeta-form-label">Nombre de la tarjeta *</label>
+            <label className="tarjeta-form-label">{t('card_form_name_label')}</label>
             <input className="tarjeta-form-input" value={formNombre} onChange={e => setFormNombre(e.target.value)}
-              placeholder="Ej: Visa Galicia" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
+              placeholder={t('card_form_name_placeholder')} enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
           </div>
           <div>
-            <label className="tarjeta-form-label">Banco / Emisor</label>
+            <label className="tarjeta-form-label">{t('card_form_bank_label')}</label>
             <input className="tarjeta-form-input" value={formBanco} onChange={e => setFormBanco(e.target.value)}
-              placeholder="Ej: Galicia, Macro, BBVA" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
+              placeholder={t('card_form_bank_placeholder')} enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
           </div>
           <div className="tarjeta-form-row">
             <div>
               <label className="tarjeta-form-label">{t("card_form_closing_day")}</label>
               <input className="tarjeta-form-input" type="number" min={1} max={31}
                 value={formDiaCierre} onChange={e => setFormDiaCierre(e.target.value)}
-                placeholder="Ej: 5" inputMode="numeric" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
+                placeholder={t('card_form_closing_day_placeholder')} inputMode="numeric" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
             </div>
             <div>
               <label className="tarjeta-form-label">{t("card_form_due_day")}</label>
               <input className="tarjeta-form-input" type="number" min={1} max={31}
                 value={formDiaVenc} onChange={e => setFormDiaVenc(e.target.value)}
-                placeholder="Ej: 10" inputMode="numeric" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
+                placeholder={t('card_form_due_day_placeholder')} inputMode="numeric" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
             </div>
           </div>
           <div className="tarjeta-form-row">
@@ -1788,17 +1794,17 @@ export function TarjetaFormModal({
               <label className="tarjeta-form-label">{t("card_form_monthly_limit_optional")}</label>
               <input className="tarjeta-form-input" type="number" min={0}
                 value={formLimiteUnPago} onChange={e => setFormLimiteUnPago(e.target.value)}
-                placeholder="Ej: 300000" inputMode="decimal" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
+                placeholder={t('card_form_limit_one_payment_placeholder')} inputMode="decimal" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
             </div>
             <div>
               <label className="tarjeta-form-label">{t("card_form_installments_limit_optional")}</label>
               <input className="tarjeta-form-input" type="number" min={0}
                 value={formLimiteCuotas} onChange={e => setFormLimiteCuotas(e.target.value)}
-                placeholder="Ej: 500000" inputMode="decimal" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
+                placeholder={t('card_form_limit_installments_placeholder')} inputMode="decimal" enterKeyHint="next" onKeyDown={handleKeyDown} onFocus={handleFocus} />
             </div>
           </div>
           <div>
-            <label className="tarjeta-form-label">Color de la tarjeta</label>
+            <label className="tarjeta-form-label">{t('card_form_color_label')}</label>
             <div className="color-picker-grid">
               {CARD_COLORS.map(c => (
                 <div key={c} className={`color-swatch ${formColor === c ? 'selected' : ''}`}
@@ -1810,13 +1816,13 @@ export function TarjetaFormModal({
 
         <div className="tarjeta-modal-actions">
           {isEdit && onArchive && (
-            <button type="button" className="btn-modal-archive" onClick={onArchive} title="Archivar tarjeta">
+            <button type="button" className="btn-modal-archive" onClick={onArchive} title={t('cards_archive')}>
               <CategoryIcon name="Trash2" size={20} />
             </button>
           )}
           <button className="btn-modal-cancel" onClick={onClose}>{t('btn_cancel')}</button>
           <button className="btn-modal-submit" onClick={onSubmit} disabled={formSubmitting}>
-            {formSubmitting ? 'Guardando...' : (isEdit ? 'Guardar cambios' : '+ Crear Tarjeta')}
+            {formSubmitting ? t('cards_saving') : (isEdit ? t('cards_save_changes') : t('cards_create_btn'))}
           </button>
         </div>
       </div>
