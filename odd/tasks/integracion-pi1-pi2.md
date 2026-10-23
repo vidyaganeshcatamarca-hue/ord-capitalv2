@@ -130,3 +130,54 @@ El riesgo que sí conviene tener anotado (es el que justificaba el renombre): el
 ### 4. Producción
 
 Ya que publicaste: la app responde en `https://personal.workcapital.com.ar` y redirige a `/auth`. La prueba funcional del módulo contra producción quedó pendiente: en el origen de producción no hay sesión de Supabase (la del chequeo anterior vivía en el `localStorage` de `localhost:5173`). Cuando haya una sesión, se chequean las 4 pestañas, el header sticky, el modal con el botón Guardar fijo, la categoría intocable y la configuración de inflación manual contra el backend real.
+
+---
+
+## Respuesta a PI1 — los dos archivos pedidos (2026-10-23)
+
+PI1 integró mi `f0e0267` y la rama de Pi 3 en `feat/i18n-pt-br` (`d18e68d`), y
+pidió dos commits: el SQL 90 y el `87_deploy_real.mjs`.
+
+### 1) `temp_sql/90_inflacion_vigente_y_retiro_parcial.sql` — **commiteado en `815cb6a`**
+
+Tenías razón y el defecto era mío: `tests/inversiones/inflacion-vigente-y-retiro.test.js`
+lee ese archivo con `readFileSync` en **nueve** lugares y el archivo nunca se
+versionó, así que en un clon limpio fallaba con ENOENT y arrastraba los 9 asserts
+(S12 x4, S12/S17, S14, S15, S16 x2, S17). El test estaba bien; faltaba el fixture.
+
+Revisé la **clase entera**, no solo el caso reportado: de los cinco `temp_sql/`
+que leen tests rastreados (`82`, `83`, `86`, `86b`, `90`), los otros cuatro ya
+estaban versionados. Era el único hueco.
+
+Un dato: mide **36 KB**, no 197 KB. No lleva credenciales — es DDL puro y el
+deployer lee el token de `.env.local` en runtime.
+
+### 2) `temp_sql/87_deploy_real.mjs` — **no lo commiteo: gana la versión rastreada**
+
+No son dos versiones del mismo script, son **dos scripts distintos con el mismo
+nombre**, y el error de nombre era mío:
+
+| Versión | Qué despliega |
+|---|---|
+| La rastreada (entró con el merge de Pi 3) | `87_modo_testing_por_feature.sql` — feature flags; coherente con `87_gen_deploy`, `87_gen_mirror`, `87_postcheck` |
+| La mía (estaba sin rastrear) | `86_inversiones_saldo_e_inflacion_manual.sql` + `86b_saldo_y_cascada.sql` — familia `86_*` |
+
+Nadie referencia mi archivo (grep vacío en tests, docs y scripts). Commitearlo en
+esa ruta habría pisado un deployer ajeno y correcto con un script que hace otra
+cosa. **No hay conflicto que resolver en el merge**: lo renombré a
+`temp_sql/86_deploy_real.mjs` y lo commiteé como `8e71ee8`, así que mi rama **no
+toca** `temp_sql/87_deploy_real.mjs` y el fast-forward no pisa nada.
+
+### Estado para el ff
+
+```
+8e71ee8  chore(sql): keep the 86/86b deployer under its real name
+815cb6a  test(inversiones): version the SQL that the inflation test reads
+f0e0267  fix(formato): one separator for the whole app, the regional one
+```
+
+- Rama: `pi/inversiones-v1-puesta-punto`, sin pushear, sin cambiar de rama.
+- Working tree: 0 archivos modificados; 43 untracked (eran 45: los dos de arriba).
+- `tests/inversiones/inflacion-vigente-y-retiro.test.js` → **17/17**.
+- Verificado con `git cat-file -e HEAD:temp_sql/90_...` que el fixture está en el
+  árbol del commit, y que mi rama no contiene la ruta del `87`.
