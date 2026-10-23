@@ -168,3 +168,25 @@ tipos de retorno no cambian):
   cambios de etiqueta en `es.ts` que no hice yo (`title: "Mi Cartera (Total)"` y
   `label_real_yield: "Rendimiento real"`); se completaron en `en.ts`/`pt.ts` para
   que el ledger i18n quedara en 0 pendientes, y quedan reportados al dueño.
+- **L3** (2026-10-23, deploy autorizado): el dueño dio el OK y se aplicó
+  `temp_sql/90_inflacion_vigente_y_retiro_parcial.sql` a producción de forma
+  **atómica** (`BEGIN; <archivo>; COMMIT;`, sin ningún `DROP FUNCTION`) con
+  `temp_sql/92_deploy_90.mjs`. Postcheck `temp_sql/93_postcheck_90.mjs`:
+  **19/19 verde** (7 funciones con una sola versión, el helper sin permiso para
+  anon/authenticated, usuario 1 en AR/ARS con 3.22% acumulado en 3.2 meses,
+  usuario 198 en GB/GBP con `sin_datos`, detalle y cartera con el mismo nominal,
+  guard de moneda antes del primer INSERT).
+  Prueba funcional `temp_sql/94_prueba_guard_moneda.mjs`, simulando el JWT del
+  usuario 198 con `set_config('request.jwt.claims', …)` y **con ROLLBACK**:
+  - liquidar una inversión GBP a la billetera BRL → rechazado con
+    `error_wallet_currency_mismatch`;
+  - la misma liquidación a la billetera GBP → aceptada (el movimiento se creó y
+    el rollback lo deshizo: `movs_antes` 1 → `movs_despues` 2, después 1);
+  - inversión con retiro parcial (capital 1000, retirado 200, valor actual 1000):
+    nominal **20,00%** tanto en el detalle como en la cartera, con
+    `monto_liquidado` = 200 (antes se mostraba como pérdida);
+  - `fn_reporte_rendimiento_vs_inflacion` devuelve `motivo_inflacion:
+    'sin_datos'` y `mensaje_key: msg_inflation_no_data` para el usuario GBP.
+  Sin residuos verificados después: 1 movimiento, inversión `activa`,
+  `monto_liquidado` intacto, ninguna función temporal. **Pendiente**: que el
+  front llegue a producción (lo publica PI1).
