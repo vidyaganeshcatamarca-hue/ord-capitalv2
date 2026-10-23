@@ -85,6 +85,7 @@ tests/inversiones/*
 !tests/inversiones/contraste-y-layout.test.js
 !tests/inversiones/modales-acciones-fijas.test.js
 !tests/inversiones/inflacion-vigente-y-retiro.test.js
+!tests/separadores-por-moneda.test.js
 !tests/keypad_decimal_separator.test.js
 scratch/
 walkthrough.md

@@ -23,6 +23,18 @@ export interface FormatContext {
   decimalsSecondary: number
   /** Separador decimal elegido en la configuración regional (por defecto ','). */
   decimalSeparator: string
+  /**
+   * Separadores por moneda, resueltos por `fn_obtener_formato_moneda()`.
+   *
+   * El dueño definió la regla: cada moneda usa SU separador elegido, y los
+   * valores genéricos (porcentajes) usan el de la moneda local. Hasta ahora el
+   * dinero se formateaba con `Intl` y el separador salía del locale, así que un
+   * usuario con punto configurado veía coma en la plata y punto en los
+   * porcentajes. Este mapa es lo que hace que ambos coincidan.
+   *
+   * Vacío = nadie lo publicó todavía: se usa el comportamiento de siempre.
+   */
+  currencySeparators: Record<string, { group?: string; decimal?: string }>
 }
 
 const DEFAULT_CONTEXT: FormatContext = {
@@ -31,13 +43,41 @@ const DEFAULT_CONTEXT: FormatContext = {
   decimalsLocal: 0,
   decimalsSecondary: 1,
   decimalSeparator: ',',
+  currencySeparators: {},
 }
 
 let context: FormatContext = { ...DEFAULT_CONTEXT }
 
+/**
+ * Suscripción a los cambios de contexto de formato.
+ *
+ * Por qué existe: `formatCurrency` es una función plana y lee un valor de
+ * módulo. Un componente que la llama durante el render NO se vuelve a renderizar
+ * cuando ese valor cambia, así que si el contexto se hidrata después de su
+ * primer render queda mostrando el default (locale es-AR, 0 decimales) para
+ * siempre: la cartera mostraba "GBP 1.737" mientras el gráfico, montado más
+ * tarde, mostraba "1,500.00 GBP". `useFormatRevision` (en hooks/) resuelve eso.
+ */
+let formatRevision = 0
+const formatListeners = new Set<() => void>()
+
+export function subscribeFormatContext(listener: () => void): () => void {
+  formatListeners.add(listener)
+  return () => {
+    formatListeners.delete(listener)
+  }
+}
+
+/** Número de versión del contexto: cambia cuando cambia el formato. */
+export function getFormatRevision(): number {
+  return formatRevision
+}
+
 /** Called by `useNumberFormat` whenever the region or the preferences change. */
 export function setFormatContext(next: Partial<FormatContext>): void {
   context = { ...context, ...next }
+  formatRevision += 1
+  for (const listener of formatListeners) listener()
 }
 
 /** Exposed for verification and tests. */
@@ -55,6 +95,50 @@ function decimalsFor(currency: string): number {
   return currency === 'USD' ? context.decimalsSecondary : context.decimalsLocal
 }
 
+/**
+ * Separadores efectivos para una moneda. Cadena de fallback:
+ *   1. la moneda pedida (lo que el usuario eligió para ESA moneda);
+ *   2. la moneda local;
+ *   3. nada: se deja que `Intl` decida.
+ *
+ * El paso 3 es deliberado. Poner acá el separador global viejo rompía el
+ * comportamiento histórico del dinero: un contexto con locale en-US y sin mapa
+ * terminaba formateando "$1,234,50" (coma decimal heredada) en lugar de
+ * "$1,234.50". Si el mapa no llegó, el dinero se comporta como siempre.
+ */
+function separatorsFor(currency: string): { group?: string; decimal?: string } {
+  const code = normalizeCurrency(currency)
+  const propio = context.currencySeparators?.[code]
+  if (propio && (propio.group || propio.decimal)) return propio
+
+  const local = context.currencySeparators?.[normalizeCurrency(context.localCurrency)]
+  if (local && (local.group || local.decimal)) return local
+
+  return {}
+}
+
+/**
+ * Aplica los separadores elegidos sin rearmar el string: `Intl` ya produjo las
+ * partes (símbolo, signo, espacios y posición incluidos) y acá solo se cambian
+ * los caracteres de los grupos y del decimal.
+ *
+ * Por qué así: es la única forma de respetar el separador del usuario sin
+ * arriesgar el resto del formato. Reconstruir el texto a mano (símbolo + número)
+ * es justo donde se rompe "$ 1.234" → "1.234 $".
+ */
+function withChosenSeparators(
+  parts: Intl.NumberFormatPart[],
+  separators: { group?: string; decimal?: string }
+): string {
+  return parts
+    .map((part) => {
+      if (part.type === 'group' && separators.group) return separators.group
+      if (part.type === 'decimal' && separators.decimal) return separators.decimal
+      return part.value
+    })
+    .join('')
+}
+
 export function formatCurrency(
   amount: number | string | undefined | null,
   currency?: string
@@ -64,20 +148,42 @@ export function formatCurrency(
 
   const code = normalizeCurrency(currency)
   const digits = decimalsFor(code)
+  const separators = separatorsFor(code)
 
   try {
-    return new Intl.NumberFormat(context.locale, {
+    // `useGrouping: 'always'` existe desde ES2023 pero la lib de TS del repo
+    // todavía tipa el campo como boolean, así que el objeto se castea. Sin esto
+    // el locale español no agrupa los números de 4 dígitos y el separador de
+    // miles elegido no se vería nunca en esa escala (1736 → "1736").
+    const options: Record<string, unknown> = {
       style: 'currency',
       currency: code,
       minimumFractionDigits: digits,
       maximumFractionDigits: digits,
-    }).format(value)
+    }
+    if (separators.group) options.useGrouping = 'always'
+
+    const formatter = new Intl.NumberFormat(
+      context.locale,
+      options as unknown as Intl.NumberFormatOptions
+    )
+    return withChosenSeparators(formatter.formatToParts(value), separators)
   } catch {
     // An unknown currency code must not break a screen: show the plain number.
-    return new Intl.NumberFormat(context.locale, {
-      minimumFractionDigits: digits,
-      maximumFractionDigits: digits,
-    }).format(value)
+    try {
+      const options: Record<string, unknown> = {
+        minimumFractionDigits: digits,
+        maximumFractionDigits: digits,
+      }
+      if (separators.group) options.useGrouping = 'always'
+      const formatter = new Intl.NumberFormat(
+        context.locale,
+        options as unknown as Intl.NumberFormatOptions
+      )
+      return withChosenSeparators(formatter.formatToParts(value), separators)
+    } catch {
+      return String(value)
+    }
   }
 }
 
@@ -151,7 +257,10 @@ export function formatPercent(
   const n = typeof value === 'string' ? parseFloat(value) : Number(value)
   if (Number.isNaN(n)) return '-'
   const fixed = n.toFixed(decimals)
-  const separator = context.decimalSeparator || ','
+  // Regla del dueño: los valores genéricos usan el separador de la MONEDA LOCAL
+  // (no el de la moneda de un activo en particular, porque un porcentaje no
+  // pertenece a ninguna moneda).
+  const separator = separatorsFor(context.localCurrency).decimal || context.decimalSeparator || ','
   const withSeparator = fixed.replace('.', separator)
   if (signed && n > 0) return `+${withSeparator}%`
   return `${withSeparator}%`

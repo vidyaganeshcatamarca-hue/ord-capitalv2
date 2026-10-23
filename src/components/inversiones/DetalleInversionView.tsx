@@ -5,6 +5,7 @@ import { parseError, t } from '@/locales/i18n'
 import { formatCurrency, formatDate, formatPercent } from '@/lib/format'
 import { formatInversionDetalle } from '@/lib/inversionesLabels'
 import './DetalleInversionView.css'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 
 export interface HistorialItem {
   fecha: string | null
@@ -87,6 +88,8 @@ export function DetalleInversionView({
   onUpdateValue,
   onLiquidate,
 }: DetalleInversionViewProps) {
+  // Formato por moneda: se re-renderiza cuando cambia el contexto.
+  useFormatRevision()
   const { showToast } = useToast()
   const [data, setData] = useState<DetalleInversion | null>(null)
   const [loading, setLoading] = useState(true)

@@ -4,6 +4,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { formatCurrency, formatDate, formatPercent } from '@/lib/format'
 import { parseError, t } from '@/locales/i18n'
 import './TrackRecordList.css'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 
 export interface HistorialInversionRow {
   inversion_id: number
@@ -44,6 +45,8 @@ function normalizeRow(row: HistorialInversionRow): HistorialInversionRow {
 }
 
 export function TrackRecordList({ className }: TrackRecordListProps) {
+  // Formato por moneda: se re-renderiza cuando cambia el contexto.
+  useFormatRevision()
   const { showToast } = useToast()
   const [items, setItems] = useState<HistorialInversionRow[]>([])
   const [loading, setLoading] = useState(true)

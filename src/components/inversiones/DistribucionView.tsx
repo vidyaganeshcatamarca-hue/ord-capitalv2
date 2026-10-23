@@ -5,6 +5,7 @@ import { formatCurrency, formatPercent } from '@/lib/format'
 import { parseError, t } from '@/locales/i18n'
 import { DistribucionDonut, type DistribucionActivoRow } from './DistribucionDonut'
 import './DistribucionView.css'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 
 interface DistribucionViewProps {
   className?: string
@@ -31,6 +32,8 @@ function colorClassFor(tipo: string): string {
 }
 
 export function DistribucionView({ className }: DistribucionViewProps) {
+  // Formato por moneda: se re-renderiza cuando cambia el contexto.
+  useFormatRevision()
   const { showToast } = useToast()
   const [items, setItems] = useState<DistribucionActivoRow[]>([])
   const [loading, setLoading] = useState(true)

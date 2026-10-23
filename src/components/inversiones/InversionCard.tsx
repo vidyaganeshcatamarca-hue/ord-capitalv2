@@ -2,6 +2,7 @@ import type { KeyboardEvent } from 'react'
 import { t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
 import './InversionCard.css'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 
 export interface Inversion {
   inversion_id: number
@@ -63,6 +64,8 @@ export function InversionCard({
   onLiquidate,
   onSelect,
 }: InversionCardProps) {
+  // Formato por moneda: se re-renderiza cuando cambia el contexto.
+  useFormatRevision()
   const handleCardClick = () => {
     if (onSelect) onSelect(inversion.inversion_id)
   }

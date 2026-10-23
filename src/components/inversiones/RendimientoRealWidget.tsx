@@ -1,6 +1,7 @@
 import { formatCurrency, formatPercent } from '@/lib/format'
 import { t } from '@/locales/i18n'
 import './RendimientoRealWidget.css'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 
 export interface RendimientoData {
   total_actual: number
@@ -56,6 +57,8 @@ export function RendimientoRealWidget({
   loading,
   onConfigureInflation,
 }: RendimientoRealWidgetProps) {
+  // Formato por moneda: se re-renderiza cuando cambia el contexto.
+  useFormatRevision()
   if (loading) {
     return (
       <header className="rendimiento-real-widget rendimiento-real-widget--loading" aria-busy="true">
