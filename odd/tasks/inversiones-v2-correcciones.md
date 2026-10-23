@@ -142,3 +142,29 @@ tipos de retorno no cambian):
   nominal ... lo está tomando aparentemente como una pérdida, cuando en
   realidad lo que ha habido es un retiro ... 6. Para la pantalla del donut, si
   necesitas usar el acceso web de Ego Browser, lo haces."
+
+- **L2** (2026-10-23, cierre de la tanda): T16–T24 hechas, salvo el deploy del
+  SQL. Commit `311a1d5` en `pi/inversiones-v1-puesta-punto`. Verificación:
+  **168 tests verdes**, `tsc -b` limpio, `vite build` limpio, y medición en
+  EgoLite con perfil celular real (Pixel 7, 412x915).
+  Medido en el navegador contra el dev server:
+  - S11: el total termina en x=384/400 y el subtotal de BRL también → misma
+    columna.
+  - S13: donut 168px, tabla de 3 columnas, `scrollHorizontal: false`, valores
+    completos ("1500,00 GBP", "237,77 GBP"), y `scrollPagina.max = 0` con dos
+    inversiones.
+  - S14: no existe `#config-inflacion-pais`; el único selector es la fuente; el
+    bloque "Inflación acumulada" explica con qué se calculó.
+  - S16b: al final del scroll del detalle la barra de acciones queda en
+    670..739, el nav en 851 y ninguna tarjeta tapada.
+  - S12: el cartel de configurar desapareció; en su lugar se lee "Todavía no hay
+    datos de inflación para tu moneda".
+  El SQL `temp_sql/90_...sql` se compiló y ejecutó **dentro de BEGIN/ROLLBACK**
+  contra Postgres real: `fn_inflacion_vigente(1)` = AR/ARS, +3.14% acumulado en
+  3.2 meses; `(198)` = GB/GBP, `sin_datos` (solo 0.3 meses de histórico).
+  **Nada quedó aplicado en producción**: el deploy de ese archivo sigue
+  necesitando autorización del dueño, y el front necesita que PI1 lo publique.
+  Nota de incidente: al empezar la tanda aparecieron en el working tree dos
+  cambios de etiqueta en `es.ts` que no hice yo (`title: "Mi Cartera (Total)"` y
+  `label_real_yield: "Rendimiento real"`); se completaron en `en.ts`/`pt.ts` para
+  que el ledger i18n quedara en 0 pendientes, y quedan reportados al dueño.
