@@ -21,6 +21,8 @@ export interface FormatContext {
   localCurrency: string
   decimalsLocal: number
   decimalsSecondary: number
+  /** Separador decimal elegido en la configuración regional (por defecto ','). */
+  decimalSeparator: string
 }
 
 const DEFAULT_CONTEXT: FormatContext = {
@@ -28,6 +30,7 @@ const DEFAULT_CONTEXT: FormatContext = {
   localCurrency: 'ARS',
   decimalsLocal: 0,
   decimalsSecondary: 1,
+  decimalSeparator: ',',
 }
 
 let context: FormatContext = { ...DEFAULT_CONTEXT }
@@ -128,4 +131,28 @@ export function formatNumber(amount: number | string | undefined | null): string
   } catch {
     return String(value)
   }
+}
+
+/**
+ * Porcentaje con el separador decimal que el usuario eligio en su configuracion
+ * regional. Existe porque el modulo de Inversiones formateaba con `toFixed(2)`,
+ * que siempre usa punto: un usuario con coma configurada veia "12.62%" en vez
+ * de "12,62%".
+ *
+ * `signed` agrega el "+" en los valores positivos (rendimientos). Los
+ * porcentajes de reparto (la tabla del grafico) van sin signo.
+ */
+export function formatPercent(
+  value: number | string | null | undefined,
+  options: { decimals?: number; signed?: boolean } = {}
+): string {
+  const { decimals = 2, signed = true } = options
+  if (value === null || value === undefined || value === '') return '-'
+  const n = typeof value === 'string' ? parseFloat(value) : Number(value)
+  if (Number.isNaN(n)) return '-'
+  const fixed = n.toFixed(decimals)
+  const separator = context.decimalSeparator || ','
+  const withSeparator = fixed.replace('.', separator)
+  if (signed && n > 0) return `+${withSeparator}%`
+  return `${withSeparator}%`
 }

@@ -167,6 +167,9 @@ export function useNumberFormat() {
       localCurrency: region?.localCurrency || 'ARS',
       decimalsLocal: prefs.decimales_moneda_local,
       decimalsSecondary: prefs.decimales_segunda_moneda,
+      // El separador elegido viaja al contexto para que `formatPercent` lo use:
+      // los porcentajes del modulo de Inversiones lo estaban ignorando.
+      decimalSeparator: prefs.separador_decimal,
     })
   }, [locale, region, prefs])
 

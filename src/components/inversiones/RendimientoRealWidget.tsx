@@ -1,4 +1,4 @@
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatPercent } from '@/lib/format'
 import { t } from '@/locales/i18n'
 import './RendimientoRealWidget.css'
 
@@ -29,14 +29,6 @@ interface RendimientoRealWidgetProps {
   rendimiento: RendimientoData
   loading?: boolean
   onConfigureInflation?: () => void
-}
-
-function formatPercent(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return '-'
-  const fixed = value.toFixed(2)
-  if (value > 0) return `+${fixed}%`
-  if (value < 0) return `${fixed}%`
-  return `${fixed}%`
 }
 
 function yieldClassFor(value: number | null | undefined): string {

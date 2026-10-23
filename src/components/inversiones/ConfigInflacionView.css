@@ -210,3 +210,12 @@
   font-size: calc(12px * var(--font-scale));
   font-weight: 500;
 }
+
+/* Inflación calculada expresada por año (proyección cuando la fuente es proxy
+   dólar). Va debajo de la acumulada, en el mismo bloque. */
+.config-inflacion-vigente-annual {
+  color: var(--text-2);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+  line-height: 1.35;
+}

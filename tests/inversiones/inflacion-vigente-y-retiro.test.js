@@ -85,6 +85,28 @@ test('S12: el helper interno no queda expuesto por PostgREST', () => {
   )
 })
 
+test('S17: la inflación también se informa anualizada, y se muestra en la pestaña', () => {
+  const sql = read(SQL90)
+  assert.match(
+    sql,
+    /v_anualizada := ROUND\(/,
+    'el backend tiene que anualizar la variación acumulada de la ventana real'
+  )
+  assert.match(
+    sql,
+    /POWER\(1 \+ \(v_inflacion_6m \/ 100\), 12 \/ v_ventana_6m\)/,
+    'anualizar = (1 + acumulada)^(12/meses) - 1'
+  )
+  assert.match(sql, /'inflacion_anualizada'/, 'la clave tiene que viajar al front')
+
+  const view = read('src/components/inversiones/ConfigInflacionView.tsx')
+  assert.match(
+    view,
+    /label_inflation_annual/,
+    'la pestaña de inflación tiene que mostrar el valor anual'
+  )
+})
+
 // ─────────────────────── backend: retiro parcial ─────────────────────────────
 
 test('S16: el rendimiento nominal suma lo ya retirado (un retiro no es pérdida)', () => {
@@ -215,5 +237,45 @@ test('las keys nuevas están en los tres diccionarios', () => {
     for (const key of keys) {
       assert.ok(dic.includes(`${key}:`), `${lang} le falta ${key}`)
     }
+  }
+})
+
+// ───────────────────── porcentajes con el separador regional ────────────────
+
+test('los porcentajes del módulo usan el separador decimal configurado', async () => {
+  const { formatPercent, setFormatContext } = await import('../../src/lib/format.ts')
+
+  setFormatContext({ decimalSeparator: ',' })
+  assert.equal(formatPercent(12.62, { signed: false }), '12,62%')
+  assert.equal(formatPercent(6.665), '+6,67%')
+  assert.equal(formatPercent(-40, { signed: false }), '-40,00%')
+
+  // Un usuario que eligió punto en su configuración regional ve punto.
+  setFormatContext({ decimalSeparator: '.' })
+  assert.equal(formatPercent(12.62, { signed: false }), '12.62%')
+  assert.equal(formatPercent(6.665), '+6.67%')
+
+  // Sin valor no se inventa un número.
+  setFormatContext({ decimalSeparator: ',' })
+  assert.equal(formatPercent(null), '-')
+  assert.equal(formatPercent(undefined), '-')
+})
+
+test('ningún componente del módulo formatea porcentajes por su cuenta', () => {
+  // El bug: cada archivo tenía su propio formatPercent con toFixed(2), que
+  // siempre usa punto y se comía el separador elegido por el usuario.
+  const archivos = fs
+    .readdirSync(path.join(repo, 'src', 'components', 'inversiones'))
+    .filter((f) => f.endsWith('.tsx'))
+  for (const archivo of archivos) {
+    const src = read(`src/components/inversiones/${archivo}`)
+    assert.ok(
+      !/function formatPercent\(/.test(src),
+      `${archivo} no debe definir su propio formatPercent: usá el de @/lib/format`
+    )
+    assert.ok(
+      !/toFixed\(2\)[`}]*%/.test(src),
+      `${archivo} no debe armar porcentajes con toFixed(2) (siempre usa punto)`
+    )
   }
 })

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatPercent } from '@/lib/format'
 import { parseError, t } from '@/locales/i18n'
 import { DistribucionDonut, type DistribucionActivoRow } from './DistribucionDonut'
 import './DistribucionView.css'
@@ -28,11 +28,6 @@ function colorClassFor(tipo: string): string {
   if (tipo === 'plazo_fijo') return 'distribucion-type-dot distribucion-type-dot--pf'
   if (tipo === 'variable') return 'distribucion-type-dot distribucion-type-dot--var'
   return 'distribucion-type-dot distribucion-type-dot--other'
-}
-
-function formatPercent(value: number): string {
-  if (Number.isNaN(value)) return '-'
-  return `${value.toFixed(2)}%`
 }
 
 export function DistribucionView({ className }: DistribucionViewProps) {
@@ -132,7 +127,7 @@ export function DistribucionView({ className }: DistribucionViewProps) {
                     </span>
                   </td>
                   <td>{formatCurrency(item.valor_total)}</td>
-                  <td>{formatPercent(item.porcentaje_valor)}</td>
+                  <td>{formatPercent(item.porcentaje_valor, { signed: false })}</td>
                 </tr>
               ))}
             </tbody>

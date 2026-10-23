@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
+import { formatPercent } from '@/lib/format'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import './ConfigInflacionView.css'
 
@@ -37,6 +38,8 @@ interface ConfigInflacionActual {
   motivo?: 'ok' | 'desactivado' | 'sin_datos' | 'manual_sin_valor'
   ventana_6m_meses?: number | null
   ventana_12m_meses?: number | null
+  /** Tasa anual equivalente (proyeccion cuando la fuente es proxy dolar). */
+  inflacion_anualizada?: number | null
 }
 
 const FUENTES: { value: FuenteInflacion; key: string; descKey: string }[] = [
@@ -68,7 +71,8 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
     motivo: string
     inflacion6m: number | null
     ventana6m: number | null
-  }>({ disponible: false, motivo: '', inflacion6m: null, ventana6m: null })
+    anualizada: number | null
+  }>({ disponible: false, motivo: '', inflacion6m: null, ventana6m: null, anualizada: null })
 
   // Lo que esta guardado en el backend: sirve para saber si hay cambios (B5).
   const [guardado, setGuardado] = useState<{
@@ -111,6 +115,7 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
           motivo: String(actual?.motivo ?? ''),
           inflacion6m: actual?.inflacion_6m ?? null,
           ventana6m: actual?.ventana_6m_meses ?? null,
+          anualizada: actual?.inflacion_anualizada ?? null,
         })
         setGuardado({
           pais: paisGuardado || null,
@@ -239,14 +244,22 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
           <div className="config-inflacion-vigente">
             <span className="config-inflacion-vigente-label">{t('label_inflation_computed')}</span>
             {vigente.disponible ? (
-              <span className="config-inflacion-vigente-value">
-                {vigente.inflacion6m === null ? '-' : `${vigente.inflacion6m.toFixed(2)}%`}
-                {vigente.ventana6m !== null && vigente.ventana6m !== undefined && (
-                  <span className="config-inflacion-vigente-window">
-                    {' '}· {t('label_inflation_window_months', { months: String(vigente.ventana6m) })}
+              <>
+                <span className="config-inflacion-vigente-value">
+                  {vigente.inflacion6m === null ? '-' : formatPercent(vigente.inflacion6m, { signed: false })}
+                  {vigente.ventana6m !== null && vigente.ventana6m !== undefined && (
+                    <span className="config-inflacion-vigente-window">
+                      {' '}· {t('label_inflation_window_months', { months: String(vigente.ventana6m) })}
+                    </span>
+                  )}
+                </span>
+                {/* El dueño quiere ver la inflación calculada expresada por año. */}
+                {vigente.anualizada !== null && vigente.anualizada !== undefined && (
+                  <span className="config-inflacion-vigente-annual">
+                    {t('label_inflation_annual', { rate: formatPercent(vigente.anualizada, { signed: false }) })}
                   </span>
                 )}
-              </span>
+              </>
             ) : (
               <span className="config-inflacion-vigente-value">
                 {vigente.motivo === 'desactivado'

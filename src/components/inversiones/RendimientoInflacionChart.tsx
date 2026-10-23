@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
+import { formatPercent } from '@/lib/format'
 import './RendimientoInflacionChart.css'
 
 export interface RendimientoVsInflacion {
@@ -18,13 +19,6 @@ export interface RendimientoVsInflacion {
 
 interface RendimientoInflacionChartProps {
   className?: string
-}
-
-function formatPercent(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return '-'
-  const fixed = value.toFixed(2)
-  if (value > 0) return `+${fixed}%`
-  return `${fixed}%`
 }
 
 function normalizeData(data: RendimientoVsInflacion): RendimientoVsInflacion {

@@ -1322,6 +1322,7 @@ export const inversiones = {
   msg_configure_inflation: "Configure sua fonte de inflação para ver o rendimento real",
   msg_inflation_no_data: "Ainda não há dados de inflação para a sua moeda",
   label_inflation_computed: "Inflação acumulada",
+  label_inflation_annual: "Inflação calculada: {rate}% ao ano",
   label_inflation_window_months: "últimos {months} meses",
   label_partial_withdrawal_note: "Você já retirou {amount} em resgates parciais; o rendimento é calculado sobre o total, então um resgate não é uma perda.",
   error_wallet_currency_mismatch: "A carteira de destino deve ser da mesma moeda que o investimento.",

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatCurrency, formatDate, formatPercent } from '@/lib/format'
 import { parseError, t } from '@/locales/i18n'
 import './TrackRecordList.css'
 
@@ -20,13 +20,6 @@ export interface HistorialInversionRow {
 
 interface TrackRecordListProps {
   className?: string
-}
-
-function formatPercent(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return '-'
-  const fixed = value.toFixed(2)
-  if (value > 0) return `+${fixed}%`
-  return `${fixed}%`
 }
 
 function gainClassFor(value: number): string {

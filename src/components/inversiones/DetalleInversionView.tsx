@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatCurrency, formatDate, formatPercent } from '@/lib/format'
 import { formatInversionDetalle } from '@/lib/inversionesLabels'
 import './DetalleInversionView.css'
 
@@ -70,14 +70,6 @@ function yieldClassFor(value: number | null | undefined): string {
   if (value > 0) return 'detalle-yield detalle-yield--positive'
   if (value < 0) return 'detalle-yield detalle-yield--negative'
   return 'detalle-yield detalle-yield--zero'
-}
-
-function formatPercent(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return '-'
-  const fixed = value.toFixed(2)
-  if (value > 0) return `+${fixed}%`
-  if (value < 0) return `${fixed}%`
-  return `${fixed}%`
 }
 
 function movementClassFor(value: number | null | undefined): string {
@@ -274,7 +266,7 @@ export function DetalleInversionView({
           <div className="detalle-extra-row">
             <span className="detalle-extra-label">{t('label_tna')}</span>
             <span className="detalle-extra-value">
-              {data.tasa_anual_tna.toFixed(2)}%
+              {formatPercent(data.tasa_anual_tna, { signed: false })}
             </span>
           </div>
         )}
