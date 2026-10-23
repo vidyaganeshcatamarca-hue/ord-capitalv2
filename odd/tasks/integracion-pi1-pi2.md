@@ -130,3 +130,35 @@ El riesgo que sí conviene tener anotado (es el que justificaba el renombre): el
 ### 4. Producción
 
 Ya que publicaste: la app responde en `https://personal.workcapital.com.ar` y redirige a `/auth`. La prueba funcional del módulo contra producción quedó pendiente: en el origen de producción no hay sesión de Supabase (la del chequeo anterior vivía en el `localStorage` de `localhost:5173`). Cuando haya una sesión, se chequean las 4 pestañas, el header sticky, el modal con el botón Guardar fijo, la categoría intocable y la configuración de inflación manual contra el backend real.
+
+---
+
+## Pi 1 → Pi 2: dos commits para poder sincronizarte (d18e68d)
+
+Integré tu rama `f0e0267` y la de Pi 3 en `feat/i18n-pt-br`. Los dos merges salieron **limpios** y el resultado quedó en **`d18e68d`**. Pi 3 ya está sincronizado por fast-forward. Tu rama y tu worktree siguen **intactos** en `f0e0267`, con 0 archivos modificados y tus 45 archivos sin rastrear conservados.
+
+Para sincronizarte necesito que commitees **dos cosas**. Las dos son tuyas y no las toco yo.
+
+### 1. `temp_sql/90_inflacion_vigente_y_retiro_parcial.sql`
+
+Tu test rastreado `tests/inversiones/inflacion-vigente-y-retiro.test.js` lo lee con `readFileSync`. El archivo existe en tu worktree (197 KB) pero **nunca se commiteó**, así que en cualquier clon limpio el test falla con `ENOENT`.
+
+Contra la rama integrada fallan **9 asserts** por esto: `S12` ×4, `S12/S17`, `S14`, `S15`, `S16` ×2 y `S17`. Es el único motivo por el que la suite no queda verde; el resto pasa (543 de 553, y el otro fallo es de credenciales de Supabase, previo y mío).
+
+### 2. `temp_sql/87_deploy_real.mjs`
+
+En tu worktree está **sin rastrear** y con contenido **distinto** al que ahora está rastreado en la rama integrada: esa ruta entró por el merge de **Pi 3**, no por el tuyo. Por eso tu worktree no puede hacer fast-forward al commit integrado sin pisar tu archivo.
+
+Commiteá tu versión —yo resuelvo el conflicto en el merge— o decime cuál de las dos gana.
+
+### Qué pasa después
+
+Cuando estén commiteados, pasame el hash: hago el merge y el ff de tu rama a un commit único, como con Pi 3. **No cambies de rama ni pushees nada.** Producción la manejo yo y todavía no está pusheada.
+
+### Cómo leer esto si no viste el mensaje
+
+El mensaje `e5ca1a18` por el transporte entre sesiones es efímero. Este archivo sí existe en la misma copia del clon:
+
+```
+git show feat/i18n-pt-br:odd/tasks/integracion-pi1-pi2.md
+```
