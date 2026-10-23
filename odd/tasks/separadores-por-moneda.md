@@ -1,0 +1,150 @@
+# Separadores por moneda — dos tandas (2026-10-23)
+
+El dueño detectó que el módulo de Inversiones mostraba la plata con un
+separador y los porcentajes con otro. La regla que fijó vale para toda la app.
+
+## Specs
+
+- **S18** ⚠️ **SUPERADA por S21** (tanda 1, separadores, L1, verbatim): "El módulo debe seguir el
+  separador elegido. Tenemos máximo tres monedas, cada moneda debe seguir su
+  separador elegido. Y en el módulo de inversiones o cualquier otro, en donde se
+  muestren porcentajes, se debe seguir el separador elegido para la moneda local.
+  Cuando son valores genéricos, que no aplican a una moneda en particular, el
+  separador elegido para la moneda local. Es lo correcto."
+- **S19** (tanda 2, decimales por moneda, pendiente, verbatim): "dos tandas, una
+  despues de la otra para poder verificar bien".
+- **S20** (restricción de proceso, L1, verbatim): "trata de aplicar los cambios
+  de la manera que se toque la menor cantidad de código o se ponga en riesgo la
+  menor cantidad de código ya escrito".
+
+## Diagnóstico
+
+| Qué | Evidencia |
+|---|---|
+| El formato **por moneda ya existía** | `fn_obtener_formato_moneda()` devuelve `{ MONEDA: { decimales, separador_miles, separador_decimal } }` desde `p_config_region.monedas_formateo` con herencia de `p_preferencias_usuario`. Lo usaba **solo** la pantalla de configuración. |
+| El **dinero** ignoraba la elección | `formatCurrency` usaba `Intl.NumberFormat` y los separadores salían del **locale**, no de la preferencia. 48 llamadas en 26 archivos. |
+| Los **porcentajes** también, hasta T26 | cada componente tenía su `formatPercent` con `toFixed(2)` (siempre punto). |
+| El dato real del dueño | usuario 198: `separador_decimal='.'`, `separador_miles=','`; `monedas_formateo` con ARS y BRL en `'.'/','` y EUR en `','/'.'`. 76 de 78 usuarios tienen coma. |
+| Bug de re-render (destapado al arreglar el formato) | `formatCurrency` lee un valor de módulo: un componente ya montado no se re-renderiza cuando el contexto se hidrata. La cartera quedaba en el default (`GBP 1.737`) mientras el gráfico, montado después, mostraba el formato correcto (`1,500.00 GBP`). |
+
+## Contrato de la tanda 1
+
+1. `FormatContext` suma `currencySeparators: Record<MONEDA, {group?, decimal?}>`
+   y `formatRevision` con `subscribeFormatContext()`.
+2. `formatCurrency(monto, moneda)`:
+   - separadores efectivos: **moneda pedida → moneda local → nada** (Intl decide,
+     o sea el comportamiento histórico);
+   - se aplican con `formatToParts()` reemplazando **solo** los caracteres de
+     `group` y `decimal`: símbolo, posición, espaciado y signo no se rearman;
+   - si hay separador de miles configurado, se usa `useGrouping: 'always'`
+     (el locale español no agrupa números de 4 dígitos y el separador elegido no
+     se veía nunca en esa escala).
+3. `formatPercent()` usa el separador de la **moneda local** (valores genéricos).
+4. `useNumberFormat` lee `fn_obtener_formato_moneda()` y publica el mapa.
+5. `useFormatRevision()` (hook nuevo, `useSyncExternalStore`) se llama en los
+   componentes del módulo que formatean dinero, para que converjan cuando el
+   contexto llega después del primer render.
+
+## Tasks
+
+| ID | Specs | Tarea | Ruta | Commit |
+|---|---|---|---|---|
+| T27 | S18, S20 | Contexto + `formatCurrency` con separadores por moneda (sin tocar llamadores) | inline | `(esta tanda)` |
+| T28 | S18 | `formatPercent` toma el separador de la moneda local | inline | idem |
+| T29 | S18 | `useNumberFormat` publica el mapa de `fn_obtener_formato_moneda()` | inline | idem |
+| T30 | S18 | `useFormatRevision` + 8 componentes del módulo suscritos | inline | idem |
+| T31 | S18 | Tests: salida idéntica sin config, por moneda, fallback, porcentajes | inline | idem |
+| T32 | S19 | Tanda 2: decimales por moneda (pendiente, después de que el dueño verifique) | — | — |
+
+## Log
+
+- **L1** (2026-10-23, verbatim): "1. El módulo debe seguir el separador elegido.
+  Tenemos máximo tres monedas, cada moneda debe seguir su separador elegido. Y en
+  el módulo de inversiones o cualquier otro, en donde se muestren porcentajes, se
+  debe seguir el separador elegido para la moneda local. Cuando son valores
+  genéricos, que no aplican a una moneda en particular, el separador elegido para
+  la moneda local. Es lo correcto. Ahora, trata de aplicar los cambios de la
+  manera que se toque la menor cantidad de código o se ponga en riesgo la menor
+  cantidad de código ya escrito. ¿Cuál sería esa forma? Explíqueme."
+- **L2** (2026-10-23): el dueño aprobó el plan en dos tandas: "dos tandas, una
+  despues de la otra para poder verificar bien".
+- **L3** (2026-10-23, cierre de la tanda 1): T27–T31 hechas. El arreglo quedó en
+  `src/lib/format.ts` + `src/hooks/useNumberFormat.ts` + el hook nuevo
+  `useFormatRevision`, **sin migrar ningún componente a otro formateador**: los
+  48 llamadores de `formatCurrency` siguen igual.
+  Verificado en EgoLite (perfil celular, esperando hidratación): cartera
+  **`1,736.92 GBP`** y **`1.600,00 BRL` al mismo tiempo** (dos monedas, dos
+  formatos, cada una el suyo), tarjetas `1.500,00 BRL`, gráfico `1,500.00 GBP` y
+  `86.36%`. Suite: **557 pasan**, los 2 de `appLock` (biometría) preexistentes;
+  `tsc -b` y `vite build` limpios.
+  Dos defectos propios detectados y corregidos durante la tanda: (a) el fallback
+  usaba el separador global viejo y rompía el formato del dinero cuando no había
+  mapa (lo destapó `tests/i18n/locale-follows-language.test.js`); (b) el
+  separador de miles no se aplicaba en números de 4 dígitos por
+  `minimumGroupingDigits` del locale español.
+  **Pendiente deliberado**: los decimales por moneda (tanda 2, S19). Hoy se
+  siguen usando `decimales_moneda_local`/`decimales_segunda_moneda`; el mapa ya
+  trae `decimales` pero no se aplica.
+
+- **L4** (2026-10-23, tanda 2 con el OK del dueño): **decimales por moneda**.
+  `CurrencyFormatEntry` suma `decimals`; `decimalsFor()` usa el del mapa cuando
+  existe y, si no, conserva la regla histórica (USD = decimales de la segunda
+  moneda, resto = decimales de la local), así ningún usuario ve cambiar sus
+  números. El campo `decimales` del RPC `fn_obtener_formato_moneda()` ya existía:
+  no hizo falta tocar el backend. Se recorta a 0..4.
+  Verificado en EgoLite: con la config real del dueño no cambia nada
+  (`1,736.92 GBP` / `1.600,00 BRL`), y con un mapa inyectado de BRL con 0
+  decimales la cartera pasa a `1.600 BRL` y `1.500 BRL` mientras GBP sigue con
+  `1,736.92` — o sea decimales por moneda reales y convergiendo en componentes ya
+  montados gracias a `useFormatRevision`.
+  Suite: **561 pasan**, los 2 de `appLock` preexistentes; `tsc -b` y `vite build`
+  limpios. Commit `(tanda 2)`.
+  Con esto el formateador del módulo ya cumple S18 y S19. Lo que queda fuera de
+  alcance, anotado: los ~18 archivos del resto de la app usan `formatCurrency`
+  pero no se suscriben a `useFormatRevision` (misma latencia de hidratación, no
+  es un error de formato); y `formatCurrency` sin moneda cae en la local, que es
+  lo correcto para los genéricos.
+
+## S21 — corrección del dueño: el separador es uno solo (2026-10-23)
+
+- **S21** (verbatim): "Me estoy dando cuenta que en realidad no podemos tener
+  separadores de miles y decimales por moneda. No es correcto. Lo correcto es que
+  el usuario regional elige cómo quiere ver todas sus billeteras con los mismos
+  separadores. Por lo tanto, está mal la opción que le estamos ofreciendo desde
+  ajustes de elegir separadores decimales y de miles por moneda. Manda el separador
+  local para toda la aplicación."
+
+**Esto reemplaza S18.** Queda así:
+
+| Qué | Regla vigente |
+|---|---|
+| Separadores (miles y decimal) | **Uno solo**: el de la configuración regional. Se aplica a todas las monedas. |
+| Decimales (cuántos) | Siguen siendo **por moneda** (es precisión, no presentación). Pendiente de confirmación del dueño. |
+| Porcentajes | Separador decimal de la moneda local (valores genéricos). |
+
+Cambios aplicados:
+
+1. `separatorsFor()` en `src/lib/format.ts` **ignora la moneda** que se formatea:
+   toma la entrada de la moneda local y, si no hay, las preferencias regionales
+   (`decimalSeparator` / `thousandSeparator`, este último nuevo en el contexto).
+   Ya no existe la rama "cada moneda con lo suyo".
+2. `useNumberFormat` publica también `thousandSeparator`.
+3. `RegionFormatoPage`: los selectores de separadores se muestran **solo en el
+   grupo de la moneda local** (`index === 0`), con el texto "Los separadores se
+   eligen una sola vez y valen para todas tus billeteras". Los grupos 2 y 3
+   conservan únicamente los decimales.
+4. Tests reescritos con la regla nueva: todas las monedas con el separador local,
+   decimales por moneda, porcentajes con el local, el símbolo/posición intactos, y
+   que sin configuración decida `Intl` (comportamiento histórico).
+   `tests/i18n/locale-follows-language.test.js` ahora publica locale **y**
+   separadores, y verifica que la preferencia regional gane sobre el locale.
+
+Verificado en EgoLite (perfil celular): la cartera muestra `1,736.92 GBP` y
+`1,600.00 BRL` — **mismo separador para las dos monedas** (antes BRL salía
+`1.600,00`, con el suyo). En Ajustes > Región y formato quedan solo
+`fmt-sep-local` / `fmt-decc-local` como selectores de separador, y los tres
+selectores de decimales. Suite: **561 pasan**, los 2 de `appLock` preexistentes.
+
+**Nota de riesgo asumida**: los separadores guardados por moneda en
+`p_config_region.monedas_formateo` siguen en la base pero ya no se leen. No se
+borraron (borrar datos es del dueño); quedan como legado inerte.

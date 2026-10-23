@@ -161,14 +161,21 @@ test('B8: el país por defecto es el del usuario', () => {
   )
 })
 
-test('B8: el catálogo de países viene de la base, no de una lista propia', () => {
+test('S14: el país no se elige en el módulo — es el de la configuración regional', () => {
+  // S14 (2026-10-22): el dueño fue explícito: "el país no debe aparecer y no
+  // debe ser seleccionable ni cambiable". Esto reemplaza al requisito B8 (que
+  // pedía un catálogo de países en el selector): ya no hay selector.
   assert.ok(
-    configView.includes('useCountryCatalog'),
-    'debe usar el catálogo que ya existe en el proyecto'
+    !configView.includes('useCountryCatalog'),
+    'no debe montar un catálogo de países: el país no se elige acá'
   )
   assert.ok(
-    configView.includes('regionName'),
-    'el nombre del país se resuelve con Intl.DisplayNames (sin keys nuevas)'
+    !/id="config-inflacion-pais"/.test(configView),
+    'no debe haber un <select> de país'
+  )
+  assert.ok(
+    configView.includes('countryCode') && configView.includes('setPais(countryCode)'),
+    'el país sale de la configuración regional (p_config_region.pais_codigo)'
   )
 })
 

@@ -7,6 +7,7 @@ import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { useMonedasExtra } from '@/hooks/useMonedasExtra'
 import { buildWalletCurrencyOptions } from '@/lib/monedasExtra'
 import './NuevaInversionModal.css'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 
 export interface BilleteraResumen {
   billetera_id: number
@@ -38,6 +39,8 @@ export function NuevaInversionModal({
   onSuccess,
   billeteras,
 }: NuevaInversionModalProps) {
+  // Formato por moneda: se re-renderiza cuando cambia el contexto.
+  useFormatRevision()
   const { showToast } = useToast()
   // S21: las monedas de inversión son las del usuario (local + extras), no el
   // par ARS/USD fijo. buildWalletCurrencyOptions ya está testeado (T2).

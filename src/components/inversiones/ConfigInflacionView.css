@@ -173,3 +173,49 @@
     max-width: none;
   }
 }
+
+/* S17 (2026-10-22): bloque que explica con qué se calculó la inflación y
+   sobre qué ventana, en vez de mostrar un número suelto. */
+.config-inflacion-vigente {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  min-width: 0;
+}
+
+.config-inflacion-vigente-label {
+  color: var(--text-3);
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.config-inflacion-vigente-value {
+  color: var(--text);
+  font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
+  font-size: calc(15px * var(--font-scale));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.config-inflacion-vigente-window {
+  color: var(--text-3);
+  font-family: var(--font-body);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 500;
+}
+
+/* Inflación calculada expresada por año (proyección cuando la fuente es proxy
+   dólar). Va debajo de la acumulada, en el mismo bloque. */
+.config-inflacion-vigente-annual {
+  color: var(--text-2);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+  line-height: 1.35;
+}

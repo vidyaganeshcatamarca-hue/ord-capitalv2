@@ -21,8 +21,12 @@ function colorFor(tipo: string): string {
   return COLORS[tipo] ?? '#64748B'
 }
 
-export function DistribucionDonut({ data, size = 220 }: DistribucionDonutProps) {
-  const strokeWidth = 22
+export function DistribucionDonut({ data, size = 168 }: DistribucionDonutProps) {
+  // S13 (2026-10-22): el donut a 220px empujaba la tabla fuera de pantalla y
+  // obligaba a scrollear con solo dos inversiones. A 168px entran el gráfico y
+  // la tabla en un teléfono. El detalle de muchas inversiones sí scrollea (ahí
+  // manda la tabla, no el círculo).
+  const strokeWidth = 18
   const radius = (size - strokeWidth) / 2
   const center = size / 2
   const circumference = 2 * Math.PI * radius

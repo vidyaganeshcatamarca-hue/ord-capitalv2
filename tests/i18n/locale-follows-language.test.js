@@ -126,18 +126,46 @@ test('buildLocale maps the active language to the display locale', () => {
 test('the shared format context follows the language it is given', async () => {
   const { setFormatContext, formatCurrency, formatDate } = await import('../../src/lib/format.ts')
 
-  setFormatContext({ locale: 'en-US', localCurrency: 'USD', decimalsLocal: 2, decimalsSecondary: 2 })
+  // S21 (2026-10-23): los separadores ya no los decide el locale sino la
+  // configuración regional, así que acá se publican los dos juntos: el locale
+  // aporta idioma, símbolo y posición; los separadores, la preferencia del
+  // usuario. En producción `useNumberFormat` publica siempre ambos.
+  setFormatContext({
+    locale: 'en-US',
+    localCurrency: 'USD',
+    decimalsLocal: 2,
+    decimalsSecondary: 2,
+    decimalSeparator: '.',
+    thousandSeparator: ',',
+    currencyFormats: {},
+  })
   const english = formatCurrency(1234.5)
   assert.ok(
     english.includes('1,234.50'),
     `English locale must group with commas and use a dot decimal: ${english}`
   )
 
-  setFormatContext({ locale: 'es-AR', localCurrency: 'ARS', decimalsLocal: 2, decimalsSecondary: 2 })
+  setFormatContext({
+    locale: 'es-AR',
+    localCurrency: 'ARS',
+    decimalsLocal: 2,
+    decimalsSecondary: 2,
+    decimalSeparator: ',',
+    thousandSeparator: '.',
+    currencyFormats: {},
+  })
   const spanish = formatCurrency(1234.5)
   assert.ok(
     spanish.includes('1.234,50'),
     `Argentine locale must group with dots and use a comma decimal: ${spanish}`
+  )
+
+  // Los separadores mandan aunque el locale no coincida: es la regla del dueño
+  // (una sola elección regional para todas las monedas).
+  setFormatContext({ locale: 'en-US', decimalSeparator: ',', thousandSeparator: '.' })
+  assert.ok(
+    formatCurrency(1234.5).includes('1.234,50'),
+    `la preferencia regional gana sobre el locale: ${formatCurrency(1234.5)}`
   )
 
   // The date follows the same context.

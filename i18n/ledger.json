@@ -5083,8 +5083,8 @@
         "to": "No recent transactions."
       },
       "inversiones.title": {
-        "from": "Mi Cartera",
-        "to": "My Portfolio"
+        "from": "Mi Cartera (Total)",
+        "to": "My Portfolio (Total)"
       },
       "inversiones.subtitle": {
         "from": "Inversiones y crecimiento patrimonial",
@@ -5163,8 +5163,8 @@
         "to": "Nominal yield"
       },
       "inversiones.label_real_yield": {
-        "from": "Rendimiento real (contempla la inflación)",
-        "to": "Real yield (inflation adjusted)"
+        "from": "Rendimiento real",
+        "to": "Real yield"
       },
       "inversiones.label_inflation_6m": {
         "from": "Inflación 6m",
@@ -5257,6 +5257,34 @@
       "inversiones.msg_configure_inflation": {
         "from": "Configurá tu fuente de inflación para ver el rendimiento real",
         "to": "Set up your inflation source to see the real yield"
+      },
+      "inversiones.msg_inflation_no_data": {
+        "from": "Todavía no hay datos de inflación para tu moneda",
+        "to": "There is no inflation data for your currency yet"
+      },
+      "inversiones.label_inflation_computed": {
+        "from": "Inflación acumulada",
+        "to": "Accumulated inflation"
+      },
+      "inversiones.label_inflation_annual": {
+        "from": "Inflación calculada: {rate}% anual",
+        "to": "Calculated inflation: {rate}% per year"
+      },
+      "inversiones.label_inflation_window_months": {
+        "from": "últimos {months} meses",
+        "to": "last {months} months"
+      },
+      "inversiones.label_partial_withdrawal_note": {
+        "from": "Ya retiraste {amount} en rescates parciales; el rendimiento se calcula sobre el total, así que un retiro no es una pérdida.",
+        "to": "You already withdrew {amount} in partial redemptions; the yield is calculated on the total, so a withdrawal is not a loss."
+      },
+      "inversiones.error_wallet_currency_mismatch": {
+        "from": "La billetera de destino tiene que ser de la misma moneda que la inversión.",
+        "to": "The destination wallet must use the same currency as the investment."
+      },
+      "inversiones.error_wallet_not_found": {
+        "from": "No encontramos esa billetera.",
+        "to": "We could not find that wallet."
       },
       "inversiones.msg_inflation_disabled": {
         "from": "Desactivada",
@@ -8797,6 +8825,10 @@
       "inversiones.settings_fmt_decimals": {
         "from": "Decimales",
         "to": "Decimals"
+      },
+      "inversiones.settings_fmt_separators_global": {
+        "from": "Los separadores se eligen una sola vez y valen para todas tus billeteras.",
+        "to": "Separators are chosen once and apply to all your wallets."
       },
       "reports.reportes_pagina_titulo": {
         "from": "Reportar un problema",
@@ -14613,8 +14645,8 @@
         "to": "Não há transações recentes."
       },
       "inversiones.title": {
-        "from": "Mi Cartera",
-        "to": "Minha Carteira"
+        "from": "Mi Cartera (Total)",
+        "to": "Minha Carteira (Total)"
       },
       "inversiones.subtitle": {
         "from": "Inversiones y crecimiento patrimonial",
@@ -14693,8 +14725,8 @@
         "to": "Rendimento nominal"
       },
       "inversiones.label_real_yield": {
-        "from": "Rendimiento real (contempla la inflación)",
-        "to": "Rendimento real (considera a inflação)"
+        "from": "Rendimiento real",
+        "to": "Rendimento real"
       },
       "inversiones.label_inflation_6m": {
         "from": "Inflación 6m",
@@ -14787,6 +14819,34 @@
       "inversiones.msg_configure_inflation": {
         "from": "Configurá tu fuente de inflación para ver el rendimiento real",
         "to": "Configure sua fonte de inflação para ver o rendimento real"
+      },
+      "inversiones.msg_inflation_no_data": {
+        "from": "Todavía no hay datos de inflación para tu moneda",
+        "to": "Ainda não há dados de inflação para a sua moeda"
+      },
+      "inversiones.label_inflation_computed": {
+        "from": "Inflación acumulada",
+        "to": "Inflação acumulada"
+      },
+      "inversiones.label_inflation_annual": {
+        "from": "Inflación calculada: {rate}% anual",
+        "to": "Inflação calculada: {rate}% ao ano"
+      },
+      "inversiones.label_inflation_window_months": {
+        "from": "últimos {months} meses",
+        "to": "últimos {months} meses"
+      },
+      "inversiones.label_partial_withdrawal_note": {
+        "from": "Ya retiraste {amount} en rescates parciales; el rendimiento se calcula sobre el total, así que un retiro no es una pérdida.",
+        "to": "Você já retirou {amount} em resgates parciais; o rendimento é calculado sobre o total, então um resgate não é uma perda."
+      },
+      "inversiones.error_wallet_currency_mismatch": {
+        "from": "La billetera de destino tiene que ser de la misma moneda que la inversión.",
+        "to": "A carteira de destino deve ser da mesma moeda que o investimento."
+      },
+      "inversiones.error_wallet_not_found": {
+        "from": "No encontramos esa billetera.",
+        "to": "Não encontramos essa carteira."
       },
       "inversiones.msg_inflation_disabled": {
         "from": "Desactivada",
@@ -18327,6 +18387,10 @@
       "inversiones.settings_fmt_decimals": {
         "from": "Decimales",
         "to": "Decimais"
+      },
+      "inversiones.settings_fmt_separators_global": {
+        "from": "Los separadores se eligen una sola vez y valen para todas tus billeteras.",
+        "to": "Os separadores são escolhidos uma única vez e valem para todas as suas carteiras."
       },
       "reports.reportes_pagina_titulo": {
         "from": "Reportar un problema",

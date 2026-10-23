@@ -4,6 +4,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
 import './LiquidarInversionModal.css'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 
 export interface BilleteraDestino {
   billetera_id: number
@@ -37,6 +38,8 @@ export function LiquidarInversionModal({
   inversion,
   billeteras,
 }: LiquidarInversionModalProps) {
+  // Formato por moneda: se re-renderiza cuando cambia el contexto.
+  useFormatRevision()
   const { showToast } = useToast()
 
   const [tipo, setTipo] = useState<LiquidacionTipo>('total')

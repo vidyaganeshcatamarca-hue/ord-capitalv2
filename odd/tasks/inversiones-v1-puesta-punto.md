@@ -238,3 +238,22 @@ del dueño (convención temp_sql, scripts numerados + dump de verificación). El
   unavailable`, dos intentos, `next_action: stop`): no se creó autoridad ni se
   mutó nada. El plan de riesgo alto se cubrió con auto-verificación (tests,
   `tsc -b`, `vite build`, medición en navegador) + verificador independiente.
+- **L9** (2026-10-22, pausa del dueño — "stop por ahora"): el dueñoConfirmó que
+  **PI1 ya publicó en produccion** (`https://personal.workcapital.com.ar`, rama
+  `feat/i18n-pt-br`, que incluye el merge `138f1e8` de este trabajo). Se abrió
+  produccion con EgoLite en modo celular real: la app responde y redirige a
+  `/auth`. **La prueba funcional del modulo en produccion quedo pendiente**:
+  en el origen de produccion no hay sesion de Supabase (la sesion que uso el
+  chequeo anterior vivia en el localStorage de `localhost:5173`), asi que hace
+  falta que el dueno inicie sesion en la ventana del navegador o que se le
+  pase una sesion de test. Pendiente de la sesion: las 4 pestañas, el header
+  sticky, el modal con el boton Guardar fijo (`8d5cf56`), la categoria
+  intocable y la configuracion de inflacion manual contra produccion real.
+  **Coordinacion con PI1**: respondi sus dos consultas (el SQL ya esta aplicado
+  y verificado; la key `cat_investments` no necesita volver al diccionario),
+  pero el canal de mensajes entre sesiones **rechaza** el envio de PI2 a PI1
+  (`session message was not accepted`, 6 intentos; el inverso, PI1 -> PI2, si
+  funciona: PI2 esta en su turno y PI1 en control del usuario). La respuesta
+  quedo escrita y pineada en Engram (obs #686, con la decision en #685) y en el
+  archivo `temp_sql/89_estado_inversiones.mjs` (read-only) para que la lea
+  cuando tenga el control de su sesion.

@@ -1306,7 +1306,7 @@ export const wallets = {
 };
 
 export const inversiones = {
-  title: "Minha Carteira",
+  title: "Minha Carteira (Total)",
   subtitle: "Investimentos e crescimento do patrimônio",
   tab_cartera: "Carteira",
   tab_track_record: "Histórico",
@@ -1326,7 +1326,7 @@ export const inversiones = {
   label_current_value: "Valor atual",
   label_gain: "Ganho",
   label_nominal_yield: "Rendimento nominal",
-  label_real_yield: "Rendimento real (considera a inflação)",
+  label_real_yield: "Rendimento real",
   label_inflation_6m: "Inflação 6m",
   label_last_conciliation: "Última conciliação",
   label_start_date: "Data de início",
@@ -1350,6 +1350,13 @@ export const inversiones = {
   badge_semaforo_red: "Desatualizado",
   msg_no_investments: "Você não tem investimentos ativos",
   msg_configure_inflation: "Configure sua fonte de inflação para ver o rendimento real",
+  msg_inflation_no_data: "Ainda não há dados de inflação para a sua moeda",
+  label_inflation_computed: "Inflação acumulada",
+  label_inflation_annual: "Inflação calculada: {rate}% ao ano",
+  label_inflation_window_months: "últimos {months} meses",
+  label_partial_withdrawal_note: "Você já retirou {amount} em resgates parciais; o rendimento é calculado sobre o total, então um resgate não é uma perda.",
+  error_wallet_currency_mismatch: "A carteira de destino deve ser da mesma moeda que o investimento.",
+  error_wallet_not_found: "Não encontramos essa carteira.",
   msg_inflation_disabled: "Desativada",
   msg_beat_inflation: "Você ganhou poder de compra real!",
   msg_lost_purchasing_power: "Você perdeu poder de compra real",
@@ -2235,6 +2242,7 @@ export const inversiones = {
   settings_fmt_third: "Terceira moeda",
   settings_fmt_third_desc: "Moeda ainda não configurada.",
   settings_fmt_decimals: "Decimais",
+  settings_fmt_separators_global: "Os separadores são escolhidos uma única vez e valem para todas as suas carteiras.",
 };
 
 export const reports = {

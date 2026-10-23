@@ -81,6 +81,34 @@ function fetchUserRegion(): Promise<UserRegion | null> {
   return regionPromise
 }
 
+/** Formato por moneda tal como lo devuelve `fn_obtener_formato_moneda()`. */
+type CurrencyFormatMap = Record<
+  string,
+  { decimales?: number; separador_miles?: string; separador_decimal?: string }
+>
+
+/** Traduce el mapa del backend a lo que necesita el formateador. */
+function toCurrencyFormats(
+  map: CurrencyFormatMap | null
+): Record<string, { group?: string; decimal?: string; decimals?: number }> {
+  const out: Record<string, { group?: string; decimal?: string; decimals?: number }> = {}
+  if (!map || typeof map !== 'object') return out
+  for (const [code, entry] of Object.entries(map)) {
+    if (!entry || typeof entry !== 'object') continue
+    const group = typeof entry.separador_miles === 'string' ? entry.separador_miles : undefined
+    const decimal = typeof entry.separador_decimal === 'string' ? entry.separador_decimal : undefined
+    // Tanda 2 (S19): los decimales también son por moneda.
+    const decimals =
+      typeof entry.decimales === 'number' && Number.isFinite(entry.decimales)
+        ? Math.min(4, Math.max(0, Math.trunc(entry.decimales)))
+        : undefined
+    if (code && (group || decimal || decimals !== undefined)) {
+      out[code.toUpperCase()] = { group, decimal, decimals }
+    }
+  }
+  return out
+}
+
 export function useNumberFormat() {
   const { lang } = useLanguage()
   const userId = useOptionalAuth()?.session?.user?.id ?? null
@@ -90,6 +118,11 @@ export function useNumberFormat() {
   const [regionError, setRegionError] = useState(false)
   const [regionAttempt, setRegionAttempt] = useState(0)
   const [hydratedFor, setHydratedFor] = useState<string | null>(null)
+  // Formato por moneda (hasta tres): es lo que hace que la plata respete la
+  // elección del usuario en vez del default del locale.
+  const [currencyFormats, setCurrencyFormats] = useState<
+    Record<string, { group?: string; decimal?: string; decimals?: number }>
+  >({})
 
   // First paint from the local snapshot. These values change rarely, so beating
   // the RPC by one round trip is the difference between rendering '-' and
@@ -156,6 +189,22 @@ export function useNumberFormat() {
     }
   }, [userId])
 
+  useEffect(() => {
+    if (!userId) return
+    let cancelled = false
+    rpc<CurrencyFormatMap>('fn_obtener_formato_moneda')
+      .then((map) => {
+        if (cancelled) return
+        setCurrencyFormats(toCurrencyFormats(map))
+      })
+      .catch(() => {
+        // Si falla, el formateador cae al separador heredado: no se rompe nada.
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [userId])
+
   const locale = buildLocale(lang, region?.countryCode ?? null)
 
   // `lib/format.ts` is called from ~22 files that cannot use a hook, so the resolved
@@ -167,8 +216,15 @@ export function useNumberFormat() {
       localCurrency: region?.localCurrency || 'ARS',
       decimalsLocal: prefs.decimales_moneda_local,
       decimalsSecondary: prefs.decimales_segunda_moneda,
+      // Los separadores son los de la moneda local, y valen para TODA la app:
+      // el dueño corrigió la idea de tenerlos por moneda.
+      decimalSeparator: prefs.separador_decimal,
+      thousandSeparator: prefs.separador_miles,
+      // El mapa por moneda queda para los decimales (y por si más adelante hace
+      // falta algo más granular).
+      currencyFormats,
     })
-  }, [locale, region, prefs])
+  }, [locale, region, prefs, currencyFormats])
 
   const reloadRegion = useCallback(() => {
     invalidateRegionCache()

@@ -1,6 +1,7 @@
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatPercent } from '@/lib/format'
 import { t } from '@/locales/i18n'
 import './RendimientoRealWidget.css'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 
 export interface RendimientoData {
   total_actual: number
@@ -11,6 +12,9 @@ export interface RendimientoData {
   mensaje_key: string
   fuente_inflacion: 'proxy_dolar' | 'manual' | 'desactivado'
   moneda_local?: string
+  /** S12: por qué no hay inflación, para no pedir "configurar" cuando en
+   *  realidad falta el dato de cotizaciones. */
+  motivo_inflacion?: 'ok' | 'desactivado' | 'sin_datos' | 'manual_sin_valor'
 }
 
 /** Una línea de subtotal por moneda (patrón del hero del Home). */
@@ -26,14 +30,6 @@ interface RendimientoRealWidgetProps {
   rendimiento: RendimientoData
   loading?: boolean
   onConfigureInflation?: () => void
-}
-
-function formatPercent(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return '-'
-  const fixed = value.toFixed(2)
-  if (value > 0) return `+${fixed}%`
-  if (value < 0) return `${fixed}%`
-  return `${fixed}%`
 }
 
 function yieldClassFor(value: number | null | undefined): string {
@@ -61,6 +57,8 @@ export function RendimientoRealWidget({
   loading,
   onConfigureInflation,
 }: RendimientoRealWidgetProps) {
+  // Formato por moneda: se re-renderiza cuando cambia el contexto.
+  useFormatRevision()
   if (loading) {
     return (
       <header className="rendimiento-real-widget rendimiento-real-widget--loading" aria-busy="true">
@@ -69,13 +67,16 @@ export function RendimientoRealWidget({
     )
   }
 
-  const { rendimiento_nominal, rendimiento_real, inflacion_disponible, mensaje_key, fuente_inflacion } = rendimiento
+  const { rendimiento_nominal, rendimiento_real, inflacion_disponible, mensaje_key, fuente_inflacion, motivo_inflacion } = rendimiento
   const verdictKey = verdictKeyFor(rendimiento_real, mensaje_key)
   const verdictIsPositive = rendimiento_real !== null && rendimiento_real > 0
-  // B3b (2026-10-21): con la fuente 'desactivado' el rendimiento real no
-  // existe por decision del usuario: no se le pide que la configure. Cuando
-  // no hay config, si se le ofrece el atajo.
+  // B3b: con 'desactivado' el real no existe por decisión del usuario.
   const inflacionDesactivada = fuente_inflacion === 'desactivado'
+  // S12 (2026-10-22): el proxy dólar es la fuente POR DEFECTO. Si el backend no
+  // tiene cotizaciones todavía, no hay nada que "configurar": se dice que falta
+  // el dato. El cartel de configuración queda solo para el caso real: manual sin
+  // valor (o sin fila y sin default aplicable).
+  const faltaConfigurar = !inflacionDesactivada && motivo_inflacion === 'manual_sin_valor'
 
   return (
     <header className="rendimiento-real-widget">
@@ -140,14 +141,27 @@ export function RendimientoRealWidget({
             </span>
           </div>
         ) : (
-          <button
-            type="button"
-            className="rendimiento-real-cta"
-            onClick={onConfigureInflation}
-            disabled={!onConfigureInflation}
-          >
-            ⚙ {t('msg_configure_inflation')}
-          </button>
+          // S12: sin datos de cotización no se pide configurar nada (ya está en
+          // proxy dólar por defecto): se dice que todavía no hay dato.
+          faltaConfigurar ? (
+            <button
+              type="button"
+              className="rendimiento-real-cta"
+              onClick={onConfigureInflation}
+              disabled={!onConfigureInflation}
+            >
+              ⚙ {t('msg_configure_inflation')}
+            </button>
+          ) : (
+            <div className="rendimiento-real-yield-block">
+              <span className="rendimiento-real-yield-label">
+                {t('label_real_yield')}
+              </span>
+              <span className="rendimiento-real-yield rendimiento-real-yield--na">
+                {t('msg_inflation_no_data')}
+              </span>
+            </div>
+          )
         )}
       </div>
     </header>

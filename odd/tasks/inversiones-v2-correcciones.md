@@ -1,0 +1,218 @@
+# Inversiones v2 — correcciones del dueño tras probar producción (2026-10-22)
+
+Segunda tanda sobre el módulo de Inversiones, después de que el dueño probó
+producción (`https://personal.workcapital.com.ar`) en su teléfono. Cierra
+hallazgos de lectura y de cálculo, no rediseños.
+
+## Specs
+
+- **S11** (subtítulos por moneda alineados, L1, verbatim): "En la tarjeta
+  principal aparece el valor total. Después, abajo de mi cartera aparecen los
+  valores de las diferentes monedas. Me gustaría alinear a la derecha. Así
+  quedan todos los valores en la misma columna. Es decir, en este caso en
+  particular, dólares debería quedar 200 abajo de 805, que es el valor total
+  de la cartera."
+- **S12** (proxy dólar es el default y debe contar como configurado, L1,
+  verbatim): "dijimos que la configuración por defecto es tomando el dólar ...
+  Todos los usuarios deberían aparecer con eso ya configurado. Por lo tanto el
+  cartel no tendría sentido. Lo que me parece que está sucediendo es que esa
+  configuración cuando se elige guiada por el dólar no la está tomando en
+  cuenta."
+- **S13** (donut más chico y tabla legible, L1, verbatim): "el donut está
+  demasiado grande ... Quisiera que esta pantalla achiques el donut para que no
+  exista scroll en esta pantalla ... que para dos inversiones no haya scroll,
+  para más inversiones sí. Lo que tienes que cambiar solamente es el tamaño del
+  donut. Otra cuestión aquí es el campo valor, no se entiende bien qué es lo que
+  dice ... no se sabe si es porcentaje, explícame ese valor, cómo lo calculas."
+- **S14** (el país no se elige, L1, verbatim): "el país es el país que ya está
+  configurado en regional y que determina la moneda local. Así que el país no
+  debe aparecer y no debe ser seleccionable ni cambiable."
+- **S15** (liquidación solo a billeteras de la misma moneda, L1, verbatim): "una
+  liquidación total o parcial solo puede ir a billeteras de la misma moneda. Me
+  pareció ver algún error en alguna prueba que hice de que me haya permitido
+  liquidar a una billetera de una moneda diferente. Solo se liquida y se
+  muestran las billeteras de la misma moneda de la inversión."
+- **S16** (un retiro parcial no es una pérdida, L1, verbatim): "Cuando yo hago
+  una liquidación parcial, el valor actual aparece con, en este ejemplo,
+  200.000 menos que el capital original. En valor actual debería decir, cuando
+  se ha aplicado un retiro parcial, debería decir que es a causa de un retiro
+  parcial para diferenciarlo de una pérdida real de la inversión. No queda claro
+  esto. Y el rendimiento nominal ... lo está tomando aparentemente como una
+  pérdida, cuando en realidad lo que ha habido es un retiro. Lo cual no es
+  pérdida."
+- **S17** (la inflación tiene que ser explicable, L1, verbatim): "Dime cómo
+  calcula la inflación en el tiempo."
+
+## Diagnóstico (verificado en producción, 2026-10-22)
+
+| # | Causa raíz | Evidencia |
+|---|---|---|
+| S11 | `.rendimiento-real-moneda-line` es `inline-flex` a la izquierda; el total va a la derecha en otra fila | `RendimientoRealWidget.css:71-92` |
+| S12/S17 | `fn_configurar_inflacion` **congela** `inflacion_acumulada_6m/12m` en el momento de guardar. Para `proxy_dolar` usa la variación del mes en curso y la eleva a la 6ª potencia. Si ese mes no tiene dato, guarda **0** y `inflacion_disponible` queda `false` **para siempre** → el cartel de "Configurá tu fuente" no se va nunca | `p_config_inflacion` de los usuarios 1 y 198: `fuente_inflacion='proxy_dolar'` con `inflacion_acumulada_6m=0` y `12m=0` |
+| S13 | `.distribucion-table { min-width: 520px }` + `overflow-x: auto` → en un teléfono la tabla siempre scrollea y corta la columna Valor y la de Porcentaje. El donut es `size=220` | `DistribucionView.css:74-81` |
+| S14 | `ConfigInflacionView` tiene un `<select>` de país, y además `const PAISES = []` (array vacío): la config guardada de país nunca se aplica, se pisa con el país regional | `ConfigInflacionView.tsx:57` y `:107` |
+| S15 | El front filtra (`billeterasMismaMoneda`), pero **`fn_liquidar_inversion` no valida nada**: acepta cualquier `p_billetera_destino_id` | `82_deploy_inversiones_puesta_punto.sql:495-590` |
+| S16 | `rendimiento_nominal` compara `valor_actual_teorico` contra `monto_invertido_original` e **ignora `monto_liquidado`**. Un rescate de 200.000 sobre 500.000 se muestra como −40%. Pasa en el detalle **y** en la lista de la cartera | `86_inversiones_saldo_e_inflacion_manual.sql:243` y `82_deploy_inversiones_puesta_punto.sql:143-158` |
+| S16b | `.detalle-actions` es `sticky` con degradado `rgba(13,17,23,0)` (oscuro hardcodeado) y el contenido no reserva espacio: la barra tapa la tarjeta de rendimiento real | `DetalleInversionView.css:383-395` |
+
+## Contrato del backend nuevo
+
+`fn_inflacion_vigente(p_user_id bigint) RETURNS jsonb` — helper **interno**
+(`REVOKE EXECUTE FROM PUBLIC, anon, authenticated`), se calcula **en tiempo de
+lectura**, nunca se congela:
+
+```json
+{ "fuente": "proxy_dolar|manual|desactivado",
+  "pais": "AR", "moneda_local": "ARS",
+  "disponible": true,
+  "motivo": "ok|desactivado|sin_datos|manual_sin_valor",
+  "inflacion_6m": 12.34, "inflacion_12m": null,
+  "ventana_6m_meses": 3.1, "ventana_12m_meses": null }
+```
+
+Reglas:
+1. `fuente = COALESCE(config.fuente_inflacion, 'proxy_dolar')` → **sin fila
+   guardada, el default es proxy_dolar** (S12).
+2. `pais = COALESCE(NULLIF(config.pais,''), p_config_region.pais_codigo)`;
+   `moneda_local` sale de `p_paises.moneda_local` (fallback
+   `p_config_region.moneda_default`, fallback `'ARS'`).
+3. `desactivado` → `disponible=false`, `motivo='desactivado'`.
+4. `manual` con `p_inflacion_manual_anual_pct > 0` → `6m =
+   (POWER(1+anual/100,0.5)-1)*100`, `12m = anual`; si no hay valor →
+   `motivo='manual_sin_valor'`.
+5. `proxy_dolar` → variación **acumulada real** de `p_cotizaciones_historico`
+   para `moneda_local`: `hoy/base - 1`, con `base` el último dato de hace 6
+   (y 12) meses. Si no hay dato de hace 6 meses, se usa **el más viejo
+   disponible** y se informa la ventana real en `ventana_6m_meses`. El
+   histórico actual llega a ~3 meses para ARS, así que una ventana de 6/12
+   meses es imposible hoy: se informa la que hay.
+6. Si no hay ningún dato de cotización → `motivo='sin_datos'` y
+   `disponible=false`. **La UI no debe pedir "configurar"**: eso ya está
+   configurado (S12), simplemente todavía no hay datos.
+7. Fallback de compatibilidad: si el cálculo da `null` y la fila guardada tiene
+   `inflacion_acumulada_6m > 0`, se usa ese valor.
+
+Funciones a parchear con `CREATE OR REPLACE` (**sin `DROP FUNCTION`**: los
+tipos de retorno no cambian):
+
+- `fn_reporte_rendimiento_vs_inflacion()` → usa el helper.
+- `fn_reporte_detalle_inversion(bigint)` → usa el helper **y** agrega
+  `monto_liquidado`; `rendimiento_nominal` = `((valor_actual + monto_liquidado)
+  - monto_invertido_original) / monto_invertido_original * 100`.
+- `fn_reporte_historial_inversiones()` → mismo arreglo del nominal.
+- `fn_obtener_config_inflacion()` → agrega `disponible`, `motivo`,
+  `ventana_6m_meses`, `ventana_12m_meses`; `inflacion_6m/12m` en vivo.
+- `fn_liquidar_inversion(bigint, numeric, bigint)` → **valida que
+  `p_billeteras.moneda` de la billetera destino sea igual a la moneda de la
+  inversión**; si no, `RAISE EXCEPTION '{"key": "error_wallet_currency_mismatch",
+  "params": {}}'`.
+
+## Tasks
+
+| ID | Specs | Tarea | Ruta | Commit |
+|---|---|---|---|---|
+| T16 | S11 | Front: los subtotales por moneda se alinean a la derecha, en la misma columna que el total | inline | — |
+| T17 | S12, S17 | SQL: `fn_inflacion_vigente` + parche de las 5 funciones (inflación en vivo, default proxy_dolar, nominal con retiro parcial, validación de moneda al liquidar) | worker | — |
+| T18 | S14 | Front: se quita el selector de país; el país y la moneda local son los de la configuración regional; se informa cómo se calcula y la ventana usada | inline | — |
+| T19 | S12 | Front: el cartel de "configurá tu fuente" solo aparece cuando de verdad no hay datos, con un mensaje distinto | inline | — |
+| T20 | S13 | Front: donut más chico; la tabla del gráfico entra en el teléfono sin scroll horizontal y los encabezados dicen qué es cada columna | inline | — |
+| T21 | S15 | Front + SQL: solo billeteras de la misma moneda al liquidar, garantizado también en el backend | inline | — |
+| T22 | S16 | Front + SQL: retiro parcial visible en el detalle (monto retirado) y nominal calculado sobre el total; la barra de acciones no tapa las tarjetas | inline | — |
+| T23 | S11-S16 | i18n: keys nuevas en `es.ts`, `en.ts` y `pt.ts` en paridad | inline | — |
+| T24 | S2 | Verificación: tests de las dos causas SQL y de la UI; chequeo en navegador móvil | inline | — |
+
+## Log
+
+- **L1** (2026-10-22, verbatim, seis puntos): "1. En la tarjeta principal aparece
+  el valor total ... Me gustaría alinear a la derecha. Así quedan todos los
+  valores en la misma columna ... También tenemos un problema con el mensaje de
+  configurar tu fuente de inflación Ya que dijimos que la configuración por
+  defecto es tomando el dólar ... Todos los usuarios deberían aparecer con eso
+  ya configurado ... 2. Pantalla de gráfico, el donut está demasiado grande ...
+  achiques el donut para que no exista scroll en esta pantalla ... 3. En la
+  pantalla de inflación aparece el país ... Eso está mal como concepto ... el
+  país no debe aparecer y no debe ser seleccionable ni cambiable. La fuente de
+  inflación, cuando es proxy dólar, hay algún inconveniente que no queda fijada
+  ... Dime cómo calcula la inflación en el tiempo. 4. Cuando voy a liquidar una
+  inversión, quiero que verifiques que se cumpla que una liquidación total o
+  parcial solo puede ir a billeteras de la misma moneda ... 5. Esta pantalla es
+  el detalle de una inversión ... Cuando yo hago una liquidación parcial, el
+  valor actual aparece con ... 200.000 menos que el capital original ...
+  debería decir que es a causa de un retiro parcial ... Y el rendimiento
+  nominal ... lo está tomando aparentemente como una pérdida, cuando en
+  realidad lo que ha habido es un retiro ... 6. Para la pantalla del donut, si
+  necesitas usar el acceso web de Ego Browser, lo haces."
+
+- **L2** (2026-10-23, cierre de la tanda): T16–T24 hechas, salvo el deploy del
+  SQL. Commit `311a1d5` en `pi/inversiones-v1-puesta-punto`. Verificación:
+  **168 tests verdes**, `tsc -b` limpio, `vite build` limpio, y medición en
+  EgoLite con perfil celular real (Pixel 7, 412x915).
+  Medido en el navegador contra el dev server:
+  - S11: el total termina en x=384/400 y el subtotal de BRL también → misma
+    columna.
+  - S13: donut 168px, tabla de 3 columnas, `scrollHorizontal: false`, valores
+    completos ("1500,00 GBP", "237,77 GBP"), y `scrollPagina.max = 0` con dos
+    inversiones.
+  - S14: no existe `#config-inflacion-pais`; el único selector es la fuente; el
+    bloque "Inflación acumulada" explica con qué se calculó.
+  - S16b: al final del scroll del detalle la barra de acciones queda en
+    670..739, el nav en 851 y ninguna tarjeta tapada.
+  - S12: el cartel de configurar desapareció; en su lugar se lee "Todavía no hay
+    datos de inflación para tu moneda".
+  El SQL `temp_sql/90_...sql` se compiló y ejecutó **dentro de BEGIN/ROLLBACK**
+  contra Postgres real: `fn_inflacion_vigente(1)` = AR/ARS, +3.14% acumulado en
+  3.2 meses; `(198)` = GB/GBP, `sin_datos` (solo 0.3 meses de histórico).
+  **Nada quedó aplicado en producción**: el deploy de ese archivo sigue
+  necesitando autorización del dueño, y el front necesita que PI1 lo publique.
+  Nota de incidente: al empezar la tanda aparecieron en el working tree dos
+  cambios de etiqueta en `es.ts` que no hice yo (`title: "Mi Cartera (Total)"` y
+  `label_real_yield: "Rendimiento real"`); se completaron en `en.ts`/`pt.ts` para
+  que el ledger i18n quedara en 0 pendientes, y quedan reportados al dueño.
+- **L3** (2026-10-23, deploy autorizado): el dueño dio el OK y se aplicó
+  `temp_sql/90_inflacion_vigente_y_retiro_parcial.sql` a producción de forma
+  **atómica** (`BEGIN; <archivo>; COMMIT;`, sin ningún `DROP FUNCTION`) con
+  `temp_sql/92_deploy_90.mjs`. Postcheck `temp_sql/93_postcheck_90.mjs`:
+  **19/19 verde** (7 funciones con una sola versión, el helper sin permiso para
+  anon/authenticated, usuario 1 en AR/ARS con 3.22% acumulado en 3.2 meses,
+  usuario 198 en GB/GBP con `sin_datos`, detalle y cartera con el mismo nominal,
+  guard de moneda antes del primer INSERT).
+  Prueba funcional `temp_sql/94_prueba_guard_moneda.mjs`, simulando el JWT del
+  usuario 198 con `set_config('request.jwt.claims', …)` y **con ROLLBACK**:
+  - liquidar una inversión GBP a la billetera BRL → rechazado con
+    `error_wallet_currency_mismatch`;
+  - la misma liquidación a la billetera GBP → aceptada (el movimiento se creó y
+    el rollback lo deshizo: `movs_antes` 1 → `movs_despues` 2, después 1);
+  - inversión con retiro parcial (capital 1000, retirado 200, valor actual 1000):
+    nominal **20,00%** tanto en el detalle como en la cartera, con
+    `monto_liquidado` = 200 (antes se mostraba como pérdida);
+  - `fn_reporte_rendimiento_vs_inflacion` devuelve `motivo_inflacion:
+    'sin_datos'` y `mensaje_key: msg_inflation_no_data` para el usuario GBP.
+  Sin residuos verificados después: 1 movimiento, inversión `activa`,
+  `monto_liquidado` intacto, ninguna función temporal. **Pendiente**: que el
+  front llegue a producción (lo publica PI1).
+- **L4** (2026-10-23, pedido del dueño sobre la inflación y los decimales): dos
+  agregados sobre la tanda cerrada.
+  (1) **Inflación anualizada**: la pestaña ahora muestra la acumulada con su
+  ventana y debajo "Inflación calculada: 12,62% anual". El backend la calcula en
+  `fn_inflacion_vigente` (`inflacion_anualizada`): con proxy dólar anualiza la
+  variación acumulada de la ventana real, `(1+acc)^(12/meses)-1`; con manual es
+  el valor anual que cargó el usuario. Se desplegó otra vez el 90 (BEGIN/COMMIT,
+  sin DROP) y el postcheck siguió 19/19: producción devuelve para el usuario 1
+  **3,22% acumulado en 3,2 meses → 12,62% anual**.
+  (2) **Separador decimal en los porcentajes**: el pedido fue "el % del módulo
+  debe usar el decimal elegido en configuración regional, para todo el módulo".
+  Causa: cada componente definía su `formatPercent` con `toFixed(2)`, que siempre
+  usa punto. Ahora `FormatContext` lleva `decimalSeparator` (lo publica
+  `useNumberFormat` desde `prefs.separador_decimal`), `@/lib/format` exporta un
+  único `formatPercent` que lo respeta y las cinco copias locales se borraron;
+  un test falla si alguna vuelve. Verificado en EgoLite con perfil celular
+  inyectando la preferencia por CDP (el valor real viene del backend y pisa el
+  cache): con coma el gráfico lee `86,36%` / `13,64%` y el detalle `+6,67%`; con
+  el separador del dueño (`.`) lee `86.36%` y `+6.67%`.
+  Commit `48ff5a8`. Suite: 548 pasan, 2 fallos preexistentes de `appLock`
+  (biometría), ajenos a Inversiones.
+  **Hallazgo aparte, sin tocar**: el *dinero* del módulo se formatea con
+  `formatCurrency`, que usa `Intl` con el locale y por lo tanto ignora
+  `separador_decimal`. Con la config del dueño (`.` como decimal) la plata sale
+  `1500,00 GBP` mientras los porcentajes salen `6.67%`. Es app-wide (22
+  archivos), no solo Inversiones; queda reportado para decidir.

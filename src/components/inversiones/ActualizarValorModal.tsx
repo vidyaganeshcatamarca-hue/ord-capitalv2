@@ -4,6 +4,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
 import './ActualizarValorModal.css'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 
 interface InversionResumen {
   inversion_id: number
@@ -25,6 +26,8 @@ export function ActualizarValorModal({
   onSuccess,
   inversion,
 }: ActualizarValorModalProps) {
+  // Formato por moneda: se re-renderiza cuando cambia el contexto.
+  useFormatRevision()
   const { showToast } = useToast()
 
   const [nuevoValor, setNuevoValor] = useState('')

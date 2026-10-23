@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
-import { formatCurrency, formatDate } from '@/lib/format'
+import { formatCurrency, formatDate, formatPercent } from '@/lib/format'
 import { formatInversionDetalle } from '@/lib/inversionesLabels'
 import './DetalleInversionView.css'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 
 export interface HistorialItem {
   fecha: string | null
@@ -27,9 +28,14 @@ export interface DetalleInversion {
   estado_inversion: string | null
   rendimiento_nominal: number | null
   rendimiento_real: number | null
+  /** S16: lo ya retirado en rescates parciales. Un retiro no es una perdida. */
+  monto_liquidado?: number | null
   /** B3b: false cuando la fuente esta desactivada (no es "falta configurar"). */
   inflacion_disponible?: boolean
   fuente_inflacion?: string | null
+  /** S12: por que no hay inflacion, para no pedir "configurar" cuando lo que
+   *  falta es el dato de cotizaciones. */
+  motivo_inflacion?: 'ok' | 'desactivado' | 'sin_datos' | 'manual_sin_valor'
   historial: HistorialItem[] | null
 }
 
@@ -67,14 +73,6 @@ function yieldClassFor(value: number | null | undefined): string {
   return 'detalle-yield detalle-yield--zero'
 }
 
-function formatPercent(value: number | null | undefined): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return '-'
-  const fixed = value.toFixed(2)
-  if (value > 0) return `+${fixed}%`
-  if (value < 0) return `${fixed}%`
-  return `${fixed}%`
-}
-
 function movementClassFor(value: number | null | undefined): string {
   if (value === null || value === undefined || Number.isNaN(value)) {
     return 'detalle-history-amount detalle-history-amount--zero'
@@ -90,6 +88,8 @@ export function DetalleInversionView({
   onUpdateValue,
   onLiquidate,
 }: DetalleInversionViewProps) {
+  // Formato por moneda: se re-renderiza cuando cambia el contexto.
+  useFormatRevision()
   const { showToast } = useToast()
   const [data, setData] = useState<DetalleInversion | null>(null)
   const [loading, setLoading] = useState(true)
@@ -152,6 +152,9 @@ export function DetalleInversionView({
   const semaforoLabel = t(semaforoLabelKey(data.estado_semaforo_key))
   const moneda = data.moneda || 'ARS'
   const historial = data.historial || []
+  // S16: plata que ya volvio al usuario por rescates parciales. El nominal del
+  // backend ya la suma, pero la UI tiene que decirlo o el numero no se entiende.
+  const retirado = Number(data.monto_liquidado ?? 0)
 
   return (
     <div className="detalle-view">
@@ -211,6 +214,14 @@ export function DetalleInversionView({
           <span className="detalle-metric-value">
             {formatCurrency(data.valor_actual_teorico, moneda)}
           </span>
+          {/* S16: si hubo rescates parciales se dice explicitamente. Sin esta
+              linea, el "valor actual" mas bajo que el capital original se lee
+              como una perdida, cuando en realidad parte ya se retiro. */}
+          {retirado > 0 && (
+            <span className="detalle-metric-note">
+              {t('label_partial_withdrawal_note', { amount: formatCurrency(retirado, moneda) })}
+            </span>
+          )}
         </article>
 
         <article className="detalle-metric-card">
@@ -229,9 +240,16 @@ export function DetalleInversionView({
               <span className="detalle-yield detalle-yield--na detalle-metric-helper">
                 {t('msg_inflation_disabled')}
               </span>
-            ) : (
+            ) : data.motivo_inflacion === 'manual_sin_valor' ? (
               <span className="detalle-yield detalle-yield--na detalle-metric-helper">
                 {t('msg_configure_inflation')}
+              </span>
+            ) : (
+              // S12: ya esta configurado en proxy dolar (el default); si no hay
+              // numero es porque todavia no hay cotizaciones, no porque falte
+              // configurar nada.
+              <span className="detalle-yield detalle-yield--na detalle-metric-helper">
+                {t('msg_inflation_no_data')}
               </span>
             )
           ) : (
@@ -251,7 +269,7 @@ export function DetalleInversionView({
           <div className="detalle-extra-row">
             <span className="detalle-extra-label">{t('label_tna')}</span>
             <span className="detalle-extra-value">
-              {data.tasa_anual_tna.toFixed(2)}%
+              {formatPercent(data.tasa_anual_tna, { signed: false })}
             </span>
           </div>
         )}
