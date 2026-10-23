@@ -2466,6 +2466,7 @@ export const inversiones = {
   settings_fmt_third: "Tercera moneda",
   settings_fmt_third_desc: "Moneda sin configurar todavía.",
   settings_fmt_decimals: "Decimales",
+  settings_fmt_separators_global: "Los separadores se eligen una sola vez y valen para todas tus billeteras.",
   // Los errores de fn_configurar_formato_moneda viven en la sección errors
   // (definidos por el merge de monedas-extra-libres); el separador repetido se
   // comparte con la escritura legacy de preferencias globales.

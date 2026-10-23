@@ -8590,6 +8590,10 @@
         "from": "Decimales",
         "to": "Decimals"
       },
+      "inversiones.settings_fmt_separators_global": {
+        "from": "Los separadores se eligen una sola vez y valen para todas tus billeteras.",
+        "to": "Separators are chosen once and apply to all your wallets."
+      },
       "reports.reportes_pagina_titulo": {
         "from": "Reportar un problema",
         "to": "Report a problem"
@@ -17911,6 +17915,10 @@
       "inversiones.settings_fmt_decimals": {
         "from": "Decimales",
         "to": "Decimais"
+      },
+      "inversiones.settings_fmt_separators_global": {
+        "from": "Los separadores se eligen una sola vez y valen para todas tus billeteras.",
+        "to": "Os separadores são escolhidos uma única vez e valem para todas as suas carteiras."
       },
       "reports.reportes_pagina_titulo": {
         "from": "Reportar un problema",

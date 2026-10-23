@@ -2182,6 +2182,7 @@ export const inversiones = {
   settings_fmt_third: "Third currency",
   settings_fmt_third_desc: "Currency not configured yet.",
   settings_fmt_decimals: "Decimals",
+  settings_fmt_separators_global: "Separators are chosen once and apply to all your wallets.",
 };
 
 export const reports = {

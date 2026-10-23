@@ -2182,6 +2182,7 @@ export const inversiones = {
   settings_fmt_third: "Terceira moeda",
   settings_fmt_third_desc: "Moeda ainda não configurada.",
   settings_fmt_decimals: "Decimais",
+  settings_fmt_separators_global: "Os separadores são escolhidos uma única vez e valem para todas as suas carteiras.",
 };
 
 export const reports = {

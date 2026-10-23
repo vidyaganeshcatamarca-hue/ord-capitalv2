@@ -216,10 +216,12 @@ export function useNumberFormat() {
       localCurrency: region?.localCurrency || 'ARS',
       decimalsLocal: prefs.decimales_moneda_local,
       decimalsSecondary: prefs.decimales_segunda_moneda,
-      // El separador elegido viaja al contexto para que `formatPercent` lo use:
-      // los porcentajes del modulo de Inversiones lo estaban ignorando.
+      // Los separadores son los de la moneda local, y valen para TODA la app:
+      // el dueño corrigió la idea de tenerlos por moneda.
       decimalSeparator: prefs.separador_decimal,
-      // Y el mapa por moneda (separadores y decimales) para `formatCurrency`.
+      thousandSeparator: prefs.separador_miles,
+      // El mapa por moneda queda para los decimales (y por si más adelante hace
+      // falta algo más granular).
       currencyFormats,
     })
   }, [locale, region, prefs, currencyFormats])

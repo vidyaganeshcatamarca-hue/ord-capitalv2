@@ -1,22 +1,21 @@
 // tests/separadores-por-moneda.test.js
-// Tanda 1 (spec S18): el dinero respeta el separador elegido POR MONEDA y los
-// porcentajes el de la MONEDA LOCAL.
+// Formato numérico del dinero y de los porcentajes.
 //
 //   node --test tests/separadores-por-moneda.test.js
 //
-// Regla del dueño (verbatim): "El módulo debe seguir el separador elegido.
-// Tenemos máximo tres monedas, cada moneda debe seguir su separador elegido. Y
-// en el módulo de inversiones o cualquier otro, en donde se muestren
-// porcentajes, se debe seguir el separador elegido para la moneda local. Cuando
-// son valores genéricos, que no aplican a una moneda en particular, el separador
-// elegido para la moneda local."
+// Historia de la regla (el dueño la corrigió dos veces):
+//   - S18 (2026-10-23, primera versión): cada moneda con SUS separadores.
+//   - S21 (2026-10-23, corrección, verbatim): "no podemos tener separadores de
+//     miles y decimales por moneda. No es correcto. Lo correcto es que el usuario
+//     regional elige cómo quiere ver todas sus billeteras con los mismos
+//     separadores... Manda el separador local para toda la aplicación."
 //
-// El arreglo vive en DOS archivos (lib/format.ts y useNumberFormat.ts) y no toca
-// ningún componente: los 48 llamadores de formatCurrency siguen igual.
-//
-// Lo más importante de este archivo es el primer test: cuando no hay separador
-// configurado para la moneda, la salida tiene que ser IDÉNTICA a la de antes
-// (locale puro). Si eso se rompe, se rompen 26 archivos.
+// Entonces, hoy:
+//   - los SEPARADORES (miles y decimal) son uno solo, el de la moneda local, y
+//     valen para todas las monedas;
+//   - los DECIMALES (cuántos) siguen siendo por moneda, porque son precisión y no
+//     presentación;
+//   - los porcentajes usan el separador decimal local (son valores genéricos).
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
@@ -33,91 +32,75 @@ const { formatCurrency, formatPercent, setFormatContext } = await import(
 )
 
 /** Deja el contexto como lo publica el hook. */
-function contexto({ locale = 'es-AR', local = 'ARS', formats = {}, decimal = ',' } = {}) {
+function contexto({
+  locale = 'es-AR',
+  local = 'ARS',
+  decimalLocal = ',',
+  milesLocal = '.',
+  decimalesLocal = 0,
+  decimalesSegunda = 1,
+  formats = {},
+} = {}) {
   setFormatContext({
     locale,
     localCurrency: local,
-    decimalsLocal: 0,
-    decimalsSecondary: 1,
-    decimalSeparator: decimal,
+    decimalsLocal: decimalesLocal,
+    decimalsSecondary: decimalesSegunda,
+    decimalSeparator: decimalLocal,
+    thousandSeparator: milesLocal,
     currencyFormats: formats,
   })
 }
 
-// ───────────── el test que protege lo ya escrito (26 archivos) ──────────────
+// ───────────────── S21: un separador, el local, para todo ────────────────────
 
-test('sin separadores configurados, la salida es la de siempre (locale puro)', () => {
-  contexto({ formats: {} })
-
-  // Comparación directa contra Intl: antes formatCurrency era exactamente esto.
-  const casos = [
-    [1234.56, 'ARS', 0],
-    [200.3, 'USD', 1],
-    [1234567.891, 'ARS', 0],
-    [0, 'ARS', 0],
-    [-500, 'BRL', 0],
-  ]
-  for (const [monto, moneda, digitos] of casos) {
-    const esperado = new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: moneda,
-      minimumFractionDigits: digitos,
-    }).format(Number(monto.toFixed(digitos)))
-    assert.equal(
-      formatCurrency(monto, moneda),
-      esperado,
-      `${monto} ${moneda} debe quedar igual que Intl`
-    )
-  }
-})
-
-// ─────────────────────── cada moneda con su separador ───────────────────────
-
-test('cada moneda usa SU separador, no el de las demás', () => {
-  setFormatContext({
-    locale: 'es-AR',
-    localCurrency: 'ARS',
-    decimalsLocal: 2,
-    decimalsSecondary: 2,
-    decimalSeparator: ',',
-    currencyFormats: {
-      ARS: { group: '.', decimal: ',' },
-      USD: { group: ',', decimal: '.' },
-      BRL: { group: '.', decimal: ',' },
+test('todas las monedas usan el separador de la moneda local', () => {
+  contexto({
+    local: 'GBP',
+    decimalLocal: '.',
+    milesLocal: ',',
+    decimalesLocal: 2,
+    decimalesSegunda: 2,
+    formats: {
+      GBP: { group: ',', decimal: '.', decimals: 2 },
+      // BRL tiene otros separadores guardados de la tanda anterior: se ignoran.
+      BRL: { group: '.', decimal: ',', decimals: 2 },
     },
   })
 
-  // ARS: miles '.' y decimal ','.
   assert.ok(
-    formatCurrency(1234.5, 'ARS').includes('1.234,5'),
-    `ARS debe usar miles '.' y decimal ',': ${formatCurrency(1234.5, 'ARS')}`
+    formatCurrency(1600.5, 'BRL').includes('1,600.50'),
+    `BRL debe usar el separador de la local: ${formatCurrency(1600.5, 'BRL')}`
   )
-  // USD configurado con punto decimal: el caso que el dueño reportó.
-  const usd = formatCurrency(1234.5, 'USD')
-  assert.ok(usd.includes('1,234.5'), `USD debe usar punto decimal: ${usd}`)
-  assert.ok(!usd.includes('1.234,5'), 'USD no debe heredar el formato de ARS')
+  assert.ok(
+    !formatCurrency(1600.5, 'BRL').includes('1.600,50'),
+    'BRL no debe usar separadores propios'
+  )
 })
 
-test('una moneda sin entrada propia cae al separador de la moneda local', () => {
-  setFormatContext({
-    locale: 'es-AR',
-    localCurrency: 'GBP',
-    decimalsLocal: 2,
-    decimalsSecondary: 2,
-    decimalSeparator: ',',
-    currencyFormats: { GBP: { group: ',', decimal: '.' } },
-  })
-  // EUR no tiene fila: se usa el de GBP.
-  const eur = formatCurrency(1234.5, 'EUR')
-  assert.ok(eur.includes('1,234.5'), `EUR debe heredar de la local: ${eur}`)
+test('con la local en coma, el dólar también sale en coma', () => {
+  contexto({ local: 'ARS', decimalLocal: ',', milesLocal: '.', decimalesLocal: 2, decimalesSegunda: 2 })
+  const usd = formatCurrency(1234.5, 'USD')
+  assert.ok(usd.includes('1.234,50'), `USD debe seguir a la local: ${usd}`)
+})
+
+test('sin mapa pero con preferencias regionales, manda la preferencia', () => {
+  contexto({ local: 'ARS', decimalLocal: ',', milesLocal: '.', decimalesLocal: 0, formats: {} })
+  const ars = formatCurrency(1234.5, 'ARS')
+  assert.ok(ars.includes('1.235'), `debe agrupar con el separador elegido: ${ars}`)
+})
+
+test('si no hay nada configurado, decide Intl (comportamiento histórico)', () => {
+  contexto({ locale: 'en-US', local: 'USD', decimalLocal: '', milesLocal: '', decimalesLocal: 2 })
+  const usd = formatCurrency(1234.5, 'USD')
+  assert.ok(usd.includes('1,234.5'), `sin configuración manda el locale: ${usd}`)
 })
 
 test('el símbolo, su posición y el signo no se tocan', () => {
-  contexto({ formats: { ARS: { group: '.', decimal: ',' } } })
+  contexto({ local: 'ARS', decimalLocal: ',', milesLocal: '.', decimalesLocal: 2 })
   const negativo = formatCurrency(-1234.5, 'ARS')
   assert.ok(negativo.includes('-'), `debe conservar el signo: ${negativo}`)
   assert.ok(negativo.includes('$'), `debe conservar el símbolo: ${negativo}`)
-  // El símbolo va antes del número, igual que en el locale.
   assert.ok(negativo.indexOf('$') < negativo.indexOf('1'), 'el símbolo sigue adelante')
 })
 
@@ -125,42 +108,95 @@ test('sin valor no se inventa un número', () => {
   contexto()
   assert.equal(formatCurrency(undefined), '-')
   assert.equal(formatCurrency('no-es-un-numero'), '-')
-  // `null` se formateaba como 0 antes de este cambio y se deja igual: cambiarlo
-  // toca 48 llamadores y no es parte de esta tanda.
-  assert.equal(formatCurrency(null), '$ 0')
+  // `null` se formateaba como 0 antes de todo esto y se deja igual: cambiarlo
+  // toca 48 llamadores y no es parte de la regla.
+  assert.match(formatCurrency(null), /^\$\s0$/)
+})
+
+// ─────────────── decimales: siguen siendo por moneda (precisión) ─────────────
+
+test('cada moneda mantiene SUS decimales aunque comparta los separadores', () => {
+  contexto({
+    local: 'GBP',
+    decimalLocal: '.',
+    milesLocal: ',',
+    decimalesLocal: 2,
+    formats: {
+      GBP: { group: ',', decimal: '.', decimals: 2 },
+      BRL: { group: ',', decimal: '.', decimals: 0 },
+      ARS: { group: ',', decimal: '.', decimals: 3 },
+    },
+  })
+
+  assert.ok(formatCurrency(1500, 'GBP').includes('1,500.00'), 'GBP con 2 decimales')
+  assert.ok(formatCurrency(1500, 'BRL').includes('1,500'), 'BRL con 0 decimales')
+  assert.ok(
+    !/1,500\.\d/.test(formatCurrency(1500, 'BRL')),
+    'BRL no debe llevar centavos'
+  )
+  assert.ok(formatCurrency(1500.1234, 'ARS').includes('1,500.123'), 'ARS con 3 decimales')
+})
+
+test('una moneda sin decimales propios conserva la regla histórica', () => {
+  setFormatContext({
+    locale: 'es-AR',
+    localCurrency: 'ARS',
+    decimalsLocal: 0,
+    decimalsSecondary: 1,
+    decimalSeparator: ',',
+    thousandSeparator: '.',
+    currencyFormats: {},
+  })
+  const usd = formatCurrency(200.35, 'USD')
+  assert.ok(usd.includes('200,4'), `USD conserva 1 decimal: ${usd}`)
+})
+
+test('los decimales fuera de rango se recortan a 0..4', () => {
+  contexto({
+    local: 'ARS',
+    decimalesLocal: 2,
+    formats: { ARS: { group: '.', decimal: ',', decimals: 9 } },
+  })
+  const texto = formatCurrency(1.123456789, 'ARS')
+  const decimales = (texto.split(',')[1] || '').replace(/[^\d]/g, '')
+  assert.ok(decimales.length <= 4, `nunca más de 4 decimales: ${texto}`)
 })
 
 // ───────────────────────────── porcentajes ──────────────────────────────────
 
-test('los porcentajes usan el separador de la moneda local', () => {
-  contexto({ local: 'ARS', formats: { ARS: { group: '.', decimal: ',' } } })
+test('los porcentajes usan el separador decimal local', () => {
+  contexto({ local: 'ARS', decimalLocal: ',', milesLocal: '.' })
   assert.equal(formatPercent(12.62, { signed: false }), '12,62%')
   assert.equal(formatPercent(6.665), '+6,67%')
 
-  contexto({ local: 'USD', formats: { USD: { group: ',', decimal: '.' } } })
+  contexto({ local: 'GBP', decimalLocal: '.', milesLocal: ',' })
   assert.equal(formatPercent(12.62, { signed: false }), '12.62%')
   assert.equal(formatPercent(6.665), '+6.67%')
 })
 
 test('un porcentaje no toma el separador de la moneda del activo', () => {
-  // El dueño lo dijo explícito: un porcentaje es genérico → moneda local.
   contexto({
     local: 'ARS',
-    formats: { ARS: { group: '.', decimal: ',' }, USD: { group: ',', decimal: '.' } },
+    decimalLocal: ',',
+    milesLocal: '.',
+    formats: { USD: { group: ',', decimal: '.' } },
   })
   assert.equal(formatPercent(12.62, { signed: false }), '12,62%')
 })
 
-// ─────────────────────── el arreglo no se desparrama ───────────────────────
+// ─────────────────── el arreglo no se desparrama ni se pierde ────────────────
 
 test('el arreglo vive en el formateador compartido, no en los componentes', () => {
   const dir = path.join(repo, 'src', 'components', 'inversiones')
-  const archivos = fs.readdirSync(dir).filter((f) => f.endsWith('.tsx'))
-  for (const archivo of archivos) {
+  for (const archivo of fs.readdirSync(dir).filter((f) => f.endsWith('.tsx'))) {
     const src = read(`src/components/inversiones/${archivo}`)
     assert.ok(
       !src.includes('formatToParts'),
       `${archivo} no debe resolver separadores por su cuenta: eso es de lib/format`
+    )
+    assert.ok(
+      !/function formatPercent\(/.test(src),
+      `${archivo} no debe definir su propio formatPercent`
     )
   }
 
@@ -169,84 +205,10 @@ test('el arreglo vive en el formateador compartido, no en los componentes', () =
   assert.match(format, /formatToParts\(/, 'y lo hace sin rearmar el string')
 })
 
-test('el hook publica el mapa por moneda del backend', () => {
+test('el hook publica el separador regional y el mapa por moneda', () => {
   const hook = read('src/hooks/useNumberFormat.ts')
-  assert.match(
-    hook,
-    /fn_obtener_formato_moneda/,
-    'el hook debe leer el formato por moneda que ya existe en el backend'
-  )
-  assert.match(hook, /currencyFormats/, 'y publicarlo en el contexto de formato')
-})
-
-// ─────────────────── tanda 2: decimales por moneda (S19) ───────────────────
-
-test('cada moneda usa SUS decimales', () => {
-  setFormatContext({
-    locale: 'es-AR',
-    localCurrency: 'GBP',
-    decimalsLocal: 2,
-    decimalsSecondary: 1,
-    decimalSeparator: '.',
-    currencyFormats: {
-      GBP: { group: ',', decimal: '.', decimals: 2 },
-      BRL: { group: '.', decimal: ',', decimals: 0 },
-      ARS: { group: '.', decimal: ',', decimals: 4 },
-    },
-  })
-
-  assert.ok(
-    formatCurrency(1500, 'GBP').includes('1,500.00'),
-    `GBP con 2 decimales: ${formatCurrency(1500, 'GBP')}`
-  )
-  assert.ok(
-    formatCurrency(1500, 'BRL').includes('1.500'),
-    `BRL con 0 decimales no debe llevar centavos: ${formatCurrency(1500, 'BRL')}`
-  )
-  assert.ok(
-    formatCurrency(1500.1234, 'ARS').includes('1.500,1234'),
-    `ARS con 4 decimales: ${formatCurrency(1500.1234, 'ARS')}`
-  )
-})
-
-test('una moneda sin decimales propios conserva la regla histórica', () => {
-  // Sin entrada en el mapa, USD sigue usando los decimales de la segunda
-  // moneda y el resto los de la local: nadie ve cambiar sus números.
-  setFormatContext({
-    locale: 'es-AR',
-    localCurrency: 'ARS',
-    decimalsLocal: 0,
-    decimalsSecondary: 1,
-    decimalSeparator: ',',
-    currencyFormats: {},
-  })
-  const usd = formatCurrency(200.35, 'USD')
-  assert.ok(usd.includes('200,4') || usd.includes('200.4'), `USD conserva 1 decimal: ${usd}`)
-
-  const ars = formatCurrency(1234.56, 'ARS')
-  assert.ok(!/,\d/.test(ars), `ARS conserva 0 decimales: ${ars}`)
-})
-
-test('los decimales fuera de rango se recortan a 0..4', () => {
-  setFormatContext({
-    locale: 'es-AR',
-    localCurrency: 'ARS',
-    decimalsLocal: 2,
-    decimalsSecondary: 2,
-    decimalSeparator: ',',
-    currencyFormats: { ARS: { group: '.', decimal: ',', decimals: 9 } },
-  })
-  const texto = formatCurrency(1.123456789, 'ARS')
-  const decimales = (texto.split(',')[1] || '').replace(/[^\d]/g, '')
-  assert.ok(decimales.length <= 4, `nunca más de 4 decimales: ${texto}`)
-})
-
-test('el mapa por moneda del backend trae los decimales elegidos', () => {
-  const hook = read('src/hooks/useNumberFormat.ts')
-  assert.match(hook, /decimales/, 'el hook debe leer el campo decimales del RPC')
-  assert.match(
-    hook,
-    /toCurrencyFormats/,
-    'el mapa tiene que incluir los decimales, no solo los separadores'
-  )
+  assert.match(hook, /fn_obtener_formato_moneda/, 'lee el formato por moneda del backend')
+  assert.match(hook, /thousandSeparator: prefs\.separador_miles/, 'publica el separador de miles')
+  assert.match(hook, /decimalSeparator: prefs\.separador_decimal/, 'y el decimal')
+  assert.match(hook, /currencyFormats/, 'y el mapa, que ahora solo aporta decimales')
 })

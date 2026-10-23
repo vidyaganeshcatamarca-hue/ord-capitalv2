@@ -23,6 +23,8 @@ export interface FormatContext {
   decimalsSecondary: number
   /** Separador decimal elegido en la configuración regional (por defecto ','). */
   decimalSeparator: string
+  /** Separador de miles elegido en la configuración regional (por defecto '.'). */
+  thousandSeparator: string
   /**
    * Formato por moneda, resuelto por `fn_obtener_formato_moneda()`.
    *
@@ -52,6 +54,7 @@ const DEFAULT_CONTEXT: FormatContext = {
   decimalsLocal: 0,
   decimalsSecondary: 1,
   decimalSeparator: ',',
+  thousandSeparator: '.',
   currencyFormats: {},
 }
 
@@ -115,25 +118,25 @@ function decimalsFor(currency: string): number {
 }
 
 /**
- * Separadores efectivos para una moneda. Cadena de fallback:
- *   1. la moneda pedida (lo que el usuario eligió para ESA moneda);
- *   2. la moneda local;
- *   3. nada: se deja que `Intl` decida.
+ * Separadores efectivos. **Son los de la moneda local para TODA la aplicación.**
  *
- * El paso 3 es deliberado. Poner acá el separador global viejo rompía el
- * comportamiento histórico del dinero: un contexto con locale en-US y sin mapa
- * terminaba formateando "$1,234,50" (coma decimal heredada) en lugar de
- * "$1,234.50". Si el mapa no llegó, el dinero se comporta como siempre.
+ * Regla del dueño (2026-10-23, corrige la anterior): "no podemos tener separadores
+ * de miles y decimales por moneda. Lo correcto es que el usuario regional elija
+ * cómo quiere ver todas sus billeteras con los mismos separadores". Así que acá
+ * no importa qué moneda se esté formateando: los separadores salen siempre de la
+ * configuración regional.
+ *
+ * Cadena de fallback:
+ *   1. la entrada de la moneda local del mapa (lo que el usuario eligió);
+ *   2. el separador global heredado (preferencias regionales);
+ *   3. nada: `Intl` decide.
  */
-function separatorsFor(currency: string): { group?: string; decimal?: string } {
-  const code = normalizeCurrency(currency)
-  const propio = context.currencyFormats?.[code]
-  if (propio && (propio.group || propio.decimal)) return propio
-
+function separatorsFor(_currency?: string): { group?: string; decimal?: string } {
   const local = context.currencyFormats?.[normalizeCurrency(context.localCurrency)]
-  if (local && (local.group || local.decimal)) return local
-
-  return {}
+  const group = local?.group || context.thousandSeparator || undefined
+  const decimal = local?.decimal || context.decimalSeparator || undefined
+  if (!group && !decimal) return {}
+  return { group, decimal }
 }
 
 /**

@@ -239,53 +239,65 @@ function NumberFormatByCurrency({
                     ))}
                   </select>
                 </div>
-                {/* Bug 2 (owner rule): thousands and decimal side by side in one
-                    row, and changing either one swaps the other immediately
-                    ('.' <-> ','); ' ' keeps the other unchanged. */}
-                <div className="config-section-fmt-separators">
-                  <div className="config-section-field">
-                    <label htmlFor={`fmt-sep-${item.key}`}>{t('config_thousands_separator')}</label>
-                    <select
-                      id={`fmt-sep-${item.key}`}
-                      value={entry.separador_miles}
-                      onChange={(e) => {
-                        const miles = e.target.value
-                        const decimal = counterpartSeparator(miles)
-                        onUpdate(code, {
-                          separador_miles: miles,
-                          ...(decimal !== null ? { separador_decimal: decimal } : {}),
-                        })
-                      }}
-                    >
-                      {THOUSANDS_SEPARATOR_VALUES.map((value) => (
-                        <option key={value} value={value}>
-                          {value === ' ' ? t('config_separator_space') : value}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="config-section-field">
-                    <label htmlFor={`fmt-decc-${item.key}`}>{t('config_decimal_separator')}</label>
-                    <select
-                      id={`fmt-decc-${item.key}`}
-                      value={entry.separador_decimal}
-                      onChange={(e) => {
-                        const decimal = e.target.value
-                        const miles = counterpartSeparator(decimal)
-                        onUpdate(code, {
-                          separador_decimal: decimal,
-                          ...(miles !== null ? { separador_miles: miles } : {}),
-                        })
-                      }}
-                    >
-                      {DECIMAL_SEPARATOR_VALUES.map((value) => (
-                        <option key={value} value={value}>
-                          {value === ' ' ? t('config_separator_space') : value}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+                {/* Dueño (2026-10-23): "no podemos tener separadores de miles y
+                    decimales por moneda... el usuario regional elige cómo quiere
+                    ver TODAS sus billeteras con los mismos separadores". Por eso
+                    los separadores se ofrecen UNA sola vez, en la moneda local, y
+                    el formateador los aplica a las tres. Los decimales siguen
+                    siendo por moneda porque son precisión, no presentación. */}
+                {index === 0 ? (
+                  <>
+                    <div className="config-section-fmt-separators">
+                      <div className="config-section-field">
+                        <label htmlFor={`fmt-sep-${item.key}`}>{t('config_thousands_separator')}</label>
+                        <select
+                          id={`fmt-sep-${item.key}`}
+                          value={entry.separador_miles}
+                          onChange={(e) => {
+                            const miles = e.target.value
+                            const decimal = counterpartSeparator(miles)
+                            onUpdate(code, {
+                              separador_miles: miles,
+                              ...(decimal !== null ? { separador_decimal: decimal } : {}),
+                            })
+                          }}
+                        >
+                          {THOUSANDS_SEPARATOR_VALUES.map((value) => (
+                            <option key={value} value={value}>
+                              {value === ' ' ? t('config_separator_space') : value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="config-section-field">
+                        <label htmlFor={`fmt-decc-${item.key}`}>{t('config_decimal_separator')}</label>
+                        <select
+                          id={`fmt-decc-${item.key}`}
+                          value={entry.separador_decimal}
+                          onChange={(e) => {
+                            const decimal = e.target.value
+                            const miles = counterpartSeparator(decimal)
+                            onUpdate(code, {
+                              separador_decimal: decimal,
+                              ...(miles !== null ? { separador_miles: miles } : {}),
+                            })
+                          }}
+                        >
+                          {DECIMAL_SEPARATOR_VALUES.map((value) => (
+                            <option key={value} value={value}>
+                              {value === ' ' ? t('config_separator_space') : value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="config-section-row">
+                      <span className="config-section-action-desc">
+                        {t('settings_fmt_separators_global')}
+                      </span>
+                    </div>
+                  </>
+                ) : null}
                 <div className="config-section-row">
                   <span>{t('config_preview')}</span>
                   <span>{`${code} ${formatPreview(entry)}`}</span>
