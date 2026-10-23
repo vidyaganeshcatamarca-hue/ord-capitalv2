@@ -163,6 +163,161 @@ export function writeDictionary(file, sections, order, header = '', keyOrder = n
 }
 
 /**
+ * Splits a source file into lines that keep their own terminator.
+ *
+ * Keeping the terminator per line is what lets a rewrite reproduce the file
+ * byte for byte, mixed endings included.
+ */
+function splitLines(source) {
+  const lines = []
+  const re = /([^\r\n]*)(\r\n|\n|$)/g
+  let m
+  while ((m = re.exec(source)) !== null) {
+    lines.push({ text: m[1], eol: m[2] })
+    if (m[2] === '') break
+  }
+  return lines
+}
+
+const DECL_RE = /^export const (\w+)\s*=\s*\{\s*$/
+const CLOSE_RE = /^\};\s*$/
+const ENTRY_RE =
+  /^(\s*)((?:[a-zA-Z_][a-zA-Z0-9_]*)|(?:'[^']+'))\s*:\s*(["'`])((?:[^\\]|\\.)*)\3(\s*,?)\s*$/
+
+function keyOf(token) {
+  return token.startsWith("'") ? token.slice(1, -1).replace(/\\'/g, "'") : token
+}
+
+/**
+ * Rewrites a dictionary by EDITING the lines whose value changed, instead of
+ * regenerating the whole file.
+ *
+ * Why not regenerate: a dictionary carries comments that group the keys into
+ * blocks, and the generated file has no idea they exist. Regenerating throws
+ * them away, so an apply that changes nothing still rewrites the file and the
+ * diff shows the comments as deleted. Worse, it makes "apply an empty delta"
+ * and "apply a delta" two different operations on the same bytes.
+ *
+ * What this keeps, verbatim: the header, the section order, the comments and
+ * blank lines inside every section, the key order, the quoting style, the
+ * trailing commas and the line terminators. What it changes: the value of the
+ * keys the caller handed over, and nothing else. A key that disappeared from
+ * the master loses its line; a key the file does not have yet is appended to
+ * the end of its section, in the order the master declares it.
+ *
+ * An empty change set leaves the file byte for byte identical.
+ *
+ * Returns the number of entries the file ends up with.
+ */
+export function writeDictionaryInPlace(file, sections, order, keyOrder = null) {
+  const source = readFileSync(file, 'utf-8')
+  const lines = splitLines(source)
+  const out = []
+  const seenSections = new Set()
+  let total = 0
+  let i = 0
+
+  while (i < lines.length) {
+    const decl = lines[i].text.match(DECL_RE)
+    if (!decl) {
+      out.push(lines[i])
+      i++
+      continue
+    }
+
+    const section = decl[1]
+    seenSections.add(section)
+    const wanted = sections[section] ?? {}
+    const seen = new Set()
+    const declared = (keyOrder?.[section] ?? Object.keys(wanted)).filter((k) => k in wanted)
+    const pos = new Map(declared.map((k, idx) => [k, idx]))
+    const inserted = new Set()
+    const eol = lines[i]?.eol || '\n'
+    const insert = (key) => {
+      out.push({ text: `  ${tsKey(key)}: ${tsString(wanted[key])},`, eol })
+      inserted.add(key)
+      seen.add(key)
+      total++
+    }
+    // A key the file does not have yet goes where the master puts it, not at
+    // the end of the section: the two files have to keep lining up.
+    const catchUp = (key) => {
+      const limit = pos.get(key)
+      if (limit === undefined) return
+      for (const k of declared) {
+        if (pos.get(k) >= limit) break
+        if (!inserted.has(k) && !seen.has(k)) insert(k)
+      }
+    }
+    out.push(lines[i])
+    i++
+
+    while (i < lines.length && !CLOSE_RE.test(lines[i].text)) {
+      const entry = lines[i].text.match(ENTRY_RE)
+      if (!entry) {
+        // A comment, a blank line, anything the file groups keys with.
+        out.push(lines[i])
+        i++
+        continue
+      }
+
+      const key = keyOf(entry[2])
+      const value = wanted[key]
+      if (value === undefined) {
+        // The master dropped it: the line goes with it.
+        i++
+        continue
+      }
+
+      seen.add(key)
+      total++
+      catchUp(key)
+      if (unescapeLiteral(entry[4]) === value) {
+        out.push(lines[i])
+      } else {
+        out.push({
+          text: `${entry[1]}${tsKey(key)}: ${tsString(value)},`,
+          eol: lines[i].eol,
+        })
+      }
+      i++
+    }
+
+    // Whatever the file still does not have: the rest of the section, in the
+    // order the master declares it.
+    for (const key of declared) if (!inserted.has(key) && !seen.has(key)) insert(key)
+    for (const key of Object.keys(wanted)) {
+      if (!pos.has(key) && !inserted.has(key) && !seen.has(key)) insert(key)
+    }
+
+    if (i < lines.length) {
+      out.push(lines[i])
+      i++
+    }
+  }
+
+  // A section the file does not have at all: it goes at the end.
+  for (const section of order) {
+    const wanted = sections[section]
+    if (!wanted || seenSections.has(section)) continue
+    const keys = keyOrder?.[section] ?? Object.keys(wanted)
+    const eol = lines.find((l) => l.eol)?.eol ?? '\n'
+    const last = out[out.length - 1]
+    if (last && !last.eol) last.eol = eol
+    out.push({ text: '', eol })
+    out.push({ text: `export const ${section} = {`, eol })
+    for (const key of keys.filter((k) => k in wanted)) {
+      out.push({ text: `  ${tsKey(key)}: ${tsString(wanted[key])},`, eol })
+      total++
+    }
+    out.push({ text: '};', eol })
+  }
+
+  writeFileSync(file, out.map((l) => l.text + l.eol).join(''), 'utf-8')
+  return total
+}
+
+/**
  * The entries of a section, in the order the master declares them.
  *
  * A key the master does not have goes last: it is a leftover, and the

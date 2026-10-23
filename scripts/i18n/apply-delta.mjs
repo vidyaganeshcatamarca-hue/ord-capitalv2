@@ -23,10 +23,9 @@ import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import {
   readDictionary,
-  writeDictionary,
+  writeDictionaryInPlace,
   sectionOrder,
   keyOrderOf,
-  readHeader,
   placeholders,
 } from './lib/dictionary.mjs'
 
@@ -155,15 +154,14 @@ if (problems.length) {
 }
 
 // ── Write it back ─────────────────────────────────────────────────────
-// The header of the file being replaced is kept: it is the only place the
-// file says what it is, and a generic replacement would throw that away.
-const header = readHeader(targetFile)
-
-const total = writeDictionary(
+// The apply edits the existing file instead of regenerating it. Regenerating
+// would drop the comments that group the keys, so a delta that changes nothing
+// would still rewrite the whole file and bury the real change in noise.
+// The header, the comments, the key order and the line endings survive.
+const total = writeDictionaryInPlace(
   targetFile,
   target,
   sectionOrder(path.join(SRC, `${SOURCE_LANG}.ts`)),
-  header,
   // The master decides the order of the keys: a translation is the mirror
   // of the Spanish, key for key and in the same order. Without this, a new
   // key would land at the end of its section and the two files would stop
