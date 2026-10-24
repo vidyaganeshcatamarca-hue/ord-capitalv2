@@ -149,7 +149,7 @@ test('the card writes through fn_configurar_formato_moneda with its full contrac
     writeIndex !== -1,
     "the write must go through rpc('fn_configurar_formato_moneda')",
   )
-  const writeBlock = pageSource.slice(writeIndex, writeIndex + 400)
+  const writeBlock = pageSource.slice(writeIndex, writeIndex + 700)
   for (const param of [
     'p_moneda:',
     'p_decimales:',
@@ -158,6 +158,16 @@ test('the card writes through fn_configurar_formato_moneda with its full contrac
   ]) {
     assert.ok(writeBlock.includes(param), `the write call must send ${param}`)
   }
+  // S21/93 (2026-10-24): los separadores pasaron a ser globales y la 2ª y 3ª
+  // moneda ya no los guardan. La llamada sigue mandando los cuatro parámetros
+  // (el contrato de la RPC no cambió), pero los dos últimos pueden ir en null:
+  // el test viejo exigía que siempre llevaran valor y eso describía la regla
+  // anterior, no la del dueño.
+  assert.match(
+    writeBlock,
+    /p_separador_miles:\s*[^,\n]*\?\?\s*null/,
+    'si la moneda no tiene separadores guardados, se manda null y la RPC guarda sólo los decimales'
+  )
 })
 
 test('an optimistic write reverts the local state when the RPC fails (S2)', () => {
