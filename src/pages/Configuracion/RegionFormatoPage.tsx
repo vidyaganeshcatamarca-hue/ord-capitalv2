@@ -454,8 +454,11 @@ export function ConfigRegionBody() {
       await rpc('fn_configurar_formato_moneda', {
         p_moneda: code,
         p_decimales: next[code].decimales,
-        p_separador_miles: next[code].separador_miles,
-        p_separador_decimal: next[code].separador_decimal,
+        // S21/93: los separadores son globales; la 2ª y 3ª moneda ya no los tienen
+        // guardados. Se manda null explícito para que la RPC guarde sólo los
+        // decimales en vez de rechazar la llamada por campo requerido.
+        p_separador_miles: next[code].separador_miles ?? null,
+        p_separador_decimal: next[code].separador_decimal ?? null,
       })
     } catch (err) {
       setFormats(previous)
