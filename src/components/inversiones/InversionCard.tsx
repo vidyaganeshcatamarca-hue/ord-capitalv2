@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from 'react'
 import { t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
+import { investmentGainAmount } from '@/lib/inversionesPatrimonio'
 import './InversionCard.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 
@@ -52,7 +53,8 @@ function gainClassFor(value: number): string {
   return 'inversion-card-amount inversion-card-amount--zero'
 }
 
-function formatGain(value: number, currency: string): string {
+function formatGain(value: number | null, currency: string): string {
+  if (value === null) return '-'
   const formatted = formatCurrency(value, currency)
   if (value > 0) return `+${formatted}`
   return formatted
@@ -66,6 +68,7 @@ export function InversionCard({
 }: InversionCardProps) {
   // Formato por moneda: se re-renderiza cuando cambia el contexto.
   useFormatRevision()
+  const ganancia = investmentGainAmount(inversion)
   const handleCardClick = () => {
     if (onSelect) onSelect(inversion.inversion_id)
   }
@@ -111,8 +114,11 @@ export function InversionCard({
         </div>
         <div className="inversion-card-metric">
           <span className="inversion-card-label">{t('label_gain')}</span>
-          <span className={gainClassFor(inversion.rendimiento_nominal)}>
-            {formatGain(inversion.rendimiento_nominal, inversion.moneda)}
+          {/* Dueño, 2026-10-23: "debe mostrar la ganancia en número, no el
+              porcentaje". Es la resta valor actual - capital, con los dos
+              números que la tarjeta ya muestra arriba. */}
+          <span className={gainClassFor(ganancia ?? 0)}>
+            {formatGain(ganancia, inversion.moneda)}
           </span>
         </div>
       </div>

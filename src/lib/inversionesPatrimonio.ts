@@ -119,3 +119,39 @@ export function resolveTotalLocal(
   }
   return 0
 }
+/**
+ * Ganancia de UNA inversión, en su propia moneda: valor actual menos capital.
+ *
+ * Dueño, 2026-10-23: "la ganancia aparece mal en número, no está haciendo bien la
+ * resta, sino que está mostrando el porcentaje, pero lo muestra como número. Ahí
+ * debe mostrar la ganancia en número, no el porcentaje."
+ *
+ * La tarjeta le pasaba `rendimiento_nominal` (un porcentaje: 20, -30) a
+ * `formatCurrency`, así que se veía `+R$ 20,00` donde la ganancia real era 500.
+ *
+ * Se calcula con los dos números que la propia tarjeta ya muestra (capital
+ * original y valor actual), así que la resta que se ve en pantalla es la misma
+ * que se informa. El porcentaje sigue viviendo en su propio campo
+ * (`rendimiento_nominal`) y se sigue mostrando como porcentaje en el detalle.
+ */
+export function investmentGainAmount(
+  inversion:
+    | {
+        monto_invertido_original?: number | string | null
+        valor_actual_teorico?: number | string | null
+      }
+    | null
+    | undefined
+): number | null {
+  if (!inversion) return null
+  const capital = inversion.monto_invertido_original
+  const actual = inversion.valor_actual_teorico
+  if (capital === null || capital === undefined) return null
+  if (actual === null || actual === undefined) return null
+
+  const capitalNum = typeof capital === 'string' ? Number.parseFloat(capital) : Number(capital)
+  const actualNum = typeof actual === 'string' ? Number.parseFloat(actual) : Number(actual)
+  if (!Number.isFinite(capitalNum) || !Number.isFinite(actualNum)) return null
+
+  return Math.round((actualNum - capitalNum) * 100) / 100
+}
