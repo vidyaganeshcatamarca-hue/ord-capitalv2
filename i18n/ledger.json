@@ -5402,6 +5402,10 @@
         "from": "Tipo de activo",
         "to": "Asset type"
       },
+      "inversiones.distribution_investment": {
+        "from": "Inversión",
+        "to": "Investment"
+      },
       "inversiones.label_new_value": {
         "from": "Nuevo valor",
         "to": "New value"
@@ -5491,8 +5495,8 @@
         "to": "History of closed investments"
       },
       "inversiones.distribution_subtitle": {
-        "from": "Distribución por tipo de activo",
-        "to": "Distribution by asset type"
+        "from": "Distribución por inversión",
+        "to": "Distribution by investment"
       },
       "inversiones.distribution_quantity": {
         "from": "Cantidad",
@@ -14964,6 +14968,10 @@
         "from": "Tipo de activo",
         "to": "Tipo de ativo"
       },
+      "inversiones.distribution_investment": {
+        "from": "Inversión",
+        "to": "Investimento"
+      },
       "inversiones.label_new_value": {
         "from": "Nuevo valor",
         "to": "Novo valor"
@@ -15053,8 +15061,8 @@
         "to": "Histórico de investimentos encerrados"
       },
       "inversiones.distribution_subtitle": {
-        "from": "Distribución por tipo de activo",
-        "to": "Distribuição por tipo de ativo"
+        "from": "Distribución por inversión",
+        "to": "Distribuição por investimento"
       },
       "inversiones.distribution_quantity": {
         "from": "Cantidad",

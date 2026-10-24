@@ -91,6 +91,7 @@ tests/inversiones/*
 !tests/inversiones/ganancia-en-monto.test.js
 !tests/inversiones/header-sin-recorte.test.js
 !tests/inversiones/config-inflacion-panel.test.js
+!tests/inversiones/distribucion-por-inversion.test.js
 !tests/separadores-por-moneda.test.js
 !tests/keypad_decimal_separator.test.js
 scratch/

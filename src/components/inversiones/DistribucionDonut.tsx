@@ -5,6 +5,9 @@ export interface DistribucionActivoRow {
   cantidad: number
   valor_total: number
   porcentaje_valor: number
+  // S6 (2026-10-24): con la migración 91 hay una fila por inversión.
+  inversion_id?: number | null
+  nombre_activo?: string | null
 }
 
 interface DistribucionDonutProps {
@@ -17,8 +20,31 @@ const COLORS: Record<string, string> = {
   variable: '#8B5CF6',
 }
 
-function colorFor(tipo: string): string {
-  return COLORS[tipo] ?? '#64748B'
+// Paleta por inversión: cada porción tiene que distinguirse de la de al lado,
+// incluso cuando las dos son 'variable'.
+const SERIES_COLORS = [
+  '#8B5CF6',
+  '#3B82F6',
+  '#14B8A6',
+  '#F59E0B',
+  '#EF4444',
+  '#EC4899',
+  '#22C55E',
+  '#64748B',
+]
+
+function colorFor(item: DistribucionActivoRow, index: number): string {
+  const nombre = typeof item.nombre_activo === 'string' ? item.nombre_activo.trim() : ''
+  if (nombre) return SERIES_COLORS[index % SERIES_COLORS.length]
+  return COLORS[item.tipo_activo] ?? '#64748B'
+}
+
+function keyFor(item: DistribucionActivoRow, index: number): string {
+  if (item.inversion_id !== null && item.inversion_id !== undefined) {
+    return `inv-${item.inversion_id}`
+  }
+  const nombre = typeof item.nombre_activo === 'string' ? item.nombre_activo.trim() : ''
+  return nombre || `${item.tipo_activo}-${index}`
 }
 
 export function DistribucionDonut({ data, size = 168 }: DistribucionDonutProps) {
@@ -53,7 +79,7 @@ export function DistribucionDonut({ data, size = 168 }: DistribucionDonutProps) 
           strokeWidth={strokeWidth}
         />
 
-        {hasData && activeData.map((item) => {
+        {hasData && activeData.map((item, idx) => {
           const length = (Math.min(item.porcentaje_valor, 100) / 100) * circumference
           const gap = activeData.length > 1 ? 2.5 : 0
           const strokeLength = Math.max(0, length - gap)
@@ -62,12 +88,12 @@ export function DistribucionDonut({ data, size = 168 }: DistribucionDonutProps) 
 
           return (
             <circle
-              key={item.tipo_activo}
+              key={keyFor(item, idx)}
               cx={center}
               cy={center}
               r={radius}
               fill="none"
-              stroke={colorFor(item.tipo_activo)}
+              stroke={colorFor(item, idx)}
               strokeWidth={strokeWidth}
               strokeDasharray={`${strokeLength} ${circumference - strokeLength}`}
               strokeDashoffset={dashOffset}

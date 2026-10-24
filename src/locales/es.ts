@@ -1586,6 +1586,7 @@ export const inversiones = {
   // Modals  — labels & placeholders (Task 6)
   label_active_name: "Nombre del activo",
   label_type: "Tipo de activo",
+  distribution_investment: "Inversión",
   label_new_value: "Nuevo valor",
   label_previous_value: "Valor anterior",
   label_rescue_amount: "Monto a retirar",
@@ -1610,7 +1611,7 @@ export const inversiones = {
   country_bolivia: "Bolivia",
   country_peru: "Perú",
   track_record_subtitle: "Historial de inversiones finalizadas",
-  distribution_subtitle: "Distribución por tipo de activo",
+  distribution_subtitle: "Distribución por inversión",
   distribution_quantity: "Cantidad",
   distribution_total_value: "Valor total",
   distribution_percentage: "Porcentaje",
