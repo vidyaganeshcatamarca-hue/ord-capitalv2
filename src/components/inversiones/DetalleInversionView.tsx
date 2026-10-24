@@ -4,6 +4,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency, formatDate, formatPercent } from '@/lib/format'
 import { formatInversionDetalle } from '@/lib/inversionesLabels'
+import { investmentMovementAmount } from '@/lib/inversionesMovimientos'
 import './DetalleInversionView.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 
@@ -285,26 +286,33 @@ export function DetalleInversionView({
           <p className="detalle-history-empty">{t('detail_history_empty')}</p>
         ) : (
           <ul className="detalle-history-list">
-            {historial.map((mov, idx) => (
-              <li key={`${mov.fecha ?? 'mov'}-${idx}`} className="detalle-history-item">
-                <div className="detalle-history-meta">
-                  <span className="detalle-history-date">
-                    {formatDate(mov.fecha)}
+            {historial.map((mov, idx) => {
+              // El RPC trae el monto con la perspectiva de la caja; acá se lee
+              // desde la inversión: aportes en verde con `+`, rescates en rojo.
+              const monto = investmentMovementAmount(mov.monto)
+              return (
+                <li key={`${mov.fecha ?? 'mov'}-${idx}`} className="detalle-history-item">
+                  <div className="detalle-history-meta">
+                    <span className="detalle-history-date">
+                      {formatDate(mov.fecha)}
+                    </span>
+                    <span className="detalle-history-detalle">
+                      {mov.detalle
+                        ? formatInversionDetalle(mov.detalle, (key) => t(key))
+                        : t('detail_movement_label')}
+                    </span>
+                  </div>
+                  <span
+                    className={movementClassFor(monto)}
+                    aria-label={t('detail_movement_monto_label')}
+                  >
+                    {monto !== null && monto > 0
+                      ? `+${formatCurrency(monto, moneda)}`
+                      : formatCurrency(monto, moneda)}
                   </span>
-                  <span className="detalle-history-detalle">
-                    {mov.detalle
-                      ? formatInversionDetalle(mov.detalle, (key) => t(key))
-                      : t('detail_movement_label')}
-                  </span>
-                </div>
-                <span
-                  className={movementClassFor(mov.monto)}
-                  aria-label={t('detail_movement_monto_label')}
-                >
-                  {formatCurrency(mov.monto, moneda)}
-                </span>
-              </li>
-            ))}
+                </li>
+              )
+            })}
           </ul>
         )}
       </section>

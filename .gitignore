@@ -86,6 +86,10 @@ tests/inversiones/*
 !tests/inversiones/contraste-y-layout.test.js
 !tests/inversiones/modales-acciones-fijas.test.js
 !tests/inversiones/inflacion-vigente-y-retiro.test.js
+!tests/inversiones/historial-perspectiva-inversion.test.js
+!tests/inversiones/ganancia-en-monto.test.js
+!tests/inversiones/header-sin-recorte.test.js
+!tests/inversiones/config-inflacion-panel.test.js
 !tests/separadores-por-moneda.test.js
 !tests/keypad_decimal_separator.test.js
 scratch/
