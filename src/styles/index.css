@@ -940,6 +940,14 @@ input::placeholder, textarea::placeholder {
 /* ───── Temas Globales ───── */
 [data-theme='warm-light'] {
   --bg: #FDFBF7;
+  /* S4 (ronda 4, dueño): "En modo claro estás poniendo mal los colores, no se ven
+     los fondos. Hay un fondo negro que no debería estar porque es modo claro."
+     `--bg-2` estaba definido SÓLO en el tema oscuro (#1c2128), así que en claro todo
+     `var(--bg-2)` heredaba el negro y los fallbacks del CSS nunca se usaban (el
+     fallback sólo entra si la variable NO existe). Se veía negro el bloque de detalle
+     del presupuesto y la ✕ del modal. Mismo valor que --surface-2: es la superficie
+     alternativa sobre el fondo de página. */
+  --bg-2: #EAE2DB;
   --surface: #F5EFEB;
   --surface-2: #EAE2DB;
   --surface-3: #DFD3C8;
