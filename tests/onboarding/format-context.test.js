@@ -136,3 +136,33 @@ test('el mapa por moneda llega al monto formateado', () => {
   assert.ok(!norm(formatCurrency(1234.5, 'ARS')).includes('1.234,50'))
   assert.ok(norm(formatCurrency(1234.5, 'BRL')).includes('1.235'))
 })
+
+// ── S6b, ronda 4 (2026-10-24) ───────────────────────────────────────────────
+// El total del Home armaba el texto a mano con dos decimales fijos
+// (toLocaleString(locale, {minimumFractionDigits:2, maximumFractionDigits:2})), así que
+// el usuario 198 veía ARS 150,372.26 y R$ 18,702.52 en el total mientras sus billeteras
+// ya mostraban 150,372.3 y 18,703. `formatCurrencyNumber` es el mismo formateo que
+// formatCurrency pero sin símbolo, para los lugares que ponen el símbolo aparte.
+const { formatCurrencyNumber } = await import('../../src/lib/format.ts')
+
+test('el número sin símbolo respeta los decimales de cada moneda', () => {
+  setFormatContext({
+    locale: 'es-ES',
+    localCurrency: 'GBP',
+    decimalsLocal: 2,
+    decimalsSecondary: 2,
+    currencyFormats: { ARS: { decimals: 1 }, BRL: { decimals: 0 } },
+  })
+  // Caso real del 198.
+  assert.equal(norm(formatCurrencyNumber(150372.26, 'ARS')), '150.372,3')
+  assert.equal(norm(formatCurrencyNumber(18702.52, 'BRL')), '18.703')
+  // La moneda local conserva sus dos decimales. Agrupa los 4 dígitos porque el
+  // contexto trae un separador de miles elegido y en ese caso el formateador usa
+  // useGrouping: 'always' (el locale español solo no agruparía 1809).
+  assert.equal(norm(formatCurrencyNumber(1809.91, 'GBP')), '1.809,91')
+})
+
+test('el número sin símbolo no arrastra el símbolo de la moneda', () => {
+  const out = norm(formatCurrencyNumber(150372.26, 'ARS'))
+  assert.ok(!/\bARS\b|£|\$|R\$/.test(out), `vino con símbolo: ${out}`)
+})

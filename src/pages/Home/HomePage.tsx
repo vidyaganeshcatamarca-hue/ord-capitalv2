@@ -13,6 +13,7 @@ import { TourTriggerButton } from '@/components/Tour/TourTriggerButton'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { useMonedasExtra } from '@/hooks/useMonedasExtra'
 import { buildHeroLines } from '@/lib/patrimonioHero'
+import { formatCurrencyNumber } from '@/lib/format'
 import { currencyName } from '@/lib/countryCatalog'
 import { translateDetalle } from '@/lib/transferTitles'
 import { useCountUp } from '@/hooks/useCountUp'
@@ -1200,7 +1201,12 @@ export function HomePage() {
                 <p key={line.moneda} className="home-patrimonio-usd font-mono" style={{ marginTop: '4px', textAlign: 'left' }}>
                   {hideAmounts
                     ? `*** ${line.moneda}`
-                    : `${currencySymbol(line.moneda)} ${line.total.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    : // S6 (ronda 4): antes era
+                      // toLocaleString(locale, {minimumFractionDigits: 2, maximumFractionDigits: 2}),
+                      // dos decimales fijos para toda moneda. Con el 198 (ARS 1 decimal,
+                      // BRL 0) el total mostraba ARS 150,372.26 y R$ 18,702.52 mientras
+                      // las billeteras ya mostraban bien 150,372.3 y 18,703.
+                      `${currencySymbol(line.moneda)} ${formatCurrencyNumber(line.total, line.moneda)}`}
                 </p>
               ))}
               <div className="home-patrimonio-badge" style={{ marginTop: '8px' }}>

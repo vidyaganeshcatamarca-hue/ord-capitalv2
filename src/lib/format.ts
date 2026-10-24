@@ -237,6 +237,43 @@ export function formatCurrency(
 }
 
 /**
+ * El mismo monto, SIN símbolo, respetando los decimales de cada moneda.
+ *
+ * Existe porque hay lugares que arman el texto a mano con el símbolo aparte (el hero
+ * del Home, por ejemplo) y terminaban usando `toLocaleString(locale, {minimumFractionDigits:
+ * 2, maximumFractionDigits: 2})`: dos decimales fijos para todas las monedas, que es
+ * justo lo que el dueño reportó como roto (S6, ronda 4). El formateo de los decimales
+ * tiene que pasar por `decimalsFor` y los separadores por `separatorsFor`, como
+ * `formatCurrency`; lo único que no agrega es el símbolo.
+ */
+export function formatCurrencyNumber(
+  amount: number | string | undefined | null,
+  currency?: string
+): string {
+  const value = typeof amount === 'string' ? parseFloat(amount) : Number(amount)
+  if (Number.isNaN(value)) return '-'
+
+  const code = normalizeCurrency(currency)
+  const digits = decimalsFor(code)
+  const separators = separatorsFor(code)
+
+  try {
+    const options: Record<string, unknown> = {
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    }
+    if (separators.group) options.useGrouping = 'always'
+    const formatter = new Intl.NumberFormat(
+      context.locale,
+      options as unknown as Intl.NumberFormatOptions
+    )
+    return withChosenSeparators(formatter.formatToParts(value), separators)
+  } catch {
+    return String(value)
+  }
+}
+
+/**
  * Dual-path para display: fecha calendario pura (YYYY-MM-DD) se parsea sin
  * timezone; cualquier ISO con hora es un instante y conserva el parseo UTC
  * historico (ej: app_reportes.creado_el, timestamptz).
