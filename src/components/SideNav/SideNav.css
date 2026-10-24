@@ -108,6 +108,18 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
+    /* Reportado por el dueño el 2026-10-24: en PC la barra lateral se cortaba en
+       "Investments" y no scrolleaba, así que Configuración y Cerrar sesión
+       quedaban fuera de la pantalla y no había forma de llegar. La lista es la
+       que scrollea: ocupa el espacio libre y el footer queda siempre visible. */
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    /* Sin esto, la barra de scroll de la lista queda pegada al borde y pisa el
+       padding lateral del sidebar. */
+    padding-right: 2px;
+    scrollbar-width: thin;
   }
 
   .side-nav-item {
@@ -177,6 +189,9 @@
     padding: var(--space-3) var(--space-3);
     border-radius: var(--radius-md);
     background: var(--surface-2);
+    /* El footer no cede: Configuración y Cerrar sesión tienen que estar siempre
+       a la vista, aunque la lista de arriba scrollee. */
+    flex: 0 0 auto;
     border: 1px solid var(--border);
     font-size: 12px;
     color: var(--text-3);
