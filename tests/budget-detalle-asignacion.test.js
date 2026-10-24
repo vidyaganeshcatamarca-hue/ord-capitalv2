@@ -62,3 +62,15 @@ test('el sheet tiene su hoja posicionada para que la X no se escape', () => {
   assert.match(css, /\.asignar-sheet-close\s*\{[^}]*position:\s*absolute/, 'la X va absoluta')
   assert.match(css, /\.modal-sheet\s*\{[^}]*position:\s*relative/, 'y la hoja tiene que ser su contención')
 })
+
+test('la tarjeta entera abre el detalle, no sólo el botón (S10)', () => {
+  // Verificado en el navegador el 2026-10-24: el clic en .sobre-fila dejaba
+  // haySheet: false; sólo abría el botón "+ Assign".
+  const fila = page.slice(page.indexOf('className="sobre-fila"'), page.indexOf('className="sobre-fila"') + 600)
+  assert.match(fila, /onClick=\{onAsignar\}/, 'la fila tiene que abrir el sheet')
+  assert.match(fila, /role="button"/, 'y anunciarse como control')
+  assert.match(fila, /tabIndex=\{0\}/, 'y ser alcanzable con el teclado')
+  assert.match(fila, /'Enter'/, 'Enter y Espacio lo abren')
+  const css = read('src/pages/Presupuestos/Presupuestos.css')
+  assert.match(css, /\.sobre-fila\s*\{[^}]*cursor:\s*pointer/, 'y mostrar que es tocable')
+})

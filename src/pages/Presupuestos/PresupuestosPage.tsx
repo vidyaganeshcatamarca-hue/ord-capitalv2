@@ -1373,7 +1373,22 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto, fmt }: FilaSobre
   }
 
   return (
-    <div className="sobre-fila" style={isLast ? { borderBottom: 'none' } : {}}>
+    <div
+      className="sobre-fila"
+      style={isLast ? { borderBottom: 'none' } : {}}
+      // S10 (2026-10-24, dueño): "esta información [...] se muestra al hacer clic en
+      // la tarjeta". Antes sólo abría el botón "+ Assign"; tocar la tarjeta no hacía
+      // nada. Verificado en el navegador: el clic en la fila dejaba haySheet: false.
+      onClick={onAsignar}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onAsignar()
+        }
+      }}
+      role="button"
+      tabIndex={0}
+    >
       {/* Botón asignar */}
       <button className="sobre-btn-asignar" onClick={e => { e.stopPropagation(); onAsignar() }}>
         {t('budget_assign_btn')}

@@ -1338,3 +1338,14 @@
 .modal-sheet {
   position: relative;
 }
+
+/* S10 (2026-10-24, dueño): la tarjeta entera abre el detalle, no sólo el botón
+   "+ Assign". Verificado en el navegador que el clic en .sobre-fila no hacía nada. */
+.sobre-fila {
+  cursor: pointer;
+}
+
+.sobre-fila:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: -2px;
+}
