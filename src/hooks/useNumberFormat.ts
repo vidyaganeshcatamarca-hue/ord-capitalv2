@@ -9,7 +9,7 @@ import {
   writePrefsSnapshot,
   writeRegionSnapshot,
 } from '@/lib/regionSnapshot'
-import { setFormatContext } from '@/lib/format'
+import { setFormatContext, resolveDecimals } from '@/lib/format'
 import { reuseForUser } from '@/lib/userCache'
 
 interface UserFormatPrefs {
@@ -255,9 +255,22 @@ export function useNumberFormat() {
 
       // Digit override for compact summaries (donut totals and category rows read
       // better rounded); null/undefined keeps the regional preference.
+      //
+      // S6 (ronda 4, dueño): "no se está respetando que cada moneda muestra la
+      // cantidad de decimales que tiene configurado". Acá vivía una COPIA de la
+      // regla, y se había quedado en la versión binaria: USD tomaba los decimales
+      // de la segunda moneda y todo lo demás los de la local. Con extras libres el
+      // 198 (ARS con 1 decimal, BRL con 0) veía 2 en las dos, porque ninguna era
+      // USD. Ahora llama a la misma `resolveDecimals` que usa el formateador de
+      // contexto, así no pueden volver a divergir.
       const digits =
         decimales ??
-        (currency === 'USD' ? prefs.decimales_segunda_moneda : prefs.decimales_moneda_local)
+        resolveDecimals(
+          currency,
+          currencyFormats,
+          prefs.decimales_moneda_local,
+          prefs.decimales_segunda_moneda
+        )
       const fixed = n.toFixed(digits)
       const [intPart, decPart] = fixed.split('.')
       const intWithThousands = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, prefs.separador_miles)
@@ -272,7 +285,7 @@ export function useNumberFormat() {
       if (!symbol) return numberText
       return position === 'after' ? `${numberText} ${symbol}` : `${symbol} ${numberText}`
     },
-    [prefs, region, locale]
+    [prefs, region, locale, currencyFormats]
   )
 
   /**

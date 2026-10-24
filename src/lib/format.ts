@@ -102,19 +102,46 @@ function normalizeCurrency(currency: string | null | undefined): string {
   return code || context.localCurrency
 }
 
-/** Decimals are a property of the currency: the local one, or the second currency (USD). */
-function decimalsFor(currency: string): number {
+/**
+ * Cuántos decimales mostrar para una moneda.
+ *
+ * Es la ÚNICA regla de decimales de la app, y por eso vive acá y no duplicada: el
+ * formateador de contexto (`decimalsFor`, usado por ~22 archivos) y el hook
+ * `useNumberFormat.formatMonto` (billeteras de Home y Cuentas) la llaman los dos.
+ *
+ * S6 (ronda 4, dueño): "no se está respetando que cada moneda muestra la cantidad
+ * de decimales que tiene configurado" — el 198 tiene ARS con 1 decimal y BRL con 0,
+ * y las billeteras mostraban los 2 de la local. La causa: el hook tenía su propia
+ * copia de la regla y se quedó en la versión binaria (USD = segunda, todo lo demás =
+ * local), mientras esto ya consultaba el mapa por moneda.
+ */
+export function resolveDecimals(
+  currency: string,
+  formats: Record<string, CurrencyFormatEntry> | undefined,
+  decimalsLocal: number,
+  decimalsSecondary: number
+): number {
   const code = normalizeCurrency(currency)
 
   // Tanda 2 (S19): si la moneda tiene decimales elegidos, mandan esos.
-  const propio = context.currencyFormats?.[code]
+  const propio = formats?.[code]
   if (propio && typeof propio.decimals === 'number' && Number.isFinite(propio.decimals)) {
     return Math.min(4, Math.max(0, Math.trunc(propio.decimals)))
   }
 
   // Sin entrada propia se mantiene la regla histórica (USD = segunda moneda),
   // así ningún usuario ve cambiar sus números por este cambio.
-  return code === 'USD' ? context.decimalsSecondary : context.decimalsLocal
+  return code === 'USD' ? decimalsSecondary : decimalsLocal
+}
+
+/** Decimals are a property of the currency: the local one, or the second currency (USD). */
+function decimalsFor(currency: string): number {
+  return resolveDecimals(
+    currency,
+    context.currencyFormats,
+    context.decimalsLocal,
+    context.decimalsSecondary
+  )
 }
 
 /**

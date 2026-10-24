@@ -93,3 +93,46 @@ test('lowercase and padded currency codes are accepted', () => {
   setFormatContext({ locale: 'es-ES', localCurrency: 'EUR', decimalsLocal: 2, decimalsSecondary: 2 })
   assert.equal(norm(formatCurrency(100, ' usd ')), norm(formatCurrency(100, 'USD')))
 })
+
+// ── S6, ronda 4 (2026-10-24) ────────────────────────────────────────────────
+// Dueño: "El usuario 198 [...] tiene configurado en la segunda moneda un decimal y
+// en la tercera moneda cero decimales. [...] en billeteras, por ejemplo, de home y
+// de cuentas, se muestra la configuración que tiene la moneda local, que son dos
+// decimales. [...] no se está respetando que cada moneda muestra la cantidad de
+// decimales que tiene configurado."
+//
+// La regla es una sola (`resolveDecimals`) y la comparten el formateador de contexto
+// y el hook de las billeteras. Antes el hook tenía su propia copia binaria y quedó
+// congelada: solo USD tenía decimales propios.
+const { resolveDecimals } = await import('../../src/lib/format.ts')
+
+test('cada moneda usa sus propios decimales, no los de la local', () => {
+  const formats = { ARS: { decimals: 1 }, BRL: { decimals: 0 } }
+  // Local GBP con 2 decimales: el caso real del usuario 198.
+  assert.equal(resolveDecimals('ARS', formats, 2, 2), 1)
+  assert.equal(resolveDecimals('BRL', formats, 2, 2), 0)
+  // Sin entrada propia se mantiene la regla histórica: ningún usuario ve cambiar
+  // sus números por este arreglo.
+  assert.equal(resolveDecimals('GBP', formats, 2, 2), 2)
+  assert.equal(resolveDecimals('USD', formats, 2, 1), 1)
+})
+
+test('los decimales fuera de rango se recortan a 0..4', () => {
+  assert.equal(resolveDecimals('ARS', { ARS: { decimals: 9 } }, 2, 2), 4)
+  assert.equal(resolveDecimals('ARS', { ARS: { decimals: -3 } }, 2, 2), 0)
+  // Un valor no numérico no puede romper el formateo: cae al respaldo.
+  assert.equal(resolveDecimals('ARS', { ARS: { decimals: NaN } }, 2, 2), 2)
+})
+
+test('el mapa por moneda llega al monto formateado', () => {
+  setFormatContext({
+    locale: 'es-ES',
+    localCurrency: 'GBP',
+    decimalsLocal: 2,
+    decimalsSecondary: 2,
+    currencyFormats: { ARS: { decimals: 1 }, BRL: { decimals: 0 } },
+  })
+  assert.ok(norm(formatCurrency(1234.5, 'ARS')).includes('1.234,5'))
+  assert.ok(!norm(formatCurrency(1234.5, 'ARS')).includes('1.234,50'))
+  assert.ok(norm(formatCurrency(1234.5, 'BRL')).includes('1.235'))
+})
