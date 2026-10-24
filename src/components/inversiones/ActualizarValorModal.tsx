@@ -115,8 +115,8 @@ export function ActualizarValorModal({
           className="actualizar-valor-modal-form"
         >
           <div className="form-group">
-            <label className="form-label">{t('label_new_value')}</label>
-            <input
+            <label className="form-label" htmlFor="actualizarvalor-label-new-value">{t('label_new_value')}</label>
+            <input id="actualizarvalor-label-new-value"
               type="number"
               step="0.01"
               min="0"

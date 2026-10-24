@@ -110,7 +110,7 @@ for (const { nombre, tsx, css, prefijo } of MODALES) {
     )
     assert.match(
       acciones[1],
-      /env\(safe-area-inset-bottom\)/,
+      /env\(safe-area-inset-bottom(?:,\s*0px)?\)/,
       `${prefijo}: las acciones deben respetar el safe-area del teléfono`
     )
   })

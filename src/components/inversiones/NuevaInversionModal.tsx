@@ -170,8 +170,8 @@ export function NuevaInversionModal({
           className="nueva-inversion-modal-form"
         >
           <div className="form-group">
-            <label className="form-label">{t('label_active_name')}</label>
-            <input
+            <label className="form-label" htmlFor="nuevainversion-label-active-name">{t('label_active_name')}</label>
+            <input id="nuevainversion-label-active-name"
               type="text"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
@@ -214,8 +214,8 @@ export function NuevaInversionModal({
 
           {tipo === 'plazo_fijo' && (
             <div className="form-group">
-              <label className="form-label">{t('label_tna')}</label>
-              <input
+              <label className="form-label" htmlFor="nuevainversion-label-tna">{t('label_tna')}</label>
+              <input id="nuevainversion-label-tna"
                 type="number"
                 step="0.01"
                 min="0"
@@ -233,8 +233,8 @@ export function NuevaInversionModal({
           )}
 
           <div className="form-group">
-            <label className="form-label">{t('label_amount')}</label>
-            <input
+            <label className="form-label" htmlFor="nuevainversion-label-amount">{t('label_amount')}</label>
+            <input id="nuevainversion-label-amount"
               type="number"
               step="0.01"
               min="0"
@@ -275,8 +275,8 @@ export function NuevaInversionModal({
           </div>
 
           <div className="form-group">
-            <label className="form-label">{t('label_source_wallet')}</label>
-            <select
+            <label className="form-label" htmlFor="nuevainversion-billetera-origen">{t('label_source_wallet')}</label>
+            <select id="nuevainversion-billetera-origen"
               value={billeteraId}
               onChange={(e) => setBilleteraId(e.target.value)}
               disabled={submitting || billeterasElegibles.length === 0}

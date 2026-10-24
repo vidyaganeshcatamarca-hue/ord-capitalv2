@@ -213,8 +213,8 @@ export function LiquidarInversionModal({
           {tipo === 'total' ? (
             <>
               <div className="form-group">
-                <label className="form-label">{t('modal_liquidate_capital_label')}</label>
-                <input
+                <label className="form-label" htmlFor="liquidarinversion-modal-liquidate-capital-label">{t('modal_liquidate_capital_label')}</label>
+                <input id="liquidarinversion-modal-liquidate-capital-label"
                   type="number"
                   step="0.01"
                   min="0"
@@ -252,8 +252,8 @@ export function LiquidarInversionModal({
             </>
           ) : (
             <div className="form-group">
-              <label className="form-label">{t('modal_liquidate_amount_label')}</label>
-              <input
+              <label className="form-label" htmlFor="liquidarinversion-modal-liquidate-amount-label">{t('modal_liquidate_amount_label')}</label>
+              <input id="liquidarinversion-modal-liquidate-amount-label"
                 type="number"
                 step="0.01"
                 min="0"
@@ -280,8 +280,8 @@ export function LiquidarInversionModal({
           )}
 
           <div className="form-group">
-            <label className="form-label">{t('label_destination_wallet')}</label>
-            <select
+            <label className="form-label" htmlFor="liquidarinversion-billetera-destino">{t('label_destination_wallet')}</label>
+            <select id="liquidarinversion-billetera-destino"
               value={billeteraId}
               onChange={(e) => setBilleteraId(e.target.value)}
               onBlur={() => setTouched(true)}

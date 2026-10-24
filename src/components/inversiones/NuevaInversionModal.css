@@ -22,6 +22,10 @@
   width: 100%;
   max-width: 480px;
   max-height: 90vh;
+  /* T14: con el teclado abierto, 90vh se mide contra el viewport SIN teclado y la
+     barra fija queda detrás. dvh sigue al viewport visible; el vh queda como
+     fallback para navegadores sin dvh. */
+  max-height: 90dvh;
   /* S9: la card NO scrollea. Scrollea el form (los campos) y las acciones
      quedan fijas al pie, siempre visibles en el teléfono. */
   overflow: hidden;
@@ -86,6 +90,8 @@
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* T14: inercia del scroll en iOS dentro del modal. */
+  -webkit-overflow-scrolling: touch;
   padding-bottom: 4px;
 }
 
@@ -145,7 +151,10 @@
   flex: 0 0 auto;
   background: var(--surface);
   border-top: 1px solid var(--border);
-  padding: 12px 0 calc(20px + env(safe-area-inset-bottom));
+  /* T14: el borde tiene que ir de lado a lado de la card, no dentro del padding. */
+  margin-inline: -20px;
+  padding-inline: 20px;
+  padding: 12px 0 calc(20px + env(safe-area-inset-bottom, 0px));
 }
 
 .nueva-inversion-modal-actions .btn {
