@@ -219,3 +219,40 @@
   font-weight: 600;
   line-height: 1.35;
 }
+
+/* S7 (2026-10-23, dueño): "el ejemplo está escrito con un color muy fuerte, por lo
+   tanto parece una celda ya escrita [...] un gris mucho más clarito". El input no
+   tenía regla propia (solo el select), así que el placeholder heredaba el color y
+   el peso del texto real. Se separa en dos: forma igual al select, y el ejemplo
+   con la mitad de peso y muy baja opacidad — así se lee como ejemplo sin
+   desaparecer. */
+.config-inflacion-field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  color: var(--text);
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 700;
+  outline: none;
+  transition: border-color var(--transition-fast, 150ms) ease,
+    box-shadow var(--transition-fast, 150ms) ease;
+}
+
+.config-inflacion-field input:focus {
+  border-color: var(--mint);
+  box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.14);
+}
+
+.config-inflacion-field input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.config-inflacion-field input::placeholder {
+  color: currentColor;
+  opacity: 0.28;
+  font-weight: 400;
+}

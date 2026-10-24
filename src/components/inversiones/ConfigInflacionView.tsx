@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { hayCambiosInflacion } from '@/lib/inflacionDirty'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
@@ -57,13 +58,22 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
   // asi que la config guardada de pais nunca se aplicaba y siempre se pisaba con
   // el pais regional.
   const { countryCode } = useNumberFormat()
+  const mountedRef = useRef(true)
+  useEffect(
+    () => () => {
+      mountedRef.current = false
+    },
+    []
+  )
   const [pais, setPais] = useState<Pais>('')
   const [fuente, setFuente] = useState<FuenteInflacion>('proxy_dolar')
   const [valorManual, setValorManual] = useState('')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [configurado, setConfigurado] = useState(false)
+  // S2 (2026-10-23): la bandera `configurado` ya no decide si hay cambios. El
+  // botón Guardar depende de si el formulario difiere de lo guardado, no de si el
+  // usuario guardó alguna vez (ver src/lib/inflacionDirty.ts).
   // S12/S17: lo que devuelve el backend sobre la inflacion vigente, para poder
   // explicar en pantalla con que se calculo y sobre que ventana.
   const [vigente, setVigente] = useState<{
@@ -90,73 +100,64 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
   // T5/T8: precargar la config REAL del usuario. Antes no existía RPC de
   // lectura y el tab siempre mostraba AR/proxy_dolar, aunque el dueño ya
   // hubiera guardado otra cosa.
-  useEffect(() => {
-    let cancelled = false
+  //
+  // S5 (2026-10-23): la misma lectura se reusa después de guardar, porque el
+  // bloque de inflación vigente se quedaba con los valores viejos hasta cambiar
+  // de pestaña y volver.
+  const cargarConfig = useCallback(async () => {
+    setLoading(true)
+    try {
+      const res = await rpc<ConfigInflacionActual>('fn_obtener_config_inflacion')
+      if (!mountedRef.current) return
+      const actual = res || null
+      const paisGuardado = String(actual?.pais ?? '').trim().toUpperCase()
+      const fuenteGuardada = String(actual?.fuente_inflacion ?? '').trim() as FuenteInflacion
+      const valorGuardado = actual?.inflacion_manual_anual_pct ?? null
 
-    async function loadConfig() {
-      setLoading(true)
-      try {
-        const res = await rpc<ConfigInflacionActual>('fn_obtener_config_inflacion')
-        if (cancelled) return
-        const actual = res || null
-        const paisGuardado = String(actual?.pais ?? '').trim().toUpperCase()
-        const fuenteGuardada = String(actual?.fuente_inflacion ?? '').trim() as FuenteInflacion
-        const valorGuardado = actual?.inflacion_manual_anual_pct ?? null
-
-        if (fuenteGuardada && FUENTES.some((f) => f.value === fuenteGuardada)) {
-          setFuente(fuenteGuardada)
-        }
-        if (valorGuardado !== null && valorGuardado !== undefined) {
-          setValorManual(String(valorGuardado))
-        }
-        setConfigurado(Boolean(actual?.configurado))
-        setVigente({
-          disponible: Boolean(actual?.disponible),
-          motivo: String(actual?.motivo ?? ''),
-          inflacion6m: actual?.inflacion_6m ?? null,
-          ventana6m: actual?.ventana_6m_meses ?? null,
-          anualizada: actual?.inflacion_anualizada ?? null,
-        })
-        setGuardado({
-          pais: paisGuardado || null,
-          fuente: fuenteGuardada && FUENTES.some((f) => f.value === fuenteGuardada)
-            ? fuenteGuardada
-            : 'proxy_dolar',
-          valorManual: valorGuardado,
-        })
-      } catch (err) {
-        if (!cancelled) {
-          // La config previa no es crítica: se sigue con los defaults.
-          const message = parseError(err) || t('error_generic')
-          showToast(message, 'error')
-        }
-      } finally {
-        if (!cancelled) setLoading(false)
+      if (fuenteGuardada && FUENTES.some((f) => f.value === fuenteGuardada)) {
+        setFuente(fuenteGuardada)
       }
-    }
-
-    loadConfig()
-    return () => {
-      cancelled = true
+      if (valorGuardado !== null && valorGuardado !== undefined) {
+        setValorManual(String(valorGuardado))
+      }
+      setVigente({
+        disponible: Boolean(actual?.disponible),
+        motivo: String(actual?.motivo ?? ''),
+        inflacion6m: actual?.inflacion_6m ?? null,
+        ventana6m: actual?.ventana_6m_meses ?? null,
+        anualizada: actual?.inflacion_anualizada ?? null,
+      })
+      setGuardado({
+        pais: paisGuardado || null,
+        fuente: fuenteGuardada && FUENTES.some((f) => f.value === fuenteGuardada)
+          ? fuenteGuardada
+          : 'proxy_dolar',
+        valorManual: valorGuardado,
+      })
+    } catch (err) {
+      if (mountedRef.current) {
+        // La config previa no es crítica: se sigue con los defaults.
+        const message = parseError(err) || t('error_generic')
+        showToast(message, 'error')
+      }
+    } finally {
+      if (mountedRef.current) setLoading(false)
     }
   }, [showToast])
+
+  useEffect(() => {
+    cargarConfig()
+  }, [cargarConfig])
 
   const valorManualNum = Number(valorManual)
   const valorManualValido = valorManual.trim() !== '' && valorManualNum > 0
 
-  // B5: el botón Guardar solo aparece si hay cambios. Sin cambios, guardar
-  // otra vez no hace nada: es ruido.
-  const hayCambios = useMemo(() => {
-    if (!configurado) return true
-    if (pais !== (guardado.pais ?? pais)) return true
-    if (fuente !== guardado.fuente) return true
-    if (fuente === 'manual') {
-      const guardadoNum = guardado.valorManual
-      if (guardadoNum === null) return valorManualValido
-      return Math.abs(valorManualNum - guardadoNum) > 0.0001
-    }
-    return false
-  }, [configurado, pais, guardado, fuente, valorManualNum, valorManualValido])
+  // B5 + S2: el botón Guardar solo aparece si hay cambios reales respecto de lo
+  // guardado. Sin cambios, guardar otra vez no hace nada: es ruido.
+  const hayCambios = useMemo(
+    () => hayCambiosInflacion({ pais, fuente, valorManual }, guardado),
+    [pais, fuente, valorManual, guardado]
+  )
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault()
@@ -173,13 +174,15 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
         p_inflacion_manual_anual_pct: fuente === 'manual' ? valorManualNum : null,
       })
 
-      setConfigurado(true)
       setGuardado({
         pais,
         fuente,
         valorManual: fuente === 'manual' ? valorManualNum : null,
       })
       showToast(t('msg_inflation_configured'), 'success')
+      // S5: releer el RPC para que el bloque de inflación vigente muestre el
+      // cambio ya mismo, sin tener que cambiar de pestaña y volver.
+      await cargarConfig()
       onSaved?.()
     } catch (err) {
       const message = parseError(err) || t('error_generic')
