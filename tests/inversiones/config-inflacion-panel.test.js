@@ -115,3 +115,22 @@ test('el ejemplo del input manual se ve como ejemplo, no como texto cargado (S7)
   )
   assert.match(body, /font-weight:\s*(400|normal)/, 'y más liviano que el valor real')
 })
+
+test('el guard de montaje vuelve a true al montar (StrictMode monta dos veces)', () => {
+  const src = read('src/components/inversiones/ConfigInflacionView.tsx')
+  const desdeGuard = src.slice(src.indexOf('mountedRef = useRef'))
+  // Verificado en el navegador el 2026-10-24: el panel quedaba clavado en los
+  // skeletons porque el efecto de montaje ponía `false` en el cleanup y nunca
+  // volvía a `true`; con el doble montaje de StrictMode, la carga salía antes de
+  // bajar `loading`.
+  assert.match(
+    desdeGuard,
+    /mountedRef\.current\s*=\s*true/,
+    'el efecto de montaje tiene que re-armar el guard antes de devolver el cleanup'
+  )
+  const efecto = desdeGuard.slice(0, desdeGuard.indexOf('}, []'))
+  assert.ok(
+    efecto.indexOf('current = true') < efecto.indexOf('current = false'),
+    'primero se marca montado, después se arma el cleanup'
+  )
+})

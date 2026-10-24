@@ -59,12 +59,17 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
   // el pais regional.
   const { countryCode } = useNumberFormat()
   const mountedRef = useRef(true)
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    // S5 (b784750) rompió el panel: el cleanup ponía `false` y nadie volvía a
+    // ponerlo en `true`. En desarrollo React monta dos veces (StrictMode): el
+    // primer cleanup dejaba el guard en `false` y `cargarConfig` salía antes de
+    // bajar `loading`, así que la pestaña quedaba en skeletons para siempre.
+    // Detectado en el navegador, no por los tests.
+    mountedRef.current = true
+    return () => {
       mountedRef.current = false
-    },
-    []
-  )
+    }
+  }, [])
   const [pais, setPais] = useState<Pais>('')
   const [fuente, setFuente] = useState<FuenteInflacion>('proxy_dolar')
   const [valorManual, setValorManual] = useState('')
