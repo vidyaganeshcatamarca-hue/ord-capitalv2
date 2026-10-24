@@ -34,9 +34,13 @@
 --     - ANTES: se le descontaba la inflación acumulada de 6 meses (3%), sin
 --       importar que la inversión tuviera 45 días.
 --     - DESPUÉS: la inflación del PERÍODO es la parte de esa tasa anual que
---       corresponde a los 45 días. El ejemplo que trae el dueño es 0,74%
---       (6% * 45/365, prorrateo simple). La fórmula COMPUESTA que se
---       despliega (POWER) da 0,72%:
+--       corresponde a los 45 días.
+--
+--   ÚNICA fórmula desplegada: la COMPUESTA (POWER) — dueño, 2026-10-24: "Dejá la
+--   compuesta, ya lo definimos así". Da 0,72% para el ejemplo de 45 días.
+--   El 0,74% (6% * 45/365, prorrateo simple) es la cuenta mental que hizo el
+--   dueño al describir el problema; NO es lo que ejecuta este archivo y no hay
+--   ninguna rama de código que lo calcule:
 --         (1 + 0,06)^(45/365) - 1 = 0,72%
 --       La diferencia entre 0,74% y 0,72% es la capitalización dentro del
 --       período; se anota acá para que el registro no difiera del SQL que se
