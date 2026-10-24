@@ -7426,6 +7426,10 @@
         "from": "Gastado mes anterior",
         "to": "Spent last month"
       },
+      "inversiones.budget_detail_title": {
+        "from": "Detalle del sobre",
+        "to": "Envelope detail"
+      },
       "inversiones.budget_tipo_need": {
         "from": "NECESIDADES",
         "to": "NEEDS"
@@ -16995,6 +16999,10 @@
       "inversiones.budget_prev_month_spent": {
         "from": "Gastado mes anterior",
         "to": "Gasto no mês anterior"
+      },
+      "inversiones.budget_detail_title": {
+        "from": "Detalle del sobre",
+        "to": "Detalhe do envelope"
       },
       "inversiones.budget_tipo_need": {
         "from": "NECESIDADES",

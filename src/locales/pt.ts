@@ -1892,6 +1892,7 @@ export const inversiones = {
   budget_carryover_warning: "Saldo negativo",
   budget_prev_month_assigned: "Atribuído no mês anterior",
   budget_prev_month_spent: "Gasto no mês anterior",
+  budget_detail_title: "Detalhe do envelope",
   budget_tipo_need: "NECESSIDADES",
   budget_tipo_want: "DESEJOS",
   budget_tipo_tithe: "DÍZIMO",

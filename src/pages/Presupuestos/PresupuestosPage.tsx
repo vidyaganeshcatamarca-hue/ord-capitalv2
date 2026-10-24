@@ -121,6 +121,10 @@ export function PresupuestosPage() {
   // Modales
   const [sobreSeleccionado, setSobreSeleccionado] = useState<SobreDetalle | null>(null)
   const [showAsignarSheet, setShowAsignarSheet] = useState(false)
+  // S1 (ronda 4, dueño): al tocar la tarjeta tiene que aparecer SÓLO la información,
+  // no las opciones de asignar. Es un panel aparte del de asignar: el de asignar
+  // queda para el botón "+ Asignar".
+  const [showDetalleSheet, setShowDetalleSheet] = useState(false)
   const [showTransferirModal, setShowTransferirModal] = useState(false)
   const [showReglasModal, setShowReglasModal] = useState(false)
   const [showBaseCeroModal, setShowBaseCeroModal] = useState(false)
@@ -337,6 +341,15 @@ export function PresupuestosPage() {
     setMostrando('opciones')
     setMontoManual('')
     setShowAsignarSheet(true)
+  }
+
+  // S1/S2 (ronda 4): tocar la tarjeta abre la información y nada más. Dueño: "solo
+  // me mostraras la información que no aparecía porque esa tarjeta tiene
+  // asignaciones ya. Que es la misma información que tienen las tarjetas que no
+  // tienen asignaciones".
+  const handleAbrirDetalle = (sobre: SobreDetalle) => {
+    setSobreSeleccionado(sobre)
+    setShowDetalleSheet(true)
   }
 
   const ejecutarAsignacion = async (monto: number) => {
@@ -809,6 +822,7 @@ export function PresupuestosPage() {
                 abierto={acordeonesAbiertos.has(tipo)}
                 onToggle={() => toggleAcordeon(tipo)}
                 onAsignar={handleAbrirAsignar}
+                onVerDetalle={handleAbrirDetalle}
                 modoPresupuesto={config?.modo_presupuesto}
                 fmt={formatMonto}
               />
@@ -821,6 +835,86 @@ export function PresupuestosPage() {
           </>
         )}
       </div>
+
+      {/* ══════════════════════════════════════════════════════════
+          PANEL: DETALLE INFORMATIVO (sólo lectura)
+          S1/S2 (ronda 4, dueño): al tocar la tarjeta se muestra la información que
+          la tarjeta con asignación no muestra, igual que en las que no tienen
+          asignación; sin botones para asignar, transferir ni llenar huecos.
+          ══════════════════════════════════════════════════════════ */}
+      {showDetalleSheet && sobreSeleccionado && (
+        <div className="modal-overlay" onClick={() => setShowDetalleSheet(false)}>
+          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+            <div className="modal-handle" />
+            <button
+              type="button"
+              className="asignar-sheet-close"
+              onClick={() => setShowDetalleSheet(false)}
+              aria-label={t('btn_close')}
+            >
+              ✕
+            </button>
+            <div className="modal-titulo">{t('budget_detail_title')}</div>
+
+            <div className="asignar-sheet-sobre">
+              <span style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: sobreSeleccionado.color || 'var(--mint, #00B127)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <CategoryIcon name={sobreSeleccionado.icono} size={18} />
+              </span>
+              <div>
+                <div className="asignar-sheet-sobre-nombre">{t(sobreSeleccionado.nombre_categoria)}</div>
+                <div className="asignar-sheet-sobre-saldo">
+                  {t('assigned')}: {formatMonto(sobreSeleccionado.monto_asignado)} ·{' '}
+                  {t('spent')}: {formatMonto(sobreSeleccionado.monto_gastado)}
+                </div>
+              </div>
+            </div>
+
+            {/* Mismas tres filas que muestran las tarjetas sin asignación, más el
+                avance de la barra. Sólo lectura: no hay ningún control acá. */}
+            <div className="asignar-sheet-detalle">
+              <div className="sobre-stats">
+                <span className="sobre-stat">
+                  <span className="sobre-stat-label">📊 {t('budget_prev_month_assigned')}: </span>
+                  <span className="sobre-stat-val">
+                    {formatMonto(Number(sobreSeleccionado.monto_asignado_anterior ?? 0))}
+                  </span>
+                </span>
+              </div>
+              <div className="sobre-stats">
+                <span className="sobre-stat">
+                  <span className="sobre-stat-label">🧾 {t('budget_prev_month_spent')}: </span>
+                  <span className="sobre-stat-val">
+                    {formatMonto(Number(sobreSeleccionado.monto_gastado_anterior ?? 0))}
+                  </span>
+                </span>
+              </div>
+              <div className="sobre-stats">
+                <span className="sobre-stat">
+                  <span className="sobre-stat-label">📈 {t('budget_prev_month_avg')}: </span>
+                  <span className="sobre-stat-val">
+                    {formatMonto(Number(sobreSeleccionado.gasto_promedio_6m ?? 0))}
+                  </span>
+                </span>
+              </div>
+              <div className="sobre-stats">
+                <span className="sobre-stat">
+                  <span className="sobre-stat-label">{t('budget_stat_progress')} </span>
+                  <span className="sobre-stat-val">
+                    {getPctBarra(
+                      Number(sobreSeleccionado.monto_gastado),
+                      Number(sobreSeleccionado.monto_asignado)
+                    )}%
+                  </span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════════════════════════
           MODAL: BOTTOM SHEET ASIGNAR
@@ -1301,12 +1395,14 @@ interface GrupoProps {
   abierto: boolean
   onToggle: () => void
   onAsignar: (s: SobreDetalle) => void
+  /** S1 (ronda 4): tocar la tarjeta muestra información, no las opciones de asignar. */
+  onVerDetalle: (s: SobreDetalle) => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
   /** Montos en la moneda local del contexto, 0 decimales (viene de PresupuestosPage). */
   fmt: (n: number) => string
 }
 
-function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, modoPresupuesto, fmt }: GrupoProps) {
+function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, modoPresupuesto, fmt }: GrupoProps) {
   const meta = TIPO_CUPO_META[tipo] ?? { labelKey: tipo.toUpperCase(), icono: '📦' }
   const totalAsignado = items.reduce((s, i) => s + Number(i.monto_asignado ?? 0), 0)
 
@@ -1333,6 +1429,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, modoPresupue
             sobre={sobre}
             isLast={i === items.length - 1}
             onAsignar={() => onAsignar(sobre)}
+            onVerDetalle={() => onVerDetalle(sobre)}
             modoPresupuesto={modoPresupuesto}
             fmt={fmt}
           />
@@ -1348,12 +1445,13 @@ interface FilaSobreProps {
   sobre: SobreDetalle
   isLast: boolean
   onAsignar: () => void
+  onVerDetalle: () => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
   /** Montos en la moneda local del contexto, 0 decimales (viene de GrupoAcordeon). */
   fmt: (n: number) => string
 }
 
-function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto, fmt }: FilaSobreProps) {
+function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, fmt }: FilaSobreProps) {
   const pct = getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
   const colorBarra = getColorBarra(sobre.estado_sobre)
   const sinDatos = sobre.estado_sobre === 'sin_movimiento'
@@ -1376,14 +1474,15 @@ function FilaSobre({ sobre, isLast, onAsignar, modoPresupuesto, fmt }: FilaSobre
     <div
       className="sobre-fila"
       style={isLast ? { borderBottom: 'none' } : {}}
-      // S10 (2026-10-24, dueño): "esta información [...] se muestra al hacer clic en
-      // la tarjeta". Antes sólo abría el botón "+ Assign"; tocar la tarjeta no hacía
-      // nada. Verificado en el navegador: el clic en la fila dejaba haySheet: false.
-      onClick={onAsignar}
+      // S1 (ronda 4, dueño): "Cuando toco en una tarjeta me estás abriendo el modal
+      // de asignar fondos. Yo lo que quería era que al tocar la tarjeta solo me
+      // mostraras la información [...]. No quería que me muestres las opciones para
+      // ingresar asignaciones". La fila abre el detalle; el botón, la asignación.
+      onClick={onVerDetalle}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault()
-          onAsignar()
+          onVerDetalle()
         }
       }}
       role="button"

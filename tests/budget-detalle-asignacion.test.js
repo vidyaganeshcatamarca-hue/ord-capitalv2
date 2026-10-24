@@ -63,14 +63,41 @@ test('el sheet tiene su hoja posicionada para que la X no se escape', () => {
   assert.match(css, /\.modal-sheet\s*\{[^}]*position:\s*relative/, 'y la hoja tiene que ser su contención')
 })
 
-test('la tarjeta entera abre el detalle, no sólo el botón (S10)', () => {
-  // Verificado en el navegador el 2026-10-24: el clic en .sobre-fila dejaba
-  // haySheet: false; sólo abría el botón "+ Assign".
-  const fila = page.slice(page.indexOf('className="sobre-fila"'), page.indexOf('className="sobre-fila"') + 600)
-  assert.match(fila, /onClick=\{onAsignar\}/, 'la fila tiene que abrir el sheet')
-  assert.match(fila, /role="button"/, 'y anunciarse como control')
-  assert.match(fila, /tabIndex=\{0\}/, 'y ser alcanzable con el teclado')
+test('la tarjeta entera abre el DETALLE, y el botón abre la asignación (S1)', () => {
+  // S1 (ronda 4, dueño): "Cuando toco en una tarjeta me estás abriendo el modal de
+  // asignar fondos. Yo lo que quería era que al tocar la tarjeta solo me mostraras la
+  // información [...] No quería que me muestres las opciones para ingresar
+  // asignaciones".
+  //
+  // El test anterior de esta misma ronda pedía exactamente lo contrario (la fila
+  // llamaba onAsignar) porque el pedido previo del dueño era otro. Se cambia el
+  // assertion, no el comportamiento: la fila ahora abre el panel informativo y el
+  // botón "+ Asignar" sigue abriendo el sheet con las opciones.
+  const fila = page.slice(page.indexOf('className="sobre-fila"'), page.indexOf('className="sobre-fila"') + 900)
+  assert.match(fila, /onClick=\{onVerDetalle\}/, 'la fila abre el detalle')
+  assert.ok(!/onClick=\{onAsignar\}/.test(fila), 'la fila NO abre las opciones de asignar')
+  assert.match(fila, /onClick=\{e => \{ e\.stopPropagation\(\); onAsignar\(\) \}\}/, 'el botón sí abre la asignación')
+  assert.match(fila, /role="button"/, 'y la fila se anuncia como control')
+  assert.match(fila, /tabIndex=\{0\}/, 'y es alcanzable con el teclado')
   assert.match(fila, /'Enter'/, 'Enter y Espacio lo abren')
   const css = read('src/pages/Presupuestos/Presupuestos.css')
-  assert.match(css, /\.sobre-fila\s*\{[^}]*cursor:\s*pointer/, 'y mostrar que es tocable')
+  assert.match(css, /\.sobre-fila\s*\{[^}]*cursor:\s*pointer/, 'y muestra que es tocable')
+})
+
+test('el panel de detalle no tiene ningún control para asignar (S1)', () => {
+  const detalle = page.slice(
+    page.indexOf('showDetalleSheet && sobreSeleccionado'),
+    page.indexOf('showAsignarSheet && sobreSeleccionado')
+  )
+  assert.ok(detalle.length > 0, 'falta el panel de detalle')
+  for (const control of ['asignar-opciones', 'handleLlenarHueco', 'ejecutarAsignacion', 'handleAbrirBaseCero', 'budget_assign_btn']) {
+    assert.ok(!detalle.includes(control), `el detalle no puede ofrecer ${control}`)
+  }
+  // S2: la misma información que las tarjetas sin asignación.
+  assert.match(detalle, /budget_prev_month_assigned/)
+  assert.match(detalle, /budget_prev_month_spent/)
+  assert.match(detalle, /budget_prev_month_avg/)
+  assert.match(detalle, /budget_stat_progress/)
+  // Y con qué cerrarse, como pidió el dueño en la ronda anterior.
+  assert.match(detalle, /setShowDetalleSheet\(false\)/)
 })

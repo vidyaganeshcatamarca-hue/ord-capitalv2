@@ -2148,6 +2148,7 @@ export const inversiones = {
   budget_carryover_warning: "Arrastre",
   budget_prev_month_assigned: "Asignado mes anterior",
   budget_prev_month_spent: "Gastado mes anterior",
+  budget_detail_title: "Detalle del sobre",
   budget_tipo_need: "NECESIDADES",
   budget_tipo_want: "DESEOS",
   budget_tipo_tithe: "DIEZMO",

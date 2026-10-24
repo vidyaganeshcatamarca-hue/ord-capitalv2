@@ -1892,6 +1892,7 @@ export const inversiones = {
   budget_carryover_warning: "Carryover",
   budget_prev_month_assigned: "Assigned last month",
   budget_prev_month_spent: "Spent last month",
+  budget_detail_title: "Envelope detail",
   budget_tipo_need: "NEEDS",
   budget_tipo_want: "WANTS",
   budget_tipo_tithe: "TITHING",
