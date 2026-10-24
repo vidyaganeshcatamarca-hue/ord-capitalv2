@@ -100,6 +100,12 @@ export function DistribucionView({ className }: DistribucionViewProps) {
   // nombre; si no (SQL sin publicar), agrupado por tipo como antes.
   const { modo, filas } = clasificarDistribucion(items)
   const porInversion = modo === 'inversion'
+  // Verificado en el navegador: con el SQL 91 sin aplicar, el título decía "por
+  // inversión" y la tabla "tipo de activo". El subtítulo sigue al modo, porque
+  // describir una cosa y mostrar otra es peor que el agrupado en sí.
+  const subtitulo = porInversion
+    ? t('distribution_subtitle')
+    : t('distribution_subtitle_tipo')
 
   if (loading) {
     return (
@@ -125,10 +131,10 @@ export function DistribucionView({ className }: DistribucionViewProps) {
   }
 
   return (
-    <section className={rootClass} aria-label={t('distribution_subtitle')}>
+    <section className={rootClass} aria-label={subtitulo}>
       <header className="distribucion-header">
         <h2 className="distribucion-title">{t('tab_distribucion')}</h2>
-        <p className="distribucion-subtitle">{t('distribution_subtitle')}</p>
+        <p className="distribucion-subtitle">{subtitulo}</p>
       </header>
 
       <div className="distribucion-card">

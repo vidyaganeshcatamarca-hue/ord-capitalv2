@@ -134,3 +134,15 @@ test('la migración devuelve el valor propio y su moneda', () => {
   assert.match(sql, /valor_propio numeric/, 'la función tiene que devolver el valor sin convertir')
   assert.match(sql, /COALESCE\(i\.moneda, 'ARS'\)::text AS moneda/, 'y la moneda de origen')
 })
+
+test('el subtítulo sigue al modo: no describe una cosa y muestra otra', () => {
+  const view = read('src/components/inversiones/DistribucionView.tsx')
+  // Verificado en el navegador el 2026-10-24: con el SQL 91 sin aplicar, el
+  // subtítulo decía "Distribution by investment" y la tabla "Asset type".
+  assert.match(view, /porInversion\s*\n?\s*\?\s*t\('distribution_subtitle'\)/, 'por inversión usa su subtítulo')
+  assert.match(view, /t\('distribution_subtitle_tipo'\)/, 'y el agrupado usa el de tipo de activo')
+  assert.ok(
+    !/<p className="distribucion-subtitle">\{t\('distribution_subtitle'\)\}<\/p>/.test(view),
+    'el subtítulo no puede estar fijo en "por inversión"'
+  )
+})

@@ -5498,6 +5498,10 @@
         "from": "Distribución por inversión",
         "to": "Distribution by investment"
       },
+      "inversiones.distribution_subtitle_tipo": {
+        "from": "Distribución por tipo de activo",
+        "to": "Distribution by asset type"
+      },
       "inversiones.distribution_quantity": {
         "from": "Cantidad",
         "to": "Quantity"
@@ -15063,6 +15067,10 @@
       "inversiones.distribution_subtitle": {
         "from": "Distribución por inversión",
         "to": "Distribuição por investimento"
+      },
+      "inversiones.distribution_subtitle_tipo": {
+        "from": "Distribución por tipo de activo",
+        "to": "Distribuição por tipo de ativo"
       },
       "inversiones.distribution_quantity": {
         "from": "Cantidad",

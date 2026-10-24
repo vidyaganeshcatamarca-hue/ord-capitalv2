@@ -1410,6 +1410,7 @@ export const inversiones = {
   country_peru: "Peru",
   track_record_subtitle: "Histórico de investimentos encerrados",
   distribution_subtitle: "Distribuição por investimento",
+  distribution_subtitle_tipo: "Distribuição por tipo de ativo",
   distribution_quantity: "Quantidade",
   distribution_total_value: "Valor total",
   distribution_percentage: "Porcentagem",
