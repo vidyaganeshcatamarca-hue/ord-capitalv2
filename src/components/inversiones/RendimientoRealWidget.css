@@ -66,6 +66,13 @@
 
 .rendimiento-real-row--title {
   justify-content: space-between;
+  /* S4 (2026-10-23, dueño): "Algo pasa con el título que lo agranda y no puede
+     meter bien los valores completos, que aparezca el número completo". En inglés
+     el título es largo (`My Portfolio (Total)`) y el número quedaba cortado.
+     Ahora la fila puede pasar a dos líneas: el número conserva su ancho completo
+     y, si aun así no entra, baja a la línea de abajo antes que recortarse. */
+  flex-wrap: wrap;
+  row-gap: var(--space-1);
 }
 
 .rendimiento-real-row--usd {
@@ -115,7 +122,12 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  flex-shrink: 0;
+  /* El título es el que cede: si no entra, se recorta él, nunca el número. */
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rendimiento-real-total-ars {
@@ -125,11 +137,9 @@
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   text-align: right;
-  min-width: 0;
-  /* The big number must never widen the row: it truncates instead. */
-  flex: 0 1 auto;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* S4: el número completo es el requisito. No se recorta: se queda con su
+     ancho natural y, si no entra al lado del título, el wrap lo baja de línea. */
+  flex: 0 0 auto;
   white-space: nowrap;
 }
 
