@@ -1352,7 +1352,7 @@ export const inversiones = {
   msg_configure_inflation: "Set up your inflation source to see the real yield",
   msg_inflation_no_data: "There is no inflation data for your currency yet",
   label_inflation_computed: "Accumulated inflation",
-  label_inflation_annual: "Calculated inflation: {rate}% per year",
+  label_inflation_annual: "Calculated inflation: {rate} per year",
   label_inflation_window_months: "last {months} months",
   label_partial_withdrawal_note: "You already withdrew {amount} in partial redemptions; the yield is calculated on the total, so a withdrawal is not a loss.",
   error_wallet_currency_mismatch: "The destination wallet must use the same currency as the investment.",

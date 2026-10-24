@@ -5267,8 +5267,8 @@
         "to": "Accumulated inflation"
       },
       "inversiones.label_inflation_annual": {
-        "from": "Inflación calculada: {rate}% anual",
-        "to": "Calculated inflation: {rate}% per year"
+        "from": "Inflación calculada: {rate} anual",
+        "to": "Calculated inflation: {rate} per year"
       },
       "inversiones.label_inflation_window_months": {
         "from": "últimos {months} meses",
@@ -14829,8 +14829,8 @@
         "to": "Inflação acumulada"
       },
       "inversiones.label_inflation_annual": {
-        "from": "Inflación calculada: {rate}% anual",
-        "to": "Inflação calculada: {rate}% ao ano"
+        "from": "Inflación calculada: {rate} anual",
+        "to": "Inflação calculada: {rate} ao ano"
       },
       "inversiones.label_inflation_window_months": {
         "from": "últimos {months} meses",
