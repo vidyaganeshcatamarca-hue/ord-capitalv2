@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { clearUserSnapshots, clearOnboardingComplete, readOnboardingComplete, writeOnboardingComplete } from '@/lib/regionSnapshot'
 import { invalidateRegionCache } from '@/hooks/useNumberFormat'
+import { invalidateMonedasExtraCache } from '@/hooks/useMonedasExtra'
 
 interface AuthContextType {
   session: Session | null
@@ -138,6 +139,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // de usuario: el que entraba veía la moneda del anterior. Con Google hay
           // redirect completo y el módulo se reinicia, por eso ahí no se notaba.
           invalidateRegionCache()
+          // Ronda 4: la memo de monedas extra tenía el mismo defecto — el 198 dejaba
+          // [BRL,ARS] y el 20 la veía como su segunda y tercera moneda.
+          invalidateMonedasExtraCache()
         }
       }
     })

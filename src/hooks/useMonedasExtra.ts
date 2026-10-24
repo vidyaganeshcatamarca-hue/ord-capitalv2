@@ -15,30 +15,46 @@ import { useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { parseJsonbStringArray } from '@/lib/jsonbRpc'
 import { useOptionalAuth } from '@/contexts/AuthContext'
+import { reuseForUser, type UserKeyedEntry } from '@/lib/userCache'
 
-let extrasPromise: Promise<string[] | null> | null = null
+// Dueño, 2026-10-24 (ronda 4): "no sé si la segunda y la tercera moneda me las
+// muestra bien o las heredó del usuario anterior cargado en el mismo teléfono".
+// Las heredaba. Este memo era de módulo y no distinguía usuario: el 198 dejaba
+// ["BRL","ARS"] y el 20, en la misma SPA, veía esas dos como su segunda y tercera
+// moneda. Al tocar la ✕ de la tercera, el front pedía ['BRL'] y el backend —que sí
+// sabe de quién es— quitaba USD, la extra real del 20, y respondía
+// error_monedas_extra_has_wallets con el nombre de USD: el mensaje "hablaba de
+// dólares" con la pantalla diciendo pesos.
+//
+// La regla es la misma de `useNumberFormat` (lib/userCache.ts): una memo pertenece
+// a UN usuario. Si el usuario cambió, no se reusa.
+let extrasEntry: UserKeyedEntry<string[] | null> | null = null
 
 /** Drops the memoized request so the next call hits the RPC again. */
 export function invalidateMonedasExtraCache(): void {
-  extrasPromise = null
+  extrasEntry = null
 }
 
-function fetchMonedasExtra(): Promise<string[] | null> {
-  if (!extrasPromise) {
-    extrasPromise = rpc<unknown>('fn_obtener_monedas_extra')
-      .then((data) => {
-        // RETURN jsonb: la forma que llega NO es fija (array puro, wrapper con
-        // la key del fn, o fila-objeto con alias). El parser puro cubre las 4
-        // formas; el bug tanda-2 (BUG3) asumía wrapper y leía [] con array
-        // puro — persistencia OK y UI siempre 'Sin moneda'.
-        return parseJsonbStringArray(data, 'fn_obtener_monedas_extra')
-      })
-      .catch(() => {
-        extrasPromise = null
-        return null
-      })
-  }
-  return extrasPromise
+function fetchMonedasExtra(userId: string): Promise<string[] | null> {
+  const reusada = reuseForUser(extrasEntry, userId)
+  if (reusada) return reusada
+
+  const promise = rpc<unknown>('fn_obtener_monedas_extra')
+    .then((data) => {
+      // RETURN jsonb: la forma que llega NO es fija (array puro, wrapper con
+      // la key del fn, o fila-objeto con alias). El parser puro cubre las 4
+      // formas; el bug tanda-2 (BUG3) asumía wrapper y leía [] con array
+      // puro — persistencia OK y UI siempre 'Sin moneda'.
+      return parseJsonbStringArray(data, 'fn_obtener_monedas_extra')
+    })
+    .catch(() => {
+      // Un fallo NO se cachea: el próximo montaje (o reload) reintenta.
+      if (extrasEntry?.userId === userId) extrasEntry = null
+      return null
+    })
+
+  extrasEntry = { userId, promise }
+  return promise
 }
 
 export function useMonedasExtra(): { extras: string[]; loading: boolean; reload: () => void } {
@@ -51,7 +67,7 @@ export function useMonedasExtra(): { extras: string[]; loading: boolean; reload:
     if (!userId) return
     let cancelled = false
     setLoading(true)
-    fetchMonedasExtra().then((resolved) => {
+    fetchMonedasExtra(userId).then((resolved) => {
       if (cancelled) return
       setExtras(resolved ?? [])
       setLoading(false)
