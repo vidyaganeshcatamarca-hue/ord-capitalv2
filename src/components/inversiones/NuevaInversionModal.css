@@ -120,7 +120,7 @@
 
 .nueva-inversion-tipo-option--active,
 .nueva-inversion-moneda-option--active {
-  border-color: var(--mint);
+  border-color: var(--mint-ink, var(--mint));
   background: rgba(78, 205, 196, 0.1);
   color: var(--text-primary, var(--text));
 }
@@ -129,7 +129,7 @@
 .nueva-inversion-moneda-option input {
   width: auto;
   margin: 0;
-  accent-color: var(--mint);
+  accent-color: var(--mint-ink, var(--mint));
 }
 
 .nueva-inversion-modal-disclaimer {
@@ -138,7 +138,7 @@
   border-radius: 10px;
   background: rgba(255, 230, 109, 0.08);
   border: 1px solid rgba(255, 230, 109, 0.2);
-  color: var(--amber);
+  color: var(--amber-ink, var(--amber));
   font-size: calc(12px * var(--font-scale));
   line-height: 1.45;
 }

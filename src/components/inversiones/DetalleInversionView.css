@@ -33,14 +33,14 @@
 }
 
 .detalle-error-text {
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
 }
 
 .detalle-spinner {
   width: 40px;
   height: 40px;
   border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top-color: var(--mint);
+  border-top-color: var(--mint-ink, var(--mint));
   border-radius: 50%;
   animation: detalle-spin 0.8s linear infinite;
 }
@@ -124,12 +124,12 @@
 
 .detalle-badge--pf {
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .detalle-badge--var {
   background: var(--amber-dim, rgba(255, 183, 3, 0.12));
-  color: var(--amber);
+  color: var(--amber-ink, var(--amber));
 }
 
 .detalle-badge--other {
@@ -242,11 +242,11 @@
 }
 
 .detalle-yield--positive {
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .detalle-yield--negative {
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
 }
 
 .detalle-yield--zero {
@@ -368,11 +368,11 @@
 }
 
 .detalle-history-amount--positive {
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .detalle-history-amount--negative {
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
 }
 
 .detalle-history-amount--zero {
@@ -433,12 +433,12 @@
 
 .detalle-action-btn--update {
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .detalle-action-btn--liquidate {
   background: var(--coral-dim, rgba(230, 57, 70, 0.12));
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
 }
 
 /* S16 (2026-10-22): nota bajo "Valor actual" que explica el retiro parcial. */

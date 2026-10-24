@@ -67,7 +67,7 @@
 
 .track-record-view-tab--active {
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .track-record-view-panel {

@@ -65,7 +65,7 @@
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
   border: 1px solid var(--mint);
   border-radius: var(--radius-md);
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
   font-weight: 600;
 }
 
@@ -91,12 +91,12 @@
 
 .rendimiento-chart-verdict--positive {
   background: var(--mint-dim);
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .rendimiento-chart-verdict--negative {
   background: var(--coral-dim, rgba(230, 57, 70, 0.12));
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
 }
 
 .rendimiento-chart-bars {

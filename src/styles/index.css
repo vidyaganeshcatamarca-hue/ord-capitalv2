@@ -26,6 +26,11 @@
   --coral-dim:            rgba(230, 57, 70, 0.12);
   --amber:                #FFB703;
   --amber-dim:            rgba(255, 183, 3, 0.12);
+  /* T13: tinta para TEXTO sobre las superficies -dim. En oscuro el acento ya
+     llega a AA (4.88), así que la tinta es el mismo color. */
+  --mint-ink:             var(--mint);
+  --amber-ink:            var(--amber);
+  --coral-ink:            var(--coral);
   --blue:                 #009621;
   --blue-dim:             rgba(0, 150, 33, 0.15);
   --purple:               #8a2be2;
@@ -953,6 +958,11 @@ input::placeholder, textarea::placeholder {
   --mint-gradient-subtle: linear-gradient(135deg, rgba(0, 140, 30, 0.15) 0%, rgba(15, 82, 17, 0.06) 100%);
   --coral: #C73E2F;
   --coral-dim: rgba(199, 62, 47, 0.12);
+  /* T13: en claro el acento como texto sobre su propio -dim queda entre 3.16 y
+     3.76 (AA pide 4.5). Estas tintas oscuras suben a >5 sin cambiar el acento. */
+  --mint-ink: #04631A;
+  --amber-ink: #7A4A00;
+  --coral-ink: #A32318;
   --amber: #B46C13;
   --amber-dim: rgba(180, 108, 19, 0.12);
 

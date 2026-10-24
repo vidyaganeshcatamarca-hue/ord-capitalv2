@@ -180,11 +180,11 @@
 }
 
 .rendimiento-real-yield--positive {
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .rendimiento-real-yield--negative {
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
 }
 
 .rendimiento-real-yield--zero {
@@ -224,12 +224,12 @@
 
 .rendimiento-real-verdict--positive {
   background: var(--mint-dim);
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .rendimiento-real-verdict--negative {
   background: var(--coral-dim);
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
 }
 
 .rendimiento-real-cta {
@@ -238,7 +238,7 @@
   gap: var(--space-2);
   padding: var(--space-2) var(--space-4);
   background: var(--mint-dim);
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
   border: 1px solid var(--mint);
   border-radius: var(--radius-md);
   font-family: var(--font-body);

@@ -24,7 +24,7 @@
 
 .config-inflacion-eyebrow {
   margin: 0 0 var(--space-1);
-  color: var(--amber);
+  color: var(--amber-ink, var(--amber));
   font-size: calc(11px * var(--font-scale));
   font-weight: 800;
   letter-spacing: 0.08em;
@@ -58,7 +58,7 @@
   border: 1px solid rgba(78, 205, 196, 0.28);
   border-radius: var(--radius-full);
   background: rgba(78, 205, 196, 0.1);
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
   font-size: calc(12px * var(--font-scale));
   font-weight: 800;
   text-align: center;
@@ -99,7 +99,7 @@
 }
 
 .config-inflacion-field select:focus {
-  border-color: var(--mint);
+  border-color: var(--mint-ink, var(--mint));
   box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.14);
 }
 
@@ -115,7 +115,7 @@
   border: 1px solid rgba(255, 107, 107, 0.28);
   border-radius: var(--radius-md);
   background: rgba(255, 107, 107, 0.1);
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
   font-size: calc(13px * var(--font-scale));
   font-weight: 700;
 }
@@ -242,7 +242,7 @@
 }
 
 .config-inflacion-field input:focus {
-  border-color: var(--mint);
+  border-color: var(--mint-ink, var(--mint));
   box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.14);
 }
 

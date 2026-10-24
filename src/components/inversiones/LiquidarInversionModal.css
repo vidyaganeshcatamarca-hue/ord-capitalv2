@@ -190,11 +190,11 @@
 }
 
 .liquidar-inversion-ganancia-value--positive {
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .liquidar-inversion-ganancia-value--negative {
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
 }
 
 .liquidar-inversion-ganancia-value--zero {

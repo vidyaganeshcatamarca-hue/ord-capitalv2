@@ -106,7 +106,7 @@
 }
 
 .track-record-list-arrow {
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .track-record-list-metrics {
@@ -146,11 +146,11 @@
 }
 
 .track-record-list-gain--positive {
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .track-record-list-gain--negative {
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
 }
 
 .track-record-list-dates {

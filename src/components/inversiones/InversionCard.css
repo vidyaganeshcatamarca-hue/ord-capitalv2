@@ -17,7 +17,7 @@
 
 .inversion-card[role="button"]:hover {
   transform: translateY(-2px);
-  border-color: var(--mint);
+  border-color: var(--mint-ink, var(--mint));
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
@@ -61,12 +61,12 @@
 
 .inversion-card-badge--pf {
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .inversion-card-badge--var {
   background: var(--amber-dim, rgba(255, 183, 3, 0.12));
-  color: var(--amber);
+  color: var(--amber-ink, var(--amber));
 }
 
 .inversion-card-badge--other {
@@ -106,11 +106,11 @@
 }
 
 .inversion-card-amount--positive {
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .inversion-card-amount--negative {
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
 }
 
 .inversion-card-amount--zero {
@@ -179,12 +179,12 @@
 
 .inversion-card-btn--update {
   background: var(--mint-dim, rgba(0, 180, 216, 0.12));
-  color: var(--mint);
+  color: var(--mint-ink, var(--mint));
 }
 
 .inversion-card-btn--liquidate {
   background: var(--coral-dim, rgba(230, 57, 70, 0.12));
-  color: var(--coral);
+  color: var(--coral-ink, var(--coral));
 }
 
 @media (max-width: 480px) {
