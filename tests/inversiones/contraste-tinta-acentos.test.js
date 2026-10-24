@@ -105,3 +105,31 @@ test('T13: la tinta existe en los dos temas y conserva el acento en oscuro', () 
     assert.match(apariciones[0][1].trim(), new RegExp(`var\\(--${acento}\\)`), 'en oscuro la tinta es el acento')
   }
 })
+
+// ───────────── T15: la pestaña activa en hover ─────────────
+// Medido en el navegador el 2026-10-24 con `mouse.move` real (page.hover no aplica
+// :hover bajo emulación): el texto se volvía claro sobre el relleno verde.
+// `.inversiones-tab:hover` tiene especificidad (0,2,0) y le ganaba a
+// `.inversiones-tab--active` (0,1,0).
+
+test('T15: la pestaña activa conserva su color en hover', () => {
+  const css = read('src/pages/Inversiones/InversionesPage.css')
+
+  const activa = /\.inversiones-tab--active\s*\{([^}]*)\}/.exec(css)
+  assert.ok(activa, 'falta la regla de la pestaña activa')
+  const colorActiva = /(?:^|[\s;])color:\s*([^;]+);/.exec(activa[1])
+  assert.ok(colorActiva, 'la pestaña activa necesita color propio')
+  assert.equal(colorActiva[1].trim(), '#000000', 'negro sobre el relleno verde')
+
+  const hoverActiva = /\.inversiones-tab--active:hover\s*\{([^}]*)\}/.exec(css)
+  assert.ok(hoverActiva, 'sin esta regla el hover (0,2,0) le gana a la activa (0,1,0)')
+  assert.match(
+    hoverActiva[1],
+    /color:\s*#000000/,
+    'en hover la activa tiene que seguir en negro, no volver a var(--text)'
+  )
+
+  // Y el negro sobre el verde del acento tiene que pasar AA.
+  const mint = hex(token('mint'))
+  assert.ok(contraste([0, 0, 0], mint) >= AA, 'negro sobre --mint tiene que pasar AA')
+})

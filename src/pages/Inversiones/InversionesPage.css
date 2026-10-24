@@ -138,6 +138,14 @@
   color: #000000;
 }
 
+/* T15 (S10): al tocar la pestaña activa, el `:hover` de .inversiones-tab tiene
+   especificidad (0,2,0) y le ganaba a .inversiones-tab--active (0,1,0), así que el
+   texto volvía a var(--text): claro sobre el relleno verde, ratio 2.43. Esta regla
+   conserva el negro sobre verde también en hover. */
+.inversiones-tab--active:hover {
+  color: #000000;
+}
+
 .inversiones-content {
   display: flex;
   flex-direction: column;
