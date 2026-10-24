@@ -10,6 +10,7 @@ import {
   writeRegionSnapshot,
 } from '@/lib/regionSnapshot'
 import { setFormatContext } from '@/lib/format'
+import { reuseForUser } from '@/lib/userCache'
 
 interface UserFormatPrefs {
   decimales_moneda_local: number
@@ -48,37 +49,43 @@ const DEFAULTS: UserFormatPrefs = {
  * later mount (or `reloadRegion`) can retry instead of inheriting a broken
  * state for the rest of the session.
  */
-let regionPromise: Promise<UserRegion | null> | null = null
+let regionCache: { userId: string; promise: Promise<UserRegion | null> } | null = null
 
 /** Drops the memoized region request so the next call hits the RPC again. */
 export function invalidateRegionCache(): void {
-  regionPromise = null
+  regionCache = null
 }
 
 function toText(value: unknown): string {
   return String(value ?? '').trim()
 }
 
-function fetchUserRegion(): Promise<UserRegion | null> {
-  if (!regionPromise) {
-    regionPromise = rpc<UserRegionRow[]>('fn_obtener_region_usuario')
-      .then((data) => {
-        const row = Array.isArray(data) ? data[0] : data
-        if (!row) return null
-        const localCurrency = toText(row.moneda_default).toUpperCase()
-        if (!localCurrency) return null
-        return {
-          countryCode: toText(row.pais_codigo).toUpperCase(),
-          localCurrency,
-          language: toText(row.idioma_default).toLowerCase(),
-        }
-      })
-      .catch(() => {
-        regionPromise = null
-        return null
-      })
-  }
-  return regionPromise
+function fetchUserRegion(userId: string): Promise<UserRegion | null> {
+  // S9 (2026-10-23): la memo es por usuario. Sin esto, entrar con otro usuario por
+  // mail (SPA, sin recarga) heredaba la región del anterior; con Google el
+  // redirect reiniciaba el módulo y por eso ahí no se veía.
+  const reusable = reuseForUser(regionCache, userId)
+  if (reusable) return reusable
+
+  const promise = rpc<UserRegionRow[]>('fn_obtener_region_usuario')
+    .then((data) => {
+      const row = Array.isArray(data) ? data[0] : data
+      if (!row) return null
+      const localCurrency = toText(row.moneda_default).toUpperCase()
+      if (!localCurrency) return null
+      return {
+        countryCode: toText(row.pais_codigo).toUpperCase(),
+        localCurrency,
+        language: toText(row.idioma_default).toLowerCase(),
+      }
+    })
+    .catch(() => {
+      if (regionCache?.promise === promise) regionCache = null
+      return null
+    })
+
+  regionCache = { userId, promise }
+  return promise
 }
 
 /** Formato por moneda tal como lo devuelve `fn_obtener_formato_moneda()`. */
@@ -142,9 +149,15 @@ export function useNumberFormat() {
 
   useEffect(() => {
     let cancelled = false
+    // S9: sin usuario no hay región que pedir, y pedirla sin saber de quién es
+    // fue justamente el bug (se servía la del usuario anterior).
+    if (!userId) {
+      setRegionLoading(false)
+      return
+    }
     setRegionLoading(true)
     setRegionError(false)
-    fetchUserRegion().then((resolved) => {
+    fetchUserRegion(userId).then((resolved) => {
       if (cancelled) return
       setRegion(resolved)
       setRegionError(resolved === null)

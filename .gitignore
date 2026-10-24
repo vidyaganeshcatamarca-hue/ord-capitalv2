@@ -74,6 +74,7 @@ tests/onboarding/*
 !tests/onboarding/transfer-titles.test.js
 !tests/onboarding/patrimonio-hero.test.js
 !tests/onboarding/formato-moneda-local.test.js
+!tests/onboarding/region-por-usuario.test.js
 !tests/onboarding/jsonb-rpc-array.test.js
 !tests/onboarding/format-context.test.js
 !tests/inversiones/

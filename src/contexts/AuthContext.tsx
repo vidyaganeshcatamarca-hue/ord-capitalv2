@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useMemo, ReactNode } fr
 import { Session, User } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { clearUserSnapshots, clearOnboardingComplete, readOnboardingComplete, writeOnboardingComplete } from '@/lib/regionSnapshot'
+import { invalidateRegionCache } from '@/hooks/useNumberFormat'
 
 interface AuthContextType {
   session: Session | null
@@ -132,6 +133,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Solo eliminamos la bandera si el evento es explícitamente un cierre de sesión
         if (event === 'SIGNED_OUT') {
           clearOnboardingComplete()
+          // S9 (2026-10-23): la región viene memoizada a nivel de módulo y, al
+          // entrar por mail (sin recarga de página), la memo sobrevivía al cambio
+          // de usuario: el que entraba veía la moneda del anterior. Con Google hay
+          // redirect completo y el módulo se reinicia, por eso ahí no se notaba.
+          invalidateRegionCache()
         }
       }
     })
