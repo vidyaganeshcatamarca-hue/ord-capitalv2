@@ -35,6 +35,7 @@ tests/
 !tests/
 tests/*
 !tests/category-translation-sort.test.js
+!tests/budget-detalle-asignacion.test.js
 !tests/voice_contract.test.js
 !tests/voice_errors.test.js
 !tests/import_parser.test.js

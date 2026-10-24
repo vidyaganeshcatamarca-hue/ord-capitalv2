@@ -829,6 +829,16 @@ export function PresupuestosPage() {
         <div className="modal-overlay" onClick={() => setShowAsignarSheet(false)}>
           <div className="modal-sheet" onClick={e => e.stopPropagation()}>
             <div className="modal-handle" />
+            {/* S10 (2026-10-24, dueño): "Se abre una ventanita con una X de cerrar".
+                El sheet se cerraba sólo tocando el fondo, que no se ve. */}
+            <button
+              type="button"
+              className="asignar-sheet-close"
+              onClick={() => setShowAsignarSheet(false)}
+              aria-label={t('btn_close')}
+            >
+              ✕
+            </button>
             <div className="modal-titulo">{t('budget_modal_titulo_asignar')}</div>
 
             <div className="asignar-sheet-sobre">
@@ -847,6 +857,41 @@ export function PresupuestosPage() {
                 </div>
               </div>
             </div>
+
+            {/* S10 (2026-10-24, dueño): "en las categorías con asignaciones, esta
+                información no se muestra en la tarjeta original, sino que se
+                muestra al hacer clic en la tarjeta". Las tarjetas sin asignación
+                ya la muestran en la propia tarjeta, así que acá aparece sólo
+                cuando hay asignación: el detalle de lo que fue el mes anterior y
+                el promedio de los últimos seis meses. */}
+            {Number(sobreSeleccionado.monto_asignado ?? 0) > 0 && (
+              <div className="asignar-sheet-detalle">
+                <div className="sobre-stats">
+                  <span className="sobre-stat">
+                    <span className="sobre-stat-label">📊 {t('budget_prev_month_assigned')}: </span>
+                    <span className="sobre-stat-val">
+                      {formatMonto(Number(sobreSeleccionado.monto_asignado_anterior ?? 0))}
+                    </span>
+                  </span>
+                </div>
+                <div className="sobre-stats">
+                  <span className="sobre-stat">
+                    <span className="sobre-stat-label">🧾 {t('budget_prev_month_spent')}: </span>
+                    <span className="sobre-stat-val">
+                      {formatMonto(Number(sobreSeleccionado.monto_gastado_anterior ?? 0))}
+                    </span>
+                  </span>
+                </div>
+                <div className="sobre-stats">
+                  <span className="sobre-stat">
+                    <span className="sobre-stat-label">📈 {t('budget_prev_month_avg')}: </span>
+                    <span className="sobre-stat-val">
+                      {formatMonto(Number(sobreSeleccionado.gasto_promedio_6m ?? 0))}
+                    </span>
+                  </span>
+                </div>
+              </div>
+            )}
 
             {mostrando === 'opciones' ? (
               <div className="asignar-opciones">
