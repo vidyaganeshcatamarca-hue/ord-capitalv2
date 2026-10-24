@@ -293,3 +293,14 @@
   color: var(--text-3);
   font-weight: 600;
 }
+
+/* S6b (2026-10-24, dueño): "muestras los valores en moneda de la inversión y entre
+   paréntesis el valor en moneda local". El paréntesis es la vara común, no el dato
+   principal: va más chico y en el gris de apoyo, para que no compita con el valor
+   propio de la inversión. */
+.distribucion-value-local {
+  color: var(--text-3);
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 500;
+  white-space: nowrap;
+}

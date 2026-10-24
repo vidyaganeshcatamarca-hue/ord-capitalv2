@@ -94,3 +94,43 @@ test('el gráfico usa el modo y el nombre de la inversión', () => {
   assert.match(view, /clasificarDistribucion\(/, 'la vista tiene que clasificar antes de pintar')
   assert.match(view, /nombre_activo/, 'y mostrar el nombre de cada inversión')
 })
+
+// ───────── S6b (2026-10-24): dos monedas en la misma celda ─────────────────
+// Dueño: "como las inversiones pueden ser de divisas diferentes, debes convertirlas
+// a moneda local solo para sacar el % del donut [...] No puedes sumar moneda local
+// con otra moneda dentro del mismo donut." Y después: "muestras los valores en
+// moneda de la inversión y entre parentesis el valor en moneda local".
+
+test('cada porción conserva su valor en SU moneda', () => {
+  const rows = [
+    fila({ inversion_id: 1, nombre_activo: 'Cripto try', valor_propio: 2500, moneda: 'BRL', valor_total: 1750000, porcentaje_valor: 80 }),
+    fila({ inversion_id: 2, nombre_activo: 'Bitcoin', valor_propio: 350000, moneda: 'ARS', valor_total: 350000, porcentaje_valor: 20 }),
+  ]
+  const r = clasificarDistribucion(rows)
+  assert.equal(r.filas[0].valor_propio, 2500)
+  assert.equal(r.filas[0].moneda, 'BRL', 'un valor en reales no puede quedar rotulado en pesos')
+  assert.equal(r.filas[1].valor_propio, 350000)
+})
+
+test('el agrupado por tipo no suma valores de monedas distintas', () => {
+  const r = clasificarDistribucion([
+    fila({ nombre_activo: null, tipo_activo: 'variable', valor_propio: 2500, moneda: 'BRL', valor_total: 1750000, porcentaje_valor: 80 }),
+    fila({ nombre_activo: null, tipo_activo: 'variable', valor_propio: 350000, moneda: 'ARS', valor_total: 350000, porcentaje_valor: 20 }),
+  ])
+  assert.equal(r.modo, 'tipo')
+  assert.equal(r.filas[0].valor_propio, null, 'no se inventa un valor propio para la suma')
+  assert.equal(r.filas[0].moneda, null)
+  assert.equal(r.filas[0].valor_total, 2100000, 'solo hay un total comparable: el local')
+})
+
+test('la celda muestra la moneda propia y el local entre paréntesis', () => {
+  const view = read('src/components/inversiones/DistribucionView.tsx')
+  assert.match(view, /formatCurrency\(item\.valor_propio, item\.moneda\)/, 'primero el valor propio')
+  assert.match(view, /\(\{formatCurrency\(item\.valor_total\)\}\)/, 'y el local entre paréntesis')
+})
+
+test('la migración devuelve el valor propio y su moneda', () => {
+  const sql = read('temp_sql/91_distribucion_por_inversion.sql')
+  assert.match(sql, /valor_propio numeric/, 'la función tiene que devolver el valor sin convertir')
+  assert.match(sql, /COALESCE\(i\.moneda, 'ARS'\)::text AS moneda/, 'y la moneda de origen')
+})

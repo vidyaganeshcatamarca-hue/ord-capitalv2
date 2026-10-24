@@ -19,6 +19,10 @@ export interface DistribucionRow {
   // fila vieja tiene que poder clasificarse igual.
   inversion_id?: number | null
   nombre_activo?: string | null
+  // S6b (2026-10-24): valor en la moneda propia de la inversión. Es lo que se
+  // MUESTRA. `valor_total` (moneda local) queda solo como vara común del %.
+  valor_propio?: number | null
+  moneda?: string | null
   tipo_activo: string
   cantidad: number
   valor_total: number
@@ -57,6 +61,12 @@ export function clasificarDistribucion(rows: DistribucionRow[]): DistribucionCla
       porTipo.set(tipo, {
         inversion_id: null,
         nombre_activo: null,
+        // Dueño, 2026-10-24: "no puedes sumar moneda local con otra moneda". Al
+        // agrupar por tipo se juntan inversiones que pueden estar en monedas
+        // distintas, así que se descarta el valor propio y la tabla cae al
+        // equivalente en moneda local, que es la única vara comparable.
+        valor_propio: null,
+        moneda: null,
         tipo_activo: tipo,
         cantidad: row.cantidad || 1,
         valor_total: row.valor_total,

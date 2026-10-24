@@ -26,6 +26,16 @@ function normalizeRow(row: DistribucionActivoRow): DistribucionActivoRow {
       typeof row.nombre_activo === 'string' && row.nombre_activo.trim()
         ? row.nombre_activo.trim()
         : null,
+    // S6b: valor en la moneda propia + la moneda. Sin esto la tabla cae al
+    // equivalente en moneda local (backend sin migrar).
+    valor_propio:
+      row.valor_propio === null || row.valor_propio === undefined
+        ? null
+        : Number(row.valor_propio),
+    moneda:
+      typeof row.moneda === 'string' && row.moneda.trim()
+        ? row.moneda.trim().toUpperCase()
+        : null,
   }
 }
 
@@ -155,7 +165,26 @@ export function DistribucionView({ className }: DistribucionViewProps) {
                       )}
                     </span>
                   </td>
-                  <td>{formatCurrency(item.valor_total)}</td>
+                  <td>
+                    {/* S6b (2026-10-24, dueño): "muestras los valores en moneda de
+                        la inversión y entre paréntesis el valor en moneda local".
+                        La conversión es una vara común para el % del donut; el
+                        valor propio es el que se lee primero. Si el backend
+                        todavía no manda valor_propio, queda solo la local. */}
+                    {item.valor_propio !== null &&
+                    item.valor_propio !== undefined &&
+                    item.moneda ? (
+                      <>
+                        {formatCurrency(item.valor_propio, item.moneda)}
+                        <span className="distribucion-value-local">
+                          {' '}
+                          ({formatCurrency(item.valor_total)})
+                        </span>
+                      </>
+                    ) : (
+                      formatCurrency(item.valor_total)
+                    )}
+                  </td>
                   <td>{formatPercent(item.porcentaje_valor, { signed: false })}</td>
                 </tr>
               ))}

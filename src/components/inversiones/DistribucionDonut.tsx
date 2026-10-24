@@ -8,6 +8,10 @@ export interface DistribucionActivoRow {
   // S6 (2026-10-24): con la migración 91 hay una fila por inversión.
   inversion_id?: number | null
   nombre_activo?: string | null
+  // S6b: valor en la moneda propia de la inversión (lo que se muestra primero) y
+  // valor_total convertido a moneda local (entre paréntesis).
+  valor_propio?: number | null
+  moneda?: string | null
 }
 
 interface DistribucionDonutProps {
