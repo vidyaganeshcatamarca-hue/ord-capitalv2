@@ -1,5 +1,6 @@
 // tests/inversiones/inflacion-vigente-y-retiro.test.js
 // S12/S13/S14/S15/S16/S17 (odd/tasks/inversiones-v2-correcciones.md).
+// S8: la inflación se prorratea por los días de cada inversión (92).
 //
 //   node --test tests/inversiones/inflacion-vigente-y-retiro.test.js
 //
@@ -27,6 +28,7 @@ const repo = path.join(__dirname, '..', '..')
 const read = (rel) => fs.readFileSync(path.join(repo, rel), 'utf-8')
 
 const SQL90 = 'temp_sql/90_inflacion_vigente_y_retiro_parcial.sql'
+const SQL92 = 'temp_sql/92_inflacion_prorrateada_por_dias.sql'
 
 // ─────────────────────────── backend: inflación ──────────────────────────────
 
@@ -278,4 +280,196 @@ test('ningún componente del módulo formatea porcentajes por su cuenta', () => 
       `${archivo} no debe armar porcentajes con toFixed(2) (siempre usa punto)`
     )
   }
+})
+
+// ────────────────── S8: la inflación se prorratea por los días ─────────────
+//
+// Decisión del dueño (2026-10-24, verbatim):
+//   "esta bien que lo trate como el año completo, ya que la carga manual, es la
+//    inflacion anual hasta ese momento de carga."
+//   "cada inversion con sus propios dias, claro"
+//
+// El valor manual YA es una tasa ANUAL: no se anualiza nada y no se toca
+// `fn_configurar_inflacion`. Lo único que cambia es que la tasa anual se
+// aplica por los días que duró cada inversión.
+//
+// La migración vive en el 92 (no en el 90: el 90 es el registro de lo ya
+// deployado y no se toca).
+
+const sql92 = read(SQL92)
+// El encabezado del 92 documenta la fórmula VIEJA a propósito (es el registro
+// del antes/después). Los asserts sobre el código miran el SQL sin comentarios.
+const codigo92 = sql92.replace(/--[^\n]*/g, '')
+
+test('S8: el 92 reemplaza las dos funciones que calculaban el real', () => {
+  assert.match(
+    sql92,
+    /CREATE OR REPLACE FUNCTION public\.fn_reporte_detalle_inversion\(p_inversion_id bigint\)/,
+    'el detalle de una inversión tiene que prorratear por sus días'
+  )
+  assert.match(
+    sql92,
+    /CREATE OR REPLACE FUNCTION public\.fn_reporte_rendimiento_vs_inflacion\(\)/,
+    'el real de la cartera tiene que prorratear por días'
+  )
+  // Mismas firmas y mismo tipo de retorno que las actuales: no se agregan
+  // parámetros ni se cambia el contrato jsonb.
+  assert.match(sql92, /RETURNS jsonb/)
+  assert.ok(
+    !/fn_reporte_detalle_inversion\((?!p_inversion_id bigint\))/.test(sql92),
+    'la firma del detalle no puede cambiar'
+  )
+})
+
+test('S8: las dos funciones del 92 se crean con las mismas reglas de seguridad', () => {
+  const ambos = sql92.match(
+    /CREATE OR REPLACE FUNCTION public\.fn_reporte_(?:detalle_inversion\(p_inversion_id bigint\)|rendimiento_vs_inflacion\(\))[\s\S]*?\$function\$;/g
+  )
+  assert.ok(ambos && ambos.length === 2, 'tiene que haber exactamente dos funciones')
+  for (const cuerpo of ambos) {
+    assert.match(cuerpo, /SECURITY DEFINER/)
+    assert.match(cuerpo, /SET search_path TO 'public'/)
+  }
+})
+
+test('S8: la inflación del período se prorratea con POWER sobre los días', () => {
+  assert.match(
+    sql92,
+    /v_inflacion_periodo := \(POWER\(1 \+ \(v_inflacion_anual \/ 100\), v_dias_tenencia \/ 365\.0\) - 1\) \* 100;/,
+    'inflación del período = (1 + anual/100)^(dias/365) - 1'
+  )
+  assert.match(
+    sql92,
+    /v_dias_tenencia := GREATEST\(\(CURRENT_DATE - v_inversion\.fecha_inicio\), 0\)::numeric;/,
+    'los días son los de ESA inversión'
+  )
+})
+
+test('S8: el real ya no se divide por la inflación de 6 meses', () => {
+  // La fórmula vieja (6 meses fijos) no puede quedar en el cálculo del real.
+  assert.ok(
+    !/\(1 \+ \(v_inflacion_6m \/ 100\)\)/.test(codigo92),
+    'el real no puede seguir descontando la inflación de 6 meses'
+  )
+  // Y el real se arma con la inflación DEL PERÍODO.
+  assert.match(
+    sql92,
+    /v_rendimiento_real := \(\(1 \+ \(v_rendimiento_nominal \/ 100\)\) \/ \(1 \+ \(v_inflacion_periodo \/ 100\)\) - 1\) \* 100;/,
+    'el real se descuenta la inflación del período'
+  )
+  assert.match(
+    sql92,
+    /v_real_inversion := \(\(1 \+ \(v_nominal_inversion \/ 100\)\) \/ \(1 \+ \(v_inflacion_periodo \/ 100\)\) - 1\) \* 100;/,
+    'en la cartera, el real es el de cada inversión con su propia inflación'
+  )
+})
+
+test('S8: la tasa anual sale del bloque de inflación, sin anualizar nada', () => {
+  // El bloque vivo ya expone la tasa anual en 'inflacion_anualizada': con la
+  // fuente manual es el valor tipeado (que YA es anual) y con el proxy dólar
+  // es la anualización de la ventana real.
+  assert.match(
+    sql92,
+    /v_inflacion_anual := COALESCE\(\s*\(v_infl ->> 'inflacion_anualizada'\)::numeric,\s*\(v_infl ->> 'inflacion_12m'\)::numeric\s*\);/,
+    'la tasa anual se toma del bloque de inflación, no se recalcula'
+  )
+  // No se toca la configuración: el archivo no define ni altera
+  // fn_configurar_inflacion.
+  assert.ok(
+    !/CREATE OR REPLACE FUNCTION public\.fn_configurar_inflacion/.test(codigo92),
+    'esta migración no toca la configuración de inflación'
+  )
+})
+
+test('S8: el 90 queda intacto: es el registro de lo ya deployado', () => {
+  const sql90 = read(SQL90)
+  assert.match(
+    sql90,
+    /v_rendimiento_real := \(\(1 \+ \(v_rendimiento_nominal \/ 100\)\) \/ \(1 \+ \(v_inflacion_6m \/ 100\)\) - 1\) \* 100;/,
+    'el 90 es histórico: no se toca'
+  )
+})
+
+test('S8: el real de la cartera es un promedio PONDERADO POR VALOR', () => {
+  assert.match(sql92, /v_peso numeric;/)
+  assert.match(sql92, /v_suma_pesos numeric := 0;/)
+  assert.match(sql92, /v_suma_real_ponderada numeric := 0;/)
+  assert.match(
+    sql92,
+    /v_suma_real_ponderada := v_suma_real_ponderada \+ \(v_peso \* v_real_inversion\);/,
+    'el real de cada inversión entra multiplicado por su peso'
+  )
+  assert.match(
+    sql92,
+    /v_rendimiento_real := v_suma_real_ponderada \/ v_suma_pesos;/,
+    'el agregado es el promedio ponderado'
+  )
+})
+
+test('S8: el peso es el capital convertido a moneda local', () => {
+  // El peso es el capital invertido convertido con la misma función que ya
+  // usa el reporte. Ponderar por el valor actual sobreponderaría a las
+  // inversiones que más subieron y rompería la coherencia con el nominal de
+  // cartera (que se mide contra el capital original).
+  assert.match(
+    sql92,
+    /SELECT c\.valor INTO v_peso\s+FROM fn_valor_a_moneda_local\(v_fila\.monto_invertido_original, v_fila\.moneda, v_user_id\) c;/,
+    'el peso se convierte con la misma función que ya usa el reporte'
+  )
+})
+
+test('S8: los días NO se promedian: cada inversión usa los suyos', () => {
+  // Un promedio de días sería un AVG sobre un rango de fechas.
+  assert.ok(
+    !/AVG\s*\([^)]*dias/i.test(codigo92),
+    'prohibido promediar días: cada inversión prorratea por los suyos'
+  )
+  assert.ok(
+    !/AVG\s*\(/i.test(codigo92),
+    'el agregado no puede ser un promedio simple'
+  )
+  // Y el cálculo del real está dentro de un bucle sobre las inversiones.
+  assert.match(
+    sql92,
+    /FOR v_fila IN[\s\S]*?FROM p_inversiones i[\s\S]*?i\.estado = 'activa'[\s\S]*?v_real_inversion :=/,
+    'el real se calcula inversión por inversión dentro del bucle'
+  )
+})
+
+test('S8: una inversión sin inflación disponible no participa del promedio', () => {
+  // No se inventa un 0: si no hay tasa anual, la inversión se saltea.
+  assert.match(
+    sql92,
+    /IF v_inflacion_anual IS NULL THEN[\s\S]*?CONTINUE;/,
+    'sin tasa anual la inversión no participa (no un 0)'
+  )
+  // Y si no quedó ninguna inversión con peso, el real es NULL, no 0.
+  assert.match(
+    sql92,
+    /IF v_suma_pesos > 0 THEN[\s\S]*?ELSE\s+v_rendimiento_real := NULL;/,
+    'sin pesos no hay real: se informa NULL'
+  )
+})
+
+test('S8: ejemplo de 45 días con 6% anual ⇒ la inflación del período es 0,72%', () => {
+  // La fórmula aprobada por el dueño es compuesta:
+  //   (1 + 0,06)^(45/365) - 1
+  const inflPeriodo = (Math.pow(1 + 6 / 100, 45 / 365.0) - 1) * 100
+  assert.ok(
+    Math.abs(inflPeriodo - 0.72) < 0.01,
+    `la inflación del período de 45 días da ${inflPeriodo.toFixed(4)}%`
+  )
+
+  // Y el real se descuenta ESA inflación, no la de 6 meses (que sería 3%).
+  const nominal = 10 // 10% de nominal
+  const real = ((1 + nominal / 100) / (1 + inflPeriodo / 100) - 1) * 100
+  const realCon6m = ((1 + nominal / 100) / (1 + 3 / 100) - 1) * 100
+  assert.ok(
+    Math.abs(real - 9.21) < 0.05,
+    `con la inflación del período el real da ${real.toFixed(2)}%`
+  )
+  assert.ok(
+    real > realCon6m,
+    'prorratear por días tiene que dar un real MEJOR que descontar 6 meses fijos'
+  )
 })
