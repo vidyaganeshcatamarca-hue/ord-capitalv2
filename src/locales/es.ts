@@ -1664,6 +1664,7 @@ export const inversiones = {
   liquidation_capital_recovery: "Recuperación de capital",
   liquidation_gain: "Ganancia por liquidación",
   liquidation_loss: "Pérdida por liquidación",
+  investment_contribution: "Aporte de capital",
   rescate_inversion: "Rescate de inversión",
   desc_blocked_capital: "Capital bloqueado en inversiones",
 

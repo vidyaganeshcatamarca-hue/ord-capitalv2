@@ -463,3 +463,31 @@
   font-weight: 500;
   line-height: 1.35;
 }
+
+/* S5 (ronda 6, dueño): los movimientos que explican el capital neto (aportes y, si hay
+   más de uno, los retiros). Sin esto la tarjeta del detalle mostraba el capital guardado
+   y el valor actual, y la diferencia se leía como pérdida. */
+.detalle-capital-movimientos {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.detalle-capital-movimiento {
+  font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
+  font-size: calc(11px * var(--font-scale));
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-3);
+}
+
+.detalle-capital-movimiento--aporte {
+  color: var(--mint-ink, var(--mint));
+}
+
+.detalle-capital-movimiento--retiro {
+  color: var(--coral-ink, var(--coral));
+}

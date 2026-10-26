@@ -1458,6 +1458,7 @@ export const inversiones = {
   liquidation_capital_recovery: "Capital recovery",
   liquidation_gain: "Liquidation gain",
   liquidation_loss: "Liquidation loss",
+  investment_contribution: "Capital contribution",
   rescate_inversion: "Investment redemption",
   desc_blocked_capital: "Capital locked in investments",
   detail_history_title: "Transaction history",

@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
-import { formatCurrency, formatDate, formatPercent } from '@/lib/format'
+import { formatCurrency, formatCurrencyNumber, formatDate, formatPercent } from '@/lib/format'
 import { formatInversionDetalle } from '@/lib/inversionesLabels'
 import { investmentMovementAmount } from '@/lib/inversionesMovimientos'
+import { investmentNetCapital } from '@/lib/inversionesPatrimonio'
 import './DetalleInversionView.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 
@@ -158,6 +159,20 @@ export function DetalleInversionView({
   // S16: plata que ya volvio al usuario por rescates parciales. El nominal del
   // backend ya la suma, pero la UI tiene que decirlo o el numero no se entiende.
   const retirado = Number(data.monto_liquidado ?? 0)
+  // S5 (ronda 6, dueño): "aparece el original capital, pero no aparecen los datos que
+  // hemos modificado que me digan los retiros o el agregado de capital [...] es el mismo
+  // arreglo que hicimos antes en la pantalla general". El capital guardado YA incluye los
+  // aportes, así que la cifra grande es el capital neto (capital − retiros) y debajo van
+  // los movimientos que explican la diferencia. Salen del mismo historial que ya trae el
+  // RPC: una fuente sola, sin inventar campos.
+  const capitalNeto = investmentNetCapital(data)
+  const movimientosCapital = historial.filter((mov) => typeof mov.detalle === 'string')
+  const aportesCapital = movimientosCapital
+    .filter((mov) => (mov.detalle as string).startsWith('investment_contribution:'))
+    .map((mov) => ({ fecha: mov.fecha, monto: Math.abs(Number(mov.monto ?? 0)) }))
+  const retirosCapital = movimientosCapital
+    .filter((mov) => (mov.detalle as string).startsWith('rescate_inversion:'))
+    .map((mov) => ({ fecha: mov.fecha, monto: Math.abs(Number(mov.monto ?? 0)) }))
 
   return (
     <div className="detalle-view">
@@ -208,8 +223,40 @@ export function DetalleInversionView({
         <article className="detalle-metric-card">
           <span className="detalle-metric-label">{t('label_capital')}</span>
           <span className="detalle-metric-value">
-            {formatCurrency(data.monto_invertido_original, moneda)}
+            {formatCurrency(capitalNeto ?? data.monto_invertido_original, moneda)}
           </span>
+          {retirado > 0 && (
+            <span className="detalle-metric-note">
+              {t('label_capital_breakdown', {
+                initial: formatCurrencyNumber(data.monto_invertido_original, moneda),
+                withdrawn: formatCurrencyNumber(retirado, moneda),
+              })}
+            </span>
+          )}
+          {/* Los aportes nunca están en el paréntesis, así que se listan siempre. Los
+              retiros sólo cuando hay más de uno: con uno solo, el paréntesis ya lo dice
+              (misma regla que la tarjeta, para no repetir el número dos veces). */}
+          {(aportesCapital.length > 0 || retirosCapital.length > 1) && (
+            <ul className="detalle-capital-movimientos">
+              {aportesCapital.map((mov, idx) => (
+                <li
+                  key={`aporte-${mov.fecha ?? 's-f'}-${idx}`}
+                  className="detalle-capital-movimiento detalle-capital-movimiento--aporte"
+                >
+                  +{formatCurrencyNumber(mov.monto, moneda)}
+                </li>
+              ))}
+              {retirosCapital.length > 1 &&
+                retirosCapital.map((mov, idx) => (
+                  <li
+                    key={`retiro-${mov.fecha ?? 's-f'}-${idx}`}
+                    className="detalle-capital-movimiento detalle-capital-movimiento--retiro"
+                  >
+                    −{formatCurrencyNumber(mov.monto, moneda)}
+                  </li>
+                ))}
+            </ul>
+          )}
         </article>
 
         <article className="detalle-metric-card">

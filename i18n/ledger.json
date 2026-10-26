@@ -5690,6 +5690,10 @@
         "from": "Pérdida por liquidación",
         "to": "Liquidation loss"
       },
+      "inversiones.investment_contribution": {
+        "from": "Aporte de capital",
+        "to": "Capital contribution"
+      },
       "inversiones.rescate_inversion": {
         "from": "Rescate de inversión",
         "to": "Investment redemption"
@@ -15279,6 +15283,10 @@
       "inversiones.liquidation_loss": {
         "from": "Pérdida por liquidación",
         "to": "Perda por liquidação"
+      },
+      "inversiones.investment_contribution": {
+        "from": "Aporte de capital",
+        "to": "Aporte de capital"
       },
       "inversiones.rescate_inversion": {
         "from": "Rescate de inversión",

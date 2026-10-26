@@ -26,6 +26,10 @@ export const INVERSION_MOVEMENT_KEYS = [
   'liquidation_gain',
   'liquidation_loss',
   'rescate_inversion',
+  // S3 (ronda 6): el aporte de capital. Sin esta clave el historial mostraba el
+  // literal 'investment_contribution: Xxx' (dueño, 2026-10-26: "la sección History no
+  // está reflejando la historia de movimientos de retiros y de agregados de capital").
+  'investment_contribution',
 ] as const
 
 export type InversionMovementKey = (typeof INVERSION_MOVEMENT_KEYS)[number]
