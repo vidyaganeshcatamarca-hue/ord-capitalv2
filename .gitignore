@@ -102,6 +102,7 @@ tests/inversiones/*
 !tests/inversiones/nominal-general-con-retiros.test.js
 !tests/inversiones/aportar-capital.test.js
 !tests/inversiones/aporte-suma-valor.test.js
+!tests/inversiones/borrado-revierte-inversion.test.js
 !tests/inversiones/desglose-retiros.test.js
 !tests/inversiones/donut-porcentajes-separados.test.js
 !tests/inversiones/distribucion-por-inversion.test.js

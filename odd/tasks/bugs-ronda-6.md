@@ -26,6 +26,12 @@ valor 300.000. Así que quita el nombre de la moneda de lo que está entre paré
 medida que se van haciendo retiros, tienen que irse sumando los retiros abajo de ARS
 200.000, como una lista de retiros si hubiera más de uno."
 
+**S4** — (dueño, 2026-10-26) "cuando yo borro desde actividad reciente un agregado de
+dinero, eso debería modificar la inversión. Tal como lo hemos resuelto para las
+liquidaciones parciales, también sería el mecanismo de borrar un error que ha agregado
+dinero por error o lo he agregado mal. Entonces, de esa forma, borrando una actividad
+reciente, me debe volver para atrás la operación. Fíjate por qué no lo hace."
+
 ## Tasks
 
 | ID | Specs | Ruta | Commit |
@@ -74,3 +80,28 @@ medida que se van haciendo retiros, tienen que irse sumando los retiros abajo de
 - Por eso la fuente de los retiros individuales es `p_caja` filtrado por
   `detalle LIKE 'rescate_inversion:%'`, que es la convención que ya usan las liquidaciones,
   en vez de inventar una tabla nueva.
+
+**L3** — por qué no lo hacía (S4), verificado contra la base y el código:
+
+- El único trigger de inversión sobre `p_caja` en el DELETE es
+  `tr_anular_inversion_al_borrar_movimiento` → `fn_tr_anular_inversion_al_borrar_movimiento`
+  (migración **86b**), y su cuerpo salía temprano con
+  `IF OLD.detalle NOT LIKE 'investment_prefix:%' THEN RETURN OLD`.
+- No era un olvido: la 86b lo dice en su comentario — "si el usuario borra un rescate o una
+  liquidacion, no se toca la inversion (eso es otra decision, con otras consecuencias
+  contables)". La decisión quedó tomada ahora.
+- Las otras dos funciones que corren al borrar no tocan inversiones:
+  `fn_t_limpiar_dependencias_caja` limpia cuotas de tarjeta y `fn_eliminar_movimiento_caja`
+  sólo hace el `DELETE`.
+- Consecuencia real: **tampoco** se revertían los retiros parciales. Borrar un rescate
+  devolvía la plata a la billetera (lo hace `fn_actualizar_saldo_billetera_integral`, que sí
+  es AFTER DELETE) pero dejaba `monto_liquidado` y `valor_mercado_actual` como estaban, así
+  que la tarjeta seguía mostrando el retiro que el usuario acababa de borrar. El arreglo
+  cubre las dos ramas por la misma razón.
+- Verificación: la 105 se aplicó y se probó **simulando** el borrado en una transacción con
+  `ROLLBACK` (inversión y movimientos de prueba, `session_replication_role = replica` para
+  saltear las validaciones del INSERT y `origin` para que dispare el DELETE). Tres casos en
+  verde: aporte (capital y valor vuelven a 1.000.000), retiro parcial (`monto_liquidado` a 0
+  y valor de vuelta a 1.000.000) y retiro que había finalizado la inversión
+  (`estado` a `activa`, `fecha_liquidacion` a NULL). Después: 0 filas de prueba y los datos
+  reales sin cambios.
