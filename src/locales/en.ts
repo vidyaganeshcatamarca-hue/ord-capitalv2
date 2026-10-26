@@ -1323,6 +1323,7 @@ export const inversiones = {
   btn_cancel: "Cancel",
   btn_close: "Close",
   label_capital: "Original capital",
+  label_capital_breakdown: "({initial} − {withdrawn} withdrawn)",
   label_current_value: "Current value",
   label_gain: "Gain",
   label_nominal_yield: "Nominal yield",

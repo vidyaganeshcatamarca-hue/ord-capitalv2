@@ -1510,6 +1510,7 @@ export const inversiones = {
 
   // Labels
   label_capital: "Capital original",
+  label_capital_breakdown: "({initial} − {withdrawn} retirados)",
   label_current_value: "Valor actual",
   label_gain: "Ganancia",
   label_nominal_yield: "Rendimiento nominal",

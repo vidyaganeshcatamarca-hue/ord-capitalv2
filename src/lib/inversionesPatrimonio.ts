@@ -139,6 +139,7 @@ export function investmentGainAmount(
     | {
         monto_invertido_original?: number | string | null
         valor_actual_teorico?: number | string | null
+        monto_liquidado?: number | string | null
       }
     | null
     | undefined
@@ -149,9 +150,40 @@ export function investmentGainAmount(
   if (capital === null || capital === undefined) return null
   if (actual === null || actual === undefined) return null
 
-  const capitalNum = typeof capital === 'string' ? Number.parseFloat(capital) : Number(capital)
-  const actualNum = typeof actual === 'string' ? Number.parseFloat(actual) : Number(actual)
-  if (!Number.isFinite(capitalNum) || !Number.isFinite(actualNum)) return null
+  const capitalNum = toNumber(capital)
+  const actualNum = toNumber(actual)
+  if (capitalNum === null || actualNum === null) return null
 
-  return Math.round((actualNum - capitalNum) * 100) / 100
+  // S2 (ronda 5, dueño): "la ganancia está mal informada, aparece como una pérdida de
+  // 350 mil cuando en realidad fue un retiro". El dinero que salió de la inversión no
+  // se perdió: sigue siendo parte de lo que la inversión devolvió. La ganancia se mide
+  // contra el capital NETO (capital menos retiros), que es exactamente lo mismo que
+  // sumar los retiros al valor actual:
+  //     actual − (capital − retirado)  ==  (actual + retirado) − capital
+  // Es la misma cuenta que ya hace `fn_reporte_cartera_inversiones` para el nominal.
+  const retirado = toNumber(inversion.monto_liquidado ?? 0) ?? 0
+  return Math.round((actualNum + retirado - capitalNum) * 100) / 100
+}
+
+/** Capital original menos los retiros parciales: el capital que sigue invertido. */
+export function investmentNetCapital(
+  inversion:
+    | {
+        monto_invertido_original?: number | string | null
+        monto_liquidado?: number | string | null
+      }
+    | null
+    | undefined
+): number | null {
+  if (!inversion) return null
+  const capital = toNumber(inversion.monto_invertido_original)
+  if (capital === null) return null
+  const retirado = toNumber(inversion.monto_liquidado ?? 0) ?? 0
+  return Math.round((capital - retirado) * 100) / 100
+}
+
+function toNumber(value: number | string | null | undefined): number | null {
+  if (value === null || value === undefined) return null
+  const num = typeof value === 'string' ? Number.parseFloat(value) : Number(value)
+  return Number.isFinite(num) ? num : null
 }

@@ -17,6 +17,8 @@ export interface InversionResumen {
   moneda: string | null
   fecha_inicio: string | null
   ultima_conciliacion: string | null
+  /** Retiros parciales: la tarjeta los descuenta del capital (S2, ronda 5). */
+  monto_liquidado?: number | null
 }
 
 interface CarteraWidgetProps {
@@ -43,6 +45,7 @@ function normalizeInversion(inv: InversionResumen): Inversion {
     moneda: inv.moneda || 'ARS',
     fecha_inicio: inv.fecha_inicio || '',
     ultima_conciliacion: inv.ultima_conciliacion || '',
+    monto_liquidado: Number(inv.monto_liquidado ?? 0),
   }
 }
 

@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from 'react'
 import { t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
-import { investmentGainAmount } from '@/lib/inversionesPatrimonio'
+import { investmentGainAmount, investmentNetCapital } from '@/lib/inversionesPatrimonio'
 import './InversionCard.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 
@@ -19,6 +19,8 @@ export interface Inversion {
   moneda: string
   fecha_inicio: string
   ultima_conciliacion: string
+  /** Retiros parciales ya cobrados: no son pérdida (S2, ronda 5). */
+  monto_liquidado?: number
 }
 
 interface InversionCardProps {
@@ -69,6 +71,8 @@ export function InversionCard({
   // Formato por moneda: se re-renderiza cuando cambia el contexto.
   useFormatRevision()
   const ganancia = investmentGainAmount(inversion)
+  const capitalNeto = investmentNetCapital(inversion)
+  const retirado = Number(inversion.monto_liquidado ?? 0)
   const handleCardClick = () => {
     if (onSelect) onSelect(inversion.inversion_id)
   }
@@ -102,9 +106,22 @@ export function InversionCard({
       <div className="inversion-card-metrics">
         <div className="inversion-card-metric">
           <span className="inversion-card-label">{t('label_capital')}</span>
+          {/* S2 (ronda 5, dueño): "el capital original debería ser el capital inicial
+              menos los retiros y aparecer en un lugar, entre paréntesis por ejemplo,
+              los retiros que se hicieron. ej: Original capital (1000000) - (350000) :
+              650000". La cifra grande es el capital neto; el desglose va debajo y sólo
+              aparece cuando hubo retiros. */}
           <span className="inversion-card-amount">
-            {formatCurrency(inversion.monto_invertido_original, inversion.moneda)}
+            {formatCurrency(capitalNeto ?? inversion.monto_invertido_original, inversion.moneda)}
           </span>
+          {retirado > 0 && (
+            <span className="inversion-card-capital-breakdown">
+              {t('label_capital_breakdown', {
+                initial: formatCurrency(inversion.monto_invertido_original, inversion.moneda),
+                withdrawn: formatCurrency(retirado, inversion.moneda),
+              })}
+            </span>
+          )}
         </div>
         <div className="inversion-card-metric">
           <span className="inversion-card-label">{t('label_current_value')}</span>

@@ -5150,6 +5150,10 @@
         "from": "Capital original",
         "to": "Original capital"
       },
+      "inversiones.label_capital_breakdown": {
+        "from": "({initial} − {withdrawn} retirados)",
+        "to": "({initial} − {withdrawn} withdrawn)"
+      },
       "inversiones.label_current_value": {
         "from": "Valor actual",
         "to": "Current value"
@@ -14723,6 +14727,10 @@
       "inversiones.label_capital": {
         "from": "Capital original",
         "to": "Capital original"
+      },
+      "inversiones.label_capital_breakdown": {
+        "from": "({initial} − {withdrawn} retirados)",
+        "to": "({initial} − {withdrawn} retirados)"
       },
       "inversiones.label_current_value": {
         "from": "Valor actual",
