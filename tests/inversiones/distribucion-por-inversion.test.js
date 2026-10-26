@@ -176,5 +176,12 @@ test('la tabla usa el helper y el donut ya no centra el 100%', () => {
   assert.ok(!/'100%'/.test(donut), 'el 100% del centro tiene que desaparecer')
   assert.match(donut, /distribucion-donut-pct/, 'cada porción lleva su porcentaje')
   // Fuera del anillo: el radio de la etiqueta es mayor que el borde externo del anillo.
-  assert.match(donut, /labelRadius = radius \+ strokeWidth \/ 2 \+ 8/)
+  // S1 (ronda 6): el hueco tiene que ser suficiente como para no tocar el trazo. Se
+  // valida el número, no un literal, para que este test no vuelva a envejecer.
+  const hueco = donut.match(/labelRadius = radius \+ strokeWidth \/ 2 \+ (\d+)/)
+  assert.ok(hueco, 'labelRadius = radio + medio trazo + hueco')
+  assert.ok(
+    Number(hueco[1]) >= 22,
+    `el porcentaje tiene que quedar separado del anillo (hueco de ${hueco[1]}px; medido, con 16px quedaban 2,2px libres)`
+  )
 })

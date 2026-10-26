@@ -63,7 +63,13 @@ export function DistribucionDonut({ data, size = 168 }: DistribucionDonutProps) 
   // sin agrandar el gráfico (a 220px la tabla se iba de pantalla, S13 de la ronda 3).
   const radius = (size - strokeWidth) / 2 - 10
   const center = size / 2
-  const labelRadius = radius + strokeWidth / 2 + 8
+  // S1 (ronda 6, dueño): "los por centajes en el Donut quedan pegados al Donut y los
+  // debes separar un poquito del margen para que no toquen el color". El hueco se mide
+  // hasta el CENTRO del texto, así que hay que descontarle media altura de la caja: con
+  // 8px el número pisaba el anillo. Medido en pantalla (412x915, font-scale grande): con
+  // 16px quedaban 2,2px libres; con 24px quedan ~10px. Las etiquetas que sobresalen de la
+  // caja no se recortan porque `.distribucion-donut-svg` ya tiene `overflow: visible`.
+  const labelRadius = radius + strokeWidth / 2 + 24
   const circumference = 2 * Math.PI * radius
   const activeData = data.filter((item) => item.porcentaje_valor > 0)
   const hasData = activeData.length > 0
