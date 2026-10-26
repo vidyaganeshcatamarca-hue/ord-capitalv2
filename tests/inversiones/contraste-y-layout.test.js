@@ -31,6 +31,34 @@ const cssFiles = [
 const read = (rel) => fs.readFileSync(path.join(repo, rel), 'utf-8')
 const allCss = cssFiles.map(read).join('\n')
 
+/**
+ * Tokens de COLOR que el tema claro no redefine (en claro valen lo mismo que en oscuro).
+ *
+ * El bloque claro se ubica con su LLAVE: una regla temática anterior
+ * (`[data-theme='warm-light'] .algo { ... }`) haría que un indexOf devuelva la regla en
+ * vez del bloque de tokens. Es la tercera vez que este patrón muerde, así que acá queda
+ * calculado y no listado.
+ */
+function darkOnlyColorTokens() {
+  const theme = read('src/styles/index.css').replace(/\/\*[\s\S]*?\*\//g, '')
+  const iRoot = theme.indexOf(':root')
+  const iLight = theme.search(/\[data-theme='warm-light'\]\s*\{/)
+  assert.ok(iRoot >= 0 && iLight > iRoot, 'los bloques de tema tienen que existir')
+  const rootBlock = theme.slice(iRoot, theme.indexOf('}', iRoot))
+  const lightBlock = theme.slice(iLight, theme.indexOf('}', iLight))
+  const declared = (block) =>
+    new Map([...block.matchAll(/--([a-z0-9-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]))
+  const root = declared(rootBlock)
+  const light = declared(lightBlock)
+  // Un COLOR, no cualquier valor que lo mencione: `--shadow-sm` vale
+  // "0 1px 2px rgba(0,0,0,.05)" y es legítimamente igual en los dos temas, así que
+  // el valor tiene que EMPEZAR con el color (o ser un degradado).
+  const isColor = (v) => /^(#[0-9a-f]{3,8}|rgba?\(|hsla?\(|linear-gradient)/i.test(v)
+  return [...root.entries()]
+    .filter(([token, value]) => isColor(value) && !light.has(token))
+    .map(([token]) => `--${token}`)
+}
+
 // ─────────────────────────── contraste ───────────────────────────────────────
 
 test('ningún color tiene un fallback hardcodeado', () => {
@@ -41,9 +69,11 @@ test('ningún color tiene un fallback hardcodeado', () => {
 })
 
 test('el módulo no usa variables que solo existen en :root (no siguen al tema)', () => {
-  // --bg-2, --green, --red, --yellow existen solo en :root: en modo claro
-  // valen lo mismo que en oscuro (el header quedaba negro sobre fondo crema).
-  const soloRoot = ['--bg-2', '--green', '--red', '--yellow', '--green-dim', '--red-dim']
+  // Esta lista estaba escrita a mano y envejeció: incluía `--bg-2`, que dejó de ser
+  // exclusiva de :root cuando el tema claro la definió (ronda 4: el header quedaba negro
+  // sobre fondo crema). Una lista fija no puede seguir al tema, así que el conjunto se
+  // calcula desde los dos bloques.
+  const soloRoot = darkOnlyColorTokens()
   for (const v of soloRoot) {
     assert.ok(
       !new RegExp(`var\\(${v}[,)]`).test(allCss),
