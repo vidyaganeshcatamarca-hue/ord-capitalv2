@@ -94,7 +94,13 @@
 
 .inversiones-tabs {
   display: flex;
-  flex-wrap: wrap;
+  /* S7 (ronda 5, dueño): "el menú de los cuatro botones que no están ocupando el ancho
+     total del teléfono [...] deberías distribuir los botones a lo largo de todo el ancho
+     y para hacer esto evidentemente puedes aumentar el tamaño de la letra y de los
+     botones". Siguen en UNA línea (pedido de la ronda 3): ahora se reparten el ancho con
+     flex y crecen un poco en alto y en tipografía. */
+  flex-wrap: nowrap;
+  width: 100%;
   gap: 6px;
   margin: 0 0 20px;
   padding: 4px 0 8px;
@@ -114,14 +120,16 @@
 }
 
 .inversiones-tab {
-  flex: 0 0 auto;
-  /* B3: botones mas compactos para que las 4 pestañas entren en una linea. */
-  padding: 8px 10px;
+  /* S7: cada pestaña toma una fracción igual del ancho disponible. */
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 9px 6px;
+  text-align: center;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--surface);
   color: var(--text-3);
-  font-size: calc(12px * var(--font-scale));
+  font-size: calc(13px * var(--font-scale));
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;

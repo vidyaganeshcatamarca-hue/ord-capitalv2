@@ -146,13 +146,24 @@ test('la página tiene clearance del bottom nav y no min-height:100vh', () => {
 
 test('las pestañas son compactas para entrar en una sola línea', () => {
   const page = read('src/pages/Inversiones/InversionesPage.css')
+  // S7 (ronda 5, dueño): "deberías distribuir los botones a lo largo de todo el ancho y
+  // para hacer esto evidentemente puedes aumentar el tamaño de la letra y de los
+  // botones". Siguen en una línea, pero repartiéndose el ancho.
   assert.ok(
-    /padding:\s*8px\s+10px/.test(page),
-    'los botones de pestaña deben ser compactos'
+    /width:\s*100%/.test(page),
+    'la fila de pestañas ocupa todo el ancho'
   )
   assert.ok(
-    /font-size:\s*calc\(12px \* var\(--font-scale\)\)/.test(page),
-    'la tipografía debe ser más chica'
+    /flex:\s*1 1 0/.test(page),
+    'cada pestaña se reparte el ancho en partes iguales'
+  )
+  assert.ok(
+    /flex-wrap:\s*nowrap/.test(page),
+    'las cuatro tienen que seguir entrando en una sola línea'
+  )
+  assert.ok(
+    /font-size:\s*calc\(13px \* var\(--font-scale\)\)/.test(page),
+    'la tipografía crece para aprovechar el ancho'
   )
 })
 
