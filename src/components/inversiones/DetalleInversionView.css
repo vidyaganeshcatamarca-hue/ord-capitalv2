@@ -255,8 +255,15 @@
 
 .detalle-yield--na {
   color: var(--text-3);
-  font-style: italic;
   font-weight: 500;
+  /* S3 (ronda 5, dueño): "el problema que tenemos acá es el tipo de letra, la tipología
+     que estás usando. No coincide con la tipografia que estamos usando en toda la app."
+     Este mensaje heredaba `--font-mono` de `.detalle-yield` (que es la familia de los
+     NÚMEROS) y además iba en itálica: una frase explicativa terminaba pareciendo un
+     comentario de código. Va en la tipografía de cuerpo, igual que el mismo mensaje en
+     RendimientoRealWidget.css, que ya lo hacía bien. */
+  font-family: var(--font-body);
+  font-style: normal;
 }
 
 /* ── Extras (metadata) ── */

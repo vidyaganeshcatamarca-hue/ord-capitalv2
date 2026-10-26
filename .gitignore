@@ -98,6 +98,7 @@ tests/inversiones/*
 !tests/inversiones/separadores-solo-locales.test.js
 !tests/inversiones/superficies-tema-claro.test.js
 !tests/inversiones/ganancia-con-retiros.test.js
+!tests/inversiones/tipografia-mensajes-detalle.test.js
 !tests/inversiones/distribucion-por-inversion.test.js
 !tests/separadores-por-moneda.test.js
 !tests/keypad_decimal_separator.test.js
