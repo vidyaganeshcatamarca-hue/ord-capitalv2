@@ -103,3 +103,33 @@ test('el bloque de detalle y la ✕ del modal usan la superficie del tema', () =
     assert.match(regla, /var\(--bg-2/, `${selector} tiene que tomar la superficie del tema`)
   }
 })
+
+// ── S1, ronda 5 (2026-10-24) ────────────────────────────────────────────────
+// Dueño: "Están muy claritos, está bien el color celeste pero tiene que tener como
+// bastante más de negro el texto del menú bottom [...] casi no se nota con el color
+// celeste. Con el verde de seleccion se ve bien, ese no lo modifiques."
+//
+// `.nav-item` usa var(--accent-mint) = #4ECDC4, token que el tema claro no redefine: el
+// celeste quedaba tal cual sobre --bg-2 (#EAE2DB), 1.45:1. En oscuro ese mismo color
+// funciona; en claro desaparece.
+test('el ítem inactivo del nav inferior llega a AA en tema claro', () => {
+  const regla = /\[data-theme='warm-light'\]\s+\.nav-item:not\(\.active\)\s*\{([^}]*)\}/.exec(
+    sinComentarios
+  )
+  assert.ok(regla, 'falta el color del nav inactivo para el tema claro')
+  const valor = /color:\s*(#[0-9a-f]{6})/i.exec(regla[1])
+  assert.ok(valor, `la regla tiene que fijar un color hex, vino: ${regla[1].trim()}`)
+
+  const ratio = contrast(hex(valor[1]), hex(light['--bg-2']))
+  assert.ok(ratio >= 4.5, `nav inactivo sobre --bg-2: ${ratio.toFixed(2)}:1, AA pide 4.5`)
+})
+
+test('el verde del ítem activo del nav no se toca', () => {
+  // El override tiene que excluir .active para no pisar `.nav-item.active { --mint }`:
+  // ambas reglas tienen la misma especificidad (0,2,0) y la del tema claro gana por orden.
+  assert.ok(
+    !/\[data-theme='warm-light'\]\s+\.nav-item\s*\{/.test(sinComentarios),
+    'un override sin :not(.active) pisaría el verde de la pestaña seleccionada'
+  )
+  assert.match(sinComentarios, /\.nav-item\.active\s*\{[^}]*var\(--mint\)/)
+})

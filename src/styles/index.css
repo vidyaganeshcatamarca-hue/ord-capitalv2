@@ -543,6 +543,19 @@ input::placeholder, textarea::placeholder {
 .nav-item.active {
   color: var(--mint); /* Keep active state using primary mint accent */
 }
+/* S1 (ronda 5, dueño): "Están muy claritos, está bien el color celeste pero tiene que
+   tener como bastante más de negro el texto del menú bottom [...] casi no se nota con
+   el color celeste. Con el verde de seleccion se ve bien, ese no lo modifiques."
+
+   La causa: `.nav-item` usa `var(--accent-mint)` (#4ECDC4) y el tema claro no redefinía
+   ese token, así que el celeste quedaba tal cual sobre `--bg-2` (#EAE2DB): 1.45:1. En
+   oscuro ese comentario original ("high contrast against dark nav background") era
+   cierto; en claro el mismo color desaparece. El mismo celeste, mucho más oscuro.
+   `:not(.active)` deja intacto el verde de la pestaña seleccionada, que el dueño pidió
+   no tocar. */
+[data-theme='warm-light'] .nav-item:not(.active) {
+  color: #0C4F5A;
+}
 .nav-item svg {
   width: 22px;
   height: 22px;
