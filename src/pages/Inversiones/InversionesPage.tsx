@@ -7,6 +7,7 @@ import { RendimientoRealWidget, type RendimientoData } from '@/components/invers
 import { NuevaInversionModal, type BilleteraResumen } from '@/components/inversiones/NuevaInversionModal'
 import { ActualizarValorModal } from '@/components/inversiones/ActualizarValorModal'
 import { LiquidarInversionModal } from '@/components/inversiones/LiquidarInversionModal'
+import { AportarCapitalModal } from '@/components/inversiones/AportarCapitalModal'
 import { DetalleInversionView } from '@/components/inversiones/DetalleInversionView'
 import { TrackRecordView } from '@/components/inversiones/TrackRecordView'
 import { DistribucionView } from '@/components/inversiones/DistribucionView'
@@ -142,6 +143,8 @@ export function InversionesPage() {
   const [showNueva, setShowNueva] = useState(false)
   const [updateTarget, setUpdateTarget] = useState<Inversion | null>(null)
   const [liquidateTarget, setLiquidateTarget] = useState<Inversion | null>(null)
+  // S6 (ronda 5): inversión a la que se le suma capital.
+  const [capitalTarget, setCapitalTarget] = useState<Inversion | null>(null)
   const [billeteras, setBilleteras] = useState<BilleteraResumen[]>([])
   const [detailRefreshKey, setDetailRefreshKey] = useState(0)
 
@@ -207,6 +210,11 @@ export function InversionesPage() {
     setLiquidateTarget(findInversion(inversionId))
   }
 
+  // S6 (ronda 5): sumar capital a una inversión existente.
+  const handleAddCapital = (inversionId: number) => {
+    setCapitalTarget(findInversion(inversionId))
+  }
+
   const handleNuevaSuccess = async () => {
     setShowNueva(false)
     await loadData()
@@ -214,6 +222,12 @@ export function InversionesPage() {
 
   const handleUpdateSuccess = async () => {
     setUpdateTarget(null)
+    await loadData()
+    setDetailRefreshKey((value) => value + 1)
+  }
+
+  const handleAddCapitalSuccess = async () => {
+    setCapitalTarget(null)
     await loadData()
     setDetailRefreshKey((value) => value + 1)
   }
@@ -236,6 +250,7 @@ export function InversionesPage() {
           onBack={handleBack}
           onUpdateValue={handleUpdateValue}
           onLiquidate={handleLiquidate}
+          onAddCapital={handleAddCapital}
         />
       )
     }
@@ -252,6 +267,7 @@ export function InversionesPage() {
         onSelect={handleSelect}
         onUpdateValue={handleUpdateValue}
         onLiquidate={handleLiquidate}
+        onAddCapital={handleAddCapital}
       />
     )
   }
@@ -346,6 +362,13 @@ export function InversionesPage() {
         onClose={() => setUpdateTarget(null)}
         onSuccess={handleUpdateSuccess}
         inversion={updateTarget}
+      />
+      <AportarCapitalModal
+        isOpen={Boolean(capitalTarget)}
+        onClose={() => setCapitalTarget(null)}
+        onSuccess={handleAddCapitalSuccess}
+        inversion={capitalTarget}
+        billeteras={billeteras}
       />
       <LiquidarInversionModal
         isOpen={Boolean(liquidateTarget)}

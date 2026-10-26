@@ -44,6 +44,7 @@ interface DetalleInversionViewProps {
   inversionId: number
   onBack: () => void
   onUpdateValue: (id: number) => void
+  onAddCapital?: (id: number) => void
   onLiquidate: (id: number) => void
 }
 
@@ -87,6 +88,7 @@ export function DetalleInversionView({
   inversionId,
   onBack,
   onUpdateValue,
+  onAddCapital,
   onLiquidate,
 }: DetalleInversionViewProps) {
   // Formato por moneda: se re-renderiza cuando cambia el contexto.
@@ -326,6 +328,16 @@ export function DetalleInversionView({
           <span aria-hidden="true">📊</span>
           <span>{t('btn_update_value')}</span>
         </button>
+        {onAddCapital && (
+          <button
+            type="button"
+            className="detalle-action-btn detalle-action-btn--add"
+            onClick={() => onAddCapital(data.inversion_id)}
+          >
+            <span aria-hidden="true">➕</span>
+            <span>{t('btn_add_capital')}</span>
+          </button>
+        )}
         <button
           type="button"
           className="detalle-action-btn detalle-action-btn--liquidate"

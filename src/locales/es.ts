@@ -1503,6 +1503,7 @@ export const inversiones = {
   btn_new: "Nueva Inversión",
   btn_update_value: "Actualizar Valor",
   btn_liquidate: "Liquidar",
+  btn_add_capital: "Agregar capital",
   btn_simulate: "Simular",
   btn_save: "Guardar",
   btn_cancel: "Cancelar",
@@ -1561,6 +1562,7 @@ export const inversiones = {
   msg_investment_updated: "Valor actualizado con éxito",
   msg_investment_liquidated: "Inversión liquidada con éxito",
   msg_investment_partial_rescued: "Rescate parcial registrado con éxito",
+  msg_capital_added: "Capital agregado a la inversión",
   msg_inflation_configured: "Configuración de inflación guardada",
 
   // Errors
@@ -1574,6 +1576,7 @@ export const inversiones = {
   modal_new_title: "Nueva Inversión",
   modal_update_value_title: "Actualizar Valor",
   modal_liquidate_title: "Liquidar Inversión",
+  modal_add_capital_title: "Agregar capital",
   modal_liquidate_total: "Liquidar todo",
   modal_liquidate_partial: "Rescate parcial",
   modal_liquidate_amount_label: "Monto a retirar",

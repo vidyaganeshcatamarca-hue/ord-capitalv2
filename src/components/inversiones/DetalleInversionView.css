@@ -448,6 +448,14 @@
   color: var(--coral-ink, var(--coral));
 }
 
+/* S6 (ronda 5): sumar capital, misma jerarquía secundaria que en la tarjeta. */
+.detalle-action-btn--add {
+  background: var(--bg-2, rgba(127, 127, 127, 0.12));
+  color: var(--text-2);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+}
+
 /* S16 (2026-10-22): nota bajo "Valor actual" que explica el retiro parcial. */
 .detalle-metric-note {
   color: var(--text-3);

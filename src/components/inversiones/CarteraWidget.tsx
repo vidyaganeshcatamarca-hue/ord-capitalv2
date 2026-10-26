@@ -26,6 +26,7 @@ interface CarteraWidgetProps {
   loading: boolean
   onUpdateValue: (inversionId: number) => void
   onLiquidate: (inversionId: number) => void
+  onAddCapital?: (inversionId: number) => void
   onSelect?: (inversionId: number) => void
   onNew?: () => void
 }
@@ -54,6 +55,7 @@ export function CarteraWidget({
   loading,
   onUpdateValue,
   onLiquidate,
+  onAddCapital,
   onSelect,
   onNew,
 }: CarteraWidgetProps) {
@@ -109,6 +111,7 @@ export function CarteraWidget({
             onSelect={onSelect}
             onUpdateValue={onUpdateValue}
             onLiquidate={onLiquidate}
+            onAddCapital={onAddCapital}
           />
         ))}
       </div>

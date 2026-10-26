@@ -27,6 +27,8 @@ interface InversionCardProps {
   inversion: Inversion
   onUpdateValue?: (id: number) => void
   onLiquidate?: (id: number) => void
+  /** S6 (ronda 5): sumar capital a esta inversión, sin crear una nueva. */
+  onAddCapital?: (id: number) => void
   onSelect?: (id: number) => void
 }
 
@@ -66,6 +68,7 @@ export function InversionCard({
   inversion,
   onUpdateValue,
   onLiquidate,
+  onAddCapital,
   onSelect,
 }: InversionCardProps) {
   // Formato por moneda: se re-renderiza cuando cambia el contexto.
@@ -87,6 +90,9 @@ export function InversionCard({
 
   const showUpdateButton = inversion.tipo_activo === 'variable' && Boolean(onUpdateValue)
   const showLiquidateButton = Boolean(onLiquidate)
+  // S6: "deberíamos tener un tercer botón, quizás más pequeño, que diga algo parecido a
+  // agregar capital". No aplica a una inversión ya finalizada.
+  const showAddCapitalButton = Boolean(onAddCapital) && inversion.estado_inversion !== 'finalizada'
 
   return (
     <article
@@ -153,7 +159,7 @@ export function InversionCard({
           </span>
         </div>
 
-        {(showUpdateButton || showLiquidateButton) && (
+        {(showUpdateButton || showLiquidateButton || showAddCapitalButton) && (
           <div className="inversion-card-actions">
             {showUpdateButton && (
               <button
@@ -165,6 +171,18 @@ export function InversionCard({
                 }}
               >
                 📊 {t('btn_update_value')}
+              </button>
+            )}
+            {showAddCapitalButton && (
+              <button
+                type="button"
+                className="inversion-card-btn inversion-card-btn--add"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onAddCapital?.(inversion.inversion_id)
+                }}
+              >
+                ➕ {t('btn_add_capital')}
               </button>
             )}
             {showLiquidateButton && (

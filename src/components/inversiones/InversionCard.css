@@ -200,6 +200,17 @@
   color: var(--coral-ink, var(--coral));
 }
 
+/* S6 (ronda 5, dueño): "un tercer botón, quizás más pequeño, que diga algo parecido a
+   agregar capital". Más chico y en superficie neutra: sumar capital no compite con
+   actualizar el valor ni con liquidar. */
+.inversion-card-btn--add {
+  background: var(--bg-2, rgba(127, 127, 127, 0.12));
+  color: var(--text-2);
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 500;
+  padding: 5px 9px;
+}
+
 @media (max-width: 480px) {
   .inversion-card-footer {
     flex-direction: column;

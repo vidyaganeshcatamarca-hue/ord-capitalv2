@@ -5130,6 +5130,10 @@
         "from": "Liquidar",
         "to": "Liquidate"
       },
+      "inversiones.btn_add_capital": {
+        "from": "Agregar capital",
+        "to": "Add capital"
+      },
       "inversiones.btn_simulate": {
         "from": "Simular",
         "to": "Simulate"
@@ -5326,6 +5330,10 @@
         "from": "Rescate parcial registrado con éxito",
         "to": "Partial redemption recorded successfully"
       },
+      "inversiones.msg_capital_added": {
+        "from": "Capital agregado a la inversión",
+        "to": "Capital added to the investment"
+      },
       "inversiones.msg_inflation_configured": {
         "from": "Configuración de inflación guardada",
         "to": "Inflation settings saved"
@@ -5361,6 +5369,10 @@
       "inversiones.modal_liquidate_title": {
         "from": "Liquidar Inversión",
         "to": "Liquidate Investment"
+      },
+      "inversiones.modal_add_capital_title": {
+        "from": "Agregar capital",
+        "to": "Add capital"
       },
       "inversiones.modal_liquidate_total": {
         "from": "Liquidar todo",
@@ -14708,6 +14720,10 @@
         "from": "Liquidar",
         "to": "Resgatar"
       },
+      "inversiones.btn_add_capital": {
+        "from": "Agregar capital",
+        "to": "Adicionar capital"
+      },
       "inversiones.btn_simulate": {
         "from": "Simular",
         "to": "Simular"
@@ -14904,6 +14920,10 @@
         "from": "Rescate parcial registrado con éxito",
         "to": "Resgate parcial registrado com sucesso"
       },
+      "inversiones.msg_capital_added": {
+        "from": "Capital agregado a la inversión",
+        "to": "Capital adicionado ao investimento"
+      },
       "inversiones.msg_inflation_configured": {
         "from": "Configuración de inflación guardada",
         "to": "Configuração de inflação salva"
@@ -14939,6 +14959,10 @@
       "inversiones.modal_liquidate_title": {
         "from": "Liquidar Inversión",
         "to": "Resgatar Investimento"
+      },
+      "inversiones.modal_add_capital_title": {
+        "from": "Agregar capital",
+        "to": "Adicionar capital"
       },
       "inversiones.modal_liquidate_total": {
         "from": "Liquidar todo",
