@@ -1,6 +1,6 @@
 import type { KeyboardEvent } from 'react'
 import { t } from '@/locales/i18n'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatCurrencyNumber } from '@/lib/format'
 import { investmentGainAmount, investmentNetCapital } from '@/lib/inversionesPatrimonio'
 import './InversionCard.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
@@ -23,8 +23,17 @@ export interface Inversion {
   monto_liquidado?: number
 }
 
+/** Un retiro parcial, tal como lo devuelve fn_retiros_inversiones. */
+export interface RetiroParcial {
+  monto: number
+  fecha: string | null
+}
+
 interface InversionCardProps {
   inversion: Inversion
+  /** Los retiros, uno por uno (S3, ronda 6). El contenedor los trae de
+   *  fn_retiros_inversiones; la tarjeta no los busca por su cuenta. */
+  retiros?: RetiroParcial[]
   onUpdateValue?: (id: number) => void
   onLiquidate?: (id: number) => void
   /** S6 (ronda 5): sumar capital a esta inversión, sin crear una nueva. */
@@ -66,6 +75,7 @@ function formatGain(value: number | null, currency: string): string {
 
 export function InversionCard({
   inversion,
+  retiros,
   onUpdateValue,
   onLiquidate,
   onAddCapital,
@@ -76,6 +86,7 @@ export function InversionCard({
   const ganancia = investmentGainAmount(inversion)
   const capitalNeto = investmentNetCapital(inversion)
   const retirado = Number(inversion.monto_liquidado ?? 0)
+  const retirosDeLaInversion = retiros ?? []
   const handleCardClick = () => {
     if (onSelect) onSelect(inversion.inversion_id)
   }
@@ -122,11 +133,30 @@ export function InversionCard({
           </span>
           {retirado > 0 && (
             <span className="inversion-card-capital-breakdown">
+              {/* S3 (ronda 6, dueño): "lo que está entre paréntesis, incluye el nombre de
+                  la moneda ... el nombre de la moneda es redundante, porque ya está el
+                  nombre de la moneda antes". El desglose va sin símbolo ni código: la
+                  moneda ya la dice la cifra grande de arriba. */}
               {t('label_capital_breakdown', {
-                initial: formatCurrency(inversion.monto_invertido_original, inversion.moneda),
-                withdrawn: formatCurrency(retirado, inversion.moneda),
+                initial: formatCurrencyNumber(inversion.monto_invertido_original, inversion.moneda),
+                withdrawn: formatCurrencyNumber(retirado, inversion.moneda),
               })}
             </span>
+          )}
+          {/* S3 (ronda 6, dueño): "a medida que se van haciendo retiros, tienen que irse
+              sumando los retiros abajo ... como una lista de retiros si hubiera más de
+              uno". La suma sigue en el paréntesis; acá van los retiros individuales. */}
+          {retirosDeLaInversion.length > 0 && (
+            <ul className="inversion-card-withdrawals">
+              {retirosDeLaInversion.map((retiro, idx) => (
+                <li
+                  key={`${retiro.fecha ?? 's-f'}-${idx}`}
+                  className="inversion-card-withdrawal"
+                >
+                  −{formatCurrencyNumber(retiro.monto, inversion.moneda)}
+                </li>
+              ))}
+            </ul>
           )}
         </div>
         <div className="inversion-card-metric">

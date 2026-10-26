@@ -9,6 +9,7 @@ import { ActualizarValorModal } from '@/components/inversiones/ActualizarValorMo
 import { LiquidarInversionModal } from '@/components/inversiones/LiquidarInversionModal'
 import { AportarCapitalModal } from '@/components/inversiones/AportarCapitalModal'
 import { DetalleInversionView } from '@/components/inversiones/DetalleInversionView'
+import type { RetiroParcial } from '@/components/inversiones/InversionCard'
 import { TrackRecordView } from '@/components/inversiones/TrackRecordView'
 import { DistribucionView } from '@/components/inversiones/DistribucionView'
 import { ConfigInflacionView } from '@/components/inversiones/ConfigInflacionView'
@@ -55,6 +56,13 @@ interface PatrimonioInversiones {
 
 type WalletRpcRow = BilleteraResumen & {
   saldo_actual?: number | null
+}
+
+/** Fila de fn_retiros_inversiones: un retiro parcial con su fecha. */
+type RetiroRpcRow = {
+  inversion_id: number | string
+  monto: number | string
+  fecha: string | null
 }
 
 const EMPTY_RENDIMIENTO: RendimientoVsInflacion = {
@@ -136,6 +144,8 @@ export function InversionesPage() {
   const [mode, setMode] = useState<PageMode>('dashboard')
   const [selectedInversionId, setSelectedInversionId] = useState<number | null>(null)
   const [inversiones, setInversiones] = useState<Inversion[]>([])
+  /** Retiros individuales por inversión (S3, ronda 6). */
+  const [retirosPorInversion, setRetirosPorInversion] = useState<Record<number, RetiroParcial[]>>({})
   const [patrimonio, setPatrimonio] = useState<PatrimonioInversiones | null>(null)
   const [rendimiento, setRendimiento] = useState<RendimientoVsInflacion | null>(null)
   const [loading, setLoading] = useState(true)
@@ -161,6 +171,23 @@ export function InversionesPage() {
       setInversiones((carteraRes || []).map(normalizeInversion))
       setPatrimonio(normalizePatrimonio(patrimonioRes))
       setRendimiento(normalizeRendimiento(rendimientoRes))
+
+      // S3 (ronda 6): los retiros, uno por uno, para listarlos bajo el capital de cada
+      // tarjeta. Va aparte y con su propio catch: si la RPC no estuviera (o fallara), la
+      // cartera tiene que mostrarse igual y sólo falta la lista.
+      try {
+        const retirosRes = await rpc<RetiroRpcRow[]>('fn_retiros_inversiones')
+        const porInversion: Record<number, RetiroParcial[]> = {}
+        for (const fila of retirosRes || []) {
+          const id = Number(fila.inversion_id)
+          if (!Number.isFinite(id)) continue
+          porInversion[id] = porInversion[id] || []
+          porInversion[id].push({ monto: Number(fila.monto), fecha: fila.fecha ?? null })
+        }
+        setRetirosPorInversion(porInversion)
+      } catch {
+        setRetirosPorInversion({})
+      }
     } catch (err) {
       const message = parseError(err) || t('error_generic')
       setError(message)
@@ -263,6 +290,7 @@ export function InversionesPage() {
       <CarteraWidget
         inversiones={inversiones}
         loading={loading}
+        retiros={retirosPorInversion}
         onNew={() => setShowNueva(true)}
         onSelect={handleSelect}
         onUpdateValue={handleUpdateValue}

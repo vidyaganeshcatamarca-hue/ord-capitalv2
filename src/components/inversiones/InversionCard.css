@@ -130,6 +130,27 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* S3 (ronda 6, dueño): "tienen que irse sumando los retiros abajo ... como una lista de
+   retiros si hubiera más de uno". Va una línea por retiro, sin moneda (ya está en la
+   cifra grande) y en mono tabular para que las cifras se alineen entre sí. */
+.inversion-card-withdrawals {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: right;
+}
+
+.inversion-card-withdrawal {
+  color: var(--text-3);
+  font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
+  font-size: calc(11px * var(--font-scale));
+  line-height: 1.25;
+  font-variant-numeric: tabular-nums;
+}
+
 .inversion-card-footer {
   display: flex;
   align-items: center;

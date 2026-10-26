@@ -1,5 +1,5 @@
 import { t } from '@/locales/i18n'
-import { InversionCard, type Inversion } from './InversionCard'
+import { InversionCard, type Inversion, type RetiroParcial } from './InversionCard'
 import './CarteraWidget.css'
 
 export interface InversionResumen {
@@ -24,6 +24,8 @@ export interface InversionResumen {
 interface CarteraWidgetProps {
   inversiones: InversionResumen[]
   loading: boolean
+  /** Retiros individuales por inversión, para listarlos bajo el capital (S3, ronda 6). */
+  retiros?: Record<number, RetiroParcial[]>
   onUpdateValue: (inversionId: number) => void
   onLiquidate: (inversionId: number) => void
   onAddCapital?: (inversionId: number) => void
@@ -53,6 +55,7 @@ function normalizeInversion(inv: InversionResumen): Inversion {
 export function CarteraWidget({
   inversiones,
   loading,
+  retiros,
   onUpdateValue,
   onLiquidate,
   onAddCapital,
@@ -108,6 +111,7 @@ export function CarteraWidget({
           <InversionCard
             key={inv.inversion_id}
             inversion={normalizeInversion(inv)}
+            retiros={retiros?.[inv.inversion_id]}
             onSelect={onSelect}
             onUpdateValue={onUpdateValue}
             onLiquidate={onLiquidate}
