@@ -61,6 +61,13 @@ test('los retiros se listan uno por uno, debajo del capital', () => {
     /retirosDeLaInversion\.map\(/,
     'tiene que recorrer los retiros, no mostrar sólo el total'
   )
+  // Con UN solo retiro, el paréntesis ya lo dice: listarlo también lo repetía dos veces
+  // (dueño, 2026-10-26: "estás repitiendo dos veces la extracción en Bitcoin").
+  assert.match(
+    card,
+    /retirosDeLaInversion\.length > 1/,
+    'la lista es para cuando hay más de un retiro'
+  )
   assert.match(card, /className="inversion-card-withdrawals"/, 'falta la lista de retiros')
   assert.match(card, /className="inversion-card-withdrawal"/, 'falta el ítem de cada retiro')
   // Con el signo menos, que es lo que dice el dueño: los retiros se van sumando abajo.
@@ -71,6 +78,17 @@ test('los retiros se listan uno por uno, debajo del capital', () => {
     /formatCurrency\(/,
     'la lista tampoco repite la moneda'
   )
+})
+
+test('el detalle del capital no se pelea el ancho con el monto', () => {
+  // El detalle (paréntesis + lista) tiene que caer en su propia línea, no dentro de la
+  // fila del monto: si no, el paréntesis se parte y se monta sobre la lista.
+  assert.match(card, /inversion-card-metric inversion-card-metric--stacked/)
+  assert.match(card, /inversion-card-capital-detail/)
+  const fila = bloqueDesde(cardCss, '.inversion-card-metric--stacked {')
+  assert.match(fila, /flex-wrap:\s*wrap/, 'la fila tiene que poder envolver')
+  const detalle = bloqueDesde(cardCss, '.inversion-card-capital-detail {')
+  assert.match(detalle, /flex:\s*1 0 100%/, 'el detalle ocupa el ancho completo abajo')
 })
 
 test('la lista se ve como lista: una línea por retiro, cifras alineadas', () => {

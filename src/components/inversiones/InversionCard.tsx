@@ -121,7 +121,7 @@ export function InversionCard({
       </header>
 
       <div className="inversion-card-metrics">
-        <div className="inversion-card-metric">
+        <div className="inversion-card-metric inversion-card-metric--stacked">
           <span className="inversion-card-label">{t('label_capital')}</span>
           {/* S2 (ronda 5, dueño): "el capital original debería ser el capital inicial
               menos los retiros y aparecer en un lugar, entre paréntesis por ejemplo,
@@ -132,31 +132,36 @@ export function InversionCard({
             {formatCurrency(capitalNeto ?? inversion.monto_invertido_original, inversion.moneda)}
           </span>
           {retirado > 0 && (
-            <span className="inversion-card-capital-breakdown">
+            <div className="inversion-card-capital-detail">
               {/* S3 (ronda 6, dueño): "lo que está entre paréntesis, incluye el nombre de
                   la moneda ... el nombre de la moneda es redundante, porque ya está el
                   nombre de la moneda antes". El desglose va sin símbolo ni código: la
                   moneda ya la dice la cifra grande de arriba. */}
-              {t('label_capital_breakdown', {
-                initial: formatCurrencyNumber(inversion.monto_invertido_original, inversion.moneda),
-                withdrawn: formatCurrencyNumber(retirado, inversion.moneda),
-              })}
-            </span>
-          )}
-          {/* S3 (ronda 6, dueño): "a medida que se van haciendo retiros, tienen que irse
-              sumando los retiros abajo ... como una lista de retiros si hubiera más de
-              uno". La suma sigue en el paréntesis; acá van los retiros individuales. */}
-          {retirosDeLaInversion.length > 0 && (
-            <ul className="inversion-card-withdrawals">
-              {retirosDeLaInversion.map((retiro, idx) => (
-                <li
-                  key={`${retiro.fecha ?? 's-f'}-${idx}`}
-                  className="inversion-card-withdrawal"
-                >
-                  −{formatCurrencyNumber(retiro.monto, inversion.moneda)}
-                </li>
-              ))}
-            </ul>
+              <span className="inversion-card-capital-breakdown">
+                {t('label_capital_breakdown', {
+                  initial: formatCurrencyNumber(inversion.monto_invertido_original, inversion.moneda),
+                  withdrawn: formatCurrencyNumber(retirado, inversion.moneda),
+                })}
+              </span>
+              {/* S3 (ronda 6, dueño): "a medida que se van haciendo retiros, tienen que
+                  irse sumando los retiros abajo ... como una lista de retiros si hubiera
+                  más de uno". Con UN solo retiro el paréntesis ya lo dice, y mostrarlo
+                  también en la lista lo repetía dos veces (dueño, 2026-10-26: "estás
+                  repitiendo dos veces la extracción en Bitcoin"): la lista es para cuando
+                  hay más de uno. */}
+              {retirosDeLaInversion.length > 1 && (
+                <ul className="inversion-card-withdrawals">
+                  {retirosDeLaInversion.map((retiro, idx) => (
+                    <li
+                      key={`${retiro.fecha ?? 's-f'}-${idx}`}
+                      className="inversion-card-withdrawal"
+                    >
+                      −{formatCurrencyNumber(retiro.monto, inversion.moneda)}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           )}
         </div>
         <div className="inversion-card-metric">

@@ -89,6 +89,23 @@
   gap: var(--space-2);
 }
 
+/* El capital puede llevar detalle debajo (el paréntesis con los retiros y, si hay más de
+   uno, la lista). Sin esto el detalle caía dentro de la fila y el paréntesis se partía en
+   tres líneas peleando por el ancho con el monto (dueño, 2026-10-26: la tarjeta de Bitcoin
+   mostraba "(600.000 − 200.000 −200.000 withdrawn)"). El detalle toma su propia línea. */
+.inversion-card-metric--stacked {
+  flex-wrap: wrap;
+}
+
+.inversion-card-capital-detail {
+  flex: 1 0 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+  min-width: 0;
+}
+
 .inversion-card-label {
   color: var(--text-3);
   font-family: var(--font-body);
