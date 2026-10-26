@@ -3,6 +3,7 @@ import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 import type { BilleteraDestino } from './LiquidarInversionModal'
 import './ActualizarValorModal.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
@@ -150,7 +151,12 @@ export function AportarCapitalModal({
               {sinBilleteras && <option value="">{t('error_no_wallets_for_currency')}</option>}
               {billeterasMismaMoneda.map((b) => (
                 <option key={b.billetera_id} value={String(b.billetera_id)}>
-                  {b.nombre}
+                  {/* La billetera de efectivo se guarda con la CLAVE de i18n
+                      'wallet_cash_default_name', no con un nombre escrito. Sin traducirla,
+                      el selector mostraba la clave cruda (dueño, 2026-10-26), mientras que
+                      el modal de liquidar sí la traducía con t(). Acá se usa el helper, que
+                      traduce sólo los nombres del sistema y deja intactos los del usuario. */}
+                  {catalogDisplayName(b.nombre)}
                 </option>
               ))}
             </select>
