@@ -146,3 +146,35 @@ test('el subtítulo sigue al modo: no describe una cosa y muestra otra', () => {
     'el subtítulo no puede estar fijo en "por inversión"'
   )
 })
+
+// ── S4, ronda 5 (2026-10-24) ────────────────────────────────────────────────
+// Dueño: "solo debes mostrar este valor a las inversiones que no son en moneda local.
+// Las que son en moneda local no tienes que mostrar nada en este campo porque ya está
+// mostrado en el campo anterior. Asimismo, el número 100% dentro del donut es
+// irrelevante, quítalo, y ponle a cada color de cada inversión el porcentaje que
+// representa en el donut, en la parte externa de cada color."
+const { mostrarEquivalenteLocal } = await import('../../src/lib/distribucionInversiones.ts')
+
+test('el equivalente local sólo se muestra para monedas distintas de la local', () => {
+  // El usuario 198 tiene local GBP: Xxx y Ypf en GBP no llevan paréntesis, Galicia en BRL sí.
+  assert.equal(mostrarEquivalenteLocal('GBP', 'GBP'), false)
+  assert.equal(mostrarEquivalenteLocal('BRL', 'GBP'), true)
+  assert.equal(mostrarEquivalenteLocal('brl', 'gbp'), true)
+  assert.equal(mostrarEquivalenteLocal(' ARS ', 'ars'), false)
+})
+
+test('sin datos de moneda se muestra igual: esconder información es peor', () => {
+  assert.equal(mostrarEquivalenteLocal(null, 'GBP'), true)
+  assert.equal(mostrarEquivalenteLocal('ARS', undefined), true)
+})
+
+test('la tabla usa el helper y el donut ya no centra el 100%', () => {
+  const view = read('src/components/inversiones/DistribucionView.tsx')
+  assert.match(view, /mostrarEquivalenteLocal\(item\.moneda, getFormatContext\(\)\.localCurrency\)/)
+
+  const donut = read('src/components/inversiones/DistribucionDonut.tsx')
+  assert.ok(!/'100%'/.test(donut), 'el 100% del centro tiene que desaparecer')
+  assert.match(donut, /distribucion-donut-pct/, 'cada porción lleva su porcentaje')
+  // Fuera del anillo: el radio de la etiqueta es mayor que el borde externo del anillo.
+  assert.match(donut, /labelRadius = radius \+ strokeWidth \/ 2 \+ 8/)
+})

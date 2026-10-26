@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
-import { formatCurrency, formatPercent } from '@/lib/format'
+import { formatCurrency, formatPercent, getFormatContext } from '@/lib/format'
 import { parseError, t } from '@/locales/i18n'
 import { DistribucionDonut, type DistribucionActivoRow } from './DistribucionDonut'
-import { clasificarDistribucion } from '@/lib/distribucionInversiones'
+import { clasificarDistribucion, mostrarEquivalenteLocal } from '@/lib/distribucionInversiones'
 import './DistribucionView.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 
@@ -182,10 +182,15 @@ export function DistribucionView({ className }: DistribucionViewProps) {
                     item.moneda ? (
                       <>
                         {formatCurrency(item.valor_propio, item.moneda)}
-                        <span className="distribucion-value-local">
-                          {' '}
-                          ({formatCurrency(item.valor_total)})
-                        </span>
+                        {/* S4 (ronda 5, dueño): el paréntesis con la conversión sólo
+                            tiene sentido cuando la inversión está en OTRA moneda. Si ya
+                            está en la local, el número de la izquierda es ese mismo. */}
+                        {mostrarEquivalenteLocal(item.moneda, getFormatContext().localCurrency) && (
+                          <span className="distribucion-value-local">
+                            {' '}
+                            ({formatCurrency(item.valor_total)})
+                          </span>
+                        )}
                       </>
                     ) : (
                       formatCurrency(item.valor_total)

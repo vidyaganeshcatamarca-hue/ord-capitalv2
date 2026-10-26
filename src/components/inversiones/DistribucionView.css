@@ -304,3 +304,12 @@
   font-weight: 500;
   white-space: nowrap;
 }
+
+/* S4 (ronda 5): el porcentaje de cada porción, fuera del anillo y en el color de su
+   porción. Tipografía de cuerpo (no la de los números) por ser una etiqueta corta. */
+.distribucion-donut-pct {
+  font-family: var(--font-body);
+  font-size: calc(10px * var(--font-scale));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}

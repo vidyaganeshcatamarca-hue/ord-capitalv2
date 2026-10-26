@@ -81,3 +81,23 @@ export function clasificarDistribucion(rows: DistribucionRow[]): DistribucionCla
   }
   return { modo: 'tipo', filas: agrupadas }
 }
+
+/**
+ * ¿Corresponde mostrar el equivalente en moneda local entre paréntesis?
+ *
+ * S4 (ronda 5, dueño): "solo debes mostrar este valor a las inversiones que no son en
+ * moneda local. Las que son en moneda local no tienes que mostrar nada en este campo
+ * porque ya está mostrado en el campo anterior."
+ *
+ * Si falta cualquiera de las dos monedas se muestra igual: esconder un dato por falta de
+ * información es peor que repetirlo.
+ */
+export function mostrarEquivalenteLocal(
+  moneda: string | null | undefined,
+  monedaLocal: string | null | undefined
+): boolean {
+  const propia = String(moneda ?? '').trim().toUpperCase()
+  const local = String(monedaLocal ?? '').trim().toUpperCase()
+  if (!propia || !local) return true
+  return propia !== local
+}

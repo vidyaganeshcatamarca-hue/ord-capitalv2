@@ -57,8 +57,13 @@ export function DistribucionDonut({ data, size = 168 }: DistribucionDonutProps) 
   // la tabla en un teléfono. El detalle de muchas inversiones sí scrollea (ahí
   // manda la tabla, no el círculo).
   const strokeWidth = 18
-  const radius = (size - strokeWidth) / 2
+  // S4 (ronda 5, dueño): "ponle a cada color de cada inversión el porcentaje que
+  // representa en el donut, en la parte externa de cada color". El porcentaje va FUERA
+  // del anillo, así que el radio se achica 10px para que las etiquetas entren en la caja
+  // sin agrandar el gráfico (a 220px la tabla se iba de pantalla, S13 de la ronda 3).
+  const radius = (size - strokeWidth) / 2 - 10
   const center = size / 2
+  const labelRadius = radius + strokeWidth / 2 + 8
   const circumference = 2 * Math.PI * radius
   const activeData = data.filter((item) => item.porcentaje_valor > 0)
   const hasData = activeData.length > 0
@@ -107,15 +112,36 @@ export function DistribucionDonut({ data, size = 168 }: DistribucionDonutProps) 
           )
         })}
 
-        <text
-          x="50%"
-          y="50%"
-          textAnchor="middle"
-          dominantBaseline="central"
-          className="distribucion-donut-label"
-        >
-          {hasData ? '100%' : '0%'}
-        </text>
+        {/* S4: el "100%" del centro era el total del propio anillo, un dato que no
+            dice nada. En su lugar, el porcentaje de cada porción sobre su color. */}
+        {hasData &&
+          (() => {
+            let acumulado = 0
+            return activeData.map((item, idx) => {
+              const pct = Math.max(0, Math.min(Number(item.porcentaje_valor) || 0, 100))
+              const centro = acumulado + pct / 2
+              acumulado += pct
+              // -90° porque los arcos arrancan arriba (rotate(-90)).
+              const angulo = (centro / 100) * 2 * Math.PI - Math.PI / 2
+              const x = center + labelRadius * Math.cos(angulo)
+              const y = center + labelRadius * Math.sin(angulo)
+              // Las porciones invisibles (menos de medio punto) no llevan etiqueta.
+              if (pct < 0.5) return null
+              return (
+                <text
+                  key={`pct-${keyFor(item, idx)}`}
+                  x={x}
+                  y={y}
+                  textAnchor="middle"
+                  dominantBaseline="central"
+                  className="distribucion-donut-pct"
+                  fill={colorFor(item, idx)}
+                >
+                  {Math.round(pct)}%
+                </text>
+              )
+            })
+          })()}
       </svg>
     </div>
   )
