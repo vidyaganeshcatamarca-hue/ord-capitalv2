@@ -22,11 +22,29 @@ const stripComments = (css) => css.replace(/\/\*[\s\S]*?\*\//g, '')
 const appLock = stripComments(read('src/components/AppLockGate/AppLockGate.css'))
 const theme = read('src/styles/index.css')
 
+/**
+ * El bloque `[data-theme='warm-light'] { ... }`.
+ *
+ * Se ubica con la LLAVE. Antes se usaba `indexOf` y se cortaba en el primer `}`: en
+ * cuanto existe una regla temática antes del bloque (`[data-theme='warm-light']
+ * .nav-item:not(.active) { ... }`, ronda 5), ese indexOf devolvía la REGLA, el bloque
+ * quedaba vacío y este test marcaba todo el tema como oscuro. Un solo localizador para
+ * los dos consumidores.
+ */
+function lightThemeBlock() {
+  const start = theme.search(/\[data-theme='warm-light'\]\s*\{/)
+  assert.ok(start >= 0, 'the light theme block must exist')
+  const rest = theme.slice(start)
+  return rest.slice(0, rest.indexOf('}'))
+}
+
 /** Tokens the light theme defines (plus the theme-independent :root ones). */
 function definedTokens() {
   const root = theme.slice(theme.indexOf(':root'), theme.indexOf('}', theme.indexOf(':root')))
-  const light = theme.slice(theme.indexOf("[data-theme='warm-light']"))
-  const lightBlock = light.slice(0, light.indexOf('}'))
+  // El bloque se ubica con la LLAVE, no con la primera mención del selector: cualquier
+  // regla temática posterior (`[data-theme='warm-light'] .algo { ... }`) aparece antes y
+  // `indexOf` cortaba ahí, dejando cero tokens y marcando todo el tema como oscuro.
+  const lightBlock = lightThemeBlock()
   const tokens = [...root.matchAll(/--([a-z0-9-]+):/g), ...lightBlock.matchAll(/--([a-z0-9-]+):/g)]
   return new Set(tokens.map((m) => m[1]))
 }
@@ -128,8 +146,7 @@ test('the deletion PIN prompt offers comfortable touch targets (owner tanda 8)',
 /** Color-looking tokens whose only definition is the dark :root palette. */
 function darkOnlyColorTokens() {
   const root = theme.slice(theme.indexOf(':root'), theme.indexOf('}', theme.indexOf(':root')))
-  const light = theme.slice(theme.indexOf("[data-theme='warm-light']"))
-  const lightBlock = light.slice(0, light.indexOf('}'))
+  const lightBlock = lightThemeBlock()
   const isColor = (v) => /#[0-9a-f]{3,8}|rgba?\(|hsla?\(|linear-gradient/i.test(v)
   const declared = (block) =>
     new Map([...block.matchAll(/--([a-z0-9-]+):\s*([^;]+);/g)].map((m) => [m[1], m[2].trim()]))

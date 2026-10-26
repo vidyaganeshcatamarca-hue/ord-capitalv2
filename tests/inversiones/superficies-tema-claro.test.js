@@ -30,14 +30,13 @@ const css = fs.readFileSync(path.join(repo, 'src/styles/index.css'), 'utf-8')
 // declaración siguiente y el token desaparece del mapa. Pasó al escribir este test.
 const sinComentarios = css.replace(/\/\*[\s\S]*?\*\//g, '')
 
-const darkBlock = sinComentarios.slice(
-  sinComentarios.indexOf(':root'),
-  sinComentarios.indexOf("[data-theme='warm-light']")
-)
-const lightBlock = sinComentarios.slice(
-  sinComentarios.indexOf("[data-theme='warm-light']"),
-  sinComentarios.indexOf("[data-theme='dark']")
-)
+// Los bloques se ubican con su LLAVE: una regla posterior como
+// `[data-theme='warm-light'] .nav-item {...}` menciona el selector antes que el bloque y
+// un indexOf simple devuelve la regla, no el bloque de tokens.
+const iLight = sinComentarios.search(/\[data-theme='warm-light'\]\s*\{/)
+const iDark = sinComentarios.search(/\[data-theme='dark'\]\s*\{/)
+const darkBlock = sinComentarios.slice(sinComentarios.indexOf(':root'), iLight)
+const lightBlock = sinComentarios.slice(iLight, iDark)
 
 const tokensOf = (block) => {
   const out = {}
