@@ -165,6 +165,33 @@ export function investmentGainAmount(
   return Math.round((actualNum + retirado - capitalNum) * 100) / 100
 }
 
+/**
+ * Qué porcentaje del capital invertido representa la ganancia.
+ *
+ * Dueño, ronda 6: "en la pantalla de inversiones me gustaría que agregues en la línea de
+ * ganancias el porcentaje que representa de ganancia, esa ganancia, porcentaje sobre el
+ * total de la inversión".
+ *
+ * La base es el capital NETO (capital menos retiros), que es contra lo que ya se mide la
+ * ganancia: mezclar bases daría un porcentaje que no cierra con las dos cifras que la
+ * tarjeta muestra arriba. Sin capital positivo no hay porcentaje que informar.
+ */
+export function investmentGainPercent(
+  inversion:
+    | {
+        monto_invertido_original?: number | string | null
+        valor_actual_teorico?: number | string | null
+        monto_liquidado?: number | string | null
+      }
+    | null
+    | undefined
+): number | null {
+  const ganancia = investmentGainAmount(inversion)
+  const capital = investmentNetCapital(inversion)
+  if (ganancia === null || capital === null || capital <= 0) return null
+  return Math.round((ganancia / capital) * 10000) / 100
+}
+
 /** Capital original menos los retiros parciales: el capital que sigue invertido. */
 export function investmentNetCapital(
   inversion:

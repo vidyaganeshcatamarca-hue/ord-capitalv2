@@ -9,6 +9,9 @@
   transition: transform var(--transition-fast),
               box-shadow var(--transition-fast),
               border-color var(--transition-fast);
+  /* La tarjeta no puede crecer más que su columna: los textos largos se
+     acomodan adentro, nunca empujan el documento. */
+  min-width: 0;
 }
 
 .inversion-card[role="button"] {
@@ -206,10 +209,19 @@
   min-width: 0;
 }
 
+/* S6 (ronda 6, dueño): "en español o en portugués no queda margen en el borde derecho...
+   cuando está en inglés está bien". La fila de botones tenía `flex-shrink: 0`: no cedía ni
+   un píxel, así que su ancho de contenido (los tres textos completos) empujaba la tarjeta
+   más allá del teléfono, y con ella toda la página. En inglés los textos son más cortos y
+   entraba; en español y portugués no. Ahora cede y envuelve: los botones bajan a una
+   segunda línea en vez de recortarse o empujar el layout. */
 .inversion-card-actions {
   display: flex;
   gap: var(--space-2);
-  flex-shrink: 0;
+  flex-shrink: 1;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .inversion-card-btn {
@@ -263,4 +275,21 @@
   .inversion-card-btn {
     flex: 1;
   }
+}
+
+/* Ronda 6 (dueño): el porcentaje de ganancia junto al monto. Más chico, en la tipografía
+   del cuerpo y heredando el color de la ganancia: se lee como dato de apoyo, sin competir
+   con la cifra, y sigue el color semántico (verde/rojo/neutro) que ya tiene la línea. */
+.inversion-card-gain-pct {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg-2);
+  font-family: var(--font-body);
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  vertical-align: middle;
 }

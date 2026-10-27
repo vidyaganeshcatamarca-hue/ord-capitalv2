@@ -1387,6 +1387,7 @@ export const inversiones = {
   modal_liquidate_partial_helper: "Valor parcial que será resgatado (não encerra o investimento)",
   modal_liquidate_partial_exceeds: "Você não pode retirar mais do que o valor atual ({max}).",
   modal_liquidate_capital_helper: "Informe o valor total que você vai receber ao resgatar.",
+  modal_liquidate_total_locked_helper: "É o valor completo do investimento e não pode ser editado. Para retirar outro valor, escolha resgate parcial.",
   modal_config_inflation_title: "Configurar Inflação",
   label_active_name: "Nome do ativo",
   label_type: "Tipo de ativo",

@@ -1,7 +1,7 @@
 import type { KeyboardEvent } from 'react'
 import { t } from '@/locales/i18n'
-import { formatCurrency, formatCurrencyNumber } from '@/lib/format'
-import { investmentGainAmount, investmentNetCapital } from '@/lib/inversionesPatrimonio'
+import { formatCurrency, formatCurrencyNumber, formatPercent } from '@/lib/format'
+import { investmentGainAmount, investmentGainPercent, investmentNetCapital } from '@/lib/inversionesPatrimonio'
 import './InversionCard.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 
@@ -84,6 +84,7 @@ export function InversionCard({
   // Formato por moneda: se re-renderiza cuando cambia el contexto.
   useFormatRevision()
   const ganancia = investmentGainAmount(inversion)
+  const porcentajeGanancia = investmentGainPercent(inversion)
   const capitalNeto = investmentNetCapital(inversion)
   const retirado = Number(inversion.monto_liquidado ?? 0)
   const retirosDeLaInversion = retiros ?? []
@@ -177,6 +178,15 @@ export function InversionCard({
               números que la tarjeta ya muestra arriba. */}
           <span className={gainClassFor(ganancia ?? 0)}>
             {formatGain(ganancia, inversion.moneda)}
+            {/* Dueño, ronda 6: "en la línea de ganancias el porcentaje que representa de
+                ganancia [...] Quiero saber [...] qué porcentaje representa cada una de
+                las inversiones". Va al lado, más chico y heredando el color de la
+                ganancia, para que se lea como un dato de apoyo y no compita con la cifra. */}
+            {porcentajeGanancia !== null && (
+              <span className="inversion-card-gain-pct">
+                {formatPercent(porcentajeGanancia, { decimals: 1 })}
+              </span>
+            )}
           </span>
         </div>
       </div>

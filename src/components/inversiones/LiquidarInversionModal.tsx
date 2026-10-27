@@ -92,7 +92,6 @@ export function LiquidarInversionModal({
   const billeteraOk = billeteraId !== ''
   const isValid = totalOk && rescateOk && billeteraOk
 
-  const showTotalError = touched && tipo === 'total' && !totalOk
   const showRescateError = touched && tipo === 'parcial' && !rescateOk
   const showRescateExceeds =
     touched && tipo === 'parcial' && montoRescate.trim() !== '' && rescateNum > saldoRestante
@@ -212,25 +211,26 @@ export function LiquidarInversionModal({
 
           {tipo === 'total' ? (
             <>
+              {/* Dueño, ronda 6: "al querer liquidar una inversión me permite editar el valor
+                  cuando en realidad ese valor no se debe editar, es el valor completo de la
+                  inversión; cuando la liquidación es total solo me debe dejar editar cuando
+                  es parcial". No es un input: es el valor completo de la posición, así que
+                  se muestra como dato y no se puede tocar (ni siquiera abre el teclado). */}
               <div className="form-group">
-                <label className="form-label" htmlFor="liquidarinversion-modal-liquidate-capital-label">{t('modal_liquidate_capital_label')}</label>
-                <input id="liquidarinversion-modal-liquidate-capital-label"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={montoTotalRetirado}
-                  onChange={(e) => setMontoTotalRetirado(e.target.value)}
-                  onBlur={() => setTouched(true)}
-                  placeholder={t('placeholder_new_value')}
-                  disabled={submitting}
-                  required
-                />
-                <span className="liquidar-inversion-modal-helper">
-                  {t('modal_liquidate_capital_helper')}
+                <span className="form-label" id="liquidarinversion-modal-liquidate-capital-label">
+                  {t('modal_liquidate_capital_label')}
                 </span>
-                {showTotalError && (
-                  <span className="form-error">{t('error_amount_zero')}</span>
-                )}
+                <div
+                  className="liquidar-inversion-total-value"
+                  role="text"
+                  aria-labelledby="liquidarinversion-modal-liquidate-capital-label"
+                  data-testid="liquidar-total-monto"
+                >
+                  {formatCurrency(totalNum, moneda)}
+                </div>
+                <span className="liquidar-inversion-modal-helper">
+                  {t('modal_liquidate_total_locked_helper')}
+                </span>
               </div>
               <div className="liquidar-inversion-ganancia-block">
                 <span className="liquidar-inversion-ganancia-label">

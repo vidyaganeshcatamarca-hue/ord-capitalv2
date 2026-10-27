@@ -5406,6 +5406,10 @@
         "from": "Ingresá el monto total que vas a recibir al liquidar.",
         "to": "Enter the total amount you will receive on liquidation."
       },
+      "inversiones.modal_liquidate_total_locked_helper": {
+        "from": "Es el valor completo de la inversión: no se edita. Para retirar otro importe, elegí retiro parcial.",
+        "to": "This is the full value of the investment and cannot be edited. To withdraw another amount, choose a partial redemption."
+      },
       "inversiones.modal_config_inflation_title": {
         "from": "Configurar Inflación",
         "to": "Configure Inflation"
@@ -14999,6 +15003,10 @@
       "inversiones.modal_liquidate_capital_helper": {
         "from": "Ingresá el monto total que vas a recibir al liquidar.",
         "to": "Informe o valor total que você vai receber ao resgatar."
+      },
+      "inversiones.modal_liquidate_total_locked_helper": {
+        "from": "Es el valor completo de la inversión: no se edita. Para retirar otro importe, elegí retiro parcial.",
+        "to": "É o valor completo do investimento e não pode ser editado. Para retirar outro valor, escolha resgate parcial."
       },
       "inversiones.modal_config_inflation_title": {
         "from": "Configurar Inflación",

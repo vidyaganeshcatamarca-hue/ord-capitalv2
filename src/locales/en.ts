@@ -1387,6 +1387,7 @@ export const inversiones = {
   modal_liquidate_partial_helper: "Partial amount to be redeemed (does not close the investment)",
   modal_liquidate_partial_exceeds: "You cannot withdraw more than the current value ({max}).",
   modal_liquidate_capital_helper: "Enter the total amount you will receive on liquidation.",
+  modal_liquidate_total_locked_helper: "This is the full value of the investment and cannot be edited. To withdraw another amount, choose a partial redemption.",
   modal_config_inflation_title: "Configure Inflation",
   label_active_name: "Asset name",
   label_type: "Asset type",

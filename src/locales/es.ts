@@ -1585,6 +1585,7 @@ export const inversiones = {
   modal_liquidate_partial_helper: "Monto parcial que se rescatará (no cierra la inversión)",
   modal_liquidate_partial_exceeds: "No podés retirar más que el valor actual ({max}).",
   modal_liquidate_capital_helper: "Ingresá el monto total que vas a recibir al liquidar.",
+  modal_liquidate_total_locked_helper: "Es el valor completo de la inversión: no se edita. Para retirar otro importe, elegí retiro parcial.",
   modal_config_inflation_title: "Configurar Inflación",
 
   // Modals  — labels & placeholders (Task 6)

@@ -235,3 +235,21 @@
     to { transform: scale(1); opacity: 1; }
   }
 }
+
+/* Ronda 6 (dueño): en la liquidación total el monto es el valor completo de la posición y
+   no se edita, así que se muestra como dato. Mismo alto y tipografía que los inputs del
+   modal para que la fila no salte, pero sin caja de formulario ni cursor de edición. */
+.liquidar-inversion-total-value {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  color: var(--text);
+  font-family: var(--font-mono, 'SFMono-Regular', Consolas, monospace);
+  font-size: calc(15px * var(--font-scale));
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
