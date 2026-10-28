@@ -111,6 +111,23 @@
   --nav-clearance: calc(var(--nav-height) + var(--safe-bottom) + var(--space-4));
   --header-height: 60px;
   --max-width:   430px;
+
+  /* ─── Alias heredados (--color-* en vez de los tokens del sistema) ───
+     Owner bug (auditoría de modo oscuro): estos nombres sólo estaban definidos
+     en el tema claro y, en oscuro, únicamente aparecían si antes se visitaba
+     Tarjetas (su CSS los inyectaba desde un chunk lazy). Resultado: en oscuro
+     `color: var(--color-text-muted)` era inválido al primer paint y el texto
+     heredaba el color del padre. Se definen acá, para los dos temas, con los
+     mismos valores que ya usaban; el tema claro los redefine con su paleta. */
+  --color-bg-dark:      var(--bg);
+  --color-surface:      var(--surface);
+  --color-surface-2:    var(--surface-2);
+  --color-border:       var(--border);
+  --color-text:         var(--text);
+  --color-text-muted:   var(--text-3);
+  --color-mint:         var(--mint);
+  --color-coral:        var(--coral);
+  --color-amber:        var(--amber);
 }
 
 html[data-font-size="chico"]    { --font-scale: 0.875; }

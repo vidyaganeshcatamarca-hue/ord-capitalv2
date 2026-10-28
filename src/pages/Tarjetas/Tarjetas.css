@@ -3,14 +3,8 @@
    Design: Dark warm mode, coral/mint/amber accent
    ================================================================ */
 
-:root {
-  --color-mint: var(--mint);
-  --color-coral: var(--coral);
-  --color-amber: var(--amber);
-  --color-text-muted: var(--text-3);
-  --color-text: var(--text);
-  --color-bg-dark: var(--bg);
-}
+/* Los alias --color-* viven en src/styles/index.css (:root) para que existan en
+   los dos temas desde el primer paint, sin depender de este chunk lazy. */
 
 /* ── Contenedor principal ──────────────────────────────────────── */
 .tarjetas-page {
