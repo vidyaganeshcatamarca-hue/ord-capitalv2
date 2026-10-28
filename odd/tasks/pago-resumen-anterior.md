@@ -90,3 +90,30 @@ Bug de lógica de dinero en dos RPC de Supabase. Alto riesgo: item 1 (datos) e i
   uso erróneo (pagar en ARS sin marcar el target USD): la cuota USD queda impaga y los ARS sobrantes
   quedan a favor — no se pierde nada. Los tres quedan fijados como U1-U3 en `114_deploy_112_113.mjs`
   (crean la cuota USD dentro de la transacción porque el sandbox no tiene ninguna).
+- **L13** (tercer defecto del clon, hallado cerrando el anterior): `_map_caja` tenía exactamente el mismo
+  problema que las tarjetas — `row_number()` sobre el id, con el `INSERT` de `p_caja` sin `ORDER BY`. Los
+  conteos por tarjeta daban perfecto, así que pasó desapercibido: lo que estaba mal era **a qué compra
+  apunta cada cuota**. Medido antes: 73 de 73 cuotas con importe de compra distinto, 54 con otro detalle,
+  73 con otra fecha (una cuota de 70.000 apuntaba a una compra de 60.000). Arreglado en la 115 con
+  `ORDER BY c.p_caja_id` en la copia. Medido después del re-clon (`audit_id=499`): **67 grupos de cuotas,
+  0 con compras distintas** al origen, y los 5 tarjetas idénticas. La guarda C1e compara el conjunto de
+  importes+fechas de compra por grupo (array ordenado, para no depender del emparejamiento 1:1 cuando hay
+  cuotas idénticas repetidas).
+- **L14** (cuatro defectos más del clon, ronda 3, migración 116): (a) billeteras y categorías hijas
+  también se emparejaban por nombre, y un JOIN por nombre se multiplica con homónimos — el user 1
+  (dos «Dolar app» USD) moría con violación de clave y el user 165 con `ON CONFLICT DO UPDATE cannot
+  affect row a second time`; (b) las billeteras se copiaban en cero, así que `fn_tr_validar_saldo_inversion`
+  reventaba al copiar una inversión (el clon del user 1 no corría); (c) la copia de `p_caja` perdía 6
+  columnas, entre ellas `parent_pago_caja_id` (vínculo de los pagos divididos) y `resumen_real`, y dejaba
+  correr triggers de validación y de liquidación sobre datos históricos; (d) `metadata.inversion_id` se
+  copiaba sin remapear, así que el movimiento del clon apuntaba a la inversión del origen (el trigger que
+  la deshace filtra por `user_id`, así que nunca alcanza a otro usuario, pero el vínculo quedaba roto).
+  La copia de `p_caja` pasó a ser literal: 33 columnas, sin triggers, con remapeo de padre e inversión.
+- **L15** (bug propio, encontrado al verificar): el contador de filas del clon estaba roto desde la 113
+  porque un `SET LOCAL` entre el `INSERT` y el `GET DIAGNOSTICS` pisa `ROW_COUNT`: informaba
+  `inserts=191` con 572 filas realmente copiadas. Corregido el orden y clavado con C1f, que compara la
+  métrica del jsonb contra lo que hay en el destino.
+- **L16** (estado final): `114_deploy_112_113.mjs` corre 15 casos y pasan los 15 (P1-P5, U1-U3, C1-C5),
+  todo en transacciones revertidas. Re-clon real `audit_id=527`, `deletes=572 inserts=572`; los 5 tarjetas,
+  las 15 billeteras y las 55 categorías del user 20 coinciden con el origen, y las 381 filas de `p_caja`
+  conservan moneda, padre del pago dividido y vínculo de inversión.
