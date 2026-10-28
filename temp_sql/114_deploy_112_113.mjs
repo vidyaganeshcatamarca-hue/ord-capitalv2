@@ -268,11 +268,12 @@ BEGIN;
 SET LOCAL ROLE service_role;
 SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
 
-SELECT public.fn_clonar_usuario_admin(${ORIGEN}, ${USER}, false);
-
 DO $c1$
 DECLARE v_dif int; v_mcbna bigint; v_tot_o bigint; v_tot_d bigint; v_huerfanas int; v_cruce int;
+        v_res jsonb; v_metrica bigint; v_real bigint;
 BEGIN
+    v_res := public.fn_clonar_usuario_admin(${ORIGEN}, ${USER}, false);
+
     WITH o AS (SELECT t.nombre_tarjeta, t.dia_cierre, t.dia_vencimiento, count(cd.cuota_id) n
                  FROM public.p_tarjetas_credito t LEFT JOIN public.p_cuotas_detalle cd ON cd.tarjeta_id = t.tarjeta_id
                 WHERE t.user_id = ${ORIGEN} GROUP BY 1,2,3),
@@ -329,6 +330,31 @@ BEGIN
      WHERE o.compras IS DISTINCT FROM d.compras;
     IF v_cruce > 0 THEN
         RAISE EXCEPTION 'C1e % grupo(s) de cuotas apuntan a compras distintas a las del origen', v_cruce;
+    END IF;
+
+    -- C1f: el jsonb de auditoria no puede mentir. El contador se rompio de verdad (decia
+    -- 191 con 572 filas copiadas) porque un SET LOCAL entre el INSERT y el GET DIAGNOSTICS
+    -- pisa ROW_COUNT. Se compara contra lo que hay realmente en el destino.
+    SELECT (v_res->>'filas_insertadas_total')::bigint INTO v_metrica;
+    SELECT (SELECT count(*) FROM public.p_presupuestos_config WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_grupo_familiar      WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_billeteras          WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_estructuras_egresos WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_tarjetas_credito    WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_inversiones         WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_caja_cuarentena     WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_caja                WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_cuotas_detalle      WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_prestamos           WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_compromisos_tarjeta WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_presupuestos        WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_gastos_recurrentes  WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_recordatorios       WHERE user_id = ${USER})
+         + (SELECT count(*) FROM public.p_referidos           WHERE user_id_invitador = ${USER})
+         + (SELECT count(*) FROM public.p_ingresos            WHERE user_id = ${USER})
+      INTO v_real;
+    IF v_metrica <> v_real THEN
+        RAISE EXCEPTION 'C1f el clon informo % filas insertadas y hay %', v_metrica, v_real;
     END IF;
 END $c1$;
 ROLLBACK;
@@ -432,6 +458,117 @@ END $u3$;
 ROLLBACK;
 `
 
+// ------------------- C2-C4: duplicados de nombre y cuotas cargadas sin gasto
+// C2 clona al user 165, que tiene "Carnes", "Mascota" y "Nafta" repetidas bajo el
+//    mismo padre. El par "Mascota" tiene un movimiento cada una, asi que un colapso
+//    se nota: el clon usaria menos categorias distintas que el origen.
+// C3 clona al user 1, que tiene dos billeteras "Dolar app" (USD) y usa las dos.
+// C4 verifica que una cuota cargada a mano, sin gasto detras (p_caja_id NULL), llegue
+//    al clon con el vinculo vacio y no se pierda.
+const clonTx = (origen) => `
+BEGIN;
+SET LOCAL ROLE service_role;
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
+SELECT public.fn_clonar_usuario_admin(${origen}, ${USER}, false);
+`
+
+const C2 = `
+${clonTx(165)}
+DO $c2$
+DECLARE v_o int; v_d int; v_ou int; v_du int;
+BEGIN
+    SELECT count(*) INTO v_o FROM public.p_estructuras_egresos WHERE user_id = 165;
+    SELECT count(*) INTO v_d FROM public.p_estructuras_egresos WHERE user_id = ${USER};
+    IF v_o <> v_d THEN
+        RAISE EXCEPTION 'C2 el origen tiene % categorias y el clon %', v_o, v_d;
+    END IF;
+    SELECT count(DISTINCT estructura_egreso_id) INTO v_ou
+      FROM public.p_caja WHERE user_id = 165 AND estructura_egreso_id IS NOT NULL;
+    SELECT count(DISTINCT estructura_egreso_id) INTO v_du
+      FROM public.p_caja WHERE user_id = ${USER} AND estructura_egreso_id IS NOT NULL;
+    IF v_ou <> v_du THEN
+        RAISE EXCEPTION 'C2 el origen usa % categorias distintas y el clon %: se colapsaron homonimas', v_ou, v_du;
+    END IF;
+END $c2$;
+ROLLBACK;
+`
+
+const C3 = `
+${clonTx(1)}
+DO $c3$
+DECLARE v_o int; v_d int; v_ou int; v_du int; v_dolar int;
+BEGIN
+    SELECT count(*) INTO v_o FROM public.p_billeteras WHERE user_id = 1;
+    SELECT count(*) INTO v_d FROM public.p_billeteras WHERE user_id = ${USER};
+    IF v_o <> v_d THEN
+        RAISE EXCEPTION 'C3 el origen tiene % billeteras y el clon %', v_o, v_d;
+    END IF;
+    SELECT count(*) INTO v_dolar FROM public.p_billeteras
+     WHERE user_id = ${USER} AND nombre = 'Dolar app' AND moneda = 'USD';
+    IF v_dolar <> 2 THEN
+        RAISE EXCEPTION 'C3 el clon tiene % billetera(s) Dolar app USD (esperaba 2)', v_dolar;
+    END IF;
+    SELECT count(DISTINCT billetera_origen_id) INTO v_ou
+      FROM public.p_caja WHERE user_id = 1 AND billetera_origen_id IS NOT NULL;
+    SELECT count(DISTINCT billetera_origen_id) INTO v_du
+      FROM public.p_caja WHERE user_id = ${USER} AND billetera_origen_id IS NOT NULL;
+    IF v_ou <> v_du THEN
+        RAISE EXCEPTION 'C3 el origen usa % billeteras distintas y el clon %: se cruzaron homonimas', v_ou, v_du;
+    END IF;
+END $c3$;
+ROLLBACK;
+`
+
+const C4 = `
+BEGIN;
+SET LOCAL ROLE service_role;
+SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
+INSERT INTO public.p_cuotas_detalle
+  (user_id, tarjeta_id, numero_cuota, monto_cuota, fecha_estimada_pago, pagado, p_caja_id)
+VALUES (${ORIGEN},
+        (SELECT tarjeta_id FROM public.p_tarjetas_credito
+          WHERE user_id = ${ORIGEN} AND nombre_tarjeta = 'MC BNA'
+            AND dia_cierre = 24 AND dia_vencimiento = 4),
+        7, 99999, DATE '2027-05-04', false, NULL);
+SELECT public.fn_clonar_usuario_admin(${ORIGEN}, ${USER}, false);
+DO $c4$
+DECLARE v_n int;
+BEGIN
+    SELECT count(*) INTO v_n FROM public.p_cuotas_detalle
+     WHERE user_id = ${USER} AND p_caja_id IS NULL AND monto_cuota = 99999;
+    IF v_n <> 1 THEN
+        RAISE EXCEPTION 'C4 la cuota sin gasto (p_caja_id NULL) no llego al clon (% filas)', v_n;
+    END IF;
+END $c4$;
+ROLLBACK;
+`
+
+// C5 clona al user 1 (que tiene inversiones) y verifica que el vinculo de la inversion
+//    dentro de metadata del movimiento apunte a una inversion DEL DESTINO, no del origen.
+const C5 = `
+${clonTx(1)}
+DO $c5$
+DECLARE v_malos int; v_con int;
+BEGIN
+    SELECT count(*) INTO v_con FROM public.p_caja
+     WHERE user_id = ${USER} AND metadata ? 'inversion_id';
+    IF v_con = 0 THEN
+        RAISE EXCEPTION 'C5 no hay movimientos con vinculo de inversion para probar';
+    END IF;
+    SELECT count(*) INTO v_malos
+      FROM public.p_caja c
+     WHERE c.user_id = ${USER} AND c.metadata ? 'inversion_id'
+       AND NOT EXISTS (SELECT 1 FROM public.p_inversiones i
+                        WHERE i.inversion_id::text = c.metadata->>'inversion_id'
+                          AND i.user_id = ${USER});
+    IF v_malos > 0 THEN
+        RAISE EXCEPTION 'C5 % de % movimientos apuntan a una inversion que no es del destino',
+            v_malos, v_con;
+    END IF;
+END $c5$;
+ROLLBACK;
+`
+
 // esperado: en RED fallan P2, P3 y P4; en GREEN no falla ninguno
 const PAGO_SUITE = [
   ['P1 consumo = reporte, fecha hoy', p1(0)],
@@ -445,7 +582,13 @@ const PAGO_SUITE = [
   ['U2 cuota en dolares pagada en dolares', U2],
   ['U3 pago mixto: pesos de un lado, dolares del otro', U3],
 ]
-const CLON_SUITE = [['C1 el clon es fiel y no deja huerfanas', C1]]
+const CLON_SUITE = [
+  ['C1 el clon es fiel y no deja huerfanas', C1],
+  ['C2 categorias homonimas no se colapsan (user 165)', C2],
+  ['C3 billeteras homonimas no se cruzan (user 1)', C3],
+  ['C4 la cuota cargada sin gasto llega al clon', C4],
+  ['C5 el vinculo de la inversion apunta al clon', C5],
+]
 
 const correr = async (suite, titulo) => {
   console.log(`\n── ${titulo}`)
@@ -468,12 +611,13 @@ const [yaAplicado] = await q(`
   select (pg_get_functiondef('public.fn_liquidar_ciclo_tarjeta_multi'::regproc) like '%v_corte_ars := true%') as fifo,
          (pg_get_functiondef('public.fn_registrar_pago_tarjeta_multi'::regproc) like '%v_pendiente_ventana%') as dif_neta,
          (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%IF v_tabla = ''p_estructuras_egresos''%') as replica_acotado,
-         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%ORDER BY c.p_caja_id%') as orden_movimientos`)
-const pendiente = !(yaAplicado?.fifo && yaAplicado?.dif_neta && yaAplicado?.replica_acotado && yaAplicado?.orden_movimientos)
+         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%ORDER BY c.p_caja_id%') as orden_movimientos,
+         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%PARTITION BY nombre, moneda%') as duplicados`)
+const pendiente = !(yaAplicado?.fifo && yaAplicado?.dif_neta && yaAplicado?.replica_acotado && yaAplicado?.orden_movimientos && yaAplicado?.duplicados)
 
 if (pendiente) {
   const rojos = await correr([...PAGO_SUITE, ...CLON_SUITE], 'RED · contra lo desplegado')
-  const esperados = ['P2', 'P3', 'P4', 'C1']
+  const esperados = ['P2', 'P3', 'P4', 'C1', 'C2', 'C3']
   const inesperados = rojos.filter((n) => !esperados.some((e) => n.startsWith(e)))
   if (inesperados.length > 0) {
     console.log('\n✗ fallaron casos que NO son los que la 112 arregla:')
@@ -492,6 +636,7 @@ if (pendiente) {
     'temp_sql/112_pago_tope_por_pool_v2.sql',
     'temp_sql/113_clon_borrado_acotado.sql',
     'temp_sql/115_clon_mapa_movimientos.sql',
+    'temp_sql/116_clon_duplicados.sql',
   ]) {
     const sql = fs.readFileSync(archivo, 'utf8')
     const r = await q('BEGIN;\n' + sql + '\nCOMMIT;')
@@ -517,5 +662,6 @@ const control = await q(`
   select (pg_get_functiondef('public.fn_liquidar_ciclo_tarjeta_multi'::regproc) like '%v_corte_ars := true%') as fifo,
          (pg_get_functiondef('public.fn_registrar_pago_tarjeta_multi'::regproc) like '%v_pendiente_ventana%') as dif_neta,
          (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%IF v_tabla = ''p_estructuras_egresos''%') as replica_acotado,
-         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%ORDER BY c.p_caja_id%') as orden_movimientos`)
+         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%ORDER BY c.p_caja_id%') as orden_movimientos,
+         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%PARTITION BY nombre, moneda%') as duplicados`)
 console.log('CONTROL:', JSON.stringify(control?.[0] ?? control))
