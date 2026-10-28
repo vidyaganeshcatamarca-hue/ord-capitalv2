@@ -37,13 +37,20 @@ const [ids] = await q(`
              AND dia_cierre = 24 AND dia_vencimiento = 4) AS tarjeta,
          (SELECT billetera_id FROM public.p_billeteras
            WHERE user_id = ${USER} AND moneda = 'ARS' AND activa = true
-           ORDER BY saldo_actual DESC LIMIT 1) AS billetera`)
+           ORDER BY saldo_actual DESC LIMIT 1) AS billetera,
+         (SELECT billetera_id FROM public.p_billeteras
+           WHERE user_id = ${USER} AND moneda = 'USD' AND activa = true AND saldo_actual > 0
+           ORDER BY saldo_actual DESC LIMIT 1) AS billetera_usd,
+         COALESCE((SELECT d.valor_por_usd FROM public.p_divisas d
+                    WHERE d.nombre = COALESCE((SELECT moneda_default FROM public.p_config_region
+                                                WHERE user_id = ${USER}), 'ARS')
+                    ORDER BY d.ultima_actualizacion DESC LIMIT 1), 1) AS cot`)
 if (!ids?.tarjeta || !ids?.billetera) {
   console.log('✗ no encuentro MC BNA (24/4) o una billetera ARS en user', USER)
   process.exit(1)
 }
-const { tarjeta: TARJETA, billetera: BILLETERA } = ids
-console.log(`tarjeta MC BNA = ${TARJETA} · billetera ARS = ${BILLETERA}`)
+const { tarjeta: TARJETA, billetera: BILLETERA, billetera_usd: BILLETERA_USD, cot: COT } = ids
+console.log(`tarjeta MC BNA = ${TARJETA} · billetera ARS = ${BILLETERA} · USD = ${BILLETERA_USD} · cotizacion = ${COT}`)
 
 const PRELUDIO = `
 BEGIN;
@@ -298,6 +305,104 @@ END $c1$;
 ROLLBACK;
 `
 
+// ---------- U1-U3: cuotas en dolares, pagadas en pesos o en dolares
+// Regla del producto: una cuota en USD se puede pagar con pesos o con dolares.
+// El sandbox no tiene ninguna cuota USD, asi que se crea una dentro de la
+// transaccion, con la fecha de la cuota impaga mas vieja para que caiga en la ventana.
+const usdFixture = `
+    INSERT INTO public.p_cuotas_detalle
+      (user_id, tarjeta_id, numero_cuota, monto_cuota, moneda, fecha_estimada_pago, pagado)
+    VALUES (${USER}, ${TARJETA}, 1, 100, 'USD',
+            (SELECT min(fecha_estimada_pago) FROM public.p_cuotas_detalle
+              WHERE tarjeta_id = ${TARJETA} AND pagado = false), false)
+    RETURNING cuota_id`
+
+const U1 = `
+BEGIN;
+${PRELUDIO}
+DO $u1$
+DECLARE v_cuota bigint; v_pagada boolean; v_ars int; v_refi numeric; v_monto numeric;
+BEGIN
+    ${usdFixture} INTO v_cuota;
+    v_monto := ROUND(100 * ${COT}::numeric, 2);
+    PERFORM public.fn_registrar_pago_tarjeta_multi(
+        p_tarjeta_id => ${TARJETA}, p_fecha_pago => CURRENT_DATE,
+        p_pagos => jsonb_build_array(jsonb_build_object(
+            'billetera_id', ${BILLETERA}, 'monto', v_monto, 'target_moneda_cuota', 'USD')),
+        p_cotizacion_usd => ${COT}, p_objetivo => 'anterior');
+
+    SELECT pagado INTO v_pagada FROM public.p_cuotas_detalle WHERE cuota_id = v_cuota;
+    SELECT count(*) INTO v_ars FROM public.p_cuotas_detalle
+     WHERE tarjeta_id = ${TARJETA} AND pagado = true AND moneda <> 'USD';
+    SELECT COALESCE(refinanciado_ars, 0) + COALESCE(refinanciado_usd, 0) INTO v_refi
+      FROM public.p_pagos_tarjeta_log ORDER BY p_caja_id DESC LIMIT 1;
+
+    IF NOT v_pagada THEN
+        RAISE EXCEPTION 'U1 la cuota en dolares no se pago pagando % pesos', v_monto;
+    END IF;
+    IF v_ars > 0 THEN
+        RAISE EXCEPTION 'U1 se pago ademas % cuota(s) en pesos', v_ars;
+    END IF;
+    IF v_refi > 0.01 THEN
+        RAISE EXCEPTION 'U1 dejo refinanciado % pagando en pesos una cuota en dolares', v_refi;
+    END IF;
+END $u1$;
+ROLLBACK;
+`
+
+const U2 = `
+BEGIN;
+${PRELUDIO}
+DO $u2$
+DECLARE v_cuota bigint; v_pagada boolean;
+BEGIN
+    IF ${BILLETERA_USD || 'NULL'} IS NULL THEN
+        RAISE EXCEPTION 'U2 no hay billetera USD con saldo';
+    END IF;
+    ${usdFixture} INTO v_cuota;
+    PERFORM public.fn_registrar_pago_tarjeta_multi(
+        p_tarjeta_id => ${TARJETA}, p_fecha_pago => CURRENT_DATE,
+        p_pagos => jsonb_build_array(jsonb_build_object(
+            'billetera_id', ${BILLETERA_USD || 'NULL'}, 'monto', 100)),
+        p_cotizacion_usd => ${COT}, p_objetivo => 'anterior');
+    SELECT pagado INTO v_pagada FROM public.p_cuotas_detalle WHERE cuota_id = v_cuota;
+    IF NOT v_pagada THEN
+        RAISE EXCEPTION 'U2 la cuota en dolares no se pago con 100 dolares';
+    END IF;
+END $u2$;
+ROLLBACK;
+`
+
+const U3 = `
+BEGIN;
+${PRELUDIO}
+DO $u3$
+DECLARE v_cuota bigint; v_pagada boolean; v_ars numeric; v_refi numeric;
+BEGIN
+    IF ${BILLETERA_USD || 'NULL'} IS NULL THEN
+        RAISE EXCEPTION 'U3 no hay billetera USD con saldo';
+    END IF;
+    ${usdFixture} INTO v_cuota;
+    PERFORM public.fn_registrar_pago_tarjeta_multi(
+        p_tarjeta_id => ${TARJETA}, p_fecha_pago => CURRENT_DATE,
+        p_pagos => jsonb_build_array(
+            jsonb_build_object('billetera_id', ${BILLETERA}, 'monto', 123000),
+            jsonb_build_object('billetera_id', ${BILLETERA_USD || 'NULL'}, 'monto', 100)),
+        p_cotizacion_usd => ${COT}, p_objetivo => 'anterior');
+
+    SELECT pagado INTO v_pagada FROM public.p_cuotas_detalle WHERE cuota_id = v_cuota;
+    SELECT COALESCE(SUM(monto_cuota),0) INTO v_ars FROM public.p_cuotas_detalle
+     WHERE tarjeta_id = ${TARJETA} AND pagado = true AND moneda <> 'USD';
+    SELECT COALESCE(refinanciado_ars, 0) + COALESCE(refinanciado_usd, 0) INTO v_refi
+      FROM public.p_pagos_tarjeta_log ORDER BY p_caja_id DESC LIMIT 1;
+
+    IF NOT v_pagada THEN RAISE EXCEPTION 'U3 el pago mixto no pago la cuota en dolares'; END IF;
+    IF v_ars <= 0.01 THEN RAISE EXCEPTION 'U3 el pago mixto no pago ninguna cuota en pesos'; END IF;
+    IF v_refi > 0.01 THEN RAISE EXCEPTION 'U3 el pago mixto dejo refinanciado %', v_refi; END IF;
+END $u3$;
+ROLLBACK;
+`
+
 // esperado: en RED fallan P2, P3 y P4; en GREEN no falla ninguno
 const PAGO_SUITE = [
   ['P1 consumo = reporte, fecha hoy', p1(0)],
@@ -307,6 +412,9 @@ const PAGO_SUITE = [
   ['P3 resumen_real: no se pierde plata ni se duplica la deuda', P3],
   ['P4 el compromiso del mes no cierra con cuotas impagas', P4],
   ['P5 regresion del modo legacy', P5],
+  ['U1 cuota en dolares pagada en pesos', U1],
+  ['U2 cuota en dolares pagada en dolares', U2],
+  ['U3 pago mixto: pesos de un lado, dolares del otro', U3],
 ]
 const CLON_SUITE = [['C1 el clon es fiel y no deja huerfanas', C1]]
 

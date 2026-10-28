@@ -78,7 +78,15 @@ Bug de lógica de dinero en dos RPC de Supabase. Alto riesgo: item 1 (datos) e i
 - **L11** (límites conocidos, no verificados en ejecución): (a) tarjetas con `dia_vencimiento` NULL caen
   al camino legacy y recuperan el bug (el reporte tampoco las lista); (b) el límite inferior de la
   ventana «anterior» sigue viniendo de `p_fecha_pago`, y hoy lo tapa el clamp `v_min_fecha` — con mora
-  de dos meses y una fecha de pago vieja podría pagar el resumen equivocado; (c) el tope es por moneda
-  sin conversión cruzada: un pago de un resumen ARS con `target_moneda_cuota = 'USD'` no paga nada y
-  todo queda a favor (el sandbox no tiene ninguna cuota USD, así que ningún test lo cubre); (d) dos
-  tarjetas homónimas del mismo ciclo se emparejan por `row_number` y podrían cruzarse igual.
+  de dos meses y una fecha de pago vieja podría pagar el resumen equivocado; (c) dos tarjetas homónimas
+  del mismo ciclo se emparejan por `row_number` y podrían cruzarse igual.
+- **L12** (multimoneda, medido 2026-10-28): **la advertencia de la ronda 1 era falsa y se retira**. El
+  producto promete que una cuota en dólares se puede pagar en pesos o en dólares, y los tres caminos
+  funcionan después de la 112: (U1) cuota USD 100 pagada con billetera ARS y `target_moneda_cuota =
+  'USD'` → la cuota se paga, convierte por cotización (ARS 153.874,10 = USD 100 × 1.538,74), no toca
+  cuotas ARS y no refinancia; (U2) cuota USD 100 pagada con billetera USD → se paga; (U3) pago mixto
+  ARS 123.000 de una billetera + USD 100 de otra → se pagan las dos cuotas, sin refinanciar. El tope por
+  pool compara cuota y dinero **dentro de la misma moneda**, que es justo lo que hacía falta. Caso de
+  uso erróneo (pagar en ARS sin marcar el target USD): la cuota USD queda impaga y los ARS sobrantes
+  quedan a favor — no se pierde nada. Los tres quedan fijados como U1-U3 en `114_deploy_112_113.mjs`
+  (crean la cuota USD dentro de la transacción porque el sandbox no tiene ninguna).
