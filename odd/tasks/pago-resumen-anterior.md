@@ -43,3 +43,20 @@ Bug de lógica de dinero en dos RPC de Supabase. Alto riesgo: item 1 (datos) e i
   así que 4 de 5 tarjetas quedaron cruzadas (AMEX→MC BNA, MC BNA→MC UALA, VISA BNA→AMEX, MC UALA→VISA
   BNA). Las 34 cuotas de MC BNA viven hoy en la tarjeta `825` con el ciclo de UALA (30/7).
 - **L4** (dueño, verbatim): *"y luego el clon"* — el arreglo del clon va después del de pago.
+- **L5** (evidencia, clon): `fn_clonar_usuario_admin` no era re-ejecutable. El trigger
+  `fn_tr_bloquear_borrado_categoria_inversion` rechaza borrar categorías con
+  `tipo_cupo = 'investment'`, y el primer clon copia `cat_investments_portfolio` del origen al
+  destino: todo re-clon posterior moría con `error_category_system_locked`. Arreglado en la 110
+  (fase de borrado con `session_replication_role = replica`, y vuelta a `origin`).
+- **L6** (verificación, 2026-10-28): `111_deploy_110.mjs` RED (`error_category_system_locked`) →
+  GREEN (B1-B3: cada tarjeta del destino con las cuotas de su par, MC BNA con 34, 69 cuotas en total).
+  Re-clon real `audit_id=492`, `deletes=572 inserts=572`. Estado final de MC BNA: tarjeta `834`,
+  ciclo 24/4, **34 cuotas / 34 impagas / 7 compromisos**, idéntica a la `5` del origen.
+- **L7** (verificación final sobre la tarjeta real `834`, experimento con ROLLBACK): el escenario
+  reportado, `objetivo='anterior'` con fecha de pago `2026-11-05`, consume **solo** las 4 cuotas del
+  `2026-10-04` ($440.666,67), `refinanciado = 0` y sin cuota fantasma. Antes consumía
+  $1.034.775,83 y dejaba la cuota fantasma de $594.109,16.
+- **L8** (riesgo residual, no autorizado): el camino legacy (`p_objetivo = NULL`) conserva el
+  comportamiento anterior a propósito (guarda A7). El frontend siempre manda objetivo, pero
+  cualquier llamador nuevo que lo omita vuelve a comerse el ciclo siguiente. `fn_liquidar_ciclo_tarjeta`
+  (la variante legacy que invoca el trigger de `p_caja`) tiene el mismo problema y no se tocó.
