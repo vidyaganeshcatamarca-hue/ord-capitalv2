@@ -141,3 +141,7 @@ public/sw.js
 .worktrees/clone-user
 # CodeGraph local index
 .codegraph/
+
+# Pi local agent config (prompt templates, skills, extensions)
+.pi/
+!tests/inversiones/posicion-existente.test.js

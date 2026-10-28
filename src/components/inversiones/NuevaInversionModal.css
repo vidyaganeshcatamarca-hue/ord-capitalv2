@@ -177,3 +177,11 @@
     to { transform: scale(1); opacity: 1; }
   }
 }
+
+/* Modo "ya la tenía": dos opciones de origen mitad y mitad. Las etiquetas son
+   largas a propósito (la segunda aclara que no toca ninguna billetera), así que
+   el texto puede envolver dentro de la píldora. */
+.nueva-inversion-origen-group {
+  grid-template-columns: 1fr 1fr;
+  align-items: stretch;
+}

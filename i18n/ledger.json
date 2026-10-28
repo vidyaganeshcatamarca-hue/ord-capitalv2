@@ -5470,6 +5470,50 @@
         "from": "El monto se descontará de tu billetera y de tu Base Cero mensual.",
         "to": "The amount will be deducted from your wallet and from your monthly Zero Base."
       },
+      "inversiones.label_investment_origin": {
+        "from": "Origen de la inversión",
+        "to": "Investment source"
+      },
+      "inversiones.origin_from_wallet": {
+        "from": "Sale de una billetera",
+        "to": "Comes from a wallet"
+      },
+      "inversiones.origin_already_owned": {
+        "from": "Ya la tenía",
+        "to": "I already had it"
+      },
+      "inversiones.helper_existing_investment": {
+        "from": "Esta plata no sale de ninguna billetera: tus billeteras son solo efectivo y cuentas.",
+        "to": "This money does not come from any wallet: wallets are cash and accounts only."
+      },
+      "inversiones.helper_existing_value": {
+        "from": "Lo que vale hoy. No se carga el capital original, así que la ganancia empieza a medirse desde ahora.",
+        "to": "What it is worth today. The original capital is not loaded, so the gain starts being measured from now on."
+      },
+      "inversiones.error_investment_start_date_future": {
+        "from": "La fecha de inicio no puede ser futura",
+        "to": "The start date cannot be in the future"
+      },
+      "inversiones.disclaimer_existing_investment": {
+        "from": "No se descuenta de ninguna billetera ni afecta tu Base Cero mensual.",
+        "to": "Nothing is deducted from any wallet and your monthly Zero Base is not affected."
+      },
+      "inversiones.error_investment_has_movements": {
+        "from": "No se puede eliminar: la inversión tiene movimientos registrados",
+        "to": "Cannot delete: the investment has recorded movements"
+      },
+      "inversiones.msg_investment_deleted": {
+        "from": "Inversión eliminada",
+        "to": "Investment deleted"
+      },
+      "inversiones.btn_delete_investment": {
+        "from": "Eliminar",
+        "to": "Delete"
+      },
+      "inversiones.confirm_delete_investment": {
+        "from": "¿Eliminar la inversión? Sale de tu patrimonio y no se puede deshacer.",
+        "to": "Delete this investment? It is removed from your net worth and cannot be undone."
+      },
       "inversiones.tooltip_api_unavailable": {
         "from": "Próximamente",
         "to": "Coming soon"
@@ -15067,6 +15111,50 @@
       "inversiones.disclaimer_new_investment": {
         "from": "El monto se descontará de tu billetera y de tu Base Cero mensual.",
         "to": "O valor será descontado da sua carteira e da sua Base zero mensal."
+      },
+      "inversiones.label_investment_origin": {
+        "from": "Origen de la inversión",
+        "to": "Origem do investimento"
+      },
+      "inversiones.origin_from_wallet": {
+        "from": "Sale de una billetera",
+        "to": "Sai de uma carteira"
+      },
+      "inversiones.origin_already_owned": {
+        "from": "Ya la tenía",
+        "to": "Já tinha"
+      },
+      "inversiones.helper_existing_investment": {
+        "from": "Esta plata no sale de ninguna billetera: tus billeteras son solo efectivo y cuentas.",
+        "to": "Este dinheiro não sai de nenhuma carteira: as carteiras são apenas dinheiro em conta."
+      },
+      "inversiones.helper_existing_value": {
+        "from": "Lo que vale hoy. No se carga el capital original, así que la ganancia empieza a medirse desde ahora.",
+        "to": "Quanto vale hoje. O capital original não é carregado, então o ganho começa a ser medido a partir de agora."
+      },
+      "inversiones.error_investment_start_date_future": {
+        "from": "La fecha de inicio no puede ser futura",
+        "to": "A data de início não pode ser futura"
+      },
+      "inversiones.disclaimer_existing_investment": {
+        "from": "No se descuenta de ninguna billetera ni afecta tu Base Cero mensual.",
+        "to": "Nada é descontado de nenhuma carteira e sua Base zero mensal não é afetada."
+      },
+      "inversiones.error_investment_has_movements": {
+        "from": "No se puede eliminar: la inversión tiene movimientos registrados",
+        "to": "Não é possível excluir: o investimento tem movimentos registrados"
+      },
+      "inversiones.msg_investment_deleted": {
+        "from": "Inversión eliminada",
+        "to": "Investimento excluído"
+      },
+      "inversiones.btn_delete_investment": {
+        "from": "Eliminar",
+        "to": "Excluir"
+      },
+      "inversiones.confirm_delete_investment": {
+        "from": "¿Eliminar la inversión? Sale de tu patrimonio y no se puede deshacer.",
+        "to": "Excluir o investimento? Ele sai do seu patrimônio e não pode ser desfeito."
       },
       "inversiones.tooltip_api_unavailable": {
         "from": "Próximamente",

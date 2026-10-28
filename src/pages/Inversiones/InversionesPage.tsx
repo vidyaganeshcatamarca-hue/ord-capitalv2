@@ -229,6 +229,15 @@ export function InversionesPage() {
     setSelectedInversionId(null)
   }
 
+  // S7: borrar una posicion preexistente saca la fila del listado, asi que hay
+  // que recargar y volver al panel.
+  const handleDeleted = () => {
+    setMode('dashboard')
+    setSelectedInversionId(null)
+    setDetailRefreshKey((k) => k + 1)
+    void loadData()
+  }
+
   const handleUpdateValue = (inversionId: number) => {
     setUpdateTarget(findInversion(inversionId))
   }
@@ -278,6 +287,7 @@ export function InversionesPage() {
           onUpdateValue={handleUpdateValue}
           onLiquidate={handleLiquidate}
           onAddCapital={handleAddCapital}
+          onDeleted={handleDeleted}
         />
       )
     }

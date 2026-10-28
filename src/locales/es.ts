@@ -1605,6 +1605,17 @@ export const inversiones = {
 
   // Misc
   disclaimer_new_investment: "El monto se descontará de tu billetera y de tu Base Cero mensual.",
+  label_investment_origin: "Origen de la inversión",
+  origin_from_wallet: "Sale de una billetera",
+  origin_already_owned: "Ya la tenía",
+  helper_existing_investment: "Esta plata no sale de ninguna billetera: tus billeteras son solo efectivo y cuentas.",
+  helper_existing_value: "Lo que vale hoy. No se carga el capital original, así que la ganancia empieza a medirse desde ahora.",
+  error_investment_start_date_future: "La fecha de inicio no puede ser futura",
+  disclaimer_existing_investment: "No se descuenta de ninguna billetera ni afecta tu Base Cero mensual.",
+  error_investment_has_movements: "No se puede eliminar: la inversión tiene movimientos registrados",
+  msg_investment_deleted: "Inversión eliminada",
+  btn_delete_investment: "Eliminar",
+  confirm_delete_investment: "¿Eliminar la inversión? Sale de tu patrimonio y no se puede deshacer.",
   tooltip_api_unavailable: "Próximamente",
   country_argentina: "Argentina",
   country_mexico: "México",

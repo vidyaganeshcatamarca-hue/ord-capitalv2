@@ -32,6 +32,8 @@ export interface DetalleInversion {
   rendimiento_real: number | null
   /** S16: lo ya retirado en rescates parciales. Un retiro no es una perdida. */
   monto_liquidado?: number | null
+  /** S1: null = posicion cargada como preexistente (sin egreso de billetera). */
+  billetera_origen_id?: number | null
   /** B3b: false cuando la fuente esta desactivada (no es "falta configurar"). */
   inflacion_disponible?: boolean
   fuente_inflacion?: string | null
@@ -47,6 +49,9 @@ interface DetalleInversionViewProps {
   onUpdateValue: (id: number) => void
   onAddCapital?: (id: number) => void
   onLiquidate: (id: number) => void
+  /// Se llama despues de borrar una posicion preexistente. La lista tiene que
+  /// recargarse y volver al panel: la fila ya no existe.
+  onDeleted?: () => void
 }
 
 function badgeClassFor(tipo: string): string {
@@ -91,12 +96,17 @@ export function DetalleInversionView({
   onUpdateValue,
   onAddCapital,
   onLiquidate,
+  onDeleted,
 }: DetalleInversionViewProps) {
   // Formato por moneda: se re-renderiza cuando cambia el contexto.
   useFormatRevision()
   const { showToast } = useToast()
   const [data, setData] = useState<DetalleInversion | null>(null)
   const [loading, setLoading] = useState(true)
+  // S7: una posicion preexistente no tiene movimiento que borrar, asi que el
+  // borrado se confirma aca y lo ejecuta fn_eliminar_inversion.
+  const [confirmBorrar, setConfirmBorrar] = useState(false)
+  const [borrando, setBorrando] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -128,6 +138,21 @@ export function DetalleInversionView({
       cancelled = true
     }
   }, [inversionId, showToast])
+
+  const handleDelete = async () => {
+    if (!data || borrando) return
+    setBorrando(true)
+    try {
+      await rpc('fn_eliminar_inversion', { p_inversion_id: data.inversion_id })
+      showToast(t('msg_investment_deleted'), 'success')
+      onDeleted?.()
+    } catch (err) {
+      showToast(parseError(err) || t('error_generic'), 'error')
+    } finally {
+      setBorrando(false)
+      setConfirmBorrar(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -393,6 +418,42 @@ export function DetalleInversionView({
           <span aria-hidden="true">💸</span>
           <span>{t('btn_liquidate')}</span>
         </button>
+        {/* S7: solo para posiciones sin billetera. Las que tienen egreso se
+            borran desde Historial, que revierte cada operacion. */}
+        {data.billetera_origen_id == null && !confirmBorrar && (
+          <button
+            type="button"
+            className="detalle-action-btn detalle-action-btn--delete"
+            onClick={() => setConfirmBorrar(true)}
+            disabled={borrando}
+          >
+            <span aria-hidden="true">🗑️</span>
+            <span>{t('btn_delete_investment')}</span>
+          </button>
+        )}
+        {data.billetera_origen_id == null && confirmBorrar && (
+          <div className="detalle-delete-confirm" data-testid="detalle-borrar-confirmacion">
+            <p>{t('confirm_delete_investment')}</p>
+            <div className="detalle-delete-confirm-actions">
+              <button
+                type="button"
+                className="detalle-action-btn detalle-action-btn--add"
+                onClick={() => setConfirmBorrar(false)}
+                disabled={borrando}
+              >
+                <span>{t('btn_cancel')}</span>
+              </button>
+              <button
+                type="button"
+                className="detalle-action-btn detalle-action-btn--liquidate"
+                onClick={handleDelete}
+                disabled={borrando}
+              >
+                <span>{borrando ? t('loading') : t('btn_delete_investment')}</span>
+              </button>
+            </div>
+          </div>
+        )}
       </footer>
     </div>
   )

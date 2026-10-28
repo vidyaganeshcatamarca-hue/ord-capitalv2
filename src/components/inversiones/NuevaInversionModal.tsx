@@ -25,6 +25,18 @@ interface NuevaInversionModalProps {
 
 type TipoActivo = 'plazo_fijo' | 'cripto' | 'cedear' | 'acciones' | 'otro'
 
+// S1: la posición puede venir de una billetera (compra de hoy) o existir desde
+// antes de la app. En el segundo caso no hay egreso: solo se registra el valor
+// actual y desde cuándo la tiene.
+type TipoOrigen = 'billetera' | 'existente'
+
+// Fecha local en YYYY-MM-DD: toISOString() pasa a UTC y en husos negativos
+// devuelve el día siguiente.
+function hoyISO(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
 const TIPO_OPCIONES: { value: TipoActivo; key: string }[] = [
   { value: 'plazo_fijo', key: 'type_plazo_fijo' },
   { value: 'cripto', key: 'type_cripto' },
@@ -50,6 +62,8 @@ export function NuevaInversionModal({
 
   const [nombre, setNombre] = useState('')
   const [tipo, setTipo] = useState<TipoActivo>('plazo_fijo')
+  const [tipoOrigen, setTipoOrigen] = useState<TipoOrigen>('billetera')
+  const [fechaInicio, setFechaInicio] = useState('')
   const [tasa, setTasa] = useState('')
   const [monto, setMonto] = useState('')
   const [moneda, setMoneda] = useState('')
@@ -61,6 +75,8 @@ export function NuevaInversionModal({
     if (!isOpen) {
       setNombre('')
       setTipo('plazo_fijo')
+      setTipoOrigen('billetera')
+      setFechaInicio('')
       setTasa('')
       setMonto('')
       setMoneda('')
@@ -93,9 +109,15 @@ export function NuevaInversionModal({
 
   const montoNum = Number(monto) || 0
   const tasaNum = Number(tasa) || 0
+  const esExistente = tipoOrigen === 'existente'
   const nombreOk = nombre.trim().length > 0
   const montoOk = montoNum > 0
-  const tasaOk = tipo !== 'plazo_fijo' || tasaNum > 0
+  // S6: una posición preexistente trae su valor actual explícito y no devenga,
+  // así que la TNA solo se pide cuando la inversión sale de una billetera.
+  const tasaOk = esExistente || tipo !== 'plazo_fijo' || tasaNum > 0
+  // S4: la fecha es obligatoria en el modo preexistente. El input ya acota el
+  // máximo a hoy, pero se valida igual porque puede venir tipeada.
+  const fechaOk = !esExistente || (fechaInicio !== '' && fechaInicio <= hoyISO())
 
   // B2 (2026-10-21): solo se ofrecen billeteras de la moneda elegida Y con
   // saldo suficiente para el monto. Antes se listaban todas las de la moneda
@@ -110,12 +132,14 @@ export function NuevaInversionModal({
     : null
   // Sin monto escrito todavia no hay saldo que comparar: no hay error.
   const hayBilleterasDeLaMoneda = billeterasDeLaMoneda.length > 0
-  const billeteraOk = billeteraId !== '' && billeteraElegibleActual !== null
-  const isValid = nombreOk && montoOk && tasaOk && billeteraOk
+  // S1: sin billetera no hay saldo que cubrir ni cuenta de la que descontar.
+  const billeteraOk = esExistente || (billeteraId !== '' && billeteraElegibleActual !== null)
+  const isValid = nombreOk && montoOk && tasaOk && billeteraOk && fechaOk
 
   const showNombreError = touched && !nombreOk
   const showMontoError = touched && !montoOk
-  const showTasaError = touched && tipo === 'plazo_fijo' && !tasaOk
+  const showTasaError = touched && !esExistente && tipo === 'plazo_fijo' && !tasaOk
+  const showFechaError = touched && esExistente && !fechaOk
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
@@ -123,14 +147,18 @@ export function NuevaInversionModal({
     if (!isValid || submitting) return
     setSubmitting(true)
     try {
-      const tasaValue = tipo === 'plazo_fijo' ? tasaNum : 0
+      const tasaValue = !esExistente && tipo === 'plazo_fijo' ? tasaNum : 0
       const result = await rpc<number>('fn_crear_inversion', {
         p_nombre_activo: nombre.trim(),
         p_monto: montoNum,
         p_tasa_anual_tna: tasaValue,
-        p_billetera_origen_id: Number(billeteraId),
+        // S1: sin billetera el backend no escribe el egreso en p_caja.
+        p_billetera_origen_id: esExistente ? null : Number(billeteraId),
         p_moneda: moneda,
         p_tipo_activo: tipo,
+        // Solo viaja en el modo preexistente: el alta desde billetera mantiene
+        // su fecha de hoy, igual que antes.
+        ...(esExistente ? { p_fecha_inicio: fechaInicio } : {}),
       })
       showToast(t('msg_investment_created'), 'success')
       onSuccess?.(result)
@@ -169,6 +197,43 @@ export function NuevaInversionModal({
           onSubmit={handleSubmit}
           className="nueva-inversion-modal-form"
         >
+          <div className="form-group">
+            <label className="form-label">{t('label_investment_origin')}</label>
+            <div className="nueva-inversion-tipo-group nueva-inversion-origen-group">
+              {([
+                { value: 'billetera' as const, key: 'origin_from_wallet' },
+                { value: 'existente' as const, key: 'origin_already_owned' },
+              ]).map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`nueva-inversion-tipo-option ${
+                    tipoOrigen === opt.value ? 'nueva-inversion-tipo-option--active' : ''
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="origen_inversion"
+                    value={opt.value}
+                    checked={tipoOrigen === opt.value}
+                    onChange={() => {
+                      setTipoOrigen(opt.value)
+                      if (opt.value === 'existente' && fechaInicio === '') {
+                        setFechaInicio(hoyISO())
+                      }
+                    }}
+                    disabled={submitting}
+                  />
+                  <span>{t(opt.key)}</span>
+                </label>
+              ))}
+            </div>
+            {esExistente && (
+              // S5: billeteras no son inversiones. La línea fija la frontera y
+              // evita que el usuario crea que tiene que cargar la plata antes.
+              <span className="form-hint">{t('helper_existing_investment')}</span>
+            )}
+          </div>
+
           <div className="form-group">
             <label className="form-label" htmlFor="nuevainversion-label-active-name">{t('label_active_name')}</label>
             <input id="nuevainversion-label-active-name"
@@ -212,7 +277,7 @@ export function NuevaInversionModal({
             </div>
           </div>
 
-          {tipo === 'plazo_fijo' && (
+          {tipo === 'plazo_fijo' && !esExistente && (
             <div className="form-group">
               <label className="form-label" htmlFor="nuevainversion-label-tna">{t('label_tna')}</label>
               <input id="nuevainversion-label-tna"
@@ -233,7 +298,9 @@ export function NuevaInversionModal({
           )}
 
           <div className="form-group">
-            <label className="form-label" htmlFor="nuevainversion-label-amount">{t('label_amount')}</label>
+            <label className="form-label" htmlFor="nuevainversion-label-amount">
+              {esExistente ? t('label_current_value') : t('label_amount')}
+            </label>
             <input id="nuevainversion-label-amount"
               type="number"
               step="0.01"
@@ -248,7 +315,30 @@ export function NuevaInversionModal({
             {showMontoError && (
               <span className="form-error">{t('error_amount_zero')}</span>
             )}
+            {esExistente && (
+              <span className="form-hint">{t('helper_existing_value')}</span>
+            )}
           </div>
+
+          {esExistente && (
+            <div className="form-group">
+              <label className="form-label" htmlFor="nuevainversion-label-fecha-inicio">
+                {t('label_start_date')}
+              </label>
+              <input id="nuevainversion-label-fecha-inicio"
+                type="date"
+                value={fechaInicio}
+                max={hoyISO()}
+                onChange={(e) => setFechaInicio(e.target.value)}
+                onBlur={() => setTouched(true)}
+                disabled={submitting}
+                required
+              />
+              {showFechaError && (
+                <span className="form-error">{t('error_investment_start_date_future')}</span>
+              )}
+            </div>
+          )}
 
           <div className="form-group">
             <label className="form-label">{t('label_currency')}</label>
@@ -274,6 +364,7 @@ export function NuevaInversionModal({
             </div>
           </div>
 
+          {!esExistente && (
           <div className="form-group">
             <label className="form-label" htmlFor="nuevainversion-billetera-origen">{t('label_source_wallet')}</label>
             <select id="nuevainversion-billetera-origen"
@@ -300,9 +391,10 @@ export function NuevaInversionModal({
               <span className="form-error">{t('error_no_wallets_with_balance')}</span>
             )}
           </div>
+          )}
 
           <p className="nueva-inversion-modal-disclaimer">
-            {t('disclaimer_new_investment')}
+            {esExistente ? t('disclaimer_existing_investment') : t('disclaimer_new_investment')}
           </p>
         </form>
 

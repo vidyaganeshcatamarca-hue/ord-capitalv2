@@ -491,3 +491,35 @@
 .detalle-capital-movimiento--retiro {
   color: var(--coral-ink, var(--coral));
 }
+
+/* S7 (posición preexistente): borrar es una acción secundaria y destructiva,
+   así que va neutra en reposo y coral en la confirmación. */
+.detalle-action-btn--delete {
+  background: var(--bg-2);
+  color: var(--coral-ink);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+}
+
+.detalle-delete-confirm {
+  flex: 1 0 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-2);
+}
+
+.detalle-delete-confirm p {
+  margin: 0;
+  color: var(--text-2);
+  font-size: calc(13px * var(--font-scale));
+  line-height: 1.4;
+}
+
+.detalle-delete-confirm-actions {
+  display: flex;
+  gap: 8px;
+}
