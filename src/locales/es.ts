@@ -1604,11 +1604,11 @@ export const inversiones = {
   error_no_wallets_for_currency: "No tenés billeteras activas en esta moneda.",
 
   // Misc
-  disclaimer_new_investment: "El monto se descontará de tu billetera y de tu Base Cero mensual.",
+  disclaimer_new_investment: "El monto se descontará de tu billetera.",
   label_investment_origin: "Origen de la inversión",
   origin_from_wallet: "Sale de una billetera",
   origin_already_owned: "Ya la tenía",
-  helper_existing_investment: "Esta plata no sale de ninguna billetera: tus billeteras son solo efectivo y cuentas.",
+  helper_existing_investment: "Este dinero no sale de ninguna billetera: Son inversiones que realizaste en el pasado.",
   helper_existing_value: "Lo que vale hoy. No se carga el capital original, así que la ganancia empieza a medirse desde ahora.",
   error_investment_start_date_future: "La fecha de inicio no puede ser futura",
   disclaimer_existing_investment: "No se descuenta de ninguna billetera ni afecta tu Base Cero mensual.",

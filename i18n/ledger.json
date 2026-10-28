@@ -5467,8 +5467,8 @@
         "to": "You have no active wallets in this currency."
       },
       "inversiones.disclaimer_new_investment": {
-        "from": "El monto se descontará de tu billetera y de tu Base Cero mensual.",
-        "to": "The amount will be deducted from your wallet and from your monthly Zero Base."
+        "from": "El monto se descontará de tu billetera.",
+        "to": "The amount will be deducted from your wallet."
       },
       "inversiones.label_investment_origin": {
         "from": "Origen de la inversión",
@@ -5483,8 +5483,8 @@
         "to": "I already had it"
       },
       "inversiones.helper_existing_investment": {
-        "from": "Esta plata no sale de ninguna billetera: tus billeteras son solo efectivo y cuentas.",
-        "to": "This money does not come from any wallet: wallets are cash and accounts only."
+        "from": "Este dinero no sale de ninguna billetera: Son inversiones que realizaste en el pasado.",
+        "to": "This money does not come from any wallet: it is money you invested in the past."
       },
       "inversiones.helper_existing_value": {
         "from": "Lo que vale hoy. No se carga el capital original, así que la ganancia empieza a medirse desde ahora.",
@@ -15109,8 +15109,8 @@
         "to": "Você não tem carteiras ativas nesta moeda."
       },
       "inversiones.disclaimer_new_investment": {
-        "from": "El monto se descontará de tu billetera y de tu Base Cero mensual.",
-        "to": "O valor será descontado da sua carteira e da sua Base zero mensal."
+        "from": "El monto se descontará de tu billetera.",
+        "to": "O valor será descontado da sua carteira."
       },
       "inversiones.label_investment_origin": {
         "from": "Origen de la inversión",
@@ -15125,8 +15125,8 @@
         "to": "Já tinha"
       },
       "inversiones.helper_existing_investment": {
-        "from": "Esta plata no sale de ninguna billetera: tus billeteras son solo efectivo y cuentas.",
-        "to": "Este dinheiro não sai de nenhuma carteira: as carteiras são apenas dinheiro em conta."
+        "from": "Este dinero no sale de ninguna billetera: Son inversiones que realizaste en el pasado.",
+        "to": "Este dinheiro não sai de nenhuma carteira: são investimentos que você fez no passado."
       },
       "inversiones.helper_existing_value": {
         "from": "Lo que vale hoy. No se carga el capital original, así que la ganancia empieza a medirse desde ahora.",
