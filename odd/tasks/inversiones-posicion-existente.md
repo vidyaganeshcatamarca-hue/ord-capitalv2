@@ -120,3 +120,12 @@ ninguna billetera, con valor actual y fecha de inicio.
   las cuatro acciones (incluida 🗑️ Eliminar) con 0 px de desborde; el borrado pidió
   confirmación y volvió al panel sin la tarjeta. Estado final: 6 filas, 0 de prueba,
   0 movimientos de prueba.
+- **L8** — Decisiones del dueño sobre los hallazgos del verificador, textuales:
+  R1 "queda como esta, no cambies nada"; R3 "si dejarlo sigue funcionando bien, lo
+  demamos (c)".
+- **L9** — Alcance real de R3 antes de aceptarlo: `tipo_activo` solo alimenta el
+  badge y la clave de traducción en `InversionCard` y `DetalleInversionView`, el
+  color y la etiqueta de la leyenda en `DistribucionDonut:43,51`, y el punto y el
+  tipo en `DistribucionView:54-55,167`. Ningún cálculo, agregado ni prorrateo lo
+  usa. Una posición preexistente de plazo fijo se ve como "Variable" y con la
+  TNA en 0; los números son correctos. Aceptado como deuda cosmética.
