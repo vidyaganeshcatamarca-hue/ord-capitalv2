@@ -77,10 +77,22 @@ BEGIN
     -- ---- D: fecha futura en preexistente: rechazada (S4) ----
     v_fallo := false; v_err := '';
     BEGIN
-        PERFORM public.fn_crear_inversion('ZZ FUTURO', 1000, 0, NULL, 'ARS', 'otro', CURRENT_DATE + 1);
+        PERFORM public.fn_crear_inversion('ZZ FUTURO', 1000, 0, NULL, 'ARS', 'otro', CURRENT_DATE + 2);
     EXCEPTION WHEN OTHERS THEN v_fallo := true; v_err := SQLERRM;
     END;
     INSERT INTO zz_results VALUES ('D preexistente con fecha futura: rechazado', v_fallo AND v_err LIKE '%start_date_future%', COALESCE(v_err, 'no falló'));
+
+    -- ---- D2: un cliente en un huso adelantado manda su "hoy", que en UTC
+    --          todavía es mañana: se acepta y se acota al día del servidor ----
+    v_fallo := false; v_err := '';
+    BEGIN
+        v_inv := public.fn_crear_inversion('ZZ HUSO', 1000, 0, NULL, 'ARS', 'otro', CURRENT_DATE + 1);
+    EXCEPTION WHEN OTHERS THEN v_fallo := true; v_err := SQLERRM;
+    END;
+    SELECT * INTO v_rec FROM public.p_inversiones WHERE inversion_id = v_inv;
+    INSERT INTO zz_results VALUES ('D2 fecha de mañana (huso del cliente): aceptada y acotada a hoy',
+        NOT v_fallo AND v_rec.nombre_activo = 'ZZ HUSO' AND v_rec.fecha_inicio = CURRENT_DATE,
+        COALESCE(NULLIF(v_err, ''), 'fecha=' || v_rec.fecha_inicio::text));
 
     -- ---- E: alta desde billetera: comportamiento previo intacto (S8) ----
     v_inv_wallet := public.fn_crear_inversion('ZZ DESDE WALLET', 1, 0, v_wallet, 'ARS', 'otro');

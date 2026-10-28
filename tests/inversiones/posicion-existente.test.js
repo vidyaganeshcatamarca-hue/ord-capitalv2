@@ -78,7 +78,11 @@ test('S6: la posición preexistente no devenga por TNA', () => {
 
 test('S4: la fecha es obligatoria en el modo preexistente y no puede ser futura', () => {
   assert.match(sql, /v_fecha_inicio := COALESCE\(p_fecha_inicio, CURRENT_DATE\)/)
-  assert.match(sql, /IF v_fecha_inicio > CURRENT_DATE THEN/, 'falta el rechazo de fechas futuras')
+  assert.match(sql, /IF v_fecha_inicio > CURRENT_DATE \+ 1 THEN/, 'falta el rechazo de fechas futuras')
+  // Un cliente en un huso adelantado manda su "hoy", que en UTC todavía es
+  // mañana: se acepta con un día de tolerancia y se acota al día del servidor
+  // para no prorratear días negativos.
+  assert.match(sql, /v_fecha_inicio := LEAST\(v_fecha_inicio, CURRENT_DATE\)/)
   assert.match(sql, /error_investment_start_date_future/)
   assert.match(
     sql,
@@ -174,10 +178,15 @@ test('S5: el texto fija la frontera entre billetera e inversión', () => {
 // ──────────────────────────── Detalle: el borrado ────────────────────────────
 
 test('S7: borrar aparece solo donde puede funcionar', () => {
-  assert.match(
+  // Tiene que coincidir con lo que verifica el backend: sin billetera Y sin
+  // movimientos. Comparación estricta: con `== null`, un reporte que todavía no
+  // expone la columna dejaría el botón en TODAS las posiciones.
+  const boton = bloqueDesde(detalle, '{data.billetera_origen_id === null &&', '>')
+  assert.match(boton, /\(data\.historial \?\? \[\]\)\.length === 0/, 'sin movimientos también')
+  assert.doesNotMatch(
     detalle,
-    /\{data\.billetera_origen_id == null && !confirmBorrar && \(/,
-    'el botón se muestra solo para posiciones sin billetera'
+    /billetera_origen_id == null/,
+    'la comparación laxa muestra el botón donde el backend lo va a rechazar'
   )
   assert.match(detalle, /rpc\('fn_eliminar_inversion', \{ p_inversion_id: data\.inversion_id \}\)/)
   assert.match(detalle, /onDeleted\?\.\(\)/, 'después de borrar hay que avisar para recargar la lista')

@@ -79,9 +79,18 @@ BEGIN
     -- puede ser futura. En el modo desde billetera sigue siendo la de hoy.
     IF v_es_existente THEN
         v_fecha_inicio := COALESCE(p_fecha_inicio, CURRENT_DATE);
-        IF v_fecha_inicio > CURRENT_DATE THEN
+        -- Un día de tolerancia: el max del input y el "hoy" del cliente son
+        -- locales, y un usuario adelantado respecto de UTC manda como hoy el
+        -- día que el servidor todavía ve como mañana. Sin esto, toda alta
+        -- hecha de noche desde Europa o Asia se rechaza sin que el usuario
+        -- pueda hacer nada.
+        IF v_fecha_inicio > CURRENT_DATE + 1 THEN
             RAISE EXCEPTION '{"key": "error_investment_start_date_future", "params": {}}';
         END IF;
+        -- Ya aceptada, se acota al día del servidor: si quedara en el futuro,
+        -- los días de tenencia serían negativos y la inflación prorrateada
+        -- (92, 96) restaría en vez de sumar.
+        v_fecha_inicio := LEAST(v_fecha_inicio, CURRENT_DATE);
     ELSE
         v_fecha_inicio := CURRENT_DATE;
     END IF;

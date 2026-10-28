@@ -418,9 +418,15 @@ export function DetalleInversionView({
           <span aria-hidden="true">💸</span>
           <span>{t('btn_liquidate')}</span>
         </button>
-        {/* S7: solo para posiciones sin billetera. Las que tienen egreso se
-            borran desde Historial, que revierte cada operacion. */}
-        {data.billetera_origen_id == null && !confirmBorrar && (
+        {/* S7: solo para posiciones sin billetera y sin movimientos, que es
+            exactamente la condicion que verifica fn_eliminar_inversion. Las que
+            tienen egreso, aporte o rescate se borran desde Historial, donde cada
+            movimiento revierte su operacion.
+            Comparacion estricta: si el reporte no expusiera la columna (deploy
+            desfasado), el boton no aparece, en vez de aparecer en todas. */}
+        {data.billetera_origen_id === null &&
+          (data.historial ?? []).length === 0 &&
+          !confirmBorrar && (
           <button
             type="button"
             className="detalle-action-btn detalle-action-btn--delete"
@@ -431,7 +437,9 @@ export function DetalleInversionView({
             <span>{t('btn_delete_investment')}</span>
           </button>
         )}
-        {data.billetera_origen_id == null && confirmBorrar && (
+        {data.billetera_origen_id === null &&
+          (data.historial ?? []).length === 0 &&
+          confirmBorrar && (
           <div className="detalle-delete-confirm" data-testid="detalle-borrar-confirmacion">
             <p>{t('confirm_delete_investment')}</p>
             <div className="detalle-delete-confirm-actions">
