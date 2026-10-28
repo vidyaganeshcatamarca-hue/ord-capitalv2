@@ -87,3 +87,36 @@ ninguna billetera, con valor actual y fecha de inicio.
   `tests/config.js`, más dos de biometría/PIN). `tsc -b` limpio.
   Ledger: 2410 claves, `missing/stale/drifted/changed` en 0 (hubo que usar
   `build --force`: `npm run i18n:ledger` sin argumento solo hace `check`).
+- **L5** — Verificación independiente (read-only, commit `13c6837`): confirmó S1,
+  S4 (backend), S7 y S8; refutó un sub-punto de S3 y encontró tres huecos.
+  - R1 (**medio**) — con fecha histórica, el nominal es 0 pero el **real** no:
+    el capital de una posición preexistente es un valor *de hoy* y el reporte lo
+    deflacta por la inflación de todo el período (`113:84-90`, `96:157-177`), así
+    que una posición de 2021 muestra un real muy negativo y hunde el agregado de
+    cartera. Con la fecha por defecto (días = 0) el efecto es nulo.
+  - R2 (**media-baja**) — el `max` del input y el "hoy" del cliente son locales,
+    pero el backend compara contra `CURRENT_DATE`: un usuario adelantado respecto
+    de UTC después de las 22:00 manda como hoy el día que el servidor ve como
+    mañana. **Corregido.**
+  - R3 (**baja**) — el tipo de activo no se persiste (TNA = 0) y los reportes lo
+    derivan `variable`: un plazo fijo preexistente se muestra como variable.
+  - R4/R5 (**baja**) — el botón "Eliminar" aparecía en posiciones que ya tenían
+    aportes, y con `== null` laxo aparecía en todas si el reporte 113 no estaba
+    desplegado. **Corregido.**
+  - R6 (**latente, preexistente**) — el CASCADE de la FK deja movimientos
+    huérfanos si se borra una billetera en duro; no es alcanzable desde la app.
+- **L6** — Correcciones de R2/R4/R5 en `8c86f1e`: un día de tolerancia en la
+  validación de fecha más `LEAST(v_fecha_inicio, CURRENT_DATE)` para que los días
+  de tenencia nunca sean negativos (la 111 se reaplicó: **10/10** casos, 6 filas
+  intactas); y el botón de borrado ahora exige también `historial` vacío, que es
+  la misma condición que cuenta `fn_eliminar_inversion`, con comparación estricta.
+  Tests **16/16**, suite **730/733**, `tsc` limpio.
+- **L7** — Prueba de punta a punta en pantalla (usuario 198, 412 px), ejecutada
+  sobre datos reales y limpiada después: alta desde la UI en modo "ya la tenía"
+  con 777.000 GBP → fila `inversion_id = 38` con `billetera_origen_id = null`,
+  `monto_invertido_original = valor_mercado_actual = 777000`, `tasa_anual_tna = 0`,
+  fecha de hoy y **0 filas en `p_caja`**; la tarjeta mostró "Capital original
+  777,000.00 GBP / Valor actual 777,000.00 GBP / Ganancia 0.00". El detalle ofreció
+  las cuatro acciones (incluida 🗑️ Eliminar) con 0 px de desborde; el borrado pidió
+  confirmación y volvió al panel sin la tarjeta. Estado final: 6 filas, 0 de prueba,
+  0 movimientos de prueba.
