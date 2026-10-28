@@ -60,3 +60,25 @@ Bug de lógica de dinero en dos RPC de Supabase. Alto riesgo: item 1 (datos) e i
   comportamiento anterior a propósito (guarda A7). El frontend siempre manda objetivo, pero
   cualquier llamador nuevo que lo omita vuelve a comerse el ciclo siguiente. `fn_liquidar_ciclo_tarjeta`
   (la variante legacy que invoca el trigger de `p_caja`) tiene el mismo problema y no se tocó.
+- **L9** (verificación independiente de la 108/110, `gentle-ai-verify`): cuatro hallazgos, tres causados
+  por el tope por pool de la 108. (a) ALTA: con `p_resumen_real` el sobrante no aplicado no se acreditaba
+  y el dinero desaparecía (repro: resumen 440.666,67, pago 300.000 → 87.333,33 evaporados). (b) La
+  «Diferencia Tarjeta» contaba como gasto la deuda que seguía viva como cuota. (c) El `CONTINUE` del
+  tope salteaba la cuota más cara y pagaba las baratas posteriores (FIFO invertido, subconjunto no
+  determinístico). (d) Cada cuota pagada cerraba el mes entero en `p_compromisos_tarjeta`. Más: la
+  excepción de triggers de la 110 apagaba también las cascadas (`p_pagos_tarjeta_log` quedaba huérfana),
+  y el harness 109 tenía ids hardcodeados que el re-clon invalidó.
+- **L10** (ronda 2, 112 + 113 + 114): corregidos los cuatro puntos y acotada la excepción de triggers a
+  `p_estructuras_egresos`. `114_deploy_112_113.mjs` corre 8 casos con la tarjeta y la billetera resueltas
+  por identidad (no por id): RED confirmado en P3 (87.333,33 perdidos), GREEN 8/8 después, incluida la
+  guarda de FIFO, la de compromisos y la de huérfanas del clon. **RED de P2 y P4 no quedó registrado**:
+  los tests estaban mal escritos en la primera pasada (tipo `numeric` para una fecha, y un fixture que
+  el clon ya traía resuelto) y se corrigieron después de aplicar la 112; lo que se observó de FIFO fue
+  la simulación de la verificación, no una ejecución del harness viejo. `109` se borra: lo reemplaza el 114.
+- **L11** (límites conocidos, no verificados en ejecución): (a) tarjetas con `dia_vencimiento` NULL caen
+  al camino legacy y recuperan el bug (el reporte tampoco las lista); (b) el límite inferior de la
+  ventana «anterior» sigue viniendo de `p_fecha_pago`, y hoy lo tapa el clamp `v_min_fecha` — con mora
+  de dos meses y una fecha de pago vieja podría pagar el resumen equivocado; (c) el tope es por moneda
+  sin conversión cruzada: un pago de un resumen ARS con `target_moneda_cuota = 'USD'` no paga nada y
+  todo queda a favor (el sandbox no tiene ninguna cuota USD, así que ningún test lo cubre); (d) dos
+  tarjetas homónimas del mismo ciclo se emparejan por `row_number` y podrían cruzarse igual.
