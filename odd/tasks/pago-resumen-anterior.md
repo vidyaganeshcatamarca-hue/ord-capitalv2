@@ -90,3 +90,12 @@ Bug de lógica de dinero en dos RPC de Supabase. Alto riesgo: item 1 (datos) e i
   uso erróneo (pagar en ARS sin marcar el target USD): la cuota USD queda impaga y los ARS sobrantes
   quedan a favor — no se pierde nada. Los tres quedan fijados como U1-U3 en `114_deploy_112_113.mjs`
   (crean la cuota USD dentro de la transacción porque el sandbox no tiene ninguna).
+- **L13** (tercer defecto del clon, hallado cerrando el anterior): `_map_caja` tenía exactamente el mismo
+  problema que las tarjetas — `row_number()` sobre el id, con el `INSERT` de `p_caja` sin `ORDER BY`. Los
+  conteos por tarjeta daban perfecto, así que pasó desapercibido: lo que estaba mal era **a qué compra
+  apunta cada cuota**. Medido antes: 73 de 73 cuotas con importe de compra distinto, 54 con otro detalle,
+  73 con otra fecha (una cuota de 70.000 apuntaba a una compra de 60.000). Arreglado en la 115 con
+  `ORDER BY c.p_caja_id` en la copia. Medido después del re-clon (`audit_id=499`): **67 grupos de cuotas,
+  0 con compras distintas** al origen, y los 5 tarjetas idénticas. La guarda C1e compara el conjunto de
+  importes+fechas de compra por grupo (array ordenado, para no depender del emparejamiento 1:1 cuando hay
+  cuotas idénticas repetidas).

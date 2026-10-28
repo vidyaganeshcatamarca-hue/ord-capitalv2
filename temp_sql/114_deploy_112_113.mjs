@@ -271,7 +271,7 @@ SELECT set_config('request.jwt.claims', '{"role":"service_role"}', true);
 SELECT public.fn_clonar_usuario_admin(${ORIGEN}, ${USER}, false);
 
 DO $c1$
-DECLARE v_dif int; v_mcbna bigint; v_tot_o bigint; v_tot_d bigint; v_huerfanas int;
+DECLARE v_dif int; v_mcbna bigint; v_tot_o bigint; v_tot_d bigint; v_huerfanas int; v_cruce int;
 BEGIN
     WITH o AS (SELECT t.nombre_tarjeta, t.dia_cierre, t.dia_vencimiento, count(cd.cuota_id) n
                  FROM public.p_tarjetas_credito t LEFT JOIN public.p_cuotas_detalle cd ON cd.tarjeta_id = t.tarjeta_id
@@ -300,6 +300,35 @@ BEGIN
        AND NOT EXISTS (SELECT 1 FROM public.p_caja c WHERE c.p_caja_id = l.p_caja_id);
     IF v_huerfanas > 0 THEN
         RAISE EXCEPTION 'C1d quedaron % fila(s) huerfanas en p_pagos_tarjeta_log', v_huerfanas;
+    END IF;
+
+    -- C1e: cada cuota tiene que conservar la COMPRA a la que apunta. Los conteos por
+    -- tarjeta dan perfecto aunque el mapa de movimientos este cruzado, asi que esto se
+    -- compara contra el origen agrupando por (numero, vencimiento, monto, moneda) y
+    -- comparando el conjunto de importes+fechas de compra (array ordenado, para no
+    -- depender del emparejamiento uno a uno cuando hay cuotas identicas repetidas).
+    WITH o AS (
+        SELECT cd.numero_cuota, cd.fecha_estimada_pago, cd.monto_cuota, cd.moneda,
+               array_agg(COALESCE(pc.valor_egreso, -1)::text || '@' || COALESCE(pc.fecha::text, '-')
+                         ORDER BY COALESCE(pc.valor_egreso, -1)::text || '@' || COALESCE(pc.fecha::text, '-')) AS compras
+          FROM public.p_cuotas_detalle cd
+          LEFT JOIN public.p_caja pc ON pc.p_caja_id = cd.p_caja_id
+         WHERE cd.user_id = ${ORIGEN}
+         GROUP BY 1, 2, 3, 4
+    ), d AS (
+        SELECT cd.numero_cuota, cd.fecha_estimada_pago, cd.monto_cuota, cd.moneda,
+               array_agg(COALESCE(pc.valor_egreso, -1)::text || '@' || COALESCE(pc.fecha::text, '-')
+                         ORDER BY COALESCE(pc.valor_egreso, -1)::text || '@' || COALESCE(pc.fecha::text, '-')) AS compras
+          FROM public.p_cuotas_detalle cd
+          LEFT JOIN public.p_caja pc ON pc.p_caja_id = cd.p_caja_id
+         WHERE cd.user_id = ${USER}
+         GROUP BY 1, 2, 3, 4
+    )
+    SELECT count(*) INTO v_cruce
+      FROM o JOIN d USING (numero_cuota, fecha_estimada_pago, monto_cuota, moneda)
+     WHERE o.compras IS DISTINCT FROM d.compras;
+    IF v_cruce > 0 THEN
+        RAISE EXCEPTION 'C1e % grupo(s) de cuotas apuntan a compras distintas a las del origen', v_cruce;
     END IF;
 END $c1$;
 ROLLBACK;
@@ -438,12 +467,13 @@ const correr = async (suite, titulo) => {
 const [yaAplicado] = await q(`
   select (pg_get_functiondef('public.fn_liquidar_ciclo_tarjeta_multi'::regproc) like '%v_corte_ars := true%') as fifo,
          (pg_get_functiondef('public.fn_registrar_pago_tarjeta_multi'::regproc) like '%v_pendiente_ventana%') as dif_neta,
-         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%IF v_tabla = ''p_estructuras_egresos''%') as replica_acotado`)
-const pendiente = !(yaAplicado?.fifo && yaAplicado?.dif_neta && yaAplicado?.replica_acotado)
+         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%IF v_tabla = ''p_estructuras_egresos''%') as replica_acotado,
+         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%ORDER BY c.p_caja_id%') as orden_movimientos`)
+const pendiente = !(yaAplicado?.fifo && yaAplicado?.dif_neta && yaAplicado?.replica_acotado && yaAplicado?.orden_movimientos)
 
 if (pendiente) {
-  const rojos = await correr([...PAGO_SUITE, ...CLON_SUITE], 'RED · contra lo desplegado (antes de 112 y 113)')
-  const esperados = ['P2', 'P3', 'P4']
+  const rojos = await correr([...PAGO_SUITE, ...CLON_SUITE], 'RED · contra lo desplegado')
+  const esperados = ['P2', 'P3', 'P4', 'C1']
   const inesperados = rojos.filter((n) => !esperados.some((e) => n.startsWith(e)))
   if (inesperados.length > 0) {
     console.log('\n✗ fallaron casos que NO son los que la 112 arregla:')
@@ -458,7 +488,11 @@ if (pendiente) {
   console.log(`\nRED confirmado: ${rojos.length} caso(s): ${rojos.join(', ')}`)
 
   // ---------------------------------------------------------------- 2) aplicar
-  for (const archivo of ['temp_sql/112_pago_tope_por_pool_v2.sql', 'temp_sql/113_clon_borrado_acotado.sql']) {
+  for (const archivo of [
+    'temp_sql/112_pago_tope_por_pool_v2.sql',
+    'temp_sql/113_clon_borrado_acotado.sql',
+    'temp_sql/115_clon_mapa_movimientos.sql',
+  ]) {
     const sql = fs.readFileSync(archivo, 'utf8')
     const r = await q('BEGIN;\n' + sql + '\nCOMMIT;')
     if (r?.message) {
@@ -482,5 +516,6 @@ console.log('\n✓ ALL TESTS PASSED (todo dentro de transacciones revertidas, ce
 const control = await q(`
   select (pg_get_functiondef('public.fn_liquidar_ciclo_tarjeta_multi'::regproc) like '%v_corte_ars := true%') as fifo,
          (pg_get_functiondef('public.fn_registrar_pago_tarjeta_multi'::regproc) like '%v_pendiente_ventana%') as dif_neta,
-         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%IF v_tabla = ''p_estructuras_egresos''%') as replica_acotado`)
+         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%IF v_tabla = ''p_estructuras_egresos''%') as replica_acotado,
+         (pg_get_functiondef('public.fn_clonar_usuario_admin'::regproc) like '%ORDER BY c.p_caja_id%') as orden_movimientos`)
 console.log('CONTROL:', JSON.stringify(control?.[0] ?? control))
