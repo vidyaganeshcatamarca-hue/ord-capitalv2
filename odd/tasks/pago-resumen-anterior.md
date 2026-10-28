@@ -1,0 +1,45 @@
+# Pago de resumen anterior: ventana anclada al ciclo y tope por pool
+
+Sandbox QA `user_id = 20`, tarjeta MC BNA (`dia_cierre = 24`, `dia_vencimiento = 4`).
+Bug de lógica de dinero en dos RPC de Supabase. Alto riesgo: item 1 (datos) e item 6 (sin test no hay red).
+
+## Specs
+
+- **S1.** El dueño reporta: *"cuando lo ejecuto me consume cuotas del mes de noviembre, cuando debería
+  consumir solo las cuotas atrasadas del mes de octubre"*.
+- **S2.** El dueño reporta: *"dejando la aplicación en un estado inconsistente, porque luego las cuotas
+  de noviembre no se pueden pagar"*.
+- **S3.** Tarjeta bajo análisis: *"Revisa exactamente la tarjeta en cuestión MC BNA"*. Para MC BNA el
+  resumen impago es el que venció el `2026-10-04` (4 cuotas, `$440.666,67`) y el siguiente vence el
+  `2026-11-04` (8 cuotas, `$594.109,17`).
+- **S4.** Alcance autorizado: *"Arreglar el bug de pago (2 defectos, con tests)"* — (a) anclar la ventana
+  al resumen que el usuario clickeó, (b) cortar la liquidación cuando se agota el pool.
+
+## Tareas
+
+| ID | Spec | Qué | Ruta | Commit |
+|----|------|-----|------|--------|
+| T1 | S1 | Anclar `v_prox_venc` a `CURRENT_DATE` (misma fórmula que `fn_reporte_vencimientos_tarjetas`), no a `p_fecha_pago` | Supabase `fn_registrar_pago_tarjeta_multi` · `temp_sql/108_*.sql` | `fix(tarjetas): anclar ventana...` |
+| T2 | S2 | En ventana explícita, no marcar `pagado = true` más allá de `pool + saldo_a_favor`; el remanente queda impago y no se crea cuota sintética | Supabase `fn_liquidar_ciclo_tarjeta_multi` · `temp_sql/108_*.sql` | ídem |
+| T3 | S1-S2 | Harness RED/GREEN transaccional: reporte y pago deben coincidir para 3 fechas de pago; prohibido `pagado` sin plata y prohibida cuota fantasma | `temp_sql/109_deploy_108.mjs` | ídem |
+| T4 | — | Mapear tarjetas del clon por nombre + ciclo en vez de `row_number()` | Supabase `fn_clonar_usuario_admin` · `temp_sql/110_*.sql` | `fix(qa): mapear tarjetas...` |
+| T5 | — | Re-clonar 30→20 y verificar que MC BNA conserva sus 34 cuotas con ciclo 24/4 | `tests/admin/clone_user.py` | ídem |
+
+## Log
+
+- **L1** (dueño, verbatim): *"Quiero que trabajes sobre el usuario 20 y te fijes e intentes detectar un bug
+  que hay en el pago atrasado de la tarjeta, ya que cuando lo ejecuto me consume cuotas del mes de
+  noviembre, cuando debería consumir solo las cuotas atrasadas del mes de octubre. Chequea bien las
+  cuotas atrasadas a que ciclo pertenecen, por qué consume las cuotas de noviembre dejando la aplicación
+  en un estado inconsistente, porque luego las cuotas de noviembre no se pueden pagar. Revisa
+  exactamente la tarjeta en cuestión MC BNA"*
+- **L2** (evidencia, experimento con ROLLBACK sobre user 20 / tarjeta 825 con ciclo forzado 24/4):
+  `objetivo='anterior'` + `p_fecha_pago = 2026-10-28` → solo octubre (correcto).
+  `objetivo='anterior'` + `p_fecha_pago = 2026-11-05` → octubre **+ las 8 de noviembre**, `liquidado =
+  1.034.775,83`, `refinanciado = 594.109,16`, cuota sintética nueva al `2026-12-04`.
+  `objetivo = NULL` (legacy) → idéntico a la fecha futura.
+- **L3** (hallazgo colateral, bloquea el repro): `fn_clonar_usuario_admin` arma `_map_tarjetas` con
+  `JOIN row_number() OVER (ORDER BY tarjeta_id)`. El `INSERT INTO p_tarjetas_credito` no tiene `ORDER BY`,
+  así que 4 de 5 tarjetas quedaron cruzadas (AMEX→MC BNA, MC BNA→MC UALA, VISA BNA→AMEX, MC UALA→VISA
+  BNA). Las 34 cuotas de MC BNA viven hoy en la tarjeta `825` con el ciclo de UALA (30/7).
+- **L4** (dueño, verbatim): *"y luego el clon"* — el arreglo del clon va después del de pago.
