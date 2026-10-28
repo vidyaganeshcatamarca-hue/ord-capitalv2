@@ -7,6 +7,7 @@ import { SliderBCG, SubcuentaModal } from '@/components/SubcuentaModal/Subcuenta
 import { MigrarCategoriaModal } from '@/components/MigrarCategoriaModal/MigrarCategoriaModal'
 import { MigrarSubcategoriaModal } from '@/components/MigrarSubcategoriaModal/MigrarSubcategoriaModal'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
+import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 import { INGRESO_ICONS, RUBRO_ICONS } from '@/constants/emojiToLucide'
 import { isUserEditableCategory } from '@/lib/categoryFilters'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
@@ -839,6 +840,7 @@ export function CategoriasPage() {
 
   return (
     <div className="page cat-page">
+      <PageBackButton to="/configuracion" />
       <div className="cat-page-header">
         <h1 className="font-display cat-page-title">{t("title_categories")}</h1>
         <p className="cat-page-subtitle">{t('cat_page_subtitle')}</p>

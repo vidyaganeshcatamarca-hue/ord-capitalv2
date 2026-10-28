@@ -12,6 +12,7 @@ import { BCGResumenCuadrantes, type ResumenCuadrante } from '@/components/bcg/BC
 import { BCGSelectMes } from '@/components/bcg/BCGSelectMes'
 import { BCGPodora } from '@/components/bcg/BCGPodora'
 import { BCGHormigas } from '@/components/bcg/BCGHormigas'
+import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 import './AnalisisEmocionalPage.css'
 
 type BcgTab = 'matriz' | 'podadora' | 'hormigas'
@@ -182,6 +183,7 @@ export function AnalisisEmocionalPage() {
 
   return (
     <div className="page bcg-page fade-in">
+      <PageBackButton fallback="/" />
       <header className="bcg-header">
         <div>
           <span className="bcg-kicker">{t('bcg_kicker')}</span>

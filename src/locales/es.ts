@@ -1937,6 +1937,7 @@ export const inversiones = {
   config_terms: "Términos y condiciones",
   config_privacy_policy: "Política de privacidad",
   config_back_to_settings: "Volver a Ajustes",
+  page_back_aria: "Volver",
 
   // Ajustes: Importar / Exportar movimientos (v1)
   config_ie_title: "Importar y exportar movimientos",

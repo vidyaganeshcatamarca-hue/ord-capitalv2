@@ -10,6 +10,7 @@ import { CalendarioWidget } from '@/components/saneamiento/CalendarioWidget'
 import { BandejaCuarentena } from '@/components/saneamiento/BandejaCuarentena'
 import { PlanAtaque } from '@/components/saneamiento/PlanAtaque'
 import { CalendarioFinanciero } from '@/components/saneamiento/CalendarioFinanciero'
+import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 import './SaneamientoPage.css'
 
 export type VistaSaneamiento = 'dashboard' | 'bandeja' | 'ataque' | 'calendario'
@@ -175,9 +176,13 @@ export function SaneamientoPage() {
       )}
 
       {vista !== 'dashboard' && (
-        <button className="saneamiento-back-btn" onClick={volver}>
+        <PageBackButton
+          variant="plain"
+          className="saneamiento-back-btn"
+          onBack={volver}
+        >
           {t('saneamiento_volver')}
-        </button>
+        </PageBackButton>
       )}
 
       {vista === 'dashboard' && (

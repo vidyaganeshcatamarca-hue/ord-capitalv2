@@ -1705,6 +1705,7 @@ export const inversiones = {
   config_terms: "Termos e condições",
   config_privacy_policy: "Política de privacidade",
   config_back_to_settings: "Voltar para Configurações",
+  page_back_aria: "Voltar",
   config_ie_title: "Importar e exportar transações",
   config_ie_desc: "Traga transações do Excel ou CSV, ou baixe o seu histórico.",
   config_ie_tab_import: "Importar",

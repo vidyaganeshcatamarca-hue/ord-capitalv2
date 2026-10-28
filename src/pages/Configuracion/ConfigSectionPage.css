@@ -12,28 +12,8 @@
   color: var(--text);
 }
 
-.config-back-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  justify-self: start;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  background: var(--surface-2);
-  color: var(--text);
-  padding: 0;
-  font-size: calc(1.4rem * var(--font-scale));
-  line-height: 1;
-  cursor: pointer;
-  /* Owner bug-3: the arrow stays apart from the section title. */
-  margin-bottom: 2px;
-}
-
-.config-back-button:hover {
-  border-color: var(--mint);
-}
+/* The back button geometry lives in PageBackButton.css (one source for every
+   second-level screen); this page only declares the gutter it already provides. */
 
 .config-section-card {
   display: grid;

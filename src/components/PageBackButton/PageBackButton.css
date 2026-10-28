@@ -1,0 +1,67 @@
+/* Page back affordance — one geometry for every second-level screen.
+   The row subtracts the padding the page already applies, so the arrow always
+   sits 16px from the left edge and 24px from the top regardless of the host
+   page. Pages that provide their own gutter declare it here, next to the rule
+   that consumes it, so there is a single place to look when one drifts. */
+
+.page-back-row {
+  --page-pad-inline: 0px;
+  --page-pad-block: 0px;
+  display: flex;
+  justify-content: flex-start;
+  /* Keeps the arrow apart from the section title (owner bug-3). */
+  margin-bottom: 2px;
+  padding-block-start: max(0px, calc(24px - var(--page-pad-block)));
+  padding-inline: max(0px, calc(16px - var(--page-pad-inline)));
+}
+
+.page-back-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 0;
+  font-size: calc(1.4rem * var(--font-scale));
+  line-height: 1;
+  cursor: pointer;
+}
+
+.page-back-button:hover {
+  border-color: var(--mint);
+}
+
+/* ConfigSectionPage.css: the page already pads 24px 16px. */
+.config-page .page-back-row {
+  --page-pad-inline: 16px;
+  --page-pad-block: 24px;
+}
+
+/* Analisis emocional: the page pads 16px on mobile and 24px from 768px up. */
+.bcg-page .page-back-row {
+  --page-pad-inline: 16px;
+  --page-pad-block: 16px;
+}
+
+@media (min-width: 768px) {
+  .bcg-page .page-back-row {
+    --page-pad-inline: 24px;
+    --page-pad-block: 24px;
+  }
+}
+
+/* Supervivencia (war room): the page pads 16px. */
+.war-page .page-back-row {
+  --page-pad-inline: 16px;
+  --page-pad-block: 16px;
+}
+
+/* Categorias: the page header pads itself, the page box does not. */
+.cat-page .page-back-row {
+  --page-pad-inline: 0px;
+  --page-pad-block: 0px;
+}

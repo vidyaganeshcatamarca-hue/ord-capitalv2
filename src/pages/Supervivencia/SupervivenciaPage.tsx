@@ -14,6 +14,7 @@ import { SafeToSpendDetalle } from '@/components/supervivencia/SafeToSpendDetall
 import { LicuadoraDetalle } from '@/components/supervivencia/LicuadoraDetalle'
 import { RadarAsfixiaDetalle } from '@/components/supervivencia/RadarAsfixiaDetalle'
 import { WarRoomInfoModal } from '@/components/supervivencia/WarRoomInfoModal'
+import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 import './SupervivenciaPage.css'
 
 export type Vista =
@@ -259,6 +260,10 @@ export function SupervivenciaPage() {
   return (
     <div className="page war-page fade-in">
       {vista === 'dashboard' && (
+        <PageBackButton fallback="/" />
+      )}
+
+      {vista === 'dashboard' && (
         <header className="war-header">
           <div>
             <span className="war-kicker">{t('war_room_kicker')}</span>
@@ -279,9 +284,13 @@ export function SupervivenciaPage() {
       )}
 
       {vista !== 'dashboard' && (
-        <button className="war-back-btn" onClick={volver}>
+        <PageBackButton
+          variant="plain"
+          className="war-back-btn"
+          onBack={volver}
+        >
           {t('war_room_volver')}
-        </button>
+        </PageBackButton>
       )}
 
       {vista === 'dashboard' && (

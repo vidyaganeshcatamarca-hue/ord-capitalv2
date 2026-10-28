@@ -1,24 +1,17 @@
-import { useNavigate } from 'react-router-dom'
 import { t } from '@/locales/i18n'
+import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 
 interface ConfigBackButtonProps {
-  /** Destino explícito. Si se omite, navega a /configuracion */
+  /** Explicit destination. Defaults to /configuracion */
   to?: string
 }
 
+/**
+ * Settings-sections back button. Kept as a named wrapper so the 14 settings
+ * pages share the geometry of PageBackButton without touching their call sites.
+ */
 export function ConfigBackButton({ to = '/configuracion' }: ConfigBackButtonProps) {
-  const navigate = useNavigate()
-
-  return (
-    <button
-      type="button"
-      className="config-back-button"
-      onClick={() => navigate(to)}
-      aria-label={t('config_back_to_settings')}
-    >
-      <span aria-hidden="true">‹</span>
-    </button>
-  )
+  return <PageBackButton to={to} ariaLabel={t('config_back_to_settings')} />
 }
 
 export default ConfigBackButton

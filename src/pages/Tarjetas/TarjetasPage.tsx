@@ -9,6 +9,7 @@ import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { CategoryIcon } from '@/components/CategoryIcon'
+import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 import { WalletIcon } from '@/components/WalletIcon'
 import { WalletDropdownSelect } from '@/components/WalletDropdownSelect'
 import type { WalletOptionItem } from '@/components/WalletDropdownSelect'
@@ -893,7 +894,13 @@ const handleLegacySubmit = async () => {
       <div className="page tarjetas-view">
         {/* Header */}
         <div className="tarjeta-detalle-header">
-          <button className="tarjeta-detalle-back" onClick={() => setSelectedCard(null)} aria-label="Volver"><CategoryIcon name="ArrowLeft" size={18} /></button>
+          <PageBackButton
+            variant="plain"
+            className="tarjeta-detalle-back"
+            onBack={() => setSelectedCard(null)}
+          >
+            <CategoryIcon name="ArrowLeft" size={18} />
+          </PageBackButton>
           <span className="tarjeta-detalle-title"><CategoryIcon name="CreditCard" size={18} /> {selectedCard.nombre_tarjeta}</span>
           <div className="tarjeta-detalle-actions">
             <button className="tarjeta-detalle-action-btn" onClick={() => openEdit(selectedCard)} title="Editar"><CategoryIcon name="Pencil" size={18} /></button>

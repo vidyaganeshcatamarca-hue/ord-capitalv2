@@ -4,6 +4,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency, formatCurrencyNumber, formatDate, formatPercent } from '@/lib/format'
 import { formatInversionDetalle } from '@/lib/inversionesLabels'
+import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 import { investmentMovementAmount } from '@/lib/inversionesMovimientos'
 import { investmentNetCapital } from '@/lib/inversionesPatrimonio'
 import './DetalleInversionView.css'
@@ -167,9 +168,14 @@ export function DetalleInversionView({
     return (
       <div className="detalle-view detalle-view--error">
         <p className="detalle-error-text">{t('error_generic')}</p>
-        <button type="button" className="detalle-back-btn" onClick={onBack}>
+        <PageBackButton
+          variant="plain"
+          className="detalle-back-btn"
+          onBack={onBack}
+          ariaLabel={t('detail_back')}
+        >
           {t('detail_back')}
-        </button>
+        </PageBackButton>
       </div>
     )
   }
@@ -202,11 +208,11 @@ export function DetalleInversionView({
   return (
     <div className="detalle-view">
       <header className="detalle-header">
-        <button
-          type="button"
+        <PageBackButton
+          variant="plain"
           className="detalle-back-btn detalle-back-btn--icon"
-          onClick={onBack}
-          aria-label={t('detail_back')}
+          onBack={onBack}
+          ariaLabel={t('detail_back')}
         >
           <svg
             width="20"
@@ -222,7 +228,7 @@ export function DetalleInversionView({
             <path d="M19 12H5" />
             <path d="M12 19l-7-7 7-7" />
           </svg>
-        </button>
+        </PageBackButton>
 
         <div className="detalle-header-text">
           <h2 className="detalle-title">{nombre}</h2>
