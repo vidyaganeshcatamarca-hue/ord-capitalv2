@@ -141,3 +141,9 @@ public/sw.js
 .worktrees/clone-user
 # CodeGraph local index
 .codegraph/
+
+# Pi local agent config (prompts, skills, extensions, scratch)
+.pi/*
+# ...menos los prompt templates, que viajan con el repo (el comando /user-clone)
+!.pi/prompts/
+
