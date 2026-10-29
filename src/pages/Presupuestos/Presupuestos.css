@@ -925,11 +925,17 @@
 
 .disclaimer-tip {
   padding: 10px 14px;
-  background: rgba(255,230,109,0.08);
-  border: 1px solid rgba(255,230,109,0.2);
+  /* Ronda 7 (S4, dueño): "texto de una sugerencia en color amarillo, ilesible
+     para el modo claro, tiene que ser en negro". El color era #FFE66D fijo, un
+     amarillo de tema oscuro que sobre el fondo claro queda casi invisible. El
+     texto pasa a la tinta del tema (--text: #1A1108 en claro, #e6edf3 en
+     oscuro) y el amarillo queda solo en el tinte y el borde, que es lo que
+     distingue la sugerencia sin volverla ilegible. */
+  background: var(--amber-dim, rgba(255, 230, 109, 0.08));
+  border: 1px solid var(--amber, rgba(255, 230, 109, 0.2));
   border-radius: 10px;
   font-size: calc(12px * var(--font-scale));
-  color: #FFE66D;
+  color: var(--text);
   line-height: 1.5;
   margin-bottom: 16px;
   display: flex;

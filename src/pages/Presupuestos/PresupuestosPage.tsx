@@ -7,6 +7,7 @@ import { t, parseError } from '@/locales/i18n'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { SYSTEM_CATEGORY_NAMES } from '@/lib/categoryFilters'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
+import { BASE_CERO_CONFIRM_TOKEN, isBaseCeroConfirmToken } from '@/lib/baseCeroConfirm'
 import { CuposResumenCard, type CupoResumen } from './CuposResumenCard'
 import './Presupuestos.css'
 
@@ -629,8 +630,8 @@ export function PresupuestosPage() {
   }
 
   const handlePasar2 = async () => {
-    if (acepto.trim().toUpperCase() !== 'ACEPTO') {
-      showToast(t('toast_write_accept_confirm'), 'error')
+    if (!isBaseCeroConfirmToken(acepto)) {
+      showToast(t('toast_write_accept_confirm', { token: BASE_CERO_CONFIRM_TOKEN }), 'error')
       return
     }
     try {
@@ -1302,11 +1303,13 @@ export function PresupuestosPage() {
                 </div>
 
                 <div className="contrato-acepto-section">
-                  <div className="contrato-acepto-label">{t('activate_base_cero_confirm_prompt')}</div>
+                  <div className="contrato-acepto-label">
+                    {t('activate_base_cero_confirm_prompt', { token: BASE_CERO_CONFIRM_TOKEN })}
+                  </div>
                   <input
-                    className={`contrato-acepto-input${acepto.toUpperCase() === 'ACEPTO' ? ' valido' : ''}`}
+                    className={`contrato-acepto-input${isBaseCeroConfirmToken(acepto) ? ' valido' : ''}`}
                     type="text"
-                    placeholder="ACEPTO"
+                    placeholder={BASE_CERO_CONFIRM_TOKEN}
                     value={acepto}
                     onChange={e => setAcepto(e.target.value)}
                   />
@@ -1319,7 +1322,7 @@ export function PresupuestosPage() {
                   <button
                     className="btn-primario peligro"
                     onClick={handlePasar2}
-                    disabled={acepto.trim().toUpperCase() !== 'ACEPTO'}
+                    disabled={!isBaseCeroConfirmToken(acepto)}
                   >
                     {t('btn_activate_discipline_confirm')}
                   </button>

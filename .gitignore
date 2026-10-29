@@ -149,3 +149,9 @@ public/sw.js
 
 !tests/inversiones/posicion-existente.test.js
 !tests/inversiones/teclado-numerico-enter.test.js
+
+# Tests de la ronda 7: presupuestos base cero y ajustes
+!tests/presupuestos/
+tests/presupuestos/*
+!tests/presupuestos/base-cero-confirmacion.test.js
+!tests/presupuestos/presupuestos-ui.test.js
