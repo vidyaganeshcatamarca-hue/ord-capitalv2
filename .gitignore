@@ -165,3 +165,8 @@ scratch/
 !tests/presupuestos/saldo-a-asignar-deficit.test.js
 !tests/presupuestos/base-cero-sin-arrastre.test.js
 !tests/presupuestos/cambio-modo-ciclo.test.js
+
+# Helpers locales de la máquina (Windows): rutas absolutas y 'git add .' que barre
+# archivos sueltos a la rama. No son parte del producto ni viajan en el repo.
+# Quedan en el disco de cada máquina, ignorados.
+/*.bat
