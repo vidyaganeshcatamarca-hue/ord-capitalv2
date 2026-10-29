@@ -148,3 +148,4 @@ public/sw.js
 !.pi/prompts/
 
 !tests/inversiones/posicion-existente.test.js
+!tests/inversiones/teclado-numerico-enter.test.js
