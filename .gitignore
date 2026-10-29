@@ -159,3 +159,6 @@ tests/presupuestos/*
 !tests/settingsModeSwitch.test.js
 !tests/base-cero-inicio.test.js
 !tests/inversiones/detalle-acciones-layout.test.js
+
+# Scratch de trabajo (probes, dumps de i18n, salidas temporales)
+scratch/
