@@ -5,6 +5,7 @@ import { parseError, t } from '@/locales/i18n'
 import { formatCurrency, formatCurrencyNumber, formatDate, formatPercent } from '@/lib/format'
 import { formatInversionDetalle } from '@/lib/inversionesLabels'
 import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
+import { Trash2 } from 'lucide-react'
 import { investmentMovementAmount } from '@/lib/inversionesMovimientos'
 import { investmentNetCapital } from '@/lib/inversionesPatrimonio'
 import './DetalleInversionView.css'
@@ -197,6 +198,11 @@ export function DetalleInversionView({
   // los movimientos que explican la diferencia. Salen del mismo historial que ya trae el
   // RPC: una fuente sola, sin inventar campos.
   const capitalNeto = investmentNetCapital(data)
+  // S8 (ronda 7, dueño): el borrado sale del pie de acciones y pasa al lado del
+  // nombre. Solo aplica a las posiciones que fn_eliminar_inversion acepta: sin
+  // billetera de origen y sin movimientos. La condicion se calcula UNA vez
+  // porque la usan el boton del header y su confirmacion.
+  const puedeBorrar = data.billetera_origen_id === null && historial.length === 0
   const movimientosCapital = historial.filter((mov) => typeof mov.detalle === 'string')
   const aportesCapital = movimientosCapital
     .filter((mov) => (mov.detalle as string).startsWith('investment_contribution:'))
@@ -234,6 +240,24 @@ export function DetalleInversionView({
           <h2 className="detalle-title">{nombre}</h2>
           <span className={badgeClass}>{typeLabel}</span>
         </div>
+
+        {/* S8 (ronda 7, dueño): "con el tachito de basura solamente al lado del
+            nombre de la inversión [...] bien a la derecha en la misma línea. Sin
+            ningún nombre, solo el tachito de basura". Es un boton de icono: el
+            nombre accesible va en aria-label, no en pantalla. */}
+        {puedeBorrar && (
+          <button
+            type="button"
+            className="detalle-header-delete"
+            onClick={() => setConfirmBorrar(true)}
+            disabled={borrando}
+            aria-label={t('btn_delete_investment')}
+            title={t('btn_delete_investment')}
+            data-testid="detalle-borrar-trigger"
+          >
+            <Trash2 size={18} aria-hidden="true" />
+          </button>
+        )}
       </header>
 
       <div className="detalle-meta">
@@ -428,24 +452,10 @@ export function DetalleInversionView({
             exactamente la condicion que verifica fn_eliminar_inversion. Las que
             tienen egreso, aporte o rescate se borran desde Historial, donde cada
             movimiento revierte su operacion.
-            Comparacion estricta: si el reporte no expusiera la columna (deploy
-            desfasado), el boton no aparece, en vez de aparecer en todas. */}
-        {data.billetera_origen_id === null &&
-          (data.historial ?? []).length === 0 &&
-          !confirmBorrar && (
-          <button
-            type="button"
-            className="detalle-action-btn detalle-action-btn--delete"
-            onClick={() => setConfirmBorrar(true)}
-            disabled={borrando}
-          >
-            <span aria-hidden="true">🗑️</span>
-            <span>{t('btn_delete_investment')}</span>
-          </button>
-        )}
-        {data.billetera_origen_id === null &&
-          (data.historial ?? []).length === 0 &&
-          confirmBorrar && (
+            S8 (ronda 7): el boton que la dispara vive ahora en el header, junto
+            al nombre. Acá queda solo la confirmación, para no dejar la accion
+            destructiva sin segundo paso. */}
+        {puedeBorrar && confirmBorrar && (
           <div className="detalle-delete-confirm" data-testid="detalle-borrar-confirmacion">
             <p>{t('confirm_delete_investment')}</p>
             <div className="detalle-delete-confirm-actions">

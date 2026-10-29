@@ -181,8 +181,15 @@ test('S7: borrar aparece solo donde puede funcionar', () => {
   // Tiene que coincidir con lo que verifica el backend: sin billetera Y sin
   // movimientos. Comparación estricta: con `== null`, un reporte que todavía no
   // expone la columna dejaría el botón en TODAS las posiciones.
-  const boton = bloqueDesde(detalle, '{data.billetera_origen_id === null &&', '>')
-  assert.match(boton, /\(data\.historial \?\? \[\]\)\.length === 0/, 'sin movimientos también')
+  //
+  // S8 (ronda 7): el botón dejó de estar en el pie y pasó a ser un icono en el
+  // header. La condición se calcula una sola vez (`puedeBorrar`) porque ahora la
+  // usan el disparador y su confirmación; el contrato es el mismo: los dos
+  // términos, juntos y estrictos.
+  const condicion = bloqueDesde(detalle, 'const puedeBorrar =', '\n')
+  assert.match(condicion, /data\.billetera_origen_id === null/, 'sin billetera de origen')
+  assert.match(condicion, /historial\.length === 0/, 'sin movimientos también')
+  assert.match(detalle, /\{puedeBorrar && \(/, 'el disparador usa la condición')
   assert.doesNotMatch(
     detalle,
     /billetera_origen_id == null/,
@@ -197,7 +204,10 @@ test('el detalle tipa la columna nueva', () => {
 })
 
 test('el estilo del borrado no trae colores hardcodeados', () => {
-  const bloque = bloqueDesde(detalleCss, '.detalle-action-btn--delete', '}')
+  // S8 (ronda 7): el disparador es ahora el botón de icono del header. La regla
+  // vieja del pie se borró con el botón, así que la revisión de color apunta a
+  // la regla que sí se dibuja.
+  const bloque = bloqueDesde(detalleCss, '.detalle-header-delete {', '}')
   assert.doesNotMatch(bloque, /#[0-9a-fA-F]{3,8}/, 'nada de hex: el tema claro/oscuro lo resuelve el token')
-  assert.match(bloque, /var\(--coral-ink\)/)
+  assert.match(bloque, /var\(--coral-ink/, 'la tinta del destrutivo sale del token del tema')
 })

@@ -110,6 +110,48 @@
   word-break: break-word;
 }
 
+/* S8 (ronda 7): el borrado de una posicion preexistente es un boton de icono,
+   solo, alineado a la derecha del nombre. No lleva etiqueta visible: el texto
+   queda en aria-label/title. Hereda el peso visual de las acciones secundarias
+   (--bg-2) y usa la tinta coral del tema, que es la que contrasta en claro y
+   oscuro, en vez de un rojo fijo. */
+.detalle-header-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-2);
+  color: var(--coral-ink, var(--coral));
+  cursor: pointer;
+  transition: background var(--transition-fast),
+              border-color var(--transition-fast),
+              opacity var(--transition-fast);
+}
+
+.detalle-header-delete:hover {
+  border-color: var(--border-light);
+  opacity: 0.88;
+}
+
+.detalle-header-delete:active {
+  transform: scale(0.98);
+}
+
+.detalle-header-delete:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+
+.detalle-header-delete:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .detalle-badge {
   display: inline-flex;
   align-items: center;
@@ -492,14 +534,11 @@
   color: var(--coral-ink, var(--coral));
 }
 
-/* S7 (posición preexistente): borrar es una acción secundaria y destructiva,
-   así que va neutra en reposo y coral en la confirmación. */
-.detalle-action-btn--delete {
-  background: var(--bg-2);
-  color: var(--coral-ink);
-  font-size: calc(12px * var(--font-scale));
-  font-weight: 600;
-}
+/* S7 (posición preexistente): borrar es una acción destructiva secundaria.
+   S8 (ronda 7): el disparador dejó de ser una acción ancha del pie y pasó a ser
+   un botón de icono junto al nombre, así que su estilo vive en
+   .detalle-header-delete. La regla vieja se borró con el botón: CSS muerto con
+   un test que lo mantiene vivo es peor que no tenerlo. */
 
 .detalle-delete-confirm {
   flex: 1 0 100%;

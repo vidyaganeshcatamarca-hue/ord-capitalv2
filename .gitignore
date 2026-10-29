@@ -158,3 +158,4 @@ tests/presupuestos/*
 !tests/settingsIcons.test.js
 !tests/settingsModeSwitch.test.js
 !tests/base-cero-inicio.test.js
+!tests/inversiones/detalle-acciones-layout.test.js
