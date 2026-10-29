@@ -1874,7 +1874,7 @@ export const inversiones = {
   card_termometer_help_title: "Cómo leer el termómetro",
   card_termometer_help_indice: "Índice de estrés: qué porcentaje de tu dinero disponible mensual consume el promedio de gastos de esta tarjeta. Verde hasta 30%, Amarillo (cuidado) entre 30% y 60%, Rojo (peligro) arriba de 60%.",
   card_termometer_help_cuota: "Próxima cuota: valor del proximo vencimiento de esta tarjeta.",
-  card_termometer_help_capacidad: "Capacidad de pago: lo que aproximadamente te queda disponible por mes después de vivir (ingresos menos gastos que no son de tarjeta). Te indica cuando dinero puedes disponer para gastos de tarjeta.",
+  card_termometer_help_capacidad: "Capacidad de pago: lo que aproximadamente te queda disponible por mes después de vivir (ingresos menos gastos que no son de tarjeta). Te indica cuánto dinero puedes disponer para gastos de tarjeta.",
   card_next_installment_due: "vence {fecha}",
   card_term_no_cuotas: "Sin plan de cuotas activo en esta tarjeta.",
   card_term_medium_quota: "El plan de cuotas consume una parte importante de tu margen mensual. Evitá sumar más compromisos por esta vía.",

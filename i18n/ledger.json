@@ -6459,7 +6459,7 @@
         "to": "Next installment: the amount of this card's next due date."
       },
       "inversiones.card_termometer_help_capacidad": {
-        "from": "Capacidad de pago: lo que aproximadamente te queda disponible por mes después de vivir (ingresos menos gastos que no son de tarjeta). Te indica cuando dinero puedes disponer para gastos de tarjeta.",
+        "from": "Capacidad de pago: lo que aproximadamente te queda disponible por mes después de vivir (ingresos menos gastos que no son de tarjeta). Te indica cuánto dinero puedes disponer para gastos de tarjeta.",
         "to": "Repayment capacity: what you roughly have available per month after living (income minus expenses that are not from cards). It tells you how much money you can set aside for card expenses."
       },
       "inversiones.card_next_installment_due": {
@@ -16149,7 +16149,7 @@
         "to": "Próxima parcela: valor do próximo vencimento deste cartão."
       },
       "inversiones.card_termometer_help_capacidad": {
-        "from": "Capacidad de pago: lo que aproximadamente te queda disponible por mes después de vivir (ingresos menos gastos que no son de tarjeta). Te indica cuando dinero puedes disponer para gastos de tarjeta.",
+        "from": "Capacidad de pago: lo que aproximadamente te queda disponible por mes después de vivir (ingresos menos gastos que no son de tarjeta). Te indica cuánto dinero puedes disponer para gastos de tarjeta.",
         "to": "Capacidade de pagamento: o que aproximadamente fica disponível por mês depois de viver (receitas menos despesas que não são de cartão). Indica quanto dinheiro você pode dispor para gastos de cartão."
       },
       "inversiones.card_next_installment_due": {
