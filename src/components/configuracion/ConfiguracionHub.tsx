@@ -83,9 +83,10 @@ function ConfigSoonCard({ item }: { item: SettingsMenuItem }) {
   )
 }
 
-/** S9 + L15 — the asymmetric Simple/Avanzado switch. Switching TO advanced asks
- *  for confirmation first (owner: avoid accidental mode changes); going back to
- *  simple stays one-tap. */
+/** S9 + L15 — el interruptor entre modo Simple y Avanzado. Confirmación en las
+ *  DOS direcciones (ronda 7, S10): entrar al avanzado siempre preguntó, y desde
+ *  la ronda 7 volver al simple también, porque un toque equivocado cambiaba el
+ *  menú sin vuelta atrás visible. */
 function ModeSwitchRow({ item }: { item: SettingsMenuItem }) {
   const { activarModoAvanzado, desactivarModoAvanzado, loading } = useModoApp()
   const goAdvanced = item.target === 'mode:to_advanced'
@@ -95,13 +96,7 @@ function ModeSwitchRow({ item }: { item: SettingsMenuItem }) {
       <button
         type="button"
         className={`config-hub-card${item.featured ? ' config-hub-card--featured' : ''}`}
-        onClick={() => {
-          if (goAdvanced) {
-            setConfirming(true)
-          } else {
-            void desactivarModoAvanzado()
-          }
-        }}
+        onClick={() => setConfirming(true)}
         disabled={loading}
       >
         <span className="config-hub-card-icon" aria-hidden="true">{rowIcon(goAdvanced ? 'go_advanced' : 'back_to_simple')}</span>
@@ -111,21 +106,25 @@ function ModeSwitchRow({ item }: { item: SettingsMenuItem }) {
         </div>
         <span className="config-hub-card-chevron" aria-hidden="true">›</span>
       </button>
-      {goAdvanced && (
-        <ConfirmModal
-          isOpen={confirming}
-          type="primary"
-          title={t('settings_confirm_go_advanced_title')}
-          message={t('settings_confirm_go_advanced_message')}
-          confirmText={t('settings_confirm_go_advanced_confirm')}
-          cancelText={t('btn_cancel')}
-          onConfirm={() => {
-            setConfirming(false)
-            void activarModoAvanzado()
-          }}
-          onCancel={() => setConfirming(false)}
-        />
-      )}
+      {/* Ronda 7 (S10, dueño): "al volver del modo avanzado al modo simple, pasa
+          sin ninguna confirmación previa [...] para que evitemos los errores de
+          vuelta al modo simple por error de mala digitación". Las DOS
+          direcciones confirman, cada una con su propio texto: entrar y salir del
+          modo avanzado cambian el menú, así que ninguno es un toque inocente. */}
+      <ConfirmModal
+        isOpen={confirming}
+        type="primary"
+        title={t(goAdvanced ? 'settings_confirm_go_advanced_title' : 'settings_confirm_back_to_simple_title')}
+        message={t(goAdvanced ? 'settings_confirm_go_advanced_message' : 'settings_confirm_back_to_simple_message')}
+        confirmText={t(goAdvanced ? 'settings_confirm_go_advanced_confirm' : 'settings_confirm_back_to_simple_confirm')}
+        cancelText={t('btn_cancel')}
+        onConfirm={() => {
+          setConfirming(false)
+          if (goAdvanced) void activarModoAvanzado()
+          else void desactivarModoAvanzado()
+        }}
+        onCancel={() => setConfirming(false)}
+      />
     </>
   )
 }

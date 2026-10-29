@@ -2523,6 +2523,11 @@ export const inversiones = {
   settings_confirm_go_advanced_title: "¿Pasar al modo avanzado?",
   settings_confirm_go_advanced_message: "Vas a activar funciones avanzadas. Podés volver al modo simple cuando quieras desde el menú Datos-Operaciones.",
   settings_confirm_go_advanced_confirm: "Activar avanzado",
+  // Ronda 7 (S10): volver a simple también pide confirmación. Salir del modo
+  // avanzado por un toque equivocado cuesta volver a entrar y reconfigurar.
+  settings_confirm_back_to_simple_title: "¿Volver al modo simple?",
+  settings_confirm_back_to_simple_message: "Vas a salir del modo avanzado y sus funciones dejan de mostrarse en el menú. Tus datos no se borran: podés activarlo de nuevo cuando quieras.",
+  settings_confirm_back_to_simple_confirm: "Volver a simple",
   settings_action_back_to_simple: "Volver a Modo Simple",
   settings_action_back_to_simple_desc: "Volvé a la experiencia simple de Ajustes.",
   settings_action_invite_friend: "Invitar a un amigo",
