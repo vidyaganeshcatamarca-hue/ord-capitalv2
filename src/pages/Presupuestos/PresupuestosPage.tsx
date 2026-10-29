@@ -169,6 +169,14 @@ export function PresupuestosPage() {
   const diaAncla = config?.dia_ancla_ciclo ? Number(config.dia_ancla_ciclo) : 1
   const activeOffset = new Date().getDate() < diaAncla ? -1 : 0
 
+  // Ronda 8 (dueño): "El ciclo anterior y el doble anterior, tanto en base cero como
+  // en modo libertad, es solo lectura. No puedo hacer asignaciones de ciclos
+  // anteriores." Un ciclo cerrado no se reasigna: la plata de ese ciclo ya se movió y
+  // tocar sus sobres reescribe la historia. Las tres cosas que dependen de esto —el
+  // botón Asignar, el Cubrir déficit y el encabezado de disponible— se apagan juntas.
+  const esCicloActivo = mesOffset === activeOffset
+  const soloLectura = !esCicloActivo
+
   const getLabelForOffset = (offset: number) => {
     if (offset === activeOffset) return t('budget_cycle_current_check')
     if (offset === activeOffset - 1) return t('budget_cycle_previous')
@@ -342,6 +350,11 @@ export function PresupuestosPage() {
   // ─── ASIGNAR PRESUPUESTO ─────────────────────────────────────────────────
 
   const handleAbrirAsignar = (sobre: SobreDetalle) => {
+    // Ciclo cerrado: no se abre ni el panel de asignación.
+    if (soloLectura) {
+      showToast(t('budget_readonly_cycle_toast'), 'error')
+      return
+    }
     setSobreSeleccionado(sobre)
     setMostrando('opciones')
     setMontoManual('')
@@ -359,6 +372,11 @@ export function PresupuestosPage() {
 
   const ejecutarAsignacion = async (monto: number) => {
     if (!sobreSeleccionado) return
+    // Guarda de fondo: aunque un botón se escape, un ciclo cerrado no escribe.
+    if (soloLectura) {
+      showToast(t('budget_readonly_cycle_toast'), 'error')
+      return
+    }
     if (isNaN(monto) || monto <= 0) {
       showToast(t('error_invalid_amount'), 'error')
       return
@@ -386,7 +404,7 @@ export function PresupuestosPage() {
   }
 
   const handleLlenarHueco = async () => {
-    if (!sobreSeleccionado) return
+    if (!sobreSeleccionado || soloLectura) return
     // En modo anticipado, el "hueco" se mide contra asignado - gastado (sin arrastre).
     const disponibleEfectivo = config?.modo_presupuesto === 'anticipado'
       ? Number(sobreSeleccionado.monto_asignado ?? 0) - Number(sobreSeleccionado.monto_gastado ?? 0)
@@ -420,6 +438,10 @@ export function PresupuestosPage() {
   }
 
   const handleMontoManualConfirmar = async () => {
+    if (soloLectura) {
+      showToast(t('budget_readonly_cycle_toast'), 'error')
+      return
+    }
     const montoAAgregar = parseFloat(montoManual.replace(/\./g, '').replace(',', '.'))
     if (isNaN(montoAAgregar) || montoAAgregar <= 0) {
       showToast(t('error_invalid_amount'), 'error')
@@ -470,6 +492,10 @@ export function PresupuestosPage() {
 
   const handleTransferir = async () => {
     if (!origenSeleccionado || !sobreSeleccionado) return
+    if (soloLectura) {
+      showToast(t('budget_readonly_cycle_toast'), 'error')
+      return
+    }
     const monto = parseFloat(montoTransferir.replace(/\./g, '').replace(',', '.'))
     if (isNaN(monto) || monto <= 0) {
       showToast(t('error_invalid_amount'), 'error')
@@ -542,6 +568,11 @@ export function PresupuestosPage() {
   }
 
   const handleAbrirTransferenciaDirecta = (sobre: SobreDetalle) => {
+    // Cubrir un déficit es una asignación: en un ciclo cerrado no se ofrece.
+    if (soloLectura) {
+      showToast(t('budget_readonly_cycle_toast'), 'error')
+      return
+    }
     setSobreSeleccionado(sobre)
     setOrigenSeleccionado(null)
     setMontoTransferir('')
@@ -778,10 +809,10 @@ export function PresupuestosPage() {
       </div>
 
       {/* ── STICKY DISPONIBLE ── */}
-      <div className={`disponible-header ${getEstadoDisponible()}`}>
+      <div className={`disponible-header ${soloLectura ? 'estado-cerrado' : getEstadoDisponible()}`}>
         <div className="disponible-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          {getLabelDisponible()}
-          {config?.modo_presupuesto === 'anticipado' && (
+          {soloLectura ? t('budget_cycle_closed_label') : getLabelDisponible()}
+          {!soloLectura && config?.modo_presupuesto === 'anticipado' && (
             <InfoBubble
               text={t('budget_info_proyeccion', {
                 pct_nec: String(config?.porcentaje_necesidades ?? 50),
@@ -792,10 +823,15 @@ export function PresupuestosPage() {
           )}
         </div>
         <div className="disponible-monto">
-          {saldoAsignar !== null ? formatMonto(saldoAsignar) : '—'}
+          {/* Un ciclo cerrado no tiene "disponible para asignar": el número que se
+              calculaba mezclaba la liquidez de HOY con los sobres de un ciclo que ya
+              se cerró, y por eso no significaba nada. */}
+          {soloLectura ? '—' : saldoAsignar !== null ? formatMonto(saldoAsignar) : '—'}
         </div>
-        <div className="disponible-subtexto">{getSubtextoDisponible()}</div>
-        {config?.modo_presupuesto === 'anticipado' && (
+        <div className="disponible-subtexto">
+          {soloLectura ? t('budget_cycle_closed_desc') : getSubtextoDisponible()}
+        </div>
+        {!soloLectura && config?.modo_presupuesto === 'anticipado' && (
           <div style={{ marginTop: 8 }}>
             <button
               className="btn-modo-disciplina"
@@ -825,7 +861,11 @@ export function PresupuestosPage() {
                   <span className="alerta-icon">⚠️</span>
                   <div className="alerta-text">
                     <h4>{t('budget_exceeded_envelopes_title')}</h4>
-                    <p>{t('budget_exceeded_envelopes_desc')}</p>
+                    <p>
+                      {soloLectura
+                        ? t('budget_exceeded_envelopes_desc_readonly')
+                        : t('budget_exceeded_envelopes_desc')}
+                    </p>
                   </div>
                 </div>
                 <div className="alerta-items">
@@ -839,13 +879,15 @@ export function PresupuestosPage() {
                         <span className="sobre-monto negativo">
                           {formatMonto(sobre.monto_disponible)}
                         </span>
-                        <button
-                          type="button"
-                          className="btn-cubrir-deficit"
-                          onClick={() => handleAbrirTransferenciaDirecta(sobre)}
-                        >
-                          {t('btn_cubrir_deficit')}
-                        </button>
+                        {!soloLectura && (
+                          <button
+                            type="button"
+                            className="btn-cubrir-deficit"
+                            onClick={() => handleAbrirTransferenciaDirecta(sobre)}
+                          >
+                            {t('btn_cubrir_deficit')}
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -863,6 +905,7 @@ export function PresupuestosPage() {
                 onAsignar={handleAbrirAsignar}
                 onVerDetalle={handleAbrirDetalle}
                 modoPresupuesto={config?.modo_presupuesto}
+                soloLectura={soloLectura}
                 fmt={formatMonto}
               />
             ))}
@@ -1451,11 +1494,13 @@ interface GrupoProps {
   /** S1 (ronda 4): tocar la tarjeta muestra información, no las opciones de asignar. */
   onVerDetalle: (s: SobreDetalle) => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
+  /** Ronda 8: un ciclo cerrado es solo lectura (sin botón Asignar). */
+  soloLectura?: boolean
   /** Montos en la moneda local del contexto, 0 decimales (viene de PresupuestosPage). */
   fmt: (n: number) => string
 }
 
-function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, modoPresupuesto, fmt }: GrupoProps) {
+function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: GrupoProps) {
   const meta = TIPO_CUPO_META[tipo] ?? { labelKey: tipo.toUpperCase(), icono: '📦' }
   const totalAsignado = items.reduce((s, i) => s + Number(i.monto_asignado ?? 0), 0)
 
@@ -1484,6 +1529,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
             onAsignar={() => onAsignar(sobre)}
             onVerDetalle={() => onVerDetalle(sobre)}
             modoPresupuesto={modoPresupuesto}
+            soloLectura={soloLectura}
             fmt={fmt}
           />
         ))}
@@ -1500,11 +1546,13 @@ interface FilaSobreProps {
   onAsignar: () => void
   onVerDetalle: () => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
+  /** Ronda 8: sin botón Asignar en un ciclo cerrado. */
+  soloLectura?: boolean
   /** Montos en la moneda local del contexto, 0 decimales (viene de GrupoAcordeon). */
   fmt: (n: number) => string
 }
 
-function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, fmt }: FilaSobreProps) {
+function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
   const pct = getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
   const colorBarra = getColorBarra(sobre.estado_sobre)
   const sinDatos = sobre.estado_sobre === 'sin_movimiento'
@@ -1541,10 +1589,12 @@ function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, fm
       role="button"
       tabIndex={0}
     >
-      {/* Botón asignar */}
-      <button className="sobre-btn-asignar" onClick={e => { e.stopPropagation(); onAsignar() }}>
-        {t('budget_assign_btn')}
-      </button>
+      {/* Botón asignar: no existe en un ciclo cerrado */}
+      {!soloLectura && (
+        <button className="sobre-btn-asignar" onClick={e => { e.stopPropagation(); onAsignar() }}>
+          {t('budget_assign_btn')}
+        </button>
+      )}
 
       {/* Nombre */}
       <div className="sobre-fila-top">
@@ -1557,7 +1607,7 @@ function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, fm
           </span>
           <span>{t(sobre.nombre_categoria)}</span>
         </div>
-        <span className={`sobre-disponible ${colorDisponible()}`} style={{ marginRight: 80 }}>
+        <span className={`sobre-disponible ${colorDisponible()}`} style={{ marginRight: soloLectura ? 0 : 80 }}>
           {disponibleEfectivo >= 0 ? fmt(disponibleEfectivo) : `-${fmt(Math.abs(disponibleEfectivo))}`}
         </span>
       </div>

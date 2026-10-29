@@ -2207,6 +2207,10 @@ export const inversiones = {
   budget_btn_confirm_and_assign: "Confirmar y asignar",
   budget_error_insufficient_funds: "No hay dinero disponible suficiente",
   // El modo base cero se bloquea hasta el ciclo siguiente (lo verifica el backend).
+  budget_readonly_cycle_toast: "Un ciclo cerrado es solo lectura: no se puede asignar ni cubrir déficits acá.",
+  budget_cycle_closed_label: "CICLO CERRADO",
+  budget_cycle_closed_desc: "Solo lectura: este ciclo ya terminó.",
+  budget_exceeded_envelopes_desc_readonly: "Gastaste más de lo asignado en estos sobres. Un ciclo cerrado no se puede modificar.",
   error_base_cero_locked: "No podés cambiar el modo de presupuesto hasta el ciclo siguiente.",
   // Ronda 7 (B3): volver a Modo Libertad reinicia las asignaciones del ciclo, así
   // que pide confirmación. El monto anterior se archiva (p_presupuestos_historial).

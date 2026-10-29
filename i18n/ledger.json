@@ -7650,6 +7650,22 @@
         "from": "No hay dinero disponible suficiente",
         "to": "There is not enough available money"
       },
+      "inversiones.budget_readonly_cycle_toast": {
+        "from": "Un ciclo cerrado es solo lectura: no se puede asignar ni cubrir déficits acá.",
+        "to": "A closed cycle is read-only: you cannot assign or cover deficits here."
+      },
+      "inversiones.budget_cycle_closed_label": {
+        "from": "CICLO CERRADO",
+        "to": "CYCLE CLOSED"
+      },
+      "inversiones.budget_cycle_closed_desc": {
+        "from": "Solo lectura: este ciclo ya terminó.",
+        "to": "Read-only: this cycle is over."
+      },
+      "inversiones.budget_exceeded_envelopes_desc_readonly": {
+        "from": "Gastaste más de lo asignado en estos sobres. Un ciclo cerrado no se puede modificar.",
+        "to": "You spent more than you assigned in these envelopes. A closed cycle cannot be changed."
+      },
       "inversiones.error_base_cero_locked": {
         "from": "No podés cambiar el modo de presupuesto hasta el ciclo siguiente.",
         "to": "You cannot change the budget mode until the next cycle."
@@ -17351,6 +17367,22 @@
       "inversiones.budget_error_insufficient_funds": {
         "from": "No hay dinero disponible suficiente",
         "to": "Não há dinheiro disponível suficiente"
+      },
+      "inversiones.budget_readonly_cycle_toast": {
+        "from": "Un ciclo cerrado es solo lectura: no se puede asignar ni cubrir déficits acá.",
+        "to": "Um ciclo fechado é somente leitura: não se pode atribuir nem cobrir déficits aqui."
+      },
+      "inversiones.budget_cycle_closed_label": {
+        "from": "CICLO CERRADO",
+        "to": "CICLO FECHADO"
+      },
+      "inversiones.budget_cycle_closed_desc": {
+        "from": "Solo lectura: este ciclo ya terminó.",
+        "to": "Somente leitura: este ciclo já terminou."
+      },
+      "inversiones.budget_exceeded_envelopes_desc_readonly": {
+        "from": "Gastaste más de lo asignado en estos sobres. Un ciclo cerrado no se puede modificar.",
+        "to": "Você gastou mais do que o atribuído nestes envelopes. Um ciclo fechado não pode ser alterado."
       },
       "inversiones.error_base_cero_locked": {
         "from": "No podés cambiar el modo de presupuesto hasta el ciclo siguiente.",

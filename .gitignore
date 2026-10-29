@@ -170,3 +170,4 @@ scratch/
 # archivos sueltos a la rama. No son parte del producto ni viajan en el repo.
 # Quedan en el disco de cada máquina, ignorados.
 /*.bat
+!tests/presupuestos/solo-lectura-ciclos-pasados.test.js

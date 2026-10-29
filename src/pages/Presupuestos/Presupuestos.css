@@ -116,6 +116,11 @@
 .disponible-header.estado-anticipado .disponible-monto { color: var(--amber); }
 .disponible-header.estado-anticipado .disponible-label { color: var(--amber); }
 
+/* Ronda 8: un ciclo cerrado es solo lectura, así que el encabezado deja de pintar
+   un número con color de "plata disponible" y pasa a gris neutro. */
+.disponible-header.estado-cerrado .disponible-label { color: var(--text-3); }
+.disponible-header.estado-cerrado .disponible-monto { color: var(--text-3); }
+
 .disponible-subtexto {
   font-size: calc(12px * var(--font-scale));
   color: var(--text-3);
