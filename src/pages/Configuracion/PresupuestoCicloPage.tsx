@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
 import { ToggleSwitch } from '@/components/configuracion/ToggleSwitch'
+import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
@@ -32,6 +33,9 @@ export function PresupuestoCicloPage() {
   const [config, setConfig] = useState<BudgetConfig>(DEFAULT_CONFIG)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  // Ronda 7 (B3): salir de base cero reinicia las asignaciones del ciclo, así que
+  // el cambio no puede pasar por un toque en el select.
+  const [confirmandoAnticipado, setConfirmandoAnticipado] = useState(false)
   const [baseCeroComoInicio, setBaseCeroComoInicio] = useState(() =>
     // Ronda 7 (S11): la preferencia vive en src/lib/baseCeroHome.ts, que es lo
     // que leen la barra de navegación y el aterrizaje de la app.
@@ -105,6 +109,12 @@ export function PresupuestoCicloPage() {
   }
 
   const updateMode = (modo: 'anticipado' | 'base_cero') => {
+    // Volver a Modo Libertad reinicia las asignaciones del ciclo (y deja el monto
+    // anterior archivado del lado del backend): se confirma antes.
+    if (modo === 'anticipado' && config.modo_presupuesto === 'base_cero') {
+      setConfirmandoAnticipado(true)
+      return
+    }
     const nextConfig = { ...config, modo_presupuesto: modo }
     setConfig(nextConfig)
     saveModo(modo)
@@ -260,6 +270,22 @@ export function PresupuestoCicloPage() {
         </article>
 
       </section>
+
+      <ConfirmModal
+        isOpen={confirmandoAnticipado}
+        type="primary"
+        title={t('budget_confirm_back_to_anticipado_title')}
+        message={t('budget_confirm_back_to_anticipado_message')}
+        confirmText={t('budget_confirm_back_to_anticipado_confirm')}
+        cancelText={t('btn_cancel')}
+        onConfirm={() => {
+          setConfirmandoAnticipado(false)
+          const nextConfig: BudgetConfig = { ...config, modo_presupuesto: 'anticipado' }
+          setConfig(nextConfig)
+          void saveModo('anticipado')
+        }}
+        onCancel={() => setConfirmandoAnticipado(false)}
+      />
     </main>
   )
 }

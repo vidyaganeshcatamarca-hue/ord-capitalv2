@@ -7,6 +7,7 @@ import { t, parseError } from '@/locales/i18n'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { SYSTEM_CATEGORY_NAMES } from '@/lib/categoryFilters'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
+import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { BASE_CERO_CONFIRM_TOKEN, isBaseCeroConfirmToken } from '@/lib/baseCeroConfirm'
 import { CuposResumenCard, type CupoResumen } from './CuposResumenCard'
 import './Presupuestos.css'
@@ -129,6 +130,9 @@ export function PresupuestosPage() {
   const [showTransferirModal, setShowTransferirModal] = useState(false)
   const [showReglasModal, setShowReglasModal] = useState(false)
   const [showBaseCeroModal, setShowBaseCeroModal] = useState(false)
+  // Ronda 7 (B3): volver a Modo Libertad reinicia las asignaciones del ciclo, así
+  // que pide confirmación. El monto anterior lo archiva el backend.
+  const [confirmandoAnticipado, setConfirmandoAnticipado] = useState(false)
 
   // Estado Asignar Sheet
   const [montoManual, setMontoManual] = useState('')
@@ -594,9 +598,9 @@ export function PresupuestosPage() {
           setShowBaseCeroModal(true)
           return
         } else {
-          const { error: errModo } = await supabase.rpc('fn_configurar_modo_presupuesto', { p_modo: modoForm })
-          if (errModo) throw errModo
-          window.dispatchEvent(new CustomEvent('budget-mode-changed'))
+          // B3: no se cambia de modo en el mismo toque que guarda las reglas.
+          setConfirmandoAnticipado(true)
+          return
         }
       }
 
@@ -620,6 +624,40 @@ export function PresupuestosPage() {
   }
 
   // ─── ACTIVAR BASE CERO ────────────────────────────────────────────────────
+
+  /**
+   * Ronda 7 (B3): confirma la vuelta a Modo Libertad, que reinicia las asignaciones
+   * del ciclo ACTIVO (el backend las pone en 0 y archiva el monto anterior).
+   *
+   * Va aparte de handleGuardarReglas porque las reglas ya quedaron guardadas: acá
+   * solo falta el cambio de modo, y el usuario tiene que decidirlo explícitamente.
+   */
+  const confirmarVueltaAAnticipado = async () => {
+    setLoadingReglas(true)
+    try {
+      const { error: errModo } = await supabase.rpc('fn_configurar_modo_presupuesto', { p_modo: 'anticipado' })
+      if (errModo) throw errModo
+      window.dispatchEvent(new CustomEvent('budget-mode-changed'))
+      showToast(t('toast_golden_rules_success'), 'success')
+      setConfirmandoAnticipado(false)
+      setShowReglasModal(false)
+      await cargarDatos()
+      if (returnToConfig) {
+        setReturnToConfig(false)
+        navigate('/configuracion')
+      }
+    } catch (err: any) {
+      const errStr = String(err?.message || '') + ' ' + JSON.stringify(err)
+      if (errStr.includes('error_base_cero_locked')) {
+        showToast(t('error_base_cero_locked'), 'error')
+      } else {
+        showToast(t('toast_golden_rules_error'), 'error')
+      }
+      setConfirmandoAnticipado(false)
+    } finally {
+      setLoadingReglas(false)
+    }
+  }
 
   const handleAbrirBaseCero = async () => {
     setPaso(1)
@@ -1385,6 +1423,18 @@ export function PresupuestosPage() {
         </div>
       )}
 
+      {/* Confirmación para volver a Modo Libertad (B3). Vive fuera del modal de
+          reglas: así el primer plano es suyo y cancelar no cierra lo de abajo. */}
+      <ConfirmModal
+        isOpen={confirmandoAnticipado}
+        type="primary"
+        title={t('budget_confirm_back_to_anticipado_title')}
+        message={t('budget_confirm_back_to_anticipado_message')}
+        confirmText={t('budget_confirm_back_to_anticipado_confirm')}
+        cancelText={t('btn_cancel')}
+        onConfirm={() => { void confirmarVueltaAAnticipado() }}
+        onCancel={() => setConfirmandoAnticipado(false)}
+      />
 
     </div>
   )

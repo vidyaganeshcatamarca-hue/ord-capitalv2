@@ -7654,6 +7654,18 @@
         "from": "No podés cambiar el modo de presupuesto hasta el ciclo siguiente.",
         "to": "You cannot change the budget mode until the next cycle."
       },
+      "inversiones.budget_confirm_back_to_anticipado_title": {
+        "from": "¿Salir de Base Cero?",
+        "to": "Leave Zero Base?"
+      },
+      "inversiones.budget_confirm_back_to_anticipado_message": {
+        "from": "Vas a volver al Modo Libertad: las asignaciones del ciclo se reinician. Lo que tenías asignado queda archivado, no se pierde.",
+        "to": "You are going back to Free Mode: this cycle's assignments restart. What you had assigned is archived, not lost."
+      },
+      "inversiones.budget_confirm_back_to_anticipado_confirm": {
+        "from": "Volver a Modo Libertad",
+        "to": "Back to Free Mode"
+      },
       "inversiones.card_status_healthy": {
         "from": "Saludable",
         "to": "Healthy"
@@ -17343,6 +17355,18 @@
       "inversiones.error_base_cero_locked": {
         "from": "No podés cambiar el modo de presupuesto hasta el ciclo siguiente.",
         "to": "Você não pode mudar o modo de orçamento até o próximo ciclo."
+      },
+      "inversiones.budget_confirm_back_to_anticipado_title": {
+        "from": "¿Salir de Base Cero?",
+        "to": "Sair do Base Zero?"
+      },
+      "inversiones.budget_confirm_back_to_anticipado_message": {
+        "from": "Vas a volver al Modo Libertad: las asignaciones del ciclo se reinician. Lo que tenías asignado queda archivado, no se pierde.",
+        "to": "Você vai voltar ao Modo Livre: as atribuições do ciclo são reiniciadas. O que você tinha atribuído fica arquivado, não se perde."
+      },
+      "inversiones.budget_confirm_back_to_anticipado_confirm": {
+        "from": "Volver a Modo Libertad",
+        "to": "Voltar ao Modo Livre"
       },
       "inversiones.card_status_healthy": {
         "from": "Saludable",

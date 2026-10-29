@@ -108,3 +108,41 @@ Función: `temp_sql/132_base_cero_sin_arrastre.sql`. Deploy: `temp_sql/133_deplo
 - Incidencia: el artefacto 132 salió de `pg_get_functiondef` sin `;` final y el deploy
   abortó antes de aplicar nada. Corregido en el archivo y en el script, y el test lo
   congela.
+
+### B3 — desplegado y verificado (2026-10-29)
+
+SQL: `temp_sql/134_cambio_modo_ciclo_activo.sql` (tabla
+`p_presupuestos_historial` con RLS, `fn_archivar_presupuestos_ciclo` y la función
+`fn_configurar_modo_presupuesto` corregida). Deploy: `temp_sql/135_deploy_134.mjs`.
+
+Qué cambió:
+
+- El reset usa el ciclo ACTIVO: `date_trunc('month', fn_obtener_fechas_ciclo_presupuesto(CURRENT_DATE).fecha_inicio)`,
+  que es la misma clave que escribe la app. Antes usaba el mes calendario.
+- Antes de poner en 0, las filas con monto van a `p_presupuestos_historial` con motivo
+  y modos. En las dos direcciones. Sigue sin borrar ninguna fila.
+- La UI confirma antes de volver a Modo Libertad, desde Ajustes → Presupuesto y ciclo
+  y desde el modal de reglas de Presupuestos (el RPC vive solo en el handler de
+  confirmación).
+
+Ensayo real sin persistencia (bloque `DO` que termina siempre en `RAISE`, así que
+Postgres revierte; hoy es 29/10 y al user 135 se le puso ancla 30 dentro de la
+transacción para que el ciclo activo cayera en el mes anterior):
+
+| Comprobación | Resultado |
+| --- | --- |
+| Ciclo activo | 2026-09-01 → quedó en **0** |
+| Mes calendario | 2026-10-01 → **intacto** en 200.000 |
+| Archivo | 100.000 con motivo `vuelta_a_anticipado` |
+| Después del ensayo | huella idéntica (41 / 11.202.000 / 79 / 1.912) y archivo con **0 filas** |
+
+También quedó verificado que la función ya no contiene `date_trunc('month',
+CURRENT_DATE)`, que la tabla tiene RLS y que el `UPDATE` apunta al ciclo activo.
+
+## Commits
+
+| Commit | Task |
+| --- | --- |
+| `e836ac6` | B1 — los déficits no suman al disponible |
+| `b87eaba` | B2 — base cero sin arrastre y con corte |
+| _(B3)_ | cambio de modo: ciclo activo, archivo y confirmación |

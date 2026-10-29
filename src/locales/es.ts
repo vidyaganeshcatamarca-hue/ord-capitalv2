@@ -2208,6 +2208,11 @@ export const inversiones = {
   budget_error_insufficient_funds: "No hay dinero disponible suficiente",
   // El modo base cero se bloquea hasta el ciclo siguiente (lo verifica el backend).
   error_base_cero_locked: "No podés cambiar el modo de presupuesto hasta el ciclo siguiente.",
+  // Ronda 7 (B3): volver a Modo Libertad reinicia las asignaciones del ciclo, así
+  // que pide confirmación. El monto anterior se archiva (p_presupuestos_historial).
+  budget_confirm_back_to_anticipado_title: "¿Salir de Base Cero?",
+  budget_confirm_back_to_anticipado_message: "Vas a volver al Modo Libertad: las asignaciones del ciclo se reinician. Lo que tenías asignado queda archivado, no se pierde.",
+  budget_confirm_back_to_anticipado_confirm: "Volver a Modo Libertad",
 
   // Refactor TarjetasPage
   card_status_healthy: "Saludable",
