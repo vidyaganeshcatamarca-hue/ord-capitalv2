@@ -14,7 +14,6 @@ import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { MiCuentaCard } from './MiCuentaCard'
 import './ConfiguracionHub.css'
 
-const BASE_CERO_HOME_KEY = 'base_cero_como_inicio'
 // L17 — persisted open-section id: back from a submenu screen returns expanded.
 const OPEN_GROUP_STORAGE_KEY = 'config-hub.open-group-id'
 

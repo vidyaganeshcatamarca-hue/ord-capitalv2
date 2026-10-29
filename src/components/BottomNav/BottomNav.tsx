@@ -5,6 +5,8 @@ import { NAV_ITEMS } from '@/constants/navigation'
 import { t } from '@/locales/i18n'
 import { supabase } from '@/lib/supabase'
 import { useModoApp } from '@/contexts/ModoAppContext'
+import { useBaseCeroHome } from '@/hooks/useBaseCeroHome'
+import { BASE_CERO_HOME_PATH, orderNavPaths, readBaseCeroHome, writeBaseCeroHome } from '@/lib/baseCeroHome'
 import { HelpCircle } from 'lucide-react'
 import './BottomNav.css'
 
@@ -21,6 +23,9 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { hasFeature, loading: modoAppLoading } = useModoApp()
+  // Ronda 7 (S11): con "Base 0 como pantalla de inicio" prendido, Base 0 pasa a
+  // ser la primera opción de la barra y HOME la segunda.
+  const baseCeroComoInicio = useBaseCeroHome()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [modoPresupuesto, setModoPresupuesto] = useState<'base_cero' | 'anticipado'>('anticipado')
   // True while the "+" is held and the long-press timer is still running.
@@ -55,6 +60,15 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
           const cfg = Array.isArray(rawData) ? rawData[0] : rawData
           if (cfg?.modo_presupuesto) {
             setModoPresupuesto(cfg.modo_presupuesto)
+            // Ronda 7 (S11): "Base 0 como pantalla de inicio" solo tiene sentido
+            // mientras el presupuesto este en modo base cero. Si el usuario
+            // vuelve a anticipado, la opcion queda apagada aca (su interruptor
+            // vive dentro del bloque base cero y ya no seria alcanzable), asi
+            // que la app no puede quedar aterrizando en una pantalla que no es
+            // la suya. La preferencia se apaga sola en vez de quedar mintiendo.
+            if (cfg.modo_presupuesto !== 'base_cero' && readBaseCeroHome()) {
+              writeBaseCeroHome(false)
+            }
           }
         }
       } catch (err) {
@@ -131,7 +145,16 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
     ? ['/', '/billeteras', '/presupuesto']
     : ['/', '/billeteras', '/tarjetas']
   const allowedMobileSet = useMemo(() => new Set(allowedMobilePaths), [isBaseCero])
-  const mobileNavItems = NAV_ITEMS.filter(item => allowedMobileSet.has(item.path))
+  // El orden se resuelve con un helper puro (src/lib/baseCeroHome.ts) y recién
+  // después se dibuja: las dos primeras posiciones van antes del FAB y la
+  // tercera después.
+  const mobileNavItems = useMemo(() => {
+    const items = NAV_ITEMS.filter((item) => allowedMobileSet.has(item.path))
+    const ordenados = orderNavPaths(items.map((item) => item.path), baseCeroComoInicio)
+    return ordenados
+      .map((path) => items.find((item) => item.path === path))
+      .filter((item): item is (typeof NAV_ITEMS)[number] => Boolean(item))
+  }, [allowedMobileSet, baseCeroComoInicio])
 
   // Rutas que se agrupan dentro del menú desplegable "Menú"
   const dropdownPaths = isBaseCero
@@ -145,6 +168,13 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
     label: 'menu_ayuda',
     icon: (active: boolean) => <HelpCircle size={22} stroke="currentColor" fill={active ? 'currentColor' : 'none'} strokeWidth={active ? 0 : 1.8} />,
   } as const
+
+  // Etiqueta de una opción de la barra. En base cero, la pantalla de
+  // presupuesto se llama "Base 0" en cualquier posición que ocupe (ronda 7: con
+  // la opción de inicio prendida pasa a la primera posición y no puede cambiar
+  // de nombre al moverse).
+  const navLabel = (path: string, label: string) =>
+    path === BASE_CERO_HOME_PATH && isBaseCero ? t('menu_base_cero_short') : t(label)
 
   const handleDropdownItemClick = (path: string) => {
     setIsMenuOpen(false)
@@ -190,6 +220,7 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
         {/* Inicio y Cuentas */}
         {mobileNavItems.slice(0, 2).map((item) => {
           const active = pathname === item.path
+          const labelText = navLabel(item.path, item.label)
           return (
             <button
               key={item.path}
@@ -198,10 +229,10 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
                 setIsMenuOpen(false)
                 navigate(item.path)
               }}
-              aria-label={t(item.label)}
+              aria-label={labelText}
             >
               {item.icon(active)}
-              {item.label && <span>{t(item.label)}</span>}
+              {item.label && <span>{labelText}</span>}
             </button>
           )
         })}
@@ -230,7 +261,7 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
         {/* Tarjetas / Base 0 */}
         {mobileNavItems.slice(2, 3).map((item) => {
           const active = pathname === item.path
-          const labelText = (item.path === '/presupuesto' && isBaseCero) ? t('menu_base_cero_short') : t(item.label)
+          const labelText = navLabel(item.path, item.label)
           return (
             <button
               key={item.path}

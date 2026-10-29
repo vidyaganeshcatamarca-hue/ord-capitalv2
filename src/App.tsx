@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, lazy, Suspense, useRef } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { HogarProvider } from '@/contexts/HogarContext'
@@ -14,6 +14,8 @@ import { onPendingReporte, type ReporteOutcome } from '@/lib/reportesPending'
 import { PrivateRoute, PublicRoute, FeatureRoute } from '@/router/guards'
 import { BottomNav } from '@/components/BottomNav/BottomNav'
 import { SideNav } from '@/components/SideNav/SideNav'
+import { useBaseCeroHome } from '@/hooks/useBaseCeroHome'
+import { resolveLandingPath } from '@/lib/baseCeroHome'
 import { PWABanner } from '@/components/PWABanner'
 import { AppVersionGate } from '@/components/AppVersionGate/AppVersionGate'
 import { AppConsentGate } from '@/components/AppConsentGate/AppConsentGate'
@@ -95,6 +97,23 @@ function AppLayout() {
   const [showAdd, setShowAdd] = useState(false)
   const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false)
   const [addConfig, setAddConfig] = useState<{ defaultTipo?: 'expense' | 'income' | 'transfer', initialBilleteraId?: number } | null>(null)
+  const navigate = useNavigate()
+
+  // Ronda 7 (S11, dueño): con "Base 0 como pantalla de inicio" prendido, la
+  // primera pantalla al entrar a la app es Base 0 y no HOME. El redirect corre
+  // UNA sola vez por apertura (el layout se monta una vez): así el botón Inicio
+  // sigue llevando a HOME sin rebotar de vuelta a Base 0.
+  const baseCeroComoInicio = useBaseCeroHome()
+  const yaResolvioInicioRef = useRef(false)
+  useEffect(() => {
+    if (yaResolvioInicioRef.current) return
+    yaResolvioInicioRef.current = true
+    const destino = resolveLandingPath(window.location.pathname, baseCeroComoInicio)
+    if (destino !== window.location.pathname) navigate(destino, { replace: true })
+    // Solo al montar: el valor de la preferencia se lee una vez para decidir el
+    // aterrizaje; cambiarla después no debe arrastrar al usuario a otra pantalla.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Voice capture is behind the voz_activada preference (fn_obtener_modo_app):
   // both global recorder openers (nav long-press + modal voice CTA) respect the

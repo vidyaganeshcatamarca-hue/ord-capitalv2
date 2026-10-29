@@ -4,10 +4,10 @@ import { ToggleSwitch } from '@/components/configuracion/ToggleSwitch'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
+import { readBaseCeroHome, writeBaseCeroHome } from '@/lib/baseCeroHome'
 import './ConfiguracionPage.css'
 import './ConfigSectionPage.css'
 
-const BASE_CERO_HOME_KEY = 'base_cero_como_inicio'
 
 interface BudgetConfig {
   modo_presupuesto: 'anticipado' | 'base_cero'
@@ -32,8 +32,10 @@ export function PresupuestoCicloPage() {
   const [config, setConfig] = useState<BudgetConfig>(DEFAULT_CONFIG)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
-  const [baseCeroComoInicio, setBaseCeroComoInicio] = useState(
-    () => localStorage.getItem(BASE_CERO_HOME_KEY) === 'true'
+  const [baseCeroComoInicio, setBaseCeroComoInicio] = useState(() =>
+    // Ronda 7 (S11): la preferencia vive en src/lib/baseCeroHome.ts, que es lo
+    // que leen la barra de navegación y el aterrizaje de la app.
+    readBaseCeroHome()
   )
 
   useEffect(() => {
@@ -116,8 +118,7 @@ export function PresupuestoCicloPage() {
 
   const handleToggleBaseCeroInicio = (val: boolean) => {
     setBaseCeroComoInicio(val)
-    localStorage.setItem(BASE_CERO_HOME_KEY, String(val))
-    window.dispatchEvent(new Event('base-cero-home-changed'))
+    writeBaseCeroHome(val)
   }
 
   return (
