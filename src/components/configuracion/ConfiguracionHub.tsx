@@ -8,6 +8,7 @@ import { rpc } from '@/lib/supabase'
 import { t } from '@/locales/i18n'
 import { resolveSettingsMenu } from '@/config/settingsMenu'
 import type { SettingsMenuGroup, SettingsMenuItem } from '@/config/settingsMenu'
+import { settingIcon, settingGroupIcon } from '@/config/settingsIcons'
 import { ToggleSwitch } from './ToggleSwitch'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { MiCuentaCard } from './MiCuentaCard'
@@ -17,16 +18,14 @@ const BASE_CERO_HOME_KEY = 'base_cero_como_inicio'
 // L17 — persisted open-section id: back from a submenu screen returns expanded.
 const OPEN_GROUP_STORAGE_KEY = 'config-hub.open-group-id'
 
-/** Icon of every row the hub renders from a `target:` destination. */
-const ROW_ICONS: Record<string, ReactNode> = {
-  region_format: '🌍',
-  load_registry: '⚙️',
-  home_config: '👥',
+/**
+ * Ronda 7 (S7): el dueño pidió icono en todos los submenúes. El mapa vive en
+ * src/config/settingsIcons.ts (dato puro, recorrible desde un test) y acá solo
+ * quedan las excepciones que el hub pinta con un icono de lucide en vez de un
+ * emoji. Cualquier id sin entrada acá sale del mapa compartido.
+ */
+const ROW_ICON_OVERRIDES: Record<string, ReactNode> = {
   import_export: <FileSpreadsheet size={22} />,
-  about: '📱',
-  report_issue: '🐞',
-  my_reports: '📋',
-  guided_tour: '🧭',
 }
 
 /**
@@ -39,13 +38,9 @@ const ROW_STATE: Record<string, Record<string, unknown>> = {
   my_reports: { origen: '/configuracion' },
 }
 
-/** Icon of every top-level tree group, rendered in its collapsible header (U1/S1). */
-const GROUP_ICONS: Record<string, ReactNode> = {
-  account_security: '🛡️',
-  preferences: '⚙️',
-  data_operations: '📊',
-  help_support: '🆘',
-  application: '📱',
+/** Icono de una fila: la excepción de lucide o el emoji del mapa compartido. */
+function rowIcon(id: string): ReactNode {
+  return ROW_ICON_OVERRIDES[id] ?? settingIcon(id)
 }
 
 interface ConfigLinkCardProps {
@@ -78,7 +73,7 @@ function ConfigLinkCard({ icon, titleKey, descKey, to, state }: ConfigLinkCardPr
 function ConfigSoonCard({ item }: { item: SettingsMenuItem }) {
   return (
     <article className="config-hub-card config-hub-card--soon" aria-disabled="true">
-      <span className="config-hub-card-icon" aria-hidden="true">{ROW_ICONS[item.id] ?? '✨'}</span>
+      <span className="config-hub-card-icon" aria-hidden="true">{rowIcon(item.id)}</span>
       <div className="config-hub-card-content">
         <h3>{t(item.titleKey)}</h3>
         {item.descKey && <p>{t(item.descKey)}</p>}
@@ -109,7 +104,7 @@ function ModeSwitchRow({ item }: { item: SettingsMenuItem }) {
         }}
         disabled={loading}
       >
-        <span className="config-hub-card-icon" aria-hidden="true">{goAdvanced ? '🚀' : '↩️'}</span>
+        <span className="config-hub-card-icon" aria-hidden="true">{rowIcon(goAdvanced ? 'go_advanced' : 'back_to_simple')}</span>
         <div className="config-hub-card-content">
           <h3>{t(item.titleKey)}</h3>
           {item.descKey && <p>{t(item.descKey)}</p>}
@@ -159,7 +154,7 @@ function SettingsEntry({ item, userId }: { item: SettingsMenuItem; userId: strin
   if (item.target.startsWith('target:')) {
     return (
       <ConfigLinkCard
-        icon={ROW_ICONS[item.id] ?? '•'}
+        icon={rowIcon(item.id)}
         titleKey={item.titleKey}
         descKey={item.descKey}
         to={item.target.slice('target:'.length)}
@@ -178,7 +173,7 @@ function SettingsSubgroup({ group }: { group: SettingsMenuGroup }) {
   if (!group.target?.startsWith('target:')) return null
   return (
     <ConfigLinkCard
-      icon={ROW_ICONS[group.id] ?? '⚙️'}
+      icon={rowIcon(group.id)}
       titleKey={group.titleKey}
       descKey={group.descKey}
       to={group.target.slice('target:'.length)}
@@ -258,7 +253,7 @@ function SettingsGroupSection({ group, userId, openGroupId, onOpenGroup }: { gro
   return (
     <SettingsCollapsible
       id={`config-group-${group.id}`}
-      icon={GROUP_ICONS[group.id] ?? '⚙️'}
+      icon={settingGroupIcon(group.id)}
       titleKey={group.titleKey}
       open={openGroupId === group.id}
       onOpenChange={(next) => onOpenGroup(next ? group.id : null)}

@@ -155,3 +155,4 @@ public/sw.js
 tests/presupuestos/*
 !tests/presupuestos/base-cero-confirmacion.test.js
 !tests/presupuestos/presupuestos-ui.test.js
+!tests/settingsIcons.test.js
