@@ -6451,16 +6451,16 @@
         "to": "How to read the thermometer"
       },
       "inversiones.card_termometer_help_indice": {
-        "from": "Índice de estrés: qué porcentaje de tu margen mensual consume en promedio el plan de cuotas de esta tarjeta, hasta terminar de pagarlo. Verde hasta 30%, cuidado entre 30% y 60%, malo arriba de 60%.",
-        "to": "Stress index: the share of your monthly margin that this card's installment plan consumes on average, until it is fully paid off. Green up to 30%, caution between 30% and 60%, bad above 60%."
+        "from": "Índice de estrés: qué porcentaje de tu dinero disponible mensual consume el promedio de gastos de esta tarjeta. Verde hasta 30%, Amarillo (cuidado) entre 30% y 60%, Rojo (peligro) arriba de 60%.",
+        "to": "Stress index: what percentage of your monthly available money this card's average spending consumes. Green up to 30%, Yellow (caution) between 30% and 60%, Red (danger) above 60%."
       },
       "inversiones.card_termometer_help_cuota": {
-        "from": "Próxima cuota: la cuota que antes vence de esta tarjeta, con su fecha estimada. La suma total del plan ya está reflejada en el índice.",
-        "to": "Next installment: the installment on this card that is due soonest, with its estimated date. The full plan total is already reflected in the index."
+        "from": "Próxima cuota: valor del proximo vencimiento de esta tarjeta.",
+        "to": "Next installment: the amount of this card's next due date."
       },
       "inversiones.card_termometer_help_capacidad": {
-        "from": "Capacidad de pago: lo que aproximadamente te queda por mes después de vivir (ingresos menos gastos que no son de tarjeta). Es el margen del que se alimentan las cuotas.",
-        "to": "Repayment capacity: roughly what you have left each month after living costs (income minus non-card expenses). This is the margin the installments draw from."
+        "from": "Capacidad de pago: lo que aproximadamente te queda disponible por mes después de vivir (ingresos menos gastos que no son de tarjeta). Te indica cuando dinero puedes disponer para gastos de tarjeta.",
+        "to": "Repayment capacity: what you roughly have available per month after living (income minus expenses that are not from cards). It tells you how much money you can set aside for card expenses."
       },
       "inversiones.card_next_installment_due": {
         "from": "vence {fecha}",
@@ -6677,6 +6677,10 @@
       "inversiones.config_back_to_settings": {
         "from": "Volver a Ajustes",
         "to": "Back to Settings"
+      },
+      "inversiones.page_back_aria": {
+        "from": "Volver",
+        "to": "Back"
       },
       "inversiones.config_ie_title": {
         "from": "Importar y exportar movimientos",
@@ -16093,16 +16097,16 @@
         "to": "Como ler o termômetro"
       },
       "inversiones.card_termometer_help_indice": {
-        "from": "Índice de estrés: qué porcentaje de tu margen mensual consume en promedio el plan de cuotas de esta tarjeta, hasta terminar de pagarlo. Verde hasta 30%, cuidado entre 30% y 60%, malo arriba de 60%.",
-        "to": "Índice de estresse: qual percentual da sua margem mensal o plano de parcelas deste cartão consome em média, até a quitação. Verde até 30%, atenção entre 30% e 60%, ruim acima de 60%."
+        "from": "Índice de estrés: qué porcentaje de tu dinero disponible mensual consume el promedio de gastos de esta tarjeta. Verde hasta 30%, Amarillo (cuidado) entre 30% y 60%, Rojo (peligro) arriba de 60%.",
+        "to": "Índice de estresse: qual percentual do seu dinheiro disponível mensal o gasto médio deste cartão consome. Verde até 30%, Amarelo (atenção) entre 30% e 60%, Vermelho (perigo) acima de 60%."
       },
       "inversiones.card_termometer_help_cuota": {
-        "from": "Próxima cuota: la cuota que antes vence de esta tarjeta, con su fecha estimada. La suma total del plan ya está reflejada en el índice.",
-        "to": "Próxima parcela: a parcela que vence mais cedo neste cartão, com a data estimada. O total do plano já está refletido no índice."
+        "from": "Próxima cuota: valor del proximo vencimiento de esta tarjeta.",
+        "to": "Próxima parcela: valor do próximo vencimento deste cartão."
       },
       "inversiones.card_termometer_help_capacidad": {
-        "from": "Capacidad de pago: lo que aproximadamente te queda por mes después de vivir (ingresos menos gastos que no son de tarjeta). Es el margen del que se alimentan las cuotas.",
-        "to": "Capacidade de pagamento: o que mais ou menos sobra para você por mês depois de viver (receitas menos despesas que não são do cartão). É a margem de onde saem as parcelas."
+        "from": "Capacidad de pago: lo que aproximadamente te queda disponible por mes después de vivir (ingresos menos gastos que no son de tarjeta). Te indica cuando dinero puedes disponer para gastos de tarjeta.",
+        "to": "Capacidade de pagamento: o que aproximadamente fica disponível por mês depois de viver (receitas menos despesas que não são de cartão). Indica quanto dinheiro você pode dispor para gastos de cartão."
       },
       "inversiones.card_next_installment_due": {
         "from": "vence {fecha}",
@@ -16319,6 +16323,10 @@
       "inversiones.config_back_to_settings": {
         "from": "Volver a Ajustes",
         "to": "Voltar para Configurações"
+      },
+      "inversiones.page_back_aria": {
+        "from": "Volver",
+        "to": "Voltar"
       },
       "inversiones.config_ie_title": {
         "from": "Importar y exportar movimientos",
