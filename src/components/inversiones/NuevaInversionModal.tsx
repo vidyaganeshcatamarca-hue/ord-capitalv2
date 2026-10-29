@@ -6,6 +6,7 @@ import { formatCurrency } from '@/lib/format'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { useMonedasExtra } from '@/hooks/useMonedasExtra'
 import { buildWalletCurrencyOptions } from '@/lib/monedasExtra'
+import { NUMERIC_INPUT_ENTER_PROPS } from '@/lib/numericKeyboard'
 import './NuevaInversionModal.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 
@@ -243,6 +244,7 @@ export function NuevaInversionModal({
               onBlur={() => setTouched(true)}
               disabled={submitting}
               required
+              {...NUMERIC_INPUT_ENTER_PROPS}
             />
             {/* B4 (2026-10-21): el ejemplo estaba como placeholder y parecia
                 un valor ya escrito. Ahora va debajo, chiquito, donde antes
@@ -290,6 +292,7 @@ export function NuevaInversionModal({
                 placeholder={t('placeholder_tna')}
                 disabled={submitting}
                 required
+                {...NUMERIC_INPUT_ENTER_PROPS}
               />
               {showTasaError && (
                 <span className="form-error">{t('error_fixed_term_requires_tna')}</span>
@@ -311,6 +314,7 @@ export function NuevaInversionModal({
               placeholder={t('placeholder_amount')}
               disabled={submitting}
               required
+              {...NUMERIC_INPUT_ENTER_PROPS}
             />
             {showMontoError && (
               <span className="form-error">{t('error_amount_zero')}</span>

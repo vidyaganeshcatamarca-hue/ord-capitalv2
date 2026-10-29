@@ -3,6 +3,7 @@ import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
+import { NUMERIC_INPUT_ENTER_PROPS } from '@/lib/numericKeyboard'
 import './ActualizarValorModal.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 
@@ -126,6 +127,7 @@ export function ActualizarValorModal({
               placeholder={t('placeholder_new_value')}
               disabled={submitting}
               required
+              {...NUMERIC_INPUT_ENTER_PROPS}
             />
             {showError && (
               <span className="form-error">{t('error_investment_value_negative')}</span>

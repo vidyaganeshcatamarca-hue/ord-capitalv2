@@ -3,6 +3,7 @@ import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
+import { NUMERIC_INPUT_ENTER_PROPS } from '@/lib/numericKeyboard'
 import './LiquidarInversionModal.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 
@@ -264,6 +265,7 @@ export function LiquidarInversionModal({
                 placeholder={t('placeholder_amount')}
                 disabled={submitting}
                 required
+                {...NUMERIC_INPUT_ENTER_PROPS}
               />
               <span className="liquidar-inversion-modal-helper">
                 {t('modal_liquidate_partial_helper')}

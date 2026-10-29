@@ -4,6 +4,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
+import { NUMERIC_INPUT_ENTER_PROPS } from '@/lib/numericKeyboard'
 import type { BilleteraDestino } from './LiquidarInversionModal'
 import './ActualizarValorModal.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
@@ -137,6 +138,7 @@ export function AportarCapitalModal({
               onChange={(e) => setMonto(e.target.value)}
               placeholder={t('placeholder_amount')}
               autoFocus
+              {...NUMERIC_INPUT_ENTER_PROPS}
             />
           </div>
 

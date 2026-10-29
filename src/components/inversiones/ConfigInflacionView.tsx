@@ -5,6 +5,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatPercent } from '@/lib/format'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { NUMERIC_INPUT_ENTER_PROPS } from '@/lib/numericKeyboard'
 import './ConfigInflacionView.css'
 
 export interface ConfigInflacionViewProps {
@@ -292,6 +293,7 @@ export function ConfigInflacionView({ className, onSaved }: ConfigInflacionViewP
                 onChange={(event) => setValorManual(event.target.value)}
                 placeholder={t('placeholder_inflation_manual')}
                 disabled={saving}
+                {...NUMERIC_INPUT_ENTER_PROPS}
               />
               <p className="config-inflacion-help">{t('inflation_manual_help')}</p>
               {valorManual.trim() !== '' && !valorManualValido && (
