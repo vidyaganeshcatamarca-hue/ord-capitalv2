@@ -1451,8 +1451,8 @@
         "to": "The system will visually confront you with the consequences (without blocking you)."
       },
       "errors.activate_base_cero_confirm_prompt": {
-        "from": "Para confirmar, escribe: ACEPTO. Importante: No podrás cambiar este modo hasta el mes siguiente.",
-        "to": "To confirm, type: ACEPTO. Important: you will not be able to change this mode until next month."
+        "from": "Para confirmar, escribe: {token}. Importante: No podrás cambiar este modo hasta el mes siguiente.",
+        "to": "To confirm, type: {token}. Important: you will not be able to change this mode until next month."
       },
       "errors.btn_activate_discipline_confirm": {
         "from": "Activar Disciplina",
@@ -1595,8 +1595,8 @@
         "to": "Error saving the income distribution"
       },
       "errors.toast_write_accept_confirm": {
-        "from": "Escribe ACEPTO para confirmar",
-        "to": "Type ACEPTO to confirm"
+        "from": "Escribe {token} para confirmar",
+        "to": "Type {token} to confirm"
       },
       "errors.toast_get_suggestions_error": {
         "from": "Error al obtener sugerencias",
@@ -7622,6 +7622,38 @@
         "from": "Error al obtener sugerencias",
         "to": "Error retrieving suggestions"
       },
+      "inversiones.budget_exceeded_envelopes_title": {
+        "from": "Sobres excedidos",
+        "to": "Envelopes over budget"
+      },
+      "inversiones.budget_exceeded_envelopes_desc": {
+        "from": "Gastaste más de lo asignado en estos sobres. Cubrí el faltante con dinero disponible o con lo que sobra en otro sobre.",
+        "to": "You spent more than you assigned in these envelopes. Cover the gap with available money or with what is left in another envelope."
+      },
+      "inversiones.btn_cubrir_deficit": {
+        "from": "Cubrir déficit",
+        "to": "Cover deficit"
+      },
+      "inversiones.btn_configure_later": {
+        "from": "Configurar después",
+        "to": "Configure later"
+      },
+      "inversiones.budget_btn_activating": {
+        "from": "Activando...",
+        "to": "Activating..."
+      },
+      "inversiones.budget_btn_confirm_and_assign": {
+        "from": "Confirmar y asignar",
+        "to": "Confirm and assign"
+      },
+      "inversiones.budget_error_insufficient_funds": {
+        "from": "No hay dinero disponible suficiente",
+        "to": "There is not enough available money"
+      },
+      "inversiones.error_base_cero_locked": {
+        "from": "No podés cambiar el modo de presupuesto hasta el ciclo siguiente.",
+        "to": "You cannot change the budget mode until the next cycle."
+      },
       "inversiones.card_status_healthy": {
         "from": "Saludable",
         "to": "Healthy"
@@ -8789,6 +8821,18 @@
       "inversiones.settings_confirm_go_advanced_confirm": {
         "from": "Activar avanzado",
         "to": "Enable advanced"
+      },
+      "inversiones.settings_confirm_back_to_simple_title": {
+        "from": "¿Volver al modo simple?",
+        "to": "Switch to simple mode?"
+      },
+      "inversiones.settings_confirm_back_to_simple_message": {
+        "from": "Vas a salir del modo avanzado y sus funciones dejan de mostrarse en el menú. Tus datos no se borran: podés activarlo de nuevo cuando quieras.",
+        "to": "You are leaving advanced mode and its features stop showing up in the menu. Your data is not deleted: you can enable it again whenever you want."
+      },
+      "inversiones.settings_confirm_back_to_simple_confirm": {
+        "from": "Volver a simple",
+        "to": "Switch to simple"
       },
       "inversiones.settings_action_back_to_simple": {
         "from": "Volver a Modo Simple",
@@ -11097,8 +11141,8 @@
         "to": "O sistema vai confrontar você visualmente com as consequências (sem bloquear)."
       },
       "errors.activate_base_cero_confirm_prompt": {
-        "from": "Para confirmar, escribe: ACEPTO. Importante: No podrás cambiar este modo hasta el mes siguiente.",
-        "to": "Para confirmar, escreva: ACEPTO. Importante: você não poderá mudar este modo até o mês seguinte."
+        "from": "Para confirmar, escribe: {token}. Importante: No podrás cambiar este modo hasta el mes siguiente.",
+        "to": "Para confirmar, escreva: {token}. Importante: você não poderá mudar este modo até o mês seguinte."
       },
       "errors.btn_activate_discipline_confirm": {
         "from": "Activar Disciplina",
@@ -11241,8 +11285,8 @@
         "to": "Erro ao salvar a distribuição de receitas"
       },
       "errors.toast_write_accept_confirm": {
-        "from": "Escribe ACEPTO para confirmar",
-        "to": "Escreva ACEPTO para confirmar"
+        "from": "Escribe {token} para confirmar",
+        "to": "Escreva {token} para confirmar"
       },
       "errors.toast_get_suggestions_error": {
         "from": "Error al obtener sugerencias",
@@ -17268,6 +17312,38 @@
         "from": "Error al obtener sugerencias",
         "to": "Erro ao obter sugestões"
       },
+      "inversiones.budget_exceeded_envelopes_title": {
+        "from": "Sobres excedidos",
+        "to": "Envelopes estourados"
+      },
+      "inversiones.budget_exceeded_envelopes_desc": {
+        "from": "Gastaste más de lo asignado en estos sobres. Cubrí el faltante con dinero disponible o con lo que sobra en otro sobre.",
+        "to": "Você gastou mais do que o atribuído nestes envelopes. Cubra a diferença com dinheiro disponível ou com o que sobra em outro envelope."
+      },
+      "inversiones.btn_cubrir_deficit": {
+        "from": "Cubrir déficit",
+        "to": "Cobrir déficit"
+      },
+      "inversiones.btn_configure_later": {
+        "from": "Configurar después",
+        "to": "Configurar depois"
+      },
+      "inversiones.budget_btn_activating": {
+        "from": "Activando...",
+        "to": "Ativando..."
+      },
+      "inversiones.budget_btn_confirm_and_assign": {
+        "from": "Confirmar y asignar",
+        "to": "Confirmar e atribuir"
+      },
+      "inversiones.budget_error_insufficient_funds": {
+        "from": "No hay dinero disponible suficiente",
+        "to": "Não há dinheiro disponível suficiente"
+      },
+      "inversiones.error_base_cero_locked": {
+        "from": "No podés cambiar el modo de presupuesto hasta el ciclo siguiente.",
+        "to": "Você não pode mudar o modo de orçamento até o próximo ciclo."
+      },
       "inversiones.card_status_healthy": {
         "from": "Saludable",
         "to": "Saudável"
@@ -18435,6 +18511,18 @@
       "inversiones.settings_confirm_go_advanced_confirm": {
         "from": "Activar avanzado",
         "to": "Ativar avançado"
+      },
+      "inversiones.settings_confirm_back_to_simple_title": {
+        "from": "¿Volver al modo simple?",
+        "to": "Voltar ao modo simples?"
+      },
+      "inversiones.settings_confirm_back_to_simple_message": {
+        "from": "Vas a salir del modo avanzado y sus funciones dejan de mostrarse en el menú. Tus datos no se borran: podés activarlo de nuevo cuando quieras.",
+        "to": "Você vai sair do modo avançado e suas funções deixam de aparecer no menu. Seus dados não são apagados: pode ativá-lo de novo quando quiser."
+      },
+      "inversiones.settings_confirm_back_to_simple_confirm": {
+        "from": "Volver a simple",
+        "to": "Voltar ao simples"
       },
       "inversiones.settings_action_back_to_simple": {
         "from": "Volver a Modo Simple",
