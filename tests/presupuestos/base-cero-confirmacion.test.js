@@ -4,9 +4,9 @@
 //
 // S6 (ronda 7, dueño): "para pasar a modo base cero debo escribir la palabra
 // acepto. Busquemos una palabra más internacional... podría ser 'BASECERO' u
-// otra". El token pasa a 'BASECERO' y, para que no vuelva a haber dos fuentes,
-// una en el código y otra escrita a mano dentro de cada traducción, el texto
-// del modal lo recibe como {token} y la validación sale del mismo módulo.
+// otra". Después de ver la propuesta el dueño eligió 'CERO'. El token vive en un
+// solo módulo y los textos lo reciben como {token}, para que no vuelva a haber
+// una palabra escrita a mano dentro de cada traducción.
 //
 // Lo que se congela:
 //   1. El token autoriza sin distinguir mayúsculas ni espacios de los extremos,
@@ -35,21 +35,20 @@ const { BASE_CERO_CONFIRM_TOKEN, isBaseCeroConfirmToken } = await import(
 )
 
 test('el token es una sola palabra, sin tildes ni espacios', () => {
-  assert.equal(BASE_CERO_CONFIRM_TOKEN, 'BASECERO')
+  assert.equal(BASE_CERO_CONFIRM_TOKEN, 'CERO')
   assert.match(BASE_CERO_CONFIRM_TOKEN, /^[A-Z]+$/)
-  // La palabra que se usa en pantalla (Base Cero) tiene que estar adentro:
-  // el usuario escribe el nombre del modo que ve.
-  assert.match(BASE_CERO_CONFIRM_TOKEN, /^BASE[C]?/)
+  // Cuatro letras: se escribe rápido y no se puede confundir con una frase.
+  assert.ok(BASE_CERO_CONFIRM_TOKEN.length <= 8)
 })
 
 test('el token autoriza con cualquier capitalización y espacios de más', () => {
-  for (const escrito of ['BASECERO', 'basecero', 'BaseCero', '  baseCero  ', 'BaSeCeRo']) {
+  for (const escrito of ['CERO', 'cero', 'Cero', '  cero  ', 'CeRo']) {
     assert.equal(isBaseCeroConfirmToken(escrito), true, `"${escrito}" debería autorizar`)
   }
 })
 
-test('cualquier otro texto no autoriza, incluida la palabra vieja', () => {
-  for (const escrito of ['', ' ', 'ACEPTO', 'acepto', 'BASECER', 'BASE CERO', 'CERO', 'SI']) {
+test('cualquier otro texto no autoriza, incluidas las palabras viejas', () => {
+  for (const escrito of ['', ' ', 'ACEPTO', 'acepto', 'BASECERO', 'basecero', 'CER', 'ZERO', 'SI']) {
     assert.equal(isBaseCeroConfirmToken(escrito), false, `"${escrito}" no debería autorizar`)
   }
 })
@@ -91,13 +90,13 @@ test('PresupuestosPage no hardcodea el token: valida y pinta con el módulo', ()
   )
 })
 
-test('el prompt dice la verdad: el texto resuelto muestra BASECERO', async () => {
+test('el prompt dice la verdad: el texto resuelto muestra CERO', async () => {
   const { t, setLanguage } = await loadI18n()
 
   for (const lang of ['es', 'en', 'pt']) {
     setLanguage(lang)
     const texto = t('activate_base_cero_confirm_prompt', { token: BASE_CERO_CONFIRM_TOKEN })
-    assert.match(texto, /BASECERO/, `${lang}: el prompt resuelto tiene que nombrar el token`)
+    assert.match(texto, /CERO/, `${lang}: el prompt resuelto tiene que nombrar el token`)
     assert.doesNotMatch(texto, /\{token\}/, `${lang}: no puede quedar el placeholder crudo`)
   }
 })

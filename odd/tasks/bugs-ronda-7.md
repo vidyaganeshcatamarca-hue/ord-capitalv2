@@ -203,8 +203,15 @@ los bugs de UI.
 | `dafd500` | T6 | confirmacion al volver a modo simple |
 | `7b4e944` | T7 | base cero como pantalla de inicio |
 | `8d2f15a` | T8 | tachito en el header y tres acciones a todo el ancho |
+| `ad2d09d` | T2/T3 | ledger de la ronda 7 |
+| _(L2)_ | S2, S6 | typo "cuanto" → "cuánto" y token `CERO` |
 
 ## Log
+
+**L2 (decisión del dueño, verbatim)**
+
+> 2. es cuanto, no cuando
+> 3. CERO me gusta mas. tu propuesta es correcta, adelante
 
 **L1 (pedido original del dueño, verbatim)**
 
