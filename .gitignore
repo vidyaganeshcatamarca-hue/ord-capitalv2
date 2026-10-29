@@ -163,3 +163,4 @@ tests/presupuestos/*
 # Scratch de trabajo (probes, dumps de i18n, salidas temporales)
 scratch/
 !tests/presupuestos/saldo-a-asignar-deficit.test.js
+!tests/presupuestos/base-cero-sin-arrastre.test.js

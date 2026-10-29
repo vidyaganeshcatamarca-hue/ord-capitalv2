@@ -86,3 +86,25 @@ re-correr).
   postcheck (comparaba la baja con signo invertido) y la reversión no cerraba el
   `CREATE` con `;`. La función quedó bien desplegada igual; se arreglaron las dos cosas
   y el test estático las congela.
+
+### B2 — desplegado y verificado (2026-10-29)
+
+Función: `temp_sql/132_base_cero_sin_arrastre.sql`. Deploy: `temp_sql/133_deploy_132.mjs`.
+
+| | Antes | Después |
+| --- | --- | --- |
+| user 1 · arrastre | −2.443.777 | **0** |
+| user 1 · gasto del ciclo | 2.287.700 (24 movs previos al traspaso) | **0** |
+| user 1 · disponible | 2.378.745 | **2.627.275** (= liquidez real) |
+| user 136 (base cero, activación NULL) | arrastre 0 · disponible 51.787 | igual |
+| users 174, 206, 207 (anticipado) | — | **idénticos** |
+
+- Sin fecha de activación no se inventa un corte: se apaga el arrastre y el gasto del
+  ciclo se cuenta completo (usuarios anteriores a la columna).
+- `monto_asignado_anterior` y `monto_gastado_anterior` no se tocan: son la historia que
+  alimenta las sugerencias de asignación.
+- Huella de tablas idéntica: 41 presupuestos (11.202.000), 1.912 movimientos
+  (174.904.723,62), 1.539 estructuras. El reporte no escribe.
+- Incidencia: el artefacto 132 salió de `pg_get_functiondef` sin `;` final y el deploy
+  abortó antes de aplicar nada. Corregido en el archivo y en el script, y el test lo
+  congela.
