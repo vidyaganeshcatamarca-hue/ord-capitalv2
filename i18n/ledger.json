@@ -7574,6 +7574,26 @@
         "from": "+ Asignar",
         "to": "+ Assign"
       },
+      "inversiones.budget_group_free": {
+        "from": "Libre del grupo: {monto}",
+        "to": "Group free: {monto}"
+      },
+      "inversiones.budget_group_expand": {
+        "from": "Mostrar subcategorías",
+        "to": "Show subcategories"
+      },
+      "inversiones.budget_group_collapse": {
+        "from": "Ocultar subcategorías",
+        "to": "Hide subcategories"
+      },
+      "inversiones.error_budget_child_over_parent": {
+        "from": "No entra: el grupo tiene {techo} y ya hay {repartido} repartido. A este rubro le quedan {disponible}.",
+        "to": "Does not fit: the group has {techo} and {repartido} is already allocated. This category has {disponible} left."
+      },
+      "inversiones.error_budget_parent_below_children": {
+        "from": "No podés bajar el grupo por debajo de lo repartido. Tiene {repartido}: recortá {recortar} antes.",
+        "to": "You cannot lower the group below what is allocated. It has {repartido}: cut {recortar} first."
+      },
       "inversiones.budget_stat_assigned": {
         "from": "Asig:",
         "to": "Assigned:"
@@ -7681,6 +7701,10 @@
       "inversiones.budget_confirm_back_to_anticipado_confirm": {
         "from": "Volver a Modo Libertad",
         "to": "Back to Free Mode"
+      },
+      "inversiones.budget_base_cero_reset_notice": {
+        "from": "Al activar Base Cero, las asignaciones de este ciclo se reinician: lo que tenías asignado queda archivado, no se pierde.",
+        "to": "Turning on Zero-Based Mode restarts this cycle's assignments: what you had assigned is archived, not lost."
       },
       "inversiones.card_status_healthy": {
         "from": "Saludable",
@@ -9717,10 +9741,6 @@
       "tour.ajustes.description": {
         "from": "Te mostramos cómo personalizar tu experiencia.",
         "to": "We show you how to personalize your experience."
-      },
-      "inversiones.budget_base_cero_reset_notice": {
-        "from": "Al activar Base Cero, las asignaciones de este ciclo se reinician: lo que tenías asignado queda archivado, no se pierde.",
-        "to": "Turning on Zero-Based Mode restarts this cycle's assignments: what you had assigned is archived, not lost."
       }
     },
     "pt": {
@@ -17296,6 +17316,26 @@
         "from": "+ Asignar",
         "to": "+ Atribuir"
       },
+      "inversiones.budget_group_free": {
+        "from": "Libre del grupo: {monto}",
+        "to": "Livre do grupo: {monto}"
+      },
+      "inversiones.budget_group_expand": {
+        "from": "Mostrar subcategorías",
+        "to": "Mostrar subcategorias"
+      },
+      "inversiones.budget_group_collapse": {
+        "from": "Ocultar subcategorías",
+        "to": "Ocultar subcategorias"
+      },
+      "inversiones.error_budget_child_over_parent": {
+        "from": "No entra: el grupo tiene {techo} y ya hay {repartido} repartido. A este rubro le quedan {disponible}.",
+        "to": "Não entra: o grupo tem {techo} e já há {repartido} distribuído. A esta categoria restam {disponible}."
+      },
+      "inversiones.error_budget_parent_below_children": {
+        "from": "No podés bajar el grupo por debajo de lo repartido. Tiene {repartido}: recortá {recortar} antes.",
+        "to": "Não pode baixar o grupo abaixo do que está distribuído. Tem {repartido}: reduza {recortar} antes."
+      },
       "inversiones.budget_stat_assigned": {
         "from": "Asig:",
         "to": "Atribuído:"
@@ -17403,6 +17443,10 @@
       "inversiones.budget_confirm_back_to_anticipado_confirm": {
         "from": "Volver a Modo Libertad",
         "to": "Voltar ao Modo Livre"
+      },
+      "inversiones.budget_base_cero_reset_notice": {
+        "from": "Al activar Base Cero, las asignaciones de este ciclo se reinician: lo que tenías asignado queda archivado, no se pierde.",
+        "to": "Ao ativar o Modo Base Zero, as atribuições deste ciclo são reiniciadas: o que você tinha atribuído fica arquivado, não se perde."
       },
       "inversiones.card_status_healthy": {
         "from": "Saludable",
@@ -19439,10 +19483,6 @@
       "tour.ajustes.description": {
         "from": "Te mostramos cómo personalizar tu experiencia.",
         "to": "Mostramos como personalizar sua experiência."
-      },
-      "inversiones.budget_base_cero_reset_notice": {
-        "from": "Al activar Base Cero, las asignaciones de este ciclo se reinician: lo que tenías asignado queda archivado, no se pierde.",
-        "to": "Ao ativar o Modo Base Zero, as atribuições deste ciclo são reiniciadas: o que você tinha atribuído fica arquivado, não se perde."
       }
     }
   }

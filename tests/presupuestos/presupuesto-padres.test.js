@@ -40,6 +40,7 @@ const filaPadre = leer('temp_sql', '155_reporte_fila_padre.sql')
 const techo = leer('temp_sql', '158_techo_al_asignar.sql')
 const transferencias = leer('temp_sql', '160_techo_en_transferencias.sql')
 const arrastre = leer('temp_sql', '162_arrastre_base_cero.sql')
+const pagina = leer('src', 'pages', 'Presupuestos', 'PresupuestosPage.tsx')
 const sumas = leer('temp_sql', '153_sumas_sin_padres.sql')
 
 // Comparar SQL sin depender de la indentación.
@@ -361,4 +362,51 @@ test('el disponible del padre incluye el arrastre de sus hijos', () => {
     arrC.includes("CASE WHEN v_modo_presupuesto = 'anticipado' THEN 0::numeric ELSE COALESCE(SUM(f.arrastre_mes_anterior), 0) END + COALESCE(p.monto_limite, 0) - COALESCE(SUM(f.monto_gastado), 0)"),
     'el disponible del padre tiene que sumar el arrastre de los hijos',
   )
+})
+
+// ---------------------------------------------------------------------------
+// T6: la fila del padre se despliega en la misma lista. El dueño eligió que sea
+// expandible en lugar de partir la pantalla en dos niveles.
+// ---------------------------------------------------------------------------
+
+test('el total del grupo cuenta una sola vez', () => {
+  // Mientras el padre y sus hijos venían en la misma lista, el total del grupo los sumaba
+  // a los dos y mostraba el doble de lo comprometido.
+  const bloque = pagina.slice(pagina.indexOf('function GrupoAcordeon'), pagina.indexOf('function GrupoAcordeon') + 3000)
+  assert.ok(bloque.includes('cuenta_en_totales !== false'), 'el total del grupo tiene que ignorar las filas que no cuentan')
+  assert.ok(bloque.includes('.reduce((s, i) => s + Number(i.monto_asignado ?? 0), 0)'), 'el total del grupo tiene que salir de las filas que cuentan')
+})
+
+test('los hijos se dibujan debajo del padre y no se repiten arriba', () => {
+  const bloque = pagina.slice(pagina.indexOf('function GrupoAcordeon'), pagina.indexOf('function GrupoAcordeon') + 3000)
+  assert.ok(bloque.includes('const padres = new Set(items.filter(i => i.es_padre)'), 'falta detectar los padres con presupuesto')
+  assert.ok(bloque.includes('if (s.padre_id != null && padres.has(s.padre_id)) continue'), 'un hijo de un padre con presupuesto no puede aparecer dos veces')
+  assert.ok(bloque.includes('visibles.push({ sobre: h, hija: true })'), 'los hijos tienen que entrar indentados debajo del padre')
+  assert.ok(bloque.includes('expandidos[s.estructura_id]'), 'sólo se despliegan si el grupo está abierto')
+})
+
+test('el monto libre del grupo es el techo menos lo repartido', () => {
+  assert.ok(pagina.includes('const libreDe = (padreId: number) =>'), 'falta el cálculo del libre del grupo')
+  const bloque = pagina.slice(pagina.indexOf('const libreDe'), pagina.indexOf('const libreDe') + 400)
+  assert.ok(bloque.includes('monto_asignado ?? 0) -'), 'el libre tiene que restar lo repartido del techo')
+  assert.ok(bloque.includes('x.padre_id === padreId'), 'lo repartido se suma sobre los hijos del padre')
+})
+
+test('la fila del padre y la hija se distinguen en el marcado', () => {
+  assert.ok(pagina.includes('sobre-fila--hija'), 'la hija necesita su clase para ir indentada')
+  assert.ok(pagina.includes('aria-expanded={!!expandido}'), 'el chevron tiene que anunciar si el grupo está abierto')
+  assert.ok(pagina.includes("aria-label={t(expandido ? 'budget_group_collapse' : 'budget_group_expand')}"), 'el chevron necesita etiqueta traducida')
+  assert.ok(pagina.includes('es_padre?: boolean') && pagina.includes('cuenta_en_totales?: boolean'), 'SobreDetalle tiene que declarar los dos campos del reporte')
+})
+
+test('los dos rechazos del techo se explican con sus números', () => {
+  const bloque = pagina.slice(pagina.indexOf('function mensajeRechazoPresupuesto'), pagina.indexOf('interface SobreDetalle'))
+  assert.ok(bloque.includes("parsed?.key === 'error_budget_child_over_parent'"), 'falta el mapeo del rechazo del hijo')
+  assert.ok(bloque.includes("parsed?.key === 'error_budget_parent_below_children'"), 'falta el mapeo del rechazo del padre')
+  for (const param of ['techo', 'repartido', 'disponible', 'recortar']) {
+    assert.ok(bloque.includes(param), `el mensaje tiene que recibir ${param}`)
+  }
+  // Y el catch de la asignación tiene que usarlo antes que los mensajes genéricos.
+  const catchAsignar = pagina.slice(pagina.indexOf('const rechazo = mensajeRechazoPresupuesto'), pagina.indexOf('const rechazo = mensajeRechazoPresupuesto') + 300)
+  assert.ok(catchAsignar.includes("? rechazo"), 'si hay rechazo del techo, ese mensaje gana al genérico')
 })

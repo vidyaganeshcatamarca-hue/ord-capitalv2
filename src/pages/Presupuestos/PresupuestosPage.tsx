@@ -15,6 +15,38 @@ import './Presupuestos.css'
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
 
+/**
+ * T3/T4 (S7): los rechazos del techo llegan como {"key": "...", "params": {...}}.
+ * Se traducen en un solo lugar para que la asignación y la transferencia expliquen lo
+ * mismo, y para que ningún texto quede hardcodeado en la base (regla 9).
+ */
+function mensajeRechazoPresupuesto(
+  err: unknown,
+  t: (clave: string, params?: Record<string, unknown>) => string,
+  fmt: (n: number) => string,
+): string | null {
+  const raw = String((err as { message?: string })?.message ?? '')
+  const i = raw.indexOf('{')
+  if (i === -1) return null
+  let parsed: { key?: string; params?: Record<string, unknown> }
+  try { parsed = JSON.parse(raw.slice(i)) } catch { return null }
+  const p = parsed?.params ?? {}
+  if (parsed?.key === 'error_budget_child_over_parent') {
+    return t('error_budget_child_over_parent', {
+      techo: fmt(Number(p.techo ?? 0)),
+      repartido: fmt(Number(p.repartido ?? 0)),
+      disponible: fmt(Number(p.disponible ?? 0)),
+    })
+  }
+  if (parsed?.key === 'error_budget_parent_below_children') {
+    return t('error_budget_parent_below_children', {
+      repartido: fmt(Number(p.repartido ?? 0)),
+      recortar: fmt(Number(p.recortar ?? 0)),
+    })
+  }
+  return null
+}
+
 interface SobreDetalle {
   estructura_id: number
   nombre_categoria: string
@@ -31,6 +63,10 @@ interface SobreDetalle {
   gasto_promedio_6m: number
   estado_sobre: string
   metodo_sobregasto: string | null
+  /** T6/S1: el rubro es padre y su fila es el techo del grupo. */
+  es_padre?: boolean
+  /** T6/S15: false cuando su padre tiene presupuesto y entonces no se cuenta aparte. */
+  cuenta_en_totales?: boolean
   isVirtualDisponible?: boolean
 }
 
@@ -439,9 +475,12 @@ export function PresupuestosPage() {
       setSobreSeleccionado(null)
       await cargarDatos()
     } catch (err: any) {
-      const msg = err?.message?.includes('error_budget_insufficient_base_zero')
-        ? t('budget_error_exceeds_available', { amount: formatMonto(saldoAsignar ?? 0) })
-        : t('budget_error_assign')
+      const rechazo = mensajeRechazoPresupuesto(err, t, formatMonto)
+      const msg = rechazo
+        ? rechazo
+        : err?.message?.includes('error_budget_insufficient_base_zero')
+          ? t('budget_error_exceeds_available', { amount: formatMonto(saldoAsignar ?? 0) })
+          : t('budget_error_assign')
       showToast(msg, 'error')
     } finally {
       // El candado se libera siempre: si el guardado falla, el usuario tiene que
@@ -1544,7 +1583,30 @@ interface GrupoProps {
 
 function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: GrupoProps) {
   const meta = TIPO_CUPO_META[tipo] ?? { labelKey: tipo.toUpperCase(), icono: '📦' }
-  const totalAsignado = items.reduce((s, i) => s + Number(i.monto_asignado ?? 0), 0)
+  // T6/S15: el total del grupo cuenta una sola vez. Cuando un rubro padre tiene
+  // presupuesto, sus hijos llegan con cuenta_en_totales = false y no se suman aparte.
+  const totalAsignado = items
+    .filter(i => i.cuenta_en_totales !== false)
+    .reduce((s, i) => s + Number(i.monto_asignado ?? 0), 0)
+
+  // T6/S1: la fila del padre se despliega en la misma lista y sus hijos se dibujan
+  // debajo, indentados. Un hijo de un padre con presupuesto no se repite arriba.
+  const [expandidos, setExpandidos] = useState<Record<number, boolean>>({})
+  const padres = new Set(items.filter(i => i.es_padre).map(i => i.estructura_id))
+  const visibles: Array<{ sobre: SobreDetalle; hija: boolean }> = []
+  for (const s of items) {
+    if (s.padre_id != null && padres.has(s.padre_id)) continue
+    visibles.push({ sobre: s, hija: false })
+    if (s.es_padre && expandidos[s.estructura_id]) {
+      for (const h of items.filter(x => x.padre_id === s.estructura_id)) {
+        visibles.push({ sobre: h, hija: true })
+      }
+    }
+  }
+  // S12/S14: lo que le queda al grupo es su techo menos lo ya repartido en sus hijos.
+  const libreDe = (padreId: number) =>
+    Number(items.find(x => x.estructura_id === padreId)?.monto_asignado ?? 0) -
+    items.filter(x => x.padre_id === padreId).reduce((s, x) => s + Number(x.monto_asignado ?? 0), 0)
 
   return (
     <div className="acord-grupo">
@@ -1563,11 +1625,17 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
 
       <div className={`acord-grupo-body${abierto ? ' abierto' : ''}`}>
         <div className="acord-separador" />
-        {items.map((sobre, i) => (
+        {visibles.map(({ sobre, hija }, i) => (
           <FilaSobre
             key={sobre.estructura_id}
             sobre={sobre}
-            isLast={i === items.length - 1}
+            isLast={i === visibles.length - 1}
+            hija={hija}
+            expandido={sobre.es_padre ? !!expandidos[sobre.estructura_id] : undefined}
+            onToggleGrupo={sobre.es_padre
+              ? () => setExpandidos(p => ({ ...p, [sobre.estructura_id]: !p[sobre.estructura_id] }))
+              : undefined}
+            libreGrupo={sobre.es_padre ? libreDe(sobre.estructura_id) : undefined}
             onAsignar={() => onAsignar(sobre)}
             onVerDetalle={() => onVerDetalle(sobre)}
             modoPresupuesto={modoPresupuesto}
@@ -1585,6 +1653,13 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
 interface FilaSobreProps {
   sobre: SobreDetalle
   isLast: boolean
+  /** T6: la fila es hija de un padre con presupuesto y va indentada. */
+  hija?: boolean
+  /** T6: sólo en la fila del padre, si el grupo está desplegado. */
+  expandido?: boolean
+  onToggleGrupo?: () => void
+  /** T6/S12: techo del grupo menos lo repartido en sus hijos. */
+  libreGrupo?: number
   onAsignar: () => void
   onVerDetalle: () => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
@@ -1594,7 +1669,7 @@ interface FilaSobreProps {
   fmt: (n: number) => string
 }
 
-function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
+function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
   const pct = getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
   const colorBarra = getColorBarra(sobre.estado_sobre)
   const sinDatos = sobre.estado_sobre === 'sin_movimiento'
@@ -1613,7 +1688,7 @@ function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, so
 
   return (
     <div
-      className="sobre-fila"
+      className={`sobre-fila${hija ? ' sobre-fila--hija' : ''}`}
       style={isLast ? { borderBottom: 'none' } : {}}
       // S1 (ronda 4, dueño): "Cuando toco en una tarjeta me estás abriendo el modal
       // de asignar fondos. Yo lo que quería era que al tocar la tarjeta solo me
@@ -1630,6 +1705,15 @@ function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, so
 
       {/* Nombre */}
       <div className="sobre-fila-top">
+        {sobre.es_padre && onToggleGrupo && (
+          <button
+            type="button"
+            className={`sobre-toggle-grupo${expandido ? ' abierto' : ''}`}
+            onClick={e => { e.stopPropagation(); onToggleGrupo() }}
+            aria-expanded={!!expandido}
+            aria-label={t(expandido ? 'budget_group_collapse' : 'budget_group_expand')}
+          >▶</button>
+        )}
         {/* F-05 (auditoría): la fila era role="button" y anidaba el botón de
             asignar, dos destinos de foco anidados. Ahora la fila responde al
             puntero y el nombre es el control real que abre el detalle con el
@@ -1645,7 +1729,14 @@ function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, so
           >
             <CategoryIcon name={sobre.icono} size={18} />
           </span>
-          <span>{t(sobre.nombre_categoria)}</span>
+          <span className="sobre-nombre-texto">
+            <span>{t(sobre.nombre_categoria)}</span>
+            {sobre.es_padre && libreGrupo !== undefined && (
+              <span className="sobre-grupo-libre">
+                {t('budget_group_free', { monto: fmt(Math.max(libreGrupo, 0)) })}
+              </span>
+            )}
+          </span>
         </button>
         <span className={`sobre-disponible ${colorDisponible()}`} style={{ marginRight: soloLectura ? 0 : 80 }}>
           {disponibleEfectivo >= 0 ? fmt(disponibleEfectivo) : `-${fmt(Math.abs(disponibleEfectivo))}`}
