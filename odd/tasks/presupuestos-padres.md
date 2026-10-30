@@ -28,17 +28,36 @@ un hijo (T0).
 L2: "en modo libertad no hay arrastre de saldo, el saldo vuelve a 0 en cada ciclo." Ya es así en el
 código: `v_arrastre_cero` y `v_modo_presupuesto = 'anticipado'` lo fuerzan a 0.
 
-**S6 — Base cero: el sobrante y la pérdida pasan al ciclo siguiente, sin duplicar.** (L8)
-Cada sobre arranca el ciclo nuevo con lo que le sobró o le quedó debiendo. La regla que evita la
-duplicación es una sola y no admite excepciones:
+**S6 — El padre es un acumulador: nunca gasta y nunca arrastra por su cuenta.** (L12, L14, L16)
+Su gasto es la suma de los gastos de sus hijos. Su número del mes siguiente es la suma de lo que
+arrastran sus hijos con presupuesto más el fondo libre. No tiene arrastre propio, nunca.
 
-> **El pozo resta la capacidad de las hojas y la parte NO repartida del padre. Nunca el techo del
-> padre, ni dos veces la misma hoja.**
+**S11 — Cada peso tiene un solo dueño (la regla contra la duplicación).**
+- Hijo con presupuesto: arrastra lo suyo respecto de su propio presupuesto, positivo o negativo.
+- Hijos sin presupuesto: comparten el **fondo libre** = techo del padre − suma de presupuestos de
+  los hijos. El fondo libre arrastra lo suyo respecto del gasto conjunto de esos hijos.
+- El padre muestra la suma de todo lo anterior. Sumar además un arrastre propio del padre es la
+  duplicación que hay que evitar.
+Ningún peso puede vivir en dos niveles a la vez.
 
-Se implementa con la convención que la base ya usa en `fn_calcular_arrastre_deuda`:
-`capacidad = GREATEST(0, limite − gastado)` y `deuda = GREATEST(0, gastado − limite)`. Las dos son
-positivas; nunca se lleva capacidad negativa, porque una capacidad negativa suma al pozo en vez de
-restarle (punto P2 del análisis de escenarios).
+**S12 — El fondo libre es el tope de los hijos sin presupuesto.** (L15)
+Un hijo libre no puede comerse la parte reservada a un hermano con presupuesto. Si el fondo libre
+es 70.000 y un hijo libre llega a 80.000, la app avisa.
+
+**S13 — La app avisa, no bloquea.** (L12)
+Los presupuestos nunca frenaron un movimiento y esta feature no cambia eso: si el grupo se pasa del
+techo, el padre se pinta excedido y el gasto queda cargado. Lo único que se rechaza son las
+asignaciones que rompen el techo (S7).
+
+**S14 — Asignar al padre mueve el saldo a asignar; reservar a un hijo no mueve nada.** (L17)
+Con el padre en 100.000 y Despensa en 30.000, lo comprometido es **100.000**, no 130.000. Los 30.000
+son una porción de los 100.000: reservarlos sólo angosta el fondo libre (100.000 → 70.000). Subir a
+un hijo no cuesta plata; agrandar el grupo sí.
+
+**S15 — Al ponerse un presupuesto al padre, sus hijos dejan de contar por separado.** (L17)
+Si Despensa ya tenía 30.000 asignados y ahora el padre recibe 100.000, contar los 30.000 de Despensa
+y además los 100.000 del padre restaría 130.000 por un grupo que sólo comprometió 100.000. En el
+momento en que el padre tiene presupuesto, la asignación del hijo pasa a ser una porción del padre.
 
 **S7 — Bajar el padre por debajo de lo repartido se rechaza con el detalle.**
 L4: "Rechazar con el detalle". El mensaje dice cuánto hay repartido y cuánto hay que recortar.
@@ -188,3 +207,46 @@ Decisiones abiertas que este cuadro deja a la vista:
   reduce, que es la convención de `fn_calcular_arrastre_deuda`.
 - **D2**: con hijos sin presupuesto propio (E7), ¿la capacidad vive en el padre (puede gastar por
   cualquier hijo hasta el techo) o se obliga a repartir?
+
+**L12** (aviso y padre en rojo) "la app solo avisa, el escenario es correcto, mes siguiente padre en
+rojo -10000."
+
+**L13** (hijo libre con padre presupuestado) "que pasa ahora si un hijo tiene presupuesto y el padre
+tambien, y otro hijo libre. veamos ese escenario"
+
+**L14** "Sigo sin entender completamente tus ejemplos... Un padre no puede hacer gastos por su cuenta
+Las cuentas padres cuando tienen hijos no tienen permitido gastar dinero Los gastos del padre es
+solamente un acumulador de la suma de los gastos de los hijos Esto es básico. ... ¿Qué pasa con los
+arrastres negativos de los hijos cuando pasan el siguiente ciclo? ¿Lastran al padre? Esto es lo que
+hay que resolver Todas las posibilidades de cuando los hijos pasan en negativo o en positivo El padre
+nunca gasta"
+
+**L15** "el tope de los hijos sin presupuesto es el fondo libre."
+
+**L16** "cuando asigno el dinero disponible, lo hago al padre siempre y no a los hijos con
+presupuesto? ej. padre con 100k y hijo1 con 30k. No debo asignar 130k, sino 100k solamente, al sobre
+padre?"
+
+**L17** "ok, continua con esas reglas definidas"
+
+## Los tres escenarios acordados
+
+Escenario 1 (cerrado): padre con presupuesto, hijos sin ninguno. El padre es el único número, así
+que arrastra los dos signos. Ejemplo: Alimentos 100.000; Despensa 40.000 y Lácteos 55.000 → padre
+−10.000 y en el ciclo siguiente arranca debiendo 10.000. Con la deuda, asignar 100.000 deja 90.000
+disponibles; sin la deuda el saldo a asignar le regalaría 10.000 que ya se gastaron.
+
+Escenario 2 (cerrado): hijo con presupuesto + hijo libre. El techo del padre se parte en reservado
+(30.000 de Despensa) y fondo libre (70.000 de Lácteos). Las cuatro combinaciones de cierre dan
+siempre padre = hijo con presupuesto + fondo libre:
+
+| | Despensa | Lácteos | Padre termina | Despensa arrastra | Fondo libre arrastra |
+|---|---|---|---|---|---|
+| A | sobran 10.000 | sobran 20.000 | +30.000 | +10.000 | +20.000 |
+| B | sobran 10.000 | debe 20.000 | −10.000 | +10.000 | −20.000 |
+| C | debe 10.000 | sobran 20.000 | +10.000 | −10.000 | +20.000 |
+| D | debe 10.000 | debe 20.000 | −30.000 | −10.000 | −20.000 |
+
+Escenario 3 (cerrado): bajar el padre por debajo de reservado + fondo libre arrastrado se rechaza
+con el detalle. Con Despensa en 40.000 efectivos y fondo libre en 20.000, el padre no puede bajar
+de 60.000.
