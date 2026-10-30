@@ -1374,3 +1374,37 @@
   font-size: calc(0.85rem * var(--font-scale));
   line-height: 1.4;
 }
+
+/* Auditoría F-05: las opciones de la hoja de asignación son <button> desde ahora,
+   para que el teclado llegue. Un button no hereda tipografía ni alineación, así que
+   se resetean acá y el resto del estilo sigue viniendo de .asignar-opcion. */
+button.asignar-opcion {
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
+  color: var(--text);
+  text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+/* Mismo caso para el nombre del sobre: es el control que abre el detalle con el
+   teclado, pero tiene que verse igual que el texto que era antes. */
+button.sobre-nombre {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+button.sobre-nombre:focus-visible,
+button.asignar-opcion:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}

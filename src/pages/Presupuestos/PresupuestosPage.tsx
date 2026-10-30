@@ -1118,16 +1118,16 @@ export function PresupuestosPage() {
               <div className="asignar-opciones">
                 <div className="asignar-opciones-label">{t('budget_assign_options')}</div>
                 {config?.modo_presupuesto !== 'anticipado' && (
-                  <div className="asignar-opcion" onClick={handleLlenarHueco}>
+                  <button type="button" className="asignar-opcion" onClick={handleLlenarHueco}>
                     <span className="asignar-opcion-icono">💰</span>
                     <div className="asignar-opcion-texto">
                       <h4>{t('budget_opcion_llenar_hueco_title')}</h4>
                       <p>{t('budget_opcion_llenar_hueco_desc')}</p>
                     </div>
-                  </div>
+                  </button>
                 )}
 
-                <div className="asignar-opcion" onClick={() => {
+                <button type="button" className="asignar-opcion" onClick={() => {
                   setMostrando('monto')
                   setTimeout(() => montoRef.current?.focus(), 100)
                 }}>
@@ -1136,34 +1136,34 @@ export function PresupuestosPage() {
                     <h4>{t('budget_opcion_ingresar_monto_title')}</h4>
                     <p>{t('budget_opcion_ingresar_monto_desc')}</p>
                   </div>
-                </div>
+                </button>
 
-                <div className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.monto_asignado_anterior ?? 0))}>
+                <button type="button" className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.monto_asignado_anterior ?? 0))}>
                   <span className="asignar-opcion-icono">🔁</span>
                   <div className="asignar-opcion-texto">
                     <h4>{t('budget_option_same_prev_month_title')}</h4>
                     <p>{t('budget_option_same_prev_month_desc', { monto: formatMonto(Number(sobreSeleccionado.monto_asignado_anterior ?? 0)) })}</p>
                   </div>
-                </div>
+                </button>
 
-                <div className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.monto_gastado_anterior ?? 0))}>
+                <button type="button" className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.monto_gastado_anterior ?? 0))}>
                   <span className="asignar-opcion-icono">🧾</span>
                   <div className="asignar-opcion-texto">
                     <h4>{t('budget_option_spent_prev_month_title')}</h4>
                     <p>{t('budget_option_spent_prev_month_desc', { monto: formatMonto(Number(sobreSeleccionado.monto_gastado_anterior ?? 0)) })}</p>
                   </div>
-                </div>
+                </button>
 
-                <div className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.gasto_promedio_6m ?? 0))}>
+                <button type="button" className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.gasto_promedio_6m ?? 0))}>
                   <span className="asignar-opcion-icono">📊</span>
                   <div className="asignar-opcion-texto">
                     <h4>{t('budget_option_avg_six_months_title')}</h4>
                     <p>{t('budget_option_avg_six_months_desc', { monto: formatMonto(Number(sobreSeleccionado.gasto_promedio_6m ?? 0)) })}</p>
                   </div>
-                </div>
+                </button>
 
                 {config?.modo_presupuesto !== 'anticipado' && (
-                  <div className="asignar-opcion" onClick={() => {
+                  <button type="button" className="asignar-opcion" onClick={() => {
                     setShowAsignarSheet(false)
                     setOrigenSeleccionado(null)
                     setMontoTransferir('')
@@ -1174,7 +1174,7 @@ export function PresupuestosPage() {
                       <h4>{t('budget_opcion_cubrir_sobre_title')}</h4>
                       <p>{t('budget_opcion_cubrir_sobre_desc')}</p>
                     </div>
-                  </div>
+                  </button>
                 )}
               </div>
             ) : (
@@ -1630,14 +1630,6 @@ function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, so
       // mostraras la información [...]. No quería que me muestres las opciones para
       // ingresar asignaciones". La fila abre el detalle; el botón, la asignación.
       onClick={onVerDetalle}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault()
-          onVerDetalle()
-        }
-      }}
-      role="button"
-      tabIndex={0}
     >
       {/* Botón asignar: no existe en un ciclo cerrado */}
       {!soloLectura && (
@@ -1648,7 +1640,15 @@ function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, so
 
       {/* Nombre */}
       <div className="sobre-fila-top">
-        <div className="sobre-nombre">
+        {/* F-05 (auditoría): la fila era role="button" y anidaba el botón de
+            asignar, dos destinos de foco anidados. Ahora la fila responde al
+            puntero y el nombre es el control real que abre el detalle con el
+            teclado. */}
+        <button
+          type="button"
+          className="sobre-nombre"
+          onClick={e => { e.stopPropagation(); onVerDetalle() }}
+        >
           <span
             className="sobre-icono-circulo"
             style={{ background: sobre.color || 'var(--mint, #00B127)' }}
@@ -1656,7 +1656,7 @@ function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, so
             <CategoryIcon name={sobre.icono} size={18} />
           </span>
           <span>{t(sobre.nombre_categoria)}</span>
-        </div>
+        </button>
         <span className={`sobre-disponible ${colorDisponible()}`} style={{ marginRight: soloLectura ? 0 : 80 }}>
           {disponibleEfectivo >= 0 ? fmt(disponibleEfectivo) : `-${fmt(Math.abs(disponibleEfectivo))}`}
         </span>
