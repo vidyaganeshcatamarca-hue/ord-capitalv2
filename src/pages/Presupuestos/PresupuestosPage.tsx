@@ -383,11 +383,31 @@ export function PresupuestosPage() {
 
   const gruposOrdenados = (() => {
     const mapa: Record<string, SobreDetalle[]> = {}
+    // T6d: en base cero el sobre en déficit se muestra arriba en la alerta y no en la
+    // lista. Pero con rubros padre eso partía el árbol: el hijo en rojo se iba a la
+    // alerta y el padre quedaba solo. Ahora el grupo se mueve entero, padre e hijos
+    // juntos, así el hijo se sigue anidando y la alerta muestra el grupo.
+    const enBaseCero = config?.modo_presupuesto === 'base_cero'
+    const padresPresentes = new Set(sobres.filter(x => x.es_padre).map(x => Number(x.estructura_id)))
+    const padresEnAlerta = new Set(
+      sobres
+        .filter(x => x.es_padre && enBaseCero && Number(x.monto_disponible) < 0)
+        .map(x => Number(x.estructura_id)),
+    )
     for (const s of sobres) {
-      // Si estamos en Base Cero y el sobre está en rojo (déficit), no lo mostramos abajo (se muestra arriba en prioridad)
-      if (config?.modo_presupuesto === 'base_cero' && s.monto_disponible < 0) {
-        continue
+      const id = Number(s.estructura_id)
+      const padreId = s.padre_id == null ? null : Number(s.padre_id)
+      const hijaDePadrePresente = padreId !== null && padresPresentes.has(padreId)
+      let aLaAlerta: boolean
+      if (s.es_padre) {
+        aLaAlerta = padresEnAlerta.has(id)
+      } else if (hijaDePadrePresente) {
+        // El hijo acompaña a su padre: ni se esconde solo ni reaparece suelto.
+        aLaAlerta = padresEnAlerta.has(padreId as number)
+      } else {
+        aLaAlerta = enBaseCero && Number(s.monto_disponible) < 0
       }
+      if (aLaAlerta) continue
       const tipo = s.tipo_cupo || 'other'
       // Unificar investment y saving bajo la misma clave
       const key = (tipo === 'saving' || tipo === 'investment') ? 'investment' : tipo
@@ -668,7 +688,15 @@ export function PresupuestosPage() {
 
   const sobresExcedidos = useMemo(() => {
     if (config?.modo_presupuesto !== 'base_cero') return []
-    return sobres.filter(s => s.monto_disponible < 0)
+    // T6d: la alerta muestra el grupo (el padre), no cada hijo por separado: los hijos
+    // de un padre con presupuesto se ven anidados en la lista.
+    const padresConTecho = new Set(
+      sobres.filter(s => s.es_padre && Number(s.monto_asignado) > 0).map(s => Number(s.estructura_id)),
+    )
+    return sobres.filter(s => {
+      if (Number(s.monto_disponible) >= 0) return false
+      return !(s.padre_id != null && padresConTecho.has(Number(s.padre_id)))
+    })
   }, [sobres, config])
 
   useEffect(() => {
@@ -1592,23 +1620,23 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
   // T6/S1: la fila del padre se despliega en la misma lista y sus hijos se dibujan
   // debajo, indentados. Un hijo de un padre con presupuesto no se repite arriba.
   const [expandidos, setExpandidos] = useState<Record<number, boolean>>({})
-  const padres = new Set(items.filter(i => i.es_padre).map(i => i.estructura_id))
+  const padres = new Set(items.filter(i => i.es_padre).map(i => Number(i.estructura_id)))
   const visibles: Array<{ sobre: SobreDetalle; hija: boolean }> = []
   for (const s of items) {
-    if (s.padre_id != null && padres.has(s.padre_id)) continue
+    if (s.padre_id != null && padres.has(Number(s.padre_id))) continue
     visibles.push({ sobre: s, hija: false })
     // El grupo arranca desplegado (undefined = abierto): ahora todo padre con hijos
     // aparece, y si arrancara cerrado los hijos desaparecerian de la lista.
     if (s.es_padre && expandidos[s.estructura_id] !== false) {
-      for (const h of items.filter(x => x.padre_id === s.estructura_id)) {
+      for (const h of items.filter(x => Number(x.padre_id) === Number(s.estructura_id))) {
         visibles.push({ sobre: h, hija: true })
       }
     }
   }
   // S12/S14: lo que le queda al grupo es su techo menos lo ya repartido en sus hijos.
   const libreDe = (padreId: number) =>
-    Number(items.find(x => x.estructura_id === padreId)?.monto_asignado ?? 0) -
-    items.filter(x => x.padre_id === padreId).reduce((s, x) => s + Number(x.monto_asignado ?? 0), 0)
+    Number(items.find(x => Number(x.estructura_id) === Number(padreId))?.monto_asignado ?? 0) -
+    items.filter(x => Number(x.padre_id) === Number(padreId)).reduce((s, x) => s + Number(x.monto_asignado ?? 0), 0)
 
   return (
     <div className="acord-grupo">

@@ -384,8 +384,12 @@ test('el total del grupo cuenta una sola vez', () => {
 test('los hijos se dibujan debajo del padre y no se repiten arriba', () => {
   const bloque = pagina.slice(pagina.indexOf('function GrupoAcordeon'), pagina.indexOf('function GrupoAcordeon') + 3000)
   assert.ok(bloque.includes('const padres = new Set(items.filter(i => i.es_padre)'), 'falta detectar los padres con presupuesto')
-  assert.ok(bloque.includes('if (s.padre_id != null && padres.has(s.padre_id)) continue'), 'un hijo de un padre con presupuesto no puede aparecer dos veces')
+  // T6d: los ids se comparan como números, porque el RPC puede devolver bigint como texto
+  // y entonces el Set no encuentra al padre y el hijo queda suelto en la lista.
+  assert.ok(bloque.includes('padres.has(Number(s.padre_id))'), 'la comparación padre/hijo tiene que normalizar los ids a número')
+  assert.ok(bloque.includes('if (s.padre_id != null && padres.has(Number(s.padre_id))) continue'), 'un hijo de un padre con presupuesto no puede aparecer dos veces')
   assert.ok(bloque.includes('visibles.push({ sobre: h, hija: true })'), 'los hijos tienen que entrar indentados debajo del padre')
+  assert.ok(bloque.includes('Number(x.padre_id) === Number(s.estructura_id)'), 'la búsqueda de hijos tiene que normalizar los ids')
   assert.ok(bloque.includes('expandidos[s.estructura_id]'), 'sólo se despliegan si el grupo está abierto')
 })
 
@@ -393,7 +397,7 @@ test('el monto libre del grupo es el techo menos lo repartido', () => {
   assert.ok(pagina.includes('const libreDe = (padreId: number) =>'), 'falta el cálculo del libre del grupo')
   const bloque = pagina.slice(pagina.indexOf('const libreDe'), pagina.indexOf('const libreDe') + 400)
   assert.ok(bloque.includes('monto_asignado ?? 0) -'), 'el libre tiene que restar lo repartido del techo')
-  assert.ok(bloque.includes('x.padre_id === padreId'), 'lo repartido se suma sobre los hijos del padre')
+  assert.ok(bloque.includes('Number(x.padre_id) === Number(padreId)'), 'lo repartido se suma sobre los hijos del padre, con ids normalizados')
 })
 
 test('la fila del padre y la hija se distinguen en el marcado', () => {
@@ -479,4 +483,12 @@ test('sin presupuesto del padre los hijos siguen contando', () => {
 
 test('la UI arranca con el grupo desplegado', () => {
   assert.ok(pagina.includes('expandidos[s.estructura_id] !== false'), 'el grupo tiene que arrancar abierto para que los hijos no desaparezcan')
+})
+
+test('el grupo se mueve entero entre la lista y la alerta de excedidos', () => {
+  // T6d: en base cero el sobre en déficit se iba a la alerta. Con rubros padre eso partía
+  // el árbol: el hijo en rojo saltaba arriba y el padre quedaba solo en la lista.
+  assert.ok(pagina.includes('const padresEnAlerta = new Set('), 'falta decidir qué padres van a la alerta')
+  assert.ok(pagina.includes('aLaAlerta = padresEnAlerta.has(padreId as number)'), 'el hijo tiene que acompañar a su padre: ni se esconde solo ni reaparece suelto')
+  assert.ok(pagina.includes('const padresConTecho = new Set('), 'la alerta no tiene que repetir a los hijos que ya se ven anidados')
 })
