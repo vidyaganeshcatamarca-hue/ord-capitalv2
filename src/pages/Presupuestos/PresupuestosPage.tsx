@@ -92,6 +92,28 @@ const getPctBarra = (gastado: number, asignado: number) => {
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
 
+/**
+ * Disponible de un sobre, con el criterio ÚNICO del módulo.
+ *
+ * Auditoría F-08: convivían tres criterios. La lista de orígenes de transferencia
+ * filtraba por `monto_disponible` crudo, mientras «Llenar Hueco», la validación de
+ * transferencia y la fila del sobre usaban el criterio dual por modo. Hoy no se ve
+ * porque ningún sobre tiene arrastre; con arrastre, la lista ofrecería orígenes que
+ * la validación después rechaza.
+ *
+ * En anticipado el disponible se mide contra lo asignado menos lo gastado (sin
+ * arrastre). En base cero el servidor ya entrega `monto_disponible` con el arrastre
+ * incluido, que es justamente lo que el modo quiere mostrar.
+ */
+function disponibleDeSobre(
+  sobre: { monto_asignado: number | null; monto_gastado: number | null; monto_disponible: number | null },
+  modoPresupuesto: string | null | undefined
+): number {
+  return modoPresupuesto === 'anticipado'
+    ? Number(sobre.monto_asignado ?? 0) - Number(sobre.monto_gastado ?? 0)
+    : Number(sobre.monto_disponible ?? 0)
+}
+
 export function PresupuestosPage() {
   const { showToast } = useToast()
   const navigate = useNavigate()
@@ -167,6 +189,20 @@ export function PresupuestosPage() {
 
 
   const [hasInitializedOffset, setHasInitializedOffset] = useState(false)
+  // F-06 (auditoría): ningún modal de esta pantalla cerraba con Escape. Se atiende
+  // en un solo lugar, en orden de capas: primero la de arriba.
+  useEffect(() => {
+    const alPresionar = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return
+      if (showBaseCeroModal) { setShowBaseCeroModal(false); return }
+      if (showTransferirModal) { setShowTransferirModal(false); setOrigenSeleccionado(null); return }
+      if (showAsignarSheet) { setShowAsignarSheet(false); setSobreSeleccionado(null); return }
+      if (showDetalleSheet) { setShowDetalleSheet(false); setSobreSeleccionado(null); return }
+    }
+    window.addEventListener('keydown', alPresionar)
+    return () => window.removeEventListener('keydown', alPresionar)
+  }, [showBaseCeroModal, showTransferirModal, showAsignarSheet, showDetalleSheet])
+
 
   const mesPeriodo = getMesPeriodo(mesOffset)
   const mesPeriodoStr = mesPeriodo.toISOString().slice(0, 10)
@@ -417,9 +453,7 @@ export function PresupuestosPage() {
   const handleLlenarHueco = async () => {
     if (!sobreSeleccionado || soloLectura) return
     // En modo anticipado, el "hueco" se mide contra asignado - gastado (sin arrastre).
-    const disponibleEfectivo = config?.modo_presupuesto === 'anticipado'
-      ? Number(sobreSeleccionado.monto_asignado ?? 0) - Number(sobreSeleccionado.monto_gastado ?? 0)
-      : Number(sobreSeleccionado.monto_disponible ?? 0)
+    const disponibleEfectivo = disponibleDeSobre(sobreSeleccionado, config?.modo_presupuesto)
     if (disponibleEfectivo >= 0) return
     let monto = Math.abs(disponibleEfectivo)
 
@@ -468,7 +502,7 @@ export function PresupuestosPage() {
 
   const sobresConDisponible = sobres.filter(s =>
     s.estructura_id !== sobreSeleccionado?.estructura_id &&
-    s.monto_disponible > 0
+    disponibleDeSobre(s, config?.modo_presupuesto) > 0
   )
 
   // Tanda 4 telemetry: an overspent budget is on screen (no amounts;
@@ -523,9 +557,7 @@ export function PresupuestosPage() {
       }
     } else {
       // En modo anticipado, no se arrastra el saldo disponible del mes anterior.
-      const disponibleEfectivo = config?.modo_presupuesto === 'anticipado'
-        ? Number(origenSeleccionado.monto_asignado ?? 0) - Number(origenSeleccionado.monto_gastado ?? 0)
-        : Number(origenSeleccionado.monto_disponible ?? 0)
+      const disponibleEfectivo = disponibleDeSobre(origenSeleccionado, config?.modo_presupuesto)
       if (monto > disponibleEfectivo) {
         showToast(t('budget_error_transfer_exceeds'), 'error')
         return
@@ -1572,9 +1604,7 @@ function FilaSobre({ sobre, isLast, onAsignar, onVerDetalle, modoPresupuesto, so
   // En modo anticipado, el "disponible" del sobre NO arrastra el saldo del mes
   // anterior: cada mes arranca en 0 y se computa como asignado - gastado.
   // En base_cero, el arrastre si forma parte del disponible.
-  const disponibleEfectivo = modoPresupuesto === 'anticipado'
-    ? Number(sobre.monto_asignado ?? 0) - Number(sobre.monto_gastado ?? 0)
-    : Number(sobre.monto_disponible ?? 0)
+  const disponibleEfectivo = disponibleDeSobre(sobre, modoPresupuesto)
   const arrastre = Number(sobre.arrastre_mes_anterior ?? 0)
 
   const colorDisponible = () => {

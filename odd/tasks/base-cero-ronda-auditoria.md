@@ -74,3 +74,11 @@ los dos casos; un monto de `50` con saldo negativo también se rechaza.
 **E4** (S4) `temp_sql/145_saneo_198.mjs`: la cuenta de testing 198 tenía 6 sobres por
 `1.000.199,00` contra `2.109,91` de liquidez. Quedaron los 6 en `0,00` y el saldo a asignar pasó a
 `+2.109,91`. `p_presupuestos` no tiene triggers, así que el `UPDATE` no dispara nada más.
+
+**E5** (S8) Un solo `useEffect` con `keydown` cierra las cuatro capas en orden: contrato de base
+cero, transferir, hoja de asignar y detalle del sobre. El listener se limpia al desmontar.
+Verificado por lectura del handler (no hay forma de probar teclado sin navegador en este repo).
+
+**E6** (S9) `disponibleDeSobre(sobre, modo)` a nivel de módulo, con el criterio dual, y cuatro usos:
+«Llenar Hueco», la lista de orígenes de transferencia (el que estaba crudo), la validación de
+transferencia y la fila del sobre. Tres tests lo fijan.

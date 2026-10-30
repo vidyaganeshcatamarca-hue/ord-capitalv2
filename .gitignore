@@ -174,3 +174,4 @@ scratch/
 !tests/presupuestos/patas-de-transferencia.test.js
 !tests/presupuestos/parse-monto.test.js
 !tests/presupuestos/candado-asignacion.test.js
+!tests/presupuestos/escape-y-criterio-disponible.test.js
