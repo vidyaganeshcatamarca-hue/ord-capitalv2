@@ -107,6 +107,14 @@ que respetar el orden de los límites: medido con bucles mínimos, `REVERSE 5..0
 devolvía `evolucion: []` en silencio. Con `REVERSE 5..0` devuelve los tres meses con ingresos:
 2026-07, 2026-09 y 2026-10.
 
-**E11** `fn_reporte_escudo_tiempo(uuid)` no se tocó: tiene otra firma que el overload vigente (7
-columnas contra 13), pisa el gasto fijo con la cotización del USD y devuelve mensajes hardcodeados
-en español. Nada la llama. Eliminarla es cambio de contrato: queda para decisión del dueño.
+**E11** `fn_reporte_escudo_tiempo(uuid)` no se toca. No es una versión rota de la función vigente
+sino una implementación vieja con otra firma (7 columnas contra 13), que pisa el gasto fijo con la
+cotización del USD, devuelve mensajes hardcodeados en español y no la llama nadie.
+
+**Decisión del dueño (pendiente de revisión, no borrar):** «Esa función todavía dejala anotada como
+para revisión porque es una funcionalidad que aún no hemos desarrollado y puede estar faltando
+código. Así que por ahora no la borramos.»
+
+Queda como está, sin arreglar y sin eliminar, hasta que se desarrolle esa funcionalidad. Si algún
+día se retoma, los tres defectos conocidos están arriba: tipo de parámetro, sobrescritura del gasto
+fijo e i18n.
