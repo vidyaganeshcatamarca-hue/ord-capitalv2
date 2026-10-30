@@ -475,7 +475,9 @@ export function PresupuestosPage() {
       showToast(t('budget_readonly_cycle_toast'), 'error')
       return
     }
-    if (isNaN(monto) || monto <= 0) {
+    // Dueño: 0 es un valor válido — deja el sobre sin presupuesto y devuelve la
+    // plata al pozo. Sólo lo negativo es un monto inválido.
+    if (isNaN(monto) || monto < 0) {
       showToast(t('error_invalid_amount'), 'error')
       return
     }
@@ -549,8 +551,14 @@ export function PresupuestosPage() {
     // El value de un input[type=number] SIEMPRE usa punto decimal: borrarlo
     // multiplicaba por 100 (auditoria F-01). Lo lee el parser compartido.
     const montoAAgregar = parseMontoInput(montoManual)
-    if (isNaN(montoAAgregar) || montoAAgregar <= 0) {
+    if (isNaN(montoAAgregar) || montoAAgregar < 0) {
       showToast(t('error_invalid_amount'), 'error')
+      return
+    }
+    // Dueño: el campo suma a lo ya asignado, por eso un 0 no devolvía nada. Un 0
+    // explícito deja el sobre en cero y libera ese dinero al disponible.
+    if (montoAAgregar === 0) {
+      await ejecutarAsignacion(0)
       return
     }
     const nuevoLimite = Number(sobreSeleccionado?.monto_asignado ?? 0) + montoAAgregar;
@@ -1256,7 +1264,7 @@ export function PresupuestosPage() {
                 <button
                   className="btn-confirmar-monto"
                   onClick={handleMontoManualConfirmar}
-                  disabled={guardandoAsignacion || !montoManual || !(parseMontoInput(montoManual) > 0)}
+                  disabled={guardandoAsignacion || !montoManual || !(parseMontoInput(montoManual) >= 0)}
                 >
                   {t('budget_btn_assign')}
                 </button>
@@ -1742,7 +1750,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
             onClick={e => { e.stopPropagation(); onToggleGrupo() }}
             aria-expanded={!!expandido}
             aria-label={t(expandido ? 'budget_group_collapse' : 'budget_group_expand')}
-          >▶</button>
+          >{expandido ? '−' : '+'}</button>
         )}
         {/* F-05 (auditoría): la fila era role="button" y anidaba el botón de
             asignar, dos destinos de foco anidados. Ahora la fila responde al
@@ -1760,12 +1768,15 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
             <CategoryIcon name={sobre.icono} size={18} />
           </span>
           <span className="sobre-nombre-texto">
-            <span>{t(sobre.nombre_categoria)}</span>
-            {sobre.es_padre && libreGrupo !== undefined && (
-              <span className="sobre-grupo-libre">
-                {t('budget_group_free', { monto: fmt(Math.max(libreGrupo, 0)) })}
-              </span>
-            )}
+            <span className="sobre-nombre-linea">
+              {t(sobre.nombre_categoria)}
+              {/* Dueño: en el teléfono el nombre salía pegado al texto del grupo
+                  («SaludLibre del grupo»). El espacio no puede depender del
+                  whitespace: va como margen de esta etiqueta. */}
+              {sobre.es_padre && libreGrupo !== undefined && (
+                <span className="sobre-grupo-etiqueta">{t('budget_group_tag')}</span>
+              )}
+            </span>
           </span>
         </button>
         <span className={`sobre-disponible ${colorDisponible()}`} style={{ marginRight: soloLectura ? 0 : 80 }}>
@@ -1793,6 +1804,14 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
           <span className="sobre-stat-label">{t('budget_stat_spent')} </span>
           <span className="sobre-stat-val">{fmt(Number(sobre.monto_gastado))}</span>
         </span>
+        {/* Lo que queda del techo del grupo para los hijos sin presupuesto propio.
+            Antes iba pegado al nombre; ahora vive acá, con su etiqueta. */}
+        {sobre.es_padre && libreGrupo !== undefined && (
+          <span className="sobre-stat">
+            <span className="sobre-stat-label">{t('budget_stat_group_free')} </span>
+            <span className="sobre-stat-val">{fmt(Math.max(libreGrupo, 0))}</span>
+          </span>
+        )}
         {!sinDatos && (
           <span className="sobre-stat">
             <span className="sobre-stat-label">{t('budget_stat_progress')} </span>

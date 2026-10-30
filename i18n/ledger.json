@@ -7574,9 +7574,13 @@
         "from": "+ Asignar",
         "to": "+ Assign"
       },
-      "inversiones.budget_group_free": {
-        "from": "Libre del grupo: {monto}",
-        "to": "Group free: {monto}"
+      "inversiones.budget_group_tag": {
+        "from": "(grupal libre)",
+        "to": "(group free)"
+      },
+      "inversiones.budget_stat_group_free": {
+        "from": "Libre grupo:",
+        "to": "Group free:"
       },
       "inversiones.budget_group_expand": {
         "from": "Mostrar subcategorías",
@@ -17316,9 +17320,13 @@
         "from": "+ Asignar",
         "to": "+ Atribuir"
       },
-      "inversiones.budget_group_free": {
-        "from": "Libre del grupo: {monto}",
-        "to": "Livre do grupo: {monto}"
+      "inversiones.budget_group_tag": {
+        "from": "(grupal libre)",
+        "to": "(grupo livre)"
+      },
+      "inversiones.budget_stat_group_free": {
+        "from": "Libre grupo:",
+        "to": "Livre grupo:"
       },
       "inversiones.budget_group_expand": {
         "from": "Mostrar subcategorías",

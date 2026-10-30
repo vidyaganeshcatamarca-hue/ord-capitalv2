@@ -252,27 +252,33 @@
 .sobre-fila:hover { background: var(--surface-3); }
 
 /* T6: la fila del padre despliega sus subcategorías en la misma lista. La hija va
-   indentada; el chevron gira cuando el grupo está abierto. */
+   indentada. */
 .sobre-fila--hija {
   padding-left: 34px;
   border-left: 2px solid var(--border-light);
   margin-left: 12px;
 }
 
+/* Dueño: el ▶ chiquito parecía un play de audio y se confundía con abrir el
+   detalle de la categoría. Ahora es un más grande (menos cuando está abierto),
+   arriba a la izquierda del ícono, y no gira. */
 .sobre-toggle-grupo {
   background: none;
   border: 0;
   color: var(--text);
-  opacity: 0.55;
+  opacity: 0.75;
   cursor: pointer;
-  padding: 2px 6px;
-  font-size: calc(11px * var(--font-scale));
-  line-height: 1;
-  transition: transform 0.15s ease, opacity 0.15s ease;
+  align-self: flex-start;
+  margin: -4px 2px 0 0;
+  padding: 0 4px;
+  font-size: calc(21px * var(--font-scale));
+  font-weight: 700;
+  line-height: 0.9;
+  transition: color 0.15s ease, opacity 0.15s ease;
 }
 
-.sobre-toggle-grupo:hover { opacity: 1; }
-.sobre-toggle-grupo.abierto { transform: rotate(90deg); }
+.sobre-toggle-grupo:hover { opacity: 1; color: var(--mint); }
+.sobre-toggle-grupo.abierto { color: var(--mint); }
 .sobre-toggle-grupo:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
 
 .sobre-nombre-texto {
@@ -282,10 +288,20 @@
   gap: 1px;
 }
 
-.sobre-grupo-libre {
+.sobre-nombre-linea {
+  display: inline-flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+/* El espacio entre el nombre y «(grupal libre)» va como margen: en el teléfono
+   el whitespace se perdía y se leía «SaludLibre del grupo». */
+.sobre-grupo-etiqueta {
+  margin-left: 5px;
   font-size: calc(11px * var(--font-scale));
-  color: var(--text);
+  font-weight: 400;
   opacity: 0.6;
+  white-space: nowrap;
 }
 .sobre-fila:not(:last-child) {
   border-bottom: 1px solid var(--border);

@@ -40,9 +40,11 @@ const filaPadre = leer('temp_sql', '155_reporte_fila_padre.sql')
 const techo = leer('temp_sql', '158_techo_al_asignar.sql')
 const transferencias = leer('temp_sql', '160_techo_en_transferencias.sql')
 const arrastre = leer('temp_sql', '162_arrastre_base_cero.sql')
-const asignarBaseCero = leer('temp_sql', '164_base_cero_hijo_dentro_del_techo.sql')
+// 168 supersede a 164 (misma función, con el 0 permitido en el padre).
+const asignarBaseCero = leer('temp_sql', '168_padre_a_cero.sql')
 const padreVisible = leer('temp_sql', '167_padre_siempre_visible.sql')
 const pagina = leer('src', 'pages', 'Presupuestos', 'PresupuestosPage.tsx')
+const cssPagina = leer('src', 'pages', 'Presupuestos', 'Presupuestos.css')
 const sumas = leer('temp_sql', '153_sumas_sin_padres.sql')
 
 // Comparar SQL sin depender de la indentación.
@@ -450,7 +452,10 @@ test('el padre se resuelve una sola vez', () => {
 test('el techo sigue rechazando después del cambio', () => {
   // Las dos validaciones de T3 no se pierden al mover el lookup.
   assert.ok(bcC.includes('IF p_monto_asignado > (v_techo_padre - v_repartido) THEN'), 'falta el rechazo del hijo sobre el techo')
-  assert.ok(bcC.includes('IF v_repartido > p_monto_asignado THEN'), 'falta el rechazo del padre por debajo de lo repartido')
+  // Sólo el 0 se exime: cualquier monto positivo por debajo de lo repartido sigue
+  // rechazando. La forma vieja (sin la excepción) dejaba al usuario sin manera de
+  // soltar un presupuesto, así que la aserción se actualiza con el comportamiento.
+  assert.ok(bcC.includes('IF p_monto_asignado > 0 AND v_repartido > p_monto_asignado THEN'), 'falta el rechazo del padre por debajo de lo repartido, con la excepción del 0')
   const iInsert = bcC.indexOf('INSERT INTO public.p_presupuestos')
   assert.ok(bcC.indexOf('error_budget_child_over_parent') < iInsert, 'el rechazo tiene que seguir antes del INSERT')
 })
@@ -491,4 +496,41 @@ test('el grupo se mueve entero entre la lista y la alerta de excedidos', () => {
   assert.ok(pagina.includes('const padresEnAlerta = new Set('), 'falta decidir qué padres van a la alerta')
   assert.ok(pagina.includes('aLaAlerta = padresEnAlerta.has(padreId as number)'), 'el hijo tiene que acompañar a su padre: ni se esconde solo ni reaparece suelto')
   assert.ok(pagina.includes('const padresConTecho = new Set('), 'la alerta no tiene que repetir a los hijos que ya se ven anidados')
+})
+
+// ---------------------------------------------------------------------------
+// Dueño (2026-10-30), tres pedidos sobre la fila del padre y la hoja de asignar:
+//   1. el ▶ chiquito parecía un play de audio: ahora es un + grande, que se
+//      distingue de abrir el detalle de la categoría
+//   2. «SaludLibre del grupo» salía pegado: ahora «Salud (grupal libre)»
+//   3. poner 0 no devolvía la plata: ahora deja el sobre en 0 y libera el pozo
+// ---------------------------------------------------------------------------
+
+test('el toggle del grupo es un más grande, no un play', () => {
+  assert.ok(pagina.includes(">{expandido ? '−' : '+'}</button>"), 'el toggle tiene que mostrar + y −, no ▶')
+  const iToggle = pagina.indexOf('sobre-toggle-grupo')
+  const bloqueToggle = pagina.slice(iToggle, iToggle + 400)
+  assert.ok(!bloqueToggle.includes('▶'), 'el toggle no puede seguir mostrando el play')
+  assert.ok(!/\.sobre-toggle-grupo\.abierto\s*\{[^}]*transform/.test(cssPagina), 'el más no rota: rotarlo lo vuelve a parecer un play')
+  assert.ok(pagina.includes("aria-label={t(expandido ? 'budget_group_collapse' : 'budget_group_expand')}"), 'el toggle sigue necesitando su etiqueta traducida')
+})
+
+test('el grupo se anuncia con (grupal libre) pegado al nombre, con espacio real', () => {
+  assert.ok(pagina.includes("t('budget_group_tag')"), 'falta la etiqueta nueva')
+  assert.ok(!pagina.includes('budget_group_free'), 'la etiqueta vieja ya no se usa')
+  const iCss = cssPagina.indexOf('.sobre-grupo-etiqueta')
+  const bloqueCss = cssPagina.slice(iCss, iCss + 200)
+  assert.ok(bloqueCss.includes('margin-left'), 'el espacio tiene que ser margen: el whitespace se pierde en el teléfono')
+})
+
+test('asignar 0 deja el sobre en cero y devuelve la plata al pozo', () => {
+  assert.ok(pagina.includes('if (isNaN(monto) || monto < 0)'), 'ejecutarAsignacion tiene que aceptar 0 y rechazar sólo lo negativo')
+  assert.ok(pagina.includes('if (montoAAgregar === 0)'), 'un 0 explícito no se suma: deja el sobre en cero')
+  assert.ok(pagina.includes('await ejecutarAsignacion(0)'), 'el 0 tiene que llegar como límite 0, no como 0 + lo asignado')
+  assert.ok(pagina.includes('parseMontoInput(montoManual) >= 0'), 'el botón tiene que habilitarse con 0')
+})
+
+test('en la base, un padre en 0 no lo frena el guard de los hijos', () => {
+  assert.ok(bcC.includes('IF p_monto_asignado > 0 AND v_repartido > p_monto_asignado THEN'), 'el guard del padre tiene que dejar pasar el 0')
+  assert.ok(bcC.includes('error_budget_parent_below_children'), 'un padre por debajo de lo repartido, pero mayor a 0, tiene que seguir rechazando')
 })
