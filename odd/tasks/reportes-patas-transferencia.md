@@ -34,7 +34,8 @@ ingreso reales.
 | T3 | S1, S3 | Medir cada RPC antes/después con el usuario 1 (`temp_sql/137_trial_136.mjs`) | hecho |
 | T4 | S5, S6 | Corregir la fila 4416 manteniendo la tasa del 29/09 (`temp_sql/139_fila_4416.mjs`) | desplegado |
 | T5 | S1-S6 | Test en `tests/` y commit | pendiente |
-| T6 | S1 | Triar las 19 definiciones restantes que suman `valor_egreso` sin leer la vista | pendiente |
+| T6 | S1 | Triar las definiciones que suman `valor_egreso` sin leer la vista | hecho |
+| T7 | S1, S2 | Repuntar las 10 del grupo A (`temp_sql/140_reportes_restantes.sql`) | desplegado |
 
 ## Log
 
@@ -95,3 +96,29 @@ Controles sin tocar e idénticos: `top_categorias_mes` y `movimientos_recientes`
 **E7** Fila 4416 corregida: `moneda='USD'`, `es_usd=true` (igual que sus hermanas 4448 y
 4464), `valor_local=98531.98`, `moneda_local='ARS'`, `tasa_snapshot=1515.8766`. Saldo total
 de billeteras `2.594.782,00` y billetera 400 en `273` antes y después.
+
+**E8** Triaje: 34 definiciones usan `valor_egreso` y no leían la vista. 15 candidatas se
+revisaron línea por línea. Diez suman gasto o ingreso sin unir el rubro, filtrar proyecto
+ni cuenta, así que veían las patas: `fn_obtener_saldo_disponible_para_asignar`,
+`fn_obtener_techo_presupuestario`, `fn_reporte_escudo_tiempo` (dos overloads),
+`fn_reporte_evolucion_presupuesto`, `fn_reporte_limite_seguro_deuda`,
+`fn_reporte_proyeccion_presupuestaria`, `fn_reporte_gasto_por_integrante`,
+`fn_reporte_punto_equilibrio` y `fn_reporte_top_fuentes_ingreso`. Las otras cinco ya las
+excluían por construcción: `calcular_pe_personal_json` une `p_cuentas_egresos`,
+`fn_generar_recurrentes_hoy` filtra una estructura concreta, y `fn_reporte_proyecto_detalle`,
+`fn_reporte_proyectos_compartidos` y `fn_reporte_proyectos_hogar` filtran por `proyecto_id`.
+Los `e_fn_get_*` y `calcular_pe_*` quedaron fuera de alcance: leen la tabla histórica
+`caja` con `cuentas_egresos`, no `p_caja`.
+
+**E9** Medición del 140, usuario 1: `techo_presupuestario` `5.357.983,67` → `5.195.233,33`;
+`limite_seguro_deuda` y `proyeccion_presupuestaria` igual delta; `gasto_por_integrante`
+`2.778.000` → `2.327.700`; `punto_equilibrio` meta de ahorro `803.697,55` → `779.285,00` y
+margen de maniobra `−603.706,48` → `−742.044,26`; `escudo_tiempo` burn rate `104.224,34` →
+`94.557,79`; `top_fuentes_ingreso` total `4.722.719` → `4.265.500`. Total de funciones que
+leen la vista: 25. Saldo de billeteras sin cambios (`2.594.782,00`).
+
+**E10** Tres RPC ya estaban rotas antes de esta tanda y siguen fallando igual:
+`fn_obtener_saldo_disponible_para_asignar(date)` con `column "hogar_id" does not exist`,
+`fn_reporte_escudo_tiempo(uuid)` con `operator does not exist: bigint = uuid` y
+`fn_reporte_evolucion_presupuesto()` con `BY value of FOR loop must be greater than zero`.
+No se tocaron: son otro defecto y necesitan decisión del dueño.
