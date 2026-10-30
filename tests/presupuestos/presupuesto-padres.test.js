@@ -41,6 +41,7 @@ const techo = leer('temp_sql', '158_techo_al_asignar.sql')
 const transferencias = leer('temp_sql', '160_techo_en_transferencias.sql')
 const arrastre = leer('temp_sql', '162_arrastre_base_cero.sql')
 const asignarBaseCero = leer('temp_sql', '164_base_cero_hijo_dentro_del_techo.sql')
+const padreVisible = leer('temp_sql', '167_padre_siempre_visible.sql')
 const pagina = leer('src', 'pages', 'Presupuestos', 'PresupuestosPage.tsx')
 const sumas = leer('temp_sql', '153_sumas_sin_padres.sql')
 
@@ -52,6 +53,7 @@ const techoC = compacto(techo)
 const transC = compacto(transferencias)
 const arrC = compacto(arrastre)
 const bcC = compacto(asignarBaseCero)
+const visC = compacto(padreVisible)
 const sumasC = compacto(sumas)
 
 const FUNCIONES_CON_GUARDA = [
@@ -447,4 +449,34 @@ test('el techo sigue rechazando después del cambio', () => {
   assert.ok(bcC.includes('IF v_repartido > p_monto_asignado THEN'), 'falta el rechazo del padre por debajo de lo repartido')
   const iInsert = bcC.indexOf('INSERT INTO public.p_presupuestos')
   assert.ok(bcC.indexOf('error_budget_child_over_parent') < iInsert, 'el rechazo tiene que seguir antes del INSERT')
+})
+
+// ---------------------------------------------------------------------------
+// T6c: el rubro padre aparece aunque no tenga presupuesto.
+// Dueño: "No puedo ver las categorias padres en el modulo de presupuestos". La fila se
+// emitía sólo con presupuesto mayor a cero, y la lista se arma con este reporte: era
+// imposible asignarle uno.
+// ---------------------------------------------------------------------------
+
+test('el padre se emite aunque no tenga presupuesto', () => {
+  assert.ok(visC.includes('LEFT JOIN p_presupuestos p ON p.estructura_egreso_id = e.estructura_id'), 'el presupuesto del padre tiene que ser LEFT JOIN para que la fila exista sin él')
+  const ramaPadre = visC.slice(visC.indexOf('SELECT filas.* FROM filas'))
+  assert.ok(!ramaPadre.includes('COALESCE(p.monto_limite, 0) > 0'), 'no puede quedar el filtro que escondía al padre sin presupuesto')
+})
+
+test('el padre aparece sólo si tiene hijos', () => {
+  // El JOIN con las filas de los hijos es lo que distingue un padre de un rubro suelto.
+  const ramaPadre = visC.slice(visC.indexOf('SELECT filas.* FROM filas'))
+  assert.ok(ramaPadre.includes('JOIN filas f ON f.padre_id = e.estructura_id'), 'sin hijos no hay fila de padre')
+})
+
+test('sin presupuesto del padre los hijos siguen contando', () => {
+  // cuenta_en_totales depende de que el padre tenga presupuesto mayor a cero; ese
+  // predicado no se toca en 167.
+  assert.ok(visC.includes('AND pp.mes_periodo = v_mes_truncado'), 'la regla de cuenta_en_totales tiene que seguir en 167')
+  assert.ok(visC.includes('AND COALESCE(pp.monto_limite, 0) > 0'), 'el hijo sólo deja de contar cuando el padre tiene presupuesto')
+})
+
+test('la UI arranca con el grupo desplegado', () => {
+  assert.ok(pagina.includes('expandidos[s.estructura_id] !== false'), 'el grupo tiene que arrancar abierto para que los hijos no desaparezcan')
 })

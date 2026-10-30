@@ -1597,7 +1597,9 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
   for (const s of items) {
     if (s.padre_id != null && padres.has(s.padre_id)) continue
     visibles.push({ sobre: s, hija: false })
-    if (s.es_padre && expandidos[s.estructura_id]) {
+    // El grupo arranca desplegado (undefined = abierto): ahora todo padre con hijos
+    // aparece, y si arrancara cerrado los hijos desaparecerian de la lista.
+    if (s.es_padre && expandidos[s.estructura_id] !== false) {
       for (const h of items.filter(x => x.padre_id === s.estructura_id)) {
         visibles.push({ sobre: h, hija: true })
       }
@@ -1631,7 +1633,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
             sobre={sobre}
             isLast={i === visibles.length - 1}
             hija={hija}
-            expandido={sobre.es_padre ? !!expandidos[sobre.estructura_id] : undefined}
+            expandido={sobre.es_padre ? expandidos[sobre.estructura_id] !== false : undefined}
             onToggleGrupo={sobre.es_padre
               ? () => setExpandidos(p => ({ ...p, [sobre.estructura_id]: !p[sobre.estructura_id] }))
               : undefined}
