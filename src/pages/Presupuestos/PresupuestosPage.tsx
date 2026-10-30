@@ -743,30 +743,20 @@ export function PresupuestosPage() {
     setShowBaseCeroModal(true)
   }
 
-  const handlePasar2 = async () => {
+  const handlePasar2 = () => {
     if (!isBaseCeroConfirmToken(acepto)) {
       showToast(t('toast_write_accept_confirm', { token: BASE_CERO_CONFIRM_TOKEN }), 'error')
       return
     }
-    try {
-      const { data, error } = await supabase.rpc('fn_sugerir_distribucion_activacion')
-      if (error) throw error
-      const d = data as { liquidez_actual: number; sugerencias: SugerenciaActivacion[] }
-      setLiquidezActivacion(Number(d.liquidez_actual ?? 0))
-      const sugerenciasFiltradas = (d.sugerencias ?? []).filter(s => {
-        const nombreLower = (s.nombre || '').toLowerCase().trim();
-        return !SYSTEM_CATEGORY_NAMES.includes(nombreLower as (typeof SYSTEM_CATEGORY_NAMES)[number]);
-      })
-      setSugerencias(sugerenciasFiltradas)
-      const iniciales: Record<number, string> = {}
-      for (const s of sugerenciasFiltradas) {
-        iniciales[s.estructura_id] = '' // Dejar vacío para que sea sugerencia visual y no asignación forzada
-      }
-      setMontosEditados(iniciales)
-      setPaso(2)
-    } catch {
-      showToast(t('budget_error_suggestions'), 'error')
-    }
+    // Decision del dueno: la app no le sugiere montos al usuario, porque ya tiene sus
+    // propios datos (lo que gasto, lo que presupuesto y el promedio de seis meses).
+    // Por eso no se llama mas a fn_sugerir_distribucion_activacion: era una llamada a
+    // Supabase con info que no se iba a usar. La funcion queda en la base por si se
+    // retoma. La liquidez sale del mismo saldo a asignar que ya muestra la pantalla.
+    setLiquidezActivacion(saldoAsignar ?? 0)
+    setSugerencias([])
+    setMontosEditados({})
+    setPaso(2)
   }
 
   const handleConfirmarActivacion = async (skipSuggestions = false) => {
