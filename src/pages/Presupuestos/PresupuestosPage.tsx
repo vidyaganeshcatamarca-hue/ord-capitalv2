@@ -9,6 +9,7 @@ import { SYSTEM_CATEGORY_NAMES } from '@/lib/categoryFilters'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { BASE_CERO_CONFIRM_TOKEN, isBaseCeroConfirmToken } from '@/lib/baseCeroConfirm'
+import { parseMontoInput } from '@/lib/parseMonto'
 import { CuposResumenCard, type CupoResumen } from './CuposResumenCard'
 import './Presupuestos.css'
 
@@ -158,6 +159,10 @@ export function PresupuestosPage() {
   const [liquidezActivacion, setLiquidezActivacion] = useState(0)
   const [montosEditados, setMontosEditados] = useState<Record<number, string>>({})
   const [loadingActivar, setLoadingActivar] = useState(false)
+  // F-07 de la auditoria: sin este estado, dos toques sobre "Asignar" mientras el
+  // primer guardado viaja mandan dos escrituras. La hoja se desmonta al volver, asi
+  // que hoy no se duplica, pero la defensa no existia.
+  const [guardandoAsignacion, setGuardandoAsignacion] = useState(false)
 
 
 
@@ -372,6 +377,7 @@ export function PresupuestosPage() {
 
   const ejecutarAsignacion = async (monto: number) => {
     if (!sobreSeleccionado) return
+    if (guardandoAsignacion) return
     // Guarda de fondo: aunque un botón se escape, un ciclo cerrado no escribe.
     if (soloLectura) {
       showToast(t('budget_readonly_cycle_toast'), 'error')
@@ -381,6 +387,7 @@ export function PresupuestosPage() {
       showToast(t('error_invalid_amount'), 'error')
       return
     }
+    setGuardandoAsignacion(true)
     try {
       const { error } = await supabase.rpc('fn_asignar_presupuesto', {
         p_estructura_egreso_id: sobreSeleccionado.estructura_id,
@@ -400,6 +407,10 @@ export function PresupuestosPage() {
         ? t('budget_error_exceeds_available', { amount: formatMonto(saldoAsignar ?? 0) })
         : t('budget_error_assign')
       showToast(msg, 'error')
+    } finally {
+      // El candado se libera siempre: si el guardado falla, el usuario tiene que
+      // poder reintentar.
+      setGuardandoAsignacion(false)
     }
   }
 
@@ -442,7 +453,9 @@ export function PresupuestosPage() {
       showToast(t('budget_readonly_cycle_toast'), 'error')
       return
     }
-    const montoAAgregar = parseFloat(montoManual.replace(/\./g, '').replace(',', '.'))
+    // El value de un input[type=number] SIEMPRE usa punto decimal: borrarlo
+    // multiplicaba por 100 (auditoria F-01). Lo lee el parser compartido.
+    const montoAAgregar = parseMontoInput(montoManual)
     if (isNaN(montoAAgregar) || montoAAgregar <= 0) {
       showToast(t('error_invalid_amount'), 'error')
       return
@@ -496,7 +509,7 @@ export function PresupuestosPage() {
       showToast(t('budget_readonly_cycle_toast'), 'error')
       return
     }
-    const monto = parseFloat(montoTransferir.replace(/\./g, '').replace(',', '.'))
+    const monto = parseMontoInput(montoTransferir)
     if (isNaN(monto) || monto <= 0) {
       showToast(t('error_invalid_amount'), 'error')
       return
@@ -1154,7 +1167,7 @@ export function PresupuestosPage() {
                 <button
                   className="btn-confirmar-monto"
                   onClick={handleMontoManualConfirmar}
-                  disabled={!montoManual || parseFloat(montoManual) <= 0}
+                  disabled={guardandoAsignacion || !montoManual || !(parseMontoInput(montoManual) > 0)}
                 >
                   {t('budget_btn_assign')}
                 </button>

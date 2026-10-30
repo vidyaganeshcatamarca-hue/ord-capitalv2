@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
+import { parseMontoInput } from '@/lib/parseMonto'
 import { useLanguage } from '@/locales/LanguageProvider'
 import { useOptionalAuth } from '@/contexts/AuthContext'
 import { buildLocale, currencySymbolPosition, resolveCurrencySymbol } from '@/lib/currencySymbol'
@@ -246,7 +247,7 @@ export function useNumberFormat() {
 
   const formatMonto = useCallback(
     (monto: number | string, moneda?: string, decimales?: number): string => {
-      const n = typeof monto === 'string' ? parseFloat(monto) : Number(monto)
+      const n = typeof monto === 'string' ? parseMontoInput(monto) : Number(monto)
       if (Number.isNaN(n)) return '-'
 
       // No explicit currency means the user's local currency, never a literal.

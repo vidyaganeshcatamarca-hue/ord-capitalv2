@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { rpc } from '@/lib/supabase'
+import { parseMontoInput } from '@/lib/parseMonto'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency, formatDateShort } from '@/lib/format'
@@ -205,7 +206,9 @@ function DeudaCard({ deuda, onSimular, onPagar }: DeudaCardProps) {
   const [monto, setMonto] = useState<string>('')
 
   const handleSimularClick = () => {
-    const val = parseFloat(monto.replace(',', '.'))
+    // Un monto tipeado como 1.500,50 se leia 1,5: el separador de miles se
+    // comia el valor. Lo resuelve el parser compartido (auditoria F-01).
+    const val = parseMontoInput(monto)
     if (!val || val <= 0) return
     onSimular(deuda, val)
   }

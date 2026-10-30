@@ -172,3 +172,5 @@ scratch/
 /*.bat
 !tests/presupuestos/solo-lectura-ciclos-pasados.test.js
 !tests/presupuestos/patas-de-transferencia.test.js
+!tests/presupuestos/parse-monto.test.js
+!tests/presupuestos/candado-asignacion.test.js

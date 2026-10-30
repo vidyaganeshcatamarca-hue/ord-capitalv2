@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { rpc } from '@/lib/supabase'
+import { parseMontoInput } from '@/lib/parseMonto'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
@@ -71,7 +72,7 @@ function numberValue(value: number | null | undefined): string {
 
 /** Parses an input value into a positive number, or null when unusable. */
 function positiveOrNull(raw: string): number | null {
-  const parsed = parseFloat(raw.replace(',', '.'))
+  const parsed = parseMontoInput(raw)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : null
 }
 
