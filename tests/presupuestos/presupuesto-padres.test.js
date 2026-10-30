@@ -37,12 +37,14 @@ const leer = (...partes) => fs.readFileSync(path.join(repo, ...partes), 'utf8')
 
 const reporte = leer('temp_sql', '151_reporte_padres.sql')
 const filaPadre = leer('temp_sql', '155_reporte_fila_padre.sql')
+const techo = leer('temp_sql', '158_techo_al_asignar.sql')
 const sumas = leer('temp_sql', '153_sumas_sin_padres.sql')
 
 // Comparar SQL sin depender de la indentación.
 const compacto = (s) => s.replace(/\s+/g, ' ').trim()
 const reporteC = compacto(reporte)
 const padreC = compacto(filaPadre)
+const techoC = compacto(techo)
 const sumasC = compacto(sumas)
 
 const FUNCIONES_CON_GUARDA = [
@@ -209,4 +211,57 @@ test('el orden final se califica para no chocar con los parámetros de salida', 
   // fallaba. Por eso el union va envuelto en una subconsulta con alias.
   assert.ok(padreC.includes(') u ORDER BY CASE u.tipo_cupo'), 'el ORDER BY tiene que ir sobre la subconsulta calificada')
   assert.ok(padreC.includes('u.monto_gastado DESC'), 'el ORDER BY tiene que calificar monto_gastado')
+})
+
+// ---------------------------------------------------------------------------
+// T3: el techo al asignar. Asignar al padre mueve el saldo a asignar; reservar a un
+// hijo sólo reparte (S14). Y los hijos nunca se pasan del padre (S2), mientras bajar el
+// padre por debajo de lo repartido se rechaza con el detalle (S7).
+// ---------------------------------------------------------------------------
+
+test('un hijo no puede pasarse de lo que queda libre del techo', () => {
+  assert.ok(
+    techoC.includes('IF p_monto_asignado > (v_techo_padre - v_repartido) THEN'),
+    'falta la comparación contra el techo menos lo repartido',
+  )
+  // Lo repartido excluye al rubro que se está asignando: si no, se compararía contra sí mismo.
+  assert.ok(
+    techoC.includes('AND pr.estructura_egreso_id <> p_estructura_egreso_id'),
+    'la suma de lo repartido tiene que excluir al rubro que se está asignando',
+  )
+})
+
+test('bajar el padre por debajo de lo repartido se rechaza con el detalle', () => {
+  assert.ok(techoC.includes('IF v_repartido > p_monto_asignado THEN'), 'falta la comparación del padre contra lo repartido en sus hijos')
+  assert.ok(techoC.includes("'error_budget_parent_below_children'"), 'falta la clave del rechazo')
+  assert.ok(techoC.includes("'recortar', v_repartido - p_monto_asignado"), 'el detalle tiene que decir cuánto recortar')
+})
+
+test('sin presupuesto en el padre no hay techo para los hijos', () => {
+  // La guarda del hijo vive dentro de IF COALESCE(v_techo_padre, 0) > 0: sin presupuesto
+  // del padre los hijos siguen siendo independientes, como hasta hoy.
+  const i = techoC.indexOf('IF COALESCE(v_techo_padre, 0) > 0 THEN')
+  const j = techoC.indexOf('error_budget_child_over_parent')
+  assert.ok(i !== -1 && j > i, 'la validación del hijo tiene que estar dentro del IF del techo')
+})
+
+test('los rechazos son datos, no texto: clave y parámetros numéricos', () => {
+  // Sólo los dos rechazos del techo: la función también tiene el de error_unauthorized y
+  // el del guard de base cero, que no son de esta regla.
+  const todos = techoC.match(/RAISE EXCEPTION '[^']*'[^;]*;/g) ?? []
+  const raises = todos.filter((r) => /error_budget_child_over_parent|error_budget_parent_below_children/.test(r))
+  assert.equal(raises.length, 2, `esperaba dos rechazos del techo, encontré ${raises.length} de ${todos.length}`)
+  for (const r of raises) {
+    assert.ok(/json_build_object/.test(r), 'el rechazo tiene que armar el JSON con json_build_object')
+    assert.ok(/'key', 'error_budget_/.test(r), 'el rechazo tiene que llevar su clave de error')
+    assert.ok(/'params', json_build_object/.test(r), 'el rechazo tiene que llevar sus parámetros')
+    // Nada de texto en español ni de números incrustados: todo va por parámetros (regla 9).
+    assert.ok(!/[áéíóúñ¿]/.test(r), `el rechazo no puede tener texto hardcodeado: ${r.slice(0, 60)}`)
+  }
+})
+
+test('la asignación sigue escribiendo en un solo lugar', () => {
+  const inserts = techoC.match(/INSERT INTO public\.p_presupuestos/g) ?? []
+  assert.equal(inserts.length, 1, 'la función tiene que seguir teniendo un único INSERT')
+  assert.ok(techoC.includes('ON CONFLICT (estructura_egreso_id, mes_periodo, user_id, COALESCE(hogar_id, 0))'), 'el ON CONFLICT tiene que seguir igual')
 })
