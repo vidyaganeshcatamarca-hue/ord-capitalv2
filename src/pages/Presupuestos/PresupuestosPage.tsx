@@ -1428,6 +1428,13 @@ export function PresupuestosPage() {
                   </div>
                 </div>
 
+                {/* Auditoría F-04: activar Base Cero reinicia las asignaciones del
+                    ciclo (fn_configurar_modo_presupuesto las archiva y las pone en
+                    cero). La salida ya lo avisaba; la entrada no. */}
+                <div className="contrato-aviso-reset" role="note">
+                  {t('budget_base_cero_reset_notice')}
+                </div>
+
                 <div className="contrato-acepto-section">
                   <div className="contrato-acepto-label">
                     {t('activate_base_cero_confirm_prompt', { token: BASE_CERO_CONFIRM_TOKEN })}

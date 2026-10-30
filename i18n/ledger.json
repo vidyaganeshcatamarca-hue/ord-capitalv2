@@ -9717,6 +9717,10 @@
       "tour.ajustes.description": {
         "from": "Te mostramos cómo personalizar tu experiencia.",
         "to": "We show you how to personalize your experience."
+      },
+      "inversiones.budget_base_cero_reset_notice": {
+        "from": "Al activar Base Cero, las asignaciones de este ciclo se reinician: lo que tenías asignado queda archivado, no se pierde.",
+        "to": "Turning on Zero-Based Mode restarts this cycle's assignments: what you had assigned is archived, not lost."
       }
     },
     "pt": {
@@ -19435,6 +19439,10 @@
       "tour.ajustes.description": {
         "from": "Te mostramos cómo personalizar tu experiencia.",
         "to": "Mostramos como personalizar sua experiência."
+      },
+      "inversiones.budget_base_cero_reset_notice": {
+        "from": "Al activar Base Cero, las asignaciones de este ciclo se reinician: lo que tenías asignado queda archivado, no se pierde.",
+        "to": "Ao ativar o Modo Base Zero, as atribuições deste ciclo são reiniciadas: o que você tinha atribuído fica arquivado, não se perde."
       }
     }
   }

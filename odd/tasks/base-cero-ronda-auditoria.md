@@ -82,3 +82,13 @@ Verificado por lectura del handler (no hay forma de probar teclado sin navegador
 **E6** (S9) `disponibleDeSobre(sobre, modo)` a nivel de módulo, con el criterio dual, y cuatro usos:
 «Llenar Hueco», la lista de orígenes de transferencia (el que estaba crudo), la validación de
 transferencia y la fila del sobre. Tres tests lo fijan.
+
+**E7** (S6) Clave `budget_base_cero_reset_notice` en `es`, `en` y `pt`, aviso con clase propia
+`.contrato-aviso-reset` (tokens del tema, sirve en claro y oscuro) dentro del paso 1 del contrato.
+Registrada en `i18n/ledger.json` como `inversiones.budget_base_cero_reset_notice`: el id del ledger
+es `seccion.clave`, no la clave pelada, y sin la sección el delta de `pt` la reportaba como
+`unrecorded`. Tres tests nuevos; suites 58/58 y 81/81.
+
+**E8** (nota de método) El aviso se apoya en lo que ya hace la tanda B3: al cambiar de modo,
+`fn_configurar_modo_presupuesto` archiva (`p_presupuestos_historial`) y pone en cero las
+asignaciones del ciclo. No se cambió ese comportamiento, solo se lo anuncia.

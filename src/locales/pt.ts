@@ -1956,6 +1956,7 @@ export const inversiones = {
   budget_confirm_back_to_anticipado_title: "Sair do Base Zero?",
   budget_confirm_back_to_anticipado_message: "Você vai voltar ao Modo Livre: as atribuições do ciclo são reiniciadas. O que você tinha atribuído fica arquivado, não se perde.",
   budget_confirm_back_to_anticipado_confirm: "Voltar ao Modo Livre",
+  budget_base_cero_reset_notice: "Ao ativar o Modo Base Zero, as atribuições deste ciclo são reiniciadas: o que você tinha atribuído fica arquivado, não se perde.",
   card_status_healthy: "Saudável",
   card_status_caution: "🟡 Precaução",
   card_status_at_risk: "Em Risco",

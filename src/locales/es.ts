@@ -2217,6 +2217,9 @@ export const inversiones = {
   budget_confirm_back_to_anticipado_title: "¿Salir de Base Cero?",
   budget_confirm_back_to_anticipado_message: "Vas a volver al Modo Libertad: las asignaciones del ciclo se reinician. Lo que tenías asignado queda archivado, no se pierde.",
   budget_confirm_back_to_anticipado_confirm: "Volver a Modo Libertad",
+  // Auditoría F-04: activar Base Cero también reinicia las asignaciones del ciclo, y
+  // el modal de entrada no lo avisaba (la salida sí).
+  budget_base_cero_reset_notice: "Al activar Base Cero, las asignaciones de este ciclo se reinician: lo que tenías asignado queda archivado, no se pierde.",
 
   // Refactor TarjetasPage
   card_status_healthy: "Saludable",

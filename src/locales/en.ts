@@ -1956,6 +1956,7 @@ export const inversiones = {
   budget_confirm_back_to_anticipado_title: "Leave Zero Base?",
   budget_confirm_back_to_anticipado_message: "You are going back to Free Mode: this cycle's assignments restart. What you had assigned is archived, not lost.",
   budget_confirm_back_to_anticipado_confirm: "Back to Free Mode",
+  budget_base_cero_reset_notice: "Turning on Zero-Based Mode restarts this cycle's assignments: what you had assigned is archived, not lost.",
   card_status_healthy: "Healthy",
   card_status_caution: "🟡 Caution",
   card_status_at_risk: "At Risk",

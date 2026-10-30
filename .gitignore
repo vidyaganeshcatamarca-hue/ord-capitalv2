@@ -175,3 +175,4 @@ scratch/
 !tests/presupuestos/parse-monto.test.js
 !tests/presupuestos/candado-asignacion.test.js
 !tests/presupuestos/escape-y-criterio-disponible.test.js
+!tests/presupuestos/aviso-reset-base-cero.test.js

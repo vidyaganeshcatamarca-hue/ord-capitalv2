@@ -1360,3 +1360,17 @@
   outline: 2px solid var(--mint);
   outline-offset: -2px;
 }
+
+/* Auditoría F-04: el aviso de que activar Base Cero reinicia las asignaciones del
+   ciclo. Usa los tokens del tema para no depender de un color fijo y funcionar en
+   claro y en oscuro. */
+.contrato-aviso-reset {
+  margin: 12px 0 4px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--warning, #f59e0b);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--warning, #f59e0b) 12%, transparent);
+  color: var(--text);
+  font-size: calc(0.85rem * var(--font-scale));
+  line-height: 1.4;
+}
