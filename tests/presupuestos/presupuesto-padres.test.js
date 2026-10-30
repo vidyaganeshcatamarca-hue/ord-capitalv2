@@ -40,6 +40,7 @@ const filaPadre = leer('temp_sql', '155_reporte_fila_padre.sql')
 const techo = leer('temp_sql', '158_techo_al_asignar.sql')
 const transferencias = leer('temp_sql', '160_techo_en_transferencias.sql')
 const arrastre = leer('temp_sql', '162_arrastre_base_cero.sql')
+const asignarBaseCero = leer('temp_sql', '164_base_cero_hijo_dentro_del_techo.sql')
 const pagina = leer('src', 'pages', 'Presupuestos', 'PresupuestosPage.tsx')
 const sumas = leer('temp_sql', '153_sumas_sin_padres.sql')
 
@@ -50,6 +51,7 @@ const padreC = compacto(filaPadre)
 const techoC = compacto(techo)
 const transC = compacto(transferencias)
 const arrC = compacto(arrastre)
+const bcC = compacto(asignarBaseCero)
 const sumasC = compacto(sumas)
 
 const FUNCIONES_CON_GUARDA = [
@@ -409,4 +411,40 @@ test('los dos rechazos del techo se explican con sus números', () => {
   // Y el catch de la asignación tiene que usarlo antes que los mensajes genéricos.
   const catchAsignar = pagina.slice(pagina.indexOf('const rechazo = mensajeRechazoPresupuesto'), pagina.indexOf('const rechazo = mensajeRechazoPresupuesto') + 300)
   assert.ok(catchAsignar.includes("? rechazo"), 'si hay rechazo del techo, ese mensaje gana al genérico')
+})
+
+// ---------------------------------------------------------------------------
+// T3b: en base cero, reservar a un hijo dentro del techo del padre no toca el pozo.
+// Defecto encontrado preparando las pruebas de UI sobre el usuario 198: el guard del
+// pozo se disparaba antes del techo y rechazaba cualquier asignación a un hijo.
+// ---------------------------------------------------------------------------
+
+test('el techo del padre se busca antes del guard de base cero', () => {
+  const iLookup = bcC.indexOf('SELECT padre_id INTO v_padre_id')
+  const iGuard = bcC.indexOf("IF v_modo_presupuesto = 'base_cero' THEN")
+  assert.ok(iLookup !== -1 && iGuard !== -1, 'no encontré el lookup del padre o el guard de base cero')
+  assert.ok(iLookup < iGuard, 'el padre y su techo tienen que resolverse antes del guard, si no no se puede saltear')
+})
+
+test('el guard del pozo se saltea cuando el rubro vive dentro de un techo', () => {
+  assert.ok(
+    bcC.includes('IF COALESCE(v_techo_padre, 0) = 0 AND p_monto_asignado > (v_saldo_disponible + v_monto_previo) THEN'),
+    'el guard del pozo tiene que exigir que el rubro NO tenga techo de padre',
+  )
+  // El guard del pozo no usa json_build_object: lleva la clave dentro del JSON literal,
+  // con comillas dobles. Por eso se busca el nombre de la clave, sin comillas.
+  assert.ok(bcC.includes('error_budget_insufficient_base_zero'), 'el guard del pozo tiene que seguir existiendo para los rubros sin techo')
+})
+
+test('el padre se resuelve una sola vez', () => {
+  assert.equal((bcC.match(/SELECT padre_id INTO v_padre_id/g) ?? []).length, 1, 'el lookup del padre no puede quedar duplicado')
+  assert.equal((bcC.match(/SELECT monto_limite INTO v_techo_padre/g) ?? []).length, 1, 'la lectura del techo no puede quedar duplicada')
+})
+
+test('el techo sigue rechazando después del cambio', () => {
+  // Las dos validaciones de T3 no se pierden al mover el lookup.
+  assert.ok(bcC.includes('IF p_monto_asignado > (v_techo_padre - v_repartido) THEN'), 'falta el rechazo del hijo sobre el techo')
+  assert.ok(bcC.includes('IF v_repartido > p_monto_asignado THEN'), 'falta el rechazo del padre por debajo de lo repartido')
+  const iInsert = bcC.indexOf('INSERT INTO public.p_presupuestos')
+  assert.ok(bcC.indexOf('error_budget_child_over_parent') < iInsert, 'el rechazo tiene que seguir antes del INSERT')
 })
