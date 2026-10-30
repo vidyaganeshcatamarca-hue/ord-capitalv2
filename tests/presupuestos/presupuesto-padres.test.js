@@ -39,6 +39,7 @@ const reporte = leer('temp_sql', '151_reporte_padres.sql')
 const filaPadre = leer('temp_sql', '155_reporte_fila_padre.sql')
 const techo = leer('temp_sql', '158_techo_al_asignar.sql')
 const transferencias = leer('temp_sql', '160_techo_en_transferencias.sql')
+const arrastre = leer('temp_sql', '162_arrastre_base_cero.sql')
 const sumas = leer('temp_sql', '153_sumas_sin_padres.sql')
 
 // Comparar SQL sin depender de la indentación.
@@ -47,6 +48,7 @@ const reporteC = compacto(reporte)
 const padreC = compacto(filaPadre)
 const techoC = compacto(techo)
 const transC = compacto(transferencias)
+const arrC = compacto(arrastre)
 const sumasC = compacto(sumas)
 
 const FUNCIONES_CON_GUARDA = [
@@ -321,4 +323,42 @@ test('los rechazos de la transferencia también son datos', () => {
 test('la transferencia sigue moviendo plata en dos pasos, no más', () => {
   assert.equal((transC.match(/UPDATE p_presupuestos/g) ?? []).length, 1, 'tiene que haber un solo UPDATE')
   assert.equal((transC.match(/INSERT INTO p_presupuestos/g) ?? []).length, 1, 'tiene que haber un solo INSERT')
+})
+
+// ---------------------------------------------------------------------------
+// T5: base cero arrastra el sobrante y el deficit, sin resucitar el modo viejo.
+// ---------------------------------------------------------------------------
+
+test('base cero arrastra, pero sólo entre ciclos que ya eran base cero', () => {
+  assert.ok(
+    arrC.includes("v_arrastre_cero := (v_modo_presupuesto = 'base_cero' AND (v_fecha_activacion IS NULL OR v_fecha_activacion > v_f_fin_ant));"),
+    'el arrastre tiene que exigir base cero Y que el ciclo anterior haya terminado dentro de la era base cero',
+  )
+})
+
+test('un rubro sin presupuesto en el ciclo anterior no arrastra nada', () => {
+  // Sin esta guarda cada gasto sin sobre se convierte en una deuda falsa (0 - gasto).
+  // Medido en noviembre del usuario 1: con la guarda el arrastre pasó de -2.852.700 en 10
+  // sobres a -285.840 en 5, que son los rubros que sí tenían presupuesto.
+  assert.ok(
+    arrC.includes('CASE WHEN v_arrastre_cero OR COALESCE(p.monto_limite, 0) <= 0 THEN 0'),
+    'el arrastre tiene que ser cero cuando el límite anterior era cero',
+  )
+})
+
+test('libertad sigue sin arrastre', () => {
+  // En anticipado el disponible se calcula con el arrastre en cero. Si alguien toca esa
+  // expresión, esto falla.
+  assert.ok(arrC.includes("CASE WHEN v_modo_presupuesto = 'anticipado' THEN 0::numeric ELSE COALESCE(SUM(f.arrastre_mes_anterior), 0) END"),
+    'el disponible del padre tiene que ignorar el arrastre en libertad')
+  assert.ok((arrC.match(/v_modo_presupuesto = 'anticipado' THEN 0::numeric/g) ?? []).length >= 3,
+    'las expresiones de estado y disponible de las hojas tienen que seguir ignorando el arrastre en libertad')
+})
+
+test('el disponible del padre incluye el arrastre de sus hijos', () => {
+  // Si no, el grupo mostraría el presupuesto pelado mientras los hijos muestran su arrastre.
+  assert.ok(
+    arrC.includes("CASE WHEN v_modo_presupuesto = 'anticipado' THEN 0::numeric ELSE COALESCE(SUM(f.arrastre_mes_anterior), 0) END + COALESCE(p.monto_limite, 0) - COALESCE(SUM(f.monto_gastado), 0)"),
+    'el disponible del padre tiene que sumar el arrastre de los hijos',
+  )
 })
