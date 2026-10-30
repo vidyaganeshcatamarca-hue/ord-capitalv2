@@ -38,6 +38,7 @@ const leer = (...partes) => fs.readFileSync(path.join(repo, ...partes), 'utf8')
 const reporte = leer('temp_sql', '151_reporte_padres.sql')
 const filaPadre = leer('temp_sql', '155_reporte_fila_padre.sql')
 const techo = leer('temp_sql', '158_techo_al_asignar.sql')
+const transferencias = leer('temp_sql', '160_techo_en_transferencias.sql')
 const sumas = leer('temp_sql', '153_sumas_sin_padres.sql')
 
 // Comparar SQL sin depender de la indentación.
@@ -45,6 +46,7 @@ const compacto = (s) => s.replace(/\s+/g, ' ').trim()
 const reporteC = compacto(reporte)
 const padreC = compacto(filaPadre)
 const techoC = compacto(techo)
+const transC = compacto(transferencias)
 const sumasC = compacto(sumas)
 
 const FUNCIONES_CON_GUARDA = [
@@ -264,4 +266,59 @@ test('la asignación sigue escribiendo en un solo lugar', () => {
   const inserts = techoC.match(/INSERT INTO public\.p_presupuestos/g) ?? []
   assert.equal(inserts.length, 1, 'la función tiene que seguir teniendo un único INSERT')
   assert.ok(techoC.includes('ON CONFLICT (estructura_egreso_id, mes_periodo, user_id, COALESCE(hogar_id, 0))'), 'el ON CONFLICT tiene que seguir igual')
+})
+
+// ---------------------------------------------------------------------------
+// T4: el mismo techo en las transferencias. Mover plata entre sobres tambien cambia
+// monto_limite, asi que sin esta guarda el techo se salteaba con una transferencia.
+// ---------------------------------------------------------------------------
+
+test('una transferencia no puede dejar al destino hijo por encima del techo', () => {
+  assert.ok(
+    transC.includes('IF (COALESCE(v_actual_destino, 0) + p_monto) > (v_techo_destino - v_repartido_destino) THEN'),
+    'falta la comparación del valor resultante del destino contra lo libre del techo',
+  )
+  assert.ok(
+    transC.includes('AND pr.estructura_egreso_id <> p_destino_id'),
+    'la suma de lo repartido tiene que excluir al destino',
+  )
+  assert.ok(transC.includes("'error_budget_child_over_parent'"), 'el rechazo tiene que usar la misma clave que la asignación')
+})
+
+test('una transferencia no puede dejar al padre origen por debajo de lo repartido', () => {
+  assert.ok(
+    transC.includes('IF EXISTS (SELECT 1 FROM public.p_estructuras_egresos h WHERE h.padre_id = p_origen_id) THEN'),
+    'la guarda del origen tiene que aplicar sólo si el origen es padre con hijos',
+  )
+  assert.ok(
+    transC.includes('IF (COALESCE(v_actual_origen, 0) - p_monto) < v_repartido_origen THEN'),
+    'falta la comparación del padre resultante contra lo repartido',
+  )
+  assert.ok(transC.includes("'error_budget_parent_below_children'"), 'el rechazo tiene que usar la misma clave que la asignación')
+  assert.ok(transC.includes("'recortar', v_repartido_origen - (COALESCE(v_actual_origen, 0) - p_monto)"), 'el detalle tiene que decir cuánto recortar')
+})
+
+test('las validaciones van antes de la primera escritura', () => {
+  // La función mueve plata con un UPDATE y un INSERT sueltos: si el rechazo llegara
+  // después del UPDATE, la transferencia quedaría a medias.
+  const iUpdate = transC.indexOf('UPDATE p_presupuestos SET monto_limite = monto_limite - p_monto')
+  const iDestino = transC.indexOf('error_budget_child_over_parent')
+  const iOrigen = transC.indexOf('error_budget_parent_below_children')
+  assert.ok(iUpdate > 0 && iDestino > 0 && iOrigen > 0, 'no encontré alguna de las tres piezas')
+  assert.ok(iDestino < iUpdate && iOrigen < iUpdate, 'las dos validaciones tienen que estar antes del UPDATE del origen')
+})
+
+test('los rechazos de la transferencia también son datos', () => {
+  const todos = transC.match(/RAISE EXCEPTION '[^']*'[^;]*;/g) ?? []
+  const nuevos = todos.filter((r) => /error_budget_child_over_parent|error_budget_parent_below_children/.test(r))
+  assert.equal(nuevos.length, 2, `esperaba dos rechazos del techo, encontré ${nuevos.length} de ${todos.length}`)
+  for (const r of nuevos) {
+    assert.ok(/'params', json_build_object/.test(r), 'el rechazo tiene que llevar sus parámetros')
+    assert.ok(!/[áéíóúñ¿]/.test(r), 'el rechazo no puede tener texto hardcodeado')
+  }
+})
+
+test('la transferencia sigue moviendo plata en dos pasos, no más', () => {
+  assert.equal((transC.match(/UPDATE p_presupuestos/g) ?? []).length, 1, 'tiene que haber un solo UPDATE')
+  assert.equal((transC.match(/INSERT INTO p_presupuestos/g) ?? []).length, 1, 'tiene que haber un solo INSERT')
 })
