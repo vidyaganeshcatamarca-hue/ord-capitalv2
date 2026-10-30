@@ -118,3 +118,23 @@ código. Así que por ahora no la borramos.»
 Queda como está, sin arreglar y sin eliminar, hasta que se desarrolle esa funcionalidad. Si algún
 día se retoma, los tres defectos conocidos están arriba: tipo de parámetro, sobrescritura del gasto
 fijo e i18n.
+
+**E12** (S10) `fn_reporte_escudo_tiempo(uuid)` corregida en `temp_sql/148_escudo_uuid.sql`. Cinco
+defectos, los tres anotados más dos que aparecieron al arreglarla:
+
+1. `user_id` (bigint) contra `p_user_id` (uuid): ahora resuelve `usuarios.auth_id`.
+2. Pisaba `v_gasto_fijo_prom_180` con la cotización del USD: eliminado.
+3. Devolvía calificaciones y mensajes hardcodeados en español: ahora `'safe' | 'warning' |
+   'critical'` (el vocabulario del overload vigente) y `mensaje` NULL, que la UI traduce.
+4. Dividía el ingreso por 6 y los gastos no: unidades mezcladas. Los tres son promedios mensuales.
+5. Llamaba a `fn_dias_escudo(numeric, numeric)`, que **no existe en ningún schema**: la función
+   nunca pudo devolver nada. Es el código que faltaba. Los días se calculan ahora en la misma
+   función con una **fórmula a revisar por el dueño**: ahorro mensual ÷ gasto diario.
+
+Criterio fijo vs variable, que antes era el mismo número dos veces: fijo son los egresos de rubros
+con `tipo_cupo = 'need'`; variable, el resto. Mismo criterio que el overload vigente para «gastos de
+necesidad». También a revisar.
+
+Verificación con el usuario 1: ingreso 3.055.950, fijo 1.091.387,50, variable 784.008,67, ahorro
+1.964.562,50, 31 días, `warning`, `mensaje` NULL. Un uuid inexistente devuelve `error_unauthorized`.
+El overload sin argumentos quedó intacto.
