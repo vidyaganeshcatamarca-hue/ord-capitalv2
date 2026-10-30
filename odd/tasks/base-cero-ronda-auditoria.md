@@ -92,3 +92,21 @@ es `seccion.clave`, no la clave pelada, y sin la sección el delta de `pt` la re
 **E8** (nota de método) El aviso se apoya en lo que ya hace la tanda B3: al cambiar de modo,
 `fn_configurar_modo_presupuesto` archiva (`p_presupuestos_historial`) y pone en cero las
 asignaciones del ciclo. No se cambió ese comportamiento, solo se lo anuncia.
+
+**E9** (S7) Las seis opciones de la hoja son `<button type="button">` (traen Tab, Enter y
+Espacio), la fila dejó de ser `role="button"` con `tabIndex` y el nombre del sobre es un `<button>`
+con `stopPropagation`, así el detalle sigue alcanzable con el teclado. Resets
+`button.asignar-opcion` / `button.sobre-nombre` y `focus-visible` con el token del tema. Cinco tests.
+
+**E10** (dos RPC rotas, ajenas a la auditoría) `temp_sql/146_dos_rpc_rotas.sql`:
+`fn_obtener_saldo_disponible_para_asignar` filtraba por `hogar_id` sobre `p_compromisos_tarjeta`,
+que no tiene esa columna; ahora devuelve ingresos `6.565.500`, asignado `644.160` y compromisos.
+`fn_reporte_evolucion_presupuesto` usaba `BY -1`, que PL/pgSQL rechaza. Al pasarlo a `REVERSE` hay
+que respetar el orden de los límites: medido con bucles mínimos, `REVERSE 5..0` recorre
+5,4,3,2,1,0 y `REVERSE 0..5` **no ejecuta ninguna vuelta y no da error**, así que la función
+devolvía `evolucion: []` en silencio. Con `REVERSE 5..0` devuelve los tres meses con ingresos:
+2026-07, 2026-09 y 2026-10.
+
+**E11** `fn_reporte_escudo_tiempo(uuid)` no se tocó: tiene otra firma que el overload vigente (7
+columnas contra 13), pisa el gasto fijo con la cotización del USD y devuelve mensajes hardcodeados
+en español. Nada la llama. Eliminarla es cambio de contrato: queda para decisión del dueño.
