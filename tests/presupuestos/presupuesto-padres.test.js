@@ -36,11 +36,13 @@ const repo = path.join(__dirname, '..', '..')
 const leer = (...partes) => fs.readFileSync(path.join(repo, ...partes), 'utf8')
 
 const reporte = leer('temp_sql', '151_reporte_padres.sql')
+const filaPadre = leer('temp_sql', '155_reporte_fila_padre.sql')
 const sumas = leer('temp_sql', '153_sumas_sin_padres.sql')
 
 // Comparar SQL sin depender de la indentación.
 const compacto = (s) => s.replace(/\s+/g, ' ').trim()
 const reporteC = compacto(reporte)
+const padreC = compacto(filaPadre)
 const sumasC = compacto(sumas)
 
 const FUNCIONES_CON_GUARDA = [
@@ -157,4 +159,54 @@ test('las cuatro sumas de presupuesto siguen siendo de lectura', () => {
     const apariciones = (sumasC.match(new RegExp(`FUNCTION public\.${nombre}`, 'g')) ?? []).length
     assert.equal(apariciones, 1, `${nombre} tiene que redefinirse exactamente una vez`)
   }
+})
+
+// ---------------------------------------------------------------------------
+// T1 paso 2: la fila del padre. El padre es un acumulador (S6/S11): su gasto es
+// la suma de los gastos de sus hijos, no tiene gasto propio y siempre cuenta en
+// los totales porque es el techo del grupo.
+// ---------------------------------------------------------------------------
+
+test('la fila del padre es la suma de las filas de sus hijos', () => {
+  assert.ok(padreC.includes('filas(estructura_id'), 'el CTE tiene que declarar sus columnas, si no hereda nombres de expresión')
+  assert.ok(padreC.includes('SELECT filas.* FROM filas UNION ALL SELECT'), 'la rama del padre se agrega con UNION ALL sobre las filas de los hijos')
+  assert.ok(padreC.includes('JOIN filas f ON f.padre_id = e.estructura_id'), 'el padre se arma desde las filas de sus hijos')
+  for (const suma of ['SUM(f.monto_gastado)', 'SUM(f.monto_asignado_anterior)', 'SUM(f.monto_gastado_anterior)', 'SUM(f.gasto_promedio_6m)', 'SUM(f.arrastre_mes_anterior)']) {
+    assert.ok(padreC.includes(suma), `falta ${suma} en la rama del padre`)
+  }
+})
+
+test('el disponible del padre es su presupuesto menos la suma de sus hijos', () => {
+  assert.ok(
+    padreC.includes('(COALESCE(p.monto_limite, 0) - COALESCE(SUM(f.monto_gastado), 0))::numeric'),
+    'el disponible del padre tiene que ser asignado menos el gasto sumado de los hijos',
+  )
+  // El padre no gasta: la rama no puede leer gastos_mes para el propio padre.
+  const ramaPadre = padreC.slice(padreC.indexOf('SELECT filas.* FROM filas'))
+  assert.ok(!/JOIN gastos_mes/.test(ramaPadre), 'el padre no tiene gasto propio: no puede unir gastos_mes')
+})
+
+test('el padre cuenta en los totales y sus hijos dejan de contar', () => {
+  // Las dos últimas columnas de la rama del padre son es_padre y cuenta_en_totales.
+  assert.ok(/\)::numeric, true, true FROM p_estructuras_egresos e/.test(padreC), 'la fila del padre tiene que salir con es_padre y cuenta_en_totales en true')
+  // En el reporte la forma es la directa: el presupuesto del padre se busca por el
+  // padre del rubro. (En las sumas de 153 va con los alias ee/pp.)
+  assert.ok(
+    padreC.includes('pp.estructura_egreso_id = e.padre_id'),
+    'el reporte tiene que calcular cuenta_en_totales buscando el presupuesto del padre del rubro',
+  )
+})
+
+test('la fila del padre sólo aparece si tiene presupuesto', () => {
+  // Sin presupuesto del padre la rama no devuelve nada: es lo que permitió verificar
+  // que la salida es idéntica byte a byte con los datos de hoy.
+  const ramaPadre = padreC.slice(padreC.indexOf('SELECT filas.* FROM filas'))
+  assert.ok(ramaPadre.includes('AND COALESCE(p.monto_limite, 0) > 0'), 'la rama del padre tiene que exigir presupuesto mayor a cero')
+})
+
+test('el orden final se califica para no chocar con los parámetros de salida', () => {
+  // ORDER BY tipo_cupo era ambiguo contra el parámetro de salida tipo_cupo, y el CREATE
+  // fallaba. Por eso el union va envuelto en una subconsulta con alias.
+  assert.ok(padreC.includes(') u ORDER BY CASE u.tipo_cupo'), 'el ORDER BY tiene que ir sobre la subconsulta calificada')
+  assert.ok(padreC.includes('u.monto_gastado DESC'), 'el ORDER BY tiene que calificar monto_gastado')
 })
