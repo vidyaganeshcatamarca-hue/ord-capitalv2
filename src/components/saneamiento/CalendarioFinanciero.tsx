@@ -171,7 +171,7 @@ export function CalendarioFinanciero({ eventosIniciales, onVolver, onChange }: C
                   <div className="saneamiento-item-main">
                     <div className="saneamiento-item-info">
                       <div className="saneamiento-item-titulo">
-                        <span className="dot" style={{ background: e.criticidad === 'critico' ? 'var(--coral)' : 'var(--amber)' }} />
+                        <span className="dot" style={{ background: e.criticidad === 'critico' ? 'var(--coral)' : e.criticidad === 'atencion' ? 'var(--amber)' : 'var(--mint, #4ade80)' }} />
                         <span>{e.nombre}</span>
                         <span className="saneamiento-badge" style={{ background: 'rgba(160,160,160,0.15)', color: 'var(--text-secondary)' }}>
                           {t(`saneamiento_tipo_${e.tipo_evento}`)}

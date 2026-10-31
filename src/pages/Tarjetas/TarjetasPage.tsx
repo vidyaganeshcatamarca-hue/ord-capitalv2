@@ -251,6 +251,8 @@ export function TarjetasPage() {
   const pasivoUsd = Number(pasivoMonedas?.total_usd ?? 0)
   const pasivoConvertido = pasivoLocal + (cotizacionUsd != null ? pasivoUsd * cotizacionUsd : 0)
   const pasivoSinCotizacion = pasivoUsd > 0 && cotizacionUsd == null
+  // S12: valor del dólar que carga el usuario cuando la moneda no tiene cotización.
+  const [cotizacionManual, setCotizacionManual] = useState('')
   const [comparativa, setComparativa] = useState<ComparativaTarjeta[]>([])
   const [serieTarjetas, setSerieTarjetas] = useState<SerieCicloTarjeta[]>([])
   const [loading, setLoading] = useState(true)
@@ -656,6 +658,13 @@ const handleLegacySubmit = async () => {
   }
 
   const handlePagar = async () => {
+  // S12: si la moneda no tiene cotización, la ventana pide el valor del dólar.
+  // El valor manual manda; si tampoco hay, la parte en dólares no se convierte
+  // (no se inventa un cambio 1:1).
+  const cotizacionEfectiva =
+    cotizacionManual !== '' && Number(cotizacionManual) > 0
+      ? Number(cotizacionManual)
+      : Number(targetCard?.cotizacion_usd ?? 0)
     // Mapear líneas a payload que la RPC multi Fase 2 espera:
     // billetera_id numérico → backend infiere moneda de la billetera (default target = origen).
     // billetera_id null → favor: requiere campo "moneda" explícito.
@@ -663,17 +672,17 @@ const handleLegacySubmit = async () => {
     // porque la UI no expone el toggle de recargo (Fase 4b).
     const favorNumModal = Math.max(0, Number(vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor ?? 0))
     const favorNumUsdModal = Math.max(0, Number(vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor_usd ?? 0))
-    const favorEquivModal = favorNumModal + (favorNumUsdModal * Number(targetCard?.cotizacion_usd ?? 1))
+    const favorEquivModal = favorNumModal + (favorNumUsdModal * cotizacionEfectiva)
     // En modo objetivo, la referencia es el total del resumen elegido (la RPC
     // capea el consumo de favor a esa ventana); sin objetivo, el ciclo entero.
     const vencHandle = vencimientoByCard[targetCard?.tarjeta_id ?? 0]
     const totalCicloARS_equivModal = pagoObjetivo === 'anterior'
-      ? Number(vencHandle?.resumen_anterior_total_ars ?? 0) + Number(vencHandle?.resumen_anterior_total_usd ?? 0) * Number(targetCard?.cotizacion_usd ?? 1)
+      ? Number(vencHandle?.resumen_anterior_total_ars ?? 0) + Number(vencHandle?.resumen_anterior_total_usd ?? 0) * cotizacionEfectiva
       : pagoObjetivo === 'actual'
-        ? Number(vencHandle?.resumen_actual_total_ars ?? 0) + Number(vencHandle?.resumen_actual_total_usd ?? 0) * Number(targetCard?.cotizacion_usd ?? 1)
+        ? Number(vencHandle?.resumen_actual_total_ars ?? 0) + Number(vencHandle?.resumen_actual_total_usd ?? 0) * cotizacionEfectiva
         : (resumenReal !== '' && parseFloat(resumenReal) > 0
           ? parseFloat(resumenReal)
-          : ((vencHandle?.monto_ciclo_total_ars ?? 0) + (vencHandle?.monto_ciclo_total_usd ?? 0) * Number(targetCard?.cotizacion_usd ?? 1)))
+          : ((vencHandle?.monto_ciclo_total_ars ?? 0) + (vencHandle?.monto_ciclo_total_usd ?? 0) * cotizacionEfectiva))
     // Fix 2026-09-15: el favor es por moneda (ARS cubre cuotas ARS, USD cubre
     // USD). Exigir cobertura por moneda evita enviar pago vacio cuando el favor
     // ARS sobra pero faltan dolares.
@@ -731,7 +740,7 @@ const handleLegacySubmit = async () => {
       // Fix 2026-09-15: convertir a ARS-equiv las lineas en USD (billetera USD o
           // linea favor en USD) para que el excedente vs resumen real no mezcle
           // monedas.
-          const cotHandle = Number(targetCard?.cotizacion_usd ?? 1)
+          const cotHandle = cotizacionEfectiva
           const totalPagarBilletera = validLineas.reduce((s, l) => {
             const m = Number(l.monto) || 0
             const w = l.billetera_id != null ? billeteras.find(b => b.billetera_id === l.billetera_id) : null
@@ -759,6 +768,7 @@ const handleLegacySubmit = async () => {
         p_monto_a_favor_explicito: montoFavorExplicito,
         // Liquidar SOLO las cuotas del resumen elegido (NULL = legacy).
         p_objetivo: pagoObjetivo,
+        p_cotizacion_usd: cotizacionEfectiva > 0 ? cotizacionEfectiva : null,
       })
       // Tanda 4 telemetry: payment intent only (no amounts, plan §3 Fase 7).
       // PRD deviation: 'minimum' is not computable — the app has no
@@ -878,7 +888,7 @@ const handleLegacySubmit = async () => {
             <div className="tarjeta-progress-row">
               <span className="tarjeta-progress-label">{t("card_monthly_limit_used")}</span>
               <span className={`tarjeta-progress-pct ${progressClass === 'danger' ? 'text-coral' : ''}`}>
-                {usoPct}% <span className="tarjeta-progress-pct-detail">({(tc.un_pago_consumido_usd ?? 0) > 0 ? t('card_monthly_limit_spent_multi', { ars: fmtMoneda(tc.un_pago_consumido_ars ?? 0, 'ARS'), usd: fmtMoneda(tc.un_pago_consumido_usd ?? 0, 'USD') }) : t('card_monthly_limit_spent_ars', { monto: fmtMoneda(tc.un_pago_consumido_ars ?? 0, 'ARS') })})</span>
+                {usoPct}% <span className="tarjeta-progress-pct-detail">({(tc.un_pago_consumido_usd ?? 0) > 0 ? t('card_monthly_limit_spent_multi', { ars: fmtMoneda(tc.un_pago_consumido_ars ?? 0, (localCurrency ?? 'ARS') as 'ARS' | 'USD'), usd: fmtMoneda(tc.un_pago_consumido_usd ?? 0, 'USD') }) : t('card_monthly_limit_spent_ars', { monto: fmtMoneda(tc.un_pago_consumido_ars ?? 0, (localCurrency ?? 'ARS') as 'ARS' | 'USD') })})</span>
               </span>
             </div>
             <div className="tarjeta-progress-bar">
@@ -1276,7 +1286,14 @@ const handleLegacySubmit = async () => {
           <PagarModal
             onClose={() => setShowPagarModal(false)}
             onSubmit={handlePagar}
-            targetCard={targetCard}
+            targetCard={
+              cotizacionManual !== '' && Number(cotizacionManual) > 0
+                ? ({ ...targetCard, cotizacion_usd: Number(cotizacionManual) } as MapaTarjeta)
+                : targetCard
+            }
+            cotizacionManual={cotizacionManual}
+            setCotizacionManual={setCotizacionManual}
+            sinCotizacion={targetCard?.cotizacion_usd == null}
             pagarLineas={pagarLineas}
             setPagarLineas={setPagarLineas}
             pagarLineasUsd={pagarLineasUsd}
@@ -1693,7 +1710,14 @@ const handleLegacySubmit = async () => {
         <PagarModal
           onClose={() => setShowPagarModal(false)}
           onSubmit={handlePagar}
-          targetCard={targetCard}
+          targetCard={
+            cotizacionManual !== '' && Number(cotizacionManual) > 0
+              ? ({ ...targetCard, cotizacion_usd: Number(cotizacionManual) } as MapaTarjeta)
+              : targetCard
+          }
+          cotizacionManual={cotizacionManual}
+          setCotizacionManual={setCotizacionManual}
+          sinCotizacion={targetCard?.cotizacion_usd == null}
           pagarLineas={pagarLineas}
           setPagarLineas={setPagarLineas}
           pagarLineasUsd={pagarLineasUsd}
@@ -1915,11 +1939,18 @@ interface PagarModalProps {
   cicloUSD: number               // bruto ciclo USD
   necesitoARS: number            // neto (post-favor) ARS
   necesitoUSD: number            // neto (post-favor) USD
+  // S12: cuando la moneda no tiene cotización, la ventana pide el valor del dólar.
+  cotizacionManual: string
+  setCotizacionManual: (v: string) => void
+  sinCotizacion: boolean
 }
 
 export function PagarModal({
   onClose,
   onSubmit,
+  cotizacionManual,
+  setCotizacionManual,
+  sinCotizacion,
   targetCard,
   pagarLineas,
   setPagarLineas,
@@ -1974,7 +2005,7 @@ export function PagarModal({
   const totalPagar = totalPagarPesos + totalPagarUsd
   // Fix 2026-09-15: equivalente ARS de lo pagado. totalPagar mezcla lineas ARS
   // y USD crudas; toda comparacion contra el ciclo (ARS-equiv) usa esto.
-  const cotizacionUsdModal = Number(targetCard?.cotizacion_usd ?? 1)
+  const cotizacionUsdModal = Number(targetCard?.cotizacion_usd ?? 0)
   const totalPagarArsEquiv = sectionUsdPayIn === 'USD'
     ? totalPagarPesos + totalPagarUsd * cotizacionUsdModal
     : totalPagarPesos
@@ -2085,7 +2116,7 @@ export function PagarModal({
   // Pago por moneda según la billetera (o favor) de cada línea.
   let pagoARS = 0
   let pagoUSD = 0
-  const cotizacion = Number(targetCard?.cotizacion_usd ?? 1)
+  const cotizacion = Number(targetCard?.cotizacion_usd ?? 0)
   pagarLineas.forEach(l => {
     const m = parseFloat(l.monto) || 0
     if (m <= 0) return
@@ -2161,12 +2192,12 @@ export function PagarModal({
   const overBudget = overpayMode === 'cancel' && selectedSumFuture > presupuestoAdelantar + 0.01
 
   // Fase 4 saldo a favor: total equivalente ARS del ciclo a pagar
-  const favorEquiv = favorNum + (favorNumUsd * Number(targetCard?.cotizacion_usd ?? 1))
+  const favorEquiv = favorNum + (favorNumUsd * Number(targetCard?.cotizacion_usd ?? 0))
   const totalCicloARS_equiv = enModoObjetivo
     ? Number(objetivoPago ?? 0) + Number(objetivoPagoUSD ?? 0) * cotizacion
     : (realNum !== null
       ? realNum
-      : (cicloARS + cicloUSD * Number(targetCard?.cotizacion_usd ?? 1)))
+      : (cicloARS + cicloUSD * Number(targetCard?.cotizacion_usd ?? 0)))
   const favorCubreTotal = favorEquiv >= totalCicloARS_equiv && totalCicloARS_equiv > 0
 
   // Fix 2026-09-18: los pagos parciales (pago minimo) vuelven a poder enviarse
@@ -2201,7 +2232,7 @@ export function PagarModal({
   const handleSetSectionUsdPayIn = (target: 'ARS' | 'USD') => {
     setSectionUsdPayIn(target)
     if (target === 'ARS') {
-      const cotizacion = Number(targetCard?.cotizacion_usd ?? 1)
+      const cotizacion = Number(targetCard?.cotizacion_usd ?? 0)
       setPagarLineasUsd((prev: PagarLine[]) => prev.map((l: PagarLine, i: number) => {
         const isEmpty = l.billetera_id == null && l.monto === ''
         const w = l.billetera_id != null ? billeteras.find(b => b.billetera_id === l.billetera_id) : undefined
@@ -2270,6 +2301,25 @@ export function PagarModal({
             {targetCard && (
               <div style={{ marginBottom: 16, padding: '10px 14px', background: 'rgba(255,107,107,0.08)', borderRadius: 10, fontSize: 'calc(13px * var(--font-scale))', color: 'var(--color-text-muted)' }}>
                 {t('pay_resumen_card_label', { nombre: targetCard.nombre_tarjeta })}
+              </div>
+            )}
+            {sinCotizacion && (
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'block', fontSize: 'calc(12px * var(--font-scale))', color: 'var(--color-text-muted)', marginBottom: 4 }}>
+                  {t('pay_rate_label')}
+                </label>
+                <input
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="any"
+                  value={cotizacionManual}
+                  onChange={e => setCotizacionManual(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text)' }}
+                />
+                <div style={{ fontSize: 'calc(11px * var(--font-scale))', color: 'var(--color-text-muted)', marginTop: 4 }}>
+                  {t('pay_rate_hint')}
+                </div>
               </div>
             )}
             {(favorNum > 0 || favorNumUsd > 0) && (
@@ -2354,7 +2404,7 @@ export function PagarModal({
               // Sección ARS: solo billeteras ARS para líneas no favor.
               const availableWallets = linea.origen === 'favor' ? baseWallets : baseWallets.filter(b => b.moneda === localMon)
               const recargoPct = Number(targetCard?.recargo_dolar_pct ?? 30)
-              const cotizacion = Number(targetCard?.cotizacion_usd ?? 1)
+              const cotizacion = Number(targetCard?.cotizacion_usd ?? 0)
               const montoNum = parseFloat(linea.monto) || 0
               return (
                 <div key={linea.id} className="pay-multi-line">
@@ -2481,7 +2531,7 @@ export function PagarModal({
                 const baseWallets = billeteras.filter(b => !usedWalletIds.includes(b.billetera_id))
                 const availableWallets = linea.origen === 'favor' ? baseWallets : baseWallets.filter(b => b.moneda === (sectionUsdPayIn === 'ARS' ? localMon : 'USD'))
                 const payInPesos = sectionUsdPayIn === 'ARS'
-                const cotizacion = Number(targetCard?.cotizacion_usd ?? 1)
+                const cotizacion = Number(targetCard?.cotizacion_usd ?? 0)
                 const montoNum = parseFloat(linea.monto) || 0
                 const equivalenteUsd = payInPesos && cotizacion > 0 && montoNum > 0
                   ? montoNum / cotizacion

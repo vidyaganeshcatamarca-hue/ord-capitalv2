@@ -83,7 +83,7 @@ export interface CalendarioEvento {
   fecha: string
   nombre: string
   monto: number
-  criticidad: 'critico' | 'normal'
+  criticidad: 'critico' | 'atencion' | 'normal'
   pagado: boolean
 }
 
