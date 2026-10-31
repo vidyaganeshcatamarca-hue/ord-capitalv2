@@ -87,6 +87,7 @@ interface PagoHistorial {
   cuotas_liquidadas: number
   observaciones: string | null
   moneda?: string
+  tarjeta_id?: number
 }
 
 interface SerieCicloTarjeta {
@@ -96,6 +97,7 @@ interface SerieCicloTarjeta {
   tarjeta_id: number
   nombre_tarjeta: string
   total_ciclo: number
+  total_ciclo_usd?: number
 }
 
 interface ComparativaTarjeta {
@@ -108,6 +110,14 @@ interface ComparativaTarjeta {
   tendencia_key: string
   mensaje_key: string
   moneda?: string
+  gasto_mes_anterior_usd?: number
+  gasto_mes_actual_usd?: number
+}
+
+interface SaldoPasivoMonedas {
+  total_local: number
+  total_usd: number
+  moneda: string
 }
 
 type PagarLine = {
@@ -221,15 +231,26 @@ export function TarjetasPage() {
   // The locale for every date and currency rendered on this screen. It
   // follows the language the user is reading in, not a fixed Argentine one.
   const locale = useActiveLocale()
-  const { localCurrency } = useNumberFormat()
+  const { localCurrency, prefs } = useNumberFormat()
+
+  // P-01: un solo decimal y el separador decimal que el usuario configuro.
+  const fmtPorcentaje = (n: number) =>
+    `${Number(n || 0).toFixed(1).replace('.', prefs.separador_decimal)}%`
 
   // â”€â”€ Data â”€â”€
   const [tarjetas, setTarjetas] = useState<MapaTarjeta[]>([])
   const [vencimientos, setVencimientos] = useState<VencimientoTarjeta[]>([])
   const [billeteras, setBilleteras] = useState<any[]>([])
   // Null honesto: sin cotización no se convierte (NADA se inventa con tasa 1).
-  const [cotizacionUsd, setCotizacionUsd] = useState<number | null>(1)
-  const [totalPasivo, setTotalPasivo] = useState<number>(0)
+  const [cotizacionUsd, setCotizacionUsd] = useState<number | null>(null)
+  // Deuda total por moneda: se muestra el total convertido como cifra grande y la
+  // porción en dólares aparte. Sin cotización no se inventa un cambio: la grande
+  // muestra solo la moneda local y la línea chica avisa que quedó sin convertir.
+  const [pasivoMonedas, setPasivoMonedas] = useState<SaldoPasivoMonedas | null>(null)
+  const pasivoLocal = Number(pasivoMonedas?.total_local ?? 0)
+  const pasivoUsd = Number(pasivoMonedas?.total_usd ?? 0)
+  const pasivoConvertido = pasivoLocal + (cotizacionUsd != null ? pasivoUsd * cotizacionUsd : 0)
+  const pasivoSinCotizacion = pasivoUsd > 0 && cotizacionUsd == null
   const [comparativa, setComparativa] = useState<ComparativaTarjeta[]>([])
   const [serieTarjetas, setSerieTarjetas] = useState<SerieCicloTarjeta[]>([])
   const [loading, setLoading] = useState(true)
@@ -308,7 +329,7 @@ export function TarjetasPage() {
         rpc<VencimientoTarjeta[]>('fn_reporte_vencimientos_tarjetas').catch(() => [] as VencimientoTarjeta[]),
         rpc<any[]>('fn_obtener_billeteras_activas').catch(() => [] as any[]),
         rpc<number>('fn_obtener_cotizacion_usd').catch(() => null),
-        rpc<number>('fn_obtener_saldo_pasivo_tarjetas').catch(() => 0),
+        rpc<SaldoPasivoMonedas[]>('fn_obtener_saldo_pasivo_tarjetas_monedas').catch(() => [] as SaldoPasivoMonedas[]),
         rpc<ComparativaTarjeta[]>('fn_reporte_comparativa_tarjetas').catch(() => [] as ComparativaTarjeta[]),
         rpc<any[]>('fn_reporte_tarjetas_archivadas').catch(() => [] as any[]), 
         rpc<SerieCicloTarjeta[]>('fn_reporte_serie_tarjetas', { p_ciclos: 12 }).catch(() => [] as SerieCicloTarjeta[]),
@@ -317,7 +338,7 @@ export function TarjetasPage() {
       setVencimientos(resV || [])
       setBilleteras((resB || []).filter((b: any) => !b.es_fondo_prevision))
       setCotizacionUsd(resUsd ?? null)
-      setTotalPasivo(Number(pasivoRes) || 0)
+      setPasivoMonedas(Array.isArray(pasivoRes) && pasivoRes.length > 0 ? pasivoRes[0] : null)
       setComparativa(comparativaRes || [])
       setArchivedCards(archivedRes || [])
       setSerieTarjetas(serieRes || [])
@@ -346,6 +367,11 @@ const handleLegacySubmit = async () => {
       showToast(t('error_field_required', { field: t('card_legacy_field_detalle') }), 'error')
       return
     }
+    // TC-05: la cantidad de cuotas es un entero. parseInt recortaba 1.5 a 1 sin avisar.
+    if (legacyCantidad !== '' && !/^\d+$/.test(legacyCantidad.trim())) {
+      showToast(t('error_invalid_cuotas_integer'), 'error')
+      return
+    }
     const cantidad = parseInt(legacyCantidad)
     const monto = parseFloat(legacyMonto)
     if (!cantidad || cantidad < 1 || cantidad > 120) {
@@ -368,7 +394,7 @@ const handleLegacySubmit = async () => {
         p_moneda: legacyMoneda || localCurrency || 'ARS',
         p_estructura_egreso_id: null,
       })
-      showToast(t('card_legacy_created_toast', {
+      showToast(t(cantidad === 1 ? 'card_legacy_created_toast_one' : 'card_legacy_created_toast', {
         cantidad,
         fecha: new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(new Date(mesInicio + 'T12:00:00')) }), 'success')
       setShowLegacyModal(false)
@@ -403,22 +429,22 @@ const handleLegacySubmit = async () => {
       setLoadingDetalle(true)
       const [termRes, histRes, cuotasRes] = await Promise.all([
         rpc<Termometro[]>('fn_reporte_termometro_tarjeta', { p_tarjeta_id: tarjetaId }).catch(() => [] as Termometro[]),
-        rpc<PagoHistorial[]>('fn_reporte_historial_pagos_tarjetas').catch(() => [] as PagoHistorial[]),
+        rpc<PagoHistorial[]>('fn_reporte_historial_pagos_tarjetas', { p_tarjeta_id: tarjetaId }).catch(() => [] as PagoHistorial[]),
         rpc<any[]>('fn_reporte_compromisos_tarjeta', { p_tarjeta_id: tarjetaId }).catch(() => [] as any[]),
       ])
       setTermometro(termRes?.[0] || null)
       setCuotasActivas(cuotasRes || [])
-      // Filter historial by this card
-      setHistorial((histRes || []).filter((h: PagoHistorial) => {
-        const card = tarjetas.find(t => t.tarjeta_id === tarjetaId)
-        return !card || h.tarjeta_nombre === card.nombre_tarjeta
-      }))
+      // El historial ya viene pedido por tarjeta: se filtra por identificador, no
+      // por nombre. Antes se traían todos los pagos del usuario y se separaban
+      // comparando nombres, así que dos tarjetas homónimas mezclaban historial y el
+      // tope de filas de una recortaba el de las otras.
+      setHistorial(histRes || [])
     } catch (err: any) {
       showToast(t('cards_error_detail') + parseError(err), 'error')
     } finally {
       setLoadingDetalle(false)
     }
-  }, [showToast, tarjetas])
+  }, [showToast])
 
   useEffect(() => {
     fetchData()
@@ -496,8 +522,8 @@ const handleLegacySubmit = async () => {
     setPagoObjetivo(origen)
     setObjetivoPagoARS(objetivoArs > 0 ? objetivoArs : null)
     setObjetivoPagoUSD(objetivoUsd > 0 ? objetivoUsd : null)
-    setPagarLineas([{ id: 1, billetera_id: null, monto: faltaArs > 0 ? faltaArs.toString() : '' }])
-    setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: faltaUsd > 0 ? faltaUsd.toString() : '' }])
+    setPagarLineas([{ id: 1, billetera_id: null, monto: faltaArs > 0 ? faltaArs.toFixed(prefs.decimales_moneda_local) : '' }])
+    setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: faltaUsd > 0 ? faltaUsd.toFixed(prefs.decimales_segunda_moneda) : '' }])
     nextLineIdArsRef.current = 2
     nextLineIdUsdRef2.current = 2
     setPagarBilleteraId(null)
@@ -903,7 +929,7 @@ const handleLegacySubmit = async () => {
           </PageBackButton>
           <span className="tarjeta-detalle-title"><CategoryIcon name="CreditCard" size={18} /> {selectedCard.nombre_tarjeta}</span>
           <div className="tarjeta-detalle-actions">
-            <button className="tarjeta-detalle-action-btn" onClick={() => openEdit(selectedCard)} title="Editar"><CategoryIcon name="Pencil" size={18} /></button>
+            <button className="tarjeta-detalle-action-btn" onClick={() => openEdit(selectedCard)} title={t('card_edit_tooltip')}><CategoryIcon name="Pencil" size={18} /></button>
           </div>
         </div>
 
@@ -926,9 +952,9 @@ const handleLegacySubmit = async () => {
                 <div className="vencimiento-info">
                     <div className="vencimiento-label"><CategoryIcon name="Calendar" size={13} /> {t("card_next_due_date")}</div>
                   <div className="vencimiento-date">
-                    {venc.resumen_vencido
-                      ? t("card_due_date_overdue", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })
-                      : t("card_due_date_format", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })}
+                    {/* Y-01: el atraso se avisa una sola vez, arriba de la pestaña. Acá el
+                        recuadro vuelve a su función: decir cuándo vence y cuánto falta. */}
+                    {t("card_due_date_format", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })}
                   </div>
                   {Number(venc.saldo_a_favor) > 0 && (
                     <div className="saldo-a-favor-chip">{t('saldo_a_favor_chip', { monto: fmtARS(Number(venc.saldo_a_favor)) })}</div>
@@ -984,7 +1010,7 @@ const handleLegacySubmit = async () => {
                 </div>
                 <div className="termometro-metrics">
                   <div className="termometro-metric">
-                    <div className="termometro-metric-value">{termometro.indice_estres != null ? `${Number(termometro.indice_estres).toFixed(1)}%` : '—'}</div>
+                    <div className="termometro-metric-value">{termometro.indice_estres != null ? fmtPorcentaje(Number(termometro.indice_estres)) : '—'}</div>
                     <div className="termometro-metric-label">{t("card_stress_index")}</div>
                   </div>
                   <div className="termometro-metric">
@@ -1104,7 +1130,7 @@ const handleLegacySubmit = async () => {
                           <div className="historial-item-source">{t('pay_multi_line_monto_label', { nombre: h.billetera_origen === 'wallet_cash_default_name' ? t('wallet_cash_default_name') : h.billetera_origen })}</div>
                         )}
                         {h.cuotas_liquidadas > 0 && (
-                          <span className="historial-item-badge"><CategoryIcon name="CheckCircle2" size={11} /> {h.cuotas_liquidadas} cuotas liquidadas</span>
+                          <span className="historial-item-badge"><CategoryIcon name="CheckCircle2" size={11} /> {h.cuotas_liquidadas === 1 ? t('cards_liquidated_one', { count: h.cuotas_liquidadas }) : t('cards_liquidated_other', { count: h.cuotas_liquidadas })}</span>
                         )}
                       </div>
                       <div className="historial-item-monto">{fmtMoneda(h.monto_pagado, (h.moneda ?? 'ARS') as 'ARS' | 'USD')}</div>
@@ -1280,7 +1306,7 @@ const handleLegacySubmit = async () => {
           <ConfirmModal
             isOpen={showArchiveConfirm}
             title={t('cards_archive')}
-            message={`t("card_archive_confirm_pending", { name: targetCard?.nombre_tarjeta })`}
+            message={`t("card_archive_confirm", { name: targetCard?.nombre_tarjeta })`}
             confirmText={t('btn_archive')}
             type="danger"
             onConfirm={handleArchive}
@@ -1314,7 +1340,14 @@ const handleLegacySubmit = async () => {
           <div className="tarjetas-debt-widget">
             <div>
               <div className="tarjetas-debt-label">{t('cards_debt_total')}</div>
-              <div className="tarjetas-debt-amount">{fmtARS(totalPasivo)}</div>
+              <div className="tarjetas-debt-amount">{fmtARS(pasivoConvertido)}</div>
+              {pasivoUsd > 0 && (
+                <div className="tarjetas-debt-usd" style={{ fontSize: 'calc(12px * var(--font-scale))', color: 'var(--color-text-muted)', marginTop: 2 }}>
+                  {pasivoSinCotizacion
+                    ? t('cards_debt_usd_unconverted', { monto: fmtMoneda(pasivoUsd, 'USD') })
+                    : t('cards_debt_usd_includes', { monto: fmtMoneda(pasivoUsd, 'USD') })}
+                </div>
+              )}
               <div className="tarjetas-debt-meta">{tarjetas.length === 1 ? t('cards_active_one', { count: tarjetas.length }) : t('cards_active_other', { count: tarjetas.length })}</div>
             </div>
             <div className="tarjetas-debt-icon"><CategoryIcon name="CreditCard" size={36} /></div>
@@ -1430,7 +1463,7 @@ const handleLegacySubmit = async () => {
                 <h3>{t("card_empty_state_title")}</h3>
                 <p>{t("card_empty_state_desc")}</p>
                 <button className="tarjetas-empty-btn" onClick={() => { resetForm(); setShowCreateModal(true) }}>
-                  + Agregar Tarjeta
+                  {t('cards_new_btn')}
                 </button>
               </div>
             ) : (
@@ -1466,7 +1499,7 @@ const handleLegacySubmit = async () => {
                             className="btn-reactivar-tarjeta"
                             onClick={() => handleReactivar(ac.tarjeta_id)}
                           >
-                            <CategoryIcon name="RotateCcw" size={12} /> Activar
+                            <CategoryIcon name="RotateCcw" size={12} /> {t('card_activate_btn')}
                           </button>
                         </div>
                       ))
@@ -1526,7 +1559,7 @@ const handleLegacySubmit = async () => {
                               (mojibake) and rendered as garbage on the user's
                               screens. */}
                           <CategoryIcon name={tendencia === 'trend_up' ? 'TrendingUp' : tendencia === 'trend_down' ? 'TrendingDown' : 'Minus'} size={14} />
-                          {Math.abs(Number(c.variacion_porcentual)).toFixed(1)}%
+                          {fmtPorcentaje(Math.abs(Number(c.variacion_porcentual)))}
                         </div>
                       </div>
 
@@ -1577,6 +1610,20 @@ const handleLegacySubmit = async () => {
                           {fmtMoneda(c.gasto_mes_actual, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
                         </strong>
                       </div>
+
+                      {(Number(c.gasto_mes_anterior_usd ?? 0) > 0 || Number(c.gasto_mes_actual_usd ?? 0) > 0) && (
+                        <div className="comparativa-usd-note" style={{ fontSize: 'calc(11px * var(--font-scale))', color: 'var(--color-text-muted)' }}>
+                          {cotizacionUsd == null
+                            ? t('card_cmp_usd_line_unconverted', {
+                                anterior: fmtMoneda(Number(c.gasto_mes_anterior_usd ?? 0), 'USD'),
+                                actual: fmtMoneda(Number(c.gasto_mes_actual_usd ?? 0), 'USD'),
+                              })
+                            : t('card_cmp_usd_line', {
+                                anterior: fmtMoneda(Number(c.gasto_mes_anterior_usd ?? 0), 'USD'),
+                                actual: fmtMoneda(Number(c.gasto_mes_actual_usd ?? 0), 'USD'),
+                              })}
+                        </div>
+                      )}
 
                       {!usoPrevio && (
                         <p className="comparativa-first-cycle">{t('card_cmp_first_cycle')}</p>
@@ -1676,7 +1723,7 @@ resumenEstimado={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_tot
           <ConfirmModal
             isOpen={showArchiveConfirm}
             title={t('cards_archive')}
-            message={`t("card_archive_confirm_reversible", { name: targetCard?.nombre_tarjeta })`}
+            message={`t("card_archive_confirm", { name: targetCard?.nombre_tarjeta })`}
             confirmText={t('btn_archive')}
             type="danger"
             onConfirm={handleArchive}
@@ -2130,6 +2177,9 @@ export function PagarModal({
   const pagoParcial = totalPagarArsEquiv > 0 && faltaVentanaEquiv > 0.5
   const submitEnabled = favorCubreTotal || !allLinesEmpty
   const submitDisabled = formSubmitting || lineasInvalidas || !submitEnabled || overBudget
+  // TC-06: el botón bloqueado decía que no sin decir por qué. El caso real es
+  // "hay un importe escrito pero ninguna cuenta elegida".
+  const blockedReason = !formSubmitting && lineasInvalidas ? t('pay_blocked_reason_no_wallet') : null
 
   const updateLine = (index: number, patch: Partial<PagarLine>) => {
     const next = pagarLineas.map((l, i) => i === index ? { ...l, ...patch } : l)
@@ -2748,6 +2798,11 @@ export function PagarModal({
           )}
         </div>
         <div className="tarjeta-modal-actions">
+          {blockedReason && (
+            <div style={{ gridColumn: '1 / -1', fontSize: 'calc(12px * var(--font-scale))', color: 'var(--color-coral)', marginBottom: 6 }}>
+              {blockedReason}
+            </div>
+          )}
           <button className="btn-modal-cancel" onClick={onClose}>{t('btn_cancel')}</button>
           <button className="btn-modal-submit" onClick={onSubmit} disabled={submitDisabled}>
             {formSubmitting ? t('btn_registering') : t('btn_confirm_payment')}
