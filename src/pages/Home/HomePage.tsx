@@ -1149,7 +1149,14 @@ export function HomePage() {
                 {alerts.vencimientos_3_dias.map((v: any, i: number) => (
                   <div key={i} className="alert-vencimiento-card">
                     <span>💳 {v.tarjeta} {t('alert_card_due_in_days', { dias: v.dias })}</span>
-                    <span className="font-mono font-semibold">{formatAmount(v.monto)}</span>
+                    <span className="font-mono font-semibold">
+                      {formatAmount(v.monto)}
+                      {Number(v.monto_usd ?? 0) > 0 && (
+                        <span className="block text-xs text-muted font-normal" style={{ fontWeight: 400, opacity: 0.75 }}>
+                          {t('cards_debt_usd_includes', { monto: formatAmount(Number(v.monto_usd), 'USD') })}
+                        </span>
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>

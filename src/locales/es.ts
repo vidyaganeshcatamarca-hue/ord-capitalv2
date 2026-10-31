@@ -235,6 +235,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   cards_tab_comparison: "Comparativa",
   cards_no_comparison_data: "Sin datos comparativos",
   cards_installment_due: "Cuota {position} de {total} - Vence el {date}",
+  cards_installment_refinanced: 'Cuota refinanciada — vence el {date}',
   error_invalid_cuotas_integer: 'La cantidad de cuotas debe ser un número entero.',
   pay_blocked_reason_no_wallet: 'Elegí la cuenta desde la que pagás.',
   error_card_has_commitments: 'No podés archivar esta tarjeta porque tiene cuotas o compromisos pendientes. Terminá de pagarlos y volvé a intentar.',

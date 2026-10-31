@@ -152,7 +152,16 @@ export function RadarAsfixiaDetalle({ radar }: RadarAsfixiaDetalleProps) {
             {diaSeleccionado.egreso_tarjeta > 0 && (
               <div className="radar-detalle-row">
                 <span>{t('war_radar_leyenda_tarjeta')}</span>
-                <strong>{formatMoneyARS(diaSeleccionado.egreso_tarjeta, 'ARS', locale)}</strong>
+                <strong>
+                  {formatMoneyARS(diaSeleccionado.egreso_tarjeta, 'ARS', locale)}
+                  {diaSeleccionado.egreso_tarjeta_usd > 0 && (
+                    <span className="block text-xs text-muted font-normal" style={{ fontWeight: 400, opacity: 0.75 }}>
+                      {t('cards_debt_usd_includes', {
+                        monto: new Intl.NumberFormat(locale, { style: 'currency', currency: 'USD', maximumFractionDigits: 2 }).format(diaSeleccionado.egreso_tarjeta_usd),
+                      })}
+                    </span>
+                  )}
+                </strong>
               </div>
             )}
             <div className="radar-detalle-row">

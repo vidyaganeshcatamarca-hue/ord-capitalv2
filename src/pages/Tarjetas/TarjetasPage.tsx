@@ -1089,7 +1089,11 @@ const handleLegacySubmit = async () => {
                             </>
                           ) : t('msg_compra_en_cuotas_default')}
                         </div>
-                        <div className="historial-item-source">{t('cards_installment_due', { position: c.posicion_cuota, total: c.total_cuotas, date: dueDateStr })}</div>
+                        <div className="historial-item-source">
+                          {(!c.caja_id && !c.descripcion)
+                            ? t('cards_installment_refinanced', { date: dueDateStr })
+                            : t('cards_installment_due', { position: c.posicion_cuota, total: c.total_cuotas, date: dueDateStr })}
+                        </div>
                       </div>
                       <div className="historial-item-monto" style={{ color: 'var(--coral)' }}>
                         {fmtMoneda(c.monto_cuota, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}

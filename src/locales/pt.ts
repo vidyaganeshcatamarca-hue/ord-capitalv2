@@ -230,6 +230,7 @@ export const errors = {
   cards_tab_comparison: "Comparativo",
   cards_no_comparison_data: "Sem dados comparativos",
   cards_installment_due: "Parcela {position} de {total} - Vence em {date}",
+  cards_installment_refinanced: 'Parcela refinanciada — vence em {date}',
   error_invalid_cuotas_integer: 'O número de parcelas deve ser um número inteiro.',
   pay_blocked_reason_no_wallet: 'Escolha a conta de onde você está pagando.',
   error_card_has_commitments: 'Você não pode arquivar este cartão porque ele tem parcelas ou compromissos pendentes. Quite-os e tente novamente.',

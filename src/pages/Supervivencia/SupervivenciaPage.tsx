@@ -79,6 +79,7 @@ export interface RadarData {
   saldo_proyectado: number
   ingreso_esperado: number
   egreso_tarjeta: number
+  egreso_tarjeta_usd: number
   egreso_goteo: number
   estado_dia: 'red' | 'yellow' | 'green'
   evento_texto: string | null
@@ -182,6 +183,7 @@ export function SupervivenciaPage() {
         saldo_proyectado: Number(row.saldo_proyectado ?? 0),
         ingreso_esperado: Number(row.ingreso_esperado ?? 0),
         egreso_tarjeta: Number(row.egreso_tarjeta ?? 0),
+        egreso_tarjeta_usd: Number(row.egreso_tarjeta_usd ?? 0),
         egreso_goteo: Number(row.egreso_goteo ?? 0),
         estado_dia: (row.estado_dia ?? 'green') as RadarData['estado_dia'],
         evento_texto: row.evento_texto ?? null,

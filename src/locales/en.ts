@@ -230,6 +230,7 @@ export const errors = {
   cards_tab_comparison: "Comparison",
   cards_no_comparison_data: "No comparison data",
   cards_installment_due: "Installment {position} of {total} - Due {date}",
+  cards_installment_refinanced: 'Refinanced installment — due {date}',
   error_invalid_cuotas_integer: 'The number of installments must be a whole number.',
   pay_blocked_reason_no_wallet: 'Choose the account you are paying from.',
   error_card_has_commitments: 'You cannot archive this card because it still has pending installments or commitments. Pay them off and try again.',
