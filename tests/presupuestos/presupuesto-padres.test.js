@@ -504,7 +504,17 @@ test('el grupo se mueve entero entre la lista y la alerta de excedidos', () => {
   // el árbol: el hijo en rojo saltaba arriba y el padre quedaba solo en la lista.
   assert.ok(pagina.includes('const padresEnAlerta = new Set('), 'falta decidir qué padres van a la alerta')
   assert.ok(pagina.includes('aLaAlerta = padresEnAlerta.has(padreId as number)'), 'el hijo tiene que acompañar a su padre: ni se esconde solo ni reaparece suelto')
-  assert.ok(pagina.includes('const padresConTecho = new Set('), 'la alerta no tiene que repetir a los hijos que ya se ven anidados')
+  // Dueño (2026-11-02): el número de un padre en déficit es la suma de sus hijos, así que
+  // la alerta no puede listar a los dos con el mismo monto. El predicado tiene que ser
+  // «el padre ESTÁ en la alerta», no «el padre tiene techo»: Transporte no lo tenía y
+  // aparecía junto a Combustible con los mismos -780.500.
+  const iAlerta = pagina.indexOf('const sobresExcedidos')
+  assert.ok(iAlerta > -1, 'falta el cálculo de los sobres en la alerta')
+  const bloqueAlerta = pagina.slice(iAlerta, iAlerta + 1400)
+  assert.ok(bloqueAlerta.includes('const padresEnAlerta = new Set('), 'la alerta necesita saber qué padres ya muestra')
+  assert.ok(bloqueAlerta.includes('s.es_padre && Number(s.monto_disponible) < 0'), 'un padre va a la alerta por su déficit, no por tener techo')
+  assert.ok(bloqueAlerta.includes('padresEnAlerta.has(Number(s.padre_id))'), 'el hijo de un padre que ya está en la alerta no se repite')
+  assert.ok(!bloqueAlerta.includes('padresConTecho'), 'no puede volver el filtro por techo, que dejaba pasar al hijo')
 })
 
 // ---------------------------------------------------------------------------

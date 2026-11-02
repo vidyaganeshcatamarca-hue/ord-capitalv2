@@ -750,12 +750,20 @@ export function PresupuestosPage() {
     if (config?.modo_presupuesto !== 'base_cero') return []
     // T6d: la alerta muestra el grupo (el padre), no cada hijo por separado: los hijos
     // de un padre con presupuesto se ven anidados en la lista.
-    const padresConTecho = new Set(
-      sobres.filter(s => s.es_padre && Number(s.monto_asignado) > 0).map(s => Number(s.estructura_id)),
+    //
+    // Dueño (2026-11-02): el número de un padre en déficit es SIEMPRE la suma de sus
+    // hijos —es un acumulador—, así que si el padre está en la alerta el hijo repite el
+    // mismo monto. Antes esto sólo se evitaba cuando el padre tenía presupuesto, y
+    // Transporte, que no lo tiene, mostraba «Transporte −780.500» y «Combustible
+    // −780.500» a la vez. Lo que manda es si el padre está en la alerta, no su techo.
+    const padresEnAlerta = new Set(
+      sobres
+        .filter(s => s.es_padre && Number(s.monto_disponible) < 0)
+        .map(s => Number(s.estructura_id)),
     )
     return sobres.filter(s => {
       if (Number(s.monto_disponible) >= 0) return false
-      return !(s.padre_id != null && padresConTecho.has(Number(s.padre_id)))
+      return !(s.padre_id != null && padresEnAlerta.has(Number(s.padre_id)))
     })
   }, [sobres, config])
 
