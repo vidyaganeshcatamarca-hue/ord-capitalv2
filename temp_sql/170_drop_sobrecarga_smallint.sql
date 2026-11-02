@@ -1,0 +1,17 @@
+-- 170: se borra la sobrecarga legacy (smallint) de fn_configurar_formato_moneda.
+--
+-- Dos funciones con el mismo nombre y los mismos parámetros salvo el tipo de
+-- p_decimales (integer vs smallint) hacían que PostgREST no pudiera elegir cuando el
+-- cliente manda un número JSON sin tipo: «Could not choose the best candidate
+-- function». El resultado era que Ajustes no podía guardar los decimales.
+--
+-- Cuál es la incorrecta, con evidencia y no por gusto: el propio encabezado de
+-- temp_sql/94_separadores_sobrecarga_smallint.sql la identifica como
+--   (text, integer,  text, text)   <- la que usa el front hoy
+--   (text, smallint, text, text)   <- legacy, quedo con la validacion vieja
+-- y el cliente (src/pages/Configuracion/RegionFormatoPage.tsx) manda p_decimals como
+-- number, que es integer. Nadie referencia la firma smallint.
+--
+-- La definición completa queda guardada en scratch/fmt_smallint.sql por si hiciera
+-- falta revertir.
+DROP FUNCTION IF EXISTS public.fn_configurar_formato_moneda(text, smallint, text, text);

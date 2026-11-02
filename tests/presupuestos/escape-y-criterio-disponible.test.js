@@ -50,14 +50,21 @@ test('el disponible del sobre se calcula en un solo lugar', () => {
 })
 
 test('la lista de orígenes ya no filtra por el monto_disponible crudo', () => {
-  const idx = pagina.indexOf('const sobresConDisponible')
-  assert.ok(idx > -1, 'no encontré la lista de orígenes')
-  // La ventana cubre el filtro completo, que ahora además excluye a los rubros padre.
-  const bloque = pagina.slice(idx, idx + 900)
+  const idx = pagina.indexOf('const fondoLibreDe')
+  assert.ok(idx > -1, 'no encontré el fondo libre del grupo ni la lista de orígenes')
+  // La ventana cubre el helper del fondo libre y la lista de orígenes completa.
+  const bloque = pagina.slice(idx, idx + 1400)
   assert.doesNotMatch(bloque, /s\.monto_disponible > 0/,
     'la lista de orígenes volvió al criterio crudo que la auditoría marcó')
-  assert.match(bloque, /disponibleDeSobre\(s, config\?\.modo_presupuesto\) > 0/,
+  assert.match(bloque, /disponibleParaTransferir\(s\) > 0/,
     'la lista de orígenes tiene que usar el criterio único')
-  assert.match(bloque, /!s\.es_padre/,
-    'un rubro padre no puede ser fuente: no tiene plata propia, su disponible es la suma de sus hijos')
+  assert.match(bloque, /disponibleDeSobre\(s, config\?\.modo_presupuesto\)/,
+    'el criterio único de disponible sigue siendo disponibleDeSobre')
+  // Dueño: el padre sí puede tener presupuesto (es el techo del grupo), pero lo único
+  // que puede aportar es su fondo libre. Si se usara su monto_disponible del reporte
+  // —que es la suma de lo asignado a los hijos— se ofrecería plata que no existe.
+  assert.match(bloque, /const fondoLibreDe = \(padreId: number\)/,
+    'falta el fondo libre del grupo')
+  assert.match(bloque, /s\.es_padre \? fondoLibreDe\(s\.estructura_id\) : disponibleDeSobre\(s, config\?\.modo_presupuesto\)/,
+    'el disponible para transferir de un padre es su fondo libre, no el acumulador del reporte')
 })

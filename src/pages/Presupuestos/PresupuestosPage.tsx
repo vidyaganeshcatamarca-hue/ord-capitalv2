@@ -594,16 +594,35 @@ export function PresupuestosPage() {
 
   // ─── TRANSFERIR ENTRE SOBRES ──────────────────────────────────────────────
 
-  const sobresConDisponible = sobres.filter(s =>
-    s.estructura_id !== sobreSeleccionado?.estructura_id &&
-    // S4/S11: el rubro padre es un acumulador y nunca tiene plata propia. Su
-    // «disponible» en el reporte es la suma de lo asignado a sus hijos, así que
-    // ofrecerlo como fuente mostraba 518.155 en verde sobre un sobre sin
-    // presupuesto y la base lo rechazaba con «insufficient funds in the source
-    // envelope». Para mover plata de ese grupo hay que elegir el hijo.
-    !s.es_padre &&
-    disponibleDeSobre(s, config?.modo_presupuesto) > 0
-  )
+  // Dueño (2026-10-30): el rubro padre SÍ puede tener presupuesto — es el techo del
+  // grupo —, pero lo único que puede aportar a una transferencia es su fondo libre: el
+  // techo menos lo que ya está reservado a sus hijos. El reporte, en cambio, devuelve en
+  // el padre la SUMA de lo asignado a sus hijos (S4: es un acumulador, no gasta), y usar
+  // ese número como disponible ofrecía 518.155 en un sobre que no tenía presupuesto
+  // propio: la base lo rechazaba con «insufficient funds in the source envelope».
+  const fondoLibreDe = (padreId: number) => {
+    const techo = Number(
+      sobres.find(x => Number(x.estructura_id) === Number(padreId))?.monto_asignado ?? 0
+    )
+    const repartido = sobres
+      .filter(x => Number(x.padre_id) === Number(padreId))
+      .reduce((s, x) => s + Number(x.monto_asignado ?? 0), 0)
+    return Math.max(techo - repartido, 0)
+  }
+
+  /** Lo que un sobre puede aportar a una transferencia: el padre, sólo su fondo libre. */
+  const disponibleParaTransferir = (s: SobreDetalle) =>
+    s.es_padre ? fondoLibreDe(s.estructura_id) : disponibleDeSobre(s, config?.modo_presupuesto)
+
+  const sobresConDisponible = sobres
+    .filter(
+      s =>
+        s.estructura_id !== sobreSeleccionado?.estructura_id &&
+        disponibleParaTransferir(s) > 0
+    )
+    // El monto que se muestra y con el que se arranca el campo tiene que ser el mismo
+    // que se va a mover: en el padre, el fondo libre.
+    .map(s => (s.es_padre ? { ...s, monto_disponible: fondoLibreDe(s.estructura_id) } : s))
 
   // Tanda 4 telemetry: an overspent budget is on screen (no amounts;
   // once per app session, plan §3 Fase 8)
