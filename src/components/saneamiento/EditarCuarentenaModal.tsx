@@ -5,7 +5,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { formatCurrency } from '@/lib/format'
 import { filterUserEditableCategories, isUserEditableCategory } from '@/lib/categoryFilters'
-import { CategoryIcon, isLikelyLucideName } from '@/components/CategoryIcon/CategoryIcon'
+import { CategoriaPicker } from '@/components/CategoriaPicker/CategoriaPicker'
 import type { CuarentenaItem } from '@/pages/Saneamiento/SaneamientoPage'
 import type { CuarentenaMovementType } from './BandejaCuarentena'
 import './EditarCuarentenaModal.css'
@@ -116,8 +116,6 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
   const [cuotas, setCuotas] = useState<string>(numberValue(item.cuotas ?? 1))
 
   const [categorias, setCategorias] = useState<CategoriaGrupoOption[]>([])
-  const [expandedRubro, setExpandedRubro] = useState<string | null>(null)
-  const [pickerOpen, setPickerOpen] = useState(false)
   const [billeteras, setBilleteras] = useState<BilleteraOption[]>([])
   const [tarjetas, setTarjetas] = useState<TarjetaOption[]>([])
   const [ingresos, setIngresos] = useState<IngresoOption[]>([])
@@ -141,13 +139,10 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
           ...r,
           hijos: (r.hijos ?? []).filter((h: any) => isUserEditableCategory(h)),
         }))
-        // Picker rows render through <CategoryIcon>; the RAW icon (lucide
-        // name, emoji or legacy letter) must reach it. The text-only trigger
-        // label degrades lucide names to the folder emoji (icon audit) - see
-        // selectedCategoriaLabel.
-        // Hierarchical groups: a parent with children becomes a native
-        // <optgroup> (its label, not selectable), children are the options
-        // and childless parents stay selectable on their own.
+        // El picker compartido (CategoriaPicker) renderiza los iconos con
+        // <CategoryIcon> y degrada los nombres de librería en el disparador.
+        // Estructura: un padre con hijos es encabezado y no se elige; los hijos
+        // y los padres sin hijos sí.
         const grupos: CategoriaGrupoOption[] = editable.map((r) => {
           const parentIcono = String(r.icono ?? '').trim() || '📁'
           return {
@@ -176,16 +171,6 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
     }
     load()
   }, [isOpen, showToast])
-
-  // When the edited movement points at a child, open its group so the
-  // current selection is visible without an extra tap.
-  useEffect(() => {
-    if (!isOpen || !estructuraId) return
-    const parent = categorias.find((g) =>
-      (g.hijos ?? []).some((h) => String(h.estructura_id) === estructuraId)
-    )
-    if (parent) setExpandedRubro(String(parent.estructura_id))
-  }, [isOpen, estructuraId, categorias])
 
   const billeteraMoneda = useMemo(
     () => billeteras.find((b) => String(b.billetera_id) === billeteraId)?.moneda ?? null,
@@ -354,21 +339,6 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
     })
   }
 
-  // Trigger label: the resolved selection, or the field placeholder.
-  const selectedCategoriaLabel = (): string => {
-    // Text context: lucide names degrade to the folder emoji (icon audit);
-    // emojis and legacy letters print as they are.
-    const iconoTextoLabel = (raw: string): string =>
-      isLikelyLucideName(raw) ? '📁' : raw.trim()
-    const idNum = Number(estructuraId)
-    for (const g of categorias) {
-      if (g.estructura_id === idNum) return `${iconoTextoLabel(g.icono)} ${g.nombre_cuenta}`
-      const hijo = (g.hijos ?? []).find((h) => h.estructura_id === idNum)
-      if (hijo) return `${iconoTextoLabel(hijo.icono)} ${hijo.nombre}`
-    }
-    return t('saneamiento_seleccionar_categoria')
-  }
-
   if (!isOpen) return null
 
   return (
@@ -405,18 +375,14 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
           {(tipo === 'expense' || tipo === 'card_expense') && (
             <div className="form-group">
               <label>{t('saneamiento_categoria')}</label>
-              {loadingLists ? (
-                <div className="spinner-sm" />
-              ) : (
-                <button
-                  type="button"
-                  className="ec-categoria-trigger"
-                  onClick={() => setPickerOpen(true)}
-                >
-                  <span className="ec-categoria-trigger-label">{selectedCategoriaLabel()}</span>
-                  <span className="ec-categoria-trigger-chevron">▼</span>
-                </button>
-              )}
+              <CategoriaPicker
+                categorias={categorias}
+                value={estructuraId}
+                onChange={(id) => setEstructuraId(id)}
+                placeholder={t('saneamiento_seleccionar_categoria')}
+                title={t('saneamiento_categoria')}
+                loading={loadingLists}
+              />
             </div>
           )}
 
@@ -574,70 +540,6 @@ export function EditarCuarentenaModal({ item, isOpen, onClose, onGuardar }: Edit
           </div>
         </form>
 
-        {pickerOpen && (
-          <div className="ec-picker-overlay" onClick={() => setPickerOpen(false)}>
-            <div className="ec-picker-sheet" onClick={(e) => e.stopPropagation()}>
-              <div className="ec-picker-header">
-                <span className="ec-picker-title">{t('saneamiento_categoria')}</span>
-                <button className="ec-picker-close" onClick={() => setPickerOpen(false)} aria-label={t('btn_close')}>✕</button>
-              </div>
-              <div className="ec-categorias-tree">
-                {categorias.map((g) => {
-                  const isGroup = g.hijos.length > 0
-                  const isExpanded = expandedRubro === String(g.estructura_id)
-                  return (
-                    <div key={g.estructura_id} className="ec-rubro-group">
-                      <div className="ec-rubro-row">
-                        {isGroup ? (
-                          // A parent with children is a heading, never a
-                          // selectable leaf: expenses point at a real subaccount.
-                          <div className="ec-rubro-heading">
-                            <span className="ec-rubro-icon"><CategoryIcon name={g.icono} size={16} /></span>
-                            <span className="ec-rubro-name">{g.nombre_cuenta}</span>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            className={`ec-opcion${Number(estructuraId) === g.estructura_id ? ' is-selected' : ''}`}
-                            onClick={() => { setEstructuraId(String(g.estructura_id)); setPickerOpen(false) }}
-                          >
-                            <span className="ec-rubro-icon"><CategoryIcon name={g.icono} size={16} /></span>
-                            <span className="ec-rubro-name">{g.nombre_cuenta}</span>
-                          </button>
-                        )}
-                        {isGroup && (
-                          <button
-                            type="button"
-                            className="ec-expand-btn"
-                            onClick={() => setExpandedRubro(isExpanded ? null : String(g.estructura_id))}
-                            aria-label={isExpanded ? t('btn_collapse') : t('btn_expand')}
-                          >
-                            {isExpanded ? '▲' : '▼'}
-                          </button>
-                        )}
-                      </div>
-                      {isGroup && isExpanded && (
-                        <div className="ec-children">
-                          {g.hijos.map((h) => (
-                            <button
-                              key={h.estructura_id}
-                              type="button"
-                              className={`ec-opcion ec-opcion-hijo${Number(estructuraId) === h.estructura_id ? ' is-selected' : ''}`}
-                              onClick={() => { setEstructuraId(String(h.estructura_id)); setPickerOpen(false) }}
-                            >
-                              <span className="ec-rubro-icon"><CategoryIcon name={h.icono} size={16} /></span>
-                              <span className="ec-rubro-name">{h.nombre}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )

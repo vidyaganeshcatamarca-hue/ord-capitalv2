@@ -1,0 +1,186 @@
+/* src/components/CategoriaPicker/CategoriaPicker.css
+   Estilos del selector de categoría compartido.
+   Movidos desde EditarCuarentenaModal.css y renombrados de `ec-*` a `cp-*`
+   para que no dependan de la pantalla de cuarentena. */
+
+.cp-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--border, #3D3D3D);
+  background: transparent;
+  color: var(--text, #FFFFFF);
+  font-size: calc(14px * var(--font-scale, 1));
+  cursor: pointer;
+  text-align: left;
+}
+
+.cp-trigger-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cp-trigger-chevron {
+  color: var(--text-3);
+  font-size: calc(11px * var(--font-scale, 1));
+}
+
+.cp-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 200;
+}
+
+@media (min-width: 640px) {
+  .cp-overlay {
+    align-items: center;
+    padding: 24px;
+  }
+}
+
+.cp-sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--surface, #2D2D2D);
+  border: 1px solid var(--border, #3D3D3D);
+  border-radius: 20px 20px 0 0;
+  padding: 16px 16px 24px;
+}
+
+@media (min-width: 640px) {
+  .cp-sheet {
+    border-radius: 20px;
+  }
+}
+
+.cp-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.cp-title {
+  font-size: calc(16px * var(--font-scale, 1));
+  font-weight: 700;
+  color: var(--text, #FFFFFF);
+}
+
+.cp-close {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: calc(16px * var(--font-scale, 1));
+  cursor: pointer;
+  padding: 4px;
+}
+
+.cp-tree {
+  max-height: 55vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-group {
+  border-radius: 10px;
+}
+
+.cp-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cp-heading,
+.cp-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  color: var(--text, #FFFFFF);
+  font-size: calc(14px * var(--font-scale, 1));
+  font-weight: 500;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 8px;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+/* Un padre con hijos es contexto, no un destino posible. */
+.cp-heading {
+  cursor: default;
+}
+
+.cp-option:hover {
+  background: var(--surface-2, #3D3D3D);
+}
+
+.cp-option.is-selected {
+  background: rgba(0, 178, 39, 0.14);
+}
+
+.cp-expand {
+  background: none;
+  border: none;
+  color: var(--text-3);
+  font-size: calc(11px * var(--font-scale, 1));
+  cursor: pointer;
+  padding: 10px 6px;
+}
+
+.cp-children {
+  padding-left: 28px;
+  display: flex;
+  flex-direction: column;
+}
+
+.cp-option-child {
+  font-size: calc(13px * var(--font-scale, 1));
+  color: var(--text-2, #E0E0E0);
+  padding: 8px 10px;
+}
+
+/* Indicador de carga propio: el componente no depende de .spinner-sm, que vive
+   duplicado en tres CSS de otras pantallas. */
+.cp-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px dashed var(--border, #3D3D3D);
+}
+
+.cp-loading-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--border, #3D3D3D);
+  border-top-color: var(--text-3, #9E9E9E);
+  animation: cp-spin 0.8s linear infinite;
+}
+
+@keyframes cp-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-loading-dot {
+    animation-duration: 2.4s;
+  }
+}
