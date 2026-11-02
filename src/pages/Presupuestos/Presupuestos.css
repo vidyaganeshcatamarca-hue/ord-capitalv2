@@ -385,6 +385,13 @@
   margin-top: 4px;
 }
 
+/* Dueño: el signo manda el color. Arrastre positivo = plata que sobra, verde;
+   arrastre negativo = deuda, coral. */
+.sobre-arrastre-badge.positivo {
+  background: var(--mint-dim);
+  color: var(--mint);
+}
+
 /* sin movimiento */
 .sobre-fila.sin-datos .sobre-nombre,
 .sobre-fila.sin-datos .sobre-stats {

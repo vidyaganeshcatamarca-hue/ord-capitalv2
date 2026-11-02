@@ -106,6 +106,33 @@ const formatMesLabel = (d: Date, locale: string) =>
 // `t()` se evaluaria al importar el modulo y quedaria congelado en el idioma
 // de arranque (no reacciona al cambio de idioma). El texto se resuelve en el
 // render, donde el idioma ya es el vigente.
+// Dueño: qué grupos están cerrados tiene que sobrevivir el cambio de pantalla y la
+// sesión. Se guarda en el dispositivo la lista de ids CERRADOS: el default seguirá
+// siendo desplegado, así que una lista vacía equivale al comportamiento de antes.
+const GRUPOS_CERRADOS_KEY = 'ord.presupuestos.grupos-cerrados'
+
+function leerGruposCerrados(): number[] {
+  try {
+    const crudo = localStorage.getItem(GRUPOS_CERRADOS_KEY)
+    const parseado = crudo ? JSON.parse(crudo) : []
+    return Array.isArray(parseado)
+      ? parseado.map(Number).filter(n => Number.isFinite(n))
+      : []
+  } catch {
+    // Sin almacenamiento disponible (modo privado, cuota llena, JSON roto): la
+    // pantalla funciona igual, sólo pierde la memoria.
+    return []
+  }
+}
+
+function guardarGruposCerrados(ids: number[]) {
+  try {
+    localStorage.setItem(GRUPOS_CERRADOS_KEY, JSON.stringify(ids))
+  } catch {
+    /* idem: no vale romper la pantalla por no poder recordar la preferencia */
+  }
+}
+
 const TIPO_CUPO_META: Record<string, { labelKey: string; icono: string }> = {
   need: { labelKey: 'budget_tipo_need', icono: '🏠' },
   want: { labelKey: 'budget_tipo_want', icono: '✨' },
@@ -569,6 +596,12 @@ export function PresupuestosPage() {
 
   const sobresConDisponible = sobres.filter(s =>
     s.estructura_id !== sobreSeleccionado?.estructura_id &&
+    // S4/S11: el rubro padre es un acumulador y nunca tiene plata propia. Su
+    // «disponible» en el reporte es la suma de lo asignado a sus hijos, así que
+    // ofrecerlo como fuente mostraba 518.155 en verde sobre un sobre sin
+    // presupuesto y la base lo rechazaba con «insufficient funds in the source
+    // envelope». Para mover plata de ese grupo hay que elegir el hijo.
+    !s.es_padre &&
     disponibleDeSobre(s, config?.modo_presupuesto) > 0
   )
 
@@ -1627,15 +1660,33 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
 
   // T6/S1: la fila del padre se despliega en la misma lista y sus hijos se dibujan
   // debajo, indentados. Un hijo de un padre con presupuesto no se repite arriba.
-  const [expandidos, setExpandidos] = useState<Record<number, boolean>>({})
+  //
+  // Dueño: el estado abierto/cerrado tiene que sobrevivir el cambio de pantalla y
+  // la sesión. Antes vivía sólo en este componente, así que al volver a Presupuestos
+  // se reabría todo. Se guarda en el dispositivo la lista de los CERRADOS (el
+  // default sigue siendo abierto).
+  const [cerrados, setCerrados] = useState<number[]>(() => leerGruposCerrados())
+  const estaCerrado = (id: number) => cerrados.includes(Number(id))
+  const alternarGrupo = (id: number) => {
+    const nid = Number(id)
+    // Se relee del almacenamiento: hay un GrupoAcordeon por cupo, y cada uno tiene
+    // su copia; sin releer, cerrar un grupo pisaba lo cerrado en otro cupo.
+    const actual = leerGruposCerrados()
+    const siguiente = actual.includes(nid)
+      ? actual.filter(x => x !== nid)
+      : [...actual, nid]
+    guardarGruposCerrados(siguiente)
+    setCerrados(siguiente)
+  }
+
   const padres = new Set(items.filter(i => i.es_padre).map(i => Number(i.estructura_id)))
   const visibles: Array<{ sobre: SobreDetalle; hija: boolean }> = []
   for (const s of items) {
     if (s.padre_id != null && padres.has(Number(s.padre_id))) continue
     visibles.push({ sobre: s, hija: false })
-    // El grupo arranca desplegado (undefined = abierto): ahora todo padre con hijos
-    // aparece, y si arrancara cerrado los hijos desaparecerian de la lista.
-    if (s.es_padre && expandidos[s.estructura_id] !== false) {
+    // Todo padre con hijos aparece; si arrancara cerrado los hijos desaparecerian
+    // de la lista, así que el default es desplegado.
+    if (s.es_padre && !estaCerrado(s.estructura_id)) {
       for (const h of items.filter(x => Number(x.padre_id) === Number(s.estructura_id))) {
         visibles.push({ sobre: h, hija: true })
       }
@@ -1669,9 +1720,9 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
             sobre={sobre}
             isLast={i === visibles.length - 1}
             hija={hija}
-            expandido={sobre.es_padre ? expandidos[sobre.estructura_id] !== false : undefined}
+            expandido={sobre.es_padre ? !estaCerrado(sobre.estructura_id) : undefined}
             onToggleGrupo={sobre.es_padre
-              ? () => setExpandidos(p => ({ ...p, [sobre.estructura_id]: !p[sobre.estructura_id] }))
+              ? () => alternarGrupo(sobre.estructura_id)
               : undefined}
             libreGrupo={sobre.es_padre ? libreDe(sobre.estructura_id) : undefined}
             onAsignar={() => onAsignar(sobre)}
@@ -1820,10 +1871,16 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
         )}
       </div>
 
-      {/* Arrastre badge (solo base_cero, donde el arrastre es real) */}
-      {modoPresupuesto !== 'anticipado' && arrastre > 0 && (
-        <div className="sobre-arrastre-badge">
-          ⚠️ {t('budget_carryover_warning')}: -{fmt(arrastre)}
+      {/* Arrastre (solo base_cero, donde el arrastre es real). Dueño: el que
+          arrastra plata tiene que verse en verde y con más, y el que arrastra
+          deuda en rojo y con menos. Antes se mostraba siempre con ⚠️ y un menos
+          adelante sobre cualquier arrastre mayor que cero, así que un arrastre
+          POSITIVO de ARS 900 se leía «-ARS 900» en rojo, y el negativo ni
+          aparecía. */}
+      {modoPresupuesto !== 'anticipado' && arrastre !== 0 && (
+        <div className={`sobre-arrastre-badge ${arrastre > 0 ? 'positivo' : 'negativo'}`}>
+          {arrastre > 0 ? '✅' : '⚠️'} {t('budget_carryover_warning')}:{' '}
+          {arrastre > 0 ? `+${fmt(arrastre)}` : `-${fmt(Math.abs(arrastre))}`}
         </div>
       )}
 

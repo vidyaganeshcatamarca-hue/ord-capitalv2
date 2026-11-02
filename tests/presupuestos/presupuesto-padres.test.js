@@ -392,7 +392,7 @@ test('los hijos se dibujan debajo del padre y no se repiten arriba', () => {
   assert.ok(bloque.includes('if (s.padre_id != null && padres.has(Number(s.padre_id))) continue'), 'un hijo de un padre con presupuesto no puede aparecer dos veces')
   assert.ok(bloque.includes('visibles.push({ sobre: h, hija: true })'), 'los hijos tienen que entrar indentados debajo del padre')
   assert.ok(bloque.includes('Number(x.padre_id) === Number(s.estructura_id)'), 'la búsqueda de hijos tiene que normalizar los ids')
-  assert.ok(bloque.includes('expandidos[s.estructura_id]'), 'sólo se despliegan si el grupo está abierto')
+  assert.ok(bloque.includes('if (s.es_padre && !estaCerrado(s.estructura_id))'), 'sólo se despliegan los grupos que no están cerrados')
 })
 
 test('el monto libre del grupo es el techo menos lo repartido', () => {
@@ -487,7 +487,16 @@ test('sin presupuesto del padre los hijos siguen contando', () => {
 })
 
 test('la UI arranca con el grupo desplegado', () => {
-  assert.ok(pagina.includes('expandidos[s.estructura_id] !== false'), 'el grupo tiene que arrancar abierto para que los hijos no desaparezcan')
+  // El default es abierto: lo que se persiste es la lista de CERRADOS, así que una
+  // lista vacía (primer ingreso, o alguien que nunca cerró nada) deja todo desplegado.
+  assert.ok(pagina.includes('const [cerrados, setCerrados] = useState<number[]>(() => leerGruposCerrados())'), 'el estado tiene que arrancar desde lo persistido')
+  assert.ok(pagina.includes('const estaCerrado = (id: number) => cerrados.includes(Number(id))'), 'cerrado = el id está en la lista persistida')
+  const iHelper = pagina.indexOf('function leerGruposCerrados')
+  assert.ok(iHelper > -1, 'falta el lector del almacenamiento')
+  assert.ok(pagina.slice(iHelper, iHelper + 400).includes(': []'), 'sin nada guardado la lista es vacía: todo abierto')
+  // Y el toggle tiene que actuar sobre el estado EFECTIVO, no sobre el valor crudo:
+  // con el default abierto, un «!p[id]» dejaba el primer clic sin efecto.
+  assert.ok(!pagina.includes('!p[sobre.estructura_id]'), 'el toggle no puede negar el valor crudo: el primer clic no contraía')
 })
 
 test('el grupo se mueve entero entre la lista y la alerta de excedidos', () => {
@@ -533,4 +542,21 @@ test('asignar 0 deja el sobre en cero y devuelve la plata al pozo', () => {
 test('en la base, un padre en 0 no lo frena el guard de los hijos', () => {
   assert.ok(bcC.includes('IF p_monto_asignado > 0 AND v_repartido > p_monto_asignado THEN'), 'el guard del padre tiene que dejar pasar el 0')
   assert.ok(bcC.includes('error_budget_parent_below_children'), 'un padre por debajo de lo repartido, pero mayor a 0, tiene que seguir rechazando')
+})
+
+// ---------------------------------------------------------------------------
+// Dueño: el arrastre positivo de un sobre al mes siguiente tiene que verse en
+// verde con el signo más, y el negativo en rojo con el menos. Antes el chip ponía
+// un menos fijo y sólo aparecía cuando el arrastre era positivo, así que la plata
+// que sobraba se leía como deuda y la deuda real no se veía nunca.
+// ---------------------------------------------------------------------------
+
+test('el arrastre muestra el signo que tiene, con su color', () => {
+  const i = pagina.indexOf('sobre-arrastre-badge')
+  const bloque = pagina.slice(Math.max(i - 500, 0), i + 400)
+  assert.ok(bloque.includes('arrastre !== 0'), 'el arrastre negativo también tiene que mostrarse, no sólo el positivo')
+  assert.ok(bloque.includes("arrastre > 0 ? 'positivo' : 'negativo'"), 'la clase tiene que salir del signo del arrastre')
+  assert.ok(bloque.includes('`+${fmt(arrastre)}`'), 'el arrastre positivo va con más')
+  assert.ok(bloque.includes('`-${fmt(Math.abs(arrastre))}`'), 'el negativo va con menos sobre el valor absoluto, sin duplicar el signo')
+  assert.ok(cssPagina.includes('.sobre-arrastre-badge.positivo'), 'falta el estilo verde para el arrastre positivo')
 })

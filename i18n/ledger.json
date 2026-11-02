@@ -862,6 +862,82 @@
         "from": "Cuota {position} de {total} - Vence el {date}",
         "to": "Installment {position} of {total} - Due {date}"
       },
+      "errors.cards_installment_refinanced": {
+        "from": "Cuota refinanciada — vence el {date}",
+        "to": "Refinanced installment — due {date}"
+      },
+      "errors.error_invalid_cuotas_integer": {
+        "from": "La cantidad de cuotas debe ser un número entero.",
+        "to": "The number of installments must be a whole number."
+      },
+      "errors.pay_blocked_reason_no_wallet": {
+        "from": "Elegí la cuenta desde la que pagás.",
+        "to": "Choose the account you are paying from."
+      },
+      "errors.error_card_has_commitments": {
+        "from": "No podés archivar esta tarjeta porque tiene cuotas o compromisos pendientes. Terminá de pagarlos y volvé a intentar.",
+        "to": "You cannot archive this card because it still has pending installments or commitments. Pay them off and try again."
+      },
+      "errors.card_archive_confirm": {
+        "from": "¿Archivar «{name}»? Va a salir de tu lista, pero no se borra nada: podés volver a activarla cuando quieras desde «Ver archivadas».",
+        "to": "Archive \"{name}\"? It will leave your list, but nothing is deleted: you can reactivate it any time from \"View archived\"."
+      },
+      "errors.cards_debt_usd_includes": {
+        "from": "incluye {monto} en dólares",
+        "to": "includes {monto} in dollars"
+      },
+      "errors.cards_debt_usd_unconverted": {
+        "from": "{monto} en dólares sin convertir (falta la cotización)",
+        "to": "{monto} in dollars not converted (rate missing)"
+      },
+      "errors.card_cmp_usd_line": {
+        "from": "En dólares: {anterior} → {actual}",
+        "to": "In dollars: {anterior} → {actual}"
+      },
+      "errors.card_cmp_usd_line_unconverted": {
+        "from": "En dólares, sin convertir: {anterior} → {actual}",
+        "to": "In dollars, not converted: {anterior} → {actual}"
+      },
+      "errors.card_legacy_created_toast_one": {
+        "from": "{cantidad} cuota cargada, empieza a correr en {fecha}",
+        "to": "{cantidad} installment loaded, starting in {fecha}"
+      },
+      "errors.card_edit_tooltip": {
+        "from": "Editar",
+        "to": "Edit"
+      },
+      "errors.card_activate_btn": {
+        "from": "Activar",
+        "to": "Activate"
+      },
+      "errors.cards_liquidated_one": {
+        "from": "{count} cuota liquidada",
+        "to": "{count} installment settled"
+      },
+      "errors.cards_liquidated_other": {
+        "from": "{count} cuotas liquidadas",
+        "to": "{count} installments settled"
+      },
+      "errors.pay_rate_label": {
+        "from": "Valor del dólar",
+        "to": "Dollar rate"
+      },
+      "errors.pay_rate_hint": {
+        "from": "No tenemos la cotización de tu moneda. Poné el valor del dólar que te cobró el banco.",
+        "to": "We don't have the rate for your currency. Enter the dollar rate your bank charged you."
+      },
+      "errors.saneamiento_calendariowidget_urgentes": {
+        "from": "urgentes",
+        "to": "urgent"
+      },
+      "errors.saneamiento_calendariowidget_proximos": {
+        "from": "próximos",
+        "to": "upcoming"
+      },
+      "errors.saneamiento_calendariowidget_con_margen": {
+        "from": "con margen",
+        "to": "with margin"
+      },
       "errors.cards_no_pending_installments": {
         "from": "No tienes compras en cuotas pendientes para esta tarjeta.",
         "to": "You have no pending installment purchases for this card."
@@ -971,8 +1047,8 @@
         "to": "Total allocated: {monto}"
       },
       "errors.pay_multi_total_pagado_ars": {
-        "from": "Pagado ARS: {monto}",
-        "to": "Paid ARS: {monto}"
+        "from": "Pagado: {monto}",
+        "to": "Paid: {monto}"
       },
       "errors.pay_multi_total_pagado_usd": {
         "from": "Pagado USD: {monto}",
@@ -1003,8 +1079,8 @@
         "to": "Equals {monto} USD"
       },
       "errors.pay_resumen_usd_equiv_suggested": {
-        "from": "Sugerido: {ars} ARS (equivale a US$ {usd})",
-        "to": "Suggested: {ars} ARS (equals US$ {usd})"
+        "from": "Sugerido: {ars} (equivale a US$ {usd})",
+        "to": "Suggested: {ars} (equals US$ {usd})"
       },
       "errors.pay_resumen_usd_pay_in_label": {
         "from": "Cuotas en USD: pagar en",
@@ -1083,8 +1159,8 @@
         "to": "You have {monto} in credit applied to this statement"
       },
       "errors.saldo_a_favor_aplicado_ars": {
-        "from": "{monto} ARS a favor",
-        "to": "{monto} ARS in credit"
+        "from": "{monto} a favor",
+        "to": "{monto} in credit"
       },
       "errors.saldo_a_favor_aplicado_usd": {
         "from": "{monto} USD a favor",
@@ -7971,8 +8047,8 @@
         "to": "Exchange rate: {rate} USD - may include taxes"
       },
       "inversiones.card_usd_estimated_total": {
-        "from": "Total estimado ARS: {amount}",
-        "to": "Estimated total ARS: {amount}"
+        "from": "Total estimado: {amount}",
+        "to": "Estimated total: {amount}"
       },
       "inversiones.step_category": {
         "from": "Categoría",
@@ -10608,6 +10684,82 @@
         "from": "Cuota {position} de {total} - Vence el {date}",
         "to": "Parcela {position} de {total} - Vence em {date}"
       },
+      "errors.cards_installment_refinanced": {
+        "from": "Cuota refinanciada — vence el {date}",
+        "to": "Parcela refinanciada — vence em {date}"
+      },
+      "errors.error_invalid_cuotas_integer": {
+        "from": "La cantidad de cuotas debe ser un número entero.",
+        "to": "O número de parcelas deve ser um número inteiro."
+      },
+      "errors.pay_blocked_reason_no_wallet": {
+        "from": "Elegí la cuenta desde la que pagás.",
+        "to": "Escolha a conta de onde você está pagando."
+      },
+      "errors.error_card_has_commitments": {
+        "from": "No podés archivar esta tarjeta porque tiene cuotas o compromisos pendientes. Terminá de pagarlos y volvé a intentar.",
+        "to": "Você não pode arquivar este cartão porque ele tem parcelas ou compromissos pendentes. Quite-os e tente novamente."
+      },
+      "errors.card_archive_confirm": {
+        "from": "¿Archivar «{name}»? Va a salir de tu lista, pero no se borra nada: podés volver a activarla cuando quieras desde «Ver archivadas».",
+        "to": "Arquivar \"{name}\"? Ele sai da sua lista, mas nada é apagado: você pode reativá-lo quando quiser em \"Ver arquivados\"."
+      },
+      "errors.cards_debt_usd_includes": {
+        "from": "incluye {monto} en dólares",
+        "to": "inclui {monto} em dólares"
+      },
+      "errors.cards_debt_usd_unconverted": {
+        "from": "{monto} en dólares sin convertir (falta la cotización)",
+        "to": "{monto} em dólares sem converter (falta a cotação)"
+      },
+      "errors.card_cmp_usd_line": {
+        "from": "En dólares: {anterior} → {actual}",
+        "to": "Em dólares: {anterior} → {actual}"
+      },
+      "errors.card_cmp_usd_line_unconverted": {
+        "from": "En dólares, sin convertir: {anterior} → {actual}",
+        "to": "Em dólares, sem converter: {anterior} → {actual}"
+      },
+      "errors.card_legacy_created_toast_one": {
+        "from": "{cantidad} cuota cargada, empieza a correr en {fecha}",
+        "to": "{cantidad} parcela carregada, começa a correr em {fecha}"
+      },
+      "errors.card_edit_tooltip": {
+        "from": "Editar",
+        "to": "Editar"
+      },
+      "errors.card_activate_btn": {
+        "from": "Activar",
+        "to": "Ativar"
+      },
+      "errors.cards_liquidated_one": {
+        "from": "{count} cuota liquidada",
+        "to": "{count} parcela liquidada"
+      },
+      "errors.cards_liquidated_other": {
+        "from": "{count} cuotas liquidadas",
+        "to": "{count} parcelas liquidadas"
+      },
+      "errors.pay_rate_label": {
+        "from": "Valor del dólar",
+        "to": "Valor do dólar"
+      },
+      "errors.pay_rate_hint": {
+        "from": "No tenemos la cotización de tu moneda. Poné el valor del dólar que te cobró el banco.",
+        "to": "Não temos a cotação da sua moeda. Informe o valor do dólar que o banco cobrou."
+      },
+      "errors.saneamiento_calendariowidget_urgentes": {
+        "from": "urgentes",
+        "to": "urgentes"
+      },
+      "errors.saneamiento_calendariowidget_proximos": {
+        "from": "próximos",
+        "to": "próximos"
+      },
+      "errors.saneamiento_calendariowidget_con_margen": {
+        "from": "con margen",
+        "to": "com margem"
+      },
       "errors.cards_no_pending_installments": {
         "from": "No tienes compras en cuotas pendientes para esta tarjeta.",
         "to": "Você não tem compras parceladas pendentes para este cartão."
@@ -10717,8 +10869,8 @@
         "to": "Total distribuído: {monto}"
       },
       "errors.pay_multi_total_pagado_ars": {
-        "from": "Pagado ARS: {monto}",
-        "to": "Pago ARS: {monto}"
+        "from": "Pagado: {monto}",
+        "to": "Pago: {monto}"
       },
       "errors.pay_multi_total_pagado_usd": {
         "from": "Pagado USD: {monto}",
@@ -10749,8 +10901,8 @@
         "to": "Equivale a {monto} USD"
       },
       "errors.pay_resumen_usd_equiv_suggested": {
-        "from": "Sugerido: {ars} ARS (equivale a US$ {usd})",
-        "to": "Sugerido: {ars} ARS (equivale a US$ {usd})"
+        "from": "Sugerido: {ars} (equivale a US$ {usd})",
+        "to": "Sugerido: {ars} (equivale a US$ {usd})"
       },
       "errors.pay_resumen_usd_pay_in_label": {
         "from": "Cuotas en USD: pagar en",
@@ -10829,8 +10981,8 @@
         "to": "Você tem {monto} a favor que é aplicado a este extrato"
       },
       "errors.saldo_a_favor_aplicado_ars": {
-        "from": "{monto} ARS a favor",
-        "to": "{monto} ARS a favor"
+        "from": "{monto} a favor",
+        "to": "{monto} a favor"
       },
       "errors.saldo_a_favor_aplicado_usd": {
         "from": "{monto} USD a favor",
@@ -17234,7 +17386,7 @@
       },
       "inversiones.budget_carryover_warning": {
         "from": "Arrastre",
-        "to": "Saldo negativo"
+        "to": "Arrasto"
       },
       "inversiones.budget_prev_month_assigned": {
         "from": "Asignado mes anterior",
@@ -17717,8 +17869,8 @@
         "to": "Cotação: {rate} USD - pode incluir impostos"
       },
       "inversiones.card_usd_estimated_total": {
-        "from": "Total estimado ARS: {amount}",
-        "to": "Total estimado ARS: {amount}"
+        "from": "Total estimado: {amount}",
+        "to": "Total estimado: {amount}"
       },
       "inversiones.step_category": {
         "from": "Categoría",

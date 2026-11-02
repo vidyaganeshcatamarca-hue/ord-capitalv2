@@ -1926,7 +1926,7 @@ export const inversiones = {
   budget_empty_state_desc1: "Crie categorias com tipo de alocação (Necessidade / Desejo / Poupança)",
   budget_empty_state_desc2: "na seção de {categoria} para começar a orçar.",
   btn_understood: "Entendi",
-  budget_carryover_warning: "Saldo negativo",
+  budget_carryover_warning: "Arrasto",
   budget_prev_month_assigned: "Atribuído no mês anterior",
   budget_prev_month_spent: "Gasto no mês anterior",
   budget_detail_title: "Detalhe do envelope",

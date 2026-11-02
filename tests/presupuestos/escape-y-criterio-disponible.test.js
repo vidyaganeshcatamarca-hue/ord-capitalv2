@@ -52,9 +52,12 @@ test('el disponible del sobre se calcula en un solo lugar', () => {
 test('la lista de orígenes ya no filtra por el monto_disponible crudo', () => {
   const idx = pagina.indexOf('const sobresConDisponible')
   assert.ok(idx > -1, 'no encontré la lista de orígenes')
-  const bloque = pagina.slice(idx, idx + 300)
+  // La ventana cubre el filtro completo, que ahora además excluye a los rubros padre.
+  const bloque = pagina.slice(idx, idx + 900)
   assert.doesNotMatch(bloque, /s\.monto_disponible > 0/,
     'la lista de orígenes volvió al criterio crudo que la auditoría marcó')
   assert.match(bloque, /disponibleDeSobre\(s, config\?\.modo_presupuesto\) > 0/,
     'la lista de orígenes tiene que usar el criterio único')
+  assert.match(bloque, /!s\.es_padre/,
+    'un rubro padre no puede ser fuente: no tiene plata propia, su disponible es la suma de sus hijos')
 })
