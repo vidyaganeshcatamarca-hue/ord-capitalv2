@@ -570,3 +570,21 @@ test('el arrastre muestra el signo que tiene, con su color', () => {
   assert.ok(bloque.includes('`-${fmt(Math.abs(arrastre))}`'), 'el negativo va con menos sobre el valor absoluto, sin duplicar el signo')
   assert.ok(cssPagina.includes('.sobre-arrastre-badge.positivo'), 'falta el estilo verde para el arrastre positivo')
 })
+
+// ---------------------------------------------------------------------------
+// Dueño (2026-11-02): «total del grupo estaría bien». El monto de un rubro padre
+// es la suma de lo disponible del grupo (arrastre de los hijos + su techo), no
+// plata propia del sobre, así que tiene que ir rotulado.
+// ---------------------------------------------------------------------------
+
+test('el monto de un padre se rotula como total del grupo', () => {
+  assert.ok(pagina.includes("t('budget_group_total')"), 'falta el rótulo del monto del padre')
+  const i = pagina.indexOf('sobre-disponible-etiqueta')
+  const bloque = pagina.slice(Math.max(i - 400, 0), i + 200)
+  assert.ok(bloque.includes('sobre.es_padre &&'), 'el rótulo es sólo para rubros padre')
+  assert.ok(cssPagina.includes('.sobre-disponible-etiqueta'), 'falta el estilo del rótulo')
+  for (const [archivo, valor] of [['es.ts', 'Total del grupo'], ['en.ts', 'Group total'], ['pt.ts', 'Total do grupo']]) {
+    const texto = leer('src', 'locales', archivo)
+    assert.ok(texto.includes(`budget_group_total: "${valor}"`), `falta la traducción en ${archivo}`)
+  }
+})

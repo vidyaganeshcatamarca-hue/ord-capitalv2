@@ -1949,6 +1949,7 @@ export const inversiones = {
   budget_needs: "Needs",
   budget_assign_btn: "+ Assign",
   budget_group_tag: "(group free)",
+  budget_group_total: "Group total",
   budget_stat_group_free: "Group free:",
   budget_group_expand: "Show subcategories",
   budget_group_collapse: "Hide subcategories",

@@ -7654,6 +7654,10 @@
         "from": "(grupal libre)",
         "to": "(group free)"
       },
+      "inversiones.budget_group_total": {
+        "from": "Total del grupo",
+        "to": "Group total"
+      },
       "inversiones.budget_stat_group_free": {
         "from": "Libre grupo:",
         "to": "Group free:"
@@ -17475,6 +17479,10 @@
       "inversiones.budget_group_tag": {
         "from": "(grupal libre)",
         "to": "(grupo livre)"
+      },
+      "inversiones.budget_group_total": {
+        "from": "Total del grupo",
+        "to": "Total do grupo"
       },
       "inversiones.budget_stat_group_free": {
         "from": "Libre grupo:",

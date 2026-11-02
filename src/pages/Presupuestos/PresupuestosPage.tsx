@@ -1857,6 +1857,12 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
             </span>
           </span>
         </button>
+        {/* Dueño (2026-11-02): en un rubro padre el monto es la suma de lo disponible del
+            grupo (arrastre de los hijos + su techo), no la plata propia del sobre, así que
+            va rotulado para que no se lea como si el padre tuviera esa plata. */}
+        {sobre.es_padre && (
+          <span className="sobre-disponible-etiqueta">{t('budget_group_total')}</span>
+        )}
         <span className={`sobre-disponible ${colorDisponible()}`} style={{ marginRight: soloLectura ? 0 : 80 }}>
           {disponibleEfectivo >= 0 ? fmt(disponibleEfectivo) : `-${fmt(Math.abs(disponibleEfectivo))}`}
         </span>
