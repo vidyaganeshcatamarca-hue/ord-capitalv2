@@ -29,6 +29,12 @@ export interface SettingsMenuItem {
   soon?: boolean
   disabled?: boolean
   featured?: boolean
+  /**
+   * Feature key de `fn_obtener_modo_app`. Si está presente y la feature no está
+   * habilitada para el modo/usuario, la entrada no se renderiza. Mismo criterio que
+   * `FeatureRoute`, que hasta ahora era el único punto de gating.
+   */
+  feature?: string
 }
 
 export interface SettingsMenuGroup {
@@ -292,6 +298,15 @@ const ADVANCED_TREE: SettingsMenuTree = {
           titleKey: 'settings_entry_import_export',
           descKey: 'config_ie_desc',
           target: 'target:/configuracion/importar-exportar',
+        },
+        {
+          // Gastos recurrentes (PRD docs/varias/prd-gastos-recurrentes.md, §32.2).
+          // Gateado por la feature key menu_recurrentes (R-GR-39).
+          id: 'recurring_expenses',
+          titleKey: 'settings_entry_recurring',
+          descKey: 'settings_entry_recurring_desc',
+          target: 'target:/configuracion/recurrentes',
+          feature: 'menu_recurrentes',
         },
         {
           // S9 — the advanced tree goes back to Simple from here.

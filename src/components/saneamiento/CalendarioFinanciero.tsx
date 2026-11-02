@@ -17,7 +17,7 @@ export function CalendarioFinanciero({ eventosIniciales, onVolver, onChange }: C
   const { showToast } = useToast()
   const navigate = useNavigate()
 
-  const [dias, setDias] = useState<30 | 60>(30)
+  const [dias, setDias] = useState<30 | 90 | 180 | 365>(30)
   const [eventos, setEventos] = useState<CalendarioEvento[]>(eventosIniciales)
   const [loading, setLoading] = useState(false)
   const [diaSeleccionado, setDiaSeleccionado] = useState<string | null>(null)
@@ -111,10 +111,27 @@ export function CalendarioFinanciero({ eventosIniciales, onVolver, onChange }: C
     }
   }
 
+  // R-GR-24 / R-GR-44: un solo criterio, POR FECHA, idéntico al de la lista.
+  // El monto ya no decide el color: el heatmap se pide en el calendario y
+  // se responde en la lista.
+  const criticidadPorDia = useMemo(() => {
+    const map: Record<string, 'critico' | 'atencion' | 'normal'> = {}
+    Object.entries(eventosPorDia).forEach(([key, list]) => {
+      let nivel: 'critico' | 'atencion' | 'normal' = 'normal'
+      for (const e of list) {
+        if (e.criticidad === 'critico') { nivel = 'critico'; break }
+        if (e.criticidad === 'atencion') nivel = 'atencion'
+      }
+      map[key] = nivel
+    })
+    return map
+  }, [eventosPorDia])
+
   const getColorDia = (key: string) => {
-    const total = totalPorDia[key] || 0
-    if (total > 50000) return 'var(--coral)'
-    if (total >= 10000) return 'var(--amber)'
+    const nivel = criticidadPorDia[key]
+    if (nivel === 'critico') return 'var(--coral)'
+    if (nivel === 'atencion') return 'var(--amber)'
+    if (nivel === 'normal') return 'color-mix(in srgb, var(--mint, #4ade80) 22%, transparent)'
     return 'transparent'
   }
 
@@ -122,9 +139,28 @@ export function CalendarioFinanciero({ eventosIniciales, onVolver, onChange }: C
     <section className="saneamiento-seccion">
       <h2 className="saneamiento-seccion-titulo">{t('saneamiento_calendariowidget_titulo')}</h2>
 
+      {/* R-GR-22 / R-GR-42: cuatro horizontes fijos, no un selector libre. */}
       <div className="saneamiento-toggle">
-        <button className={dias === 30 ? 'active' : ''} onClick={() => setDias(30)}>30 {t('saneamiento_dias')}</button>
-        <button className={dias === 60 ? 'active' : ''} onClick={() => setDias(60)}>60 {t('saneamiento_dias')}</button>
+        <button
+          className={dias === 30 ? 'active' : ''}
+          aria-pressed={dias === 30}
+          onClick={() => setDias(30)}
+        >30 {t('saneamiento_dias')}</button>
+        <button
+          className={dias === 90 ? 'active' : ''}
+          aria-pressed={dias === 90}
+          onClick={() => setDias(90)}
+        >90 {t('saneamiento_dias')}</button>
+        <button
+          className={dias === 180 ? 'active' : ''}
+          aria-pressed={dias === 180}
+          onClick={() => setDias(180)}
+        >{t('saneamiento_horizonte_6m')}</button>
+        <button
+          className={dias === 365 ? 'active' : ''}
+          aria-pressed={dias === 365}
+          onClick={() => setDias(365)}
+        >{t('saneamiento_horizonte_1a')}</button>
       </div>
 
       {loading ? (

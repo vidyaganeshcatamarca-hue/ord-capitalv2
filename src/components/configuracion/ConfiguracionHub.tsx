@@ -143,6 +143,10 @@ function ComponentSlot({ slot, userId }: { slot: string; userId: string | undefi
  * sub-options, the 10-day + PIN gate and both confirmation flows.
  */
 function SettingsEntry({ item, userId }: { item: SettingsMenuItem; userId: string | undefined }) {
+  const { hasFeature } = useModoApp()
+  // Gating por feature key (mismo criterio que FeatureRoute). Si la fila declara una
+  // feature que el modo/usuario no tiene, la entrada no se muestra.
+  if (item.feature && !hasFeature(item.feature)) return null
   if (item.soon || item.disabled) return <ConfigSoonCard item={item} />
   if (!item.target) return null
   if (item.target.startsWith('mode:')) return <ModeSwitchRow item={item} />

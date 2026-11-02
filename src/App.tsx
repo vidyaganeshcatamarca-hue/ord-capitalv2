@@ -77,6 +77,7 @@ const ImportarExportarPage = lazy(() => import('@/pages/Configuracion/ImportarEx
 const RegionFormatoPage = lazy(() => import('@/pages/Configuracion/RegionFormatoPage').then(module => ({ default: module.RegionFormatoPage })))
 const AcercaPage = lazy(() => import('@/pages/Configuracion/AcercaPage').then(module => ({ default: module.AcercaPage })))
 const BorradoPage = lazy(() => import('@/pages/Configuracion/BorradoPage').then(module => ({ default: module.BorradoPage })))
+const GastosRecurrentesPage = lazy(() => import('@/pages/Configuracion/GastosRecurrentesPage').then(module => ({ default: module.GastosRecurrentesPage })))
 const AparienciaPage = lazy(() => import('@/pages/Configuracion/AparienciaPage').then(module => ({ default: module.AparienciaPage })))
 const PWAInstallPage = lazy(() => import('@/pages/Configuracion/PWAInstallPage').then(module => ({ default: module.PWAInstallPage })))
 const MantenimientoPage = lazy(() => import('@/pages/Configuracion/MantenimientoPage').then(module => ({ default: module.MantenimientoPage })))
@@ -218,6 +219,14 @@ function AppLayout() {
           <Route path="/configuracion/mantenimiento" element={<MantenimientoPage />} />
           <Route path="/configuracion/operativas" element={<PreferenciasOperativasPage />} />
           <Route path="/configuracion/categorias" element={<CategoriasConfigPage />} />
+          <Route
+            path="/configuracion/recurrentes"
+            element={
+              <FeatureRoute feature="menu_recurrentes">
+                <GastosRecurrentesPage />
+              </FeatureRoute>
+            }
+          />
           <Route path="/configuracion/hogar" element={<HogarConfigPage />} />
           <Route path="/reportar-problema" element={<ReportarProblemaPage />} />
           <Route path="/mis-reportes" element={<MisReportesPage />} />

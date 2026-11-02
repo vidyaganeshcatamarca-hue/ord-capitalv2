@@ -52,6 +52,7 @@ export const SETTING_ICONS: Record<string, string> = {
   home_config: '👥',
   budget_cycle: '📅',
   import_export: '📥',
+  recurring_expenses: '🔁',
 
   // ── Ayuda y soporte ──
   report_issue: '🐞',
