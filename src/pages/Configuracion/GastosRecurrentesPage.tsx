@@ -9,6 +9,7 @@ import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { nombreVisibleRecurrente } from '@/lib/gastosRecurrentes'
+import { isUserEditableCategory } from '@/lib/categoryFilters'
 import { rpc } from '@/lib/supabase'
 import { useGastosRecurrentes } from '@/hooks/useGastosRecurrentes'
 import type {
@@ -66,19 +67,36 @@ export function GastosRecurrentesPage() {
       // Mismo criterio que EditarCuarentenaModal: se conserva la jerarquía
       // (padre con hijos = encabezado, no elegible) y se traduce el nombre,
       // porque las categorías semilla guardan una clave i18n como nombre.
-      const grupos: RubroOpcion[] = (arbol ?? []).map(padre => {
-        const iconoPadre = String(padre.icono ?? '').trim() || '📁'
-        return {
-          estructura_id: padre.estructura_id,
-          nombre_cuenta: t(padre.nombre_cuenta),
-          icono: iconoPadre,
-          hijos: (padre.hijos ?? []).map(hijo => ({
-            estructura_id: hijo.estructura_id,
-            nombre: t(hijo.nombre_cuenta),
-            icono: String(hijo.icono ?? '').trim() || iconoPadre,
-          })),
-        }
-      })
+      // Las categorías de SISTEMA (misterio/olvido, inversiones) no se ofrecen:
+      // no son destinos de un gasto recurrente del usuario.
+      const grupos: RubroOpcion[] = (arbol ?? [])
+        .filter(padre => isUserEditableCategory(padre))
+        .map(padre => {
+          const iconoPadre = String(padre.icono ?? '').trim() || '📁'
+          const hijos = (padre.hijos ?? [])
+            .filter(hijo => isUserEditableCategory(hijo))
+            .map(hijo => ({
+              estructura_id: hijo.estructura_id,
+              nombre: t(hijo.nombre_cuenta),
+              icono: String(hijo.icono ?? '').trim() || iconoPadre,
+            }))
+          return {
+            estructura_id: padre.estructura_id,
+            nombre_cuenta: t(padre.nombre_cuenta),
+            icono: iconoPadre,
+            hijos,
+            // Un padre que venía con hijos y se quedó sin ninguno por el filtro
+            // NO se puede volver un rubro elegible: se descarta entero.
+            descartar: (padre.hijos ?? []).length > 0 && hijos.length === 0,
+          }
+        })
+        .filter(grupo => !grupo.descartar)
+        .map(grupo => ({
+          estructura_id: grupo.estructura_id,
+          nombre_cuenta: grupo.nombre_cuenta,
+          icono: grupo.icono,
+          hijos: grupo.hijos,
+        }))
       setRubros(grupos)
       setBilleteras(bills ?? [])
       setTarjetas(tjs ?? [])
@@ -290,15 +308,9 @@ export function GastosRecurrentesPage() {
         isOpen={pendingDelete !== null}
         type="danger"
         title={t('recurrentes_borrar_titulo')}
-        message={t(
-          (pendingDelete?.ocurrencias_pendientes ?? 0) === 1
-            ? 'recurrentes_borrar_cuerpo_one'
-            : 'recurrentes_borrar_cuerpo_other',
-          {
-            nombre: pendingDelete ? nombreVisibleRecurrente(pendingDelete, t) : '',
-            count: pendingDelete?.ocurrencias_pendientes ?? 0,
-          },
-        )}
+        message={t('recurrentes_borrar_cuerpo', {
+          nombre: pendingDelete ? nombreVisibleRecurrente(pendingDelete, t) : '',
+        })}
         confirmText={t('recurrentes_borrar')}
         cancelText={t('btn_cancel')}
         onConfirm={() => void handleConfirmDelete()}

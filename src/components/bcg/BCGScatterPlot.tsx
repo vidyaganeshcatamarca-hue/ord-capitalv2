@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { t } from '@/locales/i18n'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
+import { iconGlyph } from '@/constants/emojiToLucide'
 import { BCG_FRECUENCIA_ALTA, BCG_PLACER_ALTO, BCG_CUADRANTES, classifyCuadrante, dominioX, radiusFromMonto } from '@/lib/bcgUtils'
 import { haptics } from '@/lib/haptics'
 import './BCGScatterPlot.css'
@@ -95,11 +96,13 @@ export function BCGScatterPlot({ points, onPointClick, emptyMessage }: BCGScatte
               }}
               tabIndex={0}
               role="button"
-              aria-label={`${p.icono} ${catalogDisplayName(p.nombre)} - ${t('btn_view_detail')}`}
+              aria-label={`${iconGlyph(p.icono)} ${catalogDisplayName(p.nombre)} - ${t('btn_view_detail')}`}
             >
               <circle cx={cx} cy={cy} r={r} fill={fill} className="bcg-point-circle" />
-              <text x={cx} y={cy + 3} className="bcg-point-icon" textAnchor="middle">{p.icono}</text>
-              <title>{t('bcg_punto_tooltip', { icono: p.icono, nombre: catalogDisplayName(p.nombre), placer: p.coordenada_y, frec: p.coordenada_x })}</title>
+              {/* SVG no puede montar un componente de lucide: se usa el glifo
+                  equivalente. Un nombre crudo acá se leería como «UsersRound». */}
+              <text x={cx} y={cy + 3} className="bcg-point-icon" textAnchor="middle">{iconGlyph(p.icono)}</text>
+              <title>{t('bcg_punto_tooltip', { icono: iconGlyph(p.icono), nombre: catalogDisplayName(p.nombre), placer: p.coordenada_y, frec: p.coordenada_x })}</title>
             </g>
           )
         })}

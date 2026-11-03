@@ -281,6 +281,16 @@ const ADVANCED_TREE: SettingsMenuTree = {
       titleKey: 'settings_group_data_operations',
       items: [
         {
+          // Gastos recurrentes (PRD docs/varias/prd-gastos-recurrentes.md, §32.2).
+          // Gateado por la feature key menu_recurrentes (R-GR-39).
+          // El dueño lo pidió como PRIMERA alternativa del grupo.
+          id: 'recurring_expenses',
+          titleKey: 'settings_entry_recurring',
+          descKey: 'settings_entry_recurring_desc',
+          target: 'target:/configuracion/recurrentes',
+          feature: 'menu_recurrentes',
+        },
+        {
           id: 'home_config',
           titleKey: 'settings_entry_home_config',
           descKey: 'config_hogar_desc',
@@ -298,15 +308,6 @@ const ADVANCED_TREE: SettingsMenuTree = {
           titleKey: 'settings_entry_import_export',
           descKey: 'config_ie_desc',
           target: 'target:/configuracion/importar-exportar',
-        },
-        {
-          // Gastos recurrentes (PRD docs/varias/prd-gastos-recurrentes.md, §32.2).
-          // Gateado por la feature key menu_recurrentes (R-GR-39).
-          id: 'recurring_expenses',
-          titleKey: 'settings_entry_recurring',
-          descKey: 'settings_entry_recurring_desc',
-          target: 'target:/configuracion/recurrentes',
-          feature: 'menu_recurrentes',
         },
         {
           // S9 — the advanced tree goes back to Simple from here.

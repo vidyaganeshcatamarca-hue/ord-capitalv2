@@ -4,6 +4,7 @@
 // PRD §32.4.
 
 import { t } from '@/locales/i18n'
+import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { parseFechaAnual, type GastoRecurrenteRow } from '@/lib/gastosRecurrentes'
 import { fechaVisible, nombreVisibleRecurrente } from '@/lib/gastosRecurrentes'
 
@@ -37,6 +38,10 @@ export function describirRecurrencia(item: GastoRecurrenteRow): string {
     return fechas.join(' · ')
   }
   const dias = item.dias_mes ?? (item.dia_del_mes ? [item.dia_del_mes] : [])
+  // Con tarjeta el día lo define el cierre de la tarjeta, no el usuario.
+  if (item.tarjeta_id != null && dias.length === 0) {
+    return t('recurrentes_por_cierre_tarjeta')
+  }
   return t('recurrentes_dias_del_mes', { dias: dias.join(' y ') })
 }
 
@@ -51,7 +56,11 @@ export function GastoRecurrenteCard({ item, onEdit, onPause, onResume, onDelete,
   return (
     <article className={`recur-card${pausado ? ' is-paused' : ''}`} aria-busy={busy}>
       <div className="recur-card-main">
-        <span className="recur-card-icon" aria-hidden="true">{item.icono ?? '🔁'}</span>
+        {/* El icono de la categoría se guarda como nombre de lucide: hay que
+            resolverlo con CategoryIcon, nunca imprimir el string crudo. */}
+        <span className="recur-card-icon" aria-hidden="true">
+          <CategoryIcon name={item.icono ?? 'Repeat'} size={22} />
+        </span>
         <div className="recur-card-text">
           <h3 className="recur-card-title">{nombre}</h3>
           <p className="recur-card-meta">
@@ -62,7 +71,7 @@ export function GastoRecurrenteCard({ item, onEdit, onPause, onResume, onDelete,
           {item.tarjeta_nombre ? (
             <p className="recur-card-wallet">💳 {item.tarjeta_nombre}</p>
           ) : item.billetera_nombre ? (
-            <p className="recur-card-wallet">💳 {item.billetera_nombre}</p>
+            <p className="recur-card-wallet">💳 {t(item.billetera_nombre)}</p>
           ) : null}
           {item.fecha_fin && (
             <p className="recur-card-wallet">📅 {t('recurrentes_hasta', { fecha: fechaVisible(item.fecha_fin, t) })}</p>

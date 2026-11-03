@@ -1,7 +1,8 @@
 // src/components/gastos-recurrentes/RecurrenciaEditor.tsx
-// Editor de la forma de recurrencia: semanal (1-3 días), mensual (1-3 días del mes)
-// y anual (1+ fechas). Requisitos R-GR-17 y R-GR-35 del PRD (§32.5).
-// Los límites viven en RECURRENCIA_LIMITES y la base los vuelve a validar.
+// Editor de la forma de recurrencia: semanal (1..7 días), mensual (1..31 días
+// del mes) y anual (1+ fechas). Requisitos R-GR-17 y R-GR-35 del PRD (§32.5).
+// No hay tope de días: la base valida rango y deduplica.
+// Con tarjeta no se elige día: manda el cierre de la tarjeta.
 
 import { useMemo } from 'react'
 import { t } from '@/locales/i18n'
@@ -52,14 +53,12 @@ export function RecurrenciaEditor({
       onDiasSemana(diasSemana.filter(d => d !== dia))
       return
     }
-    if (diasSemana.length >= RECURRENCIA_LIMITES.diasSemanaMax) return
     onDiasSemana([...diasSemana, dia].sort((a, b) => a - b))
   }
 
   const agregarDiaMes = (valor: number) => {
     if (!Number.isInteger(valor) || valor < 1 || valor > 31) return
     if (diasMes.includes(valor)) return
-    if (diasMes.length >= RECURRENCIA_LIMITES.diasMesMax) return
     onDiasMes([...diasMes, valor].sort((a, b) => a - b))
   }
 
@@ -93,14 +92,12 @@ export function RecurrenciaEditor({
 
       {modo === 'semanal' && (
         <div className="recur-block">
-          <p className="recur-hint">{t('recurrentes_semanal_hint')}</p>
           <div className="recur-chips">
             {DIAS_SEMANA.map(d => (
               <button
                 key={d}
                 type="button"
                 aria-pressed={diasSemana.includes(d)}
-                disabled={!diasSemana.includes(d) && diasSemana.length >= RECURRENCIA_LIMITES.diasSemanaMax}
                 className={`recur-chip${diasSemana.includes(d) ? ' is-active' : ''}`}
                 onClick={() => toggleDiaSemana(d)}
               >
@@ -111,8 +108,17 @@ export function RecurrenciaEditor({
         </div>
       )}
 
-      {modo === 'mensual' && (
-        <MensualPicker dias={diasMes} anio={anioActual} onAdd={agregarDiaMes} onRemove={d => onDiasMes(diasMes.filter(x => x !== d))} />
+      {/* Con tarjeta el día no se elige: lo manda el cierre de la tarjeta y la
+          ocurrencia se propone 3 días antes. Por eso la sección mensual no
+          aparece y el modal tampoco exige un día. */}
+      {modo === 'mensual' && conTarjeta && (
+        <div className="recur-block">
+          <p className="recur-hint">{t('recurrentes_tarjeta_hint')}</p>
+        </div>
+      )}
+
+      {modo === 'mensual' && !conTarjeta && (
+        <MensualPicker dias={diasMes} onAdd={agregarDiaMes} onRemove={d => onDiasMes(diasMes.filter(x => x !== d))} />
       )}
 
       {modo === 'anual' && (
@@ -136,20 +142,23 @@ export function RecurrenciaEditor({
       )}
 
       {/* Vigencia: vacía = se repite para siempre. Al vencer, el motor pausa
-          la recurrencia con motivo «vencida» (distinto de tu pausa manual). */}
-      <div className="recur-block">
-        <label className="recur-field">
-          <span>{t('recurrentes_campo_fecha_fin')}</span>
-          <input
-            className="recur-input"
-            type="date"
-            value={fechaFin}
-            min={modo === 'unica' && fechaUnica ? fechaUnica : hoyISO()}
-            onChange={e => onFechaFin(e.target.value)}
-          />
-        </label>
-        <p className="recur-hint">{t('recurrentes_vigencia_hint')}</p>
-      </div>
+          la recurrencia con motivo «vencida» (distinto de tu pausa manual).
+          Única vez no tiene vigencia: la ocurrencia es una sola. */}
+      {modo !== 'unica' && (
+        <div className="recur-block">
+          <label className="recur-field">
+            <span>{t('recurrentes_campo_fecha_fin')}</span>
+            <input
+              className="recur-input"
+              type="date"
+              value={fechaFin}
+              min={hoyISO()}
+              onChange={e => onFechaFin(e.target.value)}
+            />
+          </label>
+          <p className="recur-hint">{t('recurrentes_vigencia_hint')}</p>
+        </div>
+      )}
 
       {error && <p className="recur-error" role="alert">{error}</p>}
     </fieldset>
@@ -157,20 +166,18 @@ export function RecurrenciaEditor({
 }
 
 function MensualPicker({
-  dias, anio, onAdd, onRemove,
-}: { dias: number[]; anio: number; onAdd: (d: number) => void; onRemove: (d: number) => void }) {
+  dias, onAdd, onRemove,
+}: { dias: number[]; onAdd: (d: number) => void; onRemove: (d: number) => void }) {
   return (
     <div className="recur-block">
-      <p className="recur-hint">{t('recurrentes_mensual_hint')}</p>
       <div className="recur-chips">
-        {Array.from({ length: 31 }, (_, i) => i + 1).map(d => {
+        {Array.from({ length: RECURRENCIA_LIMITES.diasMesMax }, (_, i) => i + 1).map(d => {
           const activo = dias.includes(d)
           return (
             <button
               key={d}
               type="button"
               aria-pressed={activo}
-              disabled={!activo && dias.length >= RECURRENCIA_LIMITES.diasMesMax}
               className={`recur-chip recur-chip--num${activo ? ' is-active' : ''}`}
               onClick={() => (activo ? onRemove(d) : onAdd(d))}
             >
@@ -179,13 +186,6 @@ function MensualPicker({
           )
         })}
       </div>
-      <p className="recur-preview">
-        {t('recurrentes_mensual_preview', {
-          fechas: dias.length
-            ? dias.map(d => String(Math.min(d, diasDelMes(anio, 2)))).join(', ')
-            : t('recurrentes_sin_fechas'),
-        })}
-      </p>
     </div>
   )
 }

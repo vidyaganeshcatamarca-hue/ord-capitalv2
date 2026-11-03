@@ -335,17 +335,16 @@
 .recur-check {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   margin: 2px 0 0;
   font-size: 0.85rem;
   color: var(--text-2);
-  cursor: pointer;
 }
 
-.recur-check input {
-  width: auto;
-  margin: 0;
-  accent-color: var(--mint);
+/* El switch (ToggleSwitch) ya trae su propio tamaño y color; acá solo se
+   evita que herede el padding de los inputs de texto. */
+.recur-check button {
+  flex: 0 0 auto;
 }
 
 .recur-modo-btn {

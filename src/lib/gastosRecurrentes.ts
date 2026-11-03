@@ -105,9 +105,11 @@ export interface GastoRecurrenteInput {
 /** Reglas de forma que comparte el editor y que la base vuelve a validar. */
 export const RECURRENCIA_LIMITES = {
   diasSemanaMin: 1,
-  diasSemanaMax: 3,
+  /** Sin tope práctico: se pueden elegir los 7 días de la semana. */
+  diasSemanaMax: 7,
   diasMesMin: 1,
-  diasMesMax: 3,
+  /** Sin tope práctico: se pueden elegir los 31 días del mes. */
+  diasMesMax: 31,
   fechasAnioMin: 1,
 } as const
 

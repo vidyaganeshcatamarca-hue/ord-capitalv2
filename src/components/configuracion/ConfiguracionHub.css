@@ -61,7 +61,9 @@ button.config-hub-card {
 /* ── Groups per app mode (feature: menu-ajustes, T1) ───────────────────── */
 .config-hub-group-cards {
   display: grid;
-  gap: 12px;
+  /* El doble borde dibuja 4px por lado: el gap crece para que cada tarjeta
+     muestre sus dos bordes verdes sin pisar al vecino. */
+  gap: 16px;
 }
 
 /* U1 (S1) — each group renders as a tap-to-expand accordion card. Mirrors the
@@ -343,4 +345,20 @@ article.presupuesto-ciclo-card.config-hub-card {
   font-size: calc(0.85rem * var(--font-scale));
   line-height: 1.45;
   text-align: center;
+}
+
+/* ── Ronda 8 (dueño): doble borde verde por grupo ─────────────────────────
+   Cada grupo de Ajustes se tiene que leer como UNA unidad: todas las filas
+   que viven dentro de un grupo llevan doble borde verde grueso (borde +
+   contorno separados por un canal del color del fondo). Vale para todos los
+   submenús de todos los grupos, no solo para Datos y operaciones.
+   Va al final del archivo a propósito: así gana sobre los estados `:hover`
+   y `--soon` que cambian `border-color`, declarados más arriba. */
+.config-hub-group-cards > .config-hub-card,
+.config-hub-group-cards > .config-hub-card:hover,
+.config-hub-group-cards > .config-hub-card--soon:hover,
+.config-hub-group-cards > .config-hub-card--featured:hover {
+  border: 2px solid var(--mint);
+  outline: 2px solid var(--mint);
+  outline-offset: 3px;
 }

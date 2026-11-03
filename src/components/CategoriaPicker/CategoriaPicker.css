@@ -126,6 +126,12 @@
   cursor: default;
 }
 
+/* El encabezado de un grupo se puede tocar en cualquier parte de la fila para
+   desplegar sus subcategorías; el chevron de la derecha es solo el indicador. */
+.cp-heading--toggle:hover {
+  background: var(--surface-2, #3D3D3D);
+}
+
 .cp-option:hover {
   background: var(--surface-2, #3D3D3D);
 }

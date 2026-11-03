@@ -134,11 +134,18 @@ export function CategoriaPicker({
                   <div key={g.estructura_id} className="cp-group">
                     <div className="cp-row">
                       {esGrupo ? (
-                        // Encabezado: un padre con hijos no es destino de gasto.
-                        <div className="cp-heading">
+                        // Encabezado: un padre con hijos no es destino de gasto,
+                        // pero TODA la fila despliega las subcategorías (el
+                        // chevron queda como indicador, no como único botón).
+                        <button
+                          type="button"
+                          className="cp-heading cp-heading--toggle"
+                          onClick={() => setExpanded(abierto ? null : String(g.estructura_id))}
+                          aria-expanded={abierto}
+                        >
                           <span className="cp-icon"><CategoryIcon name={g.icono} size={16} /></span>
                           <span className="cp-name">{g.nombre_cuenta}</span>
-                        </div>
+                        </button>
                       ) : (
                         <button
                           type="button"

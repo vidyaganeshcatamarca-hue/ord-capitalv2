@@ -7,12 +7,12 @@ import { useEffect, useState } from 'react'
 import { t } from '@/locales/i18n'
 import { RecurrenciaEditor } from './RecurrenciaEditor'
 import { CategoriaPicker } from '@/components/CategoriaPicker/CategoriaPicker'
+import { ToggleSwitch } from '@/components/configuracion/ToggleSwitch'
 import { MODOS_CON_TARJETA } from '@/lib/gastosRecurrentes'
 import type {
   GastoRecurrenteInput,
   GastoRecurrenteRow,
   ModoRecurrencia,
-  TipoVariabilidad,
 } from '@/lib/gastosRecurrentes'
 
 export interface RubroOpcion {
@@ -53,7 +53,6 @@ export function GastoRecurrenteFormModal({
   const [billeteraId, setBilleteraId] = useState<number | null>(initial?.billetera_defecto_id ?? null)
   const [nombre, setNombre] = useState<string>(initial?.nombre_categoria ?? initial?.nombre ?? '')
   const [monto, setMonto] = useState<string>(initial?.monto_base != null ? String(initial.monto_base) : '')
-  const [variabilidad, setVariabilidad] = useState<TipoVariabilidad>(initial?.tipo_variabilidad ?? 'fijo')
   const [modo, setModo] = useState<ModoRecurrencia>(initial?.modo ?? 'mensual')
   const [diasSemana, setDiasSemana] = useState<number[]>(initial?.dias_semana ?? [])
   const [diasMes, setDiasMes] = useState<number[]>(initial?.dias_mes ?? (initial?.dia_del_mes ? [initial.dia_del_mes] : []))
@@ -84,22 +83,34 @@ export function GastoRecurrenteFormModal({
     }
   }, [origen, modo])
 
-  /** La misma forma que valida la base, adelantada en el cliente para no ir y volver. */
+  /**
+   * La misma forma que valida la base, adelantada en el cliente para no ir y volver.
+   * Con tarjeta NO se elige día: el día es el del cierre de la tarjeta y la
+   * ocurrencia se propone 3 días antes (ver fn_generar_recurrentes_hoy).
+   */
+  const conTarjeta = origen === 'tarjeta'
   const validarForma = (): string | null => {
-    if (modo === 'semanal' && (diasSemana.length < 1 || diasSemana.length > 3)) {
-      return t('recurrentes_error_semanal')
+    // Origen primero: es el dato sin el que no hay gasto posible, y el orden de
+    // los mensajes sigue el orden de los campos del formulario.
+    if (origen === 'tarjeta' && tarjetaId == null) {
+      return t('recurrentes_error_tarjeta')
     }
-    if (modo === 'mensual' && (diasMes.length < 1 || diasMes.length > 3)) {
-      return t('recurrentes_error_mensual')
+    if (!conTarjeta && billeteraId == null) {
+      return t('recurrentes_error_billetera')
+    }
+    if (!conTarjeta) {
+      if (modo === 'semanal' && diasSemana.length < 1) {
+        return t('recurrentes_error_semanal')
+      }
+      if (modo === 'mensual' && diasMes.length < 1) {
+        return t('recurrentes_error_mensual')
+      }
     }
     if (modo === 'anual' && fechasAnio.length < 1) {
       return t('recurrentes_error_anual')
     }
     if (modo === 'unica' && !fechaUnica) {
       return t('recurrentes_error_unica_fecha')
-    }
-    if (origen === 'tarjeta' && tarjetaId == null) {
-      return t('recurrentes_error_tarjeta')
     }
     if (fechaFin && fechaUnica && fechaFin < fechaUnica) {
       return t('recurrentes_error_fecha_fin')
@@ -123,19 +134,23 @@ export function GastoRecurrenteFormModal({
       estructura_egreso_id: estructuraId,
       nombre_custom: nombre.trim() || null,
       monto_base: montoNum,
-      tipo_variabilidad: variabilidad,
+      // El monto de un recurrente es SIEMPRE fijo: si cambió, se corrige la
+      // ocurrencia en cuarentena. No hay opción de promedio histórico.
+      tipo_variabilidad: 'fijo',
       // Origen mutuamente excluyente: el CHECK de la tabla tambien lo defiende.
       billetera_defecto_id: origen === 'billetera' ? billeteraId : null,
       tarjeta_id: origen === 'tarjeta' ? tarjetaId : null,
       es_usd: origen === 'tarjeta' ? esUsd : false,
       modo,
-      dias_semana: modo === 'semanal' ? diasSemana : null,
-      dias_mes: modo === 'mensual' ? diasMes : null,
+      // Con tarjeta no hay día: lo define el cierre de la tarjeta.
+      dias_semana: !conTarjeta && modo === 'semanal' ? diasSemana : null,
+      dias_mes: !conTarjeta && modo === 'mensual' ? diasMes : null,
       fechas_anio: modo === 'anual' ? fechasAnio : null,
       fecha_unica: modo === 'unica' ? fechaUnica : null,
-      fecha_fin: fechaFin || null,
+      // Única vez: la ocurrencia es una sola, no hay vigencia que fijar.
+      fecha_fin: modo === 'unica' ? null : fechaFin || null,
       // Transición: la fase 2 del esquema elimina estas dos columnas.
-      dia_del_mes: modo === 'mensual' && diasMes.length ? diasMes[0] : null,
+      dia_del_mes: !conTarjeta && modo === 'mensual' && diasMes.length ? diasMes[0] : null,
       frecuencia: modo === 'anual' || modo === 'unica' ? 'anual' : 'mensual',
     })
   }
@@ -176,33 +191,19 @@ export function GastoRecurrenteFormModal({
             />
           </label>
 
-          <div className="recur-row">
-            <label className="recur-field">
-              <span>{t('recurrentes_campo_monto')}</span>
-              <input
-                className="recur-input"
-                type="number"
-                inputMode="decimal"
-                min="0.01"
-                step="0.01"
-                value={monto}
-                onChange={e => setMonto(e.target.value)}
-                required
-              />
-            </label>
-
-            <label className="recur-field">
-              <span>{t('recurrentes_campo_variabilidad')}</span>
-              <select
-                className="recur-input"
-                value={variabilidad}
-                onChange={e => setVariabilidad(e.target.value as TipoVariabilidad)}
-              >
-                <option value="fijo">{t('recurrentes_variabilidad_fijo')}</option>
-                <option value="promedio_historico">{t('recurrentes_variabilidad_promedio')}</option>
-              </select>
-            </label>
-          </div>
+          <label className="recur-field">
+            <span>{t('recurrentes_campo_monto')}</span>
+            <input
+              className="recur-input"
+              type="number"
+              inputMode="decimal"
+              min="0.01"
+              step="0.01"
+              value={monto}
+              onChange={e => setMonto(e.target.value)}
+              required
+            />
+          </label>
 
           {/* Con que se paga: billetera o tarjeta, como el modal de movimiento
               manual. Nunca los dos: el CHECK de la tabla tambien lo defiende. */}
@@ -233,15 +234,17 @@ export function GastoRecurrenteFormModal({
           {origen === 'billetera' ? (
             <label className="recur-field">
               <span>{t('recurrentes_campo_billetera')}</span>
+              {/* Siempre hay billetera: no existe el recurrente sin origen. */}
               <select
                 className="recur-input"
                 value={billeteraId ?? ''}
                 onChange={e => setBilleteraId(e.target.value ? Number(e.target.value) : null)}
               >
-                <option value="">{t('recurrentes_sin_billetera')}</option>
+                <option value="" disabled>{t('recurrentes_elegir_billetera')}</option>
                 {billeteras.map(b => (
                   <option key={b.billetera_id} value={b.billetera_id}>
-                    {b.nombre} ({b.moneda})
+                    {/* El nombre puede ser una clave i18n (billetera semilla «efectivo»). */}
+                    {t(b.nombre)} ({b.moneda})
                   </option>
                 ))}
               </select>
@@ -263,17 +266,17 @@ export function GastoRecurrenteFormModal({
                   ))}
                 </select>
               </label>
-              <label className="recur-check">
-                <input
-                  type="checkbox"
-                  checked={esUsd}
-                  onChange={e => setEsUsd(e.target.checked)}
-                />
+              {/* El interruptor es el ToggleSwitch de la app, no un checkbox:
+                  el reset global de index.css (input { -webkit-appearance:
+                  none }) borra el tilde nativo y el control se veía apagado
+                  aunque el estado fuera true. */}
+              <div className="recur-check">
+                <ToggleSwitch checked={esUsd} onChange={setEsUsd} size="sm" />
                 <span>{t('recurrentes_es_usd')}</span>
-              </label>
-              {/* El aviso no es decorativo: explica por que no hay campo fecha
-                  ni cuotas (siempre 1, es una suscripcion). */}
-              <p className="recur-hint">{t('recurrentes_tarjeta_hint')}</p>
+              </div>
+              {/* El aviso no es decorativo: explica por que no hay campo día
+                  ni cuotas (siempre 1, es una suscripción). Vive en el editor
+                  de recurrencia, junto al bloque mensual; acá no se repite. */}
             </>
           )}
 
@@ -284,7 +287,7 @@ export function GastoRecurrenteFormModal({
             fechasAnio={fechasAnio}
             fechaUnica={fechaUnica}
             fechaFin={fechaFin}
-            conTarjeta={origen === 'tarjeta'}
+            conTarjeta={conTarjeta}
             onModo={setModo}
             onDiasSemana={setDiasSemana}
             onDiasMes={setDiasMes}
