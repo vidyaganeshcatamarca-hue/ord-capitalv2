@@ -128,3 +128,23 @@ Empezá la ejecución e implementación completa del módulo OCR."
 Las migraciones `temp_sql/95..99` **no se aplicaron**. Requieren OK explícito del dueño
 (AGENTS.md regla 1) y, una vez creadas, actualizar `funcionesSQL/` + `start_info/indice de funciones.md`
 (reglas 5 y 7).
+
+### L7 — prueba de UI real (reporte del dueño)
+
+1. **El modal se dibujaba sin overlay ni panel.** Causa: usaba `.modal-overlay` / `.modal-content`, que
+   NO son clases globales — viven en `SaneamientoPage.css`, `EditarCuarentenaModal.css` y
+   `Presupuestos.css`. El modal se monta desde `AppLayout`, donde ninguna de esas hojas está cargada.
+   Se veía suelto sobre la Home y el botón "Enviar ticket" quedaba debajo de la barra inferior.
+   Fix: `createPortal` a `document.body` + clases propias `ocr-overlay` / `ocr-modal`, con el cuerpo
+   como único contenedor scrolleable.
+2. **`POST https://api.ordcapital.app/v1/ocr/jobs` responde 404**, mientras que `POST /v1/voice/jobs`
+   en el mismo host responde 401 (existe y pide auth). El servicio OCR **no está publicado en ese
+   host con esa ruta**. Medido con curl, no inferido.
+   - Diferencia (PRD §127): el contrato v1 dice `POST /v1/ocr/jobs` sin host; `src/ocr/contract.ts`
+     asumió el host compartido de Voice.
+   - Impacto: toda subida falla con 404 antes de llegar al backend.
+   - Ajuste mínimo aplicado: la base es ahora configuración (`VITE_OCR_API_BASE_URL`) resuelta en
+     runtime, sin tocar el contrato ni el backend.
+   - El mensaje de error de subida dejó de ser "No encontramos este ticket en el servidor" (que era
+     el texto de polling) y pasó a ser el genérico de subida: mismo status, distinto significado
+     según la superficie.
