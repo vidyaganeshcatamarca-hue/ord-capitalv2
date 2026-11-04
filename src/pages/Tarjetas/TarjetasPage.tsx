@@ -929,9 +929,15 @@ const handleLegacySubmit = async () => {
               <div className="tarjeta-footer-item">
                 <CategoryIcon name="CircleDollarSign" size={14} /> {t('cards_available_label')}: <b>{fmtARS(tc.un_pago_disponible)}</b>
               </div>
-              <div className="tarjeta-footer-item">
-                <CategoryIcon name="ClipboardList" size={14} /> {t('cards_installments_label')}: <b>{fmtARS(tc.cuotas_disponible)}</b>
-              </div>
+              {/* F-13: si la tarjeta no tiene limite de cuotas configurado (0), la
+                  resta del backend da un negativo o un cero que parece un dato real
+                  (MC UALA mostraba -34.333 y NARANJA X 0 con 401.192 impagos). Sin
+                  limite configurado no hay nada que mostrar. */}
+              {Number(tc.limite_cuotas_total) > 0 && (
+                <div className="tarjeta-footer-item">
+                  <CategoryIcon name="ClipboardList" size={14} /> {t('cards_installments_label')}: <b>{fmtARS(tc.cuotas_disponible)}</b>
+                </div>
+              )}
             </div>
           </>
         )}
@@ -2485,10 +2491,17 @@ export function PagarModal({
                                 : Math.max(0, Math.max(0, Number(objetivoPago) - favorNum) - otras))
                               : Math.max(0, necesitoARS - otras)
                             const montoMax = w ? Math.max(0, Math.min(Number(w.saldo_actual), faltaSeccion)) : 0
+                            // F-35: si el usuario ya escribio un importe, elegir la cuenta no
+                            // lo pisa. Antes el autollenado lo reemplazaba por el total del
+                            // resumen y desaparecia la pregunta del excedente, asi que pagar
+                            // de mas solo funcionaba tipeando despues de elegir la cuenta.
+                            const yaEscribio = (parseFloat(linea.monto) || 0) > 0
                             updateLine(idx, {
                               billetera_id: id,
                               target_moneda_cuota: undefined,
-                              monto: montoMax > 0 ? String(Math.floor(montoMax * 100) / 100) : '',
+                              monto: yaEscribio
+                                ? linea.monto
+                                : montoMax > 0 ? String(Math.floor(montoMax * 100) / 100) : '',
                             })
                           }}
                           placeholder={t('pay_multi_wallet_placeholder')}
@@ -2628,10 +2641,14 @@ export function PagarModal({
                                 : Math.max(0, necesitoUSD - otrasUsd)
                               const faltaSeccion = payInPesos ? faltaUsdSeccion * cotizacion : faltaUsdSeccion
                               const montoMax = w ? Math.max(0, Math.min(Number(w.saldo_actual), faltaSeccion)) : 0
+                              // F-35: mismo criterio que la linea en moneda local.
+                              const yaEscribio = (parseFloat(linea.monto) || 0) > 0
                               updateLineUsd(idx, {
                                 billetera_id: id,
                                 target_moneda_cuota: target,
-                                monto: montoMax > 0 ? String(Math.floor(montoMax * 100) / 100) : '',
+                                monto: yaEscribio
+                                  ? linea.monto
+                                  : montoMax > 0 ? String(Math.floor(montoMax * 100) / 100) : '',
                               })
                             }}
                             placeholder={t('pay_multi_wallet_placeholder')}
