@@ -56,6 +56,7 @@ export const errors = {
 error_transfer_different_currencies: "Operación inválida: No se permiten transferencias directas entre cuentas de diferentes monedas ({currency_from} a {currency_to}).",
   error_no_sufficient_balance_wallets: "No tienes saldo suficiente en ninguna billetera.",
   error_wallet_not_found: "La cuenta seleccionada ya no está disponible.",
+  error_card_not_found: "No encontramos esa tarjeta. Recargá la pantalla e intentá de nuevo.",
   error_quarantine_no_wallet: "El movimiento no tiene cuenta asignada. Editalo antes de aprobarlo.",
   error_wallet_inactive: "La cuenta seleccionada está inactiva. Actívala o elige otra.",
   error_destination_required: "Selecciona la cuenta destino.",
