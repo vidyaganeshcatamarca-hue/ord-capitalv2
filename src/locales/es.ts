@@ -11,6 +11,7 @@ export const errors = {
 
   // Validaciones de campos
   error_field_required: "El campo {field} es obligatorio.",
+  error_invalid_day_range: "{field} tiene que ser un número entero entre 1 y 31.",
   card_load_legacy_cuotas_btn: "Cargar cuotas anteriores",
 
   card_legacy_btn_entry: "Cuotas anteriores",
@@ -56,6 +57,7 @@ export const errors = {
 error_transfer_different_currencies: "Operación inválida: No se permiten transferencias directas entre cuentas de diferentes monedas ({currency_from} a {currency_to}).",
   error_no_sufficient_balance_wallets: "No tienes saldo suficiente en ninguna billetera.",
   error_wallet_not_found: "La cuenta seleccionada ya no está disponible.",
+  error_card_not_found: "No encontramos esa tarjeta. Recargá la pantalla e intentá de nuevo.",
   error_quarantine_no_wallet: "El movimiento no tiene cuenta asignada. Editalo antes de aprobarlo.",
   error_wallet_inactive: "La cuenta seleccionada está inactiva. Actívala o elige otra.",
   error_destination_required: "Selecciona la cuenta destino.",
@@ -238,6 +240,8 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   cards_installment_refinanced: 'Cuota refinanciada — vence el {date}',
   error_invalid_cuotas_integer: 'La cantidad de cuotas debe ser un número entero.',
   pay_blocked_reason_no_wallet: 'Elegí la cuenta desde la que pagás.',
+  pay_real_statement_shortfall: 'El pago no cubre el resumen real del banco: faltan {falta}.',
+  error_resumen_real_no_cubierto: 'El pago no cubre el resumen real del banco. Pagá el monto que declaraste.',
   error_card_has_commitments: 'No podés archivar esta tarjeta porque tiene cuotas o compromisos pendientes. Terminá de pagarlos y volvé a intentar.',
   card_archive_confirm: '¿Archivar «{name}»? Va a salir de tu lista, pero no se borra nada: podés volver a activarla cuando quieras desde «Ver archivadas».',
   cards_debt_usd_includes: 'incluye {monto} en dólares',
@@ -302,7 +306,6 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
    pay_resumen_real_toggle: "¿El resumen real del banco es distinto?",
    pay_resumen_real_label: "Resumen real del banco",
    pay_resumen_real_hint: "Se registra un ajuste por la diferencia, sin tocar tus cuotas.",
-  pay_resumen_real_falta: "Te faltan pagar {falta} del resumen real. Si no los pagás ahora, quedan imputados como Diferencia Tarjeta.",
    pay_resumen_real_dif: "Ajuste: {monto}",
    pay_resumen_real_no: "No",
    pay_resumen_real_yes: "Sí",

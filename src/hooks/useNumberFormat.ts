@@ -224,7 +224,14 @@ export function useNumberFormat() {
   // `lib/format.ts` is called from ~22 files that cannot use a hook, so the resolved
   // context is published for them. Without this, those screens kept formatting with
   // Argentine rules (locale es-AR, 0 decimals, ARS by default).
+  //
+  // F-08: mientras la región no esté resuelta NO se publica nada. Ese contexto es
+  // global y lo lee media app: una instancia que monta con `region = null` publicaba
+  // ARS con los separadores por defecto y le cambiaba la moneda a TODA la pantalla
+  // hasta que llegara su propia región. Se veía al abrir el modal de pago: la tarjeta
+  // de fondo pasaba de «495,833.33 GBP» a «495.833 ARS».
   useEffect(() => {
+    if (!region) return
     setFormatContext({
       locale,
       localCurrency: region?.localCurrency || 'ARS',

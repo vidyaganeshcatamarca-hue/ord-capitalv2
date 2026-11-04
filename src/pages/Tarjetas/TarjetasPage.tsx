@@ -172,6 +172,18 @@ function getSemaforoIcon(alerta: string) {
   return 'TriangleAlert'
 }
 
+/**
+ * F-07: `min`/`max` en un <input type="number"> no frena nada cuando el botón que
+ * guarda no es un submit. El día viajaba crudo y rebotaba en la constraint de la
+ * tabla, que devuelve el texto de Postgres a la vista. Vacío no es inválido: el alta
+ * aplica sus valores por defecto y la edición guarda null (la columna lo acepta).
+ */
+function diaFueraDeRango(raw: string): boolean {
+  if (!raw.trim()) return false
+  const n = Number(raw)
+  return !Number.isInteger(n) || n < 1 || n > 31
+}
+
 function getUrgencyMsg(key: string, dias: number): string {
   const map: Record<string, string> = {
     msg_vencimiento_critico: t('card_due_critical', { dias }),
@@ -604,6 +616,14 @@ const handleLegacySubmit = async () => {
 
   const handleCreate = async () => {
     if (!formNombre.trim()) { showToast(t('cards_name_required'), 'error'); return }
+    if (diaFueraDeRango(formDiaVenc)) {
+      showToast(t('error_invalid_day_range', { field: t('card_form_due_day') }), 'error')
+      return
+    }
+    if (diaFueraDeRango(formDiaCierre)) {
+      showToast(t('error_invalid_day_range', { field: t('card_form_closing_day') }), 'error')
+      return
+    }
     try {
       setFormSubmitting(true)
       await rpc('fn_crear_tarjeta_credito', {
@@ -631,12 +651,22 @@ const handleLegacySubmit = async () => {
 
   const handleEdit = async () => {
     if (!targetCard) return
+    if (diaFueraDeRango(formDiaVenc)) {
+      showToast(t('error_invalid_day_range', { field: t('card_form_due_day') }), 'error')
+      return
+    }
+    if (diaFueraDeRango(formDiaCierre)) {
+      showToast(t('error_invalid_day_range', { field: t('card_form_closing_day') }), 'error')
+      return
+    }
     try {
       setFormSubmitting(true)
       await rpc('fn_editar_tarjeta_credito', {
         p_tarjeta_id: targetCard.tarjeta_id,
         p_nombre_tarjeta: formNombre.trim() || null,
-        p_banco: formBanco.trim() || null,
+        // F-10: acá `''` significa «borrá el banco» y `null` «no lo toques».
+        // Mandar null cuando el campo está vacío era lo que lo dejaba pegado.
+        p_banco: formBanco.trim(),
         p_dia_vencimiento: formDiaVenc ? parseInt(formDiaVenc) : null,
         p_dia_cierre: formDiaCierre ? parseInt(formDiaCierre) : null,
         p_limite_un_pago: formLimiteUnPago ? parseFloat(formLimiteUnPago) : null,
@@ -1024,7 +1054,10 @@ const handleLegacySubmit = async () => {
                     <div className="termometro-metric-label">{t("card_stress_index")}</div>
                   </div>
                   <div className="termometro-metric">
-                    <div className="termometro-metric-value">{fmtMoneda(Number(termometro.cuota_proxima), ((termometro.moneda_proxima ?? 'ARS') as 'ARS'|'USD'))}</div>
+                    {/* F-05: el termómetro devuelve `moneda_proxima = NULL` mientras la
+                        cuenta no tiene 30 días de datos. Caer a 'ARS' pintaba «0.0 ARS»
+                        en una cuenta en libras; la moneda local es la única correcta. */}
+                    <div className="termometro-metric-value">{fmtMoneda(Number(termometro.cuota_proxima), termometro.moneda_proxima ?? localCurrency ?? undefined)}</div>
                     <div className="termometro-metric-label">
                       {t("card_next_installment")}
                       {termometro.fecha_proxima && (
@@ -1327,7 +1360,7 @@ const handleLegacySubmit = async () => {
           <ConfirmModal
             isOpen={showArchiveConfirm}
             title={t('cards_archive')}
-            message={`t("card_archive_confirm", { name: targetCard?.nombre_tarjeta })`}
+            message={t('card_archive_confirm', { name: targetCard?.nombre_tarjeta })}
             confirmText={t('btn_archive')}
             type="danger"
             onConfirm={handleArchive}
@@ -1751,7 +1784,7 @@ resumenEstimado={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_tot
           <ConfirmModal
             isOpen={showArchiveConfirm}
             title={t('cards_archive')}
-            message={`t("card_archive_confirm", { name: targetCard?.nombre_tarjeta })`}
+            message={t('card_archive_confirm', { name: targetCard?.nombre_tarjeta })}
             confirmText={t('btn_archive')}
             type="danger"
             onConfirm={handleArchive}
@@ -2112,9 +2145,16 @@ export function PagarModal({
   // resumen real cuando esta declarado, o el ciclo cuando no.
   // El modal de overpay se muestra cuando hay excedente para que el user elija
   // si va a saldo a favor o se asigna a adelantar cuotas futuras.
-  const sobrante = realNum !== null
+  // F-09: la resta es en punto flotante y no tenia tolerancia. Una cuota de
+  // 25.000/6 se precarga con dos decimales (4.166,67) contra un ciclo de
+  // 4.166,6666..., y la diferencia de 0,0033 abria el flujo de "que hacemos con
+  // el excedente" anunciando 0.00 de excedente. Se exige al menos una unidad
+  // entera para considerarlo real; el importe mostrado sigue siendo el exacto,
+  // para no anunciar un numero distinto del que se va a guardar.
+  const sobranteBruto = realNum !== null
     ? Math.max(0, pagoTotal - realNum)  // pago total vs resumen real
     : Math.max(0, pagoTotal - cicloBruto)  // pago total vs ciclo
+  const sobrante = Math.round(sobranteBruto) >= 1 ? sobranteBruto : 0
 
   // === Fase 4 multi-moneda ===
   // Pago por moneda según la billetera (o favor) de cada línea.
@@ -2211,10 +2251,17 @@ export function PagarModal({
   const faltaVentanaEquiv = Math.max(0, Math.max(0, cicloBruto - favorNum) - pagoCubiertoEquiv)
   const pagoParcial = totalPagarArsEquiv > 0 && faltaVentanaEquiv > 0.5
   const submitEnabled = favorCubreTotal || !allLinesEmpty
-  const submitDisabled = formSubmitting || lineasInvalidas || !submitEnabled || overBudget
+  // S8: si el usuario declara un resumen real del banco, el pago tiene que cubrirlo.
+  // Antes se podía pagar menos y la diferencia quedaba como deuda nueva.
+  const faltaParaBanco = realNum !== null ? Math.max(0, realNum - pagoTotal) : 0
+  const submitDisabled = formSubmitting || lineasInvalidas || !submitEnabled || overBudget || faltaParaBanco > 0.01
   // TC-06: el botón bloqueado decía que no sin decir por qué. El caso real es
   // "hay un importe escrito pero ninguna cuenta elegida".
-  const blockedReason = !formSubmitting && lineasInvalidas ? t('pay_blocked_reason_no_wallet') : null
+  const blockedReason = !formSubmitting
+    ? (faltaParaBanco > 0.01
+        ? t('pay_real_statement_shortfall', { falta: fmtARS(faltaParaBanco) })
+        : lineasInvalidas ? t('pay_blocked_reason_no_wallet') : null)
+    : null
 
   const updateLine = (index: number, patch: Partial<PagarLine>) => {
     const next = pagarLineas.map((l, i) => i === index ? { ...l, ...patch } : l)
@@ -2744,9 +2791,9 @@ export function PagarModal({
                 {resumenReal !== '' && Math.abs(parseFloat(resumenReal) - cicloBruto) > 0.01 && (
                   <div className="pay-resumen-real-dif">{t('pay_resumen_real_dif', { monto: fmtARS(parseFloat(resumenReal) - cicloBruto) })}</div>
                 )}
-                {realNum !== null && faltaRepartir > 0.01 && (
-                  <div className="pay-resumen-real-falta">{t('pay_resumen_real_falta', { falta: fmtARS(faltaRepartir) })}</div>
-                )}
+                {/* S8: el aviso de "queda imputado como Diferencia Tarjeta" se quito: con
+                    el resumen declarado hay que pagarlo y el boton se bloquea con el
+                    motivo debajo, asi que prometer que se puede dejar impago era falso. */}
               </>
             )}
           </div>
