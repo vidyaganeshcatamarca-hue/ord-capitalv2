@@ -22,11 +22,16 @@
 --   el bloqueo se aplica en `fn_eliminar_estructura_egreso`, que es el camino de
 --   borrado del usuario.
 --
---   PENDIENTE CONOCIDO: `fn_migrar_y_eliminar_estructura_egreso` (migrar y borrar
---   el origen) tambien puede eliminar esta fila si el usuario migra DESDE
---   `ocr_unrecognized`. No se reescribe aqui porque exigiria reproducir su cuerpo
---   completo; el efecto es acotado (solo se reescriben `estructura_egreso_id` y la
---   fila se re-provisiona en la proxima confirmacion, sin perder importes).
+--   MIGRAR Y BORRAR NO SE BLOQUEA, y es correcto
+--   "Migrar cuentas" no es una funcionalidad de la app: es el paso previo a
+--   eliminar una cuenta que NO es de sistema. Como `ocr_unrecognized` es de
+--   sistema, el usuario no la alcanza: no se muestra en el menu de categorias ni
+--   en ningun selector, asi que no hay migracion posible ni tiene sentido.
+--   La proteccion es de VISIBILIDAD (front: categoryFilters), no de RPC.
+--   Que la fila sea accesible por SQL directo no es un problema: el usuario no
+--   escribe SQL. Y el DELETE directo DEBE quedar abierto para el borrado en
+--   cascada de un usuario (fn_borrar_datos_usuario), que no es una RPC de app.
+--
 --
 -- IDENTIFICADOR ESTABLE
 --   El esquema real de `p_estructuras_egresos` no tiene columna `codigo`; las
