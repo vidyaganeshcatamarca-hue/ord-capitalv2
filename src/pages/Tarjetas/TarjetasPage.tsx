@@ -664,7 +664,9 @@ const handleLegacySubmit = async () => {
       await rpc('fn_editar_tarjeta_credito', {
         p_tarjeta_id: targetCard.tarjeta_id,
         p_nombre_tarjeta: formNombre.trim() || null,
-        p_banco: formBanco.trim() || null,
+        // F-10: acá `''` significa «borrá el banco» y `null` «no lo toques».
+        // Mandar null cuando el campo está vacío era lo que lo dejaba pegado.
+        p_banco: formBanco.trim(),
         p_dia_vencimiento: formDiaVenc ? parseInt(formDiaVenc) : null,
         p_dia_cierre: formDiaCierre ? parseInt(formDiaCierre) : null,
         p_limite_un_pago: formLimiteUnPago ? parseFloat(formLimiteUnPago) : null,
