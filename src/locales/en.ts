@@ -1341,6 +1341,7 @@ export const recurrentes = {
   recurrentes_modo_unica: "One time",
   recurrentes_unica_hint: "Pick the exact date. It happens once and does not repeat.",
   recurrentes_unica_el: "one time on {fecha}",
+  recurrentes_elegir_fecha: "Pick a date",
   recurrentes_campo_fecha_unica: "Occurrence date",
   recurrentes_campo_fecha_fin: "End date (optional)",
   recurrentes_vigencia_hint: "Leave it empty to repeat forever.",

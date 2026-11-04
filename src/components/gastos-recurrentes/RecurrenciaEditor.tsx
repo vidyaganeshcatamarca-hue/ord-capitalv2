@@ -11,6 +11,7 @@ import {
   RECURRENCIA_LIMITES,
   buildFechaAnual,
   diasDelMes,
+  fechaVisible,
   parseFechaAnual,
   type ModoRecurrencia,
 } from '@/lib/gastosRecurrentes'
@@ -128,16 +129,20 @@ export function RecurrenciaEditor({
       {modo === 'unica' && (
         <div className="recur-block">
           <p className="recur-hint">{t('recurrentes_unica_hint')}</p>
-          <label className="recur-field">
+          <div className="recur-field">
             <span>{t('recurrentes_campo_fecha_unica')}</span>
-            <input
-              className="recur-input"
-              type="date"
+            {/* El input nativo de fecha se ve VACÍO en varios navegadores de
+                Android: no sugiere nada y parece un campo roto. Se dibuja el
+                texto nosotros y el nativo queda transparente encima, así el
+                calendario lo sigue abriendo el sistema. */}
+            <CampoFecha
               value={fechaUnica}
               min={hoyISO()}
-              onChange={e => onFechaUnica(e.target.value)}
+              placeholder={t('recurrentes_elegir_fecha')}
+              ariaLabel={t('recurrentes_campo_fecha_unica')}
+              onChange={onFechaUnica}
             />
-          </label>
+          </div>
         </div>
       )}
 
@@ -146,16 +151,16 @@ export function RecurrenciaEditor({
           Única vez no tiene vigencia: la ocurrencia es una sola. */}
       {modo !== 'unica' && (
         <div className="recur-block">
-          <label className="recur-field">
+          <div className="recur-field">
             <span>{t('recurrentes_campo_fecha_fin')}</span>
-            <input
-              className="recur-input"
-              type="date"
+            <CampoFecha
               value={fechaFin}
               min={hoyISO()}
-              onChange={e => onFechaFin(e.target.value)}
+              placeholder={t('recurrentes_elegir_fecha')}
+              ariaLabel={t('recurrentes_campo_fecha_fin')}
+              onChange={onFechaFin}
             />
-          </label>
+          </div>
           <p className="recur-hint">{t('recurrentes_vigencia_hint')}</p>
         </div>
       )}
@@ -242,6 +247,47 @@ function AnualPicker({
         ))}
       </div>
     </div>
+  )
+}
+
+/**
+ * Campo de fecha con placeholder visible.
+ *
+ * El `<input type="date">` nativo, cuando está vacío, no muestra ninguna pista
+ * en varios navegadores de Android: queda un rectángulo vacío que parece roto.
+ * Acá el texto lo pinta el componente (placeholder o la fecha ya elegida) y el
+ * input nativo va transparente encima, ocupando toda la caja: el toque en
+ * cualquier parte abre el calendario del sistema, que es lo que el usuario
+ * espera. En escritorio, cualquier click dispara `showPicker()`.
+ */
+function CampoFecha({
+  value, min, placeholder, ariaLabel, onChange,
+}: {
+  value: string
+  min?: string
+  placeholder: string
+  ariaLabel: string
+  onChange: (fecha: string) => void
+}) {
+  return (
+    <label className="recur-date">
+      <input
+        className="recur-date-input"
+        type="date"
+        value={value}
+        min={min}
+        aria-label={ariaLabel}
+        onChange={e => onChange(e.target.value)}
+        onClick={e => {
+          // showPicker() necesita un gesto del usuario: el click lo es.
+          try { e.currentTarget.showPicker?.() } catch { /* el nativo se abre solo */ }
+        }}
+      />
+      <span className={`recur-date-text${value ? ' is-set' : ''}`}>
+        {value ? fechaVisible(value, t) : placeholder}
+      </span>
+      <span className="recur-date-icon" aria-hidden="true">📅</span>
+    </label>
   )
 }
 
