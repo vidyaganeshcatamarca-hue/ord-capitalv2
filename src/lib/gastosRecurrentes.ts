@@ -41,6 +41,13 @@ export type FechaAnual = number
 /** Días ISO: 1 = lunes … 7 = domingo. */
 export type DiaSemana = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
+/**
+ * Un recurrente es de egreso o de ingreso, nunca de las dos.
+ * Un ingreso no paga con tarjeta ni lleva categoría de egreso: cobra en una
+ * billetera destino. La fuente de ingreso es opcional, como en la carga manual.
+ */
+export type NaturalezaRecurrente = 'egreso' | 'ingreso'
+
 /** Fila tal como la devuelve `fn_listar_gastos_recurrentes()`. */
 export interface GastoRecurrenteRow {
   recurrente_id: number
@@ -79,10 +86,23 @@ export interface GastoRecurrenteRow {
    * usuario puede tener un recurrente en BRL y otro en ARS.
    */
   moneda: string | null
+  naturaleza: NaturalezaRecurrente
+  /** Fuente de ingreso (`p_ingresos.producto_id`). null = ingreso sin fuente. */
+  estructura_ingreso_id: number | null
+  ingreso_nombre: string | null
+  ingreso_icono: string | null
+  /** Billetera donde entra el dinero de un ingreso recurrente. */
+  billetera_destino_id: number | null
+  billetera_destino_nombre: string | null
 }
 
 /** Payload de alta y edición: los mismos campos, sin el id. */
 export interface GastoRecurrenteInput {
+  /** Ausente = egreso (compatibilidad con el bundle viejo). */
+  naturaleza?: NaturalezaRecurrente
+  /** Solo ingreso: fuente opcional y billetera donde entra la plata. */
+  estructura_ingreso_id?: number | null
+  billetera_destino_id?: number | null
   estructura_egreso_id: number | null
   nombre_custom: string | null
   monto_base: number

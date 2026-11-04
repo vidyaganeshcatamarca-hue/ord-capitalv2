@@ -63,3 +63,27 @@ export function useGenerarRecurrentes() {
     })()
   }, [session])
 }
+
+/**
+ * Corre el motor una vez, sin la guarda diaria.
+ *
+ * La guarda existe para no repetir la llamada en cada render, pero tiene un
+ * costo visible: un recurrente creado después de la primera apertura del día
+ * no mostraba su ocurrencia de hoy hasta mañana. Se llama al guardar un alta o
+ * una edición; el motor es idempotente (`ON CONFLICT DO NOTHING`), así que
+ * correrlo de nuevo nunca duplica nada.
+ */
+export async function generarRecurrentesAhora(): Promise<void> {
+  const hoy = fechaLocalISO()
+  try {
+    const { error } = await supabase.rpc('fn_generar_recurrentes_usuario', { p_hoy: hoy })
+    if (error) return
+    try {
+      localStorage.setItem(STORAGE_KEY, hoy)
+    } catch {
+      // sin storage: la próxima apertura lo reintenta
+    }
+  } catch {
+    // red caída: la próxima apertura lo reintenta
+  }
+}

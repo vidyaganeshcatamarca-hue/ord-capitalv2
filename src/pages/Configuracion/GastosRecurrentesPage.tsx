@@ -12,6 +12,7 @@ import { nombreVisibleRecurrente } from '@/lib/gastosRecurrentes'
 import { isUserEditableCategory } from '@/lib/categoryFilters'
 import { rpc } from '@/lib/supabase'
 import { useGastosRecurrentes } from '@/hooks/useGastosRecurrentes'
+import { generarRecurrentesAhora } from '@/hooks/useGenerarRecurrentes'
 import type {
   GastoRecurrenteInput,
   GastoRecurrenteRow,
@@ -36,12 +37,21 @@ interface RubroArbol {
   hijos?: Array<{ estructura_id: number; nombre_cuenta: string; icono: string }>
 }
 
+/** Fuente de ingreso, como la devuelve `fn_listar_categorias_ingreso`. */
+interface FuenteIngreso {
+  producto_id: number
+  nombre: string
+  icono: string
+}
+
 export function GastosRecurrentesPage() {
   const { items, loading, refresh, create, update, pause, resume, remove } = useGastosRecurrentes()
   const { showToast } = useToast()
 
   const [loadError, setLoadError] = useState<string | null>(null)
   const [rubros, setRubros] = useState<RubroOpcion[]>([])
+  /** Fuentes de ingreso como grupos sin hijos: el selector las deja elegir. */
+  const [fuentesIngreso, setFuentesIngreso] = useState<RubroOpcion[]>([])
   const [billeteras, setBilleteras] = useState<BilleteraOpcion[]>([])
   const [tarjetas, setTarjetas] = useState<TarjetaOpcion[]>([])
 
@@ -58,8 +68,10 @@ export function GastosRecurrentesPage() {
   /** Rubros hoja, billeteras y tarjetas para los selectores del modal. */
   const loadCatalogos = useCallback(async () => {
     try {
-      const [arbol, bills, tjs] = await Promise.all([
+      const [arbol, ingrCat, bills, tjs] = await Promise.all([
         rpc<RubroArbol[]>('fn_obtener_arbol_categorias').catch(() => [] as RubroArbol[]),
+        // Mismo origen que el alta manual de un ingreso.
+        rpc<FuenteIngreso[]>('fn_listar_categorias_ingreso').catch(() => [] as FuenteIngreso[]),
         rpc<BilleteraOpcion[]>('fn_obtener_billeteras_activas').catch(() => [] as BilleteraOpcion[]),
         // Mismo origen que el modal de movimiento manual: solo las activas.
         rpc<TarjetaOpcion[]>('fn_reporte_mapa_tarjetas').catch(() => [] as TarjetaOpcion[]),
@@ -98,6 +110,14 @@ export function GastosRecurrentesPage() {
           hijos: grupo.hijos,
         }))
       setRubros(grupos)
+      // Las fuentes de ingreso no tienen jerarquía: cada una es un grupo sin
+      // hijos, que es la forma que el selector deja elegir.
+      setFuentesIngreso((ingrCat ?? []).map(fuente => ({
+        estructura_id: fuente.producto_id,
+        nombre_cuenta: t(fuente.nombre),
+        icono: String(fuente.icono ?? '').trim() || '💵',
+        hijos: [],
+      })))
       setBilleteras(bills ?? [])
       setTarjetas(tjs ?? [])
     } catch {
@@ -131,6 +151,14 @@ export function GastosRecurrentesPage() {
     setFormOpen(true)
   }
 
+  /** Cada pestaña es una naturaleza: egresos o ingresos, nunca las dos. */
+  const egresos = items.filter(item => item.naturaleza !== 'ingreso')
+  const ingresos = items.filter(item => item.naturaleza === 'ingreso')
+  const visibles = tab === 'egresos' ? egresos : ingresos
+  const naturalezaModal = editing
+    ? editing.naturaleza
+    : (tab === 'ingresos' ? 'ingreso' : 'egreso')
+
   const abrirEdicion = (item: GastoRecurrenteRow) => {
     setEditing(item)
     setFormError(null)
@@ -150,6 +178,9 @@ export function GastosRecurrentesPage() {
       }
       setFormOpen(false)
       setEditing(null)
+      // Si la primera ocurrencia cae hoy, tiene que estar en la bandeja en el
+      // acto: la guarda diaria del motor ya se consumió al abrir la app.
+      void generarRecurrentesAhora()
     } catch (err) {
       setFormError(parseError(err))
     } finally {
@@ -231,31 +262,21 @@ export function GastosRecurrentesPage() {
 
       <div className="recur-toolbar">
         <span className="recur-count">
-          {tab === 'egresos' ? t(items.length === 1 ? 'recurrentes_count_one' : 'recurrentes_count_other', { count: items.length }) : ''}
+          {t(visibles.length === 1 ? 'recurrentes_count_one' : 'recurrentes_count_other', { count: visibles.length })}
         </span>
-        {tab === 'egresos' && (
-          <button type="button" className="btn btn-primary" onClick={abrirAlta}>
-            + {t('recurrentes_nuevo_egreso')}
-          </button>
-        )}
+        <button type="button" className="btn btn-primary" onClick={abrirAlta}>
+          + {tab === 'ingresos' ? t('recurrentes_nuevo_ingreso') : t('recurrentes_nuevo_egreso')}
+        </button>
       </div>
 
-      {tab === 'ingresos' && (
-        <div className="recur-state recur-state--empty">
-          <span className="recur-badge-soon">{t('recurrentes_ingresos_pronto')}</span>
-          <p className="recur-empty-icon" aria-hidden="true">💵</p>
-          <p>{t('recurrentes_ingresos_vacio')}</p>
-        </div>
-      )}
-
-      {tab === 'egresos' && loading && (
+      {loading && (
         <div className="recur-state">
           <div className="spinner" />
           <p>{t('recurrentes_cargando')}</p>
         </div>
       )}
 
-      {tab === 'egresos' && !loading && loadError && (
+      {!loading && loadError && (
         <div className="recur-state recur-state--error">
           <p>⚠️ {loadError}</p>
           <button type="button" className="btn btn-secondary" onClick={() => void cargar()}>
@@ -264,19 +285,19 @@ export function GastosRecurrentesPage() {
         </div>
       )}
 
-      {tab === 'egresos' && !loading && !loadError && items.length === 0 && (
+      {!loading && !loadError && visibles.length === 0 && (
         <div className="recur-state recur-state--empty">
-          <p className="recur-empty-icon" aria-hidden="true">🔁</p>
-          <p>{t('recurrentes_vacio')}</p>
+          <p className="recur-empty-icon" aria-hidden="true">{tab === 'ingresos' ? '💵' : '🔁'}</p>
+          <p>{tab === 'ingresos' ? t('recurrentes_ingreso_vacio') : t('recurrentes_vacio')}</p>
           <button type="button" className="btn btn-primary" onClick={abrirAlta}>
-            + {t('recurrentes_nuevo_egreso')}
+            + {tab === 'ingresos' ? t('recurrentes_nuevo_ingreso') : t('recurrentes_nuevo_egreso')}
           </button>
         </div>
       )}
 
-      {tab === 'egresos' && !loading && !loadError && items.length > 0 && (
+      {!loading && !loadError && visibles.length > 0 && (
         <div className="recur-list">
-          {items.map(item => (
+          {visibles.map(item => (
             <GastoRecurrenteCard
               key={item.recurrente_id}
               item={item}
@@ -294,7 +315,9 @@ export function GastosRecurrentesPage() {
         <GastoRecurrenteFormModal
           mode={editing ? 'edit' : 'create'}
           initial={editing}
+          naturaleza={naturalezaModal}
           rubros={rubros}
+          fuentesIngreso={fuentesIngreso}
           billeteras={billeteras}
           tarjetas={tarjetas}
           saving={saving}
@@ -307,7 +330,9 @@ export function GastosRecurrentesPage() {
       <ConfirmModal
         isOpen={pendingDelete !== null}
         type="danger"
-        title={t('recurrentes_borrar_titulo')}
+        title={pendingDelete?.naturaleza === 'ingreso'
+          ? t('recurrentes_borrar_titulo_ingreso')
+          : t('recurrentes_borrar_titulo')}
         message={t('recurrentes_borrar_cuerpo', {
           nombre: pendingDelete ? nombreVisibleRecurrente(pendingDelete, t) : '',
         })}

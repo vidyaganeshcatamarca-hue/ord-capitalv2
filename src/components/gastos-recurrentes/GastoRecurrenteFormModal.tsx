@@ -13,6 +13,7 @@ import type {
   GastoRecurrenteInput,
   GastoRecurrenteRow,
   ModoRecurrencia,
+  NaturalezaRecurrente,
 } from '@/lib/gastosRecurrentes'
 
 export interface RubroOpcion {
@@ -37,7 +38,11 @@ export interface TarjetaOpcion {
 interface Props {
   mode: 'create' | 'edit'
   initial?: GastoRecurrenteRow | null
+  /** El modal es el mismo para egreso y para ingreso; cambia qué campos pide. */
+  naturaleza: NaturalezaRecurrente
   rubros: RubroOpcion[]
+  /** Fuentes de ingreso (`p_ingresos`), como grupos sin hijos. */
+  fuentesIngreso: RubroOpcion[]
   billeteras: BilleteraOpcion[]
   tarjetas: TarjetaOpcion[]
   saving: boolean
@@ -47,10 +52,22 @@ interface Props {
 }
 
 export function GastoRecurrenteFormModal({
-  mode, initial, rubros, billeteras, tarjetas, saving, error, onClose, onSubmit,
+  mode, initial, naturaleza, rubros, fuentesIngreso, billeteras, tarjetas,
+  saving, error, onClose, onSubmit,
 }: Props) {
-  const [estructuraId, setEstructuraId] = useState<number | null>(initial?.estructura_egreso_id ?? null)
-  const [billeteraId, setBilleteraId] = useState<number | null>(initial?.billetera_defecto_id ?? null)
+  const esIngreso = naturaleza === 'ingreso'
+  /**
+   * El mismo estado sirve a los dos: en un egreso `estructuraId` es la
+   * categoría y `billeteraId` el origen del pago; en un ingreso, la fuente de
+   * ingreso (opcional) y la billetera donde entra la plata. Al guardar se mapea
+   * según la naturaleza, así no hay dos formularios que mantener.
+   */
+  const [estructuraId, setEstructuraId] = useState<number | null>(
+    esIngreso ? (initial?.estructura_ingreso_id ?? null) : (initial?.estructura_egreso_id ?? null),
+  )
+  const [billeteraId, setBilleteraId] = useState<number | null>(
+    esIngreso ? (initial?.billetera_destino_id ?? null) : (initial?.billetera_defecto_id ?? null),
+  )
   /**
    * El nombre propio, no el visible. `nombre` de la RPC es
    * COALESCE(nombre_custom, nombre_cuenta): si coincide con el de la categoría
@@ -117,7 +134,7 @@ export function GastoRecurrenteFormModal({
       return t('recurrentes_error_tarjeta')
     }
     if (!conTarjeta && billeteraId == null) {
-      return t('recurrentes_error_billetera')
+      return esIngreso ? t('recurrentes_error_billetera_destino') : t('recurrentes_error_billetera')
     }
     if (!conTarjeta) {
       if (modo === 'semanal' && diasSemana.length < 1) {
@@ -152,16 +169,21 @@ export function GastoRecurrenteFormModal({
     }
 
     onSubmit({
-      estructura_egreso_id: estructuraId,
+      naturaleza,
+      // Un ingreso no lleva categoría de egreso, ni tarjeta, ni interruptor de
+      // USD: la moneda del monto la define la billetera destino.
+      estructura_egreso_id: esIngreso ? null : estructuraId,
+      estructura_ingreso_id: esIngreso ? estructuraId : null,
+      billetera_destino_id: esIngreso ? billeteraId : null,
       nombre_custom: nombre.trim() || null,
       monto_base: montoNum,
       // El monto de un recurrente es SIEMPRE fijo: si cambió, se corrige la
       // ocurrencia en cuarentena. No hay opción de promedio histórico.
       tipo_variabilidad: 'fijo',
       // Origen mutuamente excluyente: el CHECK de la tabla tambien lo defiende.
-      billetera_defecto_id: origen === 'billetera' ? billeteraId : null,
-      tarjeta_id: origen === 'tarjeta' ? tarjetaId : null,
-      es_usd: origen === 'tarjeta' ? esUsd : false,
+      billetera_defecto_id: !esIngreso && origen === 'billetera' ? billeteraId : null,
+      tarjeta_id: !esIngreso && origen === 'tarjeta' ? tarjetaId : null,
+      es_usd: !esIngreso && origen === 'tarjeta' ? esUsd : false,
       modo,
       // Con tarjeta no hay día: lo define el cierre de la tarjeta.
       dias_semana: !conTarjeta && modo === 'semanal' ? diasSemana : null,
@@ -181,22 +203,30 @@ export function GastoRecurrenteFormModal({
       <div className="recur-modal" onClick={e => e.stopPropagation()}>
         <header className="recur-modal-head">
           <h2 id="recur-modal-title">
-            {mode === 'create' ? t('recurrentes_nuevo') : t('recurrentes_editar')}
+            {esIngreso
+              ? t(mode === 'create' ? 'recurrentes_modal_nuevo_ingreso' : 'recurrentes_modal_editar_ingreso')
+              : t(mode === 'create' ? 'recurrentes_nuevo' : 'recurrentes_editar')}
           </h2>
           <button type="button" className="recur-close" onClick={onClose} aria-label={t('btn_cancel')}>✕</button>
         </header>
 
         <form onSubmit={handleSubmit} className="recur-form">
           <div className="recur-field">
-            <span>{t('recurrentes_campo_categoria')}</span>
+            <span>{esIngreso ? t('recurrentes_campo_fuente_ingreso') : t('recurrentes_campo_categoria')}</span>
             {/* Mismo selector que usa la cuarentena (CategoriaPicker): árbol con
-                jerarquía, padre con hijos no elegible, iconos reales. */}
+                jerarquía, padre con hijos no elegible, iconos reales. En un
+                ingreso las fuentes son una lista plana: cada una entra como
+                grupo sin hijos, que el selector sí deja elegir. */}
             <CategoriaPicker
-              categorias={rubros}
+              categorias={esIngreso ? fuentesIngreso : rubros}
               value={estructuraId}
               onChange={id => setEstructuraId(Number(id))}
-              placeholder={t('recurrentes_elegir_categoria')}
-              title={t('recurrentes_campo_categoria')}
+              placeholder={esIngreso
+                ? t('recurrentes_elegir_fuente_ingreso')
+                : t('recurrentes_elegir_categoria')}
+              title={esIngreso
+                ? t('recurrentes_campo_fuente_ingreso')
+                : t('recurrentes_campo_categoria')}
             />
           </div>
 
@@ -227,9 +257,11 @@ export function GastoRecurrenteFormModal({
           </label>
 
           {/* Con que se paga: billetera o tarjeta, como el modal de movimiento
-              manual. Nunca los dos: el CHECK de la tabla tambien lo defiende. */}
-          <div className="recur-field">
-            <span>{t('recurrentes_origen_label')}</span>
+              manual. Nunca los dos: el CHECK de la tabla tambien lo defiende.
+              Un ingreso no elige esto: cobra siempre en una billetera. */}
+          {!esIngreso && (
+            <div className="recur-field">
+              <span>{t('recurrentes_origen_label')}</span>
             <div className="recur-modo recur-origen" role="radiogroup" aria-label={t('recurrentes_origen_label')}>
               <button
                 type="button"
@@ -251,10 +283,11 @@ export function GastoRecurrenteFormModal({
               </button>
             </div>
           </div>
+          )}
 
           {origen === 'billetera' ? (
             <label className="recur-field">
-              <span>{t('recurrentes_campo_billetera')}</span>
+              <span>{esIngreso ? t('recurrentes_campo_billetera_destino') : t('recurrentes_campo_billetera')}</span>
               {/* Siempre hay billetera: no existe el recurrente sin origen. */}
               <select
                 className="recur-input"

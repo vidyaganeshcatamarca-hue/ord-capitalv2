@@ -28,6 +28,9 @@ export function useGastosRecurrentes() {
   const create = useCallback(async (input: GastoRecurrenteInput) => {
     const { data, error } = await supabase.rpc('fn_crear_gasto_recurrente', {
       p_estructura_egreso_id: input.estructura_egreso_id,
+      p_naturaleza: input.naturaleza ?? 'egreso',
+      p_estructura_ingreso_id: input.estructura_ingreso_id ?? null,
+      p_billetera_destino_id: input.billetera_destino_id ?? null,
       p_nombre_custom: input.nombre_custom,
       p_monto_base: input.monto_base,
       p_dia_del_mes: input.dia_del_mes ?? null,
@@ -55,6 +58,9 @@ export function useGastosRecurrentes() {
     const { error } = await supabase.rpc('fn_editar_gasto_recurrente', {
       p_recurrente_id: id,
       p_estructura_egreso_id: input.estructura_egreso_id,
+      p_naturaleza: input.naturaleza ?? 'egreso',
+      p_estructura_ingreso_id: input.estructura_ingreso_id ?? null,
+      p_billetera_destino_id: input.billetera_destino_id ?? null,
       p_nombre_custom: input.nombre_custom,
       p_monto_base: input.monto_base,
       p_dia_del_mes: input.dia_del_mes ?? null,
