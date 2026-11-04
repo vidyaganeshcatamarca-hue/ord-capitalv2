@@ -53,3 +53,24 @@ de calendario, la misma cuarentena y la misma pantalla. Egresos no cambia de com
   RPC con parámetros al final y con default para no romper el bundle viejo durante el deploy).
 - **L5.** Supuesto declarado y no objetado: la **billetera destino es obligatoria** en un
   ingreso, igual que el egreso exige billetera de origen.
+- **L6.** Implementado y verificado. Commits: `2fb33ae` (esquema, RPC, motor, documento) y
+  `3ac40bd` (pestaña, modal, tarjeta, motor al guardar).
+- **L7.** Evidencia de las pruebas:
+  - Smoke transaccional del 82 (`temp_sql/82`), 13 aserciones en PASS: alta de ingreso, fila
+    con naturaleza/origen correctos, rechazo de ingreso sin billetera destino, de ingreso con
+    categoría de egreso, de egreso con fuente de ingreso y de billetera inexistente,
+    generación de la ocurrencia con `tipo='income'`, no duplicación al correr el motor dos
+    veces, aprobación que crea el movimiento de ingreso y **suma el saldo** en la billetera
+    destino, edición de monto/días/fuente/destino, compatibilidad con el bundle viejo (sin
+    `p_naturaleza` no se degrada el ingreso a egreso), listado con naturaleza y moneda, y
+    aislamiento entre usuarios. La transacción terminó en `RAISE EXCEPTION`, así que la base
+    quedó intacta.
+  - Recorrido en ego (perfil Vidya, 360×844): alta de un ingreso mensual (fuente «Avisos»,
+    1.234, billetera Paypal Ar) → tarjeta en la pestaña Ingresos con «1,234 ARS · días 4» →
+    ocurrencia pendiente detectada en la tarjeta → borrado con confirmación propia del
+    ingreso. Todo el dato de prueba se borró: el usuario 1 volvió a sus 5 egresos, la bandeja
+    quedó sin pendientes y no se creó ningún movimiento.
+- **L8.** Lo que NO se verificó por UI y por qué: la **aprobación** del ingreso se probó solo
+  en SQL transaccional. Aprobar por la bandeja mueve el saldo real de una billetera del dueño,
+  así que la prueba quedó del lado de la base con rollback; el camino que dispara la UI es la
+  misma RPC `fn_aprobar_cuarentena_v2(pendiente_id)`.
