@@ -11,7 +11,7 @@
 // Voice keys, and the multipart below never carries an `idempotency_key`.
 
 /** Base URL of the OCR backend (same API host as Voice, per contract v1). */
-export const OCR_API_BASE_URL = 'https://api.ordcapital.app' as const;
+export const OCR_API_BASE_URL = 'https://ocr-api.ordcapital.app' as const;
 
 /** Enqueue path for a new ticket (contract v1 §3). */
 export const OCR_JOB_CREATE_PATH = '/v1/ocr/jobs' as const;
