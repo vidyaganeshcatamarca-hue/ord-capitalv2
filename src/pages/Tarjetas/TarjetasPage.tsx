@@ -2145,9 +2145,16 @@ export function PagarModal({
   // resumen real cuando esta declarado, o el ciclo cuando no.
   // El modal de overpay se muestra cuando hay excedente para que el user elija
   // si va a saldo a favor o se asigna a adelantar cuotas futuras.
-  const sobrante = realNum !== null
+  // F-09: la resta es en punto flotante y no tenia tolerancia. Una cuota de
+  // 25.000/6 se precarga con dos decimales (4.166,67) contra un ciclo de
+  // 4.166,6666..., y la diferencia de 0,0033 abria el flujo de "que hacemos con
+  // el excedente" anunciando 0.00 de excedente. Se exige al menos una unidad
+  // entera para considerarlo real; el importe mostrado sigue siendo el exacto,
+  // para no anunciar un numero distinto del que se va a guardar.
+  const sobranteBruto = realNum !== null
     ? Math.max(0, pagoTotal - realNum)  // pago total vs resumen real
     : Math.max(0, pagoTotal - cicloBruto)  // pago total vs ciclo
+  const sobrante = Math.round(sobranteBruto) >= 1 ? sobranteBruto : 0
 
   // === Fase 4 multi-moneda ===
   // Pago por moneda según la billetera (o favor) de cada línea.
