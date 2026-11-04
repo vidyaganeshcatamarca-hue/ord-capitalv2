@@ -51,11 +51,32 @@ export function GastoRecurrenteFormModal({
 }: Props) {
   const [estructuraId, setEstructuraId] = useState<number | null>(initial?.estructura_egreso_id ?? null)
   const [billeteraId, setBilleteraId] = useState<number | null>(initial?.billetera_defecto_id ?? null)
-  const [nombre, setNombre] = useState<string>(initial?.nombre_categoria ?? initial?.nombre ?? '')
+  /**
+   * El nombre propio, no el visible. `nombre` de la RPC es
+   * COALESCE(nombre_custom, nombre_cuenta): si coincide con el de la categoría
+   * no hay nombre propio y el campo va vacío. Antes se precargaba
+   * `nombre_categoria` y al guardar la edición **pisaba el nombre propio** con
+   * el de la categoría (bug encontrado recorriendo el módulo en el navegador).
+   */
+  const [nombre, setNombre] = useState<string>(
+    initial && initial.nombre && initial.nombre !== initial.nombre_categoria
+      ? initial.nombre
+      : '',
+  )
   const [monto, setMonto] = useState<string>(initial?.monto_base != null ? String(initial.monto_base) : '')
   const [modo, setModo] = useState<ModoRecurrencia>(initial?.modo ?? 'mensual')
   const [diasSemana, setDiasSemana] = useState<number[]>(initial?.dias_semana ?? [])
-  const [diasMes, setDiasMes] = useState<number[]>(initial?.dias_mes ?? (initial?.dia_del_mes ? [initial.dia_del_mes] : []))
+  /**
+   * Días del mes elegidos. `dia_del_mes` es la columna de transición: el alta la
+   * rellena con 1 aunque el modo sea semanal, así que solo se hereda cuando la
+   * fila ES mensual. Sin esto, editar una semanal y pasarla a mensual arrancaba
+   * con un día 1 fantasma (bug encontrado recorriendo el módulo).
+   */
+  const [diasMes, setDiasMes] = useState<number[]>(
+    initial?.modo === 'mensual'
+      ? (initial?.dias_mes ?? (initial?.dia_del_mes ? [initial.dia_del_mes] : []))
+      : [],
+  )
   const [fechasAnio, setFechasAnio] = useState<number[]>(initial?.fechas_anio ?? [])
   // Origen del pago: billetera o tarjeta, nunca los dos (mismo contrato que la base).
   const [origen, setOrigen] = useState<'billetera' | 'tarjeta'>(initial?.tarjeta_id != null ? 'tarjeta' : 'billetera')

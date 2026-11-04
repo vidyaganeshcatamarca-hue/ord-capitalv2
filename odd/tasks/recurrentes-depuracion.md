@@ -184,3 +184,25 @@ ahora recalcula `proxima_ocurrencia` desde hoy al reactivar (`temp_sql/78_recurr
 Mientras está pausada, el motor la saltea por `activo = false`. Verificado: pausada genera 0; reactivada
 con el puntero 90 días atrás genera **1** (el día de hoy, que sí es del patrón) en vez de 39.
 Si se reactiva un día que no es del patrón, el puntero queda en la próxima fecha y no genera nada ese día.
+
+## Recorrido final en ego (perfil Vidya, 360×844)
+
+Recorrido completo por UI con `ego-browser` (perfil Vidya, viewport móvil 360×844): lista, pestaña
+Ingresos, alta por billetera con 2 días semanales, picker de categoría (7 grupos, sin categorías de
+sistema, hijos desplegando al tocar la fila), edición, pausa, reactivación, borrado con confirmación,
+alta con tarjeta en dólares y el grupo de Ajustes. Todo en verde. Las filas de prueba se borraron por
+UI: la tabla volvió a sus 5 recurrentes reales.
+
+**Dos bugs encontrados por el recorrido (no por los tests):**
+
+- **P-2 (corregido):** al editar, el campo Nombre se precargaba con el nombre de la **categoría** y al
+  guardar pisaba el nombre propio del usuario. Ahora solo precarga el nombre propio: si `nombre`
+  coincide con `nombre_categoria`, el campo va vacío.
+- **P-3 (corregido):** al editar una recurrencia **semanal** y pasarla a mensual, el editor heredaba un
+  **día 1 fantasma** de la columna de transición `dia_del_mes` (el alta la rellena con 1 en todos los
+  modos). Elegir el día 5 terminaba guardando «días 1 y 5». Ahora `dia_del_mes` solo se hereda cuando
+  la fila es mensual.
+
+**Nota de entorno:** en ego `page.screenshot()` falla con «Cannot capture a screenshot while the
+window is minimized» cuando la ventana se minimiza a mitad del recorrido; `ensure-ego --restore` lo
+resuelve. Las capturas de este recorrido están en `C:/tmp/ego-m*.png`.
