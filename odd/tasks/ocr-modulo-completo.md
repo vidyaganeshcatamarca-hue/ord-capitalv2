@@ -148,3 +148,23 @@ Las migraciones `temp_sql/95..99` **no se aplicaron**. Requieren OK explícito d
    - El mensaje de error de subida dejó de ser "No encontramos este ticket en el servidor" (que era
      el texto de polling) y pasó a ser el genérico de subida: mismo status, distinto significado
      según la superficie.
+
+### L8 — host propio para OCR y decisión (b)
+
+**Host.** El servicio OCR se publicó en `https://ocr-api.ordcapital.app`, distinto del host de Voice.
+Verificado antes de tocar nada: `GET /healthz` → 200 `{"status":"ok","database":true}` y
+`POST /v1/ocr/jobs` sin token → 401 `Missing Authorization header`.
+
+- Existían ya dos constantes separadas (`OCR_API_BASE_URL` y `VOICE_API_BASE_URL`), ambas apuntando al
+  host compartido: no había variable global única que partir. Se cambió **solo el valor de OCR**.
+- Rutas, payload, contrato y `Authorization: Bearer <access_token>` no se tocaron.
+- Voice sigue en `https://api.ordcapital.app` (sin cambios).
+- Dos tests nuevos fijan las dos bases y las rutas: un copy-paste que vuelva a unir los hosts ahora
+  falla en verde-antes-de-rojo.
+
+**Decisión (b).** Antes, abrir la captura cerraba el alta (`setShowAdd(false)`) y cancelar dejaba al
+usuario en Home con lo tipeado perdido. El PRD §63 no lo especificaba: era una decisión mía sin
+respaldo documental.
+Ahora el alta queda montada debajo de la captura y solo se cierra cuando hay un job creado:
+`OcrCaptureModal.onClose` distingue `cancelled` de `submitted` leyendo el `stage` **antes** de resetear.
+Verificado en ego: importe `12.345` cargado, captura abierta encima, cerrada con `×`, importe intacto.

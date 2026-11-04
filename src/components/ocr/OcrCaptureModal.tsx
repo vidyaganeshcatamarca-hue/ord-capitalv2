@@ -26,7 +26,13 @@ import './Ocr.css'
 
 interface OcrCaptureModalProps {
   open: boolean
-  onClose: () => void
+  /**
+   * `submitted` means a job was created and the user is dismissing the
+   * confirmation: the register sheet is done and must close too.
+   * `cancelled` means nothing was sent, so whatever the user had typed
+   * behind this sheet has to survive.
+   */
+  onClose: (reason?: 'cancelled' | 'submitted') => void
 }
 
 function formatBytes(bytes: number): string {
@@ -118,8 +124,11 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
   }
 
   const close = (): void => {
+    // Read the stage BEFORE reset() wipes it: an accepted job is a
+    // submission, anything else is a dismissal.
+    const reason = stage === 'accepted' ? 'submitted' : 'cancelled'
     reset()
-    onClose()
+    onClose(reason)
   }
 
   const send = async (): Promise<void> => {
