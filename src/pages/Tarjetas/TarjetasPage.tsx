@@ -2251,10 +2251,17 @@ export function PagarModal({
   const faltaVentanaEquiv = Math.max(0, Math.max(0, cicloBruto - favorNum) - pagoCubiertoEquiv)
   const pagoParcial = totalPagarArsEquiv > 0 && faltaVentanaEquiv > 0.5
   const submitEnabled = favorCubreTotal || !allLinesEmpty
-  const submitDisabled = formSubmitting || lineasInvalidas || !submitEnabled || overBudget
+  // S8: si el usuario declara un resumen real del banco, el pago tiene que cubrirlo.
+  // Antes se podía pagar menos y la diferencia quedaba como deuda nueva.
+  const faltaParaBanco = realNum !== null ? Math.max(0, realNum - pagoTotal) : 0
+  const submitDisabled = formSubmitting || lineasInvalidas || !submitEnabled || overBudget || faltaParaBanco > 0.01
   // TC-06: el botón bloqueado decía que no sin decir por qué. El caso real es
   // "hay un importe escrito pero ninguna cuenta elegida".
-  const blockedReason = !formSubmitting && lineasInvalidas ? t('pay_blocked_reason_no_wallet') : null
+  const blockedReason = !formSubmitting
+    ? (faltaParaBanco > 0.01
+        ? t('pay_real_statement_shortfall', { falta: fmtARS(faltaParaBanco) })
+        : lineasInvalidas ? t('pay_blocked_reason_no_wallet') : null)
+    : null
 
   const updateLine = (index: number, patch: Partial<PagarLine>) => {
     const next = pagarLineas.map((l, i) => i === index ? { ...l, ...patch } : l)
@@ -2784,9 +2791,9 @@ export function PagarModal({
                 {resumenReal !== '' && Math.abs(parseFloat(resumenReal) - cicloBruto) > 0.01 && (
                   <div className="pay-resumen-real-dif">{t('pay_resumen_real_dif', { monto: fmtARS(parseFloat(resumenReal) - cicloBruto) })}</div>
                 )}
-                {realNum !== null && faltaRepartir > 0.01 && (
-                  <div className="pay-resumen-real-falta">{t('pay_resumen_real_falta', { falta: fmtARS(faltaRepartir) })}</div>
-                )}
+                {/* S8: el aviso de "queda imputado como Diferencia Tarjeta" se quito: con
+                    el resumen declarado hay que pagarlo y el boton se bloquea con el
+                    motivo debajo, asi que prometer que se puede dejar impago era falso. */}
               </>
             )}
           </div>
