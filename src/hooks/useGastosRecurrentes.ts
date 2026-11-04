@@ -48,9 +48,13 @@ export function useGastosRecurrentes() {
     return data as number
   }, [refresh])
 
+  // El modal manda TODOS los campos editables; el RPC actualiza ese mismo
+  // conjunto. La categoría faltaba en los dos lados: se elegía otra en el
+  // modal, se guardaba el resto y la tarjeta seguía con la original.
   const update = useCallback(async (id: number, input: GastoRecurrenteInput) => {
     const { error } = await supabase.rpc('fn_editar_gasto_recurrente', {
       p_recurrente_id: id,
+      p_estructura_egreso_id: input.estructura_egreso_id,
       p_nombre_custom: input.nombre_custom,
       p_monto_base: input.monto_base,
       p_dia_del_mes: input.dia_del_mes ?? null,
