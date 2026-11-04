@@ -2862,6 +2862,70 @@
         "from": "No se pudieron guardar los movimientos en la cuarentena.",
         "to": "The transactions could not be saved to quarantine."
       },
+      "errors.error_recurrent_modo_invalid": {
+        "from": "El modo de recurrencia no es válido.",
+        "to": "The recurrence mode is not valid."
+      },
+      "errors.error_recurrent_dates_required": {
+        "from": "Faltan las fechas de la recurrencia.",
+        "to": "The recurrence dates are missing."
+      },
+      "errors.error_recurrent_dates_invalid": {
+        "from": "Alguna de las fechas elegidas no es válida.",
+        "to": "One of the selected dates is not valid."
+      },
+      "errors.error_recurrent_monto_invalid": {
+        "from": "El monto tiene que ser mayor a cero.",
+        "to": "The amount must be greater than zero."
+      },
+      "errors.error_recurrent_motivo_invalid": {
+        "from": "El motivo de pausa no es válido.",
+        "to": "The pause reason is not valid."
+      },
+      "errors.error_ocr_job_id_required": {
+        "from": "Falta el identificador del ticket OCR.",
+        "to": "The OCR ticket identifier is missing."
+      },
+      "errors.error_ocr_ticket_invalid": {
+        "from": "El ticket OCR no tiene datos válidos.",
+        "to": "The OCR ticket has no valid data."
+      },
+      "errors.error_ocr_items_required": {
+        "from": "El ticket OCR no tiene productos.",
+        "to": "The OCR ticket has no products."
+      },
+      "errors.error_ocr_ticket_already_processed": {
+        "from": "Este ticket OCR ya fue confirmado.",
+        "to": "This OCR ticket was already confirmed."
+      },
+      "errors.error_ocr_total_mismatch": {
+        "from": "La suma de los grupos no coincide con el total del ticket.",
+        "to": "The group total does not match the ticket total."
+      },
+      "errors.error_ocr_payment_required": {
+        "from": "Falta la forma de pago del ticket.",
+        "to": "The ticket payment method is missing."
+      },
+      "errors.error_ocr_category_missing": {
+        "from": "Hay productos sin una categoría válida del usuario.",
+        "to": "Some products have no valid category."
+      },
+      "errors.error_ocr_system_category_missing": {
+        "from": "No se pudo preparar la categoría OCR no reconocidos.",
+        "to": "The OCR unrecognized category could not be prepared."
+      },
+      "errors.error_ocr_amount_invalid": {
+        "from": "Hay importes inválidos en el ticket.",
+        "to": "The ticket has invalid amounts."
+      },
+      "errors.error_ocr_currency_invalid": {
+        "from": "La moneda del ticket no es válida.",
+        "to": "The ticket currency is not valid."
+      },
+      "errors.error_ocr_date_invalid": {
+        "from": "La fecha del ticket no es válida.",
+        "to": "The ticket date is not valid."
+      },
       "voice.codec_unsupported": {
         "from": "Tu navegador no soporta grabación de audio. Probá con Chrome, Edge o Safari actualizado.",
         "to": "Your browser does not support audio recording. Try an updated Chrome, Edge or Safari."
@@ -2974,6 +3038,430 @@
         "from": "{count} movimientos por voz pendientes de revisar",
         "to": "{count} voice transactions pending review"
       },
+      "ocr.capture_title": {
+        "from": "Cargar ticket con OCR",
+        "to": "Upload receipt with OCR"
+      },
+      "ocr.capture_cta": {
+        "from": "Escanear ticket",
+        "to": "Scan receipt"
+      },
+      "ocr.capture_hint": {
+        "from": "Adjuntá una foto o un PDF del ticket. Podés sumar hasta 10 imágenes.",
+        "to": "Attach a photo or a PDF of the receipt. You can add up to 10 images."
+      },
+      "ocr.capture_add_images": {
+        "from": "Agregar imágenes",
+        "to": "Add images"
+      },
+      "ocr.capture_add_pdf": {
+        "from": "Agregar PDF",
+        "to": "Add PDF"
+      },
+      "ocr.capture_take_photo": {
+        "from": "Sacar foto",
+        "to": "Take photo"
+      },
+      "ocr.capture_files_count": {
+        "from": "{count} archivo(s) seleccionado(s)",
+        "to": "{count} file(s) selected"
+      },
+      "ocr.capture_remove": {
+        "from": "Quitar",
+        "to": "Remove"
+      },
+      "ocr.capture_move_up": {
+        "from": "Mover arriba",
+        "to": "Move up"
+      },
+      "ocr.capture_move_down": {
+        "from": "Mover abajo",
+        "to": "Move down"
+      },
+      "ocr.capture_send": {
+        "from": "Enviar ticket",
+        "to": "Send receipt"
+      },
+      "ocr.capture_sending": {
+        "from": "Enviando ticket...",
+        "to": "Sending receipt..."
+      },
+      "ocr.capture_cancel": {
+        "from": "Cancelar",
+        "to": "Cancel"
+      },
+      "ocr.capture_limits": {
+        "from": "JPEG, PNG, WebP o PDF. Hasta 20 MB por archivo y 80 MB en total.",
+        "to": "JPEG, PNG, WebP or PDF. Up to 20 MB per file and 80 MB in total."
+      },
+      "ocr.capture_received_title": {
+        "from": "Ticket recibido",
+        "to": "Receipt received"
+      },
+      "ocr.capture_received_desc": {
+        "from": "Podés continuar usando ORD. No es necesario volver a cargarlo.",
+        "to": "You can keep using ORD. There is no need to upload it again."
+      },
+      "ocr.capture_duplicate_note": {
+        "from": "Ya teníamos este ticket: seguimos con el mismo procesamiento.",
+        "to": "We already had this receipt: we continue with the same processing."
+      },
+      "ocr.capture_keep_using": {
+        "from": "Seguir usando ORD",
+        "to": "Keep using ORD"
+      },
+      "ocr.capture_retry": {
+        "from": "Reintentar envío",
+        "to": "Retry upload"
+      },
+      "ocr.status_queued": {
+        "from": "Ticket recibido. Pendiente de procesamiento.",
+        "to": "Receipt received. Waiting to be processed."
+      },
+      "ocr.status_processing": {
+        "from": "Procesando ticket...",
+        "to": "Processing receipt..."
+      },
+      "ocr.status_waiting_for_inference": {
+        "from": "Ticket recibido y guardado. Lo procesaremos automáticamente cuando el servicio esté disponible. No hace falta volver a cargarlo.",
+        "to": "Receipt received and stored. We will process it automatically when the service is available. You do not need to upload it again."
+      },
+      "ocr.status_classifying": {
+        "from": "Finalizando análisis...",
+        "to": "Finishing the analysis..."
+      },
+      "ocr.status_completed": {
+        "from": "Procesamiento terminado.",
+        "to": "Processing finished."
+      },
+      "ocr.status_needs_review": {
+        "from": "Procesamiento terminado con datos para revisar.",
+        "to": "Processing finished with data to review."
+      },
+      "ocr.status_failed": {
+        "from": "No pudimos procesar el ticket. Queda guardado para revisar más adelante.",
+        "to": "We could not process the receipt. It stays stored for you to review later."
+      },
+      "ocr.status_cancelled": {
+        "from": "El procesamiento de este ticket no continúa.",
+        "to": "The processing of this receipt will not continue."
+      },
+      "ocr.status_queued_short": {
+        "from": "En cola",
+        "to": "Queued"
+      },
+      "ocr.status_processing_short": {
+        "from": "Procesando",
+        "to": "Processing"
+      },
+      "ocr.status_waiting_for_inference_short": {
+        "from": "Esperando al servicio",
+        "to": "Waiting for the service"
+      },
+      "ocr.status_classifying_short": {
+        "from": "Clasificando",
+        "to": "Classifying"
+      },
+      "ocr.status_completed_short": {
+        "from": "Listo",
+        "to": "Ready"
+      },
+      "ocr.status_needs_review_short": {
+        "from": "Para revisar",
+        "to": "To review"
+      },
+      "ocr.status_failed_short": {
+        "from": "Falló",
+        "to": "Failed"
+      },
+      "ocr.status_cancelled_short": {
+        "from": "Cancelado",
+        "to": "Cancelled"
+      },
+      "ocr.error_no_files": {
+        "from": "Elegí al menos un archivo.",
+        "to": "Choose at least one file."
+      },
+      "ocr.error_too_many_images": {
+        "from": "Podés subir hasta 10 imágenes por ticket.",
+        "to": "You can upload up to 10 images per receipt."
+      },
+      "ocr.error_mixed_types": {
+        "from": "No mezcles un PDF con imágenes en el mismo ticket.",
+        "to": "Do not mix a PDF with images in the same receipt."
+      },
+      "ocr.error_unsupported_format": {
+        "from": "Formato no soportado: usá JPEG, PNG, WebP o PDF.",
+        "to": "Unsupported format: use JPEG, PNG, WebP or PDF."
+      },
+      "ocr.error_file_too_big": {
+        "from": "Cada archivo puede pesar hasta 20 MB.",
+        "to": "Each file can be up to 20 MB."
+      },
+      "ocr.error_total_too_big": {
+        "from": "El ticket completo puede pesar hasta 80 MB.",
+        "to": "The whole receipt can be up to 80 MB."
+      },
+      "ocr.error_upload_failed": {
+        "from": "No pudimos enviar el ticket. Probá de nuevo.",
+        "to": "We could not send the receipt. Try again."
+      },
+      "ocr.error_network": {
+        "from": "Se cortó la conexión. Probá de nuevo.",
+        "to": "The connection dropped. Try again."
+      },
+      "ocr.error_unauthorized": {
+        "from": "Tu sesión venció. Volvé a iniciar sesión.",
+        "to": "Your session expired. Please sign in again."
+      },
+      "ocr.error_context_unavailable": {
+        "from": "No pudimos preparar el contexto de tu ORD. Probá de nuevo.",
+        "to": "We could not prepare your ORD context. Try again."
+      },
+      "ocr.error_job_not_found": {
+        "from": "No encontramos este ticket en el servidor.",
+        "to": "We could not find this receipt on the server."
+      },
+      "ocr.error_unknown": {
+        "from": "Ocurrió un error inesperado.",
+        "to": "An unexpected error occurred."
+      },
+      "ocr.quarantine_title": {
+        "from": "Ticket OCR",
+        "to": "OCR receipt"
+      },
+      "ocr.ticket_total": {
+        "from": "Total del ticket",
+        "to": "Receipt total"
+      },
+      "ocr.ticket_merchant_unknown": {
+        "from": "Comercio sin identificar",
+        "to": "Unidentified merchant"
+      },
+      "ocr.ticket_items": {
+        "from": "{count} producto(s)",
+        "to": "{count} product(s)"
+      },
+      "ocr.group_unrecognized_hint": {
+        "from": "Productos que OCR no pudo clasificar.",
+        "to": "Products OCR could not classify."
+      },
+      "ocr.group_subtotal": {
+        "from": "Subtotal",
+        "to": "Subtotal"
+      },
+      "ocr.group_discount": {
+        "from": "Descuento general",
+        "to": "General discount"
+      },
+      "ocr.item_original_description": {
+        "from": "Leído del ticket",
+        "to": "Read from the receipt"
+      },
+      "ocr.item_description_locked": {
+        "from": "La descripción original no se edita: es evidencia del ticket.",
+        "to": "The original description is not editable: it is receipt evidence."
+      },
+      "ocr.item_quantity": {
+        "from": "Cantidad",
+        "to": "Quantity"
+      },
+      "ocr.item_unit_price": {
+        "from": "Precio unitario",
+        "to": "Unit price"
+      },
+      "ocr.item_printed_amount": {
+        "from": "Importe impreso",
+        "to": "Printed amount"
+      },
+      "ocr.item_net_amount": {
+        "from": "Importe final",
+        "to": "Final amount"
+      },
+      "ocr.item_discount": {
+        "from": "Descuento",
+        "to": "Discount"
+      },
+      "ocr.item_category": {
+        "from": "Categoría",
+        "to": "Category"
+      },
+      "ocr.item_category_pending": {
+        "from": "Falta elegir categoría",
+        "to": "Category still missing"
+      },
+      "ocr.item_review": {
+        "from": "Revisar",
+        "to": "Review"
+      },
+      "ocr.issue_title": {
+        "from": "A revisar",
+        "to": "To review"
+      },
+      "ocr.issue_category_pending": {
+        "from": "Hay productos sin categoría.",
+        "to": "Some products have no category."
+      },
+      "ocr.issue_payment_pending": {
+        "from": "Falta la forma de pago.",
+        "to": "The payment method is missing."
+      },
+      "ocr.issue_date_pending": {
+        "from": "Falta la fecha.",
+        "to": "The date is missing."
+      },
+      "ocr.issue_amount_pending": {
+        "from": "Hay importes para revisar.",
+        "to": "Some amounts need review."
+      },
+      "ocr.issue_generic": {
+        "from": "El sistema marcó datos para revisar.",
+        "to": "The system flagged data to review."
+      },
+      "ocr.view_ticket": {
+        "from": "Ver ticket",
+        "to": "View receipt"
+      },
+      "ocr.image_unavailable": {
+        "from": "Imagen original no disponible en este dispositivo.",
+        "to": "Original image not available on this device."
+      },
+      "ocr.image_counter": {
+        "from": "Imagen {index} de {total}",
+        "to": "Image {index} of {total}"
+      },
+      "ocr.save_draft": {
+        "from": "Guardar",
+        "to": "Save"
+      },
+      "ocr.saving": {
+        "from": "Guardando...",
+        "to": "Saving..."
+      },
+      "ocr.saved": {
+        "from": "Borrador guardado.",
+        "to": "Draft saved."
+      },
+      "ocr.confirm_ticket": {
+        "from": "Confirmar ticket",
+        "to": "Confirm receipt"
+      },
+      "ocr.confirm_title": {
+        "from": "Confirmar ticket OCR",
+        "to": "Confirm OCR receipt"
+      },
+      "ocr.confirm_message": {
+        "from": "Se van a crear {count} movimiento(s) por un total de {total}. Esta acción no se puede deshacer.",
+        "to": "{count} transaction(s) will be created for a total of {total}. This cannot be undone."
+      },
+      "ocr.confirmed": {
+        "from": "Ticket confirmado: {count} movimiento(s) creado(s).",
+        "to": "Receipt confirmed: {count} transaction(s) created."
+      },
+      "ocr.reject_ticket": {
+        "from": "Rechazar",
+        "to": "Reject"
+      },
+      "ocr.reject_title": {
+        "from": "Rechazar ticket OCR",
+        "to": "Reject OCR receipt"
+      },
+      "ocr.reject_message": {
+        "from": "Se va a quitar el ticket sin crear movimientos. La memoria de categorías ya aprendida se conserva.",
+        "to": "The receipt will be removed without creating transactions. Category memory already learned is kept."
+      },
+      "ocr.rejected": {
+        "from": "Ticket rechazado. No se crearon movimientos.",
+        "to": "Receipt rejected. No transactions were created."
+      },
+      "ocr.memory_pending_note": {
+        "from": "Hay correcciones de categoría pendientes de sincronizar. Se reintentan solas.",
+        "to": "Some category corrections are pending sync. They retry on their own."
+      },
+      "ocr.material_mismatch": {
+        "from": "La suma de los grupos no coincide con el total del ticket. Revisá los importes antes de confirmar.",
+        "to": "The group total does not match the receipt total. Review the amounts before confirming."
+      },
+      "ocr.rounding_adjusted": {
+        "from": "Ajustamos {amount} de redondeo en el grupo más grande.",
+        "to": "We adjusted {amount} of rounding on the largest group."
+      },
+      "ocr.missing_payment": {
+        "from": "Elegí la billetera o la tarjeta.",
+        "to": "Choose the wallet or the card."
+      },
+      "ocr.missing_date": {
+        "from": "Elegí una fecha válida.",
+        "to": "Choose a valid date."
+      },
+      "ocr.missing_total": {
+        "from": "El ticket no tiene un total válido.",
+        "to": "The receipt has no valid total."
+      },
+      "ocr.missing_category": {
+        "from": "Hay productos sin categoría válida.",
+        "to": "Some products have no valid category."
+      },
+      "ocr.total_required": {
+        "from": "Total del ticket",
+        "to": "Receipt total"
+      },
+      "ocr.field_date": {
+        "from": "Fecha",
+        "to": "Date"
+      },
+      "ocr.field_merchant": {
+        "from": "Comercio",
+        "to": "Merchant"
+      },
+      "ocr.field_payment": {
+        "from": "Forma de pago",
+        "to": "Payment method"
+      },
+      "ocr.field_installments": {
+        "from": "Cuotas",
+        "to": "Installments"
+      },
+      "ocr.movements_summary": {
+        "from": "{count} movimiento(s)",
+        "to": "{count} transaction(s)"
+      },
+      "ocr.item_category_changed": {
+        "from": "Corregido por vos",
+        "to": "Corrected by you"
+      },
+      "ocr.general_discount": {
+        "from": "Descuento general",
+        "to": "General discount"
+      },
+      "ocr.no_items": {
+        "from": "Este ticket no tiene productos para revisar.",
+        "to": "This receipt has no products to review."
+      },
+      "ocr.empty_pending": {
+        "from": "No hay tickets OCR pendientes.",
+        "to": "No OCR receipts pending."
+      },
+      "ocr.empty_pending_desc": {
+        "from": "Puede haber tickets procesándose: aparecerán acá cuando terminen.",
+        "to": "Some receipts may still be processing: they will show up here when they finish."
+      },
+      "ocr.storage_unavailable": {
+        "from": "No pudimos guardar la copia local de la imagen. El ticket igual se envía.",
+        "to": "We could not store the local image copy. The receipt is still sent."
+      },
+      "ocr.storage_resume_warning": {
+        "from": "No pudimos guardar el ticket en este dispositivo: si cerrás la app podrías no recuperarlo.",
+        "to": "We could not store the receipt on this device: if you close the app you may not recover it."
+      },
+      "ocr.edit_saved_pending": {
+        "from": "Guardado local. Sincronizaremos la memoria cuando vuelva la conexión.",
+        "to": "Saved locally. We will sync the memory once the connection is back."
+      },
+      "ocr.cache_cleared": {
+        "from": "Borramos las copias locales de tickets OCR.",
+        "to": "We cleared the local OCR receipt copies."
+      },
       "category_keys.cat_misterio": {
         "from": "Misterio/Olvido",
         "to": "Mystery/Forgotten"
@@ -2981,6 +3469,10 @@
       "category_keys.cat_mystery": {
         "from": "Misterio/Olvido",
         "to": "Mystery/Forgotten"
+      },
+      "category_keys.ocr_unrecognized": {
+        "from": "OCR no reconocidos",
+        "to": "OCR unrecognized"
       },
       "category_keys.no_detail": {
         "from": "Gastos anteriores",
@@ -4646,13 +5138,21 @@
         "from": "días",
         "to": "days"
       },
+      "saneamiento.saneamiento_horizonte_6m": {
+        "from": "6 meses",
+        "to": "6 months"
+      },
+      "saneamiento.saneamiento_horizonte_1a": {
+        "from": "1 año",
+        "to": "1 year"
+      },
       "saneamiento.saneamiento_leyenda_critico": {
-        "from": "> $50.000",
-        "to": "> $50.000"
+        "from": "Vence en 3 días o menos",
+        "to": "Due in 3 days or less"
       },
       "saneamiento.saneamiento_leyenda_normal": {
-        "from": "$10.000  — $50.000",
-        "to": "$10.000  — $50.000"
+        "from": "Vence en 10 días o menos",
+        "to": "Due in 10 days or less"
       },
       "saneamiento.saneamiento_leyenda_libre": {
         "from": "Sin vencimientos",
@@ -4933,6 +5433,446 @@
       "saneamiento.saneamiento_error_cuenta_ingreso_requerida": {
         "from": "Seleccioná una fuente de ingreso.",
         "to": "Select an income source."
+      },
+      "recurrentes.recurrentes_title": {
+        "from": "Recurrentes",
+        "to": "Recurring"
+      },
+      "recurrentes.recurrentes_subtitle": {
+        "from": "Tus ingresos y gastos que se repiten solos",
+        "to": "Your income and expenses that repeat on their own"
+      },
+      "recurrentes.recurrentes_count_one": {
+        "from": "{count} recurrente",
+        "to": "{count} recurring item"
+      },
+      "recurrentes.recurrentes_count_other": {
+        "from": "{count} recurrentes",
+        "to": "{count} recurring items"
+      },
+      "recurrentes.recurrentes_tab_egresos": {
+        "from": "Egresos",
+        "to": "Expenses"
+      },
+      "recurrentes.recurrentes_tab_ingresos": {
+        "from": "Ingresos",
+        "to": "Income"
+      },
+      "recurrentes.recurrentes_ingresos_vacio": {
+        "from": "Todavía no podés declarar ingresos recurrentes. Sueldos, alquileres cobrados y otras entradas fijas van a vivir acá, con el mismo motor que ya usan los egresos.",
+        "to": "You cannot declare recurring income yet. Salaries, rent you collect and other fixed inflows will live here, using the same engine the expenses already use."
+      },
+      "recurrentes.recurrentes_ingresos_pronto": {
+        "from": "Próximamente",
+        "to": "Coming soon"
+      },
+      "recurrentes.recurrentes_nuevo_egreso": {
+        "from": "Nuevo egreso recurrente",
+        "to": "New recurring expense"
+      },
+      "recurrentes.recurrentes_nuevo_ingreso": {
+        "from": "Nuevo ingreso recurrente",
+        "to": "New recurring income"
+      },
+      "recurrentes.recurrentes_cargando": {
+        "from": "Cargando tus gastos recurrentes…",
+        "to": "Loading your recurring expenses…"
+      },
+      "recurrentes.recurrentes_reintentar": {
+        "from": "Reintentar",
+        "to": "Try again"
+      },
+      "recurrentes.recurrentes_vacio": {
+        "from": "Todavía no declaraste ningún gasto recurrente. Alquiler, servicios, suscripciones: cargalos una vez y el sistema te los propone cada vez que toca pagarlos.",
+        "to": "You haven't set up any recurring expense yet. Rent, utilities, subscriptions: add them once and the system will suggest them every time they're due."
+      },
+      "recurrentes.recurrentes_nuevo": {
+        "from": "Nuevo gasto recurrente",
+        "to": "New recurring expense"
+      },
+      "recurrentes.recurrentes_editar": {
+        "from": "Editar",
+        "to": "Edit"
+      },
+      "recurrentes.recurrentes_guardar": {
+        "from": "Guardar",
+        "to": "Save"
+      },
+      "recurrentes.recurrentes_guardando": {
+        "from": "Guardando…",
+        "to": "Saving…"
+      },
+      "recurrentes.recurrentes_pausar": {
+        "from": "Pausar",
+        "to": "Pause"
+      },
+      "recurrentes.recurrentes_reactivar": {
+        "from": "Reactivar",
+        "to": "Resume"
+      },
+      "recurrentes.recurrentes_borrar": {
+        "from": "Borrar",
+        "to": "Delete"
+      },
+      "recurrentes.recurrentes_borrar_titulo": {
+        "from": "Borrar gasto recurrente",
+        "to": "Delete recurring expense"
+      },
+      "recurrentes.recurrentes_borrar_cuerpo_one": {
+        "from": "¿Borrar «{nombre}» definitivamente? Se va a perder 1 ocurrencia pendiente de la bandeja. Los movimientos ya registrados no se tocan. Esta acción no se puede deshacer.",
+        "to": "Delete «{nombre}» permanently? 1 pending occurrence will be lost from the tray. Already recorded movements are not affected. This action cannot be undone."
+      },
+      "recurrentes.recurrentes_borrar_cuerpo_other": {
+        "from": "¿Borrar «{nombre}» definitivamente? Se van a perder {count} ocurrencias pendientes de la bandeja. Los movimientos ya registrados no se tocan. Esta acción no se puede deshacer.",
+        "to": "Delete «{nombre}» permanently? {count} pending occurrences will be lost from the tray. Already recorded movements are not affected. This action cannot be undone."
+      },
+      "recurrentes.recurrentes_estado_activo": {
+        "from": "ACTIVO",
+        "to": "ACTIVE"
+      },
+      "recurrentes.recurrentes_estado_pausa": {
+        "from": "EN PAUSA",
+        "to": "PAUSED"
+      },
+      "recurrentes.recurrentes_pendientes_one": {
+        "from": "1 ocurrencia pendiente en la bandeja",
+        "to": "1 pending occurrence in the tray"
+      },
+      "recurrentes.recurrentes_pendientes_other": {
+        "from": "{count} ocurrencias pendientes en la bandeja",
+        "to": "{count} pending occurrences in the tray"
+      },
+      "recurrentes.recurrentes_sin_nombre": {
+        "from": "Gasto recurrente",
+        "to": "Recurring expense"
+      },
+      "recurrentes.recurrentes_sin_fechas": {
+        "from": "sin fechas elegidas",
+        "to": "no dates selected"
+      },
+      "recurrentes.recurrentes_sin_billetera": {
+        "from": "Sin billetera (elegila después)",
+        "to": "No wallet (choose it later)"
+      },
+      "recurrentes.recurrentes_dias_del_mes": {
+        "from": "días {dias}",
+        "to": "{dias} days"
+      },
+      "recurrentes.recurrentes_modo_label": {
+        "from": "¿Cuándo se repite?",
+        "to": "How often does it repeat?"
+      },
+      "recurrentes.recurrentes_modo_semanal": {
+        "from": "Semanal",
+        "to": "Weekly"
+      },
+      "recurrentes.recurrentes_modo_mensual": {
+        "from": "Mensual",
+        "to": "Monthly"
+      },
+      "recurrentes.recurrentes_modo_anual": {
+        "from": "Anual",
+        "to": "Yearly"
+      },
+      "recurrentes.recurrentes_semanal_hint": {
+        "from": "Elegí hasta 3 días de la semana.",
+        "to": "Pick up to 3 days of the week."
+      },
+      "recurrentes.recurrentes_mensual_hint": {
+        "from": "Elegí hasta 3 días del mes. Si elegís 31 y el mes es más corto, cae el último día.",
+        "to": "Pick up to 3 days of the month. If you pick 31 and the month is shorter, it falls on the last day."
+      },
+      "recurrentes.recurrentes_mensual_preview": {
+        "from": "En febrero caerían los días {fechas}.",
+        "to": "In February they would fall on the {fechas}."
+      },
+      "recurrentes.recurrentes_anual_hint": {
+        "from": "Elegí una o más fechas del año.",
+        "to": "Pick one or more dates of the year."
+      },
+      "recurrentes.recurrentes_quitar_fecha": {
+        "from": "Quitar esta fecha",
+        "to": "Remove this date"
+      },
+      "recurrentes.recurrentes_fecha_corta": {
+        "from": "{dia} de {mes}",
+        "to": "{mes} {dia}"
+      },
+      "recurrentes.recurrentes_mes_label": {
+        "from": "Mes",
+        "to": "Month"
+      },
+      "recurrentes.recurrentes_campo_categoria": {
+        "from": "Categoría",
+        "to": "Category"
+      },
+      "recurrentes.recurrentes_elegir_categoria": {
+        "from": "Elegí una categoría",
+        "to": "Choose a category"
+      },
+      "recurrentes.recurrentes_campo_nombre": {
+        "from": "Nombre (opcional)",
+        "to": "Name (optional)"
+      },
+      "recurrentes.recurrentes_campo_nombre_placeholder": {
+        "from": "Si lo dejás vacío, se usa el de la categoría",
+        "to": "If you leave it empty, the category name is used"
+      },
+      "recurrentes.recurrentes_campo_monto": {
+        "from": "Monto",
+        "to": "Amount"
+      },
+      "recurrentes.recurrentes_campo_variabilidad": {
+        "from": "Variabilidad",
+        "to": "Variability"
+      },
+      "recurrentes.recurrentes_variabilidad_fijo": {
+        "from": "Monto fijo",
+        "to": "Fixed amount"
+      },
+      "recurrentes.recurrentes_variabilidad_promedio": {
+        "from": "Promedio de los últimos 3 meses",
+        "to": "Average of the last 3 months"
+      },
+      "recurrentes.recurrentes_campo_billetera": {
+        "from": "Billetera por defecto",
+        "to": "Default wallet"
+      },
+      "recurrentes.recurrentes_error_semanal": {
+        "from": "Elegí entre 1 y 3 días de la semana.",
+        "to": "Pick between 1 and 3 days of the week."
+      },
+      "recurrentes.recurrentes_error_mensual": {
+        "from": "Elegí entre 1 y 3 días del mes.",
+        "to": "Pick between 1 and 3 days of the month."
+      },
+      "recurrentes.recurrentes_error_anual": {
+        "from": "Elegí al menos una fecha del año.",
+        "to": "Pick at least one date of the year."
+      },
+      "recurrentes.recurrentes_error_monto": {
+        "from": "El monto tiene que ser mayor a cero.",
+        "to": "The amount must be greater than zero."
+      },
+      "recurrentes.recurrentes_reconfigurar": {
+        "from": "Revisar y reactivar",
+        "to": "Review and reactivate"
+      },
+      "recurrentes.recurrentes_motivo_pausado_por_usuario": {
+        "from": "Lo pausaste vos.",
+        "to": "You paused it."
+      },
+      "recurrentes.recurrentes_motivo_billetera_eliminada": {
+        "from": "Se borró la billetera que usaba. Elegí otra para reactivarlo.",
+        "to": "The wallet it used was deleted. Choose another one to resume it."
+      },
+      "recurrentes.recurrentes_motivo_categoria_movida": {
+        "from": "La categoría cambió de lugar. Revisá la configuración antes de reactivarlo.",
+        "to": "The category moved to a different place. Review the setup before resuming it."
+      },
+      "recurrentes.recurrentes_motivo_subcuenta_creada": {
+        "from": "Se creó una subcuenta en su categoría. Revisá la configuración antes de reactivarlo.",
+        "to": "A sub-account was created in its category. Review the setup before resuming it."
+      },
+      "recurrentes.recurrentes_toast_creado": {
+        "from": "Gasto recurrente creado.",
+        "to": "Recurring expense created."
+      },
+      "recurrentes.recurrentes_toast_actualizado": {
+        "from": "Gasto recurrente actualizado.",
+        "to": "Recurring expense updated."
+      },
+      "recurrentes.recurrentes_toast_pausado": {
+        "from": "Gasto recurrente pausado.",
+        "to": "Recurring expense paused."
+      },
+      "recurrentes.recurrentes_toast_reactivado": {
+        "from": "Gasto recurrente reactivado.",
+        "to": "Recurring expense resumed."
+      },
+      "recurrentes.recurrentes_toast_borrado": {
+        "from": "Gasto borrado. Se eliminaron {count} ocurrencias pendientes.",
+        "to": "Expense deleted. {count} pending items were removed."
+      },
+      "recurrentes.recurrentes_modo_unica": {
+        "from": "Única vez",
+        "to": "One time"
+      },
+      "recurrentes.recurrentes_unica_hint": {
+        "from": "Elegí la fecha exacta. Ocurre una sola vez y no se repite.",
+        "to": "Pick the exact date. It happens once and does not repeat."
+      },
+      "recurrentes.recurrentes_unica_el": {
+        "from": "única vez el {fecha}",
+        "to": "one time on {fecha}"
+      },
+      "recurrentes.recurrentes_campo_fecha_unica": {
+        "from": "Fecha de la ocurrencia",
+        "to": "Occurrence date"
+      },
+      "recurrentes.recurrentes_campo_fecha_fin": {
+        "from": "Fecha de fin (opcional)",
+        "to": "End date (optional)"
+      },
+      "recurrentes.recurrentes_vigencia_hint": {
+        "from": "Dejala vacía para que se repita para siempre.",
+        "to": "Leave it empty to repeat forever."
+      },
+      "recurrentes.recurrentes_error_unica_fecha": {
+        "from": "Elegí la fecha de la única ocurrencia.",
+        "to": "Pick the date of the one-time occurrence."
+      },
+      "recurrentes.recurrentes_error_fecha_fin": {
+        "from": "La fecha de fin no puede ser anterior a la fecha única.",
+        "to": "The end date cannot be before the one-time date."
+      },
+      "recurrentes.recurrentes_error_tarjeta": {
+        "from": "Elegí una tarjeta.",
+        "to": "Pick a card."
+      },
+      "recurrentes.recurrentes_origen_label": {
+        "from": "¿Con qué se paga?",
+        "to": "Paid with?"
+      },
+      "recurrentes.recurrentes_origen_billetera": {
+        "from": "Billetera",
+        "to": "Wallet"
+      },
+      "recurrentes.recurrentes_origen_tarjeta": {
+        "from": "Tarjeta de crédito",
+        "to": "Credit card"
+      },
+      "recurrentes.recurrentes_campo_tarjeta": {
+        "from": "Tarjeta",
+        "to": "Card"
+      },
+      "recurrentes.recurrentes_elegir_tarjeta": {
+        "from": "Elegí una tarjeta",
+        "to": "Pick a card"
+      },
+      "recurrentes.recurrentes_es_usd": {
+        "from": "El monto está en dólares (USD)",
+        "to": "The amount is in US dollars (USD)"
+      },
+      "recurrentes.recurrentes_tarjeta_hint": {
+        "from": "La propuesta aparece en «Para aprobar» 3 días antes del cierre de la tarjeta. Sin cuotas: es un gasto cada vez, como una suscripción.",
+        "to": "The proposal shows up in “For approval” 3 days before the card’s closing date. No installments: it is a charge every time, like a subscription."
+      },
+      "recurrentes.recurrentes_hasta": {
+        "from": "hasta {fecha}",
+        "to": "until {fecha}"
+      },
+      "recurrentes.recurrentes_motivo_vencida": {
+        "from": "Llegó a su fecha de fin.",
+        "to": "It reached its end date."
+      },
+      "recurrentes.recurrentes_motivo_tarjeta_eliminada": {
+        "from": "Se borró la tarjeta.",
+        "to": "The card was deleted."
+      },
+      "recurrentes.recurrentes_dia_1": {
+        "from": "lunes",
+        "to": "Monday"
+      },
+      "recurrentes.recurrentes_dia_2": {
+        "from": "martes",
+        "to": "Tuesday"
+      },
+      "recurrentes.recurrentes_dia_3": {
+        "from": "miércoles",
+        "to": "Wednesday"
+      },
+      "recurrentes.recurrentes_dia_4": {
+        "from": "jueves",
+        "to": "Thursday"
+      },
+      "recurrentes.recurrentes_dia_5": {
+        "from": "viernes",
+        "to": "Friday"
+      },
+      "recurrentes.recurrentes_dia_6": {
+        "from": "sábado",
+        "to": "Saturday"
+      },
+      "recurrentes.recurrentes_dia_7": {
+        "from": "domingo",
+        "to": "Sunday"
+      },
+      "recurrentes.recurrentes_dia_corto_1": {
+        "from": "Lun",
+        "to": "Mon"
+      },
+      "recurrentes.recurrentes_dia_corto_2": {
+        "from": "Mar",
+        "to": "Tue"
+      },
+      "recurrentes.recurrentes_dia_corto_3": {
+        "from": "Mié",
+        "to": "Wed"
+      },
+      "recurrentes.recurrentes_dia_corto_4": {
+        "from": "Jue",
+        "to": "Thu"
+      },
+      "recurrentes.recurrentes_dia_corto_5": {
+        "from": "Vie",
+        "to": "Fri"
+      },
+      "recurrentes.recurrentes_dia_corto_6": {
+        "from": "Sáb",
+        "to": "Sat"
+      },
+      "recurrentes.recurrentes_dia_corto_7": {
+        "from": "Dom",
+        "to": "Sun"
+      },
+      "recurrentes.recurrentes_mes_1": {
+        "from": "enero",
+        "to": "January"
+      },
+      "recurrentes.recurrentes_mes_2": {
+        "from": "febrero",
+        "to": "February"
+      },
+      "recurrentes.recurrentes_mes_3": {
+        "from": "marzo",
+        "to": "March"
+      },
+      "recurrentes.recurrentes_mes_4": {
+        "from": "abril",
+        "to": "April"
+      },
+      "recurrentes.recurrentes_mes_5": {
+        "from": "mayo",
+        "to": "May"
+      },
+      "recurrentes.recurrentes_mes_6": {
+        "from": "junio",
+        "to": "June"
+      },
+      "recurrentes.recurrentes_mes_7": {
+        "from": "julio",
+        "to": "July"
+      },
+      "recurrentes.recurrentes_mes_8": {
+        "from": "agosto",
+        "to": "August"
+      },
+      "recurrentes.recurrentes_mes_9": {
+        "from": "septiembre",
+        "to": "September"
+      },
+      "recurrentes.recurrentes_mes_10": {
+        "from": "octubre",
+        "to": "October"
+      },
+      "recurrentes.recurrentes_mes_11": {
+        "from": "noviembre",
+        "to": "November"
+      },
+      "recurrentes.recurrentes_mes_12": {
+        "from": "diciembre",
+        "to": "December"
       },
       "wallets.tab_cuentas_ingreso": {
         "from": "Ingresos",
@@ -6641,14 +7581,6 @@
       "inversiones.config_mostrar_misterio_desc": {
         "from": "Activa o desactiva el análisis de fugas de capital en la pantalla de inicio.",
         "to": "Turns the capital-leak analysis on or off on the home screen."
-      },
-      "inversiones.config_ocr_enabled": {
-        "from": "OCR  – Lectura inteligente de ticket",
-        "to": "OCR  – Smart receipt reading"
-      },
-      "inversiones.config_ocr_enabled_desc": {
-        "from": "Analizá tus tickets automáticamente con cámara.",
-        "to": "Analyze your receipts automatically with the camera."
       },
       "inversiones.config_voice_enabled_desc": {
         "from": "Registrá movimientos con tu voz.",
@@ -8886,10 +9818,6 @@
         "from": "Orden de billeteras",
         "to": "Wallet order"
       },
-      "inversiones.settings_entry_ocr": {
-        "from": "OCR",
-        "to": "OCR"
-      },
       "inversiones.settings_entry_voice": {
         "from": "Voz",
         "to": "Voice"
@@ -8905,6 +9833,14 @@
       "inversiones.settings_entry_import_export": {
         "from": "Importar y exportar movimientos",
         "to": "Import and export transactions"
+      },
+      "inversiones.settings_entry_recurring": {
+        "from": "Recurrentes",
+        "to": "Recurring"
+      },
+      "inversiones.settings_entry_recurring_desc": {
+        "from": "Ingresos y gastos que se repiten solos",
+        "to": "Income and expenses that repeat on their own"
       },
       "inversiones.settings_entry_report_issue": {
         "from": "Reportar un problema o sugerencia",
@@ -12688,6 +13624,70 @@
         "from": "No se pudieron guardar los movimientos en la cuarentena.",
         "to": "Não foi possível salvar as transações em quarentena."
       },
+      "errors.error_recurrent_modo_invalid": {
+        "from": "El modo de recurrencia no es válido.",
+        "to": "O modo de recorrência não é válido."
+      },
+      "errors.error_recurrent_dates_required": {
+        "from": "Faltan las fechas de la recurrencia.",
+        "to": "Faltam as datas da recorrência."
+      },
+      "errors.error_recurrent_dates_invalid": {
+        "from": "Alguna de las fechas elegidas no es válida.",
+        "to": "Alguma das datas escolhidas não é válida."
+      },
+      "errors.error_recurrent_monto_invalid": {
+        "from": "El monto tiene que ser mayor a cero.",
+        "to": "O valor precisa ser maior que zero."
+      },
+      "errors.error_recurrent_motivo_invalid": {
+        "from": "El motivo de pausa no es válido.",
+        "to": "O motivo da pausa não é válido."
+      },
+      "errors.error_ocr_job_id_required": {
+        "from": "Falta el identificador del ticket OCR.",
+        "to": "Falta o identificador do comprovante OCR."
+      },
+      "errors.error_ocr_ticket_invalid": {
+        "from": "El ticket OCR no tiene datos válidos.",
+        "to": "O comprovante OCR não tem dados válidos."
+      },
+      "errors.error_ocr_items_required": {
+        "from": "El ticket OCR no tiene productos.",
+        "to": "O comprovante OCR não tem produtos."
+      },
+      "errors.error_ocr_ticket_already_processed": {
+        "from": "Este ticket OCR ya fue confirmado.",
+        "to": "Este comprovante OCR já foi confirmado."
+      },
+      "errors.error_ocr_total_mismatch": {
+        "from": "La suma de los grupos no coincide con el total del ticket.",
+        "to": "A soma dos grupos não confere com o total do comprovante."
+      },
+      "errors.error_ocr_payment_required": {
+        "from": "Falta la forma de pago del ticket.",
+        "to": "Falta a forma de pagamento do comprovante."
+      },
+      "errors.error_ocr_category_missing": {
+        "from": "Hay productos sin una categoría válida del usuario.",
+        "to": "Há produtos sem uma categoria válida do usuário."
+      },
+      "errors.error_ocr_system_category_missing": {
+        "from": "No se pudo preparar la categoría OCR no reconocidos.",
+        "to": "Não foi possível preparar a categoria OCR não reconhecidos."
+      },
+      "errors.error_ocr_amount_invalid": {
+        "from": "Hay importes inválidos en el ticket.",
+        "to": "Há valores inválidos no comprovante."
+      },
+      "errors.error_ocr_currency_invalid": {
+        "from": "La moneda del ticket no es válida.",
+        "to": "A moeda do comprovante não é válida."
+      },
+      "errors.error_ocr_date_invalid": {
+        "from": "La fecha del ticket no es válida.",
+        "to": "A data do comprovante não é válida."
+      },
       "voice.codec_unsupported": {
         "from": "Tu navegador no soporta grabación de audio. Probá con Chrome, Edge o Safari actualizado.",
         "to": "Seu navegador não suporta gravação de áudio. Tente com Chrome, Edge ou Safari atualizado."
@@ -12800,6 +13800,430 @@
         "from": "{count} movimientos por voz pendientes de revisar",
         "to": "{count} transações por voz pendentes de revisar"
       },
+      "ocr.capture_title": {
+        "from": "Cargar ticket con OCR",
+        "to": "Carregar comprovante com OCR"
+      },
+      "ocr.capture_cta": {
+        "from": "Escanear ticket",
+        "to": "Escanear comprovante"
+      },
+      "ocr.capture_hint": {
+        "from": "Adjuntá una foto o un PDF del ticket. Podés sumar hasta 10 imágenes.",
+        "to": "Anexe uma foto ou um PDF do comprovante. Você pode adicionar até 10 imagens."
+      },
+      "ocr.capture_add_images": {
+        "from": "Agregar imágenes",
+        "to": "Adicionar imagens"
+      },
+      "ocr.capture_add_pdf": {
+        "from": "Agregar PDF",
+        "to": "Adicionar PDF"
+      },
+      "ocr.capture_take_photo": {
+        "from": "Sacar foto",
+        "to": "Tirar foto"
+      },
+      "ocr.capture_files_count": {
+        "from": "{count} archivo(s) seleccionado(s)",
+        "to": "{count} arquivo(s) selecionado(s)"
+      },
+      "ocr.capture_remove": {
+        "from": "Quitar",
+        "to": "Remover"
+      },
+      "ocr.capture_move_up": {
+        "from": "Mover arriba",
+        "to": "Mover para cima"
+      },
+      "ocr.capture_move_down": {
+        "from": "Mover abajo",
+        "to": "Mover para baixo"
+      },
+      "ocr.capture_send": {
+        "from": "Enviar ticket",
+        "to": "Enviar comprovante"
+      },
+      "ocr.capture_sending": {
+        "from": "Enviando ticket...",
+        "to": "Enviando comprovante..."
+      },
+      "ocr.capture_cancel": {
+        "from": "Cancelar",
+        "to": "Cancelar"
+      },
+      "ocr.capture_limits": {
+        "from": "JPEG, PNG, WebP o PDF. Hasta 20 MB por archivo y 80 MB en total.",
+        "to": "JPEG, PNG, WebP ou PDF. Até 20 MB por arquivo e 80 MB no total."
+      },
+      "ocr.capture_received_title": {
+        "from": "Ticket recibido",
+        "to": "Comprovante recebido"
+      },
+      "ocr.capture_received_desc": {
+        "from": "Podés continuar usando ORD. No es necesario volver a cargarlo.",
+        "to": "Você pode continuar usando o ORD. Não é preciso carregá-lo de novo."
+      },
+      "ocr.capture_duplicate_note": {
+        "from": "Ya teníamos este ticket: seguimos con el mismo procesamiento.",
+        "to": "Já tínhamos este comprovante: seguimos com o mesmo processamento."
+      },
+      "ocr.capture_keep_using": {
+        "from": "Seguir usando ORD",
+        "to": "Continuar usando o ORD"
+      },
+      "ocr.capture_retry": {
+        "from": "Reintentar envío",
+        "to": "Tentar enviar de novo"
+      },
+      "ocr.status_queued": {
+        "from": "Ticket recibido. Pendiente de procesamiento.",
+        "to": "Comprovante recebido. Aguardando processamento."
+      },
+      "ocr.status_processing": {
+        "from": "Procesando ticket...",
+        "to": "Processando comprovante..."
+      },
+      "ocr.status_waiting_for_inference": {
+        "from": "Ticket recibido y guardado. Lo procesaremos automáticamente cuando el servicio esté disponible. No hace falta volver a cargarlo.",
+        "to": "Comprovante recebido e guardado. Vamos processá-lo automaticamente quando o serviço estiver disponível. Não é preciso carregá-lo de novo."
+      },
+      "ocr.status_classifying": {
+        "from": "Finalizando análisis...",
+        "to": "Finalizando a análise..."
+      },
+      "ocr.status_completed": {
+        "from": "Procesamiento terminado.",
+        "to": "Processamento concluído."
+      },
+      "ocr.status_needs_review": {
+        "from": "Procesamiento terminado con datos para revisar.",
+        "to": "Processamento concluído com dados para revisar."
+      },
+      "ocr.status_failed": {
+        "from": "No pudimos procesar el ticket. Queda guardado para revisar más adelante.",
+        "to": "Não conseguimos processar o comprovante. Ele fica guardado para revisar depois."
+      },
+      "ocr.status_cancelled": {
+        "from": "El procesamiento de este ticket no continúa.",
+        "to": "O processamento deste comprovante não continua."
+      },
+      "ocr.status_queued_short": {
+        "from": "En cola",
+        "to": "Na fila"
+      },
+      "ocr.status_processing_short": {
+        "from": "Procesando",
+        "to": "Processando"
+      },
+      "ocr.status_waiting_for_inference_short": {
+        "from": "Esperando al servicio",
+        "to": "Aguardando o serviço"
+      },
+      "ocr.status_classifying_short": {
+        "from": "Clasificando",
+        "to": "Classificando"
+      },
+      "ocr.status_completed_short": {
+        "from": "Listo",
+        "to": "Pronto"
+      },
+      "ocr.status_needs_review_short": {
+        "from": "Para revisar",
+        "to": "Para revisar"
+      },
+      "ocr.status_failed_short": {
+        "from": "Falló",
+        "to": "Falhou"
+      },
+      "ocr.status_cancelled_short": {
+        "from": "Cancelado",
+        "to": "Cancelado"
+      },
+      "ocr.error_no_files": {
+        "from": "Elegí al menos un archivo.",
+        "to": "Escolha pelo menos um arquivo."
+      },
+      "ocr.error_too_many_images": {
+        "from": "Podés subir hasta 10 imágenes por ticket.",
+        "to": "Você pode enviar até 10 imagens por comprovante."
+      },
+      "ocr.error_mixed_types": {
+        "from": "No mezcles un PDF con imágenes en el mismo ticket.",
+        "to": "Não misture um PDF com imagens no mesmo comprovante."
+      },
+      "ocr.error_unsupported_format": {
+        "from": "Formato no soportado: usá JPEG, PNG, WebP o PDF.",
+        "to": "Formato não suportado: use JPEG, PNG, WebP ou PDF."
+      },
+      "ocr.error_file_too_big": {
+        "from": "Cada archivo puede pesar hasta 20 MB.",
+        "to": "Cada arquivo pode ter até 20 MB."
+      },
+      "ocr.error_total_too_big": {
+        "from": "El ticket completo puede pesar hasta 80 MB.",
+        "to": "O comprovante inteiro pode ter até 80 MB."
+      },
+      "ocr.error_upload_failed": {
+        "from": "No pudimos enviar el ticket. Probá de nuevo.",
+        "to": "Não conseguimos enviar o comprovante. Tente de novo."
+      },
+      "ocr.error_network": {
+        "from": "Se cortó la conexión. Probá de nuevo.",
+        "to": "A conexão caiu. Tente de novo."
+      },
+      "ocr.error_unauthorized": {
+        "from": "Tu sesión venció. Volvé a iniciar sesión.",
+        "to": "Sua sessão expirou. Entre novamente."
+      },
+      "ocr.error_context_unavailable": {
+        "from": "No pudimos preparar el contexto de tu ORD. Probá de nuevo.",
+        "to": "Não conseguimos preparar o contexto do seu ORD. Tente de novo."
+      },
+      "ocr.error_job_not_found": {
+        "from": "No encontramos este ticket en el servidor.",
+        "to": "Não encontramos este comprovante no servidor."
+      },
+      "ocr.error_unknown": {
+        "from": "Ocurrió un error inesperado.",
+        "to": "Ocorreu um erro inesperado."
+      },
+      "ocr.quarantine_title": {
+        "from": "Ticket OCR",
+        "to": "Comprovante OCR"
+      },
+      "ocr.ticket_total": {
+        "from": "Total del ticket",
+        "to": "Total do comprovante"
+      },
+      "ocr.ticket_merchant_unknown": {
+        "from": "Comercio sin identificar",
+        "to": "Estabelecimento não identificado"
+      },
+      "ocr.ticket_items": {
+        "from": "{count} producto(s)",
+        "to": "{count} produto(s)"
+      },
+      "ocr.group_unrecognized_hint": {
+        "from": "Productos que OCR no pudo clasificar.",
+        "to": "Produtos que o OCR não conseguiu classificar."
+      },
+      "ocr.group_subtotal": {
+        "from": "Subtotal",
+        "to": "Subtotal"
+      },
+      "ocr.group_discount": {
+        "from": "Descuento general",
+        "to": "Desconto geral"
+      },
+      "ocr.item_original_description": {
+        "from": "Leído del ticket",
+        "to": "Lido do comprovante"
+      },
+      "ocr.item_description_locked": {
+        "from": "La descripción original no se edita: es evidencia del ticket.",
+        "to": "A descrição original não é editável: é evidência do comprovante."
+      },
+      "ocr.item_quantity": {
+        "from": "Cantidad",
+        "to": "Quantidade"
+      },
+      "ocr.item_unit_price": {
+        "from": "Precio unitario",
+        "to": "Preço unitário"
+      },
+      "ocr.item_printed_amount": {
+        "from": "Importe impreso",
+        "to": "Valor impresso"
+      },
+      "ocr.item_net_amount": {
+        "from": "Importe final",
+        "to": "Valor final"
+      },
+      "ocr.item_discount": {
+        "from": "Descuento",
+        "to": "Desconto"
+      },
+      "ocr.item_category": {
+        "from": "Categoría",
+        "to": "Categoria"
+      },
+      "ocr.item_category_pending": {
+        "from": "Falta elegir categoría",
+        "to": "Falta escolher a categoria"
+      },
+      "ocr.item_review": {
+        "from": "Revisar",
+        "to": "Revisar"
+      },
+      "ocr.issue_title": {
+        "from": "A revisar",
+        "to": "Para revisar"
+      },
+      "ocr.issue_category_pending": {
+        "from": "Hay productos sin categoría.",
+        "to": "Há produtos sem categoria."
+      },
+      "ocr.issue_payment_pending": {
+        "from": "Falta la forma de pago.",
+        "to": "Falta a forma de pagamento."
+      },
+      "ocr.issue_date_pending": {
+        "from": "Falta la fecha.",
+        "to": "Falta a data."
+      },
+      "ocr.issue_amount_pending": {
+        "from": "Hay importes para revisar.",
+        "to": "Há valores para revisar."
+      },
+      "ocr.issue_generic": {
+        "from": "El sistema marcó datos para revisar.",
+        "to": "O sistema marcou dados para revisar."
+      },
+      "ocr.view_ticket": {
+        "from": "Ver ticket",
+        "to": "Ver comprovante"
+      },
+      "ocr.image_unavailable": {
+        "from": "Imagen original no disponible en este dispositivo.",
+        "to": "Imagem original não disponível neste dispositivo."
+      },
+      "ocr.image_counter": {
+        "from": "Imagen {index} de {total}",
+        "to": "Imagem {index} de {total}"
+      },
+      "ocr.save_draft": {
+        "from": "Guardar",
+        "to": "Salvar"
+      },
+      "ocr.saving": {
+        "from": "Guardando...",
+        "to": "Salvando..."
+      },
+      "ocr.saved": {
+        "from": "Borrador guardado.",
+        "to": "Rascunho salvo."
+      },
+      "ocr.confirm_ticket": {
+        "from": "Confirmar ticket",
+        "to": "Confirmar comprovante"
+      },
+      "ocr.confirm_title": {
+        "from": "Confirmar ticket OCR",
+        "to": "Confirmar comprovante OCR"
+      },
+      "ocr.confirm_message": {
+        "from": "Se van a crear {count} movimiento(s) por un total de {total}. Esta acción no se puede deshacer.",
+        "to": "Serão criados {count} movimento(s) num total de {total}. Esta ação não pode ser desfeita."
+      },
+      "ocr.confirmed": {
+        "from": "Ticket confirmado: {count} movimiento(s) creado(s).",
+        "to": "Comprovante confirmado: {count} movimento(s) criado(s)."
+      },
+      "ocr.reject_ticket": {
+        "from": "Rechazar",
+        "to": "Rejeitar"
+      },
+      "ocr.reject_title": {
+        "from": "Rechazar ticket OCR",
+        "to": "Rejeitar comprovante OCR"
+      },
+      "ocr.reject_message": {
+        "from": "Se va a quitar el ticket sin crear movimientos. La memoria de categorías ya aprendida se conserva.",
+        "to": "O comprovante será removido sem criar movimentos. A memória de categorias já aprendida é mantida."
+      },
+      "ocr.rejected": {
+        "from": "Ticket rechazado. No se crearon movimientos.",
+        "to": "Comprovante rejeitado. Nenhum movimento foi criado."
+      },
+      "ocr.memory_pending_note": {
+        "from": "Hay correcciones de categoría pendientes de sincronizar. Se reintentan solas.",
+        "to": "Há correções de categoria pendentes de sincronizar. Elas são tentadas de novo sozinhas."
+      },
+      "ocr.material_mismatch": {
+        "from": "La suma de los grupos no coincide con el total del ticket. Revisá los importes antes de confirmar.",
+        "to": "A soma dos grupos não confere com o total do comprovante. Revise os valores antes de confirmar."
+      },
+      "ocr.rounding_adjusted": {
+        "from": "Ajustamos {amount} de redondeo en el grupo más grande.",
+        "to": "Ajustamos {amount} de arredondamento no maior grupo."
+      },
+      "ocr.missing_payment": {
+        "from": "Elegí la billetera o la tarjeta.",
+        "to": "Escolha a carteira ou o cartão."
+      },
+      "ocr.missing_date": {
+        "from": "Elegí una fecha válida.",
+        "to": "Escolha uma data válida."
+      },
+      "ocr.missing_total": {
+        "from": "El ticket no tiene un total válido.",
+        "to": "O comprovante não tem um total válido."
+      },
+      "ocr.missing_category": {
+        "from": "Hay productos sin categoría válida.",
+        "to": "Há produtos sem categoria válida."
+      },
+      "ocr.total_required": {
+        "from": "Total del ticket",
+        "to": "Total do comprovante"
+      },
+      "ocr.field_date": {
+        "from": "Fecha",
+        "to": "Data"
+      },
+      "ocr.field_merchant": {
+        "from": "Comercio",
+        "to": "Estabelecimento"
+      },
+      "ocr.field_payment": {
+        "from": "Forma de pago",
+        "to": "Forma de pagamento"
+      },
+      "ocr.field_installments": {
+        "from": "Cuotas",
+        "to": "Parcelas"
+      },
+      "ocr.movements_summary": {
+        "from": "{count} movimiento(s)",
+        "to": "{count} movimento(s)"
+      },
+      "ocr.item_category_changed": {
+        "from": "Corregido por vos",
+        "to": "Corrigido por você"
+      },
+      "ocr.general_discount": {
+        "from": "Descuento general",
+        "to": "Desconto geral"
+      },
+      "ocr.no_items": {
+        "from": "Este ticket no tiene productos para revisar.",
+        "to": "Este comprovante não tem produtos para revisar."
+      },
+      "ocr.empty_pending": {
+        "from": "No hay tickets OCR pendientes.",
+        "to": "Não há comprovantes OCR pendentes."
+      },
+      "ocr.empty_pending_desc": {
+        "from": "Puede haber tickets procesándose: aparecerán acá cuando terminen.",
+        "to": "Pode haver comprovantes em processamento: eles aparecerão aqui quando terminarem."
+      },
+      "ocr.storage_unavailable": {
+        "from": "No pudimos guardar la copia local de la imagen. El ticket igual se envía.",
+        "to": "Não conseguimos guardar a cópia local da imagem. O comprovante é enviado mesmo assim."
+      },
+      "ocr.storage_resume_warning": {
+        "from": "No pudimos guardar el ticket en este dispositivo: si cerrás la app podrías no recuperarlo.",
+        "to": "Não conseguimos guardar o comprovante neste dispositivo: se fechar o app talvez não o recupere."
+      },
+      "ocr.edit_saved_pending": {
+        "from": "Guardado local. Sincronizaremos la memoria cuando vuelva la conexión.",
+        "to": "Salvo localmente. Vamos sincronizar a memória quando a conexão voltar."
+      },
+      "ocr.cache_cleared": {
+        "from": "Borramos las copias locales de tickets OCR.",
+        "to": "Limpamos as cópias locais dos comprovantes OCR."
+      },
       "category_keys.cat_misterio": {
         "from": "Misterio/Olvido",
         "to": "Mistério/Esquecimento"
@@ -12807,6 +14231,10 @@
       "category_keys.cat_mystery": {
         "from": "Misterio/Olvido",
         "to": "Mistério/Esquecimento"
+      },
+      "category_keys.ocr_unrecognized": {
+        "from": "OCR no reconocidos",
+        "to": "OCR não reconhecidos"
       },
       "category_keys.no_detail": {
         "from": "Gastos anteriores",
@@ -14472,13 +15900,21 @@
         "from": "días",
         "to": "dias"
       },
+      "saneamiento.saneamiento_horizonte_6m": {
+        "from": "6 meses",
+        "to": "6 meses"
+      },
+      "saneamiento.saneamiento_horizonte_1a": {
+        "from": "1 año",
+        "to": "1 ano"
+      },
       "saneamiento.saneamiento_leyenda_critico": {
-        "from": "> $50.000",
-        "to": "> $50.000"
+        "from": "Vence en 3 días o menos",
+        "to": "Vence em 3 dias ou menos"
       },
       "saneamiento.saneamiento_leyenda_normal": {
-        "from": "$10.000  — $50.000",
-        "to": "$10.000  — $50.000"
+        "from": "Vence en 10 días o menos",
+        "to": "Vence em 10 dias ou menos"
       },
       "saneamiento.saneamiento_leyenda_libre": {
         "from": "Sin vencimientos",
@@ -14759,6 +16195,446 @@
       "saneamiento.saneamiento_error_cuenta_ingreso_requerida": {
         "from": "Seleccioná una fuente de ingreso.",
         "to": "Selecione uma fonte de renda."
+      },
+      "recurrentes.recurrentes_title": {
+        "from": "Recurrentes",
+        "to": "Recorrentes"
+      },
+      "recurrentes.recurrentes_subtitle": {
+        "from": "Tus ingresos y gastos que se repiten solos",
+        "to": "Suas receitas e despesas que se repetem sozinhas"
+      },
+      "recurrentes.recurrentes_count_one": {
+        "from": "{count} recurrente",
+        "to": "{count} recorrente"
+      },
+      "recurrentes.recurrentes_count_other": {
+        "from": "{count} recurrentes",
+        "to": "{count} recorrentes"
+      },
+      "recurrentes.recurrentes_tab_egresos": {
+        "from": "Egresos",
+        "to": "Despesas"
+      },
+      "recurrentes.recurrentes_tab_ingresos": {
+        "from": "Ingresos",
+        "to": "Receitas"
+      },
+      "recurrentes.recurrentes_ingresos_vacio": {
+        "from": "Todavía no podés declarar ingresos recurrentes. Sueldos, alquileres cobrados y otras entradas fijas van a vivir acá, con el mismo motor que ya usan los egresos.",
+        "to": "Você ainda não pode declarar receitas recorrentes. Salários, aluguéis recebidos e outras entradas fixas vão viver aqui, com o mesmo motor que as despesas já usam."
+      },
+      "recurrentes.recurrentes_ingresos_pronto": {
+        "from": "Próximamente",
+        "to": "Em breve"
+      },
+      "recurrentes.recurrentes_nuevo_egreso": {
+        "from": "Nuevo egreso recurrente",
+        "to": "Nova despesa recorrente"
+      },
+      "recurrentes.recurrentes_nuevo_ingreso": {
+        "from": "Nuevo ingreso recurrente",
+        "to": "Nova receita recorrente"
+      },
+      "recurrentes.recurrentes_cargando": {
+        "from": "Cargando tus gastos recurrentes…",
+        "to": "Carregando suas despesas recorrentes…"
+      },
+      "recurrentes.recurrentes_reintentar": {
+        "from": "Reintentar",
+        "to": "Tentar de novo"
+      },
+      "recurrentes.recurrentes_vacio": {
+        "from": "Todavía no declaraste ningún gasto recurrente. Alquiler, servicios, suscripciones: cargalos una vez y el sistema te los propone cada vez que toca pagarlos.",
+        "to": "Você ainda não cadastrou nenhuma despesa recorrente. Aluguel, contas, assinaturas: cadastre uma vez e o sistema vai sugerir para você toda vez que precisar pagar."
+      },
+      "recurrentes.recurrentes_nuevo": {
+        "from": "Nuevo gasto recurrente",
+        "to": "Nova despesa recorrente"
+      },
+      "recurrentes.recurrentes_editar": {
+        "from": "Editar",
+        "to": "Editar"
+      },
+      "recurrentes.recurrentes_guardar": {
+        "from": "Guardar",
+        "to": "Salvar"
+      },
+      "recurrentes.recurrentes_guardando": {
+        "from": "Guardando…",
+        "to": "Salvando…"
+      },
+      "recurrentes.recurrentes_pausar": {
+        "from": "Pausar",
+        "to": "Pausar"
+      },
+      "recurrentes.recurrentes_reactivar": {
+        "from": "Reactivar",
+        "to": "Reativar"
+      },
+      "recurrentes.recurrentes_borrar": {
+        "from": "Borrar",
+        "to": "Excluir"
+      },
+      "recurrentes.recurrentes_borrar_titulo": {
+        "from": "Borrar gasto recurrente",
+        "to": "Excluir despesa recorrente"
+      },
+      "recurrentes.recurrentes_borrar_cuerpo_one": {
+        "from": "¿Borrar «{nombre}» definitivamente? Se va a perder 1 ocurrencia pendiente de la bandeja. Los movimientos ya registrados no se tocan. Esta acción no se puede deshacer.",
+        "to": "Excluir «{nombre}» definitivamente? Será perdida 1 ocorrência pendente da bandeja. Os movimentos já registrados não são afetados. Esta ação não pode ser desfeita."
+      },
+      "recurrentes.recurrentes_borrar_cuerpo_other": {
+        "from": "¿Borrar «{nombre}» definitivamente? Se van a perder {count} ocurrencias pendientes de la bandeja. Los movimientos ya registrados no se tocan. Esta acción no se puede deshacer.",
+        "to": "Excluir «{nombre}» definitivamente? Serão perdidas {count} ocorrências pendentes da bandeja. Os movimentos já registrados não são afetados. Esta ação não pode ser desfeita."
+      },
+      "recurrentes.recurrentes_estado_activo": {
+        "from": "ACTIVO",
+        "to": "ATIVO"
+      },
+      "recurrentes.recurrentes_estado_pausa": {
+        "from": "EN PAUSA",
+        "to": "EM PAUSA"
+      },
+      "recurrentes.recurrentes_pendientes_one": {
+        "from": "1 ocurrencia pendiente en la bandeja",
+        "to": "1 ocorrência pendente na bandeja"
+      },
+      "recurrentes.recurrentes_pendientes_other": {
+        "from": "{count} ocurrencias pendientes en la bandeja",
+        "to": "{count} ocorrências pendentes na bandeja"
+      },
+      "recurrentes.recurrentes_sin_nombre": {
+        "from": "Gasto recurrente",
+        "to": "Despesa recorrente"
+      },
+      "recurrentes.recurrentes_sin_fechas": {
+        "from": "sin fechas elegidas",
+        "to": "sem datas escolhidas"
+      },
+      "recurrentes.recurrentes_sin_billetera": {
+        "from": "Sin billetera (elegila después)",
+        "to": "Sem carteira (escolha depois)"
+      },
+      "recurrentes.recurrentes_dias_del_mes": {
+        "from": "días {dias}",
+        "to": "{dias} dias"
+      },
+      "recurrentes.recurrentes_modo_label": {
+        "from": "¿Cuándo se repite?",
+        "to": "Com que frequência se repete?"
+      },
+      "recurrentes.recurrentes_modo_semanal": {
+        "from": "Semanal",
+        "to": "Semanal"
+      },
+      "recurrentes.recurrentes_modo_mensual": {
+        "from": "Mensual",
+        "to": "Mensal"
+      },
+      "recurrentes.recurrentes_modo_anual": {
+        "from": "Anual",
+        "to": "Anual"
+      },
+      "recurrentes.recurrentes_semanal_hint": {
+        "from": "Elegí hasta 3 días de la semana.",
+        "to": "Escolha até 3 dias da semana."
+      },
+      "recurrentes.recurrentes_mensual_hint": {
+        "from": "Elegí hasta 3 días del mes. Si elegís 31 y el mes es más corto, cae el último día.",
+        "to": "Escolha até 3 dias do mês. Se você escolher 31 e o mês for menor, cai no último dia."
+      },
+      "recurrentes.recurrentes_mensual_preview": {
+        "from": "En febrero caerían los días {fechas}.",
+        "to": "Em fevereiro cairiam os dias {fechas}."
+      },
+      "recurrentes.recurrentes_anual_hint": {
+        "from": "Elegí una o más fechas del año.",
+        "to": "Escolha uma ou mais datas do ano."
+      },
+      "recurrentes.recurrentes_quitar_fecha": {
+        "from": "Quitar esta fecha",
+        "to": "Remover esta data"
+      },
+      "recurrentes.recurrentes_fecha_corta": {
+        "from": "{dia} de {mes}",
+        "to": "{dia} de {mes}"
+      },
+      "recurrentes.recurrentes_mes_label": {
+        "from": "Mes",
+        "to": "Mês"
+      },
+      "recurrentes.recurrentes_campo_categoria": {
+        "from": "Categoría",
+        "to": "Categoria"
+      },
+      "recurrentes.recurrentes_elegir_categoria": {
+        "from": "Elegí una categoría",
+        "to": "Escolha uma categoria"
+      },
+      "recurrentes.recurrentes_campo_nombre": {
+        "from": "Nombre (opcional)",
+        "to": "Nome (opcional)"
+      },
+      "recurrentes.recurrentes_campo_nombre_placeholder": {
+        "from": "Si lo dejás vacío, se usa el de la categoría",
+        "to": "Se deixar em branco, será usado o nome da categoria"
+      },
+      "recurrentes.recurrentes_campo_monto": {
+        "from": "Monto",
+        "to": "Valor"
+      },
+      "recurrentes.recurrentes_campo_variabilidad": {
+        "from": "Variabilidad",
+        "to": "Variabilidade"
+      },
+      "recurrentes.recurrentes_variabilidad_fijo": {
+        "from": "Monto fijo",
+        "to": "Valor fixo"
+      },
+      "recurrentes.recurrentes_variabilidad_promedio": {
+        "from": "Promedio de los últimos 3 meses",
+        "to": "Média dos últimos 3 meses"
+      },
+      "recurrentes.recurrentes_campo_billetera": {
+        "from": "Billetera por defecto",
+        "to": "Carteira padrão"
+      },
+      "recurrentes.recurrentes_error_semanal": {
+        "from": "Elegí entre 1 y 3 días de la semana.",
+        "to": "Escolha entre 1 e 3 dias da semana."
+      },
+      "recurrentes.recurrentes_error_mensual": {
+        "from": "Elegí entre 1 y 3 días del mes.",
+        "to": "Escolha entre 1 e 3 dias do mês."
+      },
+      "recurrentes.recurrentes_error_anual": {
+        "from": "Elegí al menos una fecha del año.",
+        "to": "Escolha pelo menos uma data do ano."
+      },
+      "recurrentes.recurrentes_error_monto": {
+        "from": "El monto tiene que ser mayor a cero.",
+        "to": "O valor precisa ser maior que zero."
+      },
+      "recurrentes.recurrentes_reconfigurar": {
+        "from": "Revisar y reactivar",
+        "to": "Revisar e reativar"
+      },
+      "recurrentes.recurrentes_motivo_pausado_por_usuario": {
+        "from": "Lo pausaste vos.",
+        "to": "Você pausou."
+      },
+      "recurrentes.recurrentes_motivo_billetera_eliminada": {
+        "from": "Se borró la billetera que usaba. Elegí otra para reactivarlo.",
+        "to": "A carteira que ela usava foi excluída. Escolha outra para reativá-la."
+      },
+      "recurrentes.recurrentes_motivo_categoria_movida": {
+        "from": "La categoría cambió de lugar. Revisá la configuración antes de reactivarlo.",
+        "to": "A categoria mudou de lugar. Revise a configuração antes de reativá-la."
+      },
+      "recurrentes.recurrentes_motivo_subcuenta_creada": {
+        "from": "Se creó una subcuenta en su categoría. Revisá la configuración antes de reactivarlo.",
+        "to": "Foi criada uma subconta na categoria dela. Revise a configuração antes de reativá-la."
+      },
+      "recurrentes.recurrentes_toast_creado": {
+        "from": "Gasto recurrente creado.",
+        "to": "Despesa recorrente criada."
+      },
+      "recurrentes.recurrentes_toast_actualizado": {
+        "from": "Gasto recurrente actualizado.",
+        "to": "Despesa recorrente atualizada."
+      },
+      "recurrentes.recurrentes_toast_pausado": {
+        "from": "Gasto recurrente pausado.",
+        "to": "Despesa recorrente pausada."
+      },
+      "recurrentes.recurrentes_toast_reactivado": {
+        "from": "Gasto recurrente reactivado.",
+        "to": "Despesa recorrente reativada."
+      },
+      "recurrentes.recurrentes_toast_borrado": {
+        "from": "Gasto borrado. Se eliminaron {count} ocurrencias pendientes.",
+        "to": "Despesa excluída. {count} ocorrências pendentes foram removidas."
+      },
+      "recurrentes.recurrentes_modo_unica": {
+        "from": "Única vez",
+        "to": "Única vez"
+      },
+      "recurrentes.recurrentes_unica_hint": {
+        "from": "Elegí la fecha exacta. Ocurre una sola vez y no se repite.",
+        "to": "Escolhe a data exata. Acontece uma só vez e não se repete."
+      },
+      "recurrentes.recurrentes_unica_el": {
+        "from": "única vez el {fecha}",
+        "to": "única vez em {fecha}"
+      },
+      "recurrentes.recurrentes_campo_fecha_unica": {
+        "from": "Fecha de la ocurrencia",
+        "to": "Data da ocorrência"
+      },
+      "recurrentes.recurrentes_campo_fecha_fin": {
+        "from": "Fecha de fin (opcional)",
+        "to": "Data de fim (opcional)"
+      },
+      "recurrentes.recurrentes_vigencia_hint": {
+        "from": "Dejala vacía para que se repita para siempre.",
+        "to": "Deixa vazio para repetir para sempre."
+      },
+      "recurrentes.recurrentes_error_unica_fecha": {
+        "from": "Elegí la fecha de la única ocurrencia.",
+        "to": "Escolhe a data da ocorrência única."
+      },
+      "recurrentes.recurrentes_error_fecha_fin": {
+        "from": "La fecha de fin no puede ser anterior a la fecha única.",
+        "to": "A data de fim não pode ser anterior à data única."
+      },
+      "recurrentes.recurrentes_error_tarjeta": {
+        "from": "Elegí una tarjeta.",
+        "to": "Escolhe um cartão."
+      },
+      "recurrentes.recurrentes_origen_label": {
+        "from": "¿Con qué se paga?",
+        "to": "Pago com quê?"
+      },
+      "recurrentes.recurrentes_origen_billetera": {
+        "from": "Billetera",
+        "to": "Carteira"
+      },
+      "recurrentes.recurrentes_origen_tarjeta": {
+        "from": "Tarjeta de crédito",
+        "to": "Cartão de crédito"
+      },
+      "recurrentes.recurrentes_campo_tarjeta": {
+        "from": "Tarjeta",
+        "to": "Cartão"
+      },
+      "recurrentes.recurrentes_elegir_tarjeta": {
+        "from": "Elegí una tarjeta",
+        "to": "Escolhe um cartão"
+      },
+      "recurrentes.recurrentes_es_usd": {
+        "from": "El monto está en dólares (USD)",
+        "to": "O valor está em dólares (USD)"
+      },
+      "recurrentes.recurrentes_tarjeta_hint": {
+        "from": "La propuesta aparece en «Para aprobar» 3 días antes del cierre de la tarjeta. Sin cuotas: es un gasto cada vez, como una suscripción.",
+        "to": "A proposta aparece em «Para aprovar» 3 dias antes do fechamento do cartão. Sem parcelas: é um gasto de cada vez, como uma assinatura."
+      },
+      "recurrentes.recurrentes_hasta": {
+        "from": "hasta {fecha}",
+        "to": "até {fecha}"
+      },
+      "recurrentes.recurrentes_motivo_vencida": {
+        "from": "Llegó a su fecha de fin.",
+        "to": "Chegou à sua data de fim."
+      },
+      "recurrentes.recurrentes_motivo_tarjeta_eliminada": {
+        "from": "Se borró la tarjeta.",
+        "to": "O cartão foi excluído."
+      },
+      "recurrentes.recurrentes_dia_1": {
+        "from": "lunes",
+        "to": "segunda-feira"
+      },
+      "recurrentes.recurrentes_dia_2": {
+        "from": "martes",
+        "to": "terça-feira"
+      },
+      "recurrentes.recurrentes_dia_3": {
+        "from": "miércoles",
+        "to": "quarta-feira"
+      },
+      "recurrentes.recurrentes_dia_4": {
+        "from": "jueves",
+        "to": "quinta-feira"
+      },
+      "recurrentes.recurrentes_dia_5": {
+        "from": "viernes",
+        "to": "sexta-feira"
+      },
+      "recurrentes.recurrentes_dia_6": {
+        "from": "sábado",
+        "to": "sábado"
+      },
+      "recurrentes.recurrentes_dia_7": {
+        "from": "domingo",
+        "to": "domingo"
+      },
+      "recurrentes.recurrentes_dia_corto_1": {
+        "from": "Lun",
+        "to": "Seg"
+      },
+      "recurrentes.recurrentes_dia_corto_2": {
+        "from": "Mar",
+        "to": "Ter"
+      },
+      "recurrentes.recurrentes_dia_corto_3": {
+        "from": "Mié",
+        "to": "Qua"
+      },
+      "recurrentes.recurrentes_dia_corto_4": {
+        "from": "Jue",
+        "to": "Qui"
+      },
+      "recurrentes.recurrentes_dia_corto_5": {
+        "from": "Vie",
+        "to": "Sex"
+      },
+      "recurrentes.recurrentes_dia_corto_6": {
+        "from": "Sáb",
+        "to": "Sáb"
+      },
+      "recurrentes.recurrentes_dia_corto_7": {
+        "from": "Dom",
+        "to": "Dom"
+      },
+      "recurrentes.recurrentes_mes_1": {
+        "from": "enero",
+        "to": "janeiro"
+      },
+      "recurrentes.recurrentes_mes_2": {
+        "from": "febrero",
+        "to": "fevereiro"
+      },
+      "recurrentes.recurrentes_mes_3": {
+        "from": "marzo",
+        "to": "março"
+      },
+      "recurrentes.recurrentes_mes_4": {
+        "from": "abril",
+        "to": "abril"
+      },
+      "recurrentes.recurrentes_mes_5": {
+        "from": "mayo",
+        "to": "maio"
+      },
+      "recurrentes.recurrentes_mes_6": {
+        "from": "junio",
+        "to": "junho"
+      },
+      "recurrentes.recurrentes_mes_7": {
+        "from": "julio",
+        "to": "julho"
+      },
+      "recurrentes.recurrentes_mes_8": {
+        "from": "agosto",
+        "to": "agosto"
+      },
+      "recurrentes.recurrentes_mes_9": {
+        "from": "septiembre",
+        "to": "setembro"
+      },
+      "recurrentes.recurrentes_mes_10": {
+        "from": "octubre",
+        "to": "outubro"
+      },
+      "recurrentes.recurrentes_mes_11": {
+        "from": "noviembre",
+        "to": "novembro"
+      },
+      "recurrentes.recurrentes_mes_12": {
+        "from": "diciembre",
+        "to": "dezembro"
       },
       "wallets.tab_cuentas_ingreso": {
         "from": "Ingresos",
@@ -16467,14 +18343,6 @@
       "inversiones.config_mostrar_misterio_desc": {
         "from": "Activa o desactiva el análisis de fugas de capital en la pantalla de inicio.",
         "to": "Ativa ou desativa a análise de fugas de capital na tela inicial."
-      },
-      "inversiones.config_ocr_enabled": {
-        "from": "OCR  – Lectura inteligente de ticket",
-        "to": "OCR  – Leitura inteligente de comprovante"
-      },
-      "inversiones.config_ocr_enabled_desc": {
-        "from": "Analizá tus tickets automáticamente con cámara.",
-        "to": "Analise seus comprovantes automaticamente com a câmera."
       },
       "inversiones.config_voice_enabled_desc": {
         "from": "Registrá movimientos con tu voz.",
@@ -18712,10 +20580,6 @@
         "from": "Orden de billeteras",
         "to": "Ordem das carteiras"
       },
-      "inversiones.settings_entry_ocr": {
-        "from": "OCR",
-        "to": "OCR"
-      },
       "inversiones.settings_entry_voice": {
         "from": "Voz",
         "to": "Voz"
@@ -18731,6 +20595,14 @@
       "inversiones.settings_entry_import_export": {
         "from": "Importar y exportar movimientos",
         "to": "Importar e exportar transações"
+      },
+      "inversiones.settings_entry_recurring": {
+        "from": "Recurrentes",
+        "to": "Recorrentes"
+      },
+      "inversiones.settings_entry_recurring_desc": {
+        "from": "Ingresos y gastos que se repiten solos",
+        "to": "Receitas e despesas que se repetem sozinhas"
       },
       "inversiones.settings_entry_report_issue": {
         "from": "Reportar un problema o sugerencia",
