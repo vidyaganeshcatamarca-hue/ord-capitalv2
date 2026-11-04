@@ -484,7 +484,13 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
                       </span>
                       <OrigenBadge origen={item.origen} isVoice={isVoice} />
                     </div>
-                    <p className="saneamiento-item-detalle">{item.detalle || t('saneamiento_sin_detalle')}</p>
+                    {/* Sin nota cuando no hay nota: el motor de recurrentes ya no
+                        escribe ninguna, y los chips de arriba alcanzan para saber qué
+                        es. Las demás filas conservan su «Sin detalle» de siempre.
+                        `recurring_expense` queda filtrado por las filas viejas. */}
+                    {(item.detalle || item.origen !== 'recurrente') && item.detalle !== 'recurring_expense' && (
+                      <p className="saneamiento-item-detalle">{item.detalle || t('saneamiento_sin_detalle')}</p>
+                    )}
                     <p className="saneamiento-item-meta">{formatDate(item.fecha)}</p>
                     <p className="saneamiento-item-meta cuarentena-item-meta-detalle">
                       {itemMetaParts(item, tipo).map((part) => (
