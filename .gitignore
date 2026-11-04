@@ -112,7 +112,6 @@ tests/inversiones/*
 !tests/keypad_decimal_separator.test.js
 scratch/
 walkthrough.md
-AGENTS.md
 iniciar tunel.bat
 start-tunnel.bat
 inspect_*.js
