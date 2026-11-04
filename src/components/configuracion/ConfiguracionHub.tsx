@@ -216,7 +216,11 @@ function SettingsCollapsible({ id, icon, titleKey, descKey, children, open: cont
   const titleId = `${id}-title`
   const bodyId = `${id}-body`
   return (
-    <section className="config-hub-card config-hub-collapsible" aria-labelledby={titleId}>
+    <section
+      className="config-hub-card config-hub-collapsible"
+      data-open={open ? 'true' : 'false'}
+      aria-labelledby={titleId}
+    >
       <button
         type="button"
         className="config-hub-collapsible-header"

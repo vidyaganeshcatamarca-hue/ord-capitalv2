@@ -345,24 +345,39 @@ article.presupuesto-ciclo-card.config-hub-card {
   text-align: center;
 }
 
-/* ── Ronda 9 (dueño): el grupo en DOS líneas verdes, cada hijo en UNA ─────
-   Lo que se lee como unidad es el grupo: el recuadro padre lleva borde +
-   contorno (dos líneas) y encierra a todos sus hijos; cada hijo lleva una
-   sola línea verde. Vale para todos los grupos de Ajustes, no solo para
-   Datos y operaciones.
-   Va al final del archivo a propósito: así gana sobre los estados `:hover`
-   y `--soon` que cambian `border-color`, declarados más arriba. */
+/* ── Ronda 10 (dueño): recuadro SOLO en el grupo desplegado ───────────────
+   El dueño leyó la doble línea como ruido: pedía un recuadro por grupo abierto
+   y ninguno en el resto. Entonces:
+     · grupo plegado  -> sin borde y sin contorno (la tarjeta es solo fondo);
+     · grupo abierto  -> UNA línea gruesa (2px), sin contorno: nada de doble;
+     · cada hijo      -> una línea FINA (1px), que ya encierra a su propio hijo.
+   Vale para todos los grupos de Ajustes, no solo para Datos y operaciones.
+   Va al final del archivo a propósito: así gana sobre los estados `:hover`,
+   `--soon` y `--featured` que cambian `border-color`, declarados más arriba. */
 section.config-hub-collapsible.config-hub-card,
-section.config-hub-collapsible.config-hub-card:hover {
+section.config-hub-collapsible.config-hub-card:hover,
+section.config-hub-collapsible.config-hub-card[data-open='false'],
+section.config-hub-collapsible.config-hub-card[data-open='false']:hover {
+  border: none;
+  outline: none;
+}
+
+section.config-hub-collapsible.config-hub-card[data-open='true'],
+section.config-hub-collapsible.config-hub-card[data-open='true']:hover {
   border: 2px solid var(--mint);
-  outline: 2px solid var(--mint);
-  outline-offset: 4px;
+  outline: none;
+}
+
+/* El cuerpo abierto no necesita su propia línea superior: el recuadro del
+   grupo ya lo delimita y esa línea extra se leía como un borde interno. */
+section.config-hub-collapsible.config-hub-card[data-open='true'] .config-hub-collapsible-body {
+  border-top: none;
 }
 
 .config-hub-group-cards > .config-hub-card,
 .config-hub-group-cards > .config-hub-card:hover,
 .config-hub-group-cards > .config-hub-card--soon:hover,
 .config-hub-group-cards > .config-hub-card--featured:hover {
-  border: 2px solid var(--mint);
+  border: 1px solid var(--mint);
   outline: none;
 }
