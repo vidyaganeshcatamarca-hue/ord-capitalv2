@@ -73,6 +73,10 @@ const SYSTEM_CATEGORY_NAMES: readonly string[] = [
   'cat_tech_electro',
   // Created on demand by RPCs.
   'cat_investments_portfolio',
+  // OCR ticket system category (definitive OCR PRD §8): rows carry this i18n
+  // key as `nombre_cuenta`, so every render must translate it and never print
+  // the raw key.
+  'ocr_unrecognized',
   // Legacy name of the row above, before the key was made unique so it could
   // not compete with a user category literally named "Investments". Rows
   // created before the rename still carry it; the rename migration (84) moves

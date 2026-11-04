@@ -195,9 +195,11 @@ const LOAD_REGISTRY_GROUP: SettingsMenuGroup = {
     { id: 'default_wallets', titleKey: 'settings_entry_default_wallets', target: 'target:/configuracion/operativas' },
     { id: 'default_movement', titleKey: 'settings_entry_default_movement', target: 'target:/configuracion/operativas' },
     { id: 'wallet_order', titleKey: 'settings_entry_wallet_order', target: 'target:/configuracion/operativas' },
-    { id: 'ocr', titleKey: 'settings_entry_ocr', target: 'target:/configuracion/operativas' },
     { id: 'voice', titleKey: 'settings_entry_voice', target: 'target:/configuracion/operativas' },
     // S5: OCR auto-approval is gone on purpose. Do not re-add it.
+    // OCR leaf removed too (PRD OCR §61): the OCR toggle no longer exists, so a
+    // shortcut to a page without OCR settings would be a dead end. OCR access
+    // lives in the load/register flow, gated by the `menu_ocr` feature flag.
   ],
 }
 

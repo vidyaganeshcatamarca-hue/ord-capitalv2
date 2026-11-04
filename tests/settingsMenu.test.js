@@ -41,7 +41,13 @@ const ADVANCED_GROUP_IDS = [
   'application',
 ]
 // S3 — Carga y registro leaves. OCR auto-approval (S5) must NOT be here.
-const LOAD_REGISTRY_IDS = ['default_wallets', 'default_movement', 'wallet_order', 'ocr', 'voice']
+// `ocr` leaf removed on purpose: the definitive OCR PRD §61 deletes the OCR
+// toggle from Ajustes (it never persisted and there is no product reason to
+// switch OCR on/off). OCR access now lives in the load/register flow, gated by
+// the `menu_ocr` feature flag, so a shortcut to a page without OCR settings
+// would be a dead end. The S5 assertion below (no auto-approval entry) is
+// unaffected and still enforced for every entry.
+const LOAD_REGISTRY_IDS = ['default_wallets', 'default_movement', 'wallet_order', 'voice']
 // S11/S12 — Ayuda y soporte entries, present in both modes.
 const HELP_SUPPORT_IDS = ['report_issue', 'my_reports', 'guided_tour']
 // S9 — asymmetric mode switch entries.

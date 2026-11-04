@@ -9,6 +9,7 @@ import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { EditarCuarentenaModal } from './EditarCuarentenaModal'
 import type { EditarCuarentenaPayload } from './EditarCuarentenaModal'
 import { ImageModal } from './ImageModal'
+import { OcrTicketCard } from '@/components/ocr/OcrTicketCard'
 import type { CuarentenaItem } from '@/pages/Saneamiento/SaneamientoPage'
 // Shared saneamiento item styles (item layout, checkbox, flex actions) live in
 // SaneamientoPage.css; import it first so the local sheet can override.
@@ -50,6 +51,19 @@ interface LoteResultRow {
  */
 export function isVoiceItem(item: CuarentenaItem): boolean {
   return !!item.metadata && item.metadata.job_id != null
+}
+
+/**
+ * True only for a REAL OCR ticket: `origen='ocr'` AND the ticket payload present.
+ * Legacy `origen='ocr'` rows (scalar contract, no items) keep the generic
+ * approve/reject path so an existing origin never becomes unreachable
+ * (PRD OCR §28, §79).
+ */
+export function isOcrTicketItem(item: CuarentenaItem): boolean {
+  return (
+    item.origen === 'ocr' &&
+    (Array.isArray(item.metadata?.items) || item.metadata?.ocr_job_id != null)
+  )
 }
 
 /** Movement type of a row, defaulting legacy rows without `tipo` to expense. */
@@ -206,8 +220,15 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
     fetchItems()
     // A voice job landing in the quarantine refreshes the tray.
     const onVoiceLanded = () => fetchItems()
+    // Same for an OCR ticket that finished processing while the user was
+    // somewhere else (definitive OCR PRD §92: the quarantine is the destination).
+    const onOcrLanded = () => fetchItems()
     window.addEventListener('voice-quarantine-landed', onVoiceLanded)
-    return () => window.removeEventListener('voice-quarantine-landed', onVoiceLanded)
+    window.addEventListener('ocr-quarantine-landed', onOcrLanded)
+    return () => {
+      window.removeEventListener('voice-quarantine-landed', onVoiceLanded)
+      window.removeEventListener('ocr-quarantine-landed', onOcrLanded)
+    }
   }, [fetchItems])
 
   // Changing the filter changes what is visible: a selection made under the
@@ -232,8 +253,17 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
     return items.filter((i) => i.origen === filtro)
   }, [items, filtro])
 
-  const approvableItems = useMemo(() => visibles.filter(isApprovable), [visibles])
-  const excludedCount = visibles.length - approvableItems.length
+  // OCR rows are NEVER batch-approvable: one row becomes one movement per final
+  // category node through `fn_confirmar_ticket_ocr_cuarentena` (PRD §58), so the
+  // generic 1-row -> 1-movement batch RPC would silently drop money.
+  const approvableItems = useMemo(
+    () => visibles.filter((item) => !isOcrTicketItem(item) && isApprovable(item)),
+    [visibles]
+  )
+  // OCR tickets are not "excluded for missing data": they have their own
+  // grouped confirmation. Only non-OCR rows count toward that notice.
+  const batchableItems = useMemo(() => visibles.filter((item) => !isOcrTicketItem(item)), [visibles])
+  const excludedCount = batchableItems.length - approvableItems.length
   const selectedApprovable = useMemo(
     () => approvableItems.filter((i) => seleccionados.has(i.pendiente_id)),
     [approvableItems, seleccionados]
@@ -250,13 +280,14 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
     if (!isApprovable(item)) return
     try {
       await rpc('fn_aprobar_cuarentena_v2', { p_pendiente_id: item.pendiente_id })
-      // The tray approves rows from every origin: `origen` separates voice jobs
-      // from the rest without a second event name.
-      telemetry.track(
-        'voice_quarantine_approved',
-        { origen: isVoiceItem(item) ? 'voz' : 'otro' },
-        TELEMETRY_PRIORITY.MEDIUM
-      )
+      // PRD OCR §71 / §115.7: an approval must not be counted as Voice unless it
+      // IS Voice. OCR tickets never reach this path (they confirm through the
+      // grouped RPC and emit `ocr_ticket_confirmed`).
+      if (isVoiceItem(item)) {
+        telemetry.track('voice_quarantine_approved', { origen: 'voz' }, TELEMETRY_PRIORITY.MEDIUM)
+      } else {
+        telemetry.track('quarantine_approved', { origen: item.origen }, TELEMETRY_PRIORITY.MEDIUM)
+      }
       showToast(t('saneamiento_toast_aprobado'), 'success')
       onChange()
       fetchItems()
@@ -423,12 +454,39 @@ export function BandejaCuarentena({ onVolver, onChange }: BandejaCuarentenaProps
           <span className="saneamiento-empty-icon">
             <CategoryIcon name="ShieldCheck" size={48} />
           </span>
-          <h3>{t('saneamiento_bandejawidget_vacio_titulo')}</h3>
-          <p>{t('saneamiento_bandejawidget_vacio_desc')}</p>
+          <h3>
+            {filtro === 'ocr'
+              ? t('ocr.empty_pending')
+              : t('saneamiento_bandejawidget_vacio_titulo')}
+          </h3>
+          <p>
+            {filtro === 'ocr'
+              ? t('ocr.empty_pending_desc')
+              : t('saneamiento_bandejawidget_vacio_desc')}
+          </p>
         </div>
       ) : (
         <div className="saneamiento-lista">
           {visibles.map((item) => {
+            // One ticket = one quarantine card, expanded into its own grouped
+            // editor (PRD §2, §5). It has its own save/confirm/reject actions.
+            //
+            // Only a REAL OCR ticket takes this branch. A legacy `origen='ocr'`
+            // row without items (older contract) keeps the scalar row below, so
+            // an existing origin is never left without a way to approve/reject
+            // it (PRD §28, §79).
+            if (isOcrTicketItem(item)) {
+              return (
+                <OcrTicketCard
+                  key={item.pendiente_id}
+                  item={item}
+                  onChanged={() => {
+                    onChange()
+                    fetchItems()
+                  }}
+                />
+              )
+            }
             const isVoice = isVoiceItem(item)
             const tipo = resolveMovementType(item)
             const missing = missingRequiredFields(item)
