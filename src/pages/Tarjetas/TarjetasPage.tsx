@@ -1358,7 +1358,7 @@ const handleLegacySubmit = async () => {
           <ConfirmModal
             isOpen={showArchiveConfirm}
             title={t('cards_archive')}
-            message={`t("card_archive_confirm", { name: targetCard?.nombre_tarjeta })`}
+            message={t('card_archive_confirm', { name: targetCard?.nombre_tarjeta })}
             confirmText={t('btn_archive')}
             type="danger"
             onConfirm={handleArchive}
@@ -1782,7 +1782,7 @@ resumenEstimado={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_tot
           <ConfirmModal
             isOpen={showArchiveConfirm}
             title={t('cards_archive')}
-            message={`t("card_archive_confirm", { name: targetCard?.nombre_tarjeta })`}
+            message={t('card_archive_confirm', { name: targetCard?.nombre_tarjeta })}
             confirmText={t('btn_archive')}
             type="danger"
             onConfirm={handleArchive}
