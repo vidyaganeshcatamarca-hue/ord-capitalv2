@@ -178,3 +178,9 @@ ya dañadas.
 **Pendiente:** la pausa y la reactivación todavía no tocan el puntero. Hoy, reactivar una recurrencia
 pausada tres meses la haría generar todo ese atraso. Decisión propuesta: al reactivar, recalcular el
 puntero desde hoy (pausar = no generar).
+
+**Cerrado (L10): pausar significa «no lo generes».** El dueño lo definió así. `fn_pausar_gasto_recurrente`
+ahora recalcula `proxima_ocurrencia` desde hoy al reactivar (`temp_sql/78_recurrentes_pausa_y_puntero.sql`).
+Mientras está pausada, el motor la saltea por `activo = false`. Verificado: pausada genera 0; reactivada
+con el puntero 90 días atrás genera **1** (el día de hoy, que sí es del patrón) en vez de 39.
+Si se reactiva un día que no es del patrón, el puntero queda en la próxima fecha y no genera nada ese día.
