@@ -276,12 +276,12 @@ function AppLayout() {
               setShowAdd(false)
               setIsVoiceRecorderOpen(true)
             }}
-            // OCR lives in the load/register flow (definitive OCR PRD §63):
-            // the sheet closes first so dismissing the capture returns the user
-            // to the screen that opened it.
+            // OCR lives in the load/register flow (definitive OCR PRD §63).
+            // The register sheet stays mounted underneath the capture sheet:
+            // dismissing the photo has to return the user to what they had
+            // already typed, not to Home with nothing.
             onOpenOcr={() => {
               if (!ocrEnabled) return
-              setShowAdd(false)
               setIsOcrCaptureOpen(true)
             }}
           />
@@ -297,7 +297,14 @@ function AppLayout() {
       {/* Always mounted for the same reason as the voice bridge: the OCR job
        * keeps moving while the sheet is closed. `open` only controls the view. */}
       <Suspense fallback={null}>
-        <OcrCaptureModal open={isOcrCaptureOpen} onClose={() => setIsOcrCaptureOpen(false)} />
+        <OcrCaptureModal
+          open={isOcrCaptureOpen}
+          onClose={(reason) => {
+            setIsOcrCaptureOpen(false)
+            // Only a created job ends the register flow; a dismissal keeps it.
+            if (reason === 'submitted') setShowAdd(false)
+          }}
+        />
       </Suspense>
     </>
     </OcrJobsProvider>

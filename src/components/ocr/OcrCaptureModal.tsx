@@ -10,6 +10,7 @@
 // followed by the global bridge after this modal is closed (§92).
 
 import { useMemo, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { t } from '@/locales/i18n'
 import { useOcrContext } from '@/ocr/contextBuilder'
 import { useOcrJobsContext } from '@/ocr/OcrJobsProvider'
@@ -25,7 +26,13 @@ import './Ocr.css'
 
 interface OcrCaptureModalProps {
   open: boolean
-  onClose: () => void
+  /**
+   * `submitted` means a job was created and the user is dismissing the
+   * confirmation: the register sheet is done and must close too.
+   * `cancelled` means nothing was sent, so whatever the user had typed
+   * behind this sheet has to survive.
+   */
+  onClose: (reason?: 'cancelled' | 'submitted') => void
 }
 
 function formatBytes(bytes: number): string {
@@ -117,8 +124,11 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
   }
 
   const close = (): void => {
+    // Read the stage BEFORE reset() wipes it: an accepted job is a
+    // submission, anything else is a dismissal.
+    const reason = stage === 'accepted' ? 'submitted' : 'cancelled'
     reset()
-    onClose()
+    onClose(reason)
   }
 
   const send = async (): Promise<void> => {
@@ -143,17 +153,26 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
     setFiles([])
   }
 
-  return (
-    <div className="modal-overlay" onClick={close}>
-      <div className="modal-content" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
+  // Portaled to `document.body`: the sheet is mounted from AppLayout, so a
+  // page-scoped stylesheet never reaches it and any ancestor transform would
+  // also break a fixed overlay.
+  return createPortal(
+    <div
+      className="ocr-overlay"
+      onClick={close}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('ocr.capture_title')}
+    >
+      <div className="ocr-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="ocr-modal-header">
           <h3>{t('ocr.capture_title')}</h3>
-          <button className="modal-close" onClick={close} aria-label={t('ocr.capture_cancel')}>
+          <button className="ocr-modal-close" onClick={close} aria-label={t('ocr.capture_cancel')}>
             ×
           </button>
         </div>
 
-        <div className="modal-body ocr-capture-body">
+        <div className="ocr-modal-body ocr-capture-body">
           {stage === 'accepted' && accepted ? (
             <div className="ocr-received">
               <h4>{t('ocr.capture_received_title')}</h4>
@@ -306,6 +325,7 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
           </p>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

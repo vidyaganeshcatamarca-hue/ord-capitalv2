@@ -32,6 +32,21 @@ export function ocrErrorI18nKey(code: string | null | undefined): string {
   return CODE_TO_I18N_KEY[code] ?? 'ocr.error_unknown';
 }
 
+/**
+ * i18n key for an UPLOAD failure.
+ *
+ * A 404 during upload means the endpoint is not published where the client is
+ * pointing, not that a job vanished: telling the user "we could not find this
+ * ticket on the server" is nonsense right after choosing a file (verified
+ * against the real backend: `POST /v1/ocr/jobs` answers 404 while Voice answers
+ * 401 on the same host). The generic upload message is the honest one.
+ */
+export function ocrUploadErrorI18nKey(code: string | null | undefined): string {
+  if (!code) return 'ocr.error_upload_failed';
+  if (code === 'NOT_FOUND') return 'ocr.error_upload_failed';
+  return ocrErrorI18nKey(code);
+}
+
 /** i18n key for a local file-validation rejection (PRD §27). */
 const REJECTION_TO_I18N_KEY: Record<OcrFileRejection, string> = {
   no_files: 'ocr.error_no_files',

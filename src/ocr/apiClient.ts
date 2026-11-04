@@ -18,7 +18,7 @@ import {
   parseOcrErrorResponse,
 } from './contract';
 import { normalizeOcrResult } from './normalize';
-import { ocrErrorI18nKey } from './errors';
+import { ocrErrorI18nKey, ocrUploadErrorI18nKey } from './errors';
 import type { OcrIssue, OcrJob, OcrJobAccepted, OcrJobStatus } from './types';
 
 /** Typed transport error for every OCR backend interaction. */
@@ -109,11 +109,41 @@ async function fetchBounded(
   }
 }
 
-async function buildHttpError(response: Response): Promise<OcrApiError> {
+/**
+ * Resolves the OCR API base at runtime so the endpoint can be pointed without
+ * touching code (PRD §127: the OCR service is a dependency and its public host
+ * is deployment configuration, not a frontend constant).
+ *
+ * Kept inside a function on purpose: a module-level `import.meta.env` read would
+ * break the plain-Node test imports.
+ */
+export function resolveOcrApiBaseUrl(): string {
+  try {
+    const env = (import.meta as unknown as { env?: Record<string, string> }).env;
+    const configured = env?.VITE_OCR_API_BASE_URL;
+    if (typeof configured === 'string' && configured.trim().length > 0) {
+      return configured.trim().replace(/\/+$/, '');
+    }
+  } catch {
+    // No Vite env (tests, SSR): fall through to the shared host.
+  }
+  return OCR_API_BASE_URL;
+}
+
+/**
+ * `surface` decides which message the user sees: a 404 while uploading means the
+ * endpoint is missing, a 404 while polling means the job is gone. Same status,
+ * opposite meanings.
+ */
+async function buildHttpError(
+  response: Response,
+  surface: 'upload' | 'poll' = 'poll'
+): Promise<OcrApiError> {
   const body = await readJsonBody(response);
   const parsed = parseOcrErrorResponse(body);
   const code = parsed.code === 'UNKNOWN' ? ocrErrorCodeFromHttpStatus(response.status) : parsed.code;
-  return new OcrApiError(code, ocrErrorI18nKey(code), response.status, parsed.message);
+  const i18nKey = surface === 'upload' ? ocrUploadErrorI18nKey(code) : ocrErrorI18nKey(code);
+  return new OcrApiError(code, i18nKey, response.status, parsed.message);
 }
 
 function networkError(detail: string): OcrApiError {
@@ -174,7 +204,7 @@ export async function createOcrJob(input: CreateOcrJobInput): Promise<OcrJobAcce
   let response: Response;
   try {
     response = await fetchBounded(
-      `${OCR_API_BASE_URL}${OCR_JOB_CREATE_PATH}`,
+      `${resolveOcrApiBaseUrl()}${OCR_JOB_CREATE_PATH}`,
       {
         method: 'POST',
         headers: { Authorization: `Bearer ${accessToken}` },
@@ -189,7 +219,7 @@ export async function createOcrJob(input: CreateOcrJobInput): Promise<OcrJobAcce
   }
 
   if (response.status !== 200 && response.status !== 201 && response.status !== 202) {
-    throw await buildHttpError(response);
+    throw await buildHttpError(response, 'upload');
   }
 
   const body = asRecord(await readJsonBody(response));
@@ -223,7 +253,7 @@ export async function getOcrJob(input: GetOcrJobInput): Promise<OcrJob> {
   let response: Response;
   try {
     response = await fetchBounded(
-      `${OCR_API_BASE_URL}${OCR_JOB_POLL_PATH(jobId)}`,
+      `${resolveOcrApiBaseUrl()}${OCR_JOB_POLL_PATH(jobId)}`,
       { method: 'GET', headers: { Authorization: `Bearer ${accessToken}` } },
       OCR_REQUEST_TIMEOUT_MS,
       signal
@@ -276,7 +306,7 @@ export async function registerCategoryMemory(input: RegisterCategoryMemoryInput)
   let response: Response;
   try {
     response = await fetchBounded(
-      `${OCR_API_BASE_URL}${OCR_CATEGORY_MEMORY_PATH(jobId)}`,
+      `${resolveOcrApiBaseUrl()}${OCR_CATEGORY_MEMORY_PATH(jobId)}`,
       {
         method: 'POST',
         headers: {

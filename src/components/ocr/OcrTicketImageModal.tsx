@@ -4,38 +4,49 @@
 // ============================================
 //
 // Normative source: definitive PRD §65. The viewer consults the local store by
-// `ocr_job_id` first and never depends on a public backend URL. Several images
-// keep their original order and can be navigated. A missing image degrades with
-// a message and never breaks the card (§46).
+// `ocr_job_id` and never depends on a public backend URL. Several images keep
+// their original order and can be navigated. A missing image degrades with a
+// message and never breaks the card (§46).
+//
+// Portaled with its own overlay: the page-scoped `.modal-*` classes only exist
+// in the sheets of Saneamiento/Presupuestos, so this modal must not depend on
+// them (it also renders fine if moved out of the tray later).
 
-import { useState } from 'react';
-import { t } from '@/locales/i18n';
-import { useOcrImages } from '@/ocr/useOcrImages';
-import './Ocr.css';
+import { useState } from 'react'
+import { createPortal } from 'react-dom'
+import { t } from '@/locales/i18n'
+import { useOcrImages } from '@/ocr/useOcrImages'
+import './Ocr.css'
 
 interface OcrTicketImageModalProps {
-  jobId: string;
-  onClose: () => void;
+  jobId: string
+  onClose: () => void
 }
 
 export function OcrTicketImageModal({ jobId, onClose }: OcrTicketImageModalProps) {
-  const { images, loading } = useOcrImages(jobId, true);
-  const [index, setIndex] = useState(0);
+  const { images, loading } = useOcrImages(jobId, true)
+  const [index, setIndex] = useState(0)
 
-  const available = images.filter((image) => image.url !== null);
-  const current = available[Math.min(index, Math.max(0, available.length - 1))] ?? null;
-  const total = available.length;
+  const available = images.filter((image) => image.url !== null)
+  const current = available[Math.min(index, Math.max(0, available.length - 1))] ?? null
+  const total = available.length
 
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content modal-media" onClick={(event) => event.stopPropagation()}>
-        <div className="modal-header">
+  return createPortal(
+    <div
+      className="ocr-overlay"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t('ocr.view_ticket')}
+    >
+      <div className="ocr-modal" onClick={(event) => event.stopPropagation()}>
+        <div className="ocr-modal-header">
           <h3>{t('ocr.view_ticket')}</h3>
-          <button className="modal-close" onClick={onClose} aria-label={t('ocr.capture_cancel')}>
+          <button className="ocr-modal-close" onClick={onClose} aria-label={t('ocr.capture_cancel')}>
             ×
           </button>
         </div>
-        <div className="modal-body">
+        <div className="ocr-modal-body">
           {loading ? (
             <div className="ocr-viewer-empty">
               <div className="spinner" />
@@ -74,6 +85,7 @@ export function OcrTicketImageModal({ jobId, onClose }: OcrTicketImageModalProps
           )}
         </div>
       </div>
-    </div>
-  );
+    </div>,
+    document.body
+  )
 }
