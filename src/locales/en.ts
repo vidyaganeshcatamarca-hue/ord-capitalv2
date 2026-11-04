@@ -17,6 +17,7 @@ export const errors = {
   error_unauthorized: "You do not have permission to perform this action.",
   error_session_expired: "Your session has expired. Sign in again.",
   error_field_required: "The {field} field is required.",
+  error_invalid_day_range: "{field} must be a whole number between 1 and 31.",
   card_load_legacy_cuotas_btn: "Load previous installments",
   card_legacy_btn_entry: "Previous installments",
   card_legacy_modal_title: "Add installments from previous cycles",

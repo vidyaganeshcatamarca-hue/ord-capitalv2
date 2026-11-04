@@ -172,6 +172,18 @@ function getSemaforoIcon(alerta: string) {
   return 'TriangleAlert'
 }
 
+/**
+ * F-07: `min`/`max` en un <input type="number"> no frena nada cuando el botón que
+ * guarda no es un submit. El día viajaba crudo y rebotaba en la constraint de la
+ * tabla, que devuelve el texto de Postgres a la vista. Vacío no es inválido: el alta
+ * aplica sus valores por defecto y la edición guarda null (la columna lo acepta).
+ */
+function diaFueraDeRango(raw: string): boolean {
+  if (!raw.trim()) return false
+  const n = Number(raw)
+  return !Number.isInteger(n) || n < 1 || n > 31
+}
+
 function getUrgencyMsg(key: string, dias: number): string {
   const map: Record<string, string> = {
     msg_vencimiento_critico: t('card_due_critical', { dias }),
@@ -604,6 +616,14 @@ const handleLegacySubmit = async () => {
 
   const handleCreate = async () => {
     if (!formNombre.trim()) { showToast(t('cards_name_required'), 'error'); return }
+    if (diaFueraDeRango(formDiaVenc)) {
+      showToast(t('error_invalid_day_range', { field: t('card_form_due_day') }), 'error')
+      return
+    }
+    if (diaFueraDeRango(formDiaCierre)) {
+      showToast(t('error_invalid_day_range', { field: t('card_form_closing_day') }), 'error')
+      return
+    }
     try {
       setFormSubmitting(true)
       await rpc('fn_crear_tarjeta_credito', {
@@ -631,6 +651,14 @@ const handleLegacySubmit = async () => {
 
   const handleEdit = async () => {
     if (!targetCard) return
+    if (diaFueraDeRango(formDiaVenc)) {
+      showToast(t('error_invalid_day_range', { field: t('card_form_due_day') }), 'error')
+      return
+    }
+    if (diaFueraDeRango(formDiaCierre)) {
+      showToast(t('error_invalid_day_range', { field: t('card_form_closing_day') }), 'error')
+      return
+    }
     try {
       setFormSubmitting(true)
       await rpc('fn_editar_tarjeta_credito', {

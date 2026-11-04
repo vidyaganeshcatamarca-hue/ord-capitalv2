@@ -11,6 +11,7 @@ export const errors = {
 
   // Validaciones de campos
   error_field_required: "El campo {field} es obligatorio.",
+  error_invalid_day_range: "{field} tiene que ser un número entero entre 1 y 31.",
   card_load_legacy_cuotas_btn: "Cargar cuotas anteriores",
 
   card_legacy_btn_entry: "Cuotas anteriores",
