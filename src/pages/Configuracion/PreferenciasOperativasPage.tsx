@@ -18,7 +18,6 @@ interface OperationalPrefs {
   billetera_default_egreso: number | null
   billetera_default_ingreso: number | null
   ocr_auto_aprobar: boolean
-  ocr_enabled: boolean
   voz_activada: boolean
   tipo_movimiento_default: 'expense' | 'income'
   orden_billeteras: 'valor' | 'alfabetico' | null
@@ -28,7 +27,6 @@ const DEFAULT_PREFS: OperationalPrefs = {
   billetera_default_egreso: null,
   billetera_default_ingreso: null,
   ocr_auto_aprobar: false,
-  ocr_enabled: true,
   voz_activada: true,
   tipo_movimiento_default: 'expense',
   orden_billeteras: 'valor',
@@ -209,18 +207,12 @@ export function PreferenciasOperativasPage() {
         <article className="config-section-card">
           <h2>{t('config_automation_section')}</h2>
 
-          <div className="config-section-inline">
-            <div>
-              <span style={{ color: 'var(--text)', fontSize: 'calc(0.9rem * var(--font-scale))' }}>{t('config_ocr_enabled')}</span>
-              <p style={{ margin: '2px 0 0', color: 'var(--text-3)', fontSize: 'calc(0.78rem * var(--font-scale))' }}>{t('config_ocr_enabled_desc')}</p>
-            </div>
-            <ToggleSwitch
-              checked={prefs.ocr_enabled}
-              onChange={(v) => updatePref('ocr_enabled', v)}
-            />
-          </div>
+          {/* OCR toggle removed on purpose (PRD OCR definitivo §61): there is no
+              product reason for the user to switch OCR on/off, it never
+              persisted, and OCR access is gated by the `menu_ocr` feature flag
+              from the load/register flow. Do not reintroduce `ocr_enabled`. */}
 
-          <div className="config-section-inline" style={{ marginTop: 10 }}>
+          <div className="config-section-inline">
             <div>
               <span style={{ color: 'var(--text)', fontSize: 'calc(0.9rem * var(--font-scale))' }}>{t('config_voice_enabled')}</span>
               <p style={{ margin: '2px 0 0', color: 'var(--text-3)', fontSize: 'calc(0.78rem * var(--font-scale))' }}>{t('config_voice_enabled_desc')}</p>

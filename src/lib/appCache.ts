@@ -32,6 +32,27 @@ function isSupabaseKey(key: string): boolean {
   return SUPABASE_KEY_PATTERNS.some((re) => re.test(key))
 }
 
+/**
+ * OCR recovery state that MUST survive a cache wipe.
+ *
+ * Definitive OCR PRD §95: "Borrar caché" deletes the local OCR image copies and
+ * their manifests, but NOT "active job ids necesarios para recuperación",
+ * quarantines, movements or the backend category memory.
+ *
+ * This matters: an OCR job legally waits DAYS for inference (§36), so wiping its
+ * id on a cache clear would orphan a ticket the user already uploaded — the one
+ * outcome §34 and §76 forbid. The pending correction queue is preserved for the
+ * same reason (§24: keep the pending correction and retry).
+ */
+const OCR_RECOVERY_KEY_PATTERNS = [
+  /^ord\.ocr\.v1\.active_jobs$/i,
+  /^ord\.ocr\.v1\.pending_memory$/i,
+]
+
+function isRecoveryStateKey(key: string): boolean {
+  return OCR_RECOVERY_KEY_PATTERNS.some((re) => re.test(key))
+}
+
 export async function clearAppCache(deps: ClearAppCacheDeps = {}): Promise<ClearAppCacheResult> {
   const w = deps.window ?? (typeof window !== 'undefined' ? window : undefined)
   const n = deps.navigator ?? (typeof navigator !== 'undefined' ? navigator : undefined)
@@ -75,7 +96,9 @@ export async function clearAppCache(deps: ClearAppCacheDeps = {}): Promise<Clear
       const keysToRemove: string[] = []
       for (let i = 0; i < w.localStorage.length; i++) {
         const key = w.localStorage.key(i)
-        if (key && !isSupabaseKey(key)) {
+        // Recovery state (OCR jobs, pending memory) outlives a cache wipe: the
+        // cache is disposable, an already-received ticket is not.
+        if (key && !isSupabaseKey(key) && !isRecoveryStateKey(key)) {
           keysToRemove.push(key)
         }
       }

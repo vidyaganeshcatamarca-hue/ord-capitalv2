@@ -44,6 +44,11 @@ export const SYSTEM_CATEGORY_NAMES: readonly string[] = [
   // con ella (migracion 84).
   'cat_investments_portfolio',
   'cat_investments',
+  // Categoría de sistema del flujo OCR (PRD OCR §8/§29): es el fallback
+  // contable de la cuarentena, NO una categoría semántica. Se excluye de los
+  // selectores y del catálogo que se envía al clasificador; el usuario mueve
+  // los productos hacia categorías reales, nunca hacia esta.
+  'ocr_unrecognized',
 ] as const
 
 /**

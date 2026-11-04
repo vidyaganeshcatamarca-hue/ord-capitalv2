@@ -21,6 +21,7 @@ import { AppVersionGate } from '@/components/AppVersionGate/AppVersionGate'
 import { AppConsentGate } from '@/components/AppConsentGate/AppConsentGate'
 import { LegalUpdateGate } from '@/components/LegalUpdateGate/LegalUpdateGate'
 import { TelemetryRouteTracker } from '@/components/TelemetryRouteTracker/TelemetryRouteTracker'
+import { OcrJobsProvider } from '@/ocr/OcrJobsProvider'
 
 
 // Lazy-loaded, but preloaded after app idle because this is the primary quick-capture path.
@@ -30,6 +31,11 @@ const AddMovementModal = lazy(loadAddMovementModal)
 // from the BottomNav "+" long-press, so it stays out of the critical path.
 const loadVoiceRecorderModal = () => import('@/components/voice/VoiceRecorderModal').then(m => ({ default: m.VoiceRecorderModal }))
 const VoiceRecorderModal = lazy(loadVoiceRecorderModal)
+// OCR capture surface. The JOB BRIDGE is not this modal: it lives in
+// `OcrJobsProvider` (always mounted), because a received ticket must keep being
+// followed after the capture sheet closes.
+const loadOcrCaptureModal = () => import('@/components/ocr/OcrCaptureModal').then(m => ({ default: m.OcrCaptureModal }))
+const OcrCaptureModal = lazy(loadOcrCaptureModal)
 const PerfilPage = lazy(() => import('@/pages/Perfil/PerfilPage').then(m => ({ default: m.PerfilPage })))
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary'
 import '@/styles/index.css'
@@ -100,6 +106,7 @@ function AppLayout() {
   useGenerarRecurrentes()
   const [showAdd, setShowAdd] = useState(false)
   const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false)
+  const [isOcrCaptureOpen, setIsOcrCaptureOpen] = useState(false)
   const [addConfig, setAddConfig] = useState<{ defaultTipo?: 'expense' | 'income' | 'transfer', initialBilleteraId?: number } | null>(null)
   const navigate = useNavigate()
 
@@ -124,6 +131,9 @@ function AppLayout() {
   // feature gate, so the recorder is unreachable while the switch is OFF.
   const { hasFeature, loading: modoAppLoading } = useModoApp()
   const voiceEnabled = !modoAppLoading && hasFeature('menu_carga_voz')
+  // OCR access is gated by `menu_ocr` (definitive OCR PRD §60): NOT by an
+  // `ocr_enabled` preference. Per-user blocks are honoured by the same flag.
+  const ocrEnabled = !modoAppLoading && hasFeature('menu_ocr')
   
   useEffect(() => {
     rpc<any[]>('fn_obtener_preferencias_usuario')
@@ -169,6 +179,7 @@ function AppLayout() {
   }, [])
 
   return (
+    <OcrJobsProvider>
     <>
       {/* Sidebar para desktop (≥768px) */}
       <SideNav onAddPress={() => setShowAdd(!showAdd)} />
@@ -265,6 +276,14 @@ function AppLayout() {
               setShowAdd(false)
               setIsVoiceRecorderOpen(true)
             }}
+            // OCR lives in the load/register flow (definitive OCR PRD §63):
+            // the sheet closes first so dismissing the capture returns the user
+            // to the screen that opened it.
+            onOpenOcr={() => {
+              if (!ocrEnabled) return
+              setShowAdd(false)
+              setIsOcrCaptureOpen(true)
+            }}
           />
         </Suspense>
       )}
@@ -275,7 +294,13 @@ function AppLayout() {
       <Suspense fallback={null}>
         <VoiceRecorderModal open={isVoiceRecorderOpen} onClose={() => setIsVoiceRecorderOpen(false)} />
       </Suspense>
+      {/* Always mounted for the same reason as the voice bridge: the OCR job
+       * keeps moving while the sheet is closed. `open` only controls the view. */}
+      <Suspense fallback={null}>
+        <OcrCaptureModal open={isOcrCaptureOpen} onClose={() => setIsOcrCaptureOpen(false)} />
+      </Suspense>
     </>
+    </OcrJobsProvider>
   )
 }
 

@@ -4,7 +4,7 @@
  * Refactor del formulario plano original a un Bottom Sheet por pasos.
  */
 import { useState, useEffect, useLayoutEffect, useCallback, useRef, useSyncExternalStore } from 'react'
-import { Mic } from 'lucide-react'
+import { Camera, Mic } from 'lucide-react'
 import { useToast } from '@/contexts/ToastContext'
 import { useHogar } from '@/contexts/HogarContext'
 import { useModoApp } from '@/contexts/ModoAppContext'
@@ -287,9 +287,11 @@ interface AddMovementModalProps {
   initialBilleteraId?: number
   /** Opens the global full-screen voice recorder on top of this sheet. */
   onOpenVoice: () => void
+  /** Opens the OCR capture sheet (definitive OCR PRD §63). */
+  onOpenOcr?: () => void
 }
 
-export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', initialBilleteraId, onOpenVoice }: AddMovementModalProps) {
+export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', initialBilleteraId, onOpenVoice, onOpenOcr }: AddMovementModalProps) {
   const { showToast } = useToast()
   const { formatMonto, localCurrency, currencySymbol, prefs, locale } = useNumberFormat()
 
@@ -338,6 +340,7 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   // countdown on open.
   const { hasFeature, loading: modoAppLoading } = useModoApp()
   const voiceAvailable = !modoAppLoading && hasFeature('menu_carga_voz')
+  const ocrAvailable = !modoAppLoading && hasFeature('menu_ocr')
   const voiceMicButton = voiceAvailable ? (
     <button
       type="button"
@@ -347,6 +350,21 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
       title={t('add_movement_voice_hint')}
     >
       <Mic size={20} aria-hidden="true" />
+    </button>
+  ) : null
+
+  // OCR entry point: a sibling capture action in the load/register flow, gated
+  // by `menu_ocr`. It shares the visual pattern of the voice CTA on purpose but
+  // nothing else: own client, own storage, own job ids (PRD §63, §78).
+  const ocrScanButton = ocrAvailable && onOpenOcr ? (
+    <button
+      type="button"
+      className="add-movement-mic-btn"
+      onClick={onOpenOcr}
+      aria-label={t('ocr.capture_cta')}
+      title={t('ocr.capture_hint')}
+    >
+      <Camera size={20} aria-hidden="true" />
     </button>
   ) : null
 
@@ -1165,7 +1183,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           }}
                         />
                         </div>
-                        {voiceMicButton}
+                        {voiceMicButton}{ocrScanButton}
                       </div>
                     </div>
 
@@ -1668,7 +1686,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                         }}
                       />
                       </div>
-                      {voiceMicButton}
+                      {voiceMicButton}{ocrScanButton}
                     </div>
                   </div>
 
@@ -1835,7 +1853,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           style={{ cursor: 'pointer', fontSize: montoFontSize((monto === '0' ? '' : formatExpressionForDisplay(monto, prefs.separador_decimal, prefs.separador_miles)).length, 24, 14) }}
                         />
                       </div>
-                      {voiceMicButton}
+                      {voiceMicButton}{ocrScanButton}
                     </div>
 
                     {/* Desplegar la calculadora en pantalla */}
