@@ -133,3 +133,48 @@ prueba se rearmó con un magic link propio (perfil de ego vencido el 2026-11-02)
 
 **L7 (regresión):** suite de `tests/*.test.js` 270 pass / 4 fail, **los mismos 4 que antes del cambio**
 (verificado con `git stash`), `tsc --noEmit` 0 y `npm run build` exit 0.
+
+## Segunda parte — el motor de recurrentes (punto 2 del pedido)
+
+**Decisión:** se descarta el cron global diario. El motor corre **por usuario al abrir la app**,
+una vez por día, y resuelve sólo el atraso de esa sesión. El costo depende del uso, no del padrón.
+
+**Cómo recuerda qué generar:** columna `p_gastos_recurrentes.proxima_ocurrencia` (un puntero por
+recurrente). El "desde" es el alta; el motor avanza el puntero; al editar se **recalcula desde hoy**
+(si no, quedaría apuntando a una fecha que ya no existe en el patrón y la ocurrencia nunca se
+generaría). Lo rechazado no vuelve porque el motor no mira el pasado.
+
+**Sin cron de notificaciones** (decidido con el dueño): el sistema no mueve dinero real; al aprobar,
+`fn_aprobar_cuarentena_v2` usa la fecha original del movimiento y de ahí deriva el resumen de la
+tarjeta. Abrir el 20 y aprobar con fecha 15 cae en el resumen correcto. No hay nada que avisar a tiempo.
+
+**SQL aplicado:** `temp_sql/75_recurrentes_motor_lazy.sql` (helper de fechas, columna + backfill,
+índice único `(recurrente_id, fecha)`, motor por usuario, alta y edición con el puntero),
+`76_recurrentes_reparar_crear_editar.sql` y `77_recurrentes_puntero_y_fecha_fin.sql`.
+
+**Incidente (L8):** el 75 se generó con las definiciones de las RPC tomadas **antes** del 74 y, al
+correrlo, revirtió el arreglo de 5 días / tarjeta sin día. Lo detectó el smoke del motor, no un
+usuario. El 76 deja las dos funciones con el parche del 74 **y** el del 75; el 75 se regeneró para que
+reaplicarlo sea seguro.
+
+**Defecto encontrado (L9):** el avance del puntero se calculaba desde `GREATEST(hoy, fecha_fin) + 1`,
+así que quedaba **más allá** del último día válido y la recurrencia no volvía a generar nunca. Le pasó
+a una fila real (82: del 4/11 saltó al 2/12 con fin el 30/11). El 77 lo corrige: avanza desde `hoy + 1`
+y deja el puntero en NULL cuando no queda ninguna fecha dentro de la vigencia; además repara las filas
+ya dañadas.
+
+**Evidencia:**
+- Smoke 75: 8/8 PASS — dos recurrentes distintas el mismo día dan **2 filas con ids distintos**;
+  reabrir no duplica; el puntero avanza; un atraso de 90 días se genera completo en una llamada
+  (39 filas); lo rechazado no vuelve; otra recurrente de otro usuario queda intacta.
+- Regresión 74: 8/8 PASS (5 días semanales, 4 días mensuales, tarjeta sin día y los tres rechazos).
+- Smoke 77: 3/3 PASS (fin de vigencia hoy → puntero NULL; fin en 30 días → puntero dentro; ningún
+  puntero activo pasa su `fecha_fin`).
+- Cliente: `src/hooks/useGenerarRecurrentes.ts` montado en `AppLayout`; E2E 5/5 PASS — una sola llamada
+  por apertura, 200, guarda del día escrita, recargar y navegar no repiten. StrictMode duplicaba la
+  llamada; se colapsa con una bandera en vuelo a nivel de módulo.
+- `tsc --noEmit` 0 y `npm run build` exit 0.
+
+**Pendiente:** la pausa y la reactivación todavía no tocan el puntero. Hoy, reactivar una recurrencia
+pausada tres meses la haría generar todo ese atraso. Decisión propuesta: al reactivar, recalcular el
+puntero desde hoy (pausar = no generar).

@@ -93,8 +93,11 @@ const LoadingSpinner = () => (
 )
 
 import { rpc } from '@/lib/supabase'
+import { useGenerarRecurrentes } from '@/hooks/useGenerarRecurrentes'
 
 function AppLayout() {
+  // Motor de recurrentes: se dispara una vez por día, en segundo plano.
+  useGenerarRecurrentes()
   const [showAdd, setShowAdd] = useState(false)
   const [isVoiceRecorderOpen, setIsVoiceRecorderOpen] = useState(false)
   const [addConfig, setAddConfig] = useState<{ defaultTipo?: 'expense' | 'income' | 'transfer', initialBilleteraId?: number } | null>(null)
