@@ -1,0 +1,472 @@
+/* =========================================================
+   OCR de tickets — captura, ticket en cuarentena y visor.
+   Loaded after BandejaCuarentena.css; only adds new classes
+   (prefixed `ocr-`) so no existing rule is overridden.
+   ========================================================= */
+
+/* ── Captura ─────────────────────────────────────────────── */
+
+.ocr-capture-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.ocr-capture-hint {
+  margin: 0;
+  color: var(--text-3);
+  font-size: calc(0.85rem * var(--font-scale));
+  line-height: 1.45;
+}
+
+.ocr-capture-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ocr-file-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: calc(0.9rem * var(--font-scale));
+  cursor: pointer;
+}
+
+.ocr-file-btn:hover {
+  border-color: var(--border-light);
+}
+
+.ocr-file-btn input {
+  display: none;
+}
+
+.ocr-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ocr-file-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface);
+}
+
+.ocr-file-index {
+  min-width: 22px;
+  text-align: center;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}
+
+.ocr-file-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+.ocr-file-size {
+  color: var(--text-3);
+  font-size: calc(0.78rem * var(--font-scale));
+  font-variant-numeric: tabular-nums;
+}
+
+.ocr-icon-btn {
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  border-radius: 8px;
+  min-width: 30px;
+  height: 30px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.ocr-icon-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.ocr-error {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-md, 12px);
+  background: var(--coral-dim, rgba(230, 57, 70, 0.12));
+  color: var(--coral, #E63946);
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+.ocr-received {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border-radius: var(--radius-md, 12px);
+  border: 1px solid var(--mint-dim, rgba(0, 177, 39, 0.15));
+  background: var(--mint-gradient-subtle, rgba(0, 177, 39, 0.08));
+}
+
+.ocr-received h4 {
+  margin: 0;
+  font-size: calc(1rem * var(--font-scale));
+}
+
+.ocr-received p {
+  margin: 0;
+  color: var(--text-2, var(--text-3));
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+.ocr-jobs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ocr-job-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface);
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+.ocr-job-status {
+  color: var(--text-3);
+  text-align: right;
+}
+
+.ocr-job-status--warn {
+  color: var(--amber, #FFB703);
+}
+
+.ocr-job-status--error {
+  color: var(--coral, #E63946);
+}
+
+/* ── Ticket en cuarentena ────────────────────────────────── */
+
+.ocr-ticket {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface);
+}
+
+.ocr-ticket-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ocr-ticket-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.ocr-ticket-title strong {
+  font-size: calc(1rem * var(--font-scale));
+}
+
+.ocr-ticket-title span {
+  color: var(--text-3);
+  font-size: calc(0.8rem * var(--font-scale));
+}
+
+.ocr-ticket-total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.ocr-ticket-total span {
+  color: var(--text-3);
+  font-size: calc(0.75rem * var(--font-scale));
+}
+
+.ocr-ticket-total strong {
+  font-size: calc(1.1rem * var(--font-scale));
+  font-variant-numeric: tabular-nums;
+}
+
+.ocr-issues {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ocr-issue-chip {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--amber-dim, rgba(255, 183, 3, 0.12));
+  color: var(--amber, #FFB703);
+  font-size: calc(0.75rem * var(--font-scale));
+}
+
+.ocr-field-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.ocr-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ocr-field > label {
+  color: var(--text-3);
+  font-size: calc(0.75rem * var(--font-scale));
+}
+
+.ocr-field input,
+.ocr-field select {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+.ocr-field--invalid input,
+.ocr-field--invalid select {
+  border-color: var(--amber, #FFB703);
+}
+
+.ocr-groups {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ocr-group {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+
+.ocr-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  font-size: calc(0.9rem * var(--font-scale));
+}
+
+.ocr-group-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ocr-group-name small {
+  color: var(--text-3);
+  font-size: calc(0.72rem * var(--font-scale));
+}
+
+.ocr-group-subtotal {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ocr-group-discount {
+  color: var(--text-3);
+  font-size: calc(0.72rem * var(--font-scale));
+  font-variant-numeric: tabular-nums;
+}
+
+.ocr-group--unrecognized .ocr-group-head {
+  background: var(--amber-dim, rgba(255, 183, 3, 0.12));
+}
+
+.ocr-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid var(--border);
+}
+
+.ocr-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ocr-item:last-child {
+  border-bottom: 0;
+}
+
+.ocr-item-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.ocr-item-description {
+  flex: 1;
+  min-width: 0;
+  font-size: calc(0.85rem * var(--font-scale));
+  line-height: 1.35;
+  word-break: break-word;
+}
+
+.ocr-item-amount {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ocr-item-aux {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--text-3);
+  font-size: calc(0.72rem * var(--font-scale));
+}
+
+.ocr-item-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 8px;
+  align-items: end;
+}
+
+@media (max-width: 520px) {
+  .ocr-item-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ocr-item-locked {
+  color: var(--text-3);
+  font-size: calc(0.7rem * var(--font-scale));
+}
+
+.ocr-balance {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface-2);
+  font-size: calc(0.85rem * var(--font-scale));
+}
+
+.ocr-balance strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.ocr-balance--ok {
+  border: 1px solid var(--mint-dim, rgba(0, 177, 39, 0.15));
+}
+
+.ocr-balance--warn {
+  border: 1px solid var(--amber, #FFB703);
+  color: var(--amber, #FFB703);
+}
+
+.ocr-balance--error {
+  border: 1px solid var(--coral, #E63946);
+  color: var(--coral, #E63946);
+}
+
+.ocr-ticket-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.ocr-link-btn {
+  border: 0;
+  background: none;
+  color: var(--accent-mint, #4ECDC4);
+  cursor: pointer;
+  padding: 0;
+  font-size: calc(0.82rem * var(--font-scale));
+  text-decoration: underline;
+}
+
+.ocr-note {
+  margin: 0;
+  color: var(--text-3);
+  font-size: calc(0.75rem * var(--font-scale));
+}
+
+.ocr-note--warn {
+  color: var(--amber, #FFB703);
+}
+
+/* ── Visor de imágenes ───────────────────────────────────── */
+
+.ocr-viewer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.ocr-viewer img {
+  max-width: 100%;
+  max-height: 60vh;
+  border-radius: 12px;
+}
+
+.ocr-viewer-nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-3);
+  font-size: calc(0.82rem * var(--font-scale));
+}
+
+.ocr-viewer-empty {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-3);
+}
