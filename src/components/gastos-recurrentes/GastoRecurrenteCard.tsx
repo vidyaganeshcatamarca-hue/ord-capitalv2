@@ -51,7 +51,11 @@ export function GastoRecurrenteCard({ item, onEdit, onPause, onResume, onDelete,
   const monto = item.monto_base != null
     ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 2 }).format(item.monto_base)
     : '—'
-  const montoConMoneda = item.es_usd ? `${monto} USD` : monto
+  // El número solo no dice en qué moneda está. `moneda` viene del backend
+  // resuelta por origen (billetera o tarjeta); `es_usd` queda como respaldo
+  // para una fila vieja sin moneda resuelta.
+  const moneda = item.moneda ?? (item.es_usd ? 'USD' : null)
+  const montoConMoneda = moneda ? `${monto} ${moneda}` : monto
 
   return (
     <article className={`recur-card${pausado ? ' is-paused' : ''}`} aria-busy={busy}>

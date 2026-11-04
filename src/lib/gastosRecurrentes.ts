@@ -73,6 +73,12 @@ export interface GastoRecurrenteRow {
   tarjeta_nombre: string | null
   /** true si el monto se registrará en dólares. */
   es_usd: boolean
+  /**
+   * Moneda del monto, en ISO (ARS, BRL, USD…). La pone el backend según el
+   * origen: la billetera elegida, o la tarjeta. No es del usuario: un mismo
+   * usuario puede tener un recurrente en BRL y otro en ARS.
+   */
+  moneda: string | null
 }
 
 /** Payload de alta y edición: los mismos campos, sin el id. */
