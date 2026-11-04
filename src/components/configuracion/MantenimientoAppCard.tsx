@@ -3,6 +3,7 @@ import { t } from '@/locales/i18n'
 import { useToast } from '@/contexts/ToastContext'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { clearAppCache } from '@/lib/appCache'
+import { clearAllOcrImages } from '@/ocr/imageStore'
 
 export function MantenimientoAppCard() {
   const [showConfirm, setShowConfirm] = useState(false)
@@ -15,6 +16,16 @@ export function MantenimientoAppCard() {
     setShowConfirm(false)
     setLoading(true)
     try {
+      // Definitive OCR PRD §95: "Borrar caché" must remove the local OCR ticket
+      // copies and their manifests. It is done explicitly (not only through the
+      // IndexedDB sweep) because browsers without `indexedDB.databases()` would
+      // otherwise leave the OCR blobs behind. Pending job ids and the pending
+      // memory queue are preserved by `clearAppCache` itself.
+      try {
+        await clearAllOcrImages()
+      } catch {
+        // A storage failure must not abort the rest of the maintenance.
+      }
       const result = await clearAppCache()
       if (result.ok) {
         showToast(t('config_maintenance_success'), 'success')
