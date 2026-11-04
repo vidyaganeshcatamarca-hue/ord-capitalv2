@@ -1024,7 +1024,10 @@ const handleLegacySubmit = async () => {
                     <div className="termometro-metric-label">{t("card_stress_index")}</div>
                   </div>
                   <div className="termometro-metric">
-                    <div className="termometro-metric-value">{fmtMoneda(Number(termometro.cuota_proxima), ((termometro.moneda_proxima ?? 'ARS') as 'ARS'|'USD'))}</div>
+                    {/* F-05: el termómetro devuelve `moneda_proxima = NULL` mientras la
+                        cuenta no tiene 30 días de datos. Caer a 'ARS' pintaba «0.0 ARS»
+                        en una cuenta en libras; la moneda local es la única correcta. */}
+                    <div className="termometro-metric-value">{fmtMoneda(Number(termometro.cuota_proxima), termometro.moneda_proxima ?? localCurrency ?? undefined)}</div>
                     <div className="termometro-metric-label">
                       {t("card_next_installment")}
                       {termometro.fecha_proxima && (
