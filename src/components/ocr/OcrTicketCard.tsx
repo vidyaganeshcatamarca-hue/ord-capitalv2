@@ -13,7 +13,7 @@
 // The immutable field is the product description read by OCR (§15): the user
 // expresses interpretation through the category, never by rewriting evidence.
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { t } from '@/locales/i18n'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError } from '@/locales/i18n'
@@ -42,6 +42,7 @@ import type { OcrIssue, OcrItem, OcrPayment, OcrTicket } from '@/ocr/types'
 import { OCR_SCHEMA_VERSION } from '@/ocr/normalize'
 import { useOcrCatalog } from '@/ocr/useOcrCatalog'
 import { useOcrJobsContext } from '@/ocr/OcrJobsProvider'
+import { OcrTicketEditModal } from './OcrTicketEditModal'
 import { OcrTicketImageModal } from './OcrTicketImageModal'
 import './Ocr.css'
 
@@ -102,7 +103,7 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
   const metadata = metadataOf(item)
   const jobId = typeof metadata.ocr_job_id === 'string' ? metadata.ocr_job_id : ''
 
-  const [expanded, setExpanded] = useState(false)
+  const [editing, setEditing] = useState(false)
   const [openGroups, setOpenGroups] = useState<Set<string>>(new Set())
   const [items, setItems] = useState<OcrItem[]>(() =>
     (metadata.items ?? []).map((raw, index) => normalizeItem(raw, index))
@@ -129,9 +130,12 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
   const [date, setDate] = useState<string>(item.fecha ?? metadata.purchase_date ?? '')
   const [merchant, setMerchant] = useState<string>(item.detalle ?? metadata.merchant ?? '')
   const [totalInput, setTotalInput] = useState<string>(String(num(metadata.total, num(item.monto))))
+
+  // Snapshot of the values as loaded: "Cancelar" in edit mode must return the
+  // card to exactly what the backend sent, not to whatever was typed.
+  const initialValuesRef = useRef({ items, payment, date, merchant, totalInput })
   const [saving, setSaving] = useState(false)
   const [confirming, setConfirming] = useState(false)
-  const [showConfirm, setShowConfirm] = useState(false)
   const [showReject, setShowReject] = useState(false)
   const [showImages, setShowImages] = useState(false)
   const [memoryPending, setMemoryPending] = useState(false)
@@ -204,21 +208,31 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
     })
   }
 
-  const expand = (): void => {
-    setExpanded((current) => {
-      const next = !current
-      if (next) {
-        trackOcrEvent(OCR_EVENTS.quarantineOpened, {
-          job_id: jobId || undefined,
-          item_count: items.length,
-          issue_count: issues.length,
-          // Backend receipt -> quarantine row. Excludes the upload and the time
-          // the user took to open the card, which are not backend latency.
-          quarantine_age_ms: readOcrQuarantineLatencyMs(jobId) ?? undefined,
-        })
-      }
-      return next
+  // Leaving edit mode discards unsaved typing: the card returns to the values
+  // the backend sent, which is what "Cancelar" promises.
+  const cancelEdit = (): void => {
+    const initial = initialValuesRef.current
+    setItems(initial.items)
+    setPayment(initial.payment)
+    setDate(initial.date)
+    setMerchant(initial.merchant)
+    setTotalInput(initial.totalInput)
+    setOpenGroups(new Set())
+    setEditing(false)
+  }
+
+  // Opening the editor is the same action Voice calls "Editar": a full modal,
+  // not an inline expansion.
+  const openEditor = (): void => {
+    trackOcrEvent(OCR_EVENTS.quarantineOpened, {
+      job_id: jobId || undefined,
+      item_count: items.length,
+      issue_count: issues.length,
+      // Backend receipt -> quarantine row. Excludes the upload and the time
+      // the user took to open the card, which are not backend latency.
+      quarantine_age_ms: readOcrQuarantineLatencyMs(jobId) ?? undefined,
     })
+    setEditing(true)
   }
 
   const updateItem = (itemIndex: number, patch: Partial<OcrItem>): void => {
@@ -275,6 +289,8 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
         duplicate: undefined,
       })
       showToast(t('ocr.saved'), 'success')
+      // Saving is what closes the editor: the owner sees the updated card again.
+      setEditing(false)
       onChanged()
     } catch (error) {
       trackOcrError('quarantine_save', 'SAVE_FAILED', { job_id: jobId || undefined })
@@ -285,7 +301,6 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
   }
 
   const handleConfirm = async (): Promise<void> => {
-    setShowConfirm(false)
     setConfirming(true)
     try {
       // Persist the current draft first so the confirmed data is the reviewed
@@ -328,7 +343,18 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
   const paymentValue = payment.type === 'card' ? `card:${payment.card_id ?? ''}` : `wallet:${payment.wallet_id ?? ''}`
 
   return (
-    <div className="ocr-ticket">
+    <div
+      className="ocr-ticket"
+      onClick={openEditor}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault()
+          openEditor()
+        }
+      }}
+    >
       <div className="ocr-ticket-header">
         <div className="ocr-ticket-title">
           <strong>📷 {displayMerchant}</strong>
@@ -343,7 +369,12 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
         </div>
       </div>
 
-      {issues.length > 0 && (
+      {/*
+        The backend flags what IT could not read. Once every essential field is
+        filled the flag describes a past state, so keeping it on screen tells the
+        owner to review work already done. With a blocker it stays.
+      */}
+      {issues.length > 0 && blocker !== null && (
         <div className="ocr-issues" aria-label={t('ocr.issue_title')}>
           {issues.map((issue) => (
             <span className="ocr-issue-chip" key={issue}>
@@ -353,19 +384,38 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-        <button type="button" className="ocr-link-btn" onClick={expand}>
-          {expanded ? '▲' : '▼'} {t('ocr.quarantine_title')}
+      <div className="ocr-card-links">
+        <button
+          type="button"
+          className="ocr-chip-btn"
+          onClick={(event) => {
+            event.stopPropagation()
+            openEditor()
+          }}
+        >
+          {t('ocr.quarantine_title')}
         </button>
         {jobId && (
-          <button type="button" className="ocr-link-btn" onClick={() => setShowImages(true)}>
+          <button
+            type="button"
+            className="ocr-chip-btn"
+            onClick={(event) => {
+              event.stopPropagation()
+              setShowImages(true)
+            }}
+          >
             {t('ocr.view_ticket')}
           </button>
         )}
       </div>
 
-      {expanded && (
-        <>
+      {editing && (
+        <OcrTicketEditModal
+          onClose={cancelEdit}
+          onSave={() => void handleSave()}
+          saving={saving}
+          saveDisabled={blocker !== null}
+        >
           <div className="ocr-field-grid">
             <div className={`ocr-field ${date ? '' : 'ocr-field--invalid'}`}>
               <label htmlFor={`ocr-date-${item.pendiente_id}`}>{t('ocr.field_date')}</label>
@@ -532,20 +582,27 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
           )}
           {memoryPending && <p className="ocr-note">{t('ocr.memory_pending_note')}</p>}
           {blocker && <p className="ocr-note ocr-note--warn">{t(blocker)}</p>}
-        </>
+        </OcrTicketEditModal>
       )}
 
       <div className="ocr-ticket-actions">
-        <button type="button" className="saneamiento-btn-rechazar" onClick={() => setShowReject(true)}>
+        <button
+          type="button"
+          className="saneamiento-btn-rechazar"
+          onClick={(event) => {
+            event.stopPropagation()
+            setShowReject(true)
+          }}
+        >
           {t('ocr.reject_ticket')}
-        </button>
-        <button type="button" className="saneamiento-btn-editar" onClick={() => void handleSave()} disabled={saving}>
-          {saving ? t('ocr.saving') : t('ocr.save_draft')}
         </button>
         <button
           type="button"
           className="saneamiento-btn-aprobar"
-          onClick={() => setShowConfirm(true)}
+          onClick={(event) => {
+            event.stopPropagation()
+            void handleConfirm()
+          }}
           disabled={confirming || blocker !== null}
           title={blocker ? t(blocker) : undefined}
         >
@@ -556,19 +613,6 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
       {showImages && jobId && (
         <OcrTicketImageModal jobId={jobId} onClose={() => setShowImages(false)} />
       )}
-
-      <ConfirmModal
-        isOpen={showConfirm}
-        title={t('ocr.confirm_title')}
-        message={t('ocr.confirm_message', {
-          count: String(confirmableGroups(grouping).length),
-          total: formatCurrency(grouping.ticket_total_cents / 100, currency),
-        })}
-        confirmText={t('ocr.confirm_ticket')}
-        cancelText={t('ocr.capture_cancel')}
-        onConfirm={() => void handleConfirm()}
-        onCancel={() => setShowConfirm(false)}
-      />
 
       <ConfirmModal
         isOpen={showReject}

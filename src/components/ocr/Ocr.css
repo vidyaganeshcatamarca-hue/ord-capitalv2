@@ -19,15 +19,31 @@
   line-height: 1.45;
 }
 
+.ocr-capture-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 .ocr-capture-actions {
   display: flex;
-  flex-wrap: wrap;
   gap: 10px;
 }
 
+/* Both actions share the row evenly so neither looks like an afterthought. */
+.ocr-action-btn {
+  flex: 1 1 0;
+  justify-content: center;
+}
+
+.ocr-capture-total {
+  margin: 0;
+}
+
 .ocr-file-btn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 10px 14px;
   border-radius: var(--radius-md, 12px);
@@ -443,6 +459,36 @@
 
 /* ── Visor de imágenes ───────────────────────────────────── */
 
+/* Ticket detail and "Ver ticket" are two different jobs, so they sit at
+   opposite edges of the card and look like buttons instead of bare text. */
+.ocr-card-links {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.ocr-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-light, var(--border));
+  background: var(--text);
+  color: var(--surface);
+  font: inherit;
+  font-size: calc(0.86rem * var(--font-scale));
+  line-height: 1.2;
+  cursor: pointer;
+  transition: opacity 120ms ease-out;
+}
+
+.ocr-chip-btn:hover {
+  opacity: 0.85;
+}
+
 .ocr-viewer {
   display: flex;
   flex-direction: column;
@@ -451,10 +497,48 @@
   width: 100%;
 }
 
-.ocr-viewer img {
+/* The stage owns the zoom: overflow hidden keeps a panned image inside the
+   frame, and touch-action none stops the browser from scrolling the page
+   while two fingers are pinching. */
+.ocr-viewer-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-height: 60vh;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #000;
+  touch-action: none;
+  cursor: zoom-in;
+}
+
+.ocr-viewer-stage--zoomed {
+  cursor: grab;
+}
+
+.ocr-viewer-stage img {
   max-width: 100%;
   max-height: 60vh;
   border-radius: 12px;
+  transform-origin: center center;
+  transition: transform 120ms ease-out;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+.ocr-viewer-zoom {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-3);
+  font-size: calc(0.82rem * var(--font-scale));
+}
+
+.ocr-viewer-zoom-value {
+  min-width: 52px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .ocr-viewer-nav {
@@ -538,6 +622,30 @@
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: 16px;
+}
+
+/* Ticket editor: the same frame Voice's quarantine editor gives the owner, with
+   room for a ticket's fields and its category groups. */
+.ocr-modal--editor {
+  width: min(620px, 100%);
+  max-height: min(92vh, 860px);
+}
+
+.ocr-modal-footer {
+  display: flex;
+  gap: 10px;
+  flex: 0 0 auto;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border, #30363d);
+  background: var(--surface, #161b22);
+}
+
+@media (max-width: 560px) {
+  .ocr-modal--editor {
+    width: 100%;
+    max-height: 94vh;
+    border-radius: var(--radius-md, 14px) var(--radius-md, 14px) 0 0;
+  }
 }
 
 @media (max-width: 560px) {
