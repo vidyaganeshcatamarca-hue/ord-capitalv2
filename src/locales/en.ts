@@ -830,7 +830,7 @@ export const ocr = {
   error_file_too_big: "Each file can be up to 20 MB.",
   error_total_too_big: "The whole receipt can be up to 80 MB.",
   error_upload_failed: "We could not send the receipt. Try again.",
-  error_network: "The connection dropped. Try again.",
+  error_network: "We couldn't reach the ticket service. Try again.",
   error_unauthorized: "Your session expired. Please sign in again.",
   error_context_unavailable: "We could not prepare your ORD context. Try again.",
   error_job_not_found: "We could not find this receipt on the server.",

@@ -875,7 +875,7 @@ export const ocr = {
   error_file_too_big: "Cada archivo puede pesar hasta 20 MB.",
   error_total_too_big: "El ticket completo puede pesar hasta 80 MB.",
   error_upload_failed: "No pudimos enviar el ticket. Probá de nuevo.",
-  error_network: "Se cortó la conexión. Probá de nuevo.",
+  error_network: "No pudimos contactar el servicio de tickets. Probá de nuevo.",
   error_unauthorized: "Tu sesión venció. Volvé a iniciar sesión.",
   error_context_unavailable: "No pudimos preparar el contexto de tu ORD. Probá de nuevo.",
   error_job_not_found: "No encontramos este ticket en el servidor.",
