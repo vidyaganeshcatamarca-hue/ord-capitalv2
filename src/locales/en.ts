@@ -203,8 +203,6 @@ export const errors = {
   card_form_limit_installments_label: "Limit for Installment Purchases ($) (Optional)",
   card_form_limit_installments_placeholder: "e.g. 500000",
   card_form_color_label: "Card color",
-  card_form_recargo_dolar_label: "Surcharge for USD purchases (%)",
-  card_form_recargo_dolar_placeholder: "e.g. 30",
   btn_saving: "Saving...",
   btn_save_changes: "Save changes",
   btn_create_card: "+ Create Card",

@@ -672,7 +672,6 @@ const handleLegacySubmit = async () => {
         p_limite_un_pago: formLimiteUnPago ? parseFloat(formLimiteUnPago) : null,
         p_limite_cuotas: formLimiteCuotas ? parseFloat(formLimiteCuotas) : null,
         p_color: formColor || null,
-        p_recargo_dolar_pct: null,
       })
       showToast(t('cards_updated_success'), 'success')
       setShowEditModal(false)
@@ -2045,9 +2044,9 @@ export function PagarModal({
   // la deduación real para la sección USD es su equivalente en USD.
   const totalPagarPesos = pagarLineas.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0) + (sectionUsdPayIn === 'ARS' ? pagarLineasUsd.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0) : 0)
   const totalPagarUsd = sectionUsdPayIn === 'USD' ? pagarLineasUsd.reduce((s, l) => s + (parseFloat(l.monto) || 0), 0) : 0
-  const totalPagar = totalPagarPesos + totalPagarUsd
-  // Fix 2026-09-15: equivalente ARS de lo pagado. totalPagar mezcla lineas ARS
-  // y USD crudas; toda comparacion contra el ciclo (ARS-equiv) usa esto.
+  // Toda comparacion contra el ciclo (ARS-equiv) usa totalPagarArsEquiv: las lineas
+  // en USD se suman crudas en totalPagarUsd, asi que compararlas sin convertir mezcla
+  // monedas y produce diferencias fantasma (S7: 50 GBP + 50 USD crudos = 100).
   const cotizacionUsdModal = Number(targetCard?.cotizacion_usd ?? 0)
   const totalPagarArsEquiv = sectionUsdPayIn === 'USD'
     ? totalPagarPesos + totalPagarUsd * cotizacionUsdModal
@@ -2307,10 +2306,26 @@ export function PagarModal({
         return { ...l, billetera_id: null, target_moneda_cuota: 'USD', monto: shouldResetMonto ? '' : l.monto }
       }))
     } else {
-      setPagarLineasUsd((prev: PagarLine[]) => prev.map((l: PagarLine) => {
+      // F-S6: al volver a dolares hay que devolver el importe a su moneda. Antes se
+      // conservaba el importe local tal cual, asi que la sugerencia en dolares no
+      // volvia y quedaba un pago local etiquetado como dolares.
+      const cotizacionVuelta = Number(targetCard?.cotizacion_usd ?? 0)
+      const refNecesitoVueltaUSD = enModoObjetivo
+        ? Math.max(0, Number(objetivoPagoUSD ?? 0) - Math.max(0, Number(saldoAFavorUsd || 0)))
+        : necesitoUSD
+      setPagarLineasUsd((prev: PagarLine[]) => prev.map((l: PagarLine, i: number) => {
         const w = l.billetera_id != null ? billeteras.find(b => b.billetera_id === l.billetera_id) : undefined
         const shouldResetMonto = l.billetera_id != null && w?.moneda !== 'USD'
-        return { ...l, billetera_id: null, target_moneda_cuota: undefined, monto: shouldResetMonto ? '' : l.monto }
+        const montoLocal = parseFloat(l.monto) || 0
+        let montoVuelta = l.monto
+        if (!shouldResetMonto) {
+          if (montoLocal > 0 && cotizacionVuelta > 0) {
+            montoVuelta = (montoLocal / cotizacionVuelta).toFixed(2)
+          } else if (i === 0 && refNecesitoVueltaUSD > 0) {
+            montoVuelta = refNecesitoVueltaUSD.toFixed(2)
+          }
+        }
+        return { ...l, billetera_id: null, target_moneda_cuota: undefined, monto: shouldResetMonto ? '' : montoVuelta }
       }))
     }
   }
@@ -2318,7 +2333,7 @@ export function PagarModal({
   const addFavorLine = () => {
     const monto = favorCubreTotal
       ? Math.min(favorEquiv, totalCicloARS_equiv)
-      : Math.min(favorNum, Math.max(0, totalCicloARS_equiv - totalPagar))
+      : Math.min(favorNum, Math.max(0, totalCicloARS_equiv - totalPagarArsEquiv))
     const next = {
       id: nextLineIdRef.current++,
       billetera_id: null,
@@ -2456,11 +2471,18 @@ export function PagarModal({
 
             {pagarLineas.map((linea, idx) => {
               const selectedWallet = billeteras.find(b => b.billetera_id === linea.billetera_id)
-              const usedWalletIds = allLines.filter((_, i) => i !== idx).map(l => l.billetera_id).filter(id => id != null)
+              // F-S9: la misma billetera puede usarse en la sección local y en el tramo
+              // dólar: son movimientos distintos y el saldo total lo valida el backend.
+              // Solo se excluye dentro de la MISMA sección, para no repetirla en dos
+              // líneas equivalentes. Antes se excluía entre secciones y el efectivo
+              // desaparecía del tramo dólar en cuanto se lo elegía en la local.
+              const usedWalletIds = pagarLineas.filter((_, i) => i !== idx).map(l => l.billetera_id).filter(id => id != null)
               const baseWallets = billeteras.filter(b => !usedWalletIds.includes(b.billetera_id))
               // Sección ARS: solo billeteras ARS para líneas no favor.
               const availableWallets = linea.origen === 'favor' ? baseWallets : baseWallets.filter(b => b.moneda === localMon)
-              const recargoPct = Number(targetCard?.recargo_dolar_pct ?? 30)
+              // S14: el recargo por compras en dólares se elimina de todo el sistema.
+              // Antes esta línea leía recargo_dolar_pct con default 30, pero el valor
+              // nunca se usaba en el cálculo: era código muerto que confundía.
               const cotizacion = Number(targetCard?.cotizacion_usd ?? 0)
               const montoNum = parseFloat(linea.monto) || 0
               return (
@@ -2505,7 +2527,7 @@ export function PagarModal({
                             })
                           }}
                           placeholder={t('pay_multi_wallet_placeholder')}
-                          formatMonto={(val, moneda) => `${fmtMoneda(Number(val), (moneda ?? 'ARS') as 'ARS'|'USD')} ${moneda}`}
+                          formatMonto={(val, moneda) => fmtMoneda(Number(val), (moneda ?? localMon) as 'ARS'|'USD')}
                         />
                       </>
                     )}
@@ -2591,7 +2613,7 @@ export function PagarModal({
 
               {pagarLineasUsd.map((linea, idx) => {
                 const selectedWallet = billeteras.find(b => b.billetera_id === linea.billetera_id)
-                const usedWalletIds = allLines.filter((_, i) => i !== idx + pagarLineas.length).map(l => l.billetera_id).filter(id => id != null)
+                const usedWalletIds = pagarLineasUsd.filter((_, i) => i !== idx).map(l => l.billetera_id).filter(id => id != null)
                 const baseWallets = billeteras.filter(b => !usedWalletIds.includes(b.billetera_id))
                 const availableWallets = linea.origen === 'favor' ? baseWallets : baseWallets.filter(b => b.moneda === (sectionUsdPayIn === 'ARS' ? localMon : 'USD'))
                 const payInPesos = sectionUsdPayIn === 'ARS'
@@ -2652,7 +2674,7 @@ export function PagarModal({
                               })
                             }}
                             placeholder={t('pay_multi_wallet_placeholder')}
-                            formatMonto={(val, moneda) => `${fmtMoneda(Number(val), (moneda ?? 'ARS') as 'ARS'|'USD')} ${moneda}`}
+                            formatMonto={(val, moneda) => fmtMoneda(Number(val), (moneda ?? localMon) as 'ARS'|'USD')}
                           />
                           {payInPesos && montoNum > 0 && (
                             <div className="pay-multi-usd-preview">
@@ -2748,9 +2770,9 @@ export function PagarModal({
               {t('pay_partial_refinancia', { monto: fmtARS(faltaVentanaEquiv) })}
             </div>
           )}
-          {totalPagar > faltaBase + 0.5 && sobrante <= 0.5 && (
+          {totalPagarArsEquiv > faltaBase + 0.5 && sobrante <= 0.5 && (
             <div className="pay-multi-overpay-warn">
-              {t('pay_overpay_warning_line', { monto: fmtARS(totalPagar - faltaBase) })}
+              {t('pay_overpay_warning_line', { monto: fmtARS(totalPagarArsEquiv - faltaBase) })}
             </div>
           )}
 

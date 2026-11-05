@@ -203,8 +203,6 @@ export const errors = {
   card_form_limit_installments_label: "Limite para Compras Parceladas ($) (Opcional)",
   card_form_limit_installments_placeholder: "Ex: 500000",
   card_form_color_label: "Cor do cartão",
-  card_form_recargo_dolar_label: "Acréscimo para compras em USD (%)",
-  card_form_recargo_dolar_placeholder: "Ex: 30",
   btn_saving: "Salvando...",
   btn_save_changes: "Salvar alterações",
   btn_create_card: "+ Criar Cartão",

@@ -208,8 +208,6 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   card_form_limit_installments_label: "Límite para Compras en Cuotas ($) (Opcional)",
   card_form_limit_installments_placeholder: "Ej: 500000",
   card_form_color_label: "Color de la tarjeta",
-  card_form_recargo_dolar_label: "Recargo compras en USD (%)",
-  card_form_recargo_dolar_placeholder: "Ej: 30",
   btn_saving: "Guardando...",
   btn_save_changes: "Guardar cambios",
   btn_create_card: "+ Crear Tarjeta",
