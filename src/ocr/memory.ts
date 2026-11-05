@@ -7,12 +7,8 @@ import {
   type OcrCategoryCorrection,
   type OcrCategoryNameResolver,
 } from './memoryRules';
-import {
-  loadPendingOcrMemory,
-  queuePendingOcrMemory,
-  resolvePendingOcrMemory,
-  type PendingOcrMemory,
-} from './storage';
+import { loadPendingOcrMemory, queuePendingOcrMemory, type PendingOcrMemory } from './storage';
+import { runPendingMemorySync, type PendingMemorySyncResult } from './memorySync';
 import { trackOcrError, trackOcrEvent, OCR_EVENTS } from './telemetry';
 
 // The pure rules live in `memoryRules.ts` so they are testable without a
@@ -46,11 +42,7 @@ export interface SyncPendingOcrMemoryInput {
   signal?: AbortSignal;
 }
 
-export interface SyncPendingOcrMemoryResult {
-  attempted: number;
-  synced: number;
-  failed: number;
-}
+export type SyncPendingOcrMemoryResult = PendingMemorySyncResult;
 
 /**
  * Retries every queued correction (PRD §24). A failure keeps the entry for the
@@ -61,48 +53,42 @@ export async function syncPendingOcrMemory(
   input: SyncPendingOcrMemoryInput
 ): Promise<SyncPendingOcrMemoryResult> {
   const { accessToken, jobId, signal } = input;
-  const all = loadPendingOcrMemory().value;
-  const pending = jobId ? all.filter((entry) => entry.job_id === jobId) : all;
 
-  if (pending.length === 0) return { attempted: 0, synced: 0, failed: 0 };
-  if (!accessToken) {
-    return { attempted: pending.length, synced: 0, failed: pending.length };
+  // The rules (2xx confirms, failure keeps, never duplicates) live in
+  // `memorySync.ts` so they are testable; this wrapper only wires the real
+  // network call and the telemetry.
+  const result = await runPendingMemorySync({
+    accessToken,
+    jobId,
+    register: (entry) =>
+      registerCategoryMemory({
+        jobId: entry.jobId,
+        itemIndex: entry.itemIndex,
+        categoryId: entry.categoryId,
+        categoryName: entry.categoryName,
+        categoryParentName: entry.categoryParentName,
+        accessToken,
+        signal,
+      }),
+  });
+
+  for (const failure of result.failures) {
+    trackOcrError('memory_sync', failure.code, { job_id: failure.job_id });
   }
 
-  let synced = 0;
-  let failed = 0;
-
-  for (const entry of pending) {
-    const payload: RegisterCategoryMemoryInput = {
-      jobId: entry.job_id,
-      itemIndex: entry.item_index,
-      categoryId: entry.category_id,
-      categoryName: entry.category_name,
-      categoryParentName: entry.category_parent_name,
-      accessToken,
-      signal,
-    };
-    try {
-      await registerCategoryMemory(payload);
-      resolvePendingOcrMemory(entry.job_id, entry.item_index);
-      synced += 1;
-    } catch (error) {
-      failed += 1;
-      const code =
-        typeof error === 'object' && error !== null && 'code' in error
-          ? String((error as { code?: unknown }).code ?? 'UNKNOWN')
-          : 'UNKNOWN';
-      trackOcrError('memory_sync', code, { job_id: entry.job_id });
-    }
+  if (result.synced > 0) {
+    trackOcrEvent(
+      OCR_EVENTS.categoryCorrected,
+      {
+        job_id: jobId,
+        changed_item_count: result.synced,
+        memory_synced: result.failed === 0,
+      },
+      TELEMETRY_PRIORITY.MEDIUM
+    );
   }
 
-  trackOcrEvent(
-    OCR_EVENTS.categoryCorrected,
-    { job_id: jobId, changed_item_count: synced, memory_synced: failed === 0 },
-    TELEMETRY_PRIORITY.MEDIUM
-  );
-
-  return { attempted: pending.length, synced, failed };
+  return result;
 }
 
 /** Queued corrections still waiting, for the UI hint. */
