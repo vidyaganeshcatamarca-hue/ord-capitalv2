@@ -142,6 +142,24 @@ export function recordOcrJobError(jobId: string, code: string): { durable: boole
 }
 
 /**
+ * Absolute instant in UTC, from a backend or client stamp.
+ *
+ * The app is reachable from any timezone and each server reports its own
+ * offset, so every stamp is normalized to UTC before being stored or compared.
+ * A stamp WITHOUT an explicit offset is read as UTC on purpose: `Date.parse`
+ * would otherwise read it as local time and invent a difference of whole hours.
+ */
+export function toUtcIso(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const raw = value.trim();
+  if (raw === '') return null;
+  const hasOffset = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw);
+  const parsed = Date.parse(hasOffset ? raw : `${raw}Z`);
+  if (!Number.isFinite(parsed)) return null;
+  return new Date(parsed).toISOString();
+}
+
+/**
  * Backend receipt -> quarantine dispatch, in milliseconds.
  *
  * Returns null when either stamp is missing or unparseable, and also when the
@@ -152,11 +170,10 @@ export function ocrQuarantineLatencyMs(
   serverCreatedAt: string | null,
   dispatchedAt: string | null
 ): number | null {
-  if (!serverCreatedAt || !dispatchedAt) return null;
-  const start = Date.parse(serverCreatedAt);
-  const end = Date.parse(dispatchedAt);
-  if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
-  const delta = end - start;
+  const start = toUtcIso(serverCreatedAt);
+  const end = toUtcIso(dispatchedAt);
+  if (!start || !end) return null;
+  const delta = Date.parse(end) - Date.parse(start);
   return delta >= 0 ? delta : null;
 }
 
@@ -184,14 +201,9 @@ function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
       typeof value.last_error_code === 'string' && value.last_error_code.trim() !== ''
         ? value.last_error_code
         : null,
-    server_created_at:
-      typeof value.server_created_at === 'string' && value.server_created_at !== ''
-        ? value.server_created_at
-        : null,
-    quarantine_dispatched_at:
-      typeof value.quarantine_dispatched_at === 'string' && value.quarantine_dispatched_at !== ''
-        ? value.quarantine_dispatched_at
-        : null,
+    // Normalized to UTC on every read and write, whatever offset came in.
+    server_created_at: toUtcIso(value.server_created_at),
+    quarantine_dispatched_at: toUtcIso(value.quarantine_dispatched_at),
   };
 }
 
@@ -222,7 +234,9 @@ export function patchOcrJob(
   const jobs = loadOcrJobs().value;
   const index = jobs.findIndex((job) => job.job_id === jobId);
   if (index < 0) return { durable: true };
-  jobs[index] = { ...jobs[index], ...patch };
+  // Normalizing here keeps the stored payload canonical (UTC, validated) even
+  // when the caller hands us a raw backend stamp.
+  jobs[index] = normalizeStoredJob({ ...jobs[index], ...patch });
   return saveOcrJobs(jobs);
 }
 
