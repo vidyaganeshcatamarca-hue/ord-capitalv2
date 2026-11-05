@@ -187,7 +187,7 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
               <p className="ocr-capture-hint">{t('ocr.capture_hint')}</p>
               <p className="ocr-capture-hint">{t('ocr.capture_limits')}</p>
 
-              <div className="ocr-capture-actions">
+              <div className="ocr-capture-sources">
                 <label className="ocr-file-btn">
                   📷 {t('ocr.capture_take_photo')}
                   <input
@@ -276,10 +276,14 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
 
               {errorI18nKey && <p className="ocr-error">{t(errorI18nKey)}</p>}
 
+              <p className="ocr-note ocr-capture-total">
+                {MAX_OCR_IMAGES} × {formatBytes(MAX_OCR_FILE_BYTES)} · {formatBytes(MAX_OCR_TOTAL_BYTES)}
+              </p>
+
               <div className="ocr-capture-actions">
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-primary ocr-action-btn"
                   onClick={() => void send()}
                   disabled={
                     stage === 'sending' ||
@@ -291,7 +295,7 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                 >
                   {stage === 'sending' ? t('ocr.capture_sending') : t('ocr.capture_send')}
                 </button>
-                <button type="button" className="btn" onClick={close}>
+                <button type="button" className="btn ocr-action-btn" onClick={close}>
                   {t('ocr.capture_cancel')}
                 </button>
               </div>
@@ -319,10 +323,6 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
               ))}
             </div>
           )}
-
-          <p className="ocr-note">
-            {MAX_OCR_IMAGES} × {formatBytes(MAX_OCR_FILE_BYTES)} · {formatBytes(MAX_OCR_TOTAL_BYTES)}
-          </p>
         </div>
       </div>
     </div>,
