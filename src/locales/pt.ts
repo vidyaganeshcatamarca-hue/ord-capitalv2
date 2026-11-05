@@ -828,7 +828,7 @@ export const ocr = {
   error_file_too_big: "Cada arquivo pode ter até 20 MB.",
   error_total_too_big: "O comprovante inteiro pode ter até 80 MB.",
   error_upload_failed: "Não conseguimos enviar o comprovante. Tente de novo.",
-  error_network: "A conexão caiu. Tente de novo.",
+  error_network: "Não conseguimos contatar o serviço de tickets. Tente de novo.",
   error_unauthorized: "Sua sessão expirou. Entre novamente.",
   error_context_unavailable: "Não conseguimos preparar o contexto do seu ORD. Tente de novo.",
   error_job_not_found: "Não encontramos este comprovante no servidor.",

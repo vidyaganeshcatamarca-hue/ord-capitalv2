@@ -26,6 +26,45 @@ function asRecord(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
+/**
+ * TEMPORARY SHIM (PRD §127). ord-ocr-api currently sends `result` and `issues`
+ * as JSON **strings**, and nests the ticket under `result.ticket`. The canonical
+ * v1 contract keeps `ticket` as an object and `issues` as an array, so this is a
+ * read-side tolerance only: the normalized output never changes shape, and the
+ * day the backend stops double-encoding, deleting these helpers changes nothing.
+ */
+function parseMaybeJson(value: unknown): unknown {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trim();
+  if (trimmed === '') return null;
+  const first = trimmed[0];
+  // Only pay for JSON.parse when it actually looks like JSON.
+  if (first !== '{' && first !== '[') return value;
+  try {
+    return JSON.parse(trimmed) as unknown;
+  } catch {
+    return value;
+  }
+}
+
+/**
+ * Resolves where the ticket actually lives: the value itself (canonical v1) or
+ * `result.ticket` (today's wrapper). `extraIssues` carries `resolution_issues`,
+ * the only place the wrapper declares them.
+ */
+function unwrapOcrResult(raw: unknown): { ticketSource: unknown; extraIssues: unknown } {
+  const parsed = parseMaybeJson(raw);
+  const record = asRecord(parsed);
+  if (!record) return { ticketSource: parsed, extraIssues: undefined };
+  if ('ticket' in record) {
+    return {
+      ticketSource: record.ticket,
+      extraIssues: firstDefined(record, ['resolution_issues', 'issues']),
+    };
+  }
+  return { ticketSource: parsed, extraIssues: firstDefined(record, ['resolution_issues']) };
+}
+
 function firstDefined(record: Record<string, unknown>, keys: readonly string[]): unknown {
   for (const key of keys) {
     const value = record[key];
@@ -113,7 +152,9 @@ function stringList(value: unknown): string[] {
 }
 
 function normalizeIssues(value: unknown): OcrIssue[] {
-  const list = Array.isArray(value) ? value : value == null ? [] : [value];
+  // `issues` may arrive as a JSON string (today) or as an array (v1).
+  const parsed = parseMaybeJson(value);
+  const list = Array.isArray(parsed) ? parsed : parsed == null ? [] : [parsed];
   const out: OcrIssue[] = [];
   for (const entry of list) {
     if (typeof entry === 'string') {
@@ -143,10 +184,12 @@ function normalizeIssues(value: unknown): OcrIssue[] {
 function normalizePayment(source: Record<string, unknown> | null, ticket: Record<string, unknown>): OcrPayment {
   const payment = source ?? {};
   const merged = { ...ticket, ...payment };
-  const rawType = (text(firstDefined(merged, ['type', 'kind', 'tipo', 'payment_type'])) ?? '').toLowerCase();
+  const rawType = (
+    text(firstDefined(merged, ['type', 'kind', 'tipo', 'payment_type', 'payment_method'])) ?? ''
+  ).toLowerCase();
 
   const cardId = num(firstDefined(merged, ['card_id', 'tarjeta_id']));
-  const walletId = num(firstDefined(merged, ['wallet_id', 'billetera_id']));
+  const walletId = num(firstDefined(merged, ['wallet_id', 'billetera_id', 'source_wallet_id']));
 
   let type: OcrPayment['type'] = null;
   if (cardId !== null) type = 'card';
@@ -166,6 +209,19 @@ function normalizePayment(source: Record<string, unknown> | null, ticket: Record
     installments,
     currency: normalizeCurrencyCode(firstDefined(merged, ['currency', 'moneda'])),
   };
+}
+
+/** Sums a list of discount records/amounts; 0 when the value is not a list. */
+function discountListTotal(value: unknown): number {
+  const parsed = parseMaybeJson(value);
+  const list = Array.isArray(parsed) ? parsed : [];
+  return list.reduce<number>((sum, entry) => {
+    const record = asRecord(entry);
+    const amount = record
+      ? num(firstDefined(record, ['amount', 'value', 'monto', 'importe']))
+      : num(entry);
+    return amount === null ? sum : sum + Math.abs(amount);
+  }, 0);
 }
 
 function normalizeItems(value: unknown): OcrItem[] {
@@ -214,11 +270,24 @@ function normalizeItems(value: unknown): OcrItem[] {
 }
 
 /**
+ * Ticket issues: the ticket's own list wins; otherwise the wrapper's
+ * `resolution_issues`, which is where today's backend declares them.
+ */
+function resolveTicketIssues(
+  record: Record<string, unknown>,
+  extraIssues: unknown
+): OcrIssue[] {
+  const own = normalizeIssues(firstDefined(record, ['issues', 'issue_codes', 'warnings']));
+  return own.length > 0 ? own : normalizeIssues(extraIssues);
+}
+
+/**
  * Builds the normalized ticket from a backend result.
  * Returns null when there is nothing ticket-shaped to read.
  */
 export function normalizeOcrResult(jobId: string, raw: unknown): OcrTicket | null {
-  const record = asRecord(raw);
+  const { ticketSource, extraIssues } = unwrapOcrResult(raw);
+  const record = asRecord(parseMaybeJson(ticketSource));
   if (!record) return null;
 
   const items = normalizeItems(firstDefined(record, ['items', 'lines', 'products', 'productos']));
@@ -229,9 +298,17 @@ export function normalizeOcrResult(jobId: string, raw: unknown): OcrTicket | nul
 
   const explicitTotal = num(firstDefined(record, ['total', 'total_amount', 'importe_total', 'grand_total']));
   const itemsTotal = items.reduce((sum, item) => sum + item.net_amount, 0);
-  const generalDiscount = Math.abs(
-    num(firstDefined(record, ['general_discount', 'ticket_discount', 'descuento_general', 'discount'])) ?? 0
-  );
+  // The scalar field is canonical; the list form is today's backend shape.
+  const scalarDiscount = firstDefined(record, [
+    'general_discount',
+    'ticket_discount',
+    'descuento_general',
+    'discount',
+  ]);
+  const generalDiscount =
+    scalarDiscount === undefined
+      ? discountListTotal(firstDefined(record, ['general_discounts', 'descuentos_generales']))
+      : Math.abs(num(scalarDiscount) ?? 0);
 
   // A ticket without items and without a total is not a ticket: the caller
   // reports a malformed result instead of inventing an empty quarantine.
@@ -250,7 +327,7 @@ export function normalizeOcrResult(jobId: string, raw: unknown): OcrTicket | nul
     total,
     general_discount: Math.round(generalDiscount * 100) / 100,
     items,
-    issues: normalizeIssues(firstDefined(record, ['issues', 'issue_codes', 'warnings'])),
+    issues: resolveTicketIssues(record, extraIssues),
     payment,
   };
 }

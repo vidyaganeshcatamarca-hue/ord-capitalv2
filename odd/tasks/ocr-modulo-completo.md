@@ -168,3 +168,39 @@ respaldo documental.
 Ahora el alta queda montada debajo de la captura y solo se cierra cuando hay un job creado:
 `OcrCaptureModal.onClose` distingue `cancelled` de `submitted` leyendo el `stage` **antes** de resetear.
 Verificado en ego: importe `12.345` cargado, captura abierta encima, cerrada con `×`, importe intacto.
+
+### L9 — el contrato real del polling no era el v1 (y el despacho estaba muerto)
+
+Prueba contra producción, hecha desde el navegador con la sesión real (el token se leyó del
+`localStorage` y nunca se imprimió; probe efímero, borrado después):
+
+```text
+POST /v1/ocr/jobs        202   job 541262e2-f75c-475c-9bc6-1eb892c1758a
+POLL 1 queued · 2 processing · 6 classifying · 8 needs_review (terminal)
+```
+
+El POST, el CORS y la auth funcionan. El problema está en la respuesta:
+
+```json
+{ "status": "needs_review",
+  "result": "{\"ticket\": { … }, \"needs_review\": true, \"resolution_issues\": [ … ]}",
+  "issues": "[{\"type\": \"CLASSIFIER_CATEGORY_NULL\", \"item_index\": 0}]" }
+```
+
+`result` y `issues` llegan **como strings JSON** y el ticket viene envuelto en `result.ticket`.
+`asRecord(string)` devuelve null, así que `normalizeOcrResult` devolvía `null`, `job.ticket` quedaba
+null y `useOcrJobs` cortaba el despacho: **el job se procesaba entero y nunca aparecía en la
+cuarentena**. No se veía como error porque el polling no falla: simplemente no pasa nada.
+
+Divergencias adicionales: `expense_category_id` (no `original_category_id`), `payment_method` +
+`source_wallet_id` (no objeto `payment`), `general_discounts[]` (no `general_discount`), `net_amount`
+como string decimal, sin `currency` ni `ocr_schema_version`, `item_index` **0-based** (coincide).
+
+**Decisión:** el contrato canónico sigue siendo el v1. Se agregó tolerancia **de lectura** en
+`normalize.ts` (`parseMaybeJson`, `unwrapOcrResult`, `resolveTicketIssues`, `discountListTotal` y los
+alias), documentada como shim temporal: el día que `ord-ocr-api` deje de serializar dos veces, se
+borran los helpers y no cambia ningún comportamiento observable.
+
+Tests: `tests/ocr_normalize_backend_shape.test.js`, 11 casos con el payload real reducido. Los dos del
+v1 canónico ya pasaban (protegen la regresión); los nueve del shape actual estaban en rojo.
+Verificado además contra el body real capturado: 3 items, suma 8500 = total, 4 issues mapeados.

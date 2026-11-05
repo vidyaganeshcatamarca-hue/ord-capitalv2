@@ -25,9 +25,11 @@ import { syncPendingOcrMemory } from './memory';
 import { runOcrPollingLoop, type OcrPollingController } from './polling';
 import { loadOcrQuarantine } from './quarantine';
 import {
+  clearOcrJobError,
   isOcrCacheMaintenanceDue,
   loadOcrJobs,
   patchOcrJob,
+  recordOcrJobError,
   pruneDispatchedOcrJobs,
   removeOcrJob,
   upsertOcrJob,
@@ -186,6 +188,10 @@ export function useOcrJobs(): UseOcrJobsResult {
         last_checked_at: new Date().toISOString(),
         quarantine_dispatched: true,
         pendiente_id: row.pendiente_id,
+        last_error_code: null,
+        server_created_at: job.created_at || null,
+        // Closing stamp of the measurement: backend receipt -> quarantine row.
+        quarantine_dispatched_at: new Date().toISOString(),
       });
       patch(jobId, {
         phase: 'dispatched',
@@ -212,6 +218,7 @@ export function useOcrJobs(): UseOcrJobsResult {
           : 'DISPATCH_FAILED';
       trackOcrError('quarantine_dispatch', code, { job_id: jobId, status: job.status });
       patchOcrJob(jobId, { last_status: job.status, quarantine_dispatched: false });
+      recordOcrJobError(jobId, code);
       patch(jobId, { errorCode: 'DISPATCH_FAILED' });
       return false;
     }
@@ -225,7 +232,14 @@ export function useOcrJobs(): UseOcrJobsResult {
         jobId,
         accessToken,
         onUpdate: (job) => {
-          patchOcrJob(jobId, { last_status: job.status, last_checked_at: new Date().toISOString() });
+          patchOcrJob(jobId, {
+            last_status: job.status,
+            last_checked_at: new Date().toISOString(),
+            // The backend's own receipt stamp, used later to report latency.
+            server_created_at: job.created_at || null,
+          });
+          // A successful GET proves the failure is gone.
+          clearOcrJobError(jobId);
           patch(jobId, { phase: phaseFromStatus(job.status), status: job.status, errorCode: null });
         },
         onResult: (job) => {
@@ -234,6 +248,7 @@ export function useOcrJobs(): UseOcrJobsResult {
         },
         onStopped: ({ code, terminal }) => {
           pollersRef.current.delete(jobId);
+          recordOcrJobError(jobId, code);
           if (terminal) {
             // `failed`/`cancelled` keep the job id but stop following it: no
             // automatic re-upload (§36).
@@ -255,13 +270,44 @@ export function useOcrJobs(): UseOcrJobsResult {
     [dispatchToQuarantine, patch]
   );
 
+  /**
+   * Mirrors a memory-sync outcome into the persisted job: a confirmed job clears
+   * the code, any failure records it. Applied per job so one job's failure never
+   * paints another.
+   */
+  const applyMemorySyncResult = useCallback(
+    (result: {
+      syncedJobIds: string[];
+      failures: { job_id: string; code: string }[];
+    }): void => {
+      for (const syncedJobId of result.syncedJobIds) clearOcrJobError(syncedJobId);
+      for (const failure of result.failures) {
+        recordOcrJobError(failure.job_id, failure.code);
+      }
+    },
+    []
+  );
+
   const resumePending = useCallback(async (): Promise<void> => {
+    // One token read per mount, shared by the memory sync and the job resume:
+    // reading it separately inside the sync raced the Supabase session
+    // hydration, so a queued correction could survive every reload without
+    // ever being retried.
+    const accessToken = await readOcrAccessToken();
+    if (!mountedRef.current) return;
+
+    if (accessToken) {
+      try {
+        const syncResult = await syncPendingOcrMemory({ accessToken });
+        applyMemorySyncResult(syncResult);
+      } catch {
+        // A memory failure never blocks resuming the jobs.
+      }
+    }
+
     if (jobsRef.current && Object.keys(jobsRef.current).length > 0) return;
     const stored = loadOcrJobs().value;
     if (stored.length === 0) return;
-
-    const accessToken = await readOcrAccessToken();
-    if (!mountedRef.current) return;
 
     for (const job of stored) {
       if (job.quarantine_dispatched && job.pendiente_id !== null) continue;
@@ -285,13 +331,17 @@ export function useOcrJobs(): UseOcrJobsResult {
       }
       startPolling(job.job_id, accessToken);
     }
-  }, [patch, startPolling]);
+  }, [applyMemorySyncResult, patch, startPolling]);
 
-  const syncMemory = useCallback(async (jobId?: string): Promise<void> => {
-    const accessToken = await readOcrAccessToken();
-    if (!accessToken) return;
-    await syncPendingOcrMemory({ accessToken, jobId });
-  }, []);
+  const syncMemory = useCallback(
+    async (jobId?: string): Promise<void> => {
+      const accessToken = await readOcrAccessToken();
+      if (!accessToken) return;
+      const result = await syncPendingOcrMemory({ accessToken, jobId });
+      applyMemorySyncResult(result);
+    },
+    [applyMemorySyncResult]
+  );
 
   useEffect(() => {
     mountedRef.current = true;
@@ -306,7 +356,6 @@ export function useOcrJobs(): UseOcrJobsResult {
         .then(() => writeOcrCacheMaintenanceAt(Date.now()))
         .catch(() => undefined);
     }
-    void syncMemory();
     pruneDispatchedOcrJobs();
 
     return () => {
@@ -411,6 +460,11 @@ export function useOcrJobs(): UseOcrJobsResult {
           last_checked_at: new Date().toISOString(),
           quarantine_dispatched: false,
           pendiente_id: null,
+          // A fresh job starts clean; the code is set only when a stage fails.
+          last_error_code: null,
+          // Filled by the first polling GET (server stamp) and by the dispatch.
+          server_created_at: null,
+          quarantine_dispatched_at: null,
         });
 
         trackOcrEvent(OCR_EVENTS.uploadAccepted, {

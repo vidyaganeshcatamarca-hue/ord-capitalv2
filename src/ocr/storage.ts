@@ -34,6 +34,24 @@ export interface StoredOcrJob {
   quarantine_dispatched: boolean;
   /** Local quarantine row id, so a re-dispatch can reuse it. */
   pendiente_id: number | null;
+  /**
+   * Stable code of the last failure in this job's pipeline, or null when the
+   * last attempt succeeded.
+   *
+   * Without it a failed polling or dispatch lived only in React state: after a
+   * reload the job looked identical to "nothing happened yet", which is exactly
+   * how a dead dispatch stays invisible for hours. The code is enough to
+   * diagnose; no stack traces or free-form messages are stored (PRD §80).
+   */
+  last_error_code: string | null;
+  /**
+   * When the BACKEND says it received the ticket (the `created_at` of the job),
+   * not when the browser started uploading. The two are deliberately different:
+   * a 20 MB upload is not backend latency.
+   */
+  server_created_at: string | null;
+  /** When this client created the quarantine row from the finished job. */
+  quarantine_dispatched_at: string | null;
 }
 
 /** One explicit correction waiting to be acknowledged (PRD §24). */
@@ -108,6 +126,64 @@ function isStoredOcrJob(value: unknown): value is StoredOcrJob {
 }
 
 /** Normalizes a stored row so a partial payload never leaks undefined to the UI. */
+/**
+ * Clears the failure once the same stage succeeds again, so a stale code never
+ * outlives the problem it described.
+ */
+export function clearOcrJobError(jobId: string): { durable: boolean } {
+  return patchOcrJob(jobId, { last_error_code: null });
+}
+
+/** Records the stable code of the failure that stopped this job. */
+export function recordOcrJobError(jobId: string, code: string): { durable: boolean } {
+  const trimmed = typeof code === 'string' ? code.trim() : '';
+  if (trimmed === '') return { durable: true };
+  return patchOcrJob(jobId, { last_error_code: trimmed });
+}
+
+/**
+ * Absolute instant in UTC, from a backend or client stamp.
+ *
+ * The app is reachable from any timezone and each server reports its own
+ * offset, so every stamp is normalized to UTC before being stored or compared.
+ * A stamp WITHOUT an explicit offset is read as UTC on purpose: `Date.parse`
+ * would otherwise read it as local time and invent a difference of whole hours.
+ */
+export function toUtcIso(value: unknown): string | null {
+  if (typeof value !== 'string') return null;
+  const raw = value.trim();
+  if (raw === '') return null;
+  const hasOffset = /(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw);
+  const parsed = Date.parse(hasOffset ? raw : `${raw}Z`);
+  if (!Number.isFinite(parsed)) return null;
+  return new Date(parsed).toISOString();
+}
+
+/**
+ * Backend receipt -> quarantine dispatch, in milliseconds.
+ *
+ * Returns null when either stamp is missing or unparseable, and also when the
+ * result would be negative (client and server clocks disagreeing is not a
+ * latency). An unknown latency is never reported as zero.
+ */
+export function ocrQuarantineLatencyMs(
+  serverCreatedAt: string | null,
+  dispatchedAt: string | null
+): number | null {
+  const start = toUtcIso(serverCreatedAt);
+  const end = toUtcIso(dispatchedAt);
+  if (!start || !end) return null;
+  const delta = Date.parse(end) - Date.parse(start);
+  return delta >= 0 ? delta : null;
+}
+
+/** Same measurement for one followed job, or null when it is not available. */
+export function readOcrQuarantineLatencyMs(jobId: string): number | null {
+  const job = loadOcrJobs().value.find((entry) => entry.job_id === jobId);
+  if (!job) return null;
+  return ocrQuarantineLatencyMs(job.server_created_at, job.quarantine_dispatched_at);
+}
+
 function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
   return {
     job_id: value.job_id,
@@ -119,6 +195,15 @@ function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
       typeof value.pendiente_id === 'number' && Number.isFinite(value.pendiente_id)
         ? value.pendiente_id
         : null,
+    // Jobs persisted before this field existed hydrate as "no error", which is
+    // the only honest reading of an absent history.
+    last_error_code:
+      typeof value.last_error_code === 'string' && value.last_error_code.trim() !== ''
+        ? value.last_error_code
+        : null,
+    // Normalized to UTC on every read and write, whatever offset came in.
+    server_created_at: toUtcIso(value.server_created_at),
+    quarantine_dispatched_at: toUtcIso(value.quarantine_dispatched_at),
   };
 }
 
@@ -149,7 +234,9 @@ export function patchOcrJob(
   const jobs = loadOcrJobs().value;
   const index = jobs.findIndex((job) => job.job_id === jobId);
   if (index < 0) return { durable: true };
-  jobs[index] = { ...jobs[index], ...patch };
+  // Normalizing here keeps the stored payload canonical (UTC, validated) even
+  // when the caller hands us a raw backend stamp.
+  jobs[index] = normalizeStoredJob({ ...jobs[index], ...patch });
   return saveOcrJobs(jobs);
 }
 
