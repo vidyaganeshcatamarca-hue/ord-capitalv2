@@ -20,6 +20,7 @@ import {
 import { normalizeOcrResult } from './normalize';
 import { ocrErrorI18nKey, ocrUploadErrorI18nKey } from './errors';
 import type { OcrIssue, OcrJob, OcrJobAccepted, OcrJobStatus } from './types';
+import type { OcrNetworkDetail } from './telemetryProps';
 
 /** Typed transport error for every OCR backend interaction. */
 export class OcrApiError extends Error {
@@ -152,6 +153,29 @@ function networkError(detail: string): OcrApiError {
 
 function detailFromError(error: unknown): string {
   return error instanceof Error ? error.message : 'OCR request failed';
+}
+
+/**
+ * Turns a failed transport attempt into the three closed fields telemetry is
+ * allowed to carry (PRD §70, §97): a reason from a closed set, how long it took,
+ * and whether the device believed it was online. The exception message itself
+ * never travels: it is the one field that could leak ticket content.
+ */
+export function describeOcrNetworkFailure(
+  error: unknown,
+  elapsedMs: number
+): { net_detail: OcrNetworkDetail; elapsed_ms: number; online: boolean } {
+  let netDetail: OcrNetworkDetail = 'other';
+  if (isAbortError(error)) {
+    netDetail = 'abort';
+  } else if (error instanceof OcrApiError && /timed out/i.test(error.message)) {
+    netDetail = 'timeout';
+  } else if (error instanceof OcrApiError && error.code === 'NETWORK') {
+    netDetail = 'failed_to_fetch';
+  }
+  const online =
+    typeof navigator === 'undefined' || navigator.onLine !== false;
+  return { net_detail: netDetail, elapsed_ms: Math.max(0, Math.round(elapsedMs)), online };
 }
 
 /**

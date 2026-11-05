@@ -25,7 +25,19 @@ export interface OcrTelemetryProps {
   quarantine_age_ms?: number;
   duplicate?: boolean;
   memory_synced?: boolean;
+  // Network diagnosis (PRD §70): a closed enum, a counter and a flag. Never the
+  // exception message, which could carry ticket content.
+  net_detail?: OcrNetworkDetail;
+  elapsed_ms?: number;
+  online?: boolean;
 }
+
+/**
+ * Why a transport attempt failed, as a closed set. `failed_to_fetch` is the
+ * browser's own wording for an attempt blocked before it reached the network
+ * (CORS, DNS, offline); it deliberately does not claim a cause we cannot see.
+ */
+export type OcrNetworkDetail = 'failed_to_fetch' | 'timeout' | 'abort' | 'other';
 
 /** The closed list. Adding a key here is a privacy decision, not a convenience. */
 export const OCR_TELEMETRY_PROPERTY_KEYS: readonly (keyof OcrTelemetryProps)[] = [
@@ -41,6 +53,9 @@ export const OCR_TELEMETRY_PROPERTY_KEYS: readonly (keyof OcrTelemetryProps)[] =
   'quarantine_age_ms',
   'duplicate',
   'memory_synced',
+  'net_detail',
+  'elapsed_ms',
+  'online',
 ];
 
 /** Keeps only allowlisted, defined, scalar properties. */

@@ -17,7 +17,7 @@
 //   - no telemetry per poll (§69).
 
 import { useCallback, useEffect, useReducer, useRef } from 'react';
-import { OcrApiError, createOcrJob, isAbortError, readOcrAccessToken } from './apiClient';
+import { OcrApiError, createOcrJob, describeOcrNetworkFailure, isAbortError, readOcrAccessToken } from './apiClient';
 import { validateOcrFiles } from './contract';
 import { ocrFileRejectionI18nKey } from './errors';
 import { rekeyOcrImages, saveOcrImages, sweepOcrImages, markOcrImagesProcessed } from './imageStore';
@@ -431,6 +431,11 @@ export function useOcrJobs(): UseOcrJobsResult {
 
       trackOcrEvent(OCR_EVENTS.uploadStarted, { file_count: files.length });
 
+      // Elapsed is measured from the attempt, not from the click: it tells a
+      // request blocked before it left the browser (a few milliseconds) from
+      // one that waited on the server.
+      const uploadStartedAt = Date.now();
+
       try {
         const accepted = await createOcrJob({ files, context, accessToken });
         if (!mountedRef.current) return { jobId: accepted.job_id, errorI18nKey: null, errorCode: null, duplicate: accepted.duplicate };
@@ -489,7 +494,10 @@ export function useOcrJobs(): UseOcrJobsResult {
         }
         const code = error instanceof OcrApiError ? error.code : 'UNKNOWN';
         const i18nKey = error instanceof OcrApiError ? error.i18nKey : 'ocr.error_upload_failed';
-        trackOcrError('upload', code, { file_count: files.length });
+        trackOcrError('upload', code, {
+          file_count: files.length,
+          ...describeOcrNetworkFailure(error, Date.now() - uploadStartedAt),
+        });
         return { jobId: null, errorI18nKey: i18nKey, errorCode: code, duplicate: false };
       }
     },
