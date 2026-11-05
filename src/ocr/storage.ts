@@ -44,6 +44,14 @@ export interface StoredOcrJob {
    * diagnose; no stack traces or free-form messages are stored (PRD §80).
    */
   last_error_code: string | null;
+  /**
+   * When the BACKEND says it received the ticket (the `created_at` of the job),
+   * not when the browser started uploading. The two are deliberately different:
+   * a 20 MB upload is not backend latency.
+   */
+  server_created_at: string | null;
+  /** When this client created the quarantine row from the finished job. */
+  quarantine_dispatched_at: string | null;
 }
 
 /** One explicit correction waiting to be acknowledged (PRD §24). */
@@ -133,6 +141,32 @@ export function recordOcrJobError(jobId: string, code: string): { durable: boole
   return patchOcrJob(jobId, { last_error_code: trimmed });
 }
 
+/**
+ * Backend receipt -> quarantine dispatch, in milliseconds.
+ *
+ * Returns null when either stamp is missing or unparseable, and also when the
+ * result would be negative (client and server clocks disagreeing is not a
+ * latency). An unknown latency is never reported as zero.
+ */
+export function ocrQuarantineLatencyMs(
+  serverCreatedAt: string | null,
+  dispatchedAt: string | null
+): number | null {
+  if (!serverCreatedAt || !dispatchedAt) return null;
+  const start = Date.parse(serverCreatedAt);
+  const end = Date.parse(dispatchedAt);
+  if (!Number.isFinite(start) || !Number.isFinite(end)) return null;
+  const delta = end - start;
+  return delta >= 0 ? delta : null;
+}
+
+/** Same measurement for one followed job, or null when it is not available. */
+export function readOcrQuarantineLatencyMs(jobId: string): number | null {
+  const job = loadOcrJobs().value.find((entry) => entry.job_id === jobId);
+  if (!job) return null;
+  return ocrQuarantineLatencyMs(job.server_created_at, job.quarantine_dispatched_at);
+}
+
 function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
   return {
     job_id: value.job_id,
@@ -149,6 +183,14 @@ function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
     last_error_code:
       typeof value.last_error_code === 'string' && value.last_error_code.trim() !== ''
         ? value.last_error_code
+        : null,
+    server_created_at:
+      typeof value.server_created_at === 'string' && value.server_created_at !== ''
+        ? value.server_created_at
+        : null,
+    quarantine_dispatched_at:
+      typeof value.quarantine_dispatched_at === 'string' && value.quarantine_dispatched_at !== ''
+        ? value.quarantine_dispatched_at
         : null,
   };
 }

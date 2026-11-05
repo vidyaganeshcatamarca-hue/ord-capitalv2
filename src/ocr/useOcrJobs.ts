@@ -189,6 +189,9 @@ export function useOcrJobs(): UseOcrJobsResult {
         quarantine_dispatched: true,
         pendiente_id: row.pendiente_id,
         last_error_code: null,
+        server_created_at: job.created_at || null,
+        // Closing stamp of the measurement: backend receipt -> quarantine row.
+        quarantine_dispatched_at: new Date().toISOString(),
       });
       patch(jobId, {
         phase: 'dispatched',
@@ -229,7 +232,12 @@ export function useOcrJobs(): UseOcrJobsResult {
         jobId,
         accessToken,
         onUpdate: (job) => {
-          patchOcrJob(jobId, { last_status: job.status, last_checked_at: new Date().toISOString() });
+          patchOcrJob(jobId, {
+            last_status: job.status,
+            last_checked_at: new Date().toISOString(),
+            // The backend's own receipt stamp, used later to report latency.
+            server_created_at: job.created_at || null,
+          });
           // A successful GET proves the failure is gone.
           clearOcrJobError(jobId);
           patch(jobId, { phase: phaseFromStatus(job.status), status: job.status, errorCode: null });
@@ -454,6 +462,9 @@ export function useOcrJobs(): UseOcrJobsResult {
           pendiente_id: null,
           // A fresh job starts clean; the code is set only when a stage fails.
           last_error_code: null,
+          // Filled by the first polling GET (server stamp) and by the dispatch.
+          server_created_at: null,
+          quarantine_dispatched_at: null,
         });
 
         trackOcrEvent(OCR_EVENTS.uploadAccepted, {

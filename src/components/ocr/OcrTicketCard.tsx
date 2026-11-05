@@ -37,6 +37,7 @@ import {
 import { confirmOcrQuarantine, rejectOcrQuarantine, saveOcrQuarantine } from '@/ocr/quarantine'
 import { toQuarantineTicketPayload } from '@/ocr/quarantine'
 import { OCR_EVENTS, trackOcrError, trackOcrEvent } from '@/ocr/telemetry'
+import { readOcrQuarantineLatencyMs } from '@/ocr/storage'
 import type { OcrIssue, OcrItem, OcrPayment, OcrTicket } from '@/ocr/types'
 import { OCR_SCHEMA_VERSION } from '@/ocr/normalize'
 import { useOcrCatalog } from '@/ocr/useOcrCatalog'
@@ -211,6 +212,9 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
           job_id: jobId || undefined,
           item_count: items.length,
           issue_count: issues.length,
+          // Backend receipt -> quarantine row. Excludes the upload and the time
+          // the user took to open the card, which are not backend latency.
+          quarantine_age_ms: readOcrQuarantineLatencyMs(jobId) ?? undefined,
         })
       }
       return next
