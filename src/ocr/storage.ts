@@ -34,6 +34,16 @@ export interface StoredOcrJob {
   quarantine_dispatched: boolean;
   /** Local quarantine row id, so a re-dispatch can reuse it. */
   pendiente_id: number | null;
+  /**
+   * Stable code of the last failure in this job's pipeline, or null when the
+   * last attempt succeeded.
+   *
+   * Without it a failed polling or dispatch lived only in React state: after a
+   * reload the job looked identical to "nothing happened yet", which is exactly
+   * how a dead dispatch stays invisible for hours. The code is enough to
+   * diagnose; no stack traces or free-form messages are stored (PRD §80).
+   */
+  last_error_code: string | null;
 }
 
 /** One explicit correction waiting to be acknowledged (PRD §24). */
@@ -108,6 +118,21 @@ function isStoredOcrJob(value: unknown): value is StoredOcrJob {
 }
 
 /** Normalizes a stored row so a partial payload never leaks undefined to the UI. */
+/**
+ * Clears the failure once the same stage succeeds again, so a stale code never
+ * outlives the problem it described.
+ */
+export function clearOcrJobError(jobId: string): { durable: boolean } {
+  return patchOcrJob(jobId, { last_error_code: null });
+}
+
+/** Records the stable code of the failure that stopped this job. */
+export function recordOcrJobError(jobId: string, code: string): { durable: boolean } {
+  const trimmed = typeof code === 'string' ? code.trim() : '';
+  if (trimmed === '') return { durable: true };
+  return patchOcrJob(jobId, { last_error_code: trimmed });
+}
+
 function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
   return {
     job_id: value.job_id,
@@ -118,6 +143,12 @@ function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
     pendiente_id:
       typeof value.pendiente_id === 'number' && Number.isFinite(value.pendiente_id)
         ? value.pendiente_id
+        : null,
+    // Jobs persisted before this field existed hydrate as "no error", which is
+    // the only honest reading of an absent history.
+    last_error_code:
+      typeof value.last_error_code === 'string' && value.last_error_code.trim() !== ''
+        ? value.last_error_code
         : null,
   };
 }
