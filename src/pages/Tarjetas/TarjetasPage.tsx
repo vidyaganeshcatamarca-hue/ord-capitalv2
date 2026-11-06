@@ -31,7 +31,6 @@ interface MapaTarjeta {
   banco?: string
   color?: string
   cotizacion_usd?: number
-  recargo_dolar_pct?: number
   un_pago_consumido_ars?: number
   un_pago_consumido_usd?: number
   cuotas_futuras_consumido_ars?: number
@@ -707,8 +706,7 @@ const handleLegacySubmit = async () => {
     // Mapear líneas a payload que la RPC multi Fase 2 espera:
     // billetera_id numérico → backend infiere moneda de la billetera (default target = origen).
     // billetera_id null → favor: requiere campo "moneda" explícito.
-    // target_moneda_cuota: opcional (default = moneda de origen). En MVP no se setea por línea
-    // porque la UI no expone el toggle de recargo (Fase 4b).
+    // target_moneda_cuota: opcional (default = moneda de origen).
     const favorNumModal = Math.max(0, Number(vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor ?? 0))
     const favorNumUsdModal = Math.max(0, Number(vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor_usd ?? 0))
     const favorEquivModal = favorNumModal + (favorNumUsdModal * cotizacionEfectiva)
