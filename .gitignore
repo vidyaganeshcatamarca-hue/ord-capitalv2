@@ -179,3 +179,7 @@ scratch/
 
 # Scratch artifacts from visual checks (screenshots, ad-hoc scripts).
 .tmp-*/
+
+# temp_sql: throwaway probes and ad-hoc build scripts stay out of the repo.
+temp_sql/*_probe_*.mjs
+temp_sql/*_build.mjs
