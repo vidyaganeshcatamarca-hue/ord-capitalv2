@@ -21,15 +21,32 @@ BEGIN
       FROM p_tarjetas_credito
       WHERE tarjeta_id = p_tarjeta_id;
 
-    -- S10: el vencimiento del resumen se calcula igual que en
-    -- fn_reporte_vencimientos_tarjetas, que es la fuente que alimentan el banner y
-    -- el modal de pago. Antes se saltaba al ciclo siguiente apenas pasaba el dia de
-    -- cierre, asi que las cuotas del resumen en curso quedaban marcadas como
-    -- "no actuales" y el panel de adelantar cuotas aparecia vacio.
-    IF EXTRACT(DAY FROM p_fecha_pago) <= v_dia_vencimiento THEN
-        v_vencimiento_ciclo_actual := v_mes_actual + ((v_dia_vencimiento - 1) * INTERVAL '1 day');
+    IF v_dia_vencimiento > v_dia_cierre THEN
+        IF EXTRACT(DAY FROM p_fecha_pago) <= v_dia_cierre THEN
+            v_fin_ciclo_actual := v_mes_actual + ((v_dia_cierre - 1) * INTERVAL '1 day');
+        ELSE
+            v_fin_ciclo_actual := (v_mes_actual + INTERVAL '1 month') + ((v_dia_cierre - 1) * INTERVAL '1 day');
+        END IF;
     ELSE
-        v_vencimiento_ciclo_actual := (v_mes_actual + INTERVAL '1 month') + ((v_dia_vencimiento - 1) * INTERVAL '1 day');
+        IF EXTRACT(DAY FROM p_fecha_pago) <= v_dia_cierre THEN
+            v_fin_ciclo_actual := (v_mes_actual - INTERVAL '1 month') + ((v_dia_cierre - 1) * INTERVAL '1 day');
+        ELSE
+            v_fin_ciclo_actual := v_mes_actual + ((v_dia_cierre - 1) * INTERVAL '1 day');
+        END IF;
+    END IF;
+
+    IF v_dia_vencimiento <= v_dia_cierre THEN
+        v_vencimiento_ciclo_actual := (date_trunc('month', v_fin_ciclo_actual) + INTERVAL '1 month') + ((v_dia_vencimiento - 1) * INTERVAL '1 day');
+    ELSE
+        v_vencimiento_ciclo_actual := date_trunc('month', v_fin_ciclo_actual) + ((v_dia_vencimiento - 1) * INTERVAL '1 day');
+    END IF;
+
+    SELECT MIN(p_cuotas_detalle.fecha_estimada_pago) INTO v_min_fecha
+      FROM p_cuotas_detalle
+      WHERE p_cuotas_detalle.tarjeta_id = p_tarjeta_id AND p_cuotas_detalle.pagado = false;
+
+    IF v_min_fecha IS NOT NULL AND v_min_fecha > v_vencimiento_ciclo_actual THEN
+        v_vencimiento_ciclo_actual := v_min_fecha;
     END IF;
 
     RETURN QUERY
@@ -39,7 +56,26 @@ BEGIN
         -- Contrato: descripcion = la CATEGORIA del movimiento (cuenta
         -- historica si la hay, si no la estructura); detalle = el texto libre
         -- de la compra (el UI lo muestra entre parentesis, en chico).
-        COALESCE(cx.nombre_cuenta_historico, eg.nombre_cuenta, eg2.nombre_cuenta, c.descripcion)::text AS descripcion,
+        -- S1: the report must always show "parent > child". The historical
+        -- snapshot holds the human label, the structure tables hold i18n keys
+        -- and only the bare leaf, so a row without the snapshot used to show
+        -- the leaf alone while its siblings showed the full path.
+        COALESCE(
+            CASE
+                WHEN cx.nombre_cuenta_historico IS NULL THEN
+                    CASE
+                        WHEN ep.nombre_cuenta IS NOT NULL
+                            THEN ep.nombre_cuenta || ' › ' || COALESCE(eg.nombre_cuenta, eg2.nombre_cuenta)
+                        ELSE COALESCE(eg.nombre_cuenta, eg2.nombre_cuenta)
+                    END
+                WHEN position(' › ' in cx.nombre_cuenta_historico) > 0
+                    THEN cx.nombre_cuenta_historico
+                WHEN ep.nombre_cuenta IS NOT NULL AND cx.nombre_cuenta_historico <> ep.nombre_cuenta
+                    THEN ep.nombre_cuenta || ' › ' || cx.nombre_cuenta_historico
+                ELSE cx.nombre_cuenta_historico
+            END,
+            c.descripcion
+        )::text AS descripcion,
         CASE WHEN c.p_caja_id IS NULL AND c.estructura_egreso_id IS NOT NULL THEN c.descripcion ELSE cx.detalle END::text AS detalle_movimiento,
         c.monto_cuota,
         COALESCE(c.moneda, 'ARS')::text AS moneda,
@@ -55,6 +91,7 @@ BEGIN
     LEFT JOIN p_caja cx ON c.p_caja_id = cx.p_caja_id
     LEFT JOIN p_estructuras_egresos eg ON eg.estructura_id = cx.estructura_egreso_id
     LEFT JOIN p_estructuras_egresos eg2 ON eg2.estructura_id = c.estructura_egreso_id
+    LEFT JOIN p_estructuras_egresos ep ON ep.estructura_id = COALESCE(eg.padre_id, eg2.padre_id)
     WHERE c.user_id = v_user_id
       AND c.tarjeta_id = p_tarjeta_id
     ORDER BY c.pagado ASC, c.fecha_estimada_pago ASC;

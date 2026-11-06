@@ -491,10 +491,24 @@ BEGIN
             END IF;
         END;
     ELSIF p_monto_a_favor_explicito IS NOT NULL AND p_monto_a_favor_explicito > 0.01 THEN
-        UPDATE p_tarjetas_credito
-          SET saldo_a_favor = COALESCE(saldo_a_favor, 0) + p_monto_a_favor_explicito
-          WHERE tarjeta_id = p_tarjeta_id AND user_id = v_user_id;
-        v_favor_acreditado := v_favor_acreditado + p_monto_a_favor_explicito;
+        -- S14-bis: the credited favor can never exceed the surplus that this
+        -- payment actually left over. The client computes that number, but a
+        -- declared value is untrusted input: crediting it verbatim lets a direct
+        -- call mint favor that never existed and duplicate the card balance.
+        -- Cap against both the computed surplus and the cash contributed.
+        DECLARE
+            v_efectivo_aporte numeric := GREATEST(
+                v_total_pagado - (v_total_favor_ars + v_total_favor_usd * v_cotizacion_usd), 0);
+            v_credito_favor numeric := LEAST(
+                p_monto_a_favor_explicito, GREATEST(v_sobrante_total, 0), v_efectivo_aporte);
+        BEGIN
+            IF v_credito_favor > 0.01 THEN
+                UPDATE p_tarjetas_credito
+                  SET saldo_a_favor = COALESCE(saldo_a_favor, 0) + v_credito_favor
+                  WHERE tarjeta_id = p_tarjeta_id AND user_id = v_user_id;
+                v_favor_acreditado := v_favor_acreditado + v_credito_favor;
+            END IF;
+        END;
     ELSIF v_sobrante_total > 0 AND NOT p_no_acreditar_favor THEN
         UPDATE p_tarjetas_credito
           SET saldo_a_favor = COALESCE(saldo_a_favor, 0) + v_sobrante_total
