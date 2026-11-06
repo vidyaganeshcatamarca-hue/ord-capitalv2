@@ -25,13 +25,17 @@ const pagina = fs.readFileSync(
   path.join(repo, 'src', 'pages', 'Presupuestos', 'PresupuestosPage.tsx'),
   'utf8'
 )
+// El checkout de Windows trae CRLF y los helpers de abajo buscan secuencias con \n
+// (cuerpoDe corta en '\n  }\n'). Normalizar al leer deja el test igual en cualquier
+// sistema: con CRLF crudo esos dos casos fallaban sin que el codigo tuviera nada roto.
+const fuente = pagina.replace(/\r\n/g, '\n')
 
 const cuerpoDe = (nombre) => {
-  const desde = pagina.indexOf(`const ${nombre} = async`)
+  const desde = fuente.indexOf(`const ${nombre} = async`)
   assert.ok(desde > -1, `no encontré ${nombre}`)
-  const fin = pagina.indexOf('\n  }\n', desde)
+  const fin = fuente.indexOf('\n  }\n', desde)
   assert.ok(fin > desde, `no encontré el cierre de ${nombre}`)
-  return pagina.slice(desde, fin)
+  return fuente.slice(desde, fin)
 }
 
 test('la asignación no arranca si ya hay un guardado en curso', () => {

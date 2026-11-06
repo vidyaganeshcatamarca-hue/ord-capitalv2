@@ -176,6 +176,7 @@ scratch/
 !tests/presupuestos/aviso-reset-base-cero.test.js
 !tests/presupuestos/teclado-asignacion.test.js
 !tests/presupuestos/presupuesto-padres.test.js
+!tests/presupuestos/grupo-recuadro-y-columnas.test.js
 
 # Scratch artifacts from visual checks (screenshots, ad-hoc scripts).
 .tmp-*/

@@ -390,9 +390,11 @@ test('los hijos se dibujan debajo del padre y no se repiten arriba', () => {
   // y entonces el Set no encuentra al padre y el hijo queda suelto en la lista.
   assert.ok(bloque.includes('padres.has(Number(s.padre_id))'), 'la comparación padre/hijo tiene que normalizar los ids a número')
   assert.ok(bloque.includes('if (s.padre_id != null && padres.has(Number(s.padre_id))) continue'), 'un hijo de un padre con presupuesto no puede aparecer dos veces')
-  assert.ok(bloque.includes('visibles.push({ sobre: h, hija: true })'), 'los hijos tienen que entrar indentados debajo del padre')
+  // Ronda 8/S1: la lista dejó de ser plana. Cada padre viaja con sus hijas en un
+  // bloque, porque el recuadro verde del grupo tiene que envolver a las dos cosas.
+  assert.ok(bloque.includes('bloques.push({ cabecera: s, hijas })'), 'los hijos tienen que entrar dentro del bloque de su padre')
   assert.ok(bloque.includes('Number(x.padre_id) === Number(s.estructura_id)'), 'la búsqueda de hijos tiene que normalizar los ids')
-  assert.ok(bloque.includes('if (s.es_padre && !estaCerrado(s.estructura_id))'), 'sólo se despliegan los grupos que no están cerrados')
+  assert.ok(bloque.includes('const hijas = s.es_padre && !estaCerrado(s.estructura_id)'), 'sólo se despliegan los grupos que no están cerrados')
 })
 
 test('el monto libre del grupo es el techo menos lo repartido', () => {
@@ -534,12 +536,11 @@ test('el toggle del grupo es un más grande, no un play', () => {
   assert.ok(pagina.includes("aria-label={t(expandido ? 'budget_group_collapse' : 'budget_group_expand')}"), 'el toggle sigue necesitando su etiqueta traducida')
 })
 
-test('el grupo se anuncia con (grupal libre) pegado al nombre, con espacio real', () => {
-  assert.ok(pagina.includes("t('budget_group_tag')"), 'falta la etiqueta nueva')
+test('el grupo ya no anuncia (grupal libre): el rótulo se fue', () => {
+  // Ronda 8/S2 (dueño): «Grupal libre lo debes sacar porque no está diciendo nada».
+  assert.ok(!pagina.includes("t('budget_group_tag')"), 'la etiqueta (grupal libre) ya no se usa en la fila')
   assert.ok(!pagina.includes('budget_group_free'), 'la etiqueta vieja ya no se usa')
-  const iCss = cssPagina.indexOf('.sobre-grupo-etiqueta')
-  const bloqueCss = cssPagina.slice(iCss, iCss + 200)
-  assert.ok(bloqueCss.includes('margin-left'), 'el espacio tiene que ser margen: el whitespace se pierde en el teléfono')
+  assert.ok(!pagina.includes('sobre-grupo-etiqueta'), 'el marcado de la etiqueta se fue con ella')
 })
 
 test('asignar 0 deja el sobre en cero y devuelve la plata al pozo', () => {
@@ -578,11 +579,20 @@ test('el arrastre muestra el signo que tiene, con su color', () => {
 // ---------------------------------------------------------------------------
 
 test('el monto de un padre se rotula como total del grupo', () => {
-  assert.ok(pagina.includes("t('budget_group_total')"), 'falta el rótulo del monto del padre')
-  const i = pagina.indexOf('sobre-disponible-etiqueta')
-  const bloque = pagina.slice(Math.max(i - 400, 0), i + 200)
-  assert.ok(bloque.includes('sobre.es_padre &&'), 'el rótulo es sólo para rubros padre')
-  assert.ok(cssPagina.includes('.sobre-disponible-etiqueta'), 'falta el estilo del rótulo')
+  // Ronda 8/S2 (dueño): «total del grupo como título alineado a la derecha abajo de
+  // asignar con buena distancia y el valor abajo centrado justo abajo».
+  const i = pagina.indexOf('sobre-grupo-total')
+  assert.ok(i > -1, 'falta el bloque del total del grupo')
+  const bloque = pagina.slice(Math.max(i - 400, 0), i + 500)
+  assert.ok(bloque.includes("t('budget_group_total')"), 'falta el rótulo del monto del padre')
+  assert.ok(bloque.includes('sobre-grupo-total-titulo'), 'el rótulo es el título del bloque')
+  assert.ok(bloque.includes('sobre-grupo-total-valor'), 'el monto va debajo del título')
+  assert.ok(bloque.includes('sobre.es_padre ? ('), 'el bloque es sólo para rubros padre')
+  const iCss = cssPagina.indexOf('.sobre-grupo-total {')
+  assert.ok(iCss > -1, 'falta el estilo del bloque')
+  const cssBloque = cssPagina.slice(iCss, iCss + 400)
+  assert.ok(cssBloque.includes('margin-left: auto'), 'el bloque tiene que quedar alineado a la derecha')
+  assert.ok(cssBloque.includes('align-items: center'), 'el valor va centrado respecto del título')
   for (const [archivo, valor] of [['es.ts', 'Total del grupo'], ['en.ts', 'Group total'], ['pt.ts', 'Total do grupo']]) {
     const texto = leer('src', 'locales', archivo)
     assert.ok(texto.includes(`budget_group_total: "${valor}"`), `falta la traducción en ${archivo}`)

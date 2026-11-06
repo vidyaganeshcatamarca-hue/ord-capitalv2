@@ -114,3 +114,11 @@ un error o por qué está pasando."
 - Scroll: con la lista en `scrollTop = 1400`, un refresco silencioso (`movement-added`) la deja
   en `1400` sin spinner. Es el mismo camino que corre después de guardar una asignación.
 - `npx tsc --noEmit`: 0 errores.
+- Tests: `node --test tests/presupuestos/*.test.js` → 115/115 en verde. Los seis casos nuevos de
+  `tests/presupuestos/grupo-recuadro-y-columnas.test.js` se corrieron contra los cinco archivos
+  fuente de `b555bdf` y fallaron los seis (RED); con el código de esta ronda pasan los seis
+  (GREEN). Tres casos viejos de `presupuesto-padres.test.js` congelaban la lista plana y la
+  etiqueta `(grupal libre)`: se cambiaron los assertions, no el comportamiento.
+- Fuera de alcance: `tests/budget-detalle-asignacion.test.js` sigue en rojo por un selector que
+  nunca existió (`className="sobre-fila"`, el marcado usa template string desde la ronda 4).
+  No se tocó en esta ronda.
