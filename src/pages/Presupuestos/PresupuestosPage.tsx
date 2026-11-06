@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from 'react'
+import { Fragment, useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
@@ -1719,17 +1719,19 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
   }
 
   const padres = new Set(items.filter(i => i.es_padre).map(i => Number(i.estructura_id)))
-  const visibles: Array<{ sobre: SobreDetalle; hija: boolean }> = []
+  // Ronda 8/S1 (dueño): un rubro padre desplegado encierra sus subcategorías en UN
+  // recuadro verde grueso, como el menú de Ajustes. Antes la lista era plana y el
+  // recuadro no se podía dibujar, así que se arma por bloques: la cabecera del grupo
+  // y sus hijas viajan juntas.
+  const bloques: Array<{ cabecera: SobreDetalle; hijas: SobreDetalle[] }> = []
   for (const s of items) {
     if (s.padre_id != null && padres.has(Number(s.padre_id))) continue
-    visibles.push({ sobre: s, hija: false })
     // Todo padre con hijos aparece; si arrancara cerrado los hijos desaparecerian
     // de la lista, así que el default es desplegado.
-    if (s.es_padre && !estaCerrado(s.estructura_id)) {
-      for (const h of items.filter(x => Number(x.padre_id) === Number(s.estructura_id))) {
-        visibles.push({ sobre: h, hija: true })
-      }
-    }
+    const hijas = s.es_padre && !estaCerrado(s.estructura_id)
+      ? items.filter(x => Number(x.padre_id) === Number(s.estructura_id))
+      : []
+    bloques.push({ cabecera: s, hijas })
   }
   // S12/S14: lo que le queda al grupo es su techo menos lo ya repartido en sus hijos.
   const libreDe = (padreId: number) =>
@@ -1753,24 +1755,48 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
 
       <div className={`acord-grupo-body${abierto ? ' abierto' : ''}`}>
         <div className="acord-separador" />
-        {visibles.map(({ sobre, hija }, i) => (
-          <FilaSobre
-            key={sobre.estructura_id}
-            sobre={sobre}
-            isLast={i === visibles.length - 1}
-            hija={hija}
-            expandido={sobre.es_padre ? !estaCerrado(sobre.estructura_id) : undefined}
-            onToggleGrupo={sobre.es_padre
-              ? () => alternarGrupo(sobre.estructura_id)
-              : undefined}
-            libreGrupo={sobre.es_padre ? libreDe(sobre.estructura_id) : undefined}
-            onAsignar={() => onAsignar(sobre)}
-            onVerDetalle={() => onVerDetalle(sobre)}
-            modoPresupuesto={modoPresupuesto}
-            soloLectura={soloLectura}
-            fmt={fmt}
-          />
-        ))}
+        {bloques.map(({ cabecera, hijas }, i) => {
+          const filaCabecera = (
+            <FilaSobre
+              sobre={cabecera}
+              isLast={i === bloques.length - 1 && hijas.length === 0}
+              hija={false}
+              expandido={cabecera.es_padre ? !estaCerrado(cabecera.estructura_id) : undefined}
+              onToggleGrupo={cabecera.es_padre
+                ? () => alternarGrupo(cabecera.estructura_id)
+                : undefined}
+              libreGrupo={cabecera.es_padre ? libreDe(cabecera.estructura_id) : undefined}
+              onAsignar={() => onAsignar(cabecera)}
+              onVerDetalle={() => onVerDetalle(cabecera)}
+              modoPresupuesto={modoPresupuesto}
+              soloLectura={soloLectura}
+              fmt={fmt}
+            />
+          )
+          // Sin hijos el bloque es una fila más: sin recuadro, como cualquier otra.
+          if (hijas.length === 0) {
+            return <Fragment key={cabecera.estructura_id}>{filaCabecera}</Fragment>
+          }
+          return (
+            <div key={cabecera.estructura_id} className="sobre-grupo-bloque abierto">
+              {filaCabecera}
+              {hijas.map(hija => (
+                <div key={hija.estructura_id} className="sobre-grupo-hija">
+                  <FilaSobre
+                    sobre={hija}
+                    isLast
+                    hija
+                    onAsignar={() => onAsignar(hija)}
+                    onVerDetalle={() => onVerDetalle(hija)}
+                    modoPresupuesto={modoPresupuesto}
+                    soloLectura={soloLectura}
+                    fmt={fmt}
+                  />
+                </div>
+              ))}
+            </div>
+          )
+        })}
       </div>
     </div>
   )
@@ -1813,6 +1839,10 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
     if (sobre.estado_sobre === 'amarillo_precaucion') return 'amarillo'
     return 'verde'
   }
+
+  const montoVisible = disponibleEfectivo >= 0
+    ? fmt(disponibleEfectivo)
+    : `-${fmt(Math.abs(disponibleEfectivo))}`
 
   return (
     <div
@@ -1858,26 +1888,25 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
             <CategoryIcon name={sobre.icono} size={18} />
           </span>
           <span className="sobre-nombre-texto">
-            <span className="sobre-nombre-linea">
-              {t(sobre.nombre_categoria)}
-              {/* Dueño: en el teléfono el nombre salía pegado al texto del grupo
-                  («SaludLibre del grupo»). El espacio no puede depender del
-                  whitespace: va como margen de esta etiqueta. */}
-              {sobre.es_padre && libreGrupo !== undefined && (
-                <span className="sobre-grupo-etiqueta">{t('budget_group_tag')}</span>
-              )}
-            </span>
+            {t(sobre.nombre_categoria)}
           </span>
         </button>
-        {/* Dueño (2026-11-02): en un rubro padre el monto es la suma de lo disponible del
-            grupo (arrastre de los hijos + su techo), no la plata propia del sobre, así que
-            va rotulado para que no se lea como si el padre tuviera esa plata. */}
-        {sobre.es_padre && (
-          <span className="sobre-disponible-etiqueta">{t('budget_group_total')}</span>
+        {/* Ronda 8/S2 (dueño): «total del grupo como título alineado a la derecha
+            abajo de asignar con buena distancia y el valor abajo centrado justo
+            abajo del total del grupo». La etiqueta «(grupal libre)» pegada al
+            nombre se fue: no decía nada. */}
+        {sobre.es_padre ? (
+          <div className="sobre-grupo-total">
+            <span className="sobre-grupo-total-titulo">{t('budget_group_total')}</span>
+            <span className={`sobre-disponible sobre-grupo-total-valor ${colorDisponible()}`}>
+              {montoVisible}
+            </span>
+          </div>
+        ) : (
+          <span className={`sobre-disponible ${colorDisponible()}`} style={{ marginRight: soloLectura ? 0 : 80 }}>
+            {montoVisible}
+          </span>
         )}
-        <span className={`sobre-disponible ${colorDisponible()}`} style={{ marginRight: soloLectura ? 0 : 80 }}>
-          {disponibleEfectivo >= 0 ? fmt(disponibleEfectivo) : `-${fmt(Math.abs(disponibleEfectivo))}`}
-        </span>
       </div>
 
       {/* Barra */}
@@ -1890,27 +1919,31 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
         </div>
       )}
 
-      {/* Stats */}
-      <div className="sobre-stats">
+      {/* Stats. Ronda 8/S2 (dueño): «Asignado, gasto y libre son títulos y luego
+          el valor debería estar abajo, centrado [...] separarlos con algún separador
+          vertical [...] por lo menos en los rubros padres». La etiqueta va arriba y
+          el monto abajo, en columnas del mismo ancho; en el rubro padre las columnas
+          se separan con una línea vertical. */}
+      <div className={`sobre-stats sobre-stats--columnas${sobre.es_padre ? ' sobre-stats--padre' : ''}`}>
         <span className="sobre-stat">
-          <span className="sobre-stat-label">{t('budget_stat_assigned')} </span>
+          <span className="sobre-stat-label">{t('budget_stat_assigned')}</span>
           <span className="sobre-stat-val">{fmt(Number(sobre.monto_asignado))}</span>
         </span>
         <span className="sobre-stat">
-          <span className="sobre-stat-label">{t('budget_stat_spent')} </span>
+          <span className="sobre-stat-label">{t('budget_stat_spent')}</span>
           <span className="sobre-stat-val">{fmt(Number(sobre.monto_gastado))}</span>
         </span>
         {/* Lo que queda del techo del grupo para los hijos sin presupuesto propio.
             Antes iba pegado al nombre; ahora vive acá, con su etiqueta. */}
         {sobre.es_padre && libreGrupo !== undefined && (
           <span className="sobre-stat">
-            <span className="sobre-stat-label">{t('budget_stat_group_free')} </span>
+            <span className="sobre-stat-label">{t('budget_stat_group_free')}</span>
             <span className="sobre-stat-val">{fmt(Math.max(libreGrupo, 0))}</span>
           </span>
         )}
         {!sinDatos && (
           <span className="sobre-stat">
-            <span className="sobre-stat-label">{t('budget_stat_progress')} </span>
+            <span className="sobre-stat-label">{t('budget_stat_progress')}</span>
             <span className="sobre-stat-val">{pct}%</span>
           </span>
         )}

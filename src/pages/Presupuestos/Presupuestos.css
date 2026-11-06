@@ -233,7 +233,11 @@
   transition: max-height 0.3s ease;
 }
 .acord-grupo-body.abierto {
-  max-height: 2000px;
+  /* Ronda 8/S1: el recuadro del grupo y la tarjeta de cada hija suman unos pocos
+     píxeles por fila, y con 17 subcategorías medidas en el navegador el cuerpo del
+     grupo llega a 2.527px. El techo anterior (2.000px) ya lo cortaba en silencio, así
+     que sube con margen: es la altura máxima de la transición, no un límite visual. */
+  max-height: 6000px;
 }
 
 .acord-separador {
@@ -251,12 +255,45 @@
 }
 .sobre-fila:hover { background: var(--surface-3); }
 
-/* T6: la fila del padre despliega sus subcategorías en la misma lista. La hija va
-   indentada. */
+/* T6: la fila del padre despliega sus subcategorías en la misma lista.
+   Ronda 8/S1 (dueño): cada hija ya no es una línea suelta con un borde izquierdo
+   celeste: ahora vive dentro de su propia tarjeta con recuadro fino (ver
+   `.sobre-grupo-hija`), así se lee dónde empieza y termina cada una. El `padding`
+   conserva la sangría; el margen y el borde los pone el envoltorio. */
 .sobre-fila--hija {
-  padding-left: 34px;
-  border-left: 2px solid var(--border-light);
-  margin-left: 12px;
+  padding: 12px 14px 12px 16px;
+}
+
+/* Ronda 8/S1 (dueño): «algo muy similar a lo que resolvimos para el menú ajustes»:
+   un rubro padre desplegado encierra su fila y todas sus subcategorías en UN
+   recuadro verde grueso; cada subcategoría lleva su propio recuadro fino verde.
+   Plegado no lleva recuadro, igual que en Ajustes. */
+.sobre-grupo-bloque.abierto {
+  margin: 0 16px 12px;
+  border: 2px solid var(--mint);
+  border-radius: 14px;
+  padding: 2px 0;
+}
+
+/* La línea divisoria de la cabecera la reemplaza el recuadro: adentro del grupo
+   una raya extra se lee como ruido (mismo criterio que en Ajustes). */
+.sobre-grupo-bloque.abierto > .sobre-fila {
+  border-bottom: none;
+}
+
+.sobre-grupo-hija {
+  margin: 8px 10px;
+  border: 1px solid var(--mint);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.sobre-grupo-hija > .sobre-fila {
+  border-bottom: none;
+}
+
+.sobre-grupo-hija:last-child {
+  margin-bottom: 10px;
 }
 
 /* Dueño: el ▶ chiquito parecía un play de audio y se confundía con abrir el
@@ -288,32 +325,36 @@
   gap: 1px;
 }
 
-.sobre-nombre-linea {
-  display: inline-flex;
-  align-items: baseline;
-  flex-wrap: wrap;
+/* Ronda 8/S2 (dueño): «total del grupo como título alineado a la derecha abajo de
+   asignar con buena distancia y el valor abajo centrado justo abajo del total del
+   grupo». El bloque va al borde derecho de la fila y arranca debajo del botón
+   «+ Asignar» (que es absoluto, arriba a la derecha), así no se pisan. */
+.sobre-grupo-total {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  margin-left: auto;
+  padding-top: 34px;
+  min-width: 96px;
+  flex-shrink: 0;
 }
 
-/* El espacio entre el nombre y «(grupal libre)» va como margen: en el teléfono
-   el whitespace se perdía y se leía «SaludLibre del grupo». */
-.sobre-grupo-etiqueta {
-  margin-left: 5px;
-  font-size: calc(11px * var(--font-scale));
-  font-weight: 400;
-  opacity: 0.6;
-  white-space: nowrap;
-}
-
-/* Dueño: el monto de un rubro padre es el total del grupo, no plata propia del
-   sobre, así que lleva un rótulo al lado. */
-.sobre-disponible-etiqueta {
-  margin-right: 6px;
+.sobre-grupo-total-titulo {
+  align-self: flex-end;
   font-size: calc(10px * var(--font-scale));
   font-weight: 500;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.04em;
   opacity: 0.55;
   white-space: nowrap;
+}
+
+/* Dos clases para ganarle al tamaño de `.sobre-disponible`, declarado más abajo;
+   el color lo sigue poniendo `.sobre-disponible.verde/.amarillo/.rojo/.neutro`. */
+.sobre-grupo-total .sobre-grupo-total-valor {
+  font-size: calc(15px * var(--font-scale));
+  font-weight: 700;
 }
 .sobre-fila:not(:last-child) {
   border-bottom: 1px solid var(--border);
@@ -349,6 +390,8 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: calc(13px * var(--font-scale));
   font-weight: 600;
+  /* Un monto no se parte en dos renglones: «-$ / 111.500» se leía como dos cifras. */
+  white-space: nowrap;
 }
 .sobre-disponible.verde { color: var(--mint); }
 .sobre-disponible.amarillo { color: var(--amber); }
@@ -382,6 +425,47 @@
 .sobre-stat { display: flex; gap: 3px; }
 .sobre-stat-label { }
 .sobre-stat-val { font-family: 'JetBrains Mono', monospace; }
+
+/* Ronda 8/S2 (dueño): cada dato es un título con su valor abajo, centrado, para
+   que «Asignado / Gastado / Libre / Avance» se lean de un vistazo. */
+.sobre-stats--columnas {
+  gap: 0;
+  align-items: stretch;
+  margin-top: 2px;
+}
+
+.sobre-stats--columnas .sobre-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 2px;
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0 3px;
+}
+
+.sobre-stats--columnas .sobre-stat-label {
+  font-size: calc(10px * var(--font-scale));
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.65;
+  white-space: nowrap;
+}
+
+.sobre-stats--columnas .sobre-stat-val {
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 600;
+  color: var(--text);
+  /* Cuatro columnas en 390px de ancho: el monto tiene que entrar en una línea. */
+  white-space: nowrap;
+}
+
+/* «por lo menos en los rubros padres»: la línea vertical que separa las columnas. */
+.sobre-stats--padre .sobre-stat + .sobre-stat {
+  border-left: 1px solid var(--border);
+}
 
 /* arrastre badge */
 .sobre-arrastre-badge {
