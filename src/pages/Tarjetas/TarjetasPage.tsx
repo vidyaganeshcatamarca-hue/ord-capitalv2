@@ -964,6 +964,47 @@ const handleLegacySubmit = async () => {
   // Vista Detalle
   // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
+  // Un solo lugar para las props del modal de pago: se monta desde la lista y
+  // desde el detalle, y el bloque duplicado obligaba a tocar los dos cada vez
+  // que se agregaba una prop, con el riesgo de que las dos entradas divergieran.
+  const renderPagarModal = () => (
+    <PagarModal
+      onClose={() => setShowPagarModal(false)}
+      onSubmit={handlePagar}
+      targetCard={
+        cotizacionManual !== '' && Number(cotizacionManual) > 0
+          ? ({ ...targetCard, cotizacion_usd: Number(cotizacionManual) } as MapaTarjeta)
+          : targetCard
+      }
+      cotizacionManual={cotizacionManual}
+      setCotizacionManual={setCotizacionManual}
+      sinCotizacion={targetCard?.cotizacion_usd == null}
+      pagarLineas={pagarLineas}
+      setPagarLineas={setPagarLineas}
+      pagarLineasUsd={pagarLineasUsd}
+      setPagarLineasUsd={setPagarLineasUsd}
+      objetivoPago={objetivoPagoARS}
+      objetivoPagoUSD={objetivoPagoUSD}
+      sectionUsdPayIn={sectionUsdPayIn}
+      setSectionUsdPayIn={setSectionUsdPayIn}
+      pagarFecha={pagarFecha}
+      setPagarFecha={setPagarFecha}
+      formSubmitting={formSubmitting}
+      billeteras={billeteras}
+      resumenReal={resumenReal}
+      setResumenReal={setResumenReal}
+      selectedCuotasAdelantar={selectedCuotasAdelantar}
+      setSelectedCuotasAdelantar={setSelectedCuotasAdelantar}
+      resumenEstimado={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_total ?? vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_a_pagar ?? 0}
+      saldoAFavor={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor ?? 0}
+      saldoAFavorUsd={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor_usd ?? 0}
+      cicloARS={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_total_ars ?? 0}
+      cicloUSD={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_total_usd ?? 0}
+      necesitoARS={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_a_pagar_ars ?? 0}
+      necesitoUSD={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_a_pagar_usd ?? 0}
+    />
+  )
+
   if (selectedCard) {
     const usoPct = getUsoPct(selectedCard.limite_un_pago_total, selectedCard.un_pago_disponible)
     const progressClass = getProgressClass(usoPct)
@@ -1339,43 +1380,7 @@ const handleLegacySubmit = async () => {
             formSubmitting={formSubmitting}
           />
         )}
-        {showPagarModal && (
-          <PagarModal
-            onClose={() => setShowPagarModal(false)}
-            onSubmit={handlePagar}
-            targetCard={
-              cotizacionManual !== '' && Number(cotizacionManual) > 0
-                ? ({ ...targetCard, cotizacion_usd: Number(cotizacionManual) } as MapaTarjeta)
-                : targetCard
-            }
-            cotizacionManual={cotizacionManual}
-            setCotizacionManual={setCotizacionManual}
-            sinCotizacion={targetCard?.cotizacion_usd == null}
-            pagarLineas={pagarLineas}
-            setPagarLineas={setPagarLineas}
-            pagarLineasUsd={pagarLineasUsd}
-            setPagarLineasUsd={setPagarLineasUsd}
-            objetivoPago={objetivoPagoARS}
-            objetivoPagoUSD={objetivoPagoUSD}
-            sectionUsdPayIn={sectionUsdPayIn}
-            setSectionUsdPayIn={setSectionUsdPayIn}
-            pagarFecha={pagarFecha}
-            setPagarFecha={setPagarFecha}
-            formSubmitting={formSubmitting}
-            billeteras={billeteras}
-            resumenReal={resumenReal}
-            setResumenReal={setResumenReal}
-            selectedCuotasAdelantar={selectedCuotasAdelantar}
-            setSelectedCuotasAdelantar={setSelectedCuotasAdelantar}
-            resumenEstimado={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_total ?? vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_a_pagar ?? 0}
-            saldoAFavor={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor ?? 0}
-            saldoAFavorUsd={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor_usd ?? 0}
-            cicloARS={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_total_ars ?? 0}
-            cicloUSD={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_total_usd ?? 0}
-            necesitoARS={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_a_pagar_ars ?? 0}
-            necesitoUSD={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_a_pagar_usd ?? 0}
-          />
-        )}
+        {showPagarModal && renderPagarModal()}
         {showArchiveConfirm && (
           <ConfirmModal
             isOpen={showArchiveConfirm}
@@ -1763,43 +1768,7 @@ const handleLegacySubmit = async () => {
           formSubmitting={formSubmitting}
         />
       )}
-      {showPagarModal && (
-        <PagarModal
-          onClose={() => setShowPagarModal(false)}
-          onSubmit={handlePagar}
-          targetCard={
-            cotizacionManual !== '' && Number(cotizacionManual) > 0
-              ? ({ ...targetCard, cotizacion_usd: Number(cotizacionManual) } as MapaTarjeta)
-              : targetCard
-          }
-          cotizacionManual={cotizacionManual}
-          setCotizacionManual={setCotizacionManual}
-          sinCotizacion={targetCard?.cotizacion_usd == null}
-          pagarLineas={pagarLineas}
-          setPagarLineas={setPagarLineas}
-          pagarLineasUsd={pagarLineasUsd}
-          setPagarLineasUsd={setPagarLineasUsd}
-          objetivoPago={objetivoPagoARS}
-          objetivoPagoUSD={objetivoPagoUSD}
-          sectionUsdPayIn={sectionUsdPayIn}
-          setSectionUsdPayIn={setSectionUsdPayIn}
-          pagarFecha={pagarFecha}
-          setPagarFecha={setPagarFecha}
-          formSubmitting={formSubmitting}
-          billeteras={billeteras}
-          resumenReal={resumenReal}
-          setResumenReal={setResumenReal}
-            selectedCuotasAdelantar={selectedCuotasAdelantar}
-            setSelectedCuotasAdelantar={setSelectedCuotasAdelantar}
-resumenEstimado={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_total ?? vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_a_pagar ?? 0}
-            saldoAFavor={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor ?? 0}
-            saldoAFavorUsd={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.saldo_a_favor_usd ?? 0}
-            cicloARS={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_total_ars ?? 0}
-            cicloUSD={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_ciclo_total_usd ?? 0}
-            necesitoARS={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_a_pagar_ars ?? 0}
-            necesitoUSD={vencimientoByCard[targetCard?.tarjeta_id ?? 0]?.monto_a_pagar_usd ?? 0}
-          />
-        )}
+      {showPagarModal && renderPagarModal()}
         {showArchiveConfirm && (
           <ConfirmModal
             isOpen={showArchiveConfirm}
