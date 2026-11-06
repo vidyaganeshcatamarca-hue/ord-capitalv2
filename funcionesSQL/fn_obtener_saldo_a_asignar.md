@@ -34,11 +34,14 @@ BEGIN
     FROM p_billeteras
     WHERE user_id = v_user_id AND activa = true AND es_fondo_prevision = false AND moneda = v_moneda_local;
 
-    -- 2. Dinero atrapado en sobres (sumamos TODO, positivos y negativos)
-    -- Si el sobre esta en rojo, al sumarlo aqui "infla" el disponible temporalmente,
-    -- OBLIGANDO al usuario a castigarse bajandolo manualmente al cubrir el deficit.
-    SELECT COALESCE(SUM(monto_disponible), 0) INTO v_total_asignado
-    FROM public.fn_reporte_sobres_detalle(p_mes_periodo);
+    -- 2. Dinero ya comprometido en sobres: SOLO los saldos positivos.
+    -- Ronda 7 (S1): antes se sumaba monto_disponible completo, y como un sobre en
+    -- rojo es negativo, restarlo SUMABA liquidez inexistente (7.358.752 sobre
+    -- 2.627.275 reales para el user 1). El sobregasto no se resta porque el gasto
+    -- ya salio de la billetera: se muestra como alerta, no como plata disponible.
+    SELECT COALESCE(SUM(GREATEST(monto_disponible, 0)), 0) INTO v_total_asignado
+    FROM public.fn_reporte_sobres_detalle(p_mes_periodo)
+    WHERE cuenta_en_totales;
 
     -- 3. Tarjetas impagas hasta el fin del ciclo actual
     SELECT COALESCE(SUM(monto_cuota), 0) INTO v_total_tarjetas
@@ -50,3 +53,5 @@ END;
 $function$
 
 -- NOTA: Guard explicito: sin pais confirmado devuelve 0 en lugar de comparar contra NULL.
+-- NOTA (ronda 8): el espejo estaba desactualizado; se copio la definicion viva, que es
+-- la que incluye el fix de la ronda 7 (GREATEST + cuenta_en_totales).
