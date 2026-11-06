@@ -180,15 +180,9 @@ scratch/
 # Scratch artifacts from visual checks (screenshots, ad-hoc scripts).
 .tmp-*/
 
-# temp_sql: throwaway probes and ad-hoc build scripts stay out of the repo.
-temp_sql/*_probe_*.mjs
-temp_sql/*_build.mjs
-# temp_sql: logs, media and throwaway scratch spaces.
-temp_sql/*.log
-temp_sql/*.webm
-temp_sql/_ego/
-temp_sql/_tmp/
-temp_sql/_probe/
-temp_sql/_live/
-temp_sql/_generated/
-temp_sql/_cldr/
+
+# Nested worktrees: never version the worktree containers.
+.worktrees/
+
+# temp_sql: local scratch space. Never synced between worktrees, never pushed.
+temp_sql/
