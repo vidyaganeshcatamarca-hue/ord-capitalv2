@@ -137,7 +137,7 @@ export function OcrTicketImageModal({ jobId, onClose }: OcrTicketImageModalProps
       aria-modal="true"
       aria-label={t('ocr.view_ticket')}
     >
-      <div className="ocr-modal" onClick={(event) => event.stopPropagation()}>
+      <div className="ocr-modal ocr-modal--viewer" onClick={(event) => event.stopPropagation()}>
         <div className="ocr-modal-header">
           <h3>{t('ocr.view_ticket')}</h3>
           <button className="ocr-modal-close" onClick={onClose} aria-label={t('ocr.capture_cancel')}>

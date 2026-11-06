@@ -22,6 +22,7 @@ import { validateOcrFiles } from './contract';
 import { ocrFileRejectionI18nKey } from './errors';
 import { rekeyOcrImages, saveOcrImages, sweepOcrImages, markOcrImagesProcessed } from './imageStore';
 import { syncPendingOcrMemory } from './memory';
+import { patchOcrHistory, recordOcrHistory, type OcrHistoryStatus } from './history';
 import { runOcrPollingLoop, type OcrPollingController } from './polling';
 import { loadOcrQuarantine } from './quarantine';
 import {
@@ -193,6 +194,8 @@ export function useOcrJobs(): UseOcrJobsResult {
         // Closing stamp of the measurement: backend receipt -> quarantine row.
         quarantine_dispatched_at: new Date().toISOString(),
       });
+      // The owner's timeline advances even though the job is about to be pruned.
+      patchOcrHistory(jobId, { status: 'quarantine', pendiente_id: row.pendiente_id });
       patch(jobId, {
         phase: 'dispatched',
         status: job.status,
@@ -241,6 +244,13 @@ export function useOcrJobs(): UseOcrJobsResult {
           // A successful GET proves the failure is gone.
           clearOcrJobError(jobId);
           patch(jobId, { phase: phaseFromStatus(job.status), status: job.status, errorCode: null });
+          // The owner's own view of what happened: a job the backend finished
+          // classifying is no longer "processing", even before it lands in
+          // quarantine (which can take minutes with several photos).
+          const historyStatus: OcrHistoryStatus = isOcrDispatchStatus(job.status)
+            ? 'classified'
+            : 'processing';
+          patchOcrHistory(jobId, { status: historyStatus });
         },
         onResult: (job) => {
           pollersRef.current.delete(jobId);
@@ -470,6 +480,17 @@ export function useOcrJobs(): UseOcrJobsResult {
           // Filled by the first polling GET (server stamp) and by the dispatch.
           server_created_at: null,
           quarantine_dispatched_at: null,
+        });
+
+        // The local history outlives the job: the job is pruned once dispatched
+        // and removed on confirm/reject, but the owner still wants to see it.
+        recordOcrHistory({
+          job_id: accepted.job_id,
+          created_at: new Date().toISOString(),
+          image_count: files.length,
+          status: 'processing',
+          updated_at: new Date().toISOString(),
+          pendiente_id: null,
         });
 
         trackOcrEvent(OCR_EVENTS.uploadAccepted, {

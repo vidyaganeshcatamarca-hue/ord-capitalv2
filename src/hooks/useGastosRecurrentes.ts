@@ -4,6 +4,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
+import { fechaLocalISO } from '@/lib/fechaLocal'
 import type { GastoRecurrenteInput, GastoRecurrenteRow, MotivoPausa } from '@/lib/gastosRecurrentes'
 
 export function useGastosRecurrentes() {
@@ -45,6 +46,10 @@ export function useGastosRecurrentes() {
       p_fecha_fin: input.fecha_fin ?? null,
       p_tarjeta_id: input.tarjeta_id ?? null,
       p_es_usd: input.es_usd ?? false,
+      // El día del usuario, no el del servidor: la base vive en UTC y a las
+      // 22:00 de Argentina ya es mañana. Sin esto, un recurrente que empieza
+      // hoy se ancla al mes que viene (y el de una sola vez no se genera nunca).
+      p_fecha_base: fechaLocalISO(),
     })
     if (error) throw error
     await refresh()
@@ -77,6 +82,8 @@ export function useGastosRecurrentes() {
       p_fecha_fin: input.fecha_fin ?? null,
       p_tarjeta_id: input.tarjeta_id ?? null,
       p_es_usd: input.es_usd ?? false,
+      // Mismo criterio que el alta: el puntero se recalcula desde el día local.
+      p_fecha_base: fechaLocalISO(),
     })
     if (error) throw error
     await refresh()
@@ -106,6 +113,8 @@ export function useGastosRecurrentes() {
       p_recurrente_id: id,
       p_activo: true,
       p_motivo_pausa: null,
+      // Al reactivar el puntero se recalcula desde HOY; «hoy» es el del usuario.
+      p_fecha_base: fechaLocalISO(),
     })
     if (error) throw error
     await refresh()

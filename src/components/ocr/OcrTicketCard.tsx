@@ -19,6 +19,8 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError } from '@/locales/i18n'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { parseMontoInput } from '@/lib/parseMonto'
+import { useNumberFormat } from '@/hooks/useNumberFormat'
+import { WalletDropdownSelect } from '@/components/WalletDropdownSelect'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { CategoriaPicker, type CategoriaGrupo } from '@/components/CategoriaPicker/CategoriaPicker'
 import type { CuarentenaItem } from '@/pages/Saneamiento/SaneamientoPage'
@@ -35,6 +37,7 @@ import {
   queueCorrections,
 } from '@/ocr/memory'
 import { confirmOcrQuarantine, rejectOcrQuarantine, saveOcrQuarantine } from '@/ocr/quarantine'
+import { patchOcrHistory } from '@/ocr/history'
 import { toQuarantineTicketPayload } from '@/ocr/quarantine'
 import { OCR_EVENTS, trackOcrError, trackOcrEvent } from '@/ocr/telemetry'
 import { readOcrQuarantineLatencyMs } from '@/ocr/storage'
@@ -130,10 +133,18 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
   const [date, setDate] = useState<string>(item.fecha ?? metadata.purchase_date ?? '')
   const [merchant, setMerchant] = useState<string>(item.detalle ?? metadata.merchant ?? '')
   const [totalInput, setTotalInput] = useState<string>(String(num(metadata.total, num(item.monto))))
+  // Installments are edited as text on purpose: a numeric state coerced the
+  // empty string to 1 and turned "1" + "2" into 12.
+  const [installmentsInput, setInstallmentsInput] = useState<string>(
+    String(payment.installments ?? 1)
+  )
+  // Local currency of the user: the card expense can be charged in it or in USD.
+  const { localCurrency } = useNumberFormat()
+  const localCurrencyCode = (localCurrency ?? 'ARS').toUpperCase()
 
   // Snapshot of the values as loaded: "Cancelar" in edit mode must return the
   // card to exactly what the backend sent, not to whatever was typed.
-  const initialValuesRef = useRef({ items, payment, date, merchant, totalInput })
+  const initialValuesRef = useRef({ items, payment, date, merchant, totalInput, installmentsInput })
   const [saving, setSaving] = useState(false)
   const [confirming, setConfirming] = useState(false)
   const [showReject, setShowReject] = useState(false)
@@ -217,6 +228,7 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
     setDate(initial.date)
     setMerchant(initial.merchant)
     setTotalInput(initial.totalInput)
+    setInstallmentsInput(initial.installmentsInput)
     setOpenGroups(new Set())
     setEditing(false)
   }
@@ -255,10 +267,12 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
       issues: Array.isArray(metadata.issues) ? metadata.issues : [],
       payment: {
         ...payment,
+        // The typed value wins; an empty field means one installment.
+        installments: Math.max(1, Number(installmentsInput) || 1),
         currency: currency ? currency.toUpperCase() : null,
       },
     }
-  }, [metadata.ocr_schema_version, metadata.issues, jobId, merchant, date, currency, ticketTotal, generalDiscount, items, payment])
+  }, [metadata.ocr_schema_version, metadata.issues, jobId, merchant, date, currency, ticketTotal, generalDiscount, items, payment, installmentsInput])
 
   const handleSave = async (): Promise<void> => {
     setSaving(true)
@@ -315,6 +329,8 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
         status: 'completed',
       })
       showToast(t('ocr.confirmed', { count: String(groupsCreated) }), 'success')
+      // The local history keeps the outcome after the job itself is gone.
+      if (jobId) patchOcrHistory(jobId, { status: 'approved' })
       onChanged()
     } catch (error) {
       trackOcrError('confirmation', 'CONFIRM_FAILED', { job_id: jobId || undefined })
@@ -333,6 +349,7 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
         item_count: items.length,
       })
       showToast(t('ocr.rejected'), 'success')
+      if (jobId) patchOcrHistory(jobId, { status: 'rejected' })
       onChanged()
     } catch (error) {
       showToast(parseError(error), 'error')
@@ -340,7 +357,6 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
   }
 
   const displayMerchant = merchant || t('ocr.ticket_merchant_unknown')
-  const paymentValue = payment.type === 'card' ? `card:${payment.card_id ?? ''}` : `wallet:${payment.wallet_id ?? ''}`
 
   return (
     <div
@@ -435,45 +451,34 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
                 onChange={(event) => setMerchant(event.target.value)}
               />
             </div>
-            <div className="ocr-field">
+            <div className="ocr-field" id={`ocr-payment-${item.pendiente_id}`}>
+              {/* Same picker as the manual movement form: the label is the title,
+                  so the placeholder is never offered as a choice. */}
               <label htmlFor={`ocr-payment-${item.pendiente_id}`}>{t('ocr.field_payment')}</label>
-              <select
-                id={`ocr-payment-${item.pendiente_id}`}
-                value={paymentValue}
-                onChange={(event) => {
-                  const [kind, id] = event.target.value.split(':')
-                  const numeric = id ? Number(id) : null
-                  if (kind === 'card') {
-                    setPayment((current) => ({
-                      ...current,
-                      type: 'card',
-                      card_id: numeric,
-                      wallet_id: null,
-                      installments: current.installments ?? 1,
-                    }))
-                  } else {
-                    setPayment((current) => ({
-                      ...current,
-                      type: 'wallet',
-                      wallet_id: numeric,
-                      card_id: null,
-                    }))
-                  }
-                }}
-              >
-                <option value="wallet:">{t('ocr.missing_payment')}</option>
-                {wallets.map((wallet) => (
-                  <option key={`w-${wallet.billetera_id}`} value={`wallet:${wallet.billetera_id}`}>
-                    {t(wallet.nombre)} ({wallet.moneda})
-                  </option>
-                ))}
-                {cards.map((card) => (
-                  <option key={`c-${card.tarjeta_id}`} value={`card:${card.tarjeta_id}`}>
-                    {card.nombre_tarjeta}
-                    {card.moneda_iso ? ` (${card.moneda_iso})` : ''}
-                  </option>
-                ))}
-              </select>
+              <WalletDropdownSelect
+                wallets={wallets}
+                selectedWalletId={payment.type === 'wallet' ? payment.wallet_id : null}
+                onSelectWallet={(id) =>
+                  setPayment((current) => ({
+                    ...current,
+                    type: 'wallet',
+                    wallet_id: id,
+                    card_id: null,
+                  }))
+                }
+                tarjetas={cards}
+                selectedTarjetaId={payment.type === 'card' ? payment.card_id : null}
+                onSelectTarjeta={(id) =>
+                  setPayment((current) => ({
+                    ...current,
+                    type: 'card',
+                    card_id: id,
+                    wallet_id: null,
+                    installments: current.installments ?? 1,
+                  }))
+                }
+                placeholder={t('ocr.missing_payment')}
+              />
             </div>
             {payment.type === 'card' && (
               <div className="ocr-field">
@@ -482,14 +487,40 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
                   id={`ocr-installments-${item.pendiente_id}`}
                   type="number"
                   min={1}
-                  value={payment.installments ?? 1}
-                  onChange={(event) =>
+                  value={installmentsInput}
+                  onFocus={(event) => event.target.select()}
+                  onChange={(event) => {
+                    // Digits only, and an empty field is allowed while typing:
+                    // coercing it to 1 was what made the old input uneditable.
+                    const digits = event.target.value.replace(/[^0-9]/g, '')
+                    setInstallmentsInput(digits)
+                    const parsed = Number(digits)
                     setPayment((current) => ({
                       ...current,
-                      installments: Math.max(1, Number(event.target.value) || 1),
+                      installments: Number.isFinite(parsed) && parsed > 0 ? parsed : 1,
                     }))
-                  }
+                  }}
                 />
+              </div>
+            )}
+            {payment.type === 'card' && (
+              <div className="ocr-toggle-row">
+                <span>{t('card_usd_purchase')}</span>
+                <label className="ocr-switch">
+                  <input
+                    type="checkbox"
+                    checked={(payment.currency ?? localCurrencyCode).toUpperCase() === 'USD'}
+                    onChange={(event) =>
+                      setPayment((current) => ({
+                        ...current,
+                        // Off is the local currency, on is dollars. Same switch as
+                        // the manual movement form.
+                        currency: event.target.checked ? 'USD' : localCurrencyCode,
+                      }))
+                    }
+                  />
+                  <span className="ocr-switch-track" />
+                </label>
               </div>
             )}
             <div className="ocr-field">
