@@ -19,3 +19,6 @@
 
 # SQL mirrors: force LF so every worktree reads identical bytes.
 funcionesSQL/** text eol=lf
+
+# Markdown: force LF so every worktree reads identical bytes.
+*.md text eol=lf
