@@ -306,8 +306,18 @@ export function PresupuestosPage() {
 
   // ─── CARGA INICIAL ────────────────────────────────────────────────────────
 
-  const cargarDatos = useCallback(async () => {
-    setLoading(true)
+  /**
+   * Ronda 8/S3 (dueño): «una categoría, una vez que se le asigna un presupuesto,
+   * vuelve el scroll arriba, debería dejarlo donde está».
+   *
+   * La causa era esta bandera: recargar después de guardar prendía `loading`, el
+   * spinner reemplazaba la lista entera y el contenedor de scroll volvía a 0. Ahora
+   * la recarga posterior a una acción es silenciosa: la lista se queda montada y la
+   * posición del scroll no se toca. El spinner queda sólo para la primera carga y
+   * para el cambio de ciclo, donde sí se está mirando otra cosa.
+   */
+  const cargarDatos = useCallback(async (silencioso: boolean = false) => {
+    if (!silencioso) setLoading(true)
     try {
       const [rSaldo, rSobres, rConfig, rCupos] = await Promise.all([
         supabase.rpc('fn_obtener_saldo_a_asignar', { p_mes_periodo: mesPeriodoStr }),
@@ -387,7 +397,9 @@ export function PresupuestosPage() {
   useEffect(() => {
     cargarDatos()
     const handleSuccess = () => {
-      cargarDatos()
+      // Un movimiento nuevo cambia los montos pero no el lugar donde el usuario está
+      // leyendo: recarga silenciosa.
+      cargarDatos(true)
     }
     window.addEventListener('movement-added', handleSuccess)
     return () => {
@@ -522,7 +534,7 @@ export function PresupuestosPage() {
       showToast(`${formatMonto(monto)} ${t('toast_assigned_to')} ${t(sobreSeleccionado.nombre_categoria)}`, 'success')
       setShowAsignarSheet(false)
       setSobreSeleccionado(null)
-      await cargarDatos()
+      await cargarDatos(true)
     } catch (err: any) {
       const rechazo = mensajeRechazoPresupuesto(err, t, formatMonto)
       const msg = rechazo
@@ -720,7 +732,7 @@ export function PresupuestosPage() {
         setOrigenSeleccionado(null)
         setMontoTransferir(String(Math.round(Math.abs(nuevoDeficit))))
       }
-      await cargarDatos()
+      await cargarDatos(true)
     } catch (err: any) {
       const msg = err?.message?.includes('error_insufficient_funds_in_envelope')
         ? t('budget_error_insufficient_source')
@@ -817,7 +829,7 @@ export function PresupuestosPage() {
 
       showToast(t('toast_golden_rules_success'), 'success')
       setShowReglasModal(false)
-      await cargarDatos()
+      await cargarDatos(true)
       if (returnToConfig) {
         setReturnToConfig(false)
         navigate('/configuracion')
@@ -852,7 +864,7 @@ export function PresupuestosPage() {
       showToast(t('toast_golden_rules_success'), 'success')
       setConfirmandoAnticipado(false)
       setShowReglasModal(false)
-      await cargarDatos()
+      await cargarDatos(true)
       if (returnToConfig) {
         setReturnToConfig(false)
         navigate('/configuracion')
@@ -919,7 +931,7 @@ export function PresupuestosPage() {
 
       showToast(t('budget_success_base_cero_activated'), 'success')
       setShowBaseCeroModal(false)
-      await cargarDatos()
+      await cargarDatos(true)
       if (returnToConfig) {
         setReturnToConfig(false)
         navigate('/configuracion')
