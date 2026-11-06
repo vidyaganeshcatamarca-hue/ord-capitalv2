@@ -12,6 +12,7 @@
 import { useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
+import { fechaLocalISO } from '@/lib/fechaLocal'
 
 const STORAGE_KEY = 'recurrentes.ultima_generacion'
 
@@ -24,11 +25,6 @@ const STORAGE_KEY = 'recurrentes.ultima_generacion'
  * libera al terminar, así un error no bloquea el reintento.
  */
 let enCurso: string | null = null
-
-/** Fecha local en ISO (YYYY-MM-DD). No usa toISOString: eso devuelve UTC. */
-function fechaLocalISO(d = new Date()): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 export function useGenerarRecurrentes() {
   const { session } = useAuth()
