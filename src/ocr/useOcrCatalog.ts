@@ -30,12 +30,15 @@ export interface OcrWalletOption {
   billetera_id: number;
   nombre: string;
   moneda: string;
+  icono: string | null;
+  saldo_actual: number;
 }
 
 export interface OcrCardOption {
   tarjeta_id: number;
   nombre_tarjeta: string;
   moneda_iso: string | null;
+  color?: string;
 }
 
 export interface UseOcrCatalogResult {
@@ -57,7 +60,7 @@ async function safeRows<T>(name: string, params?: Record<string, unknown>): Prom
 }
 
 async function loadWallets(): Promise<OcrWalletOption[]> {
-  const rows = await safeRows<{ billetera_id: number | string; nombre: string; moneda: string; activa?: boolean; es_fondo_prevision?: boolean }>(
+  const rows = await safeRows<{ billetera_id: number | string; nombre: string; moneda: string; activa?: boolean; es_fondo_prevision?: boolean; icono?: string | null; saldo_actual?: number | string | null }>(
     'fn_obtener_billeteras_activas'
   );
   return rows
@@ -66,11 +69,13 @@ async function loadWallets(): Promise<OcrWalletOption[]> {
       billetera_id: Number(row.billetera_id),
       nombre: row.nombre,
       moneda: row.moneda,
+      icono: typeof row.icono === 'string' ? row.icono : null,
+      saldo_actual: Number(row.saldo_actual) || 0,
     }));
 }
 
 async function loadCards(): Promise<OcrCardOption[]> {
-  const rows = await safeRows<{ tarjeta_id: number | string; nombre_tarjeta: string; moneda_iso?: string | null; activa?: boolean }>(
+  const rows = await safeRows<{ tarjeta_id: number | string; nombre_tarjeta: string; moneda_iso?: string | null; activa?: boolean; color?: string | null }>(
     'fn_reporte_mapa_tarjetas'
   );
   return rows
@@ -79,6 +84,7 @@ async function loadCards(): Promise<OcrCardOption[]> {
       tarjeta_id: Number(row.tarjeta_id),
       nombre_tarjeta: row.nombre_tarjeta,
       moneda_iso: typeof row.moneda_iso === 'string' ? row.moneda_iso : null,
+      color: typeof row.color === 'string' ? row.color : undefined,
     }));
 }
 

@@ -22,6 +22,7 @@ import {
 } from '@/ocr/contract'
 import { ocrFileRejectionI18nKey } from '@/ocr/errors'
 import { isOcrPdfFile } from '@/ocr/contract'
+import { OcrHistoryModal } from './OcrHistoryModal'
 import './Ocr.css'
 
 interface OcrCaptureModalProps {
@@ -42,26 +43,8 @@ function formatBytes(bytes: number): string {
 }
 
 /** Status line of a followed job, in the user's language (PRD §35, §36). */
-function jobStatusLabel(phase: string): string {
-  switch (phase) {
-    case 'queued':
-      return t('ocr.status_queued_short')
-    case 'waiting':
-      return t('ocr.status_waiting_for_inference_short')
-    case 'classifying':
-      return t('ocr.status_classifying_short')
-    case 'ready':
-    case 'dispatched':
-      return t('ocr.status_needs_review_short')
-    case 'failed':
-      return t('ocr.status_failed_short')
-    case 'cancelled':
-      return t('ocr.status_cancelled_short')
-    case 'processing':
-    default:
-      return t('ocr.status_processing_short')
-  }
-}
+// El listado inline de jobs se reemplazo por OcrHistoryModal, que lee el
+// historial local y sobrevive al despacho y a la aprobacion.
 
 export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
   const { submit, jobs } = useOcrJobsContext()
@@ -79,10 +62,7 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
   const validation = useMemo(() => validateOcrFiles(files), [files])
   const totalBytes = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files])
 
-  const followedJobs = useMemo(
-    () => Object.values(jobs).filter((job) => job.phase !== 'dispatched'),
-    [jobs]
-  )
+  const [showHistory, setShowHistory] = useState(false)
 
   if (!open) return null
 
@@ -307,22 +287,16 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
             </>
           )}
 
-          {followedJobs.length > 0 && (
-            <div className="ocr-jobs-list">
-              {followedJobs.map((job) => (
-                <div className="ocr-job-row" key={job.jobId}>
-                  <span>📷 {t('ocr.quarantine_title')}</span>
-                  <span
-                    className={`ocr-job-status ${
-                      job.errorCode ? 'ocr-job-status--error' : ''
-                    } ${job.phase === 'waiting' ? 'ocr-job-status--warn' : ''}`}
-                  >
-                    {job.errorCode ? t('ocr.error_upload_failed') : jobStatusLabel(job.phase)}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+          <button
+            type="button"
+            className="ocr-history-trigger"
+            onClick={() => setShowHistory(true)}
+          >
+            <span>📷 {t('ocr.history_title')}</span>
+            <span aria-hidden="true">›</span>
+          </button>
+
+          {showHistory && <OcrHistoryModal onClose={() => setShowHistory(false)} />}
         </div>
       </div>
     </div>,
