@@ -834,8 +834,11 @@
 }
 
 .tarjetas-tab.active {
-  background: var(--surface-3);
-  color: var(--color-text);
+  /* S4: el tab elegido usa el mismo verde de fondo que los botones de la app
+     (el degradado de "+ Nueva"), no la superficie gris anterior. */
+  background: linear-gradient(135deg, var(--mint), var(--blue));
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(0, 177, 39, 0.25);
 }
 
 /* ── Menú contextual ────────────────────────────────────────────── */
@@ -927,6 +930,21 @@
   font-size: calc(18px * var(--font-scale));
   font-weight: 700;
   color: var(--color-text);
+}
+
+.tarjeta-modal-back {
+  background: var(--surface-3);
+  border: none;
+  color: var(--color-text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  margin-right: 12px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tarjeta-modal-close {

@@ -319,6 +319,16 @@ export function TarjetasPage() {
   const [pagarBilleteraId, setPagarBilleteraId] = useState<number | null>(null)
   const nextLineIdArsRef = useRef(2)
   const nextLineIdUsdRef2 = useRef(2)
+  // S5: el detalle de la tarjeta conservaba el scroll de la pantalla anterior y
+  // arrancaba mostrando el final del resumen. Este ref permite llevarlo al top.
+  const scrollDetalleRef = useRef<HTMLDivElement | null>(null)
+
+  // S5: al entrar al detalle el resumen tiene que arrancar desde arriba, no en
+  // la posición en la que quedó la pantalla anterior.
+  useEffect(() => {
+    if (!selectedCard) return
+    scrollDetalleRef.current?.scrollTo({ top: 0 })
+  }, [selectedCard?.tarjeta_id])
   const [pagarLineas, setPagarLineas] = useState<PagarLine[]>([{ id: 1, billetera_id: null, monto: '' }])
   // Bug fix 2026-09-14: monto total del resumen que se esta pagando (null = ciclo entero).
   const [objetivoPagoARS, setObjetivoPagoARS] = useState<number | null>(null)
@@ -978,9 +988,7 @@ const handleLegacySubmit = async () => {
           </div>
         </div>
 
-        <div className="tarjetas-scroll">
-
-          {/* Widget de Límite Disponible */}
+        <div className="tarjetas-scroll" ref={scrollDetalleRef}>
           <div className="tarjeta-detalle-section">
             <div className="tarjeta-detalle-section-title"><CategoryIcon name="CircleDollarSign" size={13} /> {t("card_available_limit")}</div>
             <div className="limite-row">
@@ -1004,7 +1012,16 @@ const handleLegacySubmit = async () => {
                   {Number(venc.saldo_a_favor) > 0 && (
                     <div className="saldo-a-favor-chip">{t('saldo_a_favor_chip', { monto: fmtARS(Number(venc.saldo_a_favor)) })}</div>
                   )}
-                  <div className="vencimiento-monto">{t('card_due_estimated_prefix', { monto: fmtARS(venc.monto_ciclo_total ?? venc.monto_a_pagar) })}</div>
+                  {/* S12: el Estimado es el total del PRÓXIMO resumen (ARS más las
+                      cuotas USD convertidas), no la deuda total del ciclo. Antes
+                      mostraba monto_ciclo_total, que suma todos los ciclos futuros. */}
+                  <div className="vencimiento-monto">{t('card_due_estimated_prefix', {
+                    monto: fmtARS(
+                      venc.resumen_actual_total_ars != null
+                        ? Number(venc.resumen_actual_total_ars) + Number(venc.resumen_actual_total_usd ?? 0) * (cotizacionUsd ?? 0)
+                        : Number(venc.monto_a_pagar ?? 0)
+                    ),
+                  })}</div>
                 </div>
                 <button className="btn-pagar-resumen" onClick={() => abrirPagarResumen(selectedCard, 'actual')}>
                   {t('btn_pay_resumen')}
@@ -1598,7 +1615,7 @@ const handleLegacySubmit = async () => {
                   const serieFull = serieTarjetas
                     .filter(x => x.tarjeta_id === c.tarjeta_id)
                     .sort((x, y) => y.ciclo_index - x.ciclo_index)
-                  const serie = serieFull.slice(0, 6)
+                  const serie = serieFull.slice(-6)
                   const serieMax = Math.max(...serie.map(x => Number(x.total_ciclo)), 1)
                   const usoPrevio = serieFull.length > 1 && serieFull.slice(0, 5).some(x => Number(x.total_ciclo) > 0)
                   // Available window: drop the OLDEST leading run of zero
@@ -2020,7 +2037,7 @@ export function PagarModal({
 }: PagarModalProps) {
   // La seccion "ARS" del payment es la moneda LOCAL del usuario (RON para un
   // user de Rumania); el literal 'ARS' fue hardcodeo de la era monounaria.
-  const { localCurrency } = useNumberFormat()
+  const { localCurrency, prefs } = useNumberFormat()
   const localMon = localCurrency || 'ARS'
   // El locale activo: los montos y las fechas de este modal siguen el idioma
   // que el usuario está leyendo.
@@ -2092,7 +2109,7 @@ export function PagarModal({
     const prefillMontoUSDInit = isObjetivoInit
       ? Math.max(0, Number(objetivoPagoUSD ?? 0) - Math.max(0, Number(saldoAFavorUsd || 0)))
       : Number(necesitoUSD ?? 0)
-    setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillMontoUSDInit > 0 ? prefillMontoUSDInit.toString() : '' }])
+    setPagarLineasUsd([{ id: 1, billetera_id: null, target_moneda_cuota: 'USD', monto: prefillMontoUSDInit > 0 ? prefillMontoUSDInit.toFixed(prefs.decimales_segunda_moneda) : '' }])
     // Nota: en modo objetivo NO se crean lineas de saldo a favor. El backend
     // (p_objetivo) consume el favor automaticamente capeado a la ventana del
     // resumen; las lineas de billetera cubren solo la diferencia.
@@ -2262,10 +2279,24 @@ export function PagarModal({
   const submitDisabled = formSubmitting || lineasInvalidas || !submitEnabled || overBudget || faltaParaBanco > 0.01
   // TC-06: el botón bloqueado decía que no sin decir por qué. El caso real es
   // "hay un importe escrito pero ninguna cuenta elegida".
+  // S8: el aviso era genérico y rojo, así que parecía un error sin sentido. Ahora
+  // dice en qué tramo falta la cuenta y sale como indicación, no como error.
+  const lineaSinCuenta = (l: PagarLine) => l.billetera_id == null && l.monto !== '' && !isNaN(parseFloat(l.monto))
+  const faltaCuentaLocal = pagarLineas.some(lineaSinCuenta)
+  const faltaCuentaUsd = pagarLineasUsd.some(lineaSinCuenta)
   const blockedReason = !formSubmitting
     ? (faltaParaBanco > 0.01
-        ? t('pay_real_statement_shortfall', { falta: fmtARS(faltaParaBanco) })
-        : lineasInvalidas ? t('pay_blocked_reason_no_wallet') : null)
+        ? { texto: t('pay_real_statement_shortfall', { falta: fmtARS(faltaParaBanco) }), tipo: 'error' as const }
+        : faltaCuentaLocal || faltaCuentaUsd
+          ? {
+              texto: faltaCuentaLocal && faltaCuentaUsd
+                ? t('pay_blocked_reason_no_wallet_both')
+                : faltaCuentaUsd
+                  ? t('pay_blocked_reason_no_wallet_usd')
+                  : t('pay_blocked_reason_no_wallet_local'),
+              tipo: 'aviso' as const,
+            }
+          : lineasInvalidas ? { texto: t('pay_blocked_reason_no_wallet'), tipo: 'error' as const } : null)
     : null
 
   const updateLine = (index: number, patch: Partial<PagarLine>) => {
@@ -2367,6 +2398,9 @@ export function PagarModal({
     <div className="tarjeta-modal-overlay" onClick={onClose}>
       <div className="tarjeta-modal" onClick={e => e.stopPropagation()}>
         <div className="tarjeta-modal-header">
+          {/* S3: el modal de pago solo tenia la ✕ de la derecha; el dueno pide
+              ademas la flecha de volver arriba a la izquierda, que cierra igual. */}
+          <button className="tarjeta-modal-back" onClick={onClose} aria-label={t('btn_back')}><CategoryIcon name="ArrowLeft" size={18} /></button>
           <span className="tarjeta-modal-title">{t('pay_resumen_title')}</span>
           <button className="tarjeta-modal-close" onClick={onClose}><CategoryIcon name="CircleX" size={18} /></button>
         </div>
@@ -2939,8 +2973,8 @@ export function PagarModal({
         </div>
         <div className="tarjeta-modal-actions">
           {blockedReason && (
-            <div style={{ gridColumn: '1 / -1', fontSize: 'calc(12px * var(--font-scale))', color: 'var(--color-coral)', marginBottom: 6 }}>
-              {blockedReason}
+            <div style={{ gridColumn: '1 / -1', fontSize: 'calc(12px * var(--font-scale))', color: blockedReason.tipo === 'error' ? 'var(--color-coral)' : 'var(--color-text-muted)', marginBottom: 6 }}>
+              {blockedReason.texto}
             </div>
           )}
           <button className="btn-modal-cancel" onClick={onClose}>{t('btn_cancel')}</button>
