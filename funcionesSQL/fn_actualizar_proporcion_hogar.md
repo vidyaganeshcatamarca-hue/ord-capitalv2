@@ -1,0 +1,15 @@
+CREATE OR REPLACE FUNCTION public.fn_actualizar_proporcion_hogar(p_pct_creador numeric, p_pct_invitado numeric)
+ RETURNS void
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE v_user_id bigint; v_hogar_id int8;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
+    IF (p_pct_creador + p_pct_invitado) != 100.00 THEN RAISE EXCEPTION '{"key": "error_sum_must_be_100", "params": {}}'; END IF;
+    SELECT hogar_id INTO v_hogar_id FROM p_hogar_participantes WHERE user_id = v_user_id;
+    IF v_hogar_id IS NULL THEN RAISE EXCEPTION '{"key": "error_home_no_active_home", "params": {}}'; END IF;
+    UPDATE p_hogares SET porcentaje_usuario_creador = p_pct_creador, porcentaje_usuario_invitado = p_pct_invitado WHERE hogar_id = v_hogar_id;
+END; $function$

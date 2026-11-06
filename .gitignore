@@ -28,7 +28,6 @@ docs/
 docs/*
 !docs/i18n-toolchain.md
 start_info/
-funcionesSQL/
 supabase/
 testeo/
 tests/
