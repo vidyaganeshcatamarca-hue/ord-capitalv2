@@ -210,3 +210,4 @@ tests/configuracion/*
 !tests/presupuestos/padres-separados.test.js
 !tests/appLockOffline.test.js
 !tests/conexion-badge.test.js
+!tests/nav-modo-offline.test.js
