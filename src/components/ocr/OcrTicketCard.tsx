@@ -19,6 +19,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError } from '@/locales/i18n'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { parseMontoInput } from '@/lib/parseMonto'
+import { NUMERIC_INPUT_ENTER_PROPS } from '@/lib/numericKeyboard'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { WalletDropdownSelect } from '@/components/WalletDropdownSelect'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
@@ -491,6 +492,7 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
                   type="number"
                   min={1}
                   value={installmentsInput}
+                  {...NUMERIC_INPUT_ENTER_PROPS}
                   // The first tap clears the suggested value so typing replaces it. Using
                   // select() only highlighted it, which on Android pops the copy/paste menu.
                   onFocus={() => setInstallmentsInput('')}
@@ -749,6 +751,7 @@ function OcrItemRow({ entry, currency, categoryGroups, catalogLoading, resolve, 
             type="text"
             inputMode="decimal"
             value={amountInput}
+            {...NUMERIC_INPUT_ENTER_PROPS}
             onChange={(event) => setAmountInput(event.target.value)}
             onBlur={() => {
               const parsed = parseMontoInput(amountInput)
