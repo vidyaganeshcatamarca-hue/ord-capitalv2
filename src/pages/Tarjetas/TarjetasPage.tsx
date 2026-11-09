@@ -2,9 +2,10 @@
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
+import { useSyncExternalStore } from 'react'
 import { useLanguage } from '@/locales/LanguageProvider'
 import { useActiveLocale } from '@/hooks/useActiveLocale'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, getFormatRevision, subscribeFormatContext } from '@/lib/format'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
@@ -222,11 +223,23 @@ function getNextVencimientoDate(diaVencimiento: number): Date {
   return new Date(hoy.getFullYear(), hoy.getMonth() + 1, diaVencimiento)
 }
 
-function getDiasParaProximoVencimiento(card: MapaTarjeta): number {
+function getDiasParaProximoVencimiento(card: MapaTarjeta, yaPagado = false): number {
   if (card.dia_vencimiento === undefined || card.dia_vencimiento === null) {
     return Infinity
   }
-  const venc = getNextVencimientoDate(card.dia_vencimiento)
+  const dia = card.dia_vencimiento
+  let venc = getNextVencimientoDate(dia)
+  if (yaPagado) {
+    // El resumen de este ciclo ya esta saldado: el proximo vencimiento es el del
+    // mes siguiente. Sin esto, una tarjeta pagada el dia anterior al vencimiento
+    // seguia anunciando "1 dias" (dueno, 2026-11-02). Se clava el dia configurado
+    // y se recorta al ultimo dia del mes destino para no desbordar a febrero.
+    const m = venc.getMonth() + 1
+    const y = venc.getFullYear() + Math.floor(m / 12)
+    const mes = m % 12
+    const ultimoDia = new Date(y, mes + 1, 0).getDate()
+    venc = new Date(y, mes, Math.min(dia, ultimoDia))
+  }
   const hoy = new Date()
   const hoySoloFecha = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
   const diffTime = venc.getTime() - hoySoloFecha.getTime()
@@ -243,6 +256,11 @@ export function TarjetasPage() {
   // follows the language the user is reading in, not a fixed Argentine one.
   const locale = useActiveLocale()
   const { localCurrency, prefs } = useNumberFormat()
+  // Los importes se formatean con el contexto global de lib/format. Sin suscribirse,
+  // la primera pintura usa los defaults (0 decimales) y la lista queda desactualizada
+  // respecto de la configuración regional: la misma moneda salía con y sin decimales
+  // según la pantalla. `getFormatRevision` ya existe y notifica cada cambio.
+  useSyncExternalStore(subscribeFormatContext, getFormatRevision, getFormatRevision)
 
   // P-01: un solo decimal y el separador decimal que el usuario configuro.
   const fmtPorcentaje = (n: number) =>
@@ -885,6 +903,14 @@ const handleLegacySubmit = async () => {
     const semaforoIcon = usoPct >= 90 ? 'TriangleAlert' : usoPct >= 70 ? 'BarChart3' : 'CircleDollarSign'
 
     const isConfigRequired = tc.estado_config === 'requires_configuration'
+    // Nada pendiente en el proximo resumen = el ciclo ya se pago. La fila tiene que
+    // avisar el vencimiento del mes siguiente. Ojo: fn_reporte_vencimientos_tarjetas
+    // OMITE las tarjetas sin nada a pagar, asi que la ausencia de `venc` es la señal
+    // mas fuerte de que el ciclo esta saldado (dueño, 2026-11-02).
+    const pendienteProximoResumen =
+      Number(venc?.monto_a_pagar_ars ?? venc?.monto_a_pagar ?? 0) +
+      Number(venc?.monto_a_pagar_usd ?? 0)
+    const resumenSaldado = !venc || pendienteProximoResumen <= 0.5
 
     return (
       <div
@@ -900,7 +926,7 @@ const handleLegacySubmit = async () => {
               <div className="tarjeta-card-name">{tc.nombre_tarjeta}</div>
               {tc.dia_vencimiento && tc.dia_cierre && (
                 <div className="tarjeta-card-banco">
-                  {getDiasParaProximoVencimiento(tc)} {t('card_dias_label')} · {t('card_vence_label')} {tc.dia_vencimiento} · {t('card_cierre_label', { day: tc.dia_cierre })}
+                  {getDiasParaProximoVencimiento(tc, resumenSaldado)} {t('card_dias_label')} · {t('card_vence_label')} {tc.dia_vencimiento} · {t('card_cierre_label', { day: tc.dia_cierre })}
                 </div>
               )}
             </div>
@@ -1620,7 +1646,14 @@ const handleLegacySubmit = async () => {
                     .sort((x, y) => y.ciclo_index - x.ciclo_index)
                   const serie = serieFull.slice(-6)
                   const serieMax = Math.max(...serie.map(x => Number(x.total_ciclo)), 1)
-                  const usoPrevio = serieFull.length > 1 && serieFull.slice(0, 5).some(x => Number(x.total_ciclo) > 0)
+                  // "Prior usage" means usage in a cycle OTHER than the current one.
+                  // `fn_reporte_serie_tarjetas` defines ciclo_index 0 = CURRENT cycle and
+                  // the series is sorted descending, so the current cycle sits LAST. The
+                  // previous check inspected `slice(0, 5)`, i.e. the five OLDEST cycles:
+                  // with leading zero cycles before the first use it returned false and
+                  // the "first cycle" note printed even on a card with four cycles of
+                  // history (owner report, 2026-11-02).
+                  const usoPrevio = serieFull.some(x => x.ciclo_index !== 0 && Number(x.total_ciclo) > 0)
                   // Available window: drop the OLDEST leading run of zero
                   // cycles (no card usage yet); interior zeros are real.
                   let primerUso = serieFull.findIndex(x => Number(x.total_ciclo) > 0)
@@ -1679,15 +1712,23 @@ const handleLegacySubmit = async () => {
                       </div>
 
                       <div className="comparativa-ciclo-montos">
-                        <span>{t('card_cmp_cycle_ant')}</span>
-                        <strong style={{ color: 'var(--color-text-muted)' }}>
-                          {fmtMoneda(c.gasto_mes_anterior, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
-                        </strong>
-                        <span>→</span>
-                        <span>{t('card_cmp_cycle_act')}</span>
-                        <strong style={{ color: isSaving ? 'var(--color-mint)' : 'var(--color-coral)' }}>
-                          {fmtMoneda(c.gasto_mes_actual, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
-                        </strong>
+                        {/* Owner rule: a label never separates from its amount. When the
+                            row does not fit, the whole "current cycle + amount" pair
+                            drops to the next line, so both cycles read as a matched
+                            pair instead of leaving a number orphaned below. */}
+                        <span className="cmp-cycle-pair">
+                          <span>{t('card_cmp_cycle_ant')}</span>
+                          <strong style={{ color: 'var(--color-text-muted)' }}>
+                            {fmtMoneda(c.gasto_mes_anterior, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
+                          </strong>
+                        </span>
+                        <span className="cmp-cycle-arrow" aria-hidden="true">→</span>
+                        <span className="cmp-cycle-pair">
+                          <span>{t('card_cmp_cycle_act')}</span>
+                          <strong style={{ color: isSaving ? 'var(--color-mint)' : 'var(--color-coral)' }}>
+                            {fmtMoneda(c.gasto_mes_actual, (c.moneda ?? 'ARS') as 'ARS' | 'USD')}
+                          </strong>
+                        </span>
                       </div>
 
                       {(Number(c.gasto_mes_anterior_usd ?? 0) > 0 || Number(c.gasto_mes_actual_usd ?? 0) > 0) && (
@@ -2004,8 +2045,22 @@ export function PagarModal({
 }: PagarModalProps) {
   // La seccion "ARS" del payment es la moneda LOCAL del usuario (RON para un
   // user de Rumania); el literal 'ARS' fue hardcodeo de la era monounaria.
-  const { localCurrency, prefs } = useNumberFormat()
+  const { localCurrency, prefs, currencySymbol } = useNumberFormat()
   const localMon = localCurrency || 'ARS'
+  // Money inputs show grouped digits with the user's own separators while the
+  // state keeps a raw dot-decimal string, so parseFloat and the RPC payload are
+  // untouched. Same pattern as ReconcileWalletModal: `type="number"` cannot
+  // display group separators, which is why the fields printed "355685".
+  const formatMontoInput = (raw: string): string => {
+    if (raw === '' || raw === '-') return raw
+    const neg = raw.startsWith('-')
+    const body = neg ? raw.slice(1) : raw
+    const [intPart, decPart] = body.split('.')
+    const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, prefs.separador_miles)
+    return (neg ? '-' : '') + grouped + (decPart !== undefined ? prefs.separador_decimal + decPart : '')
+  }
+  const parseMontoInput = (text: string): string =>
+    text.split(prefs.separador_miles).join('').replace(prefs.separador_decimal, '.')
   // El locale activo: los montos y las fechas de este modal siguen el idioma
   // que el usuario está leyendo.
   const locale = useActiveLocale()
@@ -2120,16 +2175,22 @@ export function PagarModal({
   const favorLineasArs = pagarLineas
     .filter(l => l.origen === 'favor')
     .reduce((s, l) => s + (parseFloat(l.monto) || 0), 0)
+  // El autorelleno de la primera cuenta usa `faltaBase = real - favor`, así que cuando
+  // el usuario paga esa cifra el favor YA está aplicado al resumen. El excedente se
+  // mide contra la cobertura total (efectivo + favor aplicado), no sólo contra el
+  // efectivo: si no, sale corto exactamente en el favor aplicado.
+  // Caso real (dueño, 2026-11-02): 455.685 de efectivo + 30.527 de favor aplicado
+  // contra 386.212 de deuda son 100.000 de sobrante, no 69.473.
+  const favorAplicado = Math.min(favorNum, targetCiclo)
   const pagoTotal = enModoObjetivo
-    // Gap-fill como el backend: el favor consume solo lo que el pago de billetera
-    // no cubre del objetivo (evita excedente fantasma cuando una seccion se paga
-    // con billetera y la otra cubre el favor).
-    ? totalPagarArsEquiv + Math.min(favorNum, Math.max(0, targetCiclo - totalPagarArsEquiv))
+    ? totalPagarArsEquiv + favorAplicado
     : totalPagarArsEquiv + Math.max(0, favorNum - favorLineasArs)
   // Fix 2026-09-15: favor que queda sin consumir (el pool de billeteras cubre el
   // ciclo). Rueda al proximo resumen junto con el sobrante: comunicarlo en el
   // banner evita la confusion "solo sobra el excedente".
-  const favorNoConsumido = favorNum - Math.min(favorNum, Math.max(0, targetCiclo - totalPagarArsEquiv))
+  const favorNoConsumido = enModoObjetivo
+    ? Math.max(0, favorNum - favorAplicado)
+    : favorNum - Math.min(favorNum, Math.max(0, targetCiclo - totalPagarArsEquiv))
   // Sobrante: pago total por encima de la referencia. La referencia es el
   // resumen real cuando esta declarado, o el ciclo cuando no.
   // El modal de overpay se muestra cuando hay excedente para que el user elija
@@ -2140,6 +2201,7 @@ export function PagarModal({
   // el excedente" anunciando 0.00 de excedente. Se exige al menos una unidad
   // entera para considerarlo real; el importe mostrado sigue siendo el exacto,
   // para no anunciar un numero distinto del que se va a guardar.
+  // El sobrante se mide contra el resumen real si esta declarado, o contra el ciclo.
   const sobranteBruto = realNum !== null
     ? Math.max(0, pagoTotal - realNum)  // pago total vs resumen real
     : Math.max(0, pagoTotal - cicloBruto)  // pago total vs ciclo
@@ -2536,13 +2598,14 @@ export function PagarModal({
                   <div className="pay-multi-monto-col">
                     <input
                       className="tarjeta-form-input pay-multi-monto-input"
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      value={linea.monto}
-                      onChange={e => updateLine(idx, { monto: e.target.value })}
+                      type="text"
+                      value={formatMontoInput(linea.monto)}
+                      onChange={e => {
+                        const v = parseMontoInput(e.target.value)
+                        if (v === '' || /^\d*\.?\d{0,2}$/.test(v)) updateLine(idx, { monto: v })
+                      }}
                       autoComplete="off"
-                      inputMode="numeric"
+                      inputMode="decimal"
                       enterKeyHint="done"
                       data-form-type="other"
                       onPointerDown={() => {
@@ -2564,7 +2627,7 @@ export function PagarModal({
                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }}
                      />
                      {selectedWallet ? (
-                      <span className={`pay-multi-moneda pay-multi-moneda--${selectedWallet.moneda.toLowerCase()}`}>{selectedWallet.moneda}</span>
+                      <span className={`pay-multi-moneda pay-multi-moneda--${selectedWallet.moneda.toLowerCase()}`}>{currencySymbol(selectedWallet.moneda)} {selectedWallet.moneda}</span>
                     ) : linea.origen === 'favor' ? (
                       <span className="pay-multi-moneda pay-multi-moneda--ars">ARS</span>
                     ) : null}
@@ -2693,13 +2756,14 @@ export function PagarModal({
                     <div className="pay-multi-monto-col">
                       <input
                         className="tarjeta-form-input pay-multi-monto-input"
-                        type="number"
-                        min={0}
-                        step="0.01"
-                        value={linea.monto}
-                        onChange={e => updateLineUsd(idx, { monto: e.target.value })}
+                        type="text"
+                        value={formatMontoInput(linea.monto)}
+                        onChange={e => {
+                          const v = parseMontoInput(e.target.value)
+                          if (v === '' || /^\d*\.?\d{0,2}$/.test(v)) updateLineUsd(idx, { monto: v })
+                        }}
                         autoComplete="off"
-                        inputMode="numeric"
+                        inputMode="decimal"
                         enterKeyHint="done"
                         data-form-type="other"
                         onPointerDown={() => {
@@ -2721,7 +2785,7 @@ export function PagarModal({
                         onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.currentTarget.blur(); } }}
                       />
                       {selectedWallet ? (
-                        <span className={`pay-multi-moneda pay-multi-moneda--${selectedWallet.moneda.toLowerCase()}`}>{selectedWallet.moneda}</span>
+                        <span className={`pay-multi-moneda pay-multi-moneda--${selectedWallet.moneda.toLowerCase()}`}>{currencySymbol(selectedWallet.moneda)} {selectedWallet.moneda}</span>
                       ) : linea.origen === 'favor' ? (
                         <span className="pay-multi-moneda pay-multi-moneda--ars">ARS</span>
                       ) : null}
@@ -2847,7 +2911,7 @@ export function PagarModal({
                 <div className="overpay-favor-note">
                   {overpayMode === 'accumulate'
                     ? t('pay_overpay_favor_total_proximo', { total: fmtARS(favorNoConsumido + favorNoConsumidoUsd * cotizacion + sobrante) })
-                    : t('pay_overpay_favor_restante', { total: fmtARS(Math.max(0, favorNoConsumido + favorNoConsumidoUsd * cotizacion - Math.max(0, selectedSumFuture - sobrante))) })}
+                    : t('pay_overpay_favor_restante', { total: fmtARS(Math.max(0, favorNoConsumido + favorNoConsumidoUsd * cotizacion + sobrante - Math.max(0, selectedSumFuture - sobrante))) })}
                 </div>
               )}
               <div className="overpay-options">
