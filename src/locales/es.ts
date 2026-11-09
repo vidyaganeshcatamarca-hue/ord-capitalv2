@@ -3129,6 +3129,8 @@ export const sobres = {
   sobres_subtitle: "Tus sobres y proyectos, con el dinero separado o reservado sólo en ORD.",
   sobres_new: "Nuevo sobre",
   sobres_archived_link: "Sobres archivados",
+  sobres_order_auto: "Orden automático",
+  sobres_order_hint: "Mantené presionada una tarjeta para moverla",
   sobres_archived_title: "Sobres archivados",
   sobres_archived_empty: "Todavía no archivaste ningún sobre.",
   sobres_archived_note: "Los sobres archivados se consultan pero no se reactivan. Para volver a ahorrar con ese objetivo, creá un sobre nuevo.",

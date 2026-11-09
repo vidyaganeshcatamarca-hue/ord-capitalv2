@@ -121,10 +121,53 @@
   color: var(--text);
 }
 
+.sobres-orden {
+  align-items: center;
+  display: flex;
+  min-height: 32px;
+}
+
+.sobres-orden-auto {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-2);
+  cursor: pointer;
+  display: inline-flex;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  gap: 6px;
+  padding: 6px 12px;
+}
+
+.sobres-orden-auto:hover {
+  border-color: var(--mint);
+  color: var(--text);
+}
+
+.sobres-orden-hint {
+  color: var(--text-3);
+  font-size: 12px;
+}
+
 .sobres-lista {
   display: grid;
   gap: 12px;
   grid-template-columns: 1fr;
+}
+
+/* Arrastrar la tarjeta exige sostenerla sin que el navegador seleccione texto. */
+.sobres-item {
+  -webkit-touch-callout: none;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.sobres-item--arrastrando {
+  opacity: 0.9;
+  transform: scale(0.98);
+  z-index: 2;
 }
 
 @media (min-width: 760px) {

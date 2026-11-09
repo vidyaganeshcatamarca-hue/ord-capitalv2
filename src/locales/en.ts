@@ -2799,6 +2799,8 @@ export const sobres = {
   sobres_subtitle: "Your envelopes and projects, with the money set aside or reserved in ORD only.",
   sobres_new: "New envelope",
   sobres_archived_link: "Archived envelopes",
+  sobres_order_auto: "Automatic order",
+  sobres_order_hint: "Press and hold a card to move it",
   sobres_archived_title: "Archived envelopes",
   sobres_archived_empty: "You have not archived any envelope yet.",
   sobres_archived_note: "Archived envelopes are read only and cannot be reactivated. To save for that goal again, create a new envelope.",

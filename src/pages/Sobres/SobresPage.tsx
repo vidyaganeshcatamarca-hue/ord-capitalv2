@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Archive } from 'lucide-react'
+import { Archive, ArrowDownUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { haptics } from '@/lib/haptics'
 import { useToast } from '@/contexts/ToastContext'
@@ -12,6 +12,7 @@ import { SobreFormModal } from '@/components/sobres/SobreFormModal'
 import { SobreAporteModal } from '@/components/sobres/SobreAporteModal'
 import { SobreRescateModal } from '@/components/sobres/SobreRescateModal'
 import { SobreRendimientoModal } from '@/components/sobres/SobreRendimientoModal'
+import { useOrdenArrastre } from '@/components/sobres/useOrdenArrastre'
 import {
   normalizarBilletera,
   normalizarDetalle,
@@ -132,6 +133,40 @@ export function SobresPage() {
       setArchivoTarget(null)
     }
   }, [archivoTarget, cargarTodo, showToast])
+
+  const persistirOrden = useCallback(
+    async (sobreIds: number[]) => {
+      const { error: rpcError } = await supabase.rpc('fn_sobres_reordenar', { p_sobre_ids: sobreIds })
+      if (rpcError) {
+        showToast(parseError(rpcError), 'error')
+        haptics.error()
+        return false
+      }
+      haptics.success()
+      await cargarTodo()
+      return true
+    },
+    [cargarTodo, showToast],
+  )
+
+  const volverAlOrdenAutomatico = useCallback(async () => {
+    try {
+      const { error: rpcError } = await supabase.rpc('fn_sobres_orden_automatico')
+      if (rpcError) throw rpcError
+      haptics.success()
+      await cargarTodo()
+    } catch (err) {
+      showToast(parseError(err), 'error')
+      haptics.error()
+    }
+  }, [cargarTodo, showToast])
+
+  const { ordenados, contenedor, propsItem } = useOrdenArrastre({
+    sobres: activos,
+    onPersistir: persistirOrden,
+  })
+
+  const hayOrdenManual = useMemo(() => activos.some((sobre) => sobre.orden_manual), [activos])
 
   /** Totales por moneda: nunca sumar ARS y USD como si fueran una unidad (CA-29). */
   const resumenPorMoneda = useMemo(() => {
@@ -266,18 +301,30 @@ export function SobresPage() {
             </button>
           )}
 
-          <section className="sobres-lista">
-            {activos.map((sobre) => (
-              <SobreCard
-                key={sobre.sobre_id}
-                sobre={sobre}
-                onSelect={abrirDetalle}
-                onProvision={setAporteTarget}
-                onRescue={setRescateTarget}
-                onEdit={setFormTarget}
-                onArchive={setArchivoTarget}
-                onYield={setRendimientoTarget}
-              />
+          <div className="sobres-orden">
+            {hayOrdenManual ? (
+              <button type="button" className="sobres-orden-auto" onClick={volverAlOrdenAutomatico}>
+                <ArrowDownUp size={14} />
+                {t('sobres_order_auto')}
+              </button>
+            ) : (
+              activos.length > 1 && <span className="sobres-orden-hint">{t('sobres_order_hint')}</span>
+            )}
+          </div>
+
+          <section className="sobres-lista" ref={contenedor}>
+            {ordenados.map((sobre) => (
+              <div key={sobre.sobre_id} {...propsItem(sobre)}>
+                <SobreCard
+                  sobre={sobre}
+                  onSelect={abrirDetalle}
+                  onProvision={setAporteTarget}
+                  onRescue={setRescateTarget}
+                  onEdit={setFormTarget}
+                  onArchive={setArchivoTarget}
+                  onYield={setRendimientoTarget}
+                />
+              </div>
             ))}
           </section>
         </>
