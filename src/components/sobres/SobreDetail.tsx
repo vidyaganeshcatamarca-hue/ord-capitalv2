@@ -125,11 +125,13 @@ export function SobreDetail({ detalle, onBack, onProvision, onRescue, onEdit }: 
           {cuotaDisponible && (
             <div>
               <span>{t('sobres_quota_monthly')}</span>
-              <strong>{formatCurrency(plan.cuota_mensual, sobre.moneda)}</strong>
+              {/* Las sugerencias de cuota van sin decimales (definición del dueño):
+                  el monto es una recomendación, no un importe a mover. */}
+              <strong>{formatCurrency(plan.cuota_mensual, sobre.moneda, 0)}</strong>
               <small>
                 {t('sobres_quota_equivalences')}: {t('sobres_quota_fortnightly')}{' '}
-                {formatCurrency(plan.cuota_quincenal, sobre.moneda)} · {t('sobres_quota_weekly')}{' '}
-                {formatCurrency(plan.cuota_semanal, sobre.moneda)}
+                {formatCurrency(plan.cuota_quincenal, sobre.moneda, 0)} · {t('sobres_quota_weekly')}{' '}
+                {formatCurrency(plan.cuota_semanal, sobre.moneda, 0)}
               </small>
             </div>
           )}

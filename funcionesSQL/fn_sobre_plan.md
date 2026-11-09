@@ -1,8 +1,10 @@
--- Helper interno y puro: sin tablas, sin auth. Calcula progreso, faltante, días,
--- estado del semáforo y cuotas a partir de meta, saldo, saldo base, fecha e inicio.
--- PRD: DF-09/DF-10 (cuota dinámica mensual con equivalencias), DF-11 (plazo vencido),
--- DF-12/DF-13 (ritmo real vs. ideal, umbrales 85/60), DF-14 (replanificación),
--- DF-15 (período inicial: un mes calendario, o una semana si el plazo es menor).
+-- Helper interno y puro: sin tablas, sin auth. Calcula progreso, faltante, dias,
+-- estado del semaforo y cuotas a partir de meta, saldo, saldo base, fecha e inicio.
+-- CUOTA: el plazo se convierte de dias a periodos SIN redondear (45 dias = 1,5
+-- meses) y lo que se redondea es la sugerencia, sin decimales. Mensual = faltante
+-- sobre dias/30; quincenal sobre dias/15; semanal sobre dias/7.
+-- PRD: DF-09/DF-10 (cuota dinamica con equivalencias), DF-11 (plazo vencido),
+-- DF-12/DF-13 (ritmo real vs ideal, umbrales 85/60), DF-14, DF-15 (periodo inicial).
 -- No expuesto al cliente (EXECUTE revocado a anon/authenticated).
 
 CREATE OR REPLACE FUNCTION public.fn_sobre_plan(p_meta numeric, p_saldo numeric, p_saldo_base numeric, p_fecha date, p_inicio date)
@@ -13,7 +15,7 @@ AS $function$
 DECLARE
     v_hoy date := CURRENT_DATE;
     v_faltante numeric;
-    v_meses integer;
+    v_dias integer;
     v_cuota numeric;
     v_esperado numeric;
     v_avance numeric;
@@ -31,7 +33,7 @@ BEGIN
         porcentaje_progreso := ROUND((p_saldo / p_meta) * 100, 2);
     END IF;
 
-    -- Precedencia de DF-13 / §6.3.
+    -- Precedencia de DF-13 / Â§6.3.
     IF p_meta IS NOT NULL AND p_saldo >= p_meta THEN
         estado_key := 'state_fulfilled';
     ELSIF p_fecha IS NOT NULL AND p_fecha < v_hoy THEN
@@ -65,17 +67,14 @@ BEGIN
         END IF;
     END IF;
 
-    -- Cuota: sólo con meta y fecha futura y algo por ahorrar (DF-09/DF-10).
-    IF p_meta IS NOT NULL AND p_fecha IS NOT NULL AND p_fecha >= v_hoy AND v_faltante > 0 THEN
-        v_meses := GREATEST(1,
-            (EXTRACT(YEAR FROM p_fecha)::int - EXTRACT(YEAR FROM v_hoy)::int) * 12
-            + (EXTRACT(MONTH FROM p_fecha)::int - EXTRACT(MONTH FROM v_hoy)::int)
-            + CASE WHEN EXTRACT(DAY FROM p_fecha) > EXTRACT(DAY FROM v_hoy) THEN 1 ELSE 0 END
-        );
-        v_cuota := ROUND(CEIL((v_faltante / v_meses) * 100) / 100, 2);
-        cuota_mensual := v_cuota;
-        cuota_quincenal := ROUND(v_cuota / 2, 2);
-        cuota_semanal := ROUND(v_cuota / 4.345, 2);
+    -- Cuota: sÃ³lo con meta y fecha futura y algo por ahorrar (DF-09/DF-10).
+    -- El plazo se convierte de dias a periodos SIN redondear: 45 dias son 1,5
+    -- meses. Lo que se redondea es la sugerencia, y sin decimales.
+    IF p_meta IS NOT NULL AND p_fecha IS NOT NULL AND p_fecha > v_hoy AND v_faltante > 0 THEN
+        v_dias := (p_fecha - v_hoy)::int;
+        cuota_mensual := ROUND(v_faltante / (v_dias / 30.0), 0);
+        cuota_quincenal := ROUND(v_faltante / (v_dias / 15.0), 0);
+        cuota_semanal := ROUND(v_faltante / (v_dias / 7.0), 0);
     END IF;
 
     RETURN NEXT;

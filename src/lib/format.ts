@@ -190,13 +190,19 @@ function withChosenSeparators(
 
 export function formatCurrency(
   amount: number | string | undefined | null,
-  currency?: string
+  currency?: string,
+  /**
+   * Fuerza la cantidad de decimales. Existe para las sugerencias de cuota de
+   * Ahorro: el dueño definió que se muestra SIN decimales, y la moneda puede
+   * tener uno o dos configurados. Sin este parámetro todo se comporta igual.
+   */
+  decimals?: number
 ): string {
   const value = typeof amount === 'string' ? parseFloat(amount) : Number(amount)
   if (Number.isNaN(value)) return '-'
 
   const code = normalizeCurrency(currency)
-  const digits = decimalsFor(code)
+  const digits = decimals ?? decimalsFor(code)
   const separators = separatorsFor(code)
 
   try {
