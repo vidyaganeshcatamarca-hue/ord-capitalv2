@@ -201,6 +201,9 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
     return groupingBlocker(grouping)
   }, [ticketTotal, payment, date, grouping])
 
+  // The mismatch note is already rendered further down; the blocker must not repeat it.
+  const duplicateBlockerKey = grouping.material_mismatch ? 'ocr.material_mismatch' : null
+
   const groupLabel = useCallback(
     (group: OcrCategoryGroup): { name: string; parent_name: string | null } => {
       if (group.unrecognized) return { name: t('ocr_unrecognized'), parent_name: null }
@@ -612,7 +615,9 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
             </p>
           )}
           {memoryPending && <p className="ocr-note">{t('ocr.memory_pending_note')}</p>}
-          {blocker && <p className="ocr-note ocr-note--warn">{t(blocker)}</p>}
+          {blocker && blocker !== duplicateBlockerKey && (
+            <p className="ocr-note ocr-note--warn">{t(blocker)}</p>
+          )}
         </OcrTicketEditModal>
       )}
 
