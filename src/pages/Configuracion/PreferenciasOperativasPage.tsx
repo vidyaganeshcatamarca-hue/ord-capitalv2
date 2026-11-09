@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ConfigBackButton } from '@/components/configuracion/ConfigBackButton'
-import { ToggleSwitch } from '@/components/configuracion/ToggleSwitch'
 import { useToast } from '@/contexts/ToastContext'
 import { rpc } from '@/lib/supabase'
 import { parseError, t } from '@/locales/i18n'
@@ -203,26 +202,14 @@ export function PreferenciasOperativasPage() {
           </div>
         </article>
 
-        {/* Automatización */}
-        <article className="config-section-card">
-          <h2>{t('config_automation_section')}</h2>
-
-          {/* OCR toggle removed on purpose (PRD OCR definitivo §61): there is no
-              product reason for the user to switch OCR on/off, it never
-              persisted, and OCR access is gated by the `menu_ocr` feature flag
-              from the load/register flow. Do not reintroduce `ocr_enabled`. */}
-
-          <div className="config-section-inline">
-            <div>
-              <span style={{ color: 'var(--text)', fontSize: 'calc(0.9rem * var(--font-scale))' }}>{t('config_voice_enabled')}</span>
-              <p style={{ margin: '2px 0 0', color: 'var(--text-3)', fontSize: 'calc(0.78rem * var(--font-scale))' }}>{t('config_voice_enabled_desc')}</p>
-            </div>
-            <ToggleSwitch
-              checked={prefs.voz_activada}
-              onChange={(v) => updatePref('voz_activada', v)}
-            />
-          </div>
-        </article>
+        {/* No automation section (owner, 2026-11-02): voice capture has no user
+            switch, it is always on, and OCR lost its switch earlier for the same
+            reason (PRD OCR definitivo §61). Rendering the card title with nothing
+            inside would be worse than removing the card, so the card is gone.
+            Measured before removing it: app_feature_flags.menu_carga_voz is
+            modo_minimo 'simple' with pref_key null, so the old preference never
+            gated the feature, and 0 of 83 users had it off. Do not reintroduce
+            the switch. */}
 
       </section>
     </main>

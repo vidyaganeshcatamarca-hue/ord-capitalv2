@@ -202,3 +202,7 @@ tests/cuarentena/*
 !tests/add-movement/
 tests/add-movement/*
 !tests/add-movement/recientes-una-linea.test.js
+
+!tests/configuracion/
+tests/configuracion/*
+!tests/configuracion/sin-interruptor-voz.test.js
