@@ -1,7 +1,10 @@
--- Total reservado SÓLO en modalidad virtual, por billetera y moneda.
--- Es el número que Presupuesto debe restar del disponible: la reserva real ya está
--- excluida del saldo externo y restarla otra vez duplicaría el descuento.
--- PRD: DF-01, DF-32, §10.1 y §10.3 (integración sin rediseñar Conciliación).
+-- Total apartado SÓLO en modalidad virtual, por billetera y moneda.
+-- Bajo la regla vigente (la billetera de ORD es el dinero disponible) la billetera
+-- YA viene neta de lo apartado, asi que este número no se resta del disponible:
+-- es el dato que usa Conciliacion para descontar del saldo del banco lo que sigue
+-- fisicamente en la cuenta. La reserva REAL no se descuenta nunca: ese dinero ya
+-- salió de la cuenta física.
+-- PRD: DF-01, DF-32, §10.3.
 
 CREATE OR REPLACE FUNCTION public.fn_sobres_reservas_virtuales()
  RETURNS TABLE(billetera_id bigint, moneda text, reservado_virtual numeric)

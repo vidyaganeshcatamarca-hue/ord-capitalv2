@@ -1,7 +1,7 @@
--- Rescate con reparto explícito entre porciones. Cada importe vuelve a SU billetera
--- de origen; no se elige destino distinto ni se reparte sin autorización.
+-- Rescate con reparto explicito entre porciones. Cada importe vuelve a SU
+-- billetera de origen y la acredita en las dos modalidades.
 -- p_asignaciones: [{"billetera_id": 1, "modalidad": "virtual", "importe": 60000}, ...]
--- PRD: DF-04, DF-05, DF-29, §16.7 (no se puede rescatar más que la porción viva).
+-- PRD: DF-04, DF-05, DF-29.
 
 CREATE OR REPLACE FUNCTION public.fn_sobre_rescatar(p_sobre_id bigint, p_asignaciones jsonb)
  RETURNS integer
@@ -17,6 +17,7 @@ DECLARE
     v_modalidad text;
     v_importe numeric;
     v_disponible numeric;
+    v_caja_id bigint;
     v_n integer := 0;
 BEGIN
     SELECT u.user_id INTO v_user_id FROM public.usuarios u WHERE u.auth_id = auth.uid();
@@ -58,11 +59,19 @@ BEGIN
             RAISE EXCEPTION '{"key": "error_sobre_portion_insufficient", "params": {"disponible": "{{disponible}}"}}';
         END IF;
 
+        -- Rescatar devuelve la plata a la billetera de origen en las dos
+        -- modalidades, igual que el aporte la saca.
+        v_caja_id := public.fn_sobre_pata_billetera(
+            v_user_id, v_billetera_id, v_sobre.moneda, v_importe, false,
+            'savings_envelope_rescate_real', p_sobre_id, v_sobre.nombre
+        );
+
         INSERT INTO public.p_sobre_movimientos (
-            sobre_id, user_id, tipo, importe, moneda, billetera_id, modalidad, genera_rendimiento
+            sobre_id, user_id, tipo, importe, moneda, billetera_id, modalidad,
+            genera_rendimiento, caja_movimiento_id
         ) VALUES (
             p_sobre_id, v_user_id, 'rescate', v_importe, v_sobre.moneda,
-            v_billetera_id, v_modalidad, false
+            v_billetera_id, v_modalidad, false, v_caja_id
         );
         v_n := v_n + 1;
     END LOOP;

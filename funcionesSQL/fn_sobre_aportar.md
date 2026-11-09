@@ -1,7 +1,8 @@
--- Aporte a un sobre. La modalidad real/virtual se decide en CADA movimiento.
--- En reserva virtual se exige que el dinero siga en la billetera; en reserva real el
--- dinero ya salió, así que no se descuenta dos veces. En Free no se aporta.
--- PRD: DF-01, DF-03, DF-07, DF-08 (superar la meta sólo advierte), DF-31.
+-- Aporte a un sobre. La plata sale de la billetera en LAS DOS modalidades:
+-- la diferencia entre real y virtual la resuelve Conciliacion, no el saldo.
+-- La billetera ya viene neta de lo apartado en otros sobres, asi que el
+-- chequeo de saldo compara directo contra saldo_actual. En Free no se aporta.
+-- PRD: DF-01, DF-03, DF-07, DF-08, DF-31.
 
 CREATE OR REPLACE FUNCTION public.fn_sobre_aportar(p_sobre_id bigint, p_billetera_id bigint, p_importe numeric, p_modalidad text, p_genera_rendimiento boolean DEFAULT false, p_fecha date DEFAULT CURRENT_DATE)
  RETURNS bigint
@@ -14,8 +15,8 @@ DECLARE
     v_plan text;
     v_sobre public.p_sobres;
     v_wallet public.p_billeteras;
-    v_ya_reservado numeric;
     v_movimiento_id bigint;
+    v_caja_id bigint;
 BEGIN
     SELECT u.user_id, u.plan_tipo INTO v_user_id, v_plan
     FROM public.usuarios u WHERE u.auth_id = auth.uid();
@@ -53,24 +54,27 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_sobre_currency_mismatch", "params": {"sobre": "{{sobre}}", "billetera": "{{billetera}}"}}';
     END IF;
 
-    IF p_modalidad = 'virtual' THEN
-        SELECT COALESCE(SUM(CASE WHEN m.tipo = 'rescate' THEN -m.importe ELSE m.importe END), 0)
-        INTO v_ya_reservado
-        FROM public.p_sobre_movimientos m
-        WHERE m.billetera_id = p_billetera_id
-          AND m.modalidad = 'virtual'
-          AND m.moneda = v_sobre.moneda;
-
-        IF v_wallet.saldo_actual - v_ya_reservado < p_importe THEN
-            RAISE EXCEPTION '{"key": "error_sobre_wallet_insufficient", "params": {"billetera": "{{billetera}}"}}';
-        END IF;
+    -- La billetera ya viene neta de lo que estÃ¡ apartado en otros sobres (la
+    -- regla es que su saldo ES el disponible), asÃ­ que no hay que descontar
+    -- reservas previas: alcanza con comparar contra el saldo actual.
+    IF v_wallet.saldo_actual < p_importe THEN
+        RAISE EXCEPTION '{"key": "error_sobre_wallet_insufficient", "params": {"billetera": "{{billetera}}"}}';
     END IF;
 
+    -- La plata sale de la billetera en LAS DOS modalidades: la diferencia entre
+    -- real y virtual la resuelve la conciliaciÃ³n, no el saldo.
+    v_caja_id := public.fn_sobre_pata_billetera(
+        v_user_id, p_billetera_id, v_sobre.moneda, p_importe, true,
+        'savings_envelope_aporte_real', p_sobre_id, v_sobre.nombre
+    );
+
     INSERT INTO public.p_sobre_movimientos (
-        sobre_id, user_id, tipo, importe, moneda, billetera_id, modalidad, genera_rendimiento, fecha
+        sobre_id, user_id, tipo, importe, moneda, billetera_id, modalidad,
+        genera_rendimiento, fecha, caja_movimiento_id
     ) VALUES (
         p_sobre_id, v_user_id, 'aporte', p_importe, v_sobre.moneda,
-        p_billetera_id, p_modalidad, COALESCE(p_genera_rendimiento, false), COALESCE(p_fecha, CURRENT_DATE)
+        p_billetera_id, p_modalidad, COALESCE(p_genera_rendimiento, false),
+        COALESCE(p_fecha, CURRENT_DATE), v_caja_id
     )
     RETURNING movimiento_id INTO v_movimiento_id;
 
