@@ -116,12 +116,12 @@ Ordenadas por módulo para no saltar de archivo en archivo. El número `B#` es e
 
 | T | Spec | Módulo | Commit |
 | --- | --- | --- | --- |
-| T1 | S1 | cuarentena: aviso duplicado | — |
-| T2 | S12 | cuarentena: cuotas borra el sugerido | — |
-| T3 | S13 | cuarentena: botón ir confirma | — |
-| T4 | S14 | cuarentena: pago en dólares persiste | — |
-| T5 | S10 | aviso de cuarentena duplicado | — |
-| T6 | S2 | carga manual: iconos 50% y «ver todas» | — |
+| T1 | S1 | cuarentena: aviso duplicado | `f5d4c3f` |
+| T2 | S12 | cuarentena: cuotas borra el sugerido | `101ca92` |
+| T3 | S13 | cuarentena: botón ir confirma | `3a997fc` |
+| T4 | S14 | cuarentena: pago en dólares persiste | `ae73f9b` |
+| T5 | S10 | aviso de cuarentena duplicado | `fecf4bc` |
+| T6 | S2 | carga manual: iconos 50% y «ver todas» | `eea059b` |
 | T7 | S3 | ajustes: quitar interruptor de voz | — |
 | T8 | S4 | base cero: barra excedida titila | — |
 | T9 | S5 | base cero: espacio entre padres | — |
