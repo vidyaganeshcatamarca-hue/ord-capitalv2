@@ -23,6 +23,7 @@ import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { DonutChart as DonutChartComponent } from '@/components/charts/DonutChart'
 import { QuarantineHomeFab } from '@/components/cuarentena/QuarantineHomeFab'
 import { syncBadge, useOnlineStatus } from '@/lib/connection'
+import { isDismissSwipe } from '@/lib/swipeDismiss'
 import './Home.css'
 
 function getGreeting() {
@@ -1026,6 +1027,25 @@ export function HomePage() {
     }
   }
 
+  // Dueño (2026-11-02): "un barrido lateral [...] me haga desaparecer la notificación
+  // [...] Yo hago clic en la notificación y me lleva a la acción [...] Pero si la
+  // deslizo, la quito". Los avisos de vencimiento se descartan con el gesto, porque el
+  // toque lleva a pagar la tarjeta; se guardan con la misma clave que las alertas y
+  // reaparecen cuando el vencimiento cambia.
+  const claveVencimiento = (v: any, i: number) => `venc:${v.tarjeta_id ?? v.tarjeta ?? i}`
+
+  const descartarVencimiento = (v: any, i: number) => {
+    try {
+      const data = { ...descartadas, [claveVencimiento(v, i)]: 1 }
+      localStorage.setItem(ALERTAS_DESCARTADAS_KEY, JSON.stringify(data))
+      setDescartadas(data)
+    } catch {
+      // Sin storage el descarte dura lo que dure el montaje.
+    }
+  }
+
+  const gestoVencimiento = useRef<{ x: number; y: number; swipe: boolean } | null>(null)
+
   const alertasFilas = useMemo((): AlertaFila[] => {
     if (!alerts) return []
     const filas: AlertaFila[] = []
@@ -1150,8 +1170,39 @@ export function HomePage() {
             {alerts.vencimientos_3_dias && alerts.vencimientos_3_dias.length > 0 && (
               <div className="alert-vencimientos-list">
                 <p className="text-xs text-muted font-semibold mt-1">{t('alert_upcoming_card_dues')}</p>
-                {alerts.vencimientos_3_dias.map((v: any, i: number) => (
-                  <div key={i} className="alert-vencimiento-card">
+                {alerts.vencimientos_3_dias.map((v: any, i: number) => {
+                  if (descartadas[claveVencimiento(v, i)] === 1) return null
+                  return (
+                  <div
+                    key={i}
+                    className="alert-vencimiento-card"
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      if (gestoVencimiento.current?.swipe) {
+                        gestoVencimiento.current = null
+                        return
+                      }
+                      navigate('/tarjetas')
+                    }}
+                    onTouchStart={(e) => {
+                      gestoVencimiento.current = {
+                        x: e.touches[0].clientX,
+                        y: e.touches[0].clientY,
+                        swipe: false,
+                      }
+                    }}
+                    onTouchEnd={(e) => {
+                      const inicio = gestoVencimiento.current
+                      if (!inicio) return
+                      const toque = e.changedTouches[0]
+                      if (isDismissSwipe(toque.clientX - inicio.x, toque.clientY - inicio.y)) {
+                        gestoVencimiento.current = { ...inicio, swipe: true }
+                        descartarVencimiento(v, i)
+                      } else {
+                        gestoVencimiento.current = null
+                      }
+                    }}
+                  >
                     <span>💳 {v.tarjeta} {t('alert_card_due_in_days', { dias: v.dias })}</span>
                     <span className="font-mono font-semibold">
                       {formatAmount(v.monto)}
@@ -1162,7 +1213,8 @@ export function HomePage() {
                       )}
                     </span>
                   </div>
-                ))}
+                  )
+                })}
               </div>
             )}
             {filasVisibles.length === 0 && (

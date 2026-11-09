@@ -211,3 +211,4 @@ tests/configuracion/*
 !tests/appLockOffline.test.js
 !tests/conexion-badge.test.js
 !tests/nav-modo-offline.test.js
+!tests/swipe-vencimientos.test.js
