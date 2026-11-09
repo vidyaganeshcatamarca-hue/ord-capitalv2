@@ -191,3 +191,4 @@ temp_sql/
 !tests/ocr/
 tests/ocr/*
 !tests/ocr/aviso-no-duplicado.test.js
+!tests/ocr/cuotas-limpiar-al-enfocar.test.js

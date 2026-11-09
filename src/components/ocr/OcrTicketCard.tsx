@@ -491,7 +491,14 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
                   type="number"
                   min={1}
                   value={installmentsInput}
-                  onFocus={(event) => event.target.select()}
+                  // The first tap clears the suggested value so typing replaces it. Using
+                  // select() only highlighted it, which on Android pops the copy/paste menu.
+                  onFocus={() => setInstallmentsInput('')}
+                  onBlur={() =>
+                    setInstallmentsInput((current) =>
+                      current === '' ? String(payment.installments ?? 1) : current,
+                    )
+                  }
                   onChange={(event) => {
                     // Digits only, and an empty field is allowed while typing:
                     // coercing it to 1 was what made the old input uneditable.
