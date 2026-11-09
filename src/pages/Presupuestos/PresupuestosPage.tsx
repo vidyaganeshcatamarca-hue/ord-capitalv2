@@ -1909,11 +1909,13 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
         )}
       </div>
 
-      {/* Barra */}
+      {/* Barra. Dueño (2026-11-02): «la línea roja del sobre que se ha excedido la hagas
+          titilar, prender y apagar». Sólo el excedido: el que cubrió justo el total se
+          queda quieto, porque en un celular el color solo no alcanza. */}
       {!sinDatos && (
         <div className="sobre-barra-wrap">
           <div
-            className={`sobre-barra-fill ${colorBarra}`}
+            className={`sobre-barra-fill ${colorBarra}${sobre.estado_sobre === 'rojo_excedido' ? ' excedido' : ''}`}
             style={{ width: `${pct}%` }}
           />
         </div>
