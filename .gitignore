@@ -198,3 +198,7 @@ tests/ocr/*
 !tests/cuarentena/
 tests/cuarentena/*
 !tests/cuarentena/un-solo-aviso.test.js
+
+!tests/add-movement/
+tests/add-movement/*
+!tests/add-movement/recientes-una-linea.test.js

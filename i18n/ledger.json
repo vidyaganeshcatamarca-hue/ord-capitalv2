@@ -9082,6 +9082,10 @@
         "from": "Ver todas las categorías",
         "to": "See all categories"
       },
+      "inversiones.add_move_see_all": {
+        "from": "Ver todas",
+        "to": "See all"
+      },
       "inversiones.title_add_subcategory": {
         "from": "Agregar sub-categoría",
         "to": "Add subcategory"
@@ -19927,6 +19931,10 @@
       "inversiones.btn_see_all_categories": {
         "from": "Ver todas las categorías",
         "to": "Ver todas as categorias"
+      },
+      "inversiones.add_move_see_all": {
+        "from": "Ver todas",
+        "to": "Ver todas"
       },
       "inversiones.title_add_subcategory": {
         "from": "Agregar sub-categoría",

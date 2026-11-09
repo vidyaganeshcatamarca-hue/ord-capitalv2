@@ -1190,3 +1190,45 @@
 
 
 
+
+/* ─── Fila de categorías recientes (dueño, 2026-11-02) ─────────────────────
+   Los cinco iconos y el botón "Ver todas" tienen que quedar SIEMPRE en una sola
+   línea. Los iconos crecen un 50% (32 -> 48) pero se encogen cuando la pantalla
+   no alcanza, en vez de envolver: flex-wrap: nowrap lo impide y el min() reparte
+   el ancho disponible entre los cinco, reservando el resto para el botón. */
+.mobile-frecuentes-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.cat-recent-icon-btn {
+  width: min(48px, calc((100% - 104px) / 5));
+  aspect-ratio: 1;
+  flex: 0 1 auto;
+  min-width: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+.cat-recent-see-all {
+  flex: 0 0 auto;
+  margin-left: auto;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 20px;
+  /* Borde de contraste: --border-light se ve sobre la superficie oscura y
+     tambien sobre la clara, que son dos valores distintos del mismo token. */
+  border: 1px solid var(--border-light);
+  font-size: calc(13px * var(--font-scale));
+  font-weight: 700;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+}

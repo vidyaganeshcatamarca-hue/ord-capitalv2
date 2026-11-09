@@ -2331,6 +2331,7 @@ export const inversiones = {
   step_category: "Category",
   placeholder_search_category: "Search category...",
   btn_see_all_categories: "See all categories",
+  add_move_see_all: "See all",
   title_add_subcategory: "Add subcategory",
   label_category: "Category",
   step_when: "When?",
