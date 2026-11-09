@@ -118,3 +118,9 @@
 .sobre-total--excede strong {
   color: var(--coral);
 }
+
+.sobre-reservas {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}

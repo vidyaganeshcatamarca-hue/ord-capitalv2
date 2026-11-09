@@ -11,6 +11,7 @@ import { SobreDetail, sobreDesdeDetalle } from '@/components/sobres/SobreDetail'
 import { SobreFormModal } from '@/components/sobres/SobreFormModal'
 import { SobreAporteModal } from '@/components/sobres/SobreAporteModal'
 import { SobreRescateModal } from '@/components/sobres/SobreRescateModal'
+import { SobreRendimientoModal } from '@/components/sobres/SobreRendimientoModal'
 import {
   normalizarBilletera,
   normalizarDetalle,
@@ -38,6 +39,7 @@ export function SobresPage() {
   const [aporteTarget, setAporteTarget] = useState<Sobre | null>(null)
   const [rescateTarget, setRescateTarget] = useState<Sobre | null>(null)
   const [archivoTarget, setArchivoTarget] = useState<Sobre | null>(null)
+  const [rendimientoTarget, setRendimientoTarget] = useState<Sobre | null>(null)
 
   const cargarTodo = useCallback(async () => {
     setCargando(true)
@@ -274,6 +276,7 @@ export function SobresPage() {
                 onRescue={setRescateTarget}
                 onEdit={setFormTarget}
                 onArchive={setArchivoTarget}
+                onYield={setRendimientoTarget}
               />
             ))}
           </section>
@@ -300,6 +303,13 @@ export function SobresPage() {
         isOpen={rescateTarget !== null}
         sobre={rescateTarget}
         onClose={() => setRescateTarget(null)}
+        onSuccess={trasCambio}
+      />
+
+      <SobreRendimientoModal
+        isOpen={rendimientoTarget !== null}
+        sobre={rendimientoTarget}
+        onClose={() => setRendimientoTarget(null)}
         onSuccess={trasCambio}
       />
 
