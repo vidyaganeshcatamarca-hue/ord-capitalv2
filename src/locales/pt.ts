@@ -784,7 +784,14 @@ export const voice = {
   not_sent_hint: "O áudio não foi enviado.",
   seconds_left: "{seconds} s restantes",
   close: "Fechar",
-  fab_a11y: "{count} transações por voz pendentes de revisar",
+};
+
+/**
+ * Home quarantine notice: one entry point for every pending row, whatever its
+ * origin (OCR or voice). The count is the whole list the inbox opens.
+ */
+export const quarantine = {
+  fab_a11y: "Quarentena: {count} transações pendentes de revisar",
 };
 
 // === OCR DE COMPROVANTES (PRD definitivo) ===
@@ -875,7 +882,6 @@ export const ocr = {
   history_status_approved: "Aprovado",
   history_status_rejected: "Recusado",
   history_open: "Ver na quarentena",
-  fab_a11y: "Comprovantes OCR pendentes: {count}",
   save_draft: "Salvar",
   saving: "Salvando...",
   saved: "Rascunho salvo.",

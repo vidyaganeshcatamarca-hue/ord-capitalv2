@@ -825,8 +825,14 @@ export const voice = {
   not_sent_hint: "El audio no se envió.",
   seconds_left: "{seconds} s restantes",
   close: "Cerrar",
-  // Home FAB — pending voice movements awaiting quarantine review
-  fab_a11y: "{count} movimientos por voz pendientes de revisar",
+};
+
+/**
+ * Home quarantine notice: one entry point for every pending row, whatever its
+ * origin (OCR or voice). The count is the whole list the inbox opens.
+ */
+export const quarantine = {
+  fab_a11y: "Cuarentena: {count} movimientos pendientes de revisar",
 };
 
 // === OCR DE TICKETS (PRD definitivo) ===
@@ -921,7 +927,6 @@ export const ocr = {
   history_status_approved: "Aprobado",
   history_status_rejected: "Rechazado",
   history_open: "Ver en cuarentena",
-  fab_a11y: "Tickets OCR pendientes: {count}",
   save_draft: "Guardar",
   saving: "Guardando...",
   saved: "Borrador guardado.",

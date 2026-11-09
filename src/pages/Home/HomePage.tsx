@@ -21,8 +21,7 @@ import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { generateColorShade } from '@/lib/colorUtils'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { DonutChart as DonutChartComponent } from '@/components/charts/DonutChart'
-import { VoiceHomeFab } from '@/components/voice/VoiceHomeFab'
-import { OcrHomeFab } from '@/components/ocr/OcrHomeFab'
+import { QuarantineHomeFab } from '@/components/cuarentena/QuarantineHomeFab'
 import './Home.css'
 
 function getGreeting() {
@@ -1830,9 +1829,8 @@ export function HomePage() {
 
       </div>
 
-      {/* ── VOICE QUARANTINE FAB ── */}
-      <VoiceHomeFab />
-      <OcrHomeFab />
+      {/* ── QUARANTINE INBOX FAB (OCR + voice, one notice) ── */}
+      <QuarantineHomeFab />
 
       {/* ── MODAL CONCILIACIÓN RÁPIDA ── */}
       {selectedBilletera && (

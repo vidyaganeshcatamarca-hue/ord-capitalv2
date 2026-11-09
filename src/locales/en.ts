@@ -784,7 +784,14 @@ export const voice = {
   not_sent_hint: "The audio was not sent.",
   seconds_left: "{seconds}s left",
   close: "Close",
-  fab_a11y: "{count} voice transactions pending review",
+};
+
+/**
+ * Home quarantine notice: one entry point for every pending row, whatever its
+ * origin (OCR or voice). The count is the whole list the inbox opens.
+ */
+export const quarantine = {
+  fab_a11y: "Quarantine: {count} transactions pending review",
 };
 
 // === OCR TICKETS (definitive PRD) ===
@@ -875,7 +882,6 @@ export const ocr = {
   history_status_approved: "Approved",
   history_status_rejected: "Rejected",
   history_open: "Open in quarantine",
-  fab_a11y: "Pending OCR tickets: {count}",
   save_draft: "Save",
   saving: "Saving...",
   saved: "Draft saved.",

@@ -194,3 +194,7 @@ tests/ocr/*
 !tests/ocr/cuotas-limpiar-al-enfocar.test.js
 !tests/ocr/tecla-ir-confirma.test.js
 !tests/ocr/dolares-persisten.test.js
+
+!tests/cuarentena/
+tests/cuarentena/*
+!tests/cuarentena/un-solo-aviso.test.js

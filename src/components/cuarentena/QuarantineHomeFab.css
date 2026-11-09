@@ -1,9 +1,9 @@
-/* ─── VoiceHomeFab.css — Voice v1 (Home quarantine FAB) ─────────────────── */
+/* ─── QuarantineHomeFab.css — un solo aviso de cuarentena ──────────────── */
 
-/* Floating entry point into the voice quarantine. Fixed to the viewport so it
+/* Floating entry point into the quarantine inbox. Fixed to the viewport so it
    survives Home's own scroll container; the offset lifts it above the
    back-to-top FAB (bottom-right as well) so the two never overlap. */
-.voice-fab {
+.quarantine-fab {
   position: fixed;
   right: var(--space-5);
   bottom: calc(var(--nav-height) + var(--safe-bottom) + var(--space-4) + 56px);
@@ -22,24 +22,24 @@
      below the add-movement modal (1000/1010) and the voice recorder (1100/1110). */
   z-index: 130;
   transition: transform var(--transition-fast), box-shadow var(--transition-fast);
-  animation: voice-fab-in var(--transition-normal);
+  animation: quarantine-fab-in var(--transition-normal);
 }
 
-.voice-fab:hover {
+.quarantine-fab:hover {
   filter: brightness(1.12);
 }
 
-.voice-fab:active {
+.quarantine-fab:active {
   transform: scale(0.92);
   box-shadow: var(--shadow-md);
 }
 
-.voice-fab:focus-visible {
+.quarantine-fab:focus-visible {
   outline: 2px solid var(--mint);
   outline-offset: 2px;
 }
 
-.voice-fab-badge {
+.quarantine-fab-badge {
   position: absolute;
   top: -6px;
   right: -6px;
@@ -59,7 +59,7 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.45);
 }
 
-@keyframes voice-fab-in {
+@keyframes quarantine-fab-in {
   from {
     opacity: 0;
     transform: translateY(12px) scale(0.9);
@@ -72,13 +72,13 @@
 
 /* Desktop hides the bottom nav, so the FAB drops back to the bottom corner. */
 @media (min-width: 768px) {
-  .voice-fab {
+  .quarantine-fab {
     bottom: var(--space-6);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .voice-fab {
+  .quarantine-fab {
     animation: none;
     transition: none;
   }
