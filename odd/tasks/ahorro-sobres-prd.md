@@ -52,16 +52,17 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
 
 | ID | Tarea | Specs | Estado |
 |---|---|---|---|
-| T1 | Modelo de datos en Supabase + migración legacy | S6-S11 | blocked: D1 |
-| T2 | RPCs núcleo (crear/editar/listar/archivar/aportar/rescatar) | S6-S9, S14 | blocked: D1 |
-| T3 | Integración presupuesto: reservas virtuales en `fn_obtener_saldo_a_asignar` | S8, DF-32 | blocked: D1 |
-| T4 | RPC rendimiento + ingreso único en `p_caja` | S11 | blocked: D1 |
-| T5 | UI completa + i18n es/en/pt | S6-S17 | pending |
-| T6 | Cuota dinámica, semáforo 85/60, período inicial, reprogramación | S12 | pending |
-| T7 | Orden manual por arrastre persistente | S15 | pending |
-| T8 | Ciclo de vida y plan Free | S16 | pending |
+| T1 | Modelo de datos en Supabase (sin migración: no había datos) | S6-S11 | **done** `685988d` |
+| T2 | RPCs núcleo (listar/porciones/detalle/crear/editar/aportar/rescatar/archivar/reordenar) | S6-S9, S14 | **done** `2cf529a` |
+| T5 | UI completa + i18n es/en/pt (109 claves × 3 idiomas) | S6-S17 | **done** `ecb2d1c` |
+| T6 | Cuota dinámica, semáforo 85/60, período inicial, reprogramación | S12 | **done** en `fn_sobre_plan` |
+| T10a | Retiro de Cuenta Madre, transferencia entre sobres y gráfico inventado | S10, S9 | **done** `ecb2d1c` |
+| T4 | RPC de rendimiento + ingreso único en `p_caja` + modal | S11 | pending: autorización |
+| T3 | Integración presupuesto: reservas virtuales en `fn_obtener_saldo_a_asignar` | S8, DF-32 | pending: autorización |
+| T7 | Orden manual por arrastre persistente (la RPC existe; falta el gesto) | S15 | pending |
+| T8 | Plan Free en la UI (la base ya lo bloquea; falta deshabilitar el alta) | S16 | pending |
 | T9 | Notificaciones por infraestructura general | DF-30 | pending |
-| T10 | Retiro de Cuenta Madre y transferencia entre sobres | S10, S9 | pending |
+| T10b | Baja de las RPC legacy de Cuenta Madre y transferencia entre sobres | S10 | pending: autorización (DROP) |
 
 ## Precisiones propuestas (§16, no aprobadas)
 
@@ -94,3 +95,5 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
 - **L4** (corrección del dueño, verbatim): "las pruebas las haras con el user vidyaganeshcatamarca, que usa presupuesto base 0 cuando corresponda". → Cuenta de prueba: `vidyaganeshcatamarca@gmail.com` = **user 1** (`plan_tipo = free`). El user 198 (`arieldere75@gmail.com`, `trial`) queda sólo para verificación visual. El plan Free del user 1 sirve además para probar DF-31 (S16).
 - **L5** — D1 resuelta: opción A. DDL escrito en `odd/tasks/ahorro-sobres-prd.schema.sql`, validado en una transacción con `ROLLBACK` y **creado en Supabase** con autorización del dueño. Verificado en la base: 3 tablas, RLS activo, todas las constraints e índices.
 - **L6** (constancia del dueño, verbatim): "ten en cuenta que no hay users con sobres creados que migrar". → Verificado: `p_billeteras` tiene `0` filas con `es_fondo_prevision`, `0` con `es_cuenta_madre_ahorro` y `0` con `billetera_respaldo_id`. Se retiró del modelo el caso legacy (`es_legacy`, `legacy_billetera_id`): billetera de origen y modalidad pasan a ser obligatorias en todos los movimientos.
+- **L7** — T1, T2, T5 y T6 cerrados y commiteados. Verificado en la base con 20 aserciones transaccionales (`PASS`) sobre el user 198 y el user 1 para el caso Free, y en movil 390x844 con ego-browser: alta con aporte inicial virtual, segundo aporte real desde otra porcion, rescate repartido 30.000 + 20.000, detalle con cuotas y equivalencias, historial y saldos. Capturas en `C:/Users/Vidya Ganesh/ego/ahorro-sobres-audit-20261106-01/`.
+- **L8** — Datos de prueba borrados al terminar (`p_sobres`, `p_sobre_movimientos` y `p_sobre_movimientos_auditoria` en 0). La billetera auxiliar del test SQL nunca persistio: corria dentro de `ROLLBACK`.
