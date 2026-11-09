@@ -26,6 +26,7 @@ import {
   retryBackoffSeconds,
   type LockState,
   type PinServerState,
+  stateAfterStatusError,
   type StatusRefreshMode,
 } from '@/lib/appLock'
 /**
@@ -137,12 +138,15 @@ export function AppLockProvider({ children }: { children: ReactNode }) {
         setAttempts(0)
       }
     } catch {
-      // Fail closed (lib contract): unknown server response → locked. A silent
-      // refresh keeps the resolution: the server already accepted that PIN, so a
-      // status hiccup must not throw the user back to the lock screen.
-      estadoRef.current = 'activa'
-      setServerEstado('activa')
-      if (statusRefreshArmsLock(options?.mode ?? 'arm', 'activa')) setLocked(true)
+      // S9 fails closed on an UNKNOWN server value; an unanswered request is not
+      // that. Offline this RPC always throws, so answering with 'activa' invented a
+      // PIN the user never set and left them a keypad with no way in (owner,
+      // 2026-11-02). Keep whatever the server last told us, and only arm when a PIN
+      // is known to exist.
+      const { estado, arm } = stateAfterStatusError(estadoRef.current)
+      estadoRef.current = estado
+      setServerEstado(estado)
+      if (arm && statusRefreshArmsLock(options?.mode ?? 'arm', estado)) setLocked(true)
     }
   }, [session])
 
