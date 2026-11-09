@@ -1584,3 +1584,15 @@ button.asignar-opcion:focus-visible {
     animation: none;
   }
 }
+
+/* Dueño (2026-11-02): «todas las categorías padres están separaditas con una pequeña
+   línea de espacio. Que se note que son tarjetas diferentes». El padre con hijos ya
+   trae su propio margen, pero el padre sin hijos es una fila pelada, y con los dos
+   plegados se leían como un bloque continuo. La separación va entre hermanos del
+   contenedor, así cubre las dos formas sin atarse a una clase; el segundo selector
+   existe porque `.sobre-grupo-bloque.abierto` fija `margin: 0 16px 12px` con la misma
+   especificidad y, al ir después, necesita ganarle el `margin-top`. */
+.acord-grupo-body > * + *,
+.acord-grupo-body > .sobre-grupo-bloque + * {
+  margin-top: 10px;
+}

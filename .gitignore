@@ -207,3 +207,4 @@ tests/add-movement/*
 tests/configuracion/*
 !tests/configuracion/sin-interruptor-voz.test.js
 !tests/presupuestos/barra-excedida-titila.test.js
+!tests/presupuestos/padres-separados.test.js
