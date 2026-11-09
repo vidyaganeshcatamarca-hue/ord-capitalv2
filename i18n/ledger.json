@@ -915,12 +915,12 @@
         "to": "{monto} in dollars not converted (rate missing)"
       },
       "errors.card_cmp_usd_line": {
-        "from": "En dólares: {anterior} → {actual}",
-        "to": "In dollars: {anterior} → {actual}"
+        "from": "En dólares: anterior {anterior} → actual {actual}",
+        "to": "In dollars: previous {anterior} → current {actual}"
       },
       "errors.card_cmp_usd_line_unconverted": {
-        "from": "En dólares, sin convertir: {anterior} → {actual}",
-        "to": "In dollars, not converted: {anterior} → {actual}"
+        "from": "En dólares, sin convertir: anterior {anterior} → actual {actual}",
+        "to": "In dollars, not converted: previous {anterior} → current {actual}"
       },
       "errors.card_legacy_created_toast_one": {
         "from": "{cantidad} cuota cargada, empieza a correr en {fecha}",
@@ -11769,12 +11769,12 @@
         "to": "{monto} em dólares sem converter (falta a cotação)"
       },
       "errors.card_cmp_usd_line": {
-        "from": "En dólares: {anterior} → {actual}",
-        "to": "Em dólares: {anterior} → {actual}"
+        "from": "En dólares: anterior {anterior} → actual {actual}",
+        "to": "Em dólares: anterior {anterior} → atual {actual}"
       },
       "errors.card_cmp_usd_line_unconverted": {
-        "from": "En dólares, sin convertir: {anterior} → {actual}",
-        "to": "Em dólares, sem converter: {anterior} → {actual}"
+        "from": "En dólares, sin convertir: anterior {anterior} → actual {actual}",
+        "to": "Em dólares, sem converter: anterior {anterior} → atual {actual}"
       },
       "errors.card_legacy_created_toast_one": {
         "from": "{cantidad} cuota cargada, empieza a correr en {fecha}",
