@@ -120,7 +120,9 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
         card_id: item.tarjeta_id,
         wallet_id: null,
         installments: item.cuotas ?? fromMetadata?.installments ?? 1,
-        currency: item.moneda ?? fromMetadata?.currency ?? null,
+        // The purchase currency the user chose lives in metadata; item.moneda is the
+        // currency of the charge (the card's), so reading it first switched USD off.
+        currency: fromMetadata?.currency ?? item.moneda ?? null,
       }
     }
     return {
@@ -128,7 +130,7 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
       card_id: item.tarjeta_id ?? fromMetadata?.card_id ?? null,
       wallet_id: item.billetera_id ?? fromMetadata?.wallet_id ?? null,
       installments: item.cuotas ?? fromMetadata?.installments ?? 1,
-      currency: item.moneda ?? fromMetadata?.currency ?? null,
+      currency: fromMetadata?.currency ?? item.moneda ?? null,
     }
   })
   const [date, setDate] = useState<string>(item.fecha ?? metadata.purchase_date ?? '')

@@ -193,3 +193,4 @@ tests/ocr/*
 !tests/ocr/aviso-no-duplicado.test.js
 !tests/ocr/cuotas-limpiar-al-enfocar.test.js
 !tests/ocr/tecla-ir-confirma.test.js
+!tests/ocr/dolares-persisten.test.js
