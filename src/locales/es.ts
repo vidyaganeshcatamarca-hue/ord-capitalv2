@@ -98,6 +98,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   hero_title_safe_to_spend: "Safe-to-Spend",
   hero_title_total: "Total",
   hero_sync_ok: "Datos sincronizados",
+  hero_sync_offline: "Sin conexión",
   section_my_wallets: "Mis Billeteras",
   horizontal_scroll_hint: "<- Desliza para ver más ->",
   wallets_empty: "Aún no tienes billeteras creadas.",

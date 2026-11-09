@@ -95,6 +95,7 @@ export const errors = {
   hero_title_safe_to_spend: "Safe-to-Spend",
   hero_title_total: "Total",
   hero_sync_ok: "Dados sincronizados",
+  hero_sync_offline: "Sem conexão",
   section_my_wallets: "Minhas Carteiras",
   horizontal_scroll_hint: "<- Deslize para ver mais ->",
   wallets_empty: "Você ainda não tem carteiras criadas.",

@@ -22,6 +22,7 @@ import { generateColorShade } from '@/lib/colorUtils'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { DonutChart as DonutChartComponent } from '@/components/charts/DonutChart'
 import { QuarantineHomeFab } from '@/components/cuarentena/QuarantineHomeFab'
+import { syncBadge, useOnlineStatus } from '@/lib/connection'
 import './Home.css'
 
 function getGreeting() {
@@ -262,6 +263,9 @@ export function HomePage() {
   const [alertsOpen, setAlertsOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [movementToDelete, setMovementToDelete] = useState<any | null>(null)
+  // Dueño (2026-11-02): el cartel de sincronización no puede afirmar que hay datos
+  // frescos cuando el teléfono está sin red. Sin conexión va en rojo y lo dice.
+  const syncState = syncBadge(useOnlineStatus())
   const [movementToEdit, setMovementToEdit] = useState<any | null>(null)
 
   const [fugasMisterioOcultado, setFugasMisterioOcultado] = useState(() => {
@@ -1217,8 +1221,8 @@ export function HomePage() {
                 </p>
               ))}
               <div className="home-patrimonio-badge" style={{ marginTop: '8px' }}>
-                <span className="dot dot-green" />
-                <span className="text-xs text-muted">{t('hero_sync_ok')}</span>
+                <span className={`dot ${syncState.dot}`} />
+                <span className="text-xs text-muted">{t(syncState.key)}</span>
               </div>
             </div>
           </div>

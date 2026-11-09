@@ -326,6 +326,10 @@
         "from": "Datos sincronizados",
         "to": "Data synced"
       },
+      "errors.hero_sync_offline": {
+        "from": "Sin conexión",
+        "to": "No connection"
+      },
       "errors.section_my_wallets": {
         "from": "Mis Billeteras",
         "to": "My Wallets"
@@ -11175,6 +11179,10 @@
       "errors.hero_sync_ok": {
         "from": "Datos sincronizados",
         "to": "Dados sincronizados"
+      },
+      "errors.hero_sync_offline": {
+        "from": "Sin conexión",
+        "to": "Sem conexão"
       },
       "errors.section_my_wallets": {
         "from": "Mis Billeteras",

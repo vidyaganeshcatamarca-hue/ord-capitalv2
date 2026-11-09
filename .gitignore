@@ -209,3 +209,4 @@ tests/configuracion/*
 !tests/presupuestos/barra-excedida-titila.test.js
 !tests/presupuestos/padres-separados.test.js
 !tests/appLockOffline.test.js
+!tests/conexion-badge.test.js
