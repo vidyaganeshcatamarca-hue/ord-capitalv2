@@ -1,138 +1,166 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Archive } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { haptics } from '@/lib/haptics'
 import { useToast } from '@/contexts/ToastContext'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, formatDate } from '@/lib/format'
 import { parseError, t } from '@/locales/i18n'
+import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { SobreCard } from '@/components/sobres/SobreCard'
-import { SobreDetail } from '@/components/sobres/SobreDetail'
+import { SobreDetail, sobreDesdeDetalle } from '@/components/sobres/SobreDetail'
 import { SobreFormModal } from '@/components/sobres/SobreFormModal'
-import { SobreTransferModal } from '@/components/sobres/SobreTransferModal'
-import { RespaldoFisicoPanel } from '@/components/sobres/RespaldoFisicoPanel'
-import type { BilleteraOperativa, Sobre, TransferMode } from '@/components/sobres/types'
+import { SobreAporteModal } from '@/components/sobres/SobreAporteModal'
+import { SobreRescateModal } from '@/components/sobres/SobreRescateModal'
+import {
+  normalizarBilletera,
+  normalizarDetalle,
+  normalizarSobre,
+  type BilleteraOperativa,
+  type Sobre,
+  type SobreDetalle,
+} from '@/components/sobres/types'
 import './SobresPage.css'
 
-type Mode = 'dashboard' | 'detail' | 'backup'
-
-interface TransferState {
-  mode: TransferMode
-  sobre: Sobre
-  initialAmount?: number | null
-}
-
-function normalizeSobre(row: any): Sobre {
-  return {
-    fondo_id: Number(row.fondo_id),
-    nombre: String(row.nombre ?? ''),
-    saldo_actual: Number(row.saldo_actual ?? 0),
-    monto_meta: Number(row.monto_meta ?? 0),
-    porcentaje_progreso: Number(row.porcentaje_progreso ?? 0),
-    dias_restantes: Number(row.dias_restantes ?? 0),
-    estado_alerta_key: String(row.estado_alerta_key ?? 'state_in_progress'),
-  }
-}
-
-function normalizeWallet(row: any): BilleteraOperativa {
-  return {
-    billetera_id: Number(row.billetera_id),
-    nombre: String(row.nombre ?? ''),
-    moneda: String(row.moneda ?? 'ARS'),
-    saldo_actual: Number(row.saldo_actual ?? 0),
-    es_fondo_prevision: Boolean(row.es_fondo_prevision),
-    icono: row.icono ?? null,
-  }
-}
+type Vista = 'activos' | 'archivados' | 'detalle'
 
 export function SobresPage() {
   const { showToast } = useToast()
-  const [mode, setMode] = useState<Mode>('dashboard')
-  const [sobres, setSobres] = useState<Sobre[]>([])
+
+  const [vista, setVista] = useState<Vista>('activos')
+  const [activos, setActivos] = useState<Sobre[]>([])
+  const [archivados, setArchivados] = useState<Sobre[]>([])
+  const [detalle, setDetalle] = useState<SobreDetalle | null>(null)
   const [billeteras, setBilleteras] = useState<BilleteraOperativa[]>([])
-  const [selected, setSelected] = useState<Sobre | null>(null)
-  const [formTarget, setFormTarget] = useState<Sobre | null | 'new'>(null)
-  const [transfer, setTransfer] = useState<TransferState | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const loadData = useCallback(async () => {
-    setLoading(true)
+  const [formTarget, setFormTarget] = useState<Sobre | 'nuevo' | null>(null)
+  const [aporteTarget, setAporteTarget] = useState<Sobre | null>(null)
+  const [rescateTarget, setRescateTarget] = useState<Sobre | null>(null)
+  const [archivoTarget, setArchivoTarget] = useState<Sobre | null>(null)
+
+  const cargarTodo = useCallback(async () => {
+    setCargando(true)
     setError(null)
     try {
-      const [fondosRes, billeterasRes] = await Promise.all([
-        supabase.rpc('fn_reporte_estado_fondos_prevision'),
+      const [activosRes, archivadosRes, billeterasRes] = await Promise.all([
+        supabase.rpc('fn_sobres_listar', { p_incluir_archivados: false }),
+        supabase.rpc('fn_sobres_listar', { p_incluir_archivados: true }),
         supabase.rpc('fn_obtener_billeteras_activas'),
       ])
-      if (fondosRes.error) throw fondosRes.error
+      if (activosRes.error) throw activosRes.error
+      if (archivadosRes.error) throw archivadosRes.error
       if (billeterasRes.error) throw billeterasRes.error
 
-      const baseSobres = Array.isArray(fondosRes.data) ? fondosRes.data.map(normalizeSobre) : []
-      const enriched = await Promise.all(baseSobres.map(async (sobre) => {
-        const { data, error: cuotaError } = await supabase.rpc('fn_calcular_cuota_sobre', { p_billetera_id: sobre.fondo_id })
-        if (cuotaError || !Array.isArray(data) || data.length === 0) return sobre
-        const row = data[0]
-        return {
-          ...sobre,
-          cuota_sugerida: Number(row.cuota_sugerida ?? 0),
-          monto_faltante: Number(row.monto_faltante ?? 0),
-          meses_restantes: Number(row.meses_restantes ?? 0),
-        }
-      }))
-      setSobres(enriched)
-      setBilleteras((Array.isArray(billeterasRes.data) ? billeterasRes.data : []).map(normalizeWallet))
+      const listaActivos = (Array.isArray(activosRes.data) ? activosRes.data : []).map(normalizarSobre)
+      const listaTodos = (Array.isArray(archivadosRes.data) ? archivadosRes.data : []).map(normalizarSobre)
 
-      setSelected((current) => {
-        if (!current) return null
-        return enriched.find((sobre) => sobre.fondo_id === current.fondo_id) ?? null
+      setActivos(listaActivos)
+      setArchivados(listaTodos.filter((s) => s.archivado_at !== null))
+      setBilleteras(
+        (Array.isArray(billeterasRes.data) ? billeterasRes.data : [])
+          .map(normalizarBilletera)
+          .filter((b) => !b.es_fondo_prevision),
+      )
+
+      setDetalle((actual) => {
+        if (!actual) return actual
+        const sigue = listaTodos.find((s) => s.sobre_id === actual.sobre.sobre_id)
+        return sigue ? actual : null
       })
     } catch (err) {
-      const message = parseError(err) || t('error_generic')
-      setError(message)
-      showToast(message, 'error')
+      const mensaje = parseError(err) || t('error_generic')
+      setError(mensaje)
+      showToast(mensaje, 'error')
     } finally {
-      setLoading(false)
+      setCargando(false)
     }
   }, [showToast])
 
   useEffect(() => {
-    loadData()
-  }, [loadData])
+    cargarTodo()
+  }, [cargarTodo])
 
-  const operativas = useMemo(() => billeteras.filter((wallet) => !wallet.es_fondo_prevision), [billeteras])
-  const totalSaved = useMemo(() => sobres.reduce((sum, sobre) => sum + sobre.saldo_actual, 0), [sobres])
+  const abrirDetalle = useCallback(
+    async (sobre: Sobre) => {
+      haptics.light()
+      try {
+        const { data, error: rpcError } = await supabase.rpc('fn_sobre_detalle', { p_sobre_id: sobre.sobre_id })
+        if (rpcError) throw rpcError
+        setDetalle(normalizarDetalle(data))
+        setVista('detalle')
+      } catch (err) {
+        showToast(parseError(err), 'error')
+      }
+    },
+    [showToast],
+  )
 
-  const handleSelect = (sobre: Sobre) => {
-    setSelected(sobre)
-    setMode('detail')
-    haptics.light()
-  }
+  const recargarDetalle = useCallback(async () => {
+    if (!detalle) return
+    const { data, error: rpcError } = await supabase.rpc('fn_sobre_detalle', {
+      p_sobre_id: detalle.sobre.sobre_id,
+    })
+    if (rpcError) {
+      showToast(parseError(rpcError), 'error')
+      return
+    }
+    setDetalle(normalizarDetalle(data))
+  }, [detalle, showToast])
 
-  const handleArchive = async (sobre: Sobre) => {
+  const trasCambio = useCallback(async () => {
+    await cargarTodo()
+    await recargarDetalle()
+  }, [cargarTodo, recargarDetalle])
+
+  const confirmarArchivado = useCallback(async () => {
+    if (!archivoTarget) return
     try {
-      const { error: archiveError } = await supabase.rpc('fn_archivar_fondo_prevision', { p_billetera_id: sobre.fondo_id })
-      if (archiveError) throw archiveError
-      showToast(t('sobres_archived'), 'success')
+      const { error: rpcError } = await supabase.rpc('fn_sobre_archivar', { p_sobre_id: archivoTarget.sobre_id })
+      if (rpcError) throw rpcError
+      showToast(t('sobres_archived_toast'), 'success')
       haptics.success()
-      await loadData()
+      setArchivoTarget(null)
+      setVista('activos')
+      setDetalle(null)
+      await cargarTodo()
     } catch (err) {
       showToast(parseError(err), 'error')
       haptics.error()
+      setArchivoTarget(null)
     }
-  }
+  }, [archivoTarget, cargarTodo, showToast])
 
-  if (loading) {
+  /** Totales por moneda: nunca sumar ARS y USD como si fueran una unidad (CA-29). */
+  const resumenPorMoneda = useMemo(() => {
+    const mapa = new Map<string, number>()
+    for (const sobre of activos) {
+      mapa.set(sobre.moneda, (mapa.get(sobre.moneda) ?? 0) + sobre.saldo)
+    }
+    return Array.from(mapa.entries()).sort((a, b) => b[1] - a[1])
+  }, [activos])
+
+  const cantidadTexto =
+    activos.length === 1
+      ? t('sobres_active_count_one')
+      : t('sobres_active_count', { cantidad: activos.length })
+
+  if (cargando && activos.length === 0 && archivados.length === 0) {
     return (
-      <main className="page sobres-page sobres-page--center" aria-busy="true">
+      <main className="page sobres-page sobres-page--centro" aria-busy="true">
         <div className="sobres-spinner" aria-hidden="true" />
         <p>{t('loading')}</p>
       </main>
     )
   }
 
-  if (error) {
+  if (error && activos.length === 0) {
     return (
-      <main className="page sobres-page sobres-page--center" role="alert">
+      <main className="page sobres-page sobres-page--centro" role="alert">
         <p>{error}</p>
-        <button type="button" className="sobres-primary" onClick={loadData}>{t('health_retry')}</button>
+        <button type="button" className="btn btn-primary" onClick={cargarTodo}>
+          {t('btn_retry')}
+        </button>
       </main>
     )
   }
@@ -140,74 +168,150 @@ export function SobresPage() {
   return (
     <main className="page sobres-page">
       <header className="sobres-header">
-        <div>
+        <div className="sobres-header-texto">
           <p className="sobres-kicker">{t('menu_sobres')}</p>
           <h1>{t('sobres_title')}</h1>
           <p>{t('sobres_subtitle')}</p>
         </div>
-        <div className="sobres-header-actions">
-          <button type="button" className="sobres-secondary" onClick={() => setMode(mode === 'backup' ? 'dashboard' : 'backup')}>{t('sobres_backup_title')}</button>
-          <button type="button" className="sobres-primary" onClick={() => setFormTarget('new')}>{t('sobres_new')}</button>
-        </div>
+        {vista === 'activos' && activos.length > 0 && (
+          <div className="sobres-header-acciones">
+            <button type="button" className="btn btn-secondary" onClick={() => setVista('archivados')}>
+              <Archive size={16} />
+              {t('sobres_archived_link')}
+            </button>
+            <button type="button" className="btn btn-primary" onClick={() => setFormTarget('nuevo')}>
+              {t('sobres_new')}
+            </button>
+          </div>
+        )}
       </header>
 
-      <section className="sobres-summary" aria-label={t('sobres_title')}>
-        <article>
-          <span>{t('sobres_total_saved')}</span>
-          <strong>{formatCurrency(totalSaved)}</strong>
-        </article>
-        <article>
-          <span>{t('sobres_active_goals')}</span>
-          <strong>{sobres.length}</strong>
-        </article>
-      </section>
-
-      {mode === 'backup' ? (
-        <RespaldoFisicoPanel sobres={sobres} billeteras={operativas} onSuccess={loadData} />
-      ) : mode === 'detail' && selected ? (
+      {vista === 'detalle' && detalle ? (
         <SobreDetail
-          sobre={selected}
-          onBack={() => setMode('dashboard')}
-          onProvision={(sobre) => setTransfer({ mode: 'provision', sobre, initialAmount: sobre.cuota_sugerida })}
-          onRescue={(sobre) => setTransfer({ mode: 'rescue', sobre })}
-          onEdit={(sobre) => setFormTarget(sobre)}
+          detalle={detalle}
+          onBack={() => {
+            setVista('activos')
+            setDetalle(null)
+          }}
+          onProvision={setAporteTarget}
+          onRescue={setRescateTarget}
+          onEdit={setFormTarget}
         />
-      ) : sobres.length === 0 ? (
-        <section className="sobres-empty">
+      ) : vista === 'archivados' ? (
+        <section className="sobres-archivados">
+          <div className="sobres-archivados-encabezado">
+            <h2>{t('sobres_archived_title')}</h2>
+            <button type="button" className="btn btn-secondary" onClick={() => setVista('activos')}>
+              {t('btn_back')}
+            </button>
+          </div>
+          <p className="sobres-archivados-nota">{t('sobres_archived_note')}</p>
+          {archivados.length === 0 ? (
+            <p className="sobres-vacio-texto">{t('sobres_archived_empty')}</p>
+          ) : (
+            <ul className="sobres-archivados-lista">
+              {archivados.map((sobre) => (
+                <li key={sobre.sobre_id}>
+                  <div>
+                    <strong>{sobre.nombre}</strong>
+                    <small>
+                      {sobre.archivado_at ? formatDate(sobre.archivado_at) : ''}
+                      {sobre.monto_meta !== null
+                        ? ` · ${t('sobres_goal_amount')} ${formatCurrency(sobre.monto_meta, sobre.moneda)}`
+                        : ''}
+                    </small>
+                  </div>
+                  <div className="sobres-archivados-saldo">
+                    <span>{formatCurrency(sobre.saldo, sobre.moneda)}</span>
+                    <button type="button" className="btn btn-secondary" onClick={() => abrirDetalle(sobre)}>
+                      {t('sobres_detail')}
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : activos.length === 0 ? (
+        <section className="sobres-vacio">
           <h2>{t('sobres_empty_title')}</h2>
-          <p>{t('sobres_empty_text')}</p>
-          <button type="button" className="sobres-primary" onClick={() => setFormTarget('new')}>{t('sobres_new')}</button>
+          <p className="sobres-vacio-texto">{t('sobres_empty_text')}</p>
+          <button type="button" className="btn btn-primary" onClick={() => setFormTarget('nuevo')}>
+            {t('sobres_new')}
+          </button>
+          {archivados.length > 0 && (
+            <button type="button" className="sobres-vacio-enlace" onClick={() => setVista('archivados')}>
+              {t('sobres_archived_link')}
+            </button>
+          )}
         </section>
       ) : (
-        <section className="sobres-list">
-          {sobres.map((sobre) => (
-            <SobreCard
-              key={sobre.fondo_id}
-              sobre={sobre}
-              onSelect={handleSelect}
-              onProvision={(item) => setTransfer({ mode: 'provision', sobre: item, initialAmount: item.cuota_sugerida })}
-              onRescue={(item) => setTransfer({ mode: 'rescue', sobre: item })}
-              onEdit={(item) => setFormTarget(item)}
-              onArchive={handleArchive}
-            />
-          ))}
-        </section>
+        <>
+          <section className="sobres-resumen" aria-label={t('sobres_title')}>
+            {resumenPorMoneda.map(([moneda, total]) => (
+              <article key={moneda}>
+                <span>{t('sobres_saved')}</span>
+                <strong>{formatCurrency(total, moneda)}</strong>
+                <small>{cantidadTexto}</small>
+              </article>
+            ))}
+          </section>
+
+          {archivados.length > 0 && (
+            <button type="button" className="sobres-enlace-archivados" onClick={() => setVista('archivados')}>
+              <Archive size={14} />
+              {t('sobres_archived_link')}
+            </button>
+          )}
+
+          <section className="sobres-lista">
+            {activos.map((sobre) => (
+              <SobreCard
+                key={sobre.sobre_id}
+                sobre={sobre}
+                onSelect={abrirDetalle}
+                onProvision={setAporteTarget}
+                onRescue={setRescateTarget}
+                onEdit={setFormTarget}
+                onArchive={setArchivoTarget}
+              />
+            ))}
+          </section>
+        </>
       )}
 
       <SobreFormModal
         isOpen={formTarget !== null}
-        sobre={formTarget === 'new' ? null : formTarget}
+        sobre={formTarget === null || formTarget === 'nuevo' ? null : formTarget}
+        billeteras={billeteras}
         onClose={() => setFormTarget(null)}
-        onSuccess={loadData}
+        onSuccess={trasCambio}
       />
-      <SobreTransferModal
-        isOpen={transfer !== null}
-        mode={transfer?.mode ?? 'provision'}
-        sobre={transfer?.sobre ?? null}
-        billeteras={operativas}
-        initialAmount={transfer?.initialAmount}
-        onClose={() => setTransfer(null)}
-        onSuccess={loadData}
+
+      <SobreAporteModal
+        isOpen={aporteTarget !== null}
+        sobre={aporteTarget}
+        billeteras={billeteras}
+        onClose={() => setAporteTarget(null)}
+        onSuccess={trasCambio}
+      />
+
+      <SobreRescateModal
+        isOpen={rescateTarget !== null}
+        sobre={rescateTarget}
+        onClose={() => setRescateTarget(null)}
+        onSuccess={trasCambio}
+      />
+
+      <ConfirmModal
+        isOpen={archivoTarget !== null}
+        title={t('sobres_archive_confirm_title')}
+        message={t('sobres_archive_confirm_message')}
+        confirmText={t('sobres_archive')}
+        cancelText={t('btn_cancel')}
+        type="danger"
+        onConfirm={confirmarArchivado}
+        onCancel={() => setArchivoTarget(null)}
       />
     </main>
   )

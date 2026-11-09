@@ -1,0 +1,120 @@
+/* Rescate multi-origen. La cáscara está en sobresModal.css. */
+
+.sobre-porcion {
+  align-items: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  padding: 12px;
+}
+
+.sobre-porcion-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sobre-porcion-info strong {
+  color: var(--text);
+  font-size: calc(13px * var(--font-scale));
+}
+
+.sobre-porcion-info small {
+  color: var(--text-3);
+  font-size: calc(11px * var(--font-scale));
+}
+
+.sobre-porcion-modalidad {
+  border-radius: 999px;
+  font-size: calc(10px * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  padding: 2px 8px;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.sobre-porcion-modalidad--real {
+  background: rgba(251, 191, 36, 0.16);
+  color: var(--amber);
+}
+
+.sobre-porcion-modalidad--virtual {
+  background: rgba(52, 211, 153, 0.16);
+  color: var(--mint);
+}
+
+.sobre-porcion-input {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+
+.sobre-porcion-input input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  padding: 8px 10px;
+  width: 120px;
+}
+
+.sobre-porcion-input input:focus {
+  border-color: var(--mint);
+  outline: none;
+}
+
+.sobre-porcion-todo {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: calc(11px * var(--font-scale));
+  padding: 8px 10px;
+  white-space: nowrap;
+}
+
+.sobre-porcion-todo:hover {
+  background: var(--surface);
+  color: var(--text);
+}
+
+.sobre-total {
+  align-items: baseline;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 14px;
+}
+
+.sobre-total span {
+  color: var(--text-2);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.sobre-total strong {
+  color: var(--text);
+  font-size: calc(16px * var(--font-scale));
+}
+
+.sobre-total--excede {
+  border-color: var(--coral);
+}
+
+.sobre-total--excede strong {
+  color: var(--coral);
+}
