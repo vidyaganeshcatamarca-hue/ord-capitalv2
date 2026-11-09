@@ -1,7 +1,7 @@
--- Lista de sobres activos o archivados con todo lo que pinta la tarjeta.
--- Orden inicial DF-26: meta+fecha -> meta sin fecha -> fecha sin meta -> sin ambas;
--- si el usuario reordenó a mano manda su orden y no se reordena por progreso.
--- PRD: DF-06 (meta y fecha opcionales), DF-13, DF-19, DF-26.
+-- Lista de sobres del usuario. El orden inicial agrupa por tipo: primero los
+-- proyectos con fecha, despues los proyectos sin fecha y al final los ahorros
+-- libres. Archivados al final; el orden manual manda cuando existe.
+-- PRD: replanteo DF-29.
 
 CREATE OR REPLACE FUNCTION public.fn_sobres_listar(p_incluir_archivados boolean DEFAULT false)
  RETURNS TABLE(sobre_id bigint, nombre text, moneda text, saldo numeric, monto_meta numeric, fecha_objetivo date, plan_inicio_at date, porcentaje_progreso numeric, monto_faltante numeric, dias_restantes integer, estado_key text, cuota_mensual numeric, cuota_quincenal numeric, cuota_semanal numeric, orden integer, orden_manual boolean, archivado_at timestamp with time zone, tiene_rendimiento boolean)
@@ -73,8 +73,7 @@ BEGIN
             WHEN b.orden_manual THEN b.orden
             WHEN b.monto_meta IS NOT NULL AND b.fecha_objetivo IS NOT NULL THEN 0
             WHEN b.monto_meta IS NOT NULL THEN 1
-            WHEN b.fecha_objetivo IS NOT NULL THEN 2
-            ELSE 3
+            ELSE 2
         END,
         b.orden,
         b.sobre_id;

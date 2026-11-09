@@ -23,7 +23,8 @@ const claseEstado: Record<string, string> = {
   state_fulfilled: 'sobre-estado--cumplido',
   state_overdue: 'sobre-estado--vencido',
   state_plan_started: 'sobre-estado--neutral',
-  state_no_plan: 'sobre-estado--neutral',
+  state_free_savings: 'sobre-estado--neutral',
+  state_project: 'sobre-estado--proyecto',
 }
 
 /** La barra se frena en 100 pero el texto del porcentaje puede pasarse (DF-08). */

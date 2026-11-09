@@ -54,6 +54,8 @@ CREATE TABLE IF NOT EXISTS public.p_sobres (
     CONSTRAINT p_sobres_nombre_no_vacio CHECK (length(btrim(nombre)) > 0),
     CONSTRAINT p_sobres_moneda_no_vacia  CHECK (length(btrim(moneda)) > 0),
     CONSTRAINT p_sobres_meta_positiva    CHECK (monto_meta IS NULL OR monto_meta > 0),
+    -- La fecha objetivo exige una meta: sin meta no hay plazo que medir.
+    CONSTRAINT p_sobres_fecha_requiere_meta CHECK (fecha_objetivo IS NULL OR monto_meta IS NOT NULL),
 
     -- Habilita la FK compuesta de abajo: la moneda del movimiento no puede
     -- diferir de la del sobre (DF-07, "sin conversiones").

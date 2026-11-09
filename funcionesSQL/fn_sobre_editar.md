@@ -1,7 +1,7 @@
--- Edita nombre, meta, fecha e icono. Si cambian meta o fecha, el plan se reinicia
--- HOY usando el saldo existente como base y conserva el historial.
--- La moneda no se edita: la FK compuesta (sobre_id, moneda) de los movimientos lo
--- impide igual. PRD: DF-14, §5.3, §16.2.
+-- Edicion de sobre. Quitar la meta y dejar una fecha viva se rechaza: sin meta
+-- no hay plazo que medir. Quitar meta y fecha juntas convierte el proyecto en
+-- ahorro libre. Cambiar meta o fecha reprograma el plan desde hoy.
+-- PRD: replanteo DF-29.
 
 CREATE OR REPLACE FUNCTION public.fn_sobre_editar(p_sobre_id bigint, p_nombre text DEFAULT NULL::text, p_monto_meta numeric DEFAULT NULL::numeric, p_fecha_objetivo date DEFAULT NULL::date, p_icono text DEFAULT NULL::text, p_quitar_meta boolean DEFAULT false, p_quitar_fecha boolean DEFAULT false)
  RETURNS void
@@ -37,6 +37,12 @@ BEGIN
 
     v_nueva_meta := CASE WHEN p_quitar_meta THEN NULL ELSE COALESCE(p_monto_meta, v_sobre.monto_meta) END;
     v_nueva_fecha := CASE WHEN p_quitar_fecha THEN NULL ELSE COALESCE(p_fecha_objetivo, v_sobre.fecha_objetivo) END;
+
+    -- Si el resultado quita la meta y deja una fecha, no se puede guardar:
+    -- la fecha sola no significa nada.
+    IF v_nueva_fecha IS NOT NULL AND v_nueva_meta IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_sobre_date_requires_meta", "params": {}}';
+    END IF;
 
     v_replanifica := (v_nueva_meta IS DISTINCT FROM v_sobre.monto_meta)
                   OR (v_nueva_fecha IS DISTINCT FROM v_sobre.fecha_objetivo);

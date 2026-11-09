@@ -1,11 +1,8 @@
--- Helper interno y puro: sin tablas, sin auth. Calcula progreso, faltante, dias,
--- estado del semaforo y cuotas a partir de meta, saldo, saldo base, fecha e inicio.
--- CUOTA: el plazo se convierte de dias a periodos SIN redondear (45 dias = 1,5
--- meses) y lo que se redondea es la sugerencia, sin decimales. Mensual = faltante
--- sobre dias/30; quincenal sobre dias/15; semanal sobre dias/7.
--- PRD: DF-09/DF-10 (cuota dinamica con equivalencias), DF-11 (plazo vencido),
--- DF-12/DF-13 (ritmo real vs ideal, umbrales 85/60), DF-14, DF-15 (periodo inicial).
--- No expuesto al cliente (EXECUTE revocado a anon/authenticated).
+-- Estado y cuotas del sobre. Los estados posibles son: cumplido, vencido,
+-- ahorro libre (sin meta), proyecto (con meta y sin fecha), espera inicial,
+-- y los tres semaforos de ritmo. Un ahorro libre no tiene barra; un proyecto
+-- sin fecha tiene barra y porcentaje pero no cuota ni semaforo.
+-- PRD: DF-13, replanteo DF-29.
 
 CREATE OR REPLACE FUNCTION public.fn_sobre_plan(p_meta numeric, p_saldo numeric, p_saldo_base numeric, p_fecha date, p_inicio date)
  RETURNS TABLE(porcentaje_progreso numeric, monto_faltante numeric, dias_restantes integer, estado_key text, cuota_mensual numeric, cuota_quincenal numeric, cuota_semanal numeric)
@@ -38,8 +35,12 @@ BEGIN
         estado_key := 'state_fulfilled';
     ELSIF p_fecha IS NOT NULL AND p_fecha < v_hoy THEN
         estado_key := 'state_overdue';
-    ELSIF p_meta IS NULL OR p_fecha IS NULL THEN
-        estado_key := 'state_no_plan';
+    ELSIF p_meta IS NULL THEN
+        -- Ahorro libre: reserva sin objetivo ni plazo.
+        estado_key := 'state_free_savings';
+    ELSIF p_fecha IS NULL THEN
+        -- Proyecto sin plazo: se mide por porcentaje, no por ritmo.
+        estado_key := 'state_project';
     ELSE
         v_espera := (p_inicio + CASE
             WHEN p_fecha < (p_inicio + INTERVAL '1 month') THEN INTERVAL '7 days'

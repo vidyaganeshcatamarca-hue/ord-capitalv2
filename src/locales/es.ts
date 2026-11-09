@@ -3121,6 +3121,7 @@ export const sobres = {
   error_sobre_rescue_empty: "Elegí al menos un origen para rescatar.",
   error_sobre_order_empty: "No hay sobres para ordenar.",
   error_sobre_order_mismatch: "El orden enviado no coincide con tus sobres activos.",
+  error_sobre_date_requires_meta: "Una fecha objetivo necesita una meta: sin meta no hay plazo que medir.",
   error_sobre_amount_invalid: "El importe tiene que ser mayor que cero.",
 
   // Cabecera y lista
@@ -3156,7 +3157,8 @@ export const sobres = {
   state_green: "En ritmo",
   state_yellow: "Un poco atrasado",
   state_red: "Atrasado",
-  state_no_plan: "Ahorro libre",
+  state_free_savings: "Ahorro libre",
+  state_project: "Proyecto",
 
   // Alta y edicion
   sobres_create_title: "Nuevo sobre",
@@ -3165,7 +3167,8 @@ export const sobres = {
   sobres_name_placeholder: "Vacaciones, auto, fondo de emergencia…",
   sobres_currency: "Moneda",
   sobres_target_amount: "Meta (opcional)",
-  sobres_target_date: "Fecha objetivo (opcional)",
+  sobres_target_date: "Fecha objetivo",
+  sobres_target_date_needs_goal: "Primero definí cuánto querés juntar.",
   sobres_target_hint: "La meta y la fecha son opcionales e independientes.",
   sobres_clear: "Quitar",
   sobres_initial_aporte: "Aporte inicial (opcional)",

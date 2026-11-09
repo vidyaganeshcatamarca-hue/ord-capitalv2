@@ -2792,6 +2792,7 @@ export const sobres = {
   error_sobre_rescue_empty: "Escolha pelo menos uma origem para resgatar.",
   error_sobre_order_empty: "Não há envelopes para ordenar.",
   error_sobre_order_mismatch: "A ordem enviada não corresponde aos seus envelopes ativos.",
+  error_sobre_date_requires_meta: "Uma data alvo precisa de uma meta: sem meta não há prazo a medir.",
   error_sobre_amount_invalid: "O valor precisa ser maior que zero.",
 
   sobres_title: "Minhas economias",
@@ -2824,7 +2825,8 @@ export const sobres = {
   state_green: "No ritmo",
   state_yellow: "Um pouco atrasado",
   state_red: "Atrasado",
-  state_no_plan: "Economia livre",
+  state_free_savings: "Economia livre",
+  state_project: "Projeto",
 
   sobres_create_title: "Novo envelope",
   sobres_edit_title: "Editar envelope",
@@ -2832,7 +2834,8 @@ export const sobres = {
   sobres_name_placeholder: "Férias, carro, fundo de emergência…",
   sobres_currency: "Moeda",
   sobres_target_amount: "Meta (opcional)",
-  sobres_target_date: "Data alvo (opcional)",
+  sobres_target_date: "Data alvo",
+  sobres_target_date_needs_goal: "Primeiro defina quanto quer juntar.",
   sobres_target_hint: "A meta e a data são opcionais e independentes.",
   sobres_clear: "Remover",
   sobres_initial_aporte: "Aporte inicial (opcional)",

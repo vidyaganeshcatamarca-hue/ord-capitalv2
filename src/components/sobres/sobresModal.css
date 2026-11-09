@@ -111,6 +111,17 @@
   outline: none;
 }
 
+.sobre-grupo input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.sobre-grupo-hint {
+  color: var(--text-3);
+  font-size: 12px;
+  margin: 6px 0 0;
+}
+
 .sobre-aviso {
   background: var(--surface-2);
   border: 1px solid var(--border);

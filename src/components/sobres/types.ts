@@ -12,7 +12,8 @@ export type EstadoSobre =
   | 'state_green'
   | 'state_yellow'
   | 'state_red'
-  | 'state_no_plan'
+  | 'state_free_savings'
+  | 'state_project'
 
 export interface Sobre {
   sobre_id: number
@@ -141,7 +142,7 @@ export function normalizarSobre(row: any): Sobre {
     porcentaje_progreso: numeroONull(row.porcentaje_progreso),
     monto_faltante: numeroONull(row.monto_faltante),
     dias_restantes: numeroONull(row.dias_restantes),
-    estado_key: (row.estado_key ?? 'state_no_plan') as EstadoSobre,
+    estado_key: (row.estado_key ?? 'state_free_savings') as EstadoSobre,
     cuota_mensual: numeroONull(row.cuota_mensual),
     cuota_quincenal: numeroONull(row.cuota_quincenal),
     cuota_semanal: numeroONull(row.cuota_semanal),
@@ -195,7 +196,7 @@ export function normalizarDetalle(data: any): SobreDetalle {
       porcentaje_progreso: numeroONull(plan.porcentaje_progreso),
       monto_faltante: numeroONull(plan.monto_faltante),
       dias_restantes: numeroONull(plan.dias_restantes),
-      estado_key: (plan.estado_key ?? 'state_no_plan') as EstadoSobre,
+      estado_key: (plan.estado_key ?? 'state_free_savings') as EstadoSobre,
       cuota_mensual: numeroONull(plan.cuota_mensual),
       cuota_quincenal: numeroONull(plan.cuota_quincenal),
       cuota_semanal: numeroONull(plan.cuota_semanal),

@@ -1,7 +1,9 @@
--- Alta de sobre. Sólo el nombre es obligatorio; meta y fecha son opcionales.
+-- Alta de sobre. El nombre y la moneda son obligatorios. Hay dos formas:
+-- ahorro libre (sin meta) y proyecto (con meta, y fecha opcional). La fecha
+-- sola no existe: pedirla sin meta se rechaza con error_sobre_date_requires_meta.
 -- El aporte inicial es todo o nada y descuenta la billetera en las dos
 -- modalidades. En plan Free no se crean sobres.
--- PRD: DF-06, DF-07, DF-25, DF-31.
+-- PRD: DF-06, DF-07, DF-25, DF-31; replanteo DF-29.
 
 CREATE OR REPLACE FUNCTION public.fn_sobre_crear(p_nombre text, p_moneda text, p_monto_meta numeric DEFAULT NULL::numeric, p_fecha_objetivo date DEFAULT NULL::date, p_aporte_billetera_id bigint DEFAULT NULL::bigint, p_aporte_importe numeric DEFAULT NULL::numeric, p_aporte_modalidad text DEFAULT NULL::text, p_aporte_genera_rendimiento boolean DEFAULT false, p_icono text DEFAULT 'ðŸ’°'::text)
  RETURNS bigint
@@ -15,6 +17,7 @@ DECLARE
     v_sobre_id bigint;
     v_orden integer;
     v_wallet public.p_billeteras;
+    v_ya_reservado numeric;
     v_caja_id bigint;
 BEGIN
     SELECT u.user_id, u.plan_tipo INTO v_user_id, v_plan
@@ -33,6 +36,10 @@ BEGIN
     END IF;
     IF p_monto_meta IS NOT NULL AND p_monto_meta <= 0 THEN
         RAISE EXCEPTION '{"key": "error_sobre_meta_invalid", "params": {}}';
+    END IF;
+    -- Una fecha sin meta no existe: no hay objetivo que cumplir ni plazo que medir.
+    IF p_fecha_objetivo IS NOT NULL AND p_monto_meta IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_sobre_date_requires_meta", "params": {}}';
     END IF;
 
     -- El aporte inicial, si viene, se valida ANTES de crear nada (Â§16.9).
@@ -58,10 +65,24 @@ BEGIN
             RAISE EXCEPTION '{"key": "error_sobre_currency_mismatch", "params": {"sobre": "{{sobre}}", "billetera": "{{billetera}}"}}';
         END IF;
 
-        -- El saldo de la billetera ya es el disponible: no se descuentan
-        -- reservas previas.
-        IF v_wallet.saldo_actual < p_aporte_importe THEN
-            RAISE EXCEPTION '{"key": "error_sobre_wallet_insufficient", "params": {"billetera": "{{billetera}}"}}';
+        -- Virtual: sÃ³lo se aparta lo que sigue libre en la billetera, descontando
+        -- lo que otros sobres ya reservaron de la misma billetera.
+        -- Real: la plata sale de la billetera, asÃ­ que hace falta el saldo.
+        IF p_aporte_modalidad = 'virtual' THEN
+            SELECT COALESCE(SUM(CASE WHEN m.tipo = 'rescate' THEN -m.importe ELSE m.importe END), 0)
+            INTO v_ya_reservado
+            FROM public.p_sobre_movimientos m
+            WHERE m.billetera_id = p_aporte_billetera_id
+              AND m.modalidad = 'virtual'
+              AND m.moneda = p_moneda;
+
+            IF v_wallet.saldo_actual - v_ya_reservado < p_aporte_importe THEN
+                RAISE EXCEPTION '{"key": "error_sobre_wallet_insufficient", "params": {"billetera": "{{billetera}}"}}';
+            END IF;
+        ELSE
+            IF v_wallet.saldo_actual < p_aporte_importe THEN
+                RAISE EXCEPTION '{"key": "error_sobre_wallet_insufficient", "params": {"billetera": "{{billetera}}"}}';
+            END IF;
         END IF;
     END IF;
 
@@ -73,10 +94,12 @@ BEGIN
     RETURNING sobre_id INTO v_sobre_id;
 
     IF p_aporte_billetera_id IS NOT NULL THEN
-        v_caja_id := public.fn_sobre_pata_billetera(
-            v_user_id, p_aporte_billetera_id, p_moneda, p_aporte_importe, true,
-            'savings_envelope_aporte_real', v_sobre_id, btrim(p_nombre)
-        );
+        IF p_aporte_modalidad = 'real' THEN
+            v_caja_id := public.fn_sobre_pata_billetera(
+                v_user_id, p_aporte_billetera_id, p_moneda, p_aporte_importe, true,
+                'savings_envelope_aporte_real', v_sobre_id, btrim(p_nombre)
+            );
+        END IF;
 
         INSERT INTO public.p_sobre_movimientos (
             sobre_id, user_id, tipo, importe, moneda, billetera_id, modalidad,

@@ -200,7 +200,11 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
               min="0"
               step="0.01"
               value={meta}
-              onChange={(e) => setMeta(e.target.value)}
+              onChange={(e) => {
+                setMeta(e.target.value)
+                // Sin meta no hay plazo: la fecha se cae junto con ella.
+                if (e.target.value.trim() === '') setFecha('')
+              }}
               placeholder="0"
             />
           </div>
@@ -211,8 +215,12 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
               id="sobre-fecha"
               type="date"
               value={fecha}
+              disabled={meta.trim() === ''}
               onChange={(e) => setFecha(e.target.value)}
             />
+            {meta.trim() === '' && (
+              <p className="sobre-grupo-hint">{t('sobres_target_date_needs_goal')}</p>
+            )}
           </div>
 
           {!esEdicion && (

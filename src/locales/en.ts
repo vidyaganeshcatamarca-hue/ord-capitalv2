@@ -2792,6 +2792,7 @@ export const sobres = {
   error_sobre_rescue_empty: "Pick at least one origin to withdraw from.",
   error_sobre_order_empty: "There are no envelopes to sort.",
   error_sobre_order_mismatch: "The order you sent does not match your active envelopes.",
+  error_sobre_date_requires_meta: "A target date needs a goal: without a goal there is no deadline to measure.",
   error_sobre_amount_invalid: "The amount must be greater than zero.",
 
   sobres_title: "My savings",
@@ -2824,7 +2825,8 @@ export const sobres = {
   state_green: "On track",
   state_yellow: "A bit behind",
   state_red: "Behind",
-  state_no_plan: "Free savings",
+  state_free_savings: "Free savings",
+  state_project: "Project",
 
   sobres_create_title: "New envelope",
   sobres_edit_title: "Edit envelope",
@@ -2832,7 +2834,8 @@ export const sobres = {
   sobres_name_placeholder: "Vacation, car, emergency fund…",
   sobres_currency: "Currency",
   sobres_target_amount: "Goal (optional)",
-  sobres_target_date: "Target date (optional)",
+  sobres_target_date: "Target date",
+  sobres_target_date_needs_goal: "Set the amount you want to reach first.",
   sobres_target_hint: "The goal and the date are optional and independent.",
   sobres_clear: "Clear",
   sobres_initial_aporte: "Initial contribution (optional)",
