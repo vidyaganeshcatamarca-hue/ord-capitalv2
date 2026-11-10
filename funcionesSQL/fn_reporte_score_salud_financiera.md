@@ -38,9 +38,15 @@ BEGIN
         v_score_deuda := GREATEST(0, 100 - (v_deuda_total / 10000)); 
     END IF;
 
-    SELECT COALESCE(SUM(monto_meta), 0), COALESCE(SUM(saldo_actual), 0) 
+        -- El ahorro se mide con los sobres que tienen meta: la meta declarada contra
+    -- el saldo vivo del sobre. El ratio no depende de la moneda, asi que no hay
+    -- que convertir nada. Los archivados no cuentan (se archivan en cero).
+    SELECT COALESCE(SUM(s.monto_meta), 0), COALESCE(SUM(public.fn_sobre_saldo(s.sobre_id)), 0)
     INTO v_meta_ahorro, v_actual_ahorro
-    FROM p_billeteras WHERE user_id = v_user_id AND es_fondo_prevision = true AND activa = true;
+    FROM public.p_sobres s
+    WHERE s.user_id = v_user_id
+      AND s.archivado_at IS NULL
+      AND s.monto_meta IS NOT NULL;
 
     IF v_meta_ahorro > 0 THEN
         v_score_ahorro := LEAST(100, ROUND((v_actual_ahorro / v_meta_ahorro) * 100));
@@ -73,4 +79,4 @@ BEGIN
         )
     );
 END;
-$function$
+$function$;
