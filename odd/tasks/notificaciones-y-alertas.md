@@ -52,3 +52,36 @@ Es un tercer mecanismo, independiente de los dos anteriores: es el FAB con icono
 2. **Explicar el mecanismo completo al dueño**, sin tecnicismos, con el ejemplo de la captura: por qué el badge decía 2 y no 8, y por qué "llega al instante" cuando en realidad no llega nada.
 3. **Decidir qué pasa con `p_notificaciones_enviadas`**: hoy es una tabla muerta con RPC de lectura, campana y preferencias funcionando contra el vacío. O se le construye un productor, o se retira.
 4. **Avisos de vencimiento de sobres** (definición 32, L12 del documento de ahorro): dependen de resolver el punto 3, porque no hay productor donde enchufarlos.
+
+## Eventos ratificados por el dueño (2026-11-10)
+
+Lista cerrada uno por uno sobre las 12 categorías que ya declara `p_notificaciones_config`.
+
+### Van
+
+| Categoría | Evento |
+|---|---|
+| `cat_cuarentena` | entró una transacción a cuarentena, venga de gasto recurrente, de voz o de OCR |
+| `cat_cuarentena` | una cuenta quedó desconciliada |
+| `cat_vencimientos` | vence una tarjeta, **y también** el aviso previo cercano a esa fecha |
+| `cat_deuda` | vence una deuda · vence el plazo para cobrar o recuperar un préstamo que dimos |
+| `cat_presupuesto` | en base cero, un sobre quedó en rojo |
+| `cat_ahorro` | falta poco para la fecha y estamos lejos del objetivo · se alcanzó la meta |
+| `cat_inversiones` | venció un plazo fijo |
+| `cat_hogar` | alguien **intenta** vincularse al hogar |
+
+### No van
+
+| Categoría | Motivo del dueño |
+|---|---|
+| cuenta que pasó a rojo | **las cuentas no pueden ir a negativo**, así que ese aviso no debería existir |
+| `cat_recurrentes` | los gastos recurrentes caen en cuarentena, y es ahí donde el sistema ve si hay con qué pagarlos |
+| `cat_score` | el score no hace falta mostrarlo |
+
+### Sin definir todavía
+
+- `cat_resumen_semanal` y `cat_resumen_mensual`: el dueño no las nombró. El agente recomienda **no** hacerlas (material típico del usuario que deja de leer avisos), o dejarlas apagadas por defecto.
+
+## Cabo suelto que abre la decisión de "rojo"
+
+Si las cuentas no pueden ir a negativo, `fn_reporte_alertas_home` está devolviendo `v_billeteras_rojas` con algún significado distinto —la captura del dueño mostraba **4**— o hay datos en un estado que no debería existir. Hay que mirar qué mide exactamente ese contador antes de descartar la categoría.
