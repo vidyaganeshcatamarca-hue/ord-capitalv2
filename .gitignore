@@ -28,7 +28,7 @@ docs/
 docs/*
 !docs/i18n-toolchain.md
 start_info/
-supabase/
+supabase/.temp/
 testeo/
 tests/
 !tests/
