@@ -164,14 +164,14 @@ for (const lang of SUPPORTED) {
 
       if (esPlaceholders.length === 0 && dictPlaceholders.length === 0) continue
 
-      if (esPlaceholders.length !== dictPlaceholders.length) {
-        mismatched.push(
-          `${key}\n    es: [${esPlaceholders.join(', ')}]\n    ${lang}: [${dictPlaceholders.join(', ')}]`
-        )
-        continue
-      }
-      // Order matters as much as the set: the value is rendered in sequence.
-      if (esPlaceholders.join('|') !== dictPlaceholders.join('|')) {
+      // Compare the set of names, not their order: t() replaces each {name} where
+      // it appears (raw.replace(/\{(\w+)\}/g, ...)), so reordering a placeholder
+      // is a legitimate translation, not a broken one — English dates lead with the
+      // month. What must never happen is a placeholder that disappears, appears out
+      // of nowhere or gets renamed, because the caller would render a literal
+      // {name} on screen.
+      const sortedNames = (list) => [...list].sort().join('|')
+      if (sortedNames(esPlaceholders) !== sortedNames(dictPlaceholders)) {
         mismatched.push(
           `${key}\n    es: [${esPlaceholders.join(', ')}]\n    ${lang}: [${dictPlaceholders.join(', ')}]`
         )

@@ -124,6 +124,25 @@ export type StatusRefreshMode = 'arm' | 'silent'
  * Only an `arm` refresh on an enforcing state locks. A `silent` refresh never
  * does, whatever the server says, so a successful resolution stays resolved.
  */
+/**
+ * S9 says an unknown server value fails closed, and that stays true. But a request
+ * that got no answer is not an unknown value: offline the RPC always throws.
+ *
+ * Answering that with 'activa' invented a PIN the user never set, so a lost
+ * connection opened a keypad nobody could satisfy (owner, 2026-11-02: "simplemente
+ * debe aparecer la aplicación sin conexión, pero no bloquearse"). Keep whatever the
+ * server last told us, and only a known enforcing state arms the lock.
+ */
+export function stateAfterStatusError(previous: PinServerState | null): {
+  estado: PinServerState | null
+  arm: boolean
+} {
+  return {
+    estado: previous,
+    arm: previous === 'activa' || previous === 'en_cooldown',
+  }
+}
+
 export function statusRefreshArmsLock(
   mode: StatusRefreshMode,
   estado: PinServerState | string | null | undefined,

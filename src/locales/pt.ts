@@ -95,6 +95,7 @@ export const errors = {
   hero_title_safe_to_spend: "Safe-to-Spend",
   hero_title_total: "Total",
   hero_sync_ok: "Dados sincronizados",
+  hero_sync_offline: "Sem conexão",
   section_my_wallets: "Minhas Carteiras",
   horizontal_scroll_hint: "<- Deslize para ver mais ->",
   wallets_empty: "Você ainda não tem carteiras criadas.",
@@ -242,8 +243,8 @@ export const errors = {
   card_archive_confirm: 'Arquivar "{name}"? Ele sai da sua lista, mas nada é apagado: você pode reativá-lo quando quiser em "Ver arquivados".',
   cards_debt_usd_includes: 'inclui {monto} em dólares',
   cards_debt_usd_unconverted: '{monto} em dólares sem converter (falta a cotação)',
-  card_cmp_usd_line: 'Em dólares: {anterior} → {actual}',
-  card_cmp_usd_line_unconverted: 'Em dólares, sem converter: {anterior} → {actual}',
+  card_cmp_usd_line: 'Em dólares: anterior {anterior} → atual {actual}',
+  card_cmp_usd_line_unconverted: 'Em dólares, sem converter: anterior {anterior} → atual {actual}',
   card_legacy_created_toast_one: '{cantidad} parcela carregada, começa a correr em {fecha}',
   card_edit_tooltip: 'Editar',
   card_activate_btn: 'Ativar',
@@ -784,7 +785,14 @@ export const voice = {
   not_sent_hint: "O áudio não foi enviado.",
   seconds_left: "{seconds} s restantes",
   close: "Fechar",
-  fab_a11y: "{count} transações por voz pendentes de revisar",
+};
+
+/**
+ * Home quarantine notice: one entry point for every pending row, whatever its
+ * origin (OCR or voice). The count is the whole list the inbox opens.
+ */
+export const quarantine = {
+  fab_a11y: "Quarentena: {count} transações pendentes de revisar",
 };
 
 // === OCR DE COMPROVANTES (PRD definitivo) ===
@@ -875,7 +883,6 @@ export const ocr = {
   history_status_approved: "Aprovado",
   history_status_rejected: "Recusado",
   history_open: "Ver na quarentena",
-  fab_a11y: "Comprovantes OCR pendentes: {count}",
   save_draft: "Salvar",
   saving: "Salvando...",
   saved: "Rascunho salvo.",
@@ -2325,6 +2332,7 @@ export const inversiones = {
   step_category: "Categoria",
   placeholder_search_category: "Buscar categoria...",
   btn_see_all_categories: "Ver todas as categorias",
+  add_move_see_all: "Ver todas",
   title_add_subcategory: "Adicionar subcategoria",
   label_category: "Categoria",
   step_when: "Quando?",

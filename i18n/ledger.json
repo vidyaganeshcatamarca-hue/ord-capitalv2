@@ -14,6 +14,10 @@
         "from": "El campo {field} es obligatorio.",
         "to": "The {field} field is required."
       },
+      "errors.error_invalid_day_range": {
+        "from": "{field} tiene que ser un número entero entre 1 y 31.",
+        "to": "{field} must be a whole number between 1 and 31."
+      },
       "errors.card_load_legacy_cuotas_btn": {
         "from": "Cargar cuotas anteriores",
         "to": "Load previous installments"
@@ -166,6 +170,10 @@
         "from": "La cuenta seleccionada ya no está disponible.",
         "to": "The selected account is no longer available."
       },
+      "errors.error_card_not_found": {
+        "from": "No encontramos esa tarjeta. Recargá la pantalla e intentá de nuevo.",
+        "to": "We could not find that card. Reload the screen and try again."
+      },
       "errors.error_quarantine_no_wallet": {
         "from": "El movimiento no tiene cuenta asignada. Editalo antes de aprobarlo.",
         "to": "The transaction has no account assigned. Edit it before approving it."
@@ -317,6 +325,10 @@
       "errors.hero_sync_ok": {
         "from": "Datos sincronizados",
         "to": "Data synced"
+      },
+      "errors.hero_sync_offline": {
+        "from": "Sin conexión",
+        "to": "No connection"
       },
       "errors.section_my_wallets": {
         "from": "Mis Billeteras",
@@ -750,14 +762,6 @@
         "from": "Color de la tarjeta",
         "to": "Card color"
       },
-      "errors.card_form_recargo_dolar_label": {
-        "from": "Recargo compras en USD (%)",
-        "to": "Surcharge for USD purchases (%)"
-      },
-      "errors.card_form_recargo_dolar_placeholder": {
-        "from": "Ej: 30",
-        "to": "e.g. 30"
-      },
       "errors.btn_saving": {
         "from": "Guardando...",
         "to": "Saving..."
@@ -874,6 +878,26 @@
         "from": "Elegí la cuenta desde la que pagás.",
         "to": "Choose the account you are paying from."
       },
+      "errors.pay_blocked_reason_no_wallet_local": {
+        "from": "Falta elegir la cuenta del pago en moneda local.",
+        "to": "Pick the account for the local-currency payment."
+      },
+      "errors.pay_blocked_reason_no_wallet_usd": {
+        "from": "Falta elegir la cuenta del pago en dólares.",
+        "to": "Pick the account for the US dollar payment."
+      },
+      "errors.pay_blocked_reason_no_wallet_both": {
+        "from": "Falta elegir la cuenta en los dos tramos: moneda local y dólares.",
+        "to": "Pick an account in both parts: local currency and US dollars."
+      },
+      "errors.pay_real_statement_shortfall": {
+        "from": "El pago no cubre el resumen real del banco: faltan {falta}.",
+        "to": "The payment does not cover the actual bank statement: {falta} missing."
+      },
+      "errors.error_resumen_real_no_cubierto": {
+        "from": "El pago no cubre el resumen real del banco. Pagá el monto que declaraste.",
+        "to": "The payment does not cover the actual bank statement. Pay the amount you declared."
+      },
       "errors.error_card_has_commitments": {
         "from": "No podés archivar esta tarjeta porque tiene cuotas o compromisos pendientes. Terminá de pagarlos y volvé a intentar.",
         "to": "You cannot archive this card because it still has pending installments or commitments. Pay them off and try again."
@@ -891,12 +915,12 @@
         "to": "{monto} in dollars not converted (rate missing)"
       },
       "errors.card_cmp_usd_line": {
-        "from": "En dólares: {anterior} → {actual}",
-        "to": "In dollars: {anterior} → {actual}"
+        "from": "En dólares: anterior {anterior} → actual {actual}",
+        "to": "In dollars: previous {anterior} → current {actual}"
       },
       "errors.card_cmp_usd_line_unconverted": {
-        "from": "En dólares, sin convertir: {anterior} → {actual}",
-        "to": "In dollars, not converted: {anterior} → {actual}"
+        "from": "En dólares, sin convertir: anterior {anterior} → actual {actual}",
+        "to": "In dollars, not converted: previous {anterior} → current {actual}"
       },
       "errors.card_legacy_created_toast_one": {
         "from": "{cantidad} cuota cargada, empieza a correr en {fecha}",
@@ -1075,8 +1099,8 @@
         "to": "US$"
       },
       "errors.pay_resumen_usd_equiv_preview": {
-        "from": "Equivale a {monto} USD",
-        "to": "Equals {monto} USD"
+        "from": "Equivale a {monto}",
+        "to": "Equals {monto}"
       },
       "errors.pay_resumen_usd_equiv_suggested": {
         "from": "Sugerido: {ars} (equivale a US$ {usd})",
@@ -1129,10 +1153,6 @@
       "errors.pay_resumen_real_hint": {
         "from": "Se registra un ajuste por la diferencia, sin tocar tus cuotas.",
         "to": "An adjustment is recorded for the difference, without touching your installments."
-      },
-      "errors.pay_resumen_real_falta": {
-        "from": "Te faltan pagar {falta} del resumen real. Si no los pagás ahora, quedan imputados como Diferencia Tarjeta.",
-        "to": "You still owe {falta} of the actual statement. If you do not pay it now, it is recorded as Card Difference."
       },
       "errors.pay_resumen_real_dif": {
         "from": "Ajuste: {monto}",
@@ -3034,9 +3054,9 @@
         "from": "Cerrar",
         "to": "Close"
       },
-      "voice.fab_a11y": {
-        "from": "{count} movimientos por voz pendientes de revisar",
-        "to": "{count} voice transactions pending review"
+      "quarantine.fab_a11y": {
+        "from": "Cuarentena: {count} movimientos pendientes de revisar",
+        "to": "Quarantine: {count} transactions pending review"
       },
       "ocr.capture_title": {
         "from": "Cargar ticket con OCR",
@@ -3107,8 +3127,8 @@
         "to": "We already had this receipt: we continue with the same processing."
       },
       "ocr.capture_keep_using": {
-        "from": "Seguir usando ORD",
-        "to": "Keep using ORD"
+        "from": "Continuar",
+        "to": "Continue"
       },
       "ocr.capture_retry": {
         "from": "Reintentar envío",
@@ -3207,8 +3227,8 @@
         "to": "We could not send the receipt. Try again."
       },
       "ocr.error_network": {
-        "from": "Se cortó la conexión. Probá de nuevo.",
-        "to": "The connection dropped. Try again."
+        "from": "No pudimos contactar el servicio de tickets. Probá de nuevo.",
+        "to": "We couldn't reach the ticket service. Try again."
       },
       "ocr.error_unauthorized": {
         "from": "Tu sesión venció. Volvé a iniciar sesión.",
@@ -3227,8 +3247,8 @@
         "to": "An unexpected error occurred."
       },
       "ocr.quarantine_title": {
-        "from": "Ticket OCR",
-        "to": "OCR receipt"
+        "from": "Editar",
+        "to": "Edit"
       },
       "ocr.ticket_total": {
         "from": "Total del ticket",
@@ -3319,8 +3339,8 @@
         "to": "The system flagged data to review."
       },
       "ocr.view_ticket": {
-        "from": "Ver ticket",
-        "to": "View receipt"
+        "from": "Ver imagen",
+        "to": "View image"
       },
       "ocr.image_unavailable": {
         "from": "Imagen original no disponible en este dispositivo.",
@@ -3329,6 +3349,58 @@
       "ocr.image_counter": {
         "from": "Imagen {index} de {total}",
         "to": "Image {index} of {total}"
+      },
+      "ocr.zoom_in": {
+        "from": "Acercar",
+        "to": "Zoom in"
+      },
+      "ocr.zoom_out": {
+        "from": "Alejar",
+        "to": "Zoom out"
+      },
+      "ocr.zoom_reset": {
+        "from": "Tamaño original",
+        "to": "Reset zoom"
+      },
+      "ocr.zoom_hint": {
+        "from": "Zoom de la imagen",
+        "to": "Image zoom"
+      },
+      "ocr.history_title": {
+        "from": "Últimos envíos",
+        "to": "Recent uploads"
+      },
+      "ocr.history_empty": {
+        "from": "Todavía no enviaste ningún ticket.",
+        "to": "You haven't sent any ticket yet."
+      },
+      "ocr.history_images": {
+        "from": "{count} imagen(es)",
+        "to": "{count} image(s)"
+      },
+      "ocr.history_status_processing": {
+        "from": "Procesando",
+        "to": "Processing"
+      },
+      "ocr.history_status_classified": {
+        "from": "Clasificado",
+        "to": "Classified"
+      },
+      "ocr.history_status_quarantine": {
+        "from": "Para aprobar",
+        "to": "Ready to approve"
+      },
+      "ocr.history_status_approved": {
+        "from": "Aprobado",
+        "to": "Approved"
+      },
+      "ocr.history_status_rejected": {
+        "from": "Rechazado",
+        "to": "Rejected"
+      },
+      "ocr.history_open": {
+        "from": "Ver en cuarentena",
+        "to": "Open in quarantine"
       },
       "ocr.save_draft": {
         "from": "Guardar",
@@ -3343,16 +3415,8 @@
         "to": "Draft saved."
       },
       "ocr.confirm_ticket": {
-        "from": "Confirmar ticket",
-        "to": "Confirm receipt"
-      },
-      "ocr.confirm_title": {
-        "from": "Confirmar ticket OCR",
-        "to": "Confirm OCR receipt"
-      },
-      "ocr.confirm_message": {
-        "from": "Se van a crear {count} movimiento(s) por un total de {total}. Esta acción no se puede deshacer.",
-        "to": "{count} transaction(s) will be created for a total of {total}. This cannot be undone."
+        "from": "Aprobar",
+        "to": "Approve"
       },
       "ocr.confirmed": {
         "from": "Ticket confirmado: {count} movimiento(s) creado(s).",
@@ -5466,6 +5530,30 @@
         "from": "Próximamente",
         "to": "Coming soon"
       },
+      "recurrentes.recurrentes_modal_nuevo_ingreso": {
+        "from": "Nuevo ingreso recurrente",
+        "to": "New recurring income"
+      },
+      "recurrentes.recurrentes_modal_editar_ingreso": {
+        "from": "Editar ingreso recurrente",
+        "to": "Edit recurring income"
+      },
+      "recurrentes.recurrentes_campo_fuente_ingreso": {
+        "from": "Fuente de ingreso (opcional)",
+        "to": "Income source (optional)"
+      },
+      "recurrentes.recurrentes_elegir_fuente_ingreso": {
+        "from": "Elegí una fuente",
+        "to": "Pick a source"
+      },
+      "recurrentes.recurrentes_campo_billetera_destino": {
+        "from": "Billetera donde entra",
+        "to": "Wallet it lands in"
+      },
+      "recurrentes.recurrentes_ingreso_vacio": {
+        "from": "Sueldos, alquileres cobrados y otras entradas fijas van acá. El día que corresponde, la ocurrencia aparece en la bandeja y la aprobás desde ahí.",
+        "to": "Salaries, collected rent and other fixed inflows live here. On the due date the occurrence lands in the inbox and you approve it from there."
+      },
       "recurrentes.recurrentes_nuevo_egreso": {
         "from": "Nuevo egreso recurrente",
         "to": "New recurring expense"
@@ -5518,13 +5606,13 @@
         "from": "Borrar gasto recurrente",
         "to": "Delete recurring expense"
       },
-      "recurrentes.recurrentes_borrar_cuerpo_one": {
-        "from": "¿Borrar «{nombre}» definitivamente? Se va a perder 1 ocurrencia pendiente de la bandeja. Los movimientos ya registrados no se tocan. Esta acción no se puede deshacer.",
-        "to": "Delete «{nombre}» permanently? 1 pending occurrence will be lost from the tray. Already recorded movements are not affected. This action cannot be undone."
+      "recurrentes.recurrentes_borrar_titulo_ingreso": {
+        "from": "Borrar ingreso recurrente",
+        "to": "Delete recurring income"
       },
-      "recurrentes.recurrentes_borrar_cuerpo_other": {
-        "from": "¿Borrar «{nombre}» definitivamente? Se van a perder {count} ocurrencias pendientes de la bandeja. Los movimientos ya registrados no se tocan. Esta acción no se puede deshacer.",
-        "to": "Delete «{nombre}» permanently? {count} pending occurrences will be lost from the tray. Already recorded movements are not affected. This action cannot be undone."
+      "recurrentes.recurrentes_borrar_cuerpo": {
+        "from": "¿Borrar «{nombre}» definitivamente? Esta acción no se puede deshacer.",
+        "to": "Delete «{nombre}» permanently? This action cannot be undone."
       },
       "recurrentes.recurrentes_estado_activo": {
         "from": "ACTIVO",
@@ -5550,13 +5638,13 @@
         "from": "sin fechas elegidas",
         "to": "no dates selected"
       },
-      "recurrentes.recurrentes_sin_billetera": {
-        "from": "Sin billetera (elegila después)",
-        "to": "No wallet (choose it later)"
-      },
       "recurrentes.recurrentes_dias_del_mes": {
         "from": "días {dias}",
         "to": "{dias} days"
+      },
+      "recurrentes.recurrentes_por_cierre_tarjeta": {
+        "from": "según el cierre de la tarjeta",
+        "to": "per the card closing date"
       },
       "recurrentes.recurrentes_modo_label": {
         "from": "¿Cuándo se repite?",
@@ -5575,16 +5663,12 @@
         "to": "Yearly"
       },
       "recurrentes.recurrentes_semanal_hint": {
-        "from": "Elegí hasta 3 días de la semana.",
-        "to": "Pick up to 3 days of the week."
+        "from": "Elegí los días de la semana en que se repite.",
+        "to": "Pick the days of the week it repeats on."
       },
       "recurrentes.recurrentes_mensual_hint": {
-        "from": "Elegí hasta 3 días del mes. Si elegís 31 y el mes es más corto, cae el último día.",
-        "to": "Pick up to 3 days of the month. If you pick 31 and the month is shorter, it falls on the last day."
-      },
-      "recurrentes.recurrentes_mensual_preview": {
-        "from": "En febrero caerían los días {fechas}.",
-        "to": "In February they would fall on the {fechas}."
+        "from": "Elegí los días del mes en que se repite.",
+        "to": "Pick the days of the month it repeats on."
       },
       "recurrentes.recurrentes_anual_hint": {
         "from": "Elegí una o más fechas del año.",
@@ -5622,29 +5706,29 @@
         "from": "Monto",
         "to": "Amount"
       },
-      "recurrentes.recurrentes_campo_variabilidad": {
-        "from": "Variabilidad",
-        "to": "Variability"
-      },
-      "recurrentes.recurrentes_variabilidad_fijo": {
-        "from": "Monto fijo",
-        "to": "Fixed amount"
-      },
-      "recurrentes.recurrentes_variabilidad_promedio": {
-        "from": "Promedio de los últimos 3 meses",
-        "to": "Average of the last 3 months"
-      },
       "recurrentes.recurrentes_campo_billetera": {
-        "from": "Billetera por defecto",
-        "to": "Default wallet"
+        "from": "Billetera de origen",
+        "to": "Source wallet"
+      },
+      "recurrentes.recurrentes_elegir_billetera": {
+        "from": "Elegí una billetera",
+        "to": "Pick a wallet"
       },
       "recurrentes.recurrentes_error_semanal": {
-        "from": "Elegí entre 1 y 3 días de la semana.",
-        "to": "Pick between 1 and 3 days of the week."
+        "from": "Elegí al menos un día de la semana.",
+        "to": "Pick at least one day of the week."
       },
       "recurrentes.recurrentes_error_mensual": {
-        "from": "Elegí entre 1 y 3 días del mes.",
-        "to": "Pick between 1 and 3 days of the month."
+        "from": "Elegí al menos un día del mes.",
+        "to": "Pick at least one day of the month."
+      },
+      "recurrentes.recurrentes_error_billetera": {
+        "from": "Elegí la billetera con la que se paga.",
+        "to": "Pick the wallet it is paid with."
+      },
+      "recurrentes.recurrentes_error_billetera_destino": {
+        "from": "Elegí la billetera donde entra el dinero.",
+        "to": "Pick the wallet the money lands in."
       },
       "recurrentes.recurrentes_error_anual": {
         "from": "Elegí al menos una fecha del año.",
@@ -5705,6 +5789,10 @@
       "recurrentes.recurrentes_unica_el": {
         "from": "única vez el {fecha}",
         "to": "one time on {fecha}"
+      },
+      "recurrentes.recurrentes_elegir_fecha": {
+        "from": "Elegí una fecha",
+        "to": "Pick a date"
       },
       "recurrentes.recurrentes_campo_fecha_unica": {
         "from": "Fecha de la ocurrencia",
@@ -8591,8 +8679,8 @@
         "to": "Group total"
       },
       "inversiones.budget_stat_group_free": {
-        "from": "Libre grupo:",
-        "to": "Group free:"
+        "from": "Libre",
+        "to": "Free"
       },
       "inversiones.budget_group_expand": {
         "from": "Mostrar subcategorías",
@@ -8611,16 +8699,16 @@
         "to": "You cannot lower the group below what is allocated. It has {repartido}: cut {recortar} first."
       },
       "inversiones.budget_stat_assigned": {
-        "from": "Asig:",
-        "to": "Assigned:"
+        "from": "Asignado",
+        "to": "Assigned"
       },
       "inversiones.budget_stat_spent": {
-        "from": "Gast:",
-        "to": "Spent:"
+        "from": "Gastado",
+        "to": "Spent"
       },
       "inversiones.budget_stat_progress": {
-        "from": "Avance:",
-        "to": "Progress:"
+        "from": "Avance",
+        "to": "Progress"
       },
       "inversiones.budget_total_must_be_100": {
         "from": "⚠️ Total: {total}% — Debe ser exactamente 100%",
@@ -8997,6 +9085,10 @@
       "inversiones.btn_see_all_categories": {
         "from": "Ver todas las categorías",
         "to": "See all categories"
+      },
+      "inversiones.add_move_see_all": {
+        "from": "Ver todas",
+        "to": "See all"
       },
       "inversiones.title_add_subcategory": {
         "from": "Agregar sub-categoría",
@@ -10776,6 +10868,10 @@
         "from": "El campo {field} es obligatorio.",
         "to": "O campo {field} é obrigatório."
       },
+      "errors.error_invalid_day_range": {
+        "from": "{field} tiene que ser un número entero entre 1 y 31.",
+        "to": "{field} deve ser um número inteiro entre 1 e 31."
+      },
       "errors.card_load_legacy_cuotas_btn": {
         "from": "Cargar cuotas anteriores",
         "to": "Carregar parcelas anteriores"
@@ -10928,6 +11024,10 @@
         "from": "La cuenta seleccionada ya no está disponible.",
         "to": "A conta selecionada não está mais disponível."
       },
+      "errors.error_card_not_found": {
+        "from": "No encontramos esa tarjeta. Recargá la pantalla e intentá de nuevo.",
+        "to": "Não encontramos esse cartão. Recarregue a tela e tente novamente."
+      },
       "errors.error_quarantine_no_wallet": {
         "from": "El movimiento no tiene cuenta asignada. Editalo antes de aprobarlo.",
         "to": "A transação não tem conta atribuída. Edite-a antes de aprová-la."
@@ -11079,6 +11179,10 @@
       "errors.hero_sync_ok": {
         "from": "Datos sincronizados",
         "to": "Dados sincronizados"
+      },
+      "errors.hero_sync_offline": {
+        "from": "Sin conexión",
+        "to": "Sem conexão"
       },
       "errors.section_my_wallets": {
         "from": "Mis Billeteras",
@@ -11512,14 +11616,6 @@
         "from": "Color de la tarjeta",
         "to": "Cor do cartão"
       },
-      "errors.card_form_recargo_dolar_label": {
-        "from": "Recargo compras en USD (%)",
-        "to": "Acréscimo para compras em USD (%)"
-      },
-      "errors.card_form_recargo_dolar_placeholder": {
-        "from": "Ej: 30",
-        "to": "Ex: 30"
-      },
       "errors.btn_saving": {
         "from": "Guardando...",
         "to": "Salvando..."
@@ -11636,6 +11732,26 @@
         "from": "Elegí la cuenta desde la que pagás.",
         "to": "Escolha a conta de onde você está pagando."
       },
+      "errors.pay_blocked_reason_no_wallet_local": {
+        "from": "Falta elegir la cuenta del pago en moneda local.",
+        "to": "Falta escolher a conta do pagamento em moeda local."
+      },
+      "errors.pay_blocked_reason_no_wallet_usd": {
+        "from": "Falta elegir la cuenta del pago en dólares.",
+        "to": "Falta escolher a conta do pagamento em dólares."
+      },
+      "errors.pay_blocked_reason_no_wallet_both": {
+        "from": "Falta elegir la cuenta en los dos tramos: moneda local y dólares.",
+        "to": "Falta escolher a conta nas duas partes: moeda local e dólares."
+      },
+      "errors.pay_real_statement_shortfall": {
+        "from": "El pago no cubre el resumen real del banco: faltan {falta}.",
+        "to": "O pagamento não cobre o resumo real do banco: faltam {falta}."
+      },
+      "errors.error_resumen_real_no_cubierto": {
+        "from": "El pago no cubre el resumen real del banco. Pagá el monto que declaraste.",
+        "to": "O pagamento não cobre o resumo real do banco. Pague o valor que você declarou."
+      },
       "errors.error_card_has_commitments": {
         "from": "No podés archivar esta tarjeta porque tiene cuotas o compromisos pendientes. Terminá de pagarlos y volvé a intentar.",
         "to": "Você não pode arquivar este cartão porque ele tem parcelas ou compromissos pendentes. Quite-os e tente novamente."
@@ -11653,12 +11769,12 @@
         "to": "{monto} em dólares sem converter (falta a cotação)"
       },
       "errors.card_cmp_usd_line": {
-        "from": "En dólares: {anterior} → {actual}",
-        "to": "Em dólares: {anterior} → {actual}"
+        "from": "En dólares: anterior {anterior} → actual {actual}",
+        "to": "Em dólares: anterior {anterior} → atual {actual}"
       },
       "errors.card_cmp_usd_line_unconverted": {
-        "from": "En dólares, sin convertir: {anterior} → {actual}",
-        "to": "Em dólares, sem converter: {anterior} → {actual}"
+        "from": "En dólares, sin convertir: anterior {anterior} → actual {actual}",
+        "to": "Em dólares, sem converter: anterior {anterior} → atual {actual}"
       },
       "errors.card_legacy_created_toast_one": {
         "from": "{cantidad} cuota cargada, empieza a correr en {fecha}",
@@ -11837,8 +11953,8 @@
         "to": "US$"
       },
       "errors.pay_resumen_usd_equiv_preview": {
-        "from": "Equivale a {monto} USD",
-        "to": "Equivale a {monto} USD"
+        "from": "Equivale a {monto}",
+        "to": "Equivale a {monto}"
       },
       "errors.pay_resumen_usd_equiv_suggested": {
         "from": "Sugerido: {ars} (equivale a US$ {usd})",
@@ -11891,10 +12007,6 @@
       "errors.pay_resumen_real_hint": {
         "from": "Se registra un ajuste por la diferencia, sin tocar tus cuotas.",
         "to": "É registrado um ajuste pela diferença, sem alterar suas parcelas."
-      },
-      "errors.pay_resumen_real_falta": {
-        "from": "Te faltan pagar {falta} del resumen real. Si no los pagás ahora, quedan imputados como Diferencia Tarjeta.",
-        "to": "Falta pagar {falta} do extrato real. Se você não pagar agora, o valor fica lançado como Diferença de Cartão."
       },
       "errors.pay_resumen_real_dif": {
         "from": "Ajuste: {monto}",
@@ -13796,9 +13908,9 @@
         "from": "Cerrar",
         "to": "Fechar"
       },
-      "voice.fab_a11y": {
-        "from": "{count} movimientos por voz pendientes de revisar",
-        "to": "{count} transações por voz pendentes de revisar"
+      "quarantine.fab_a11y": {
+        "from": "Cuarentena: {count} movimientos pendientes de revisar",
+        "to": "Quarentena: {count} transações pendentes de revisar"
       },
       "ocr.capture_title": {
         "from": "Cargar ticket con OCR",
@@ -13869,8 +13981,8 @@
         "to": "Já tínhamos este comprovante: seguimos com o mesmo processamento."
       },
       "ocr.capture_keep_using": {
-        "from": "Seguir usando ORD",
-        "to": "Continuar usando o ORD"
+        "from": "Continuar",
+        "to": "Continuar"
       },
       "ocr.capture_retry": {
         "from": "Reintentar envío",
@@ -13969,8 +14081,8 @@
         "to": "Não conseguimos enviar o comprovante. Tente de novo."
       },
       "ocr.error_network": {
-        "from": "Se cortó la conexión. Probá de nuevo.",
-        "to": "A conexão caiu. Tente de novo."
+        "from": "No pudimos contactar el servicio de tickets. Probá de nuevo.",
+        "to": "Não conseguimos contatar o serviço de tickets. Tente de novo."
       },
       "ocr.error_unauthorized": {
         "from": "Tu sesión venció. Volvé a iniciar sesión.",
@@ -13989,8 +14101,8 @@
         "to": "Ocorreu um erro inesperado."
       },
       "ocr.quarantine_title": {
-        "from": "Ticket OCR",
-        "to": "Comprovante OCR"
+        "from": "Editar",
+        "to": "Editar"
       },
       "ocr.ticket_total": {
         "from": "Total del ticket",
@@ -14081,8 +14193,8 @@
         "to": "O sistema marcou dados para revisar."
       },
       "ocr.view_ticket": {
-        "from": "Ver ticket",
-        "to": "Ver comprovante"
+        "from": "Ver imagen",
+        "to": "Ver imagem"
       },
       "ocr.image_unavailable": {
         "from": "Imagen original no disponible en este dispositivo.",
@@ -14091,6 +14203,58 @@
       "ocr.image_counter": {
         "from": "Imagen {index} de {total}",
         "to": "Imagem {index} de {total}"
+      },
+      "ocr.zoom_in": {
+        "from": "Acercar",
+        "to": "Aproximar"
+      },
+      "ocr.zoom_out": {
+        "from": "Alejar",
+        "to": "Afastar"
+      },
+      "ocr.zoom_reset": {
+        "from": "Tamaño original",
+        "to": "Tamanho original"
+      },
+      "ocr.zoom_hint": {
+        "from": "Zoom de la imagen",
+        "to": "Zoom da imagem"
+      },
+      "ocr.history_title": {
+        "from": "Últimos envíos",
+        "to": "Últimos envios"
+      },
+      "ocr.history_empty": {
+        "from": "Todavía no enviaste ningún ticket.",
+        "to": "Você ainda não enviou nenhum comprovante."
+      },
+      "ocr.history_images": {
+        "from": "{count} imagen(es)",
+        "to": "{count} imagem(ns)"
+      },
+      "ocr.history_status_processing": {
+        "from": "Procesando",
+        "to": "Processando"
+      },
+      "ocr.history_status_classified": {
+        "from": "Clasificado",
+        "to": "Classificado"
+      },
+      "ocr.history_status_quarantine": {
+        "from": "Para aprobar",
+        "to": "Para aprovar"
+      },
+      "ocr.history_status_approved": {
+        "from": "Aprobado",
+        "to": "Aprovado"
+      },
+      "ocr.history_status_rejected": {
+        "from": "Rechazado",
+        "to": "Recusado"
+      },
+      "ocr.history_open": {
+        "from": "Ver en cuarentena",
+        "to": "Ver na quarentena"
       },
       "ocr.save_draft": {
         "from": "Guardar",
@@ -14105,16 +14269,8 @@
         "to": "Rascunho salvo."
       },
       "ocr.confirm_ticket": {
-        "from": "Confirmar ticket",
-        "to": "Confirmar comprovante"
-      },
-      "ocr.confirm_title": {
-        "from": "Confirmar ticket OCR",
-        "to": "Confirmar comprovante OCR"
-      },
-      "ocr.confirm_message": {
-        "from": "Se van a crear {count} movimiento(s) por un total de {total}. Esta acción no se puede deshacer.",
-        "to": "Serão criados {count} movimento(s) num total de {total}. Esta ação não pode ser desfeita."
+        "from": "Aprobar",
+        "to": "Aprovar"
       },
       "ocr.confirmed": {
         "from": "Ticket confirmado: {count} movimiento(s) creado(s).",
@@ -16228,6 +16384,30 @@
         "from": "Próximamente",
         "to": "Em breve"
       },
+      "recurrentes.recurrentes_modal_nuevo_ingreso": {
+        "from": "Nuevo ingreso recurrente",
+        "to": "Nova receita recorrente"
+      },
+      "recurrentes.recurrentes_modal_editar_ingreso": {
+        "from": "Editar ingreso recurrente",
+        "to": "Editar receita recorrente"
+      },
+      "recurrentes.recurrentes_campo_fuente_ingreso": {
+        "from": "Fuente de ingreso (opcional)",
+        "to": "Fonte de receita (opcional)"
+      },
+      "recurrentes.recurrentes_elegir_fuente_ingreso": {
+        "from": "Elegí una fuente",
+        "to": "Escolha uma fonte"
+      },
+      "recurrentes.recurrentes_campo_billetera_destino": {
+        "from": "Billetera donde entra",
+        "to": "Carteira onde entra"
+      },
+      "recurrentes.recurrentes_ingreso_vacio": {
+        "from": "Sueldos, alquileres cobrados y otras entradas fijas van acá. El día que corresponde, la ocurrencia aparece en la bandeja y la aprobás desde ahí.",
+        "to": "Salários, aluguéis recebidos e outras entradas fixas ficam aqui. No dia certo a ocorrência aparece na caixa de entrada e você a aprova por lá."
+      },
       "recurrentes.recurrentes_nuevo_egreso": {
         "from": "Nuevo egreso recurrente",
         "to": "Nova despesa recorrente"
@@ -16280,13 +16460,13 @@
         "from": "Borrar gasto recurrente",
         "to": "Excluir despesa recorrente"
       },
-      "recurrentes.recurrentes_borrar_cuerpo_one": {
-        "from": "¿Borrar «{nombre}» definitivamente? Se va a perder 1 ocurrencia pendiente de la bandeja. Los movimientos ya registrados no se tocan. Esta acción no se puede deshacer.",
-        "to": "Excluir «{nombre}» definitivamente? Será perdida 1 ocorrência pendente da bandeja. Os movimentos já registrados não são afetados. Esta ação não pode ser desfeita."
+      "recurrentes.recurrentes_borrar_titulo_ingreso": {
+        "from": "Borrar ingreso recurrente",
+        "to": "Excluir receita recorrente"
       },
-      "recurrentes.recurrentes_borrar_cuerpo_other": {
-        "from": "¿Borrar «{nombre}» definitivamente? Se van a perder {count} ocurrencias pendientes de la bandeja. Los movimientos ya registrados no se tocan. Esta acción no se puede deshacer.",
-        "to": "Excluir «{nombre}» definitivamente? Serão perdidas {count} ocorrências pendentes da bandeja. Os movimentos já registrados não são afetados. Esta ação não pode ser desfeita."
+      "recurrentes.recurrentes_borrar_cuerpo": {
+        "from": "¿Borrar «{nombre}» definitivamente? Esta acción no se puede deshacer.",
+        "to": "Excluir «{nombre}» definitivamente? Esta ação não pode ser desfeita."
       },
       "recurrentes.recurrentes_estado_activo": {
         "from": "ACTIVO",
@@ -16312,13 +16492,13 @@
         "from": "sin fechas elegidas",
         "to": "sem datas escolhidas"
       },
-      "recurrentes.recurrentes_sin_billetera": {
-        "from": "Sin billetera (elegila después)",
-        "to": "Sem carteira (escolha depois)"
-      },
       "recurrentes.recurrentes_dias_del_mes": {
         "from": "días {dias}",
         "to": "{dias} dias"
+      },
+      "recurrentes.recurrentes_por_cierre_tarjeta": {
+        "from": "según el cierre de la tarjeta",
+        "to": "conforme o fechamento do cartão"
       },
       "recurrentes.recurrentes_modo_label": {
         "from": "¿Cuándo se repite?",
@@ -16337,16 +16517,12 @@
         "to": "Anual"
       },
       "recurrentes.recurrentes_semanal_hint": {
-        "from": "Elegí hasta 3 días de la semana.",
-        "to": "Escolha até 3 dias da semana."
+        "from": "Elegí los días de la semana en que se repite.",
+        "to": "Escolha os dias da semana em que se repete."
       },
       "recurrentes.recurrentes_mensual_hint": {
-        "from": "Elegí hasta 3 días del mes. Si elegís 31 y el mes es más corto, cae el último día.",
-        "to": "Escolha até 3 dias do mês. Se você escolher 31 e o mês for menor, cai no último dia."
-      },
-      "recurrentes.recurrentes_mensual_preview": {
-        "from": "En febrero caerían los días {fechas}.",
-        "to": "Em fevereiro cairiam os dias {fechas}."
+        "from": "Elegí los días del mes en que se repite.",
+        "to": "Escolha os dias do mês em que se repete."
       },
       "recurrentes.recurrentes_anual_hint": {
         "from": "Elegí una o más fechas del año.",
@@ -16384,29 +16560,29 @@
         "from": "Monto",
         "to": "Valor"
       },
-      "recurrentes.recurrentes_campo_variabilidad": {
-        "from": "Variabilidad",
-        "to": "Variabilidade"
-      },
-      "recurrentes.recurrentes_variabilidad_fijo": {
-        "from": "Monto fijo",
-        "to": "Valor fixo"
-      },
-      "recurrentes.recurrentes_variabilidad_promedio": {
-        "from": "Promedio de los últimos 3 meses",
-        "to": "Média dos últimos 3 meses"
-      },
       "recurrentes.recurrentes_campo_billetera": {
-        "from": "Billetera por defecto",
-        "to": "Carteira padrão"
+        "from": "Billetera de origen",
+        "to": "Carteira de origem"
+      },
+      "recurrentes.recurrentes_elegir_billetera": {
+        "from": "Elegí una billetera",
+        "to": "Escolha uma carteira"
       },
       "recurrentes.recurrentes_error_semanal": {
-        "from": "Elegí entre 1 y 3 días de la semana.",
-        "to": "Escolha entre 1 e 3 dias da semana."
+        "from": "Elegí al menos un día de la semana.",
+        "to": "Escolha ao menos um dia da semana."
       },
       "recurrentes.recurrentes_error_mensual": {
-        "from": "Elegí entre 1 y 3 días del mes.",
-        "to": "Escolha entre 1 e 3 dias do mês."
+        "from": "Elegí al menos un día del mes.",
+        "to": "Escolha ao menos um dia do mês."
+      },
+      "recurrentes.recurrentes_error_billetera": {
+        "from": "Elegí la billetera con la que se paga.",
+        "to": "Escolha a carteira com que é pago."
+      },
+      "recurrentes.recurrentes_error_billetera_destino": {
+        "from": "Elegí la billetera donde entra el dinero.",
+        "to": "Escolha a carteira onde o dinheiro entra."
       },
       "recurrentes.recurrentes_error_anual": {
         "from": "Elegí al menos una fecha del año.",
@@ -16467,6 +16643,10 @@
       "recurrentes.recurrentes_unica_el": {
         "from": "única vez el {fecha}",
         "to": "única vez em {fecha}"
+      },
+      "recurrentes.recurrentes_elegir_fecha": {
+        "from": "Elegí una fecha",
+        "to": "Escolha uma data"
       },
       "recurrentes.recurrentes_campo_fecha_unica": {
         "from": "Fecha de la ocurrencia",
@@ -19353,8 +19533,8 @@
         "to": "Total do grupo"
       },
       "inversiones.budget_stat_group_free": {
-        "from": "Libre grupo:",
-        "to": "Livre grupo:"
+        "from": "Libre",
+        "to": "Livre"
       },
       "inversiones.budget_group_expand": {
         "from": "Mostrar subcategorías",
@@ -19373,16 +19553,16 @@
         "to": "Não pode baixar o grupo abaixo do que está distribuído. Tem {repartido}: reduza {recortar} antes."
       },
       "inversiones.budget_stat_assigned": {
-        "from": "Asig:",
-        "to": "Atribuído:"
+        "from": "Asignado",
+        "to": "Atribuído"
       },
       "inversiones.budget_stat_spent": {
-        "from": "Gast:",
-        "to": "Gasto:"
+        "from": "Gastado",
+        "to": "Gasto"
       },
       "inversiones.budget_stat_progress": {
-        "from": "Avance:",
-        "to": "Avanço:"
+        "from": "Avance",
+        "to": "Avanço"
       },
       "inversiones.budget_total_must_be_100": {
         "from": "⚠️ Total: {total}% — Debe ser exactamente 100%",
@@ -19759,6 +19939,10 @@
       "inversiones.btn_see_all_categories": {
         "from": "Ver todas las categorías",
         "to": "Ver todas as categorias"
+      },
+      "inversiones.add_move_see_all": {
+        "from": "Ver todas",
+        "to": "Ver todas"
       },
       "inversiones.title_add_subcategory": {
         "from": "Agregar sub-categoría",

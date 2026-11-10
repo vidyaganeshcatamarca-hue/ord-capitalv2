@@ -1564,3 +1564,35 @@ button.asignar-opcion:focus-visible {
   outline: 2px solid var(--mint);
   outline-offset: 2px;
 }
+
+/* Dueño (2026-11-02): «la línea roja del sobre que se ha excedido la hagas titilar,
+   prender y apagar [...] porque en un celular quizás no se nota muy bien la
+   diferencia de color». Sólo titila el excedido: el que cubrió justo el total se
+   queda quieto y conserva su color. steps(1, end) lo hace encender y apagar, no
+   un degradé suave. */
+.sobre-barra-fill.excedido {
+  animation: sobre-barra-titila 1s steps(1, end) infinite;
+}
+
+@keyframes sobre-barra-titila {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.2; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sobre-barra-fill.excedido {
+    animation: none;
+  }
+}
+
+/* Dueño (2026-11-02): «todas las categorías padres están separaditas con una pequeña
+   línea de espacio. Que se note que son tarjetas diferentes». El padre con hijos ya
+   trae su propio margen, pero el padre sin hijos es una fila pelada, y con los dos
+   plegados se leían como un bloque continuo. La separación va entre hermanos del
+   contenedor, así cubre las dos formas sin atarse a una clase; el segundo selector
+   existe porque `.sobre-grupo-bloque.abierto` fija `margin: 0 16px 12px` con la misma
+   especificidad y, al ir después, necesita ganarle el `margin-top`. */
+.acord-grupo-body > * + *,
+.acord-grupo-body > .sobre-grupo-bloque + * {
+  margin-top: 10px;
+}

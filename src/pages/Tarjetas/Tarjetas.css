@@ -1760,6 +1760,15 @@
   margin-top: 6px;
 }
 .comparativa-ciclo-montos strong { font-family: var(--font-mono, monospace); }
+/* The label travels with its amount: never break between "Ciclo actual" and the
+   number. If the row does not fit, the whole pair moves to the next line (owner). */
+.cmp-cycle-pair {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
+}
+.cmp-cycle-arrow { flex: 0 0 auto; }
 .comparativa-first-cycle {
   font-size: calc(12px * var(--font-scale));
   color: var(--color-text-muted);

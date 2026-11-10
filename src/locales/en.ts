@@ -95,6 +95,7 @@ export const errors = {
   hero_title_safe_to_spend: "Safe-to-Spend",
   hero_title_total: "Total",
   hero_sync_ok: "Data synced",
+  hero_sync_offline: "No connection",
   section_my_wallets: "My Wallets",
   horizontal_scroll_hint: "<- Swipe to see more ->",
   wallets_empty: "You do not have any wallets yet.",
@@ -242,8 +243,8 @@ export const errors = {
   card_archive_confirm: 'Archive "{name}"? It will leave your list, but nothing is deleted: you can reactivate it any time from "View archived".',
   cards_debt_usd_includes: 'includes {monto} in dollars',
   cards_debt_usd_unconverted: '{monto} in dollars not converted (rate missing)',
-  card_cmp_usd_line: 'In dollars: {anterior} → {actual}',
-  card_cmp_usd_line_unconverted: 'In dollars, not converted: {anterior} → {actual}',
+  card_cmp_usd_line: 'In dollars: previous {anterior} → current {actual}',
+  card_cmp_usd_line_unconverted: 'In dollars, not converted: previous {anterior} → current {actual}',
   card_legacy_created_toast_one: '{cantidad} installment loaded, starting in {fecha}',
   card_edit_tooltip: 'Edit',
   card_activate_btn: 'Activate',
@@ -784,7 +785,14 @@ export const voice = {
   not_sent_hint: "The audio was not sent.",
   seconds_left: "{seconds}s left",
   close: "Close",
-  fab_a11y: "{count} voice transactions pending review",
+};
+
+/**
+ * Home quarantine notice: one entry point for every pending row, whatever its
+ * origin (OCR or voice). The count is the whole list the inbox opens.
+ */
+export const quarantine = {
+  fab_a11y: "Quarantine: {count} transactions pending review",
 };
 
 // === OCR TICKETS (definitive PRD) ===
@@ -875,7 +883,6 @@ export const ocr = {
   history_status_approved: "Approved",
   history_status_rejected: "Rejected",
   history_open: "Open in quarantine",
-  fab_a11y: "Pending OCR tickets: {count}",
   save_draft: "Save",
   saving: "Saving...",
   saved: "Draft saved.",
@@ -2325,6 +2332,7 @@ export const inversiones = {
   step_category: "Category",
   placeholder_search_category: "Search category...",
   btn_see_all_categories: "See all categories",
+  add_move_see_all: "See all",
   title_add_subcategory: "Add subcategory",
   label_category: "Category",
   step_when: "When?",

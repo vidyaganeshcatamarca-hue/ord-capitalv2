@@ -19,6 +19,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError } from '@/locales/i18n'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { parseMontoInput } from '@/lib/parseMonto'
+import { NUMERIC_INPUT_ENTER_PROPS } from '@/lib/numericKeyboard'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { WalletDropdownSelect } from '@/components/WalletDropdownSelect'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
@@ -119,7 +120,9 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
         card_id: item.tarjeta_id,
         wallet_id: null,
         installments: item.cuotas ?? fromMetadata?.installments ?? 1,
-        currency: item.moneda ?? fromMetadata?.currency ?? null,
+        // The purchase currency the user chose lives in metadata; item.moneda is the
+        // currency of the charge (the card's), so reading it first switched USD off.
+        currency: fromMetadata?.currency ?? item.moneda ?? null,
       }
     }
     return {
@@ -127,7 +130,7 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
       card_id: item.tarjeta_id ?? fromMetadata?.card_id ?? null,
       wallet_id: item.billetera_id ?? fromMetadata?.wallet_id ?? null,
       installments: item.cuotas ?? fromMetadata?.installments ?? 1,
-      currency: item.moneda ?? fromMetadata?.currency ?? null,
+      currency: fromMetadata?.currency ?? item.moneda ?? null,
     }
   })
   const [date, setDate] = useState<string>(item.fecha ?? metadata.purchase_date ?? '')
@@ -200,6 +203,9 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
     if (!date) return 'ocr.missing_date'
     return groupingBlocker(grouping)
   }, [ticketTotal, payment, date, grouping])
+
+  // The mismatch note is already rendered further down; the blocker must not repeat it.
+  const duplicateBlockerKey = grouping.material_mismatch ? 'ocr.material_mismatch' : null
 
   const groupLabel = useCallback(
     (group: OcrCategoryGroup): { name: string; parent_name: string | null } => {
@@ -488,7 +494,15 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
                   type="number"
                   min={1}
                   value={installmentsInput}
-                  onFocus={(event) => event.target.select()}
+                  {...NUMERIC_INPUT_ENTER_PROPS}
+                  // The first tap clears the suggested value so typing replaces it. Using
+                  // select() only highlighted it, which on Android pops the copy/paste menu.
+                  onFocus={() => setInstallmentsInput('')}
+                  onBlur={() =>
+                    setInstallmentsInput((current) =>
+                      current === '' ? String(payment.installments ?? 1) : current,
+                    )
+                  }
                   onChange={(event) => {
                     // Digits only, and an empty field is allowed while typing:
                     // coercing it to 1 was what made the old input uneditable.
@@ -612,7 +626,9 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
             </p>
           )}
           {memoryPending && <p className="ocr-note">{t('ocr.memory_pending_note')}</p>}
-          {blocker && <p className="ocr-note ocr-note--warn">{t(blocker)}</p>}
+          {blocker && blocker !== duplicateBlockerKey && (
+            <p className="ocr-note ocr-note--warn">{t(blocker)}</p>
+          )}
         </OcrTicketEditModal>
       )}
 
@@ -737,6 +753,7 @@ function OcrItemRow({ entry, currency, categoryGroups, catalogLoading, resolve, 
             type="text"
             inputMode="decimal"
             value={amountInput}
+            {...NUMERIC_INPUT_ENTER_PROPS}
             onChange={(event) => setAmountInput(event.target.value)}
             onBlur={() => {
               const parsed = parseMontoInput(amountInput)

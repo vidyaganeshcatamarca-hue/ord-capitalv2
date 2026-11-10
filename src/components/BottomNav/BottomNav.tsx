@@ -9,6 +9,7 @@ import { useBaseCeroHome } from '@/hooks/useBaseCeroHome'
 import { BASE_CERO_HOME_PATH, orderNavPaths, readBaseCeroHome, writeBaseCeroHome } from '@/lib/baseCeroHome'
 import { HelpCircle } from 'lucide-react'
 import './BottomNav.css'
+import { readModoPresupuesto, writeModoPresupuesto } from '@/lib/modoPresupuesto'
 
 interface BottomNavProps {
   onAddPress: () => void
@@ -27,7 +28,11 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
   // ser la primera opción de la barra y HOME la segunda.
   const baseCeroComoInicio = useBaseCeroHome()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [modoPresupuesto, setModoPresupuesto] = useState<'base_cero' | 'anticipado'>('anticipado')
+  const [modoPresupuesto, setModoPresupuesto] = useState<'base_cero' | 'anticipado'>(() =>
+    // Dueño (2026-11-02): sin red la RPC del modo falla y la barra se quedaba con el
+    // default, mostrando Tarjetas donde va Base 0. Arranca con el último modo conocido.
+    readModoPresupuesto(),
+  )
   // True while the "+" is held and the long-press timer is still running.
   const [isVoicePressing, setIsVoicePressing] = useState(false)
 
@@ -60,6 +65,7 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
           const cfg = Array.isArray(rawData) ? rawData[0] : rawData
           if (cfg?.modo_presupuesto) {
             setModoPresupuesto(cfg.modo_presupuesto)
+            writeModoPresupuesto(cfg.modo_presupuesto)
             // Ronda 7 (S11): "Base 0 como pantalla de inicio" solo tiene sentido
             // mientras el presupuesto este en modo base cero. Si el usuario
             // vuelve a anticipado, la opcion queda apagada aca (su interruptor

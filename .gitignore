@@ -187,3 +187,28 @@ scratch/
 
 # temp_sql: local scratch space. Never synced between worktrees, never pushed.
 temp_sql/
+
+!tests/ocr/
+tests/ocr/*
+!tests/ocr/aviso-no-duplicado.test.js
+!tests/ocr/cuotas-limpiar-al-enfocar.test.js
+!tests/ocr/tecla-ir-confirma.test.js
+!tests/ocr/dolares-persisten.test.js
+
+!tests/cuarentena/
+tests/cuarentena/*
+!tests/cuarentena/un-solo-aviso.test.js
+
+!tests/add-movement/
+tests/add-movement/*
+!tests/add-movement/recientes-una-linea.test.js
+
+!tests/configuracion/
+tests/configuracion/*
+!tests/configuracion/sin-interruptor-voz.test.js
+!tests/presupuestos/barra-excedida-titila.test.js
+!tests/presupuestos/padres-separados.test.js
+!tests/appLockOffline.test.js
+!tests/conexion-badge.test.js
+!tests/nav-modo-offline.test.js
+!tests/swipe-vencimientos.test.js

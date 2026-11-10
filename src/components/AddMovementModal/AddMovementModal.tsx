@@ -1925,25 +1925,16 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
 
                           {/* Las 5 categorías más usadas recientemente */}
                           <div className="mobile-frecuentes-section" style={{ margin: '12px 0' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            <div className="mobile-frecuentes-row">
                               {frecuentesMobile.map((cat, i) => (
                                   <button
                                     key={i}
                                     type="button"
                                     className="cat-recent-icon-btn"
                                     style={{
-                                      width: '32px',
-                                      height: '32px',
-                                      borderRadius: '50%',
                                       backgroundColor: cat.color,
                                       color: '#000000',
-                                      border: categoriaEgreso?.estructura_id === cat.estructura_id ? '3px solid var(--text)' : '1px solid rgba(255,255,255,0.1)',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      fontSize: '16px',
-                                      cursor: 'pointer',
-                                      transition: 'transform 0.1s',
+                                      border: categoriaEgreso?.estructura_id === cat.estructura_id ? '3px solid var(--text)' : '1px solid var(--border)',
                                       boxShadow: categoriaEgreso?.estructura_id === cat.estructura_id ? `0 0 10px ${cat.color}` : 'none'
                                     }}
                                     onClick={() => {
@@ -1951,28 +1942,18 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                       setShowCalculator(false)
                                     }}
                                   >
-                                    <CategoryIcon name={cat.icono} size={20} />
+                                    <CategoryIcon name={cat.icono} size={30} />
                                   </button>
                               ))}
                               <button
                                 type="button"
-                                className="btn btn-secondary"
-                                style={{
-                                  marginLeft: 'auto',
-                                  padding: '8px 16px',
-                                  borderRadius: '20px',
-                                  fontSize: '14px',
-                                  fontWeight: 'bold',
-                                  height: '36px',
-                                  display: 'flex',
-                                  alignItems: 'center'
-                                }}
+                                className="btn btn-secondary cat-recent-see-all"
                                 onClick={() => {
                                   setMobileShowAllCat(true)
                                   setShowCalculator(false)
                                 }}
                               >
-                                Ver todas
+                                {t('add_move_see_all')}
                               </button>
                             </div>
                           </div>

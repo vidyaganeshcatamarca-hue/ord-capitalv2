@@ -1,44 +1,35 @@
-// src/components/voice/VoiceHomeFab.tsx
+// src/components/cuarentena/QuarantineHomeFab.tsx
 // ============================================
-// Voice v1 - Home FAB with the pending-quarantine counter
+// Single quarantine notice for the Home screen
 // ============================================
-// Persistent entry point into the voice quarantine. It only renders when the
-// quarantine menu feature is enabled AND there is at least one pending
-// voice-originated movement, so the user always has a visible count of what is
-// waiting for review.
+//
+// One entry point for every pending quarantine row, whatever produced it: OCR or
+// voice. Before this, Home mounted one FAB per source, each with its own number,
+// so two pending tickets showed as two envelopes with "1" instead of one with
+// "2" (owner, 2026-11-02).
+//
+// The count is the whole pending list, because that is exactly what the inbox it
+// opens lists, and its tabs already split by origin.
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Inbox } from 'lucide-react'
 import { rpc } from '@/lib/supabase'
 import { t } from '@/locales/i18n'
 import { useModoApp } from '@/contexts/ModoAppContext'
-import './VoiceHomeFab.css'
+import './QuarantineHomeFab.css'
 
 /**
- * How often the pending voice-quarantine count is refreshed, in milliseconds.
+ * How often the pending count is refreshed, in milliseconds.
  * Exported so tests can assert against it instead of duplicating the value.
  */
-export const VOICE_QUARANTINE_POLL_MS = 15000
+export const QUARANTINE_POLL_MS = 15000
 
-/**
- * Minimal slice of a `fn_reporte_cuarentena_pendientes` row that this FAB reads.
- *
- * `metadata.job_id` is the discriminator for voice rows. `origen = 'voz'`
- * is authoritative in new data; job_id keeps legacy rows identifiable.
- */
-interface VoiceQuarantineRow {
-  metadata: { job_id?: string | null } | null
+/** Minimal slice of a `fn_reporte_cuarentena_pendientes` row that this FAB reads. */
+interface QuarantineRow {
+  pendiente_id: number
 }
 
-/** Counts pending rows that carry a voice job id in their metadata. */
-function countVoiceItems(rows: VoiceQuarantineRow[]): number {
-  return rows.reduce(
-    (total, row) => (row?.metadata != null && row.metadata.job_id != null ? total + 1 : total),
-    0
-  )
-}
-
-export function VoiceHomeFab() {
+export function QuarantineHomeFab() {
   const navigate = useNavigate()
   const { hasFeature, loading } = useModoApp()
   const [count, setCount] = useState(0)
@@ -58,20 +49,20 @@ export function VoiceHomeFab() {
 
     const load = async () => {
       try {
-        const rows = await rpc<VoiceQuarantineRow[]>('fn_reporte_cuarentena_pendientes')
+        const rows = await rpc<QuarantineRow[]>('fn_reporte_cuarentena_pendientes')
         if (cancelled) return
-        setCount(countVoiceItems(Array.isArray(rows) ? rows : []))
+        setCount(Array.isArray(rows) ? rows.length : 0)
       } catch (err) {
         // Silent by design: the FAB just stays hidden on failure. Toasting here
         // would fire on every poll tick (every 15s) and spam the user.
-        if (!cancelled) console.warn('voice quarantine count failed:', err)
+        if (!cancelled) console.warn('quarantine count failed:', err)
       }
     }
 
     void load()
     const intervalId = window.setInterval(() => {
       void load()
-    }, VOICE_QUARANTINE_POLL_MS)
+    }, QUARANTINE_POLL_MS)
 
     return () => {
       // Guards every `setCount` above against running after unmount.
@@ -82,18 +73,18 @@ export function VoiceHomeFab() {
 
   if (!enabled || count <= 0) return null
 
-  const label = t('voice.fab_a11y', { count })
+  const label = t('quarantine.fab_a11y', { count: String(count) })
 
   return (
     <button
       type="button"
-      className="voice-fab"
-      onClick={() => navigate('/cuarentena?origen=voz')}
+      className="quarantine-fab"
+      onClick={() => navigate('/cuarentena')}
       aria-label={label}
       title={label}
     >
       <Inbox size={24} stroke="currentColor" strokeWidth={1.8} aria-hidden="true" />
-      <span className="voice-fab-badge" aria-hidden="true">{count}</span>
+      <span className="quarantine-fab-badge" aria-hidden="true">{count}</span>
     </button>
   )
 }

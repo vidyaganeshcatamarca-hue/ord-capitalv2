@@ -69,7 +69,12 @@ function assess(lang, dict, recorded) {
       }
       const esPh = placeholders(esValue)
       const ph = placeholders(value)
-      if (esPh.join('|') !== ph.join('|')) {
+      // Placeholders are matched by name when the value is rendered
+      // (raw.replace(/\{(\w+)\}/g, ...)), so their order carries no meaning:
+      // English dates lead with the month, and that is a translation, not drift.
+      // Only a name that appears, vanishes or is renamed is drift.
+      const sortedNames = (list) => [...list].sort().join('|')
+      if (sortedNames(esPh) !== sortedNames(ph)) {
         drifted.push(id)
       }
     }

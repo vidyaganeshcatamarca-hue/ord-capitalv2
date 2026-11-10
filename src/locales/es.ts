@@ -98,6 +98,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   hero_title_safe_to_spend: "Safe-to-Spend",
   hero_title_total: "Total",
   hero_sync_ok: "Datos sincronizados",
+  hero_sync_offline: "Sin conexión",
   section_my_wallets: "Mis Billeteras",
   horizontal_scroll_hint: "<- Desliza para ver más ->",
   wallets_empty: "Aún no tienes billeteras creadas.",
@@ -247,8 +248,8 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   card_archive_confirm: '¿Archivar «{name}»? Va a salir de tu lista, pero no se borra nada: podés volver a activarla cuando quieras desde «Ver archivadas».',
   cards_debt_usd_includes: 'incluye {monto} en dólares',
   cards_debt_usd_unconverted: '{monto} en dólares sin convertir (falta la cotización)',
-  card_cmp_usd_line: 'En dólares: {anterior} → {actual}',
-  card_cmp_usd_line_unconverted: 'En dólares, sin convertir: {anterior} → {actual}',
+  card_cmp_usd_line: 'En dólares: anterior {anterior} → actual {actual}',
+  card_cmp_usd_line_unconverted: 'En dólares, sin convertir: anterior {anterior} → actual {actual}',
   card_legacy_created_toast_one: '{cantidad} cuota cargada, empieza a correr en {fecha}',
   card_edit_tooltip: 'Editar',
   card_activate_btn: 'Activar',
@@ -825,8 +826,14 @@ export const voice = {
   not_sent_hint: "El audio no se envió.",
   seconds_left: "{seconds} s restantes",
   close: "Cerrar",
-  // Home FAB — pending voice movements awaiting quarantine review
-  fab_a11y: "{count} movimientos por voz pendientes de revisar",
+};
+
+/**
+ * Home quarantine notice: one entry point for every pending row, whatever its
+ * origin (OCR or voice). The count is the whole list the inbox opens.
+ */
+export const quarantine = {
+  fab_a11y: "Cuarentena: {count} movimientos pendientes de revisar",
 };
 
 // === OCR DE TICKETS (PRD definitivo) ===
@@ -921,7 +928,6 @@ export const ocr = {
   history_status_approved: "Aprobado",
   history_status_rejected: "Rechazado",
   history_open: "Ver en cuarentena",
-  fab_a11y: "Tickets OCR pendientes: {count}",
   save_draft: "Guardar",
   saving: "Guardando...",
   saved: "Borrador guardado.",
@@ -2599,6 +2605,7 @@ export const inversiones = {
   step_category: "Categoría",
   placeholder_search_category: "Buscar categoría...",
   btn_see_all_categories: "Ver todas las categorías",
+  add_move_see_all: "Ver todas",
   title_add_subcategory: "Agregar sub-categoría",
   label_category: "Categoría",
   step_when: "¿Cuándo?",

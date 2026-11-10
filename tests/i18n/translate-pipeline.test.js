@@ -65,7 +65,10 @@ test('the pipeline turns the master into a translated dictionary', () => {
     const manifest = JSON.parse(
       readFileSync(sandbox.path('scratch', `i18n-manifest-${LANG}.json`), 'utf-8')
     )
-    assert.equal(Object.keys(manifest).length, 10, 'the master has ten sections')
+    // Every dictionary section the master exports, and this number must grow with
+    // it: it exists so a truncated or half-merged master fails loudly instead of
+    // producing a dictionary that silently lost a whole section.
+    assert.equal(Object.keys(manifest).length, 13, 'the master has thirteen sections')
     const totalKeys = Object.values(manifest).flatMap((s) => Object.values(s)).length
     assert.ok(totalKeys > 2000, `the master has ${totalKeys} keys`)
 
