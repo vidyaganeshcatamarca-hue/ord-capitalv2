@@ -2791,6 +2791,10 @@ export const sobres = {
   error_sobre_rescue_empty: "Escolha pelo menos uma origem para resgatar.",
   error_sobre_order_empty: "Não há envelopes para ordenar.",
   error_sobre_order_mismatch: "A ordem enviada não corresponde aos seus envelopes ativos.",
+  error_sobre_not_a_contribution: "Só aportes e resgates podem ser corrigidos.",
+  error_sobre_aporte_below_rescued: "O aporte não pode ficar abaixo do que você já resgatou dessa carteira.",
+  error_sobre_rescate_above_contributed: "O resgate não pode superar o que você aportou nessa carteira.",
+  error_sobre_portion_in_use: "Para trocar a carteira ou o tipo de reserva, corrija primeiro os resgates dessa carteira.",
   error_sobre_date_requires_meta: "Uma data alvo precisa de uma meta: sem meta não há prazo a medir.",
   error_sobre_amount_invalid: "O valor precisa ser maior que zero.",
 

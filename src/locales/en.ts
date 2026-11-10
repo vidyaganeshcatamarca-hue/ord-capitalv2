@@ -2791,6 +2791,10 @@ export const sobres = {
   error_sobre_rescue_empty: "Pick at least one origin to withdraw from.",
   error_sobre_order_empty: "There are no envelopes to sort.",
   error_sobre_order_mismatch: "The order you sent does not match your active envelopes.",
+  error_sobre_not_a_contribution: "Only contributions and withdrawals can be corrected.",
+  error_sobre_aporte_below_rescued: "A contribution cannot go below what you already withdrew from that wallet.",
+  error_sobre_rescate_above_contributed: "A withdrawal cannot exceed what you contributed from that wallet.",
+  error_sobre_portion_in_use: "To change the wallet or the reserve type, correct the withdrawals from that wallet first.",
   error_sobre_date_requires_meta: "A target date needs a goal: without a goal there is no deadline to measure.",
   error_sobre_amount_invalid: "The amount must be greater than zero.",
 

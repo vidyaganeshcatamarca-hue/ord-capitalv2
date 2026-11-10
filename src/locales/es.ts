@@ -3120,6 +3120,10 @@ export const sobres = {
   error_sobre_rescue_empty: "Elegí al menos un origen para rescatar.",
   error_sobre_order_empty: "No hay sobres para ordenar.",
   error_sobre_order_mismatch: "El orden enviado no coincide con tus sobres activos.",
+  error_sobre_not_a_contribution: "Sólo se pueden corregir aportes y rescates.",
+  error_sobre_aporte_below_rescued: "El aporte no puede quedar por debajo de lo que ya rescataste de esa billetera.",
+  error_sobre_rescate_above_contributed: "El rescate no puede superar lo que aportaste en esa billetera.",
+  error_sobre_portion_in_use: "Para cambiar la billetera o el tipo de reserva, primero corregí los rescates de esa billetera.",
   error_sobre_date_requires_meta: "Una fecha objetivo necesita una meta: sin meta no hay plazo que medir.",
   error_sobre_amount_invalid: "El importe tiene que ser mayor que cero.",
 
