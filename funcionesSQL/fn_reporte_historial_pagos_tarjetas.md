@@ -1,9 +1,44 @@
-CREATE OR REPLACE FUNCTION public.fn_reporte_historial_pagos_tarjetas()
- RETURNS TABLE(pago_id bigint, fecha date, tarjeta_nombre text, monto_pagado numeric, billetera_origen text, cuotas_liquidadas integer, observaciones text, moneda text)
+CREATE OR REPLACE FUNCTION public.fn_reporte_historial_pagos_tarjetas(p_tarjeta_id bigint DEFAULT NULL::bigint)
+ RETURNS TABLE(pago_id bigint, fecha date, tarjeta_nombre text, monto_pagado numeric, billetera_origen text, cuotas_liquidadas integer, observaciones text, moneda text, tarjeta_id bigint)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
 AS $function$
+DECLARE
+    v_user_id bigint;
+    v_moneda_local text;
+BEGIN
+    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+    IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
+
+    SELECT COALESCE((SELECT moneda_default FROM public.p_config_region WHERE user_id = v_user_id), 'ARS')
+      INTO v_moneda_local;
+
+    RETURN QUERY
+    SELECT
+        c.p_caja_id,
+        c.fecha,
+        t.nombre_tarjeta,
+        c.valor_egreso,
+        b.nombre,
+        COALESCE((
+            SELECT COUNT(*) FROM public.p_cuotas_detalle cd
+             WHERE cd.pago_caja_id = c.p_caja_id
+        ), 0)::integer,
+        c.observaciones,
+        COALESCE(c.moneda, v_moneda_local)::text,
+        c.tarjeta_id
+    FROM public.p_caja c
+    INNER JOIN public.p_tarjetas_credito t ON c.tarjeta_id = t.tarjeta_id
+    LEFT JOIN public.p_billeteras b ON c.billetera_origen_id = b.billetera_id
+    WHERE c.user_id = v_user_id
+      AND c.tipo = 'pago_tarjeta'
+      AND c.tarjeta_id IS NOT NULL
+      AND (p_tarjeta_id IS NULL OR c.tarjeta_id = p_tarjeta_id)
+    ORDER BY c.fecha DESC, c.p_caja_id DESC
+    LIMIT 500;
+END;
+$function$;
 DECLARE
     v_user_id bigint;
 BEGIN
