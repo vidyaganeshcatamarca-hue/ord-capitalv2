@@ -1,5 +1,7 @@
--- Detalle completo en un viaje: sobre, plan calculado, porciones e historial básico.
--- PRD: DF-16 (fecha, tipo, importe y billetera; sin filtros avanzados), DF-21.
+-- Detalle completo en un viaje: sobre, plan calculado, porciones e historial basico.
+-- El historial incluye billetera_id ademas del nombre: la pantalla de correccion
+-- necesita el id porque puede haber billeteras homonimas.
+-- PRD: DF-10, DF-11, DF-15.
 
 CREATE OR REPLACE FUNCTION public.fn_sobre_detalle(p_sobre_id bigint)
  RETURNS jsonb
@@ -72,11 +74,11 @@ BEGIN
                 'fecha', h.fecha,
                 'tipo', h.tipo,
                 'importe', h.importe,
-                'billetera_nombre', h.billetera_nombre,
+                'billetera_nombre', h.billetera_nombre, 'billetera_id', h.billetera_id,
                 'modalidad', h.modalidad
             ) ORDER BY h.fecha DESC, h.movimiento_id DESC)
             FROM (
-                SELECT m.movimiento_id, m.fecha, m.tipo, m.importe, w.nombre AS billetera_nombre, m.modalidad
+                SELECT m.movimiento_id, m.fecha, m.tipo, m.importe, m.billetera_id, w.nombre AS billetera_nombre, m.modalidad
                 FROM public.p_sobre_movimientos m
                 JOIN public.p_billeteras w ON w.billetera_id = m.billetera_id
                 WHERE m.sobre_id = p_sobre_id

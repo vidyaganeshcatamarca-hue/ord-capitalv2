@@ -169,6 +169,26 @@
   padding: 10px 14px;
 }
 
+.sobre-detalle-corregir {
+  align-items: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-3);
+  cursor: pointer;
+  display: inline-flex;
+  flex: none;
+  height: 28px;
+  justify-content: center;
+  padding: 0;
+  width: 28px;
+}
+
+.sobre-detalle-corregir:hover {
+  border-color: var(--mint);
+  color: var(--text);
+}
+
 .sobre-detalle-porciones li div,
 .sobre-detalle-historial li div {
   display: flex;

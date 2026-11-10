@@ -1,7 +1,7 @@
 import { formatCurrency, formatDate, formatPercent } from '@/lib/format'
 import { t } from '@/locales/i18n'
-import { ChevronLeft } from 'lucide-react'
-import type { Sobre, SobreDetalle } from './types'
+import { ChevronLeft, Pencil } from 'lucide-react'
+import type { Sobre, SobreDetalle, SobreMovimiento } from './types'
 import './SobreDetail.css'
 
 interface SobreDetailProps {
@@ -10,6 +10,8 @@ interface SobreDetailProps {
   onProvision: (sobre: Sobre) => void
   onRescue: (sobre: Sobre) => void
   onEdit: (sobre: Sobre) => void
+  /** Corregir un aporte o un rescate ya registrado (DF-17). */
+  onCorrect: (movimiento: SobreMovimiento) => void
 }
 
 const ETIQUETA_TIPO: Record<string, string> = {
@@ -42,7 +44,7 @@ export function sobreDesdeDetalle(detalle: SobreDetalle): Sobre {
   }
 }
 
-export function SobreDetail({ detalle, onBack, onProvision, onRescue, onEdit }: SobreDetailProps) {
+export function SobreDetail({ detalle, onBack, onProvision, onRescue, onEdit, onCorrect }: SobreDetailProps) {
   const { sobre, plan, porciones, historial } = detalle
   const tieneMeta = sobre.monto_meta !== null && sobre.monto_meta > 0
   const tieneFecha = sobre.fecha_objetivo !== null
@@ -179,6 +181,17 @@ export function SobreDetail({ detalle, onBack, onProvision, onRescue, onEdit }: 
                   {movimiento.tipo === 'rescate' ? '−' : '+'}
                   {formatCurrency(movimiento.importe, sobre.moneda)}
                 </span>
+                {movimiento.tipo !== 'rendimiento' && (
+                  <button
+                    type="button"
+                    className="sobre-detalle-corregir"
+                    onClick={() => onCorrect(movimiento)}
+                    aria-label={t('sobres_correct_action')}
+                    title={t('sobres_correct_action')}
+                  >
+                    <Pencil size={14} />
+                  </button>
+                )}
               </li>
             ))}
           </ul>

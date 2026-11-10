@@ -13,6 +13,7 @@ import { SobreAporteModal } from '@/components/sobres/SobreAporteModal'
 import { SobreRescateModal } from '@/components/sobres/SobreRescateModal'
 import { SobreRendimientoModal } from '@/components/sobres/SobreRendimientoModal'
 import { useOrdenArrastre } from '@/components/sobres/useOrdenArrastre'
+import { SobreMovimientoModal } from '@/components/sobres/SobreMovimientoModal'
 import {
   normalizarBilletera,
   normalizarDetalle,
@@ -20,6 +21,7 @@ import {
   type BilleteraOperativa,
   type Sobre,
   type SobreDetalle,
+  type SobreMovimiento,
 } from '@/components/sobres/types'
 import './SobresPage.css'
 
@@ -41,6 +43,7 @@ export function SobresPage() {
   const [rescateTarget, setRescateTarget] = useState<Sobre | null>(null)
   const [archivoTarget, setArchivoTarget] = useState<Sobre | null>(null)
   const [rendimientoTarget, setRendimientoTarget] = useState<Sobre | null>(null)
+  const [movimientoTarget, setMovimientoTarget] = useState<SobreMovimiento | null>(null)
 
   const cargarTodo = useCallback(async () => {
     setCargando(true)
@@ -233,6 +236,7 @@ export function SobresPage() {
           onProvision={setAporteTarget}
           onRescue={setRescateTarget}
           onEdit={setFormTarget}
+          onCorrect={setMovimientoTarget}
         />
       ) : vista === 'archivados' ? (
         <section className="sobres-archivados">
@@ -350,6 +354,15 @@ export function SobresPage() {
         isOpen={rescateTarget !== null}
         sobre={rescateTarget}
         onClose={() => setRescateTarget(null)}
+        onSuccess={trasCambio}
+      />
+
+      <SobreMovimientoModal
+        isOpen={movimientoTarget !== null}
+        movimiento={movimientoTarget}
+        moneda={detalle?.sobre.moneda ?? ''}
+        billeteras={billeteras}
+        onClose={() => setMovimientoTarget(null)}
         onSuccess={trasCambio}
       />
 

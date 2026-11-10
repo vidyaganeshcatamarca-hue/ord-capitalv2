@@ -51,6 +51,7 @@ export interface SobreMovimiento {
   fecha: string
   tipo: 'aporte' | 'rescate' | 'rendimiento'
   importe: number
+  billetera_id: number
   billetera_nombre: string
   modalidad: ModalidadReserva
 }
@@ -208,6 +209,7 @@ export function normalizarDetalle(data: any): SobreDetalle {
           fecha: String(h.fecha ?? ''),
           tipo: h.tipo as SobreMovimiento['tipo'],
           importe: numero(h.importe),
+          billetera_id: numero(h.billetera_id),
           billetera_nombre: String(h.billetera_nombre ?? ''),
           modalidad: (h.modalidad === 'real' ? 'real' : 'virtual') as ModalidadReserva,
         }))
