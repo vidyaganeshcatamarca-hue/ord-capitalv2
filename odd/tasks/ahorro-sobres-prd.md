@@ -73,7 +73,7 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
 | 3 | Cuota exacta | `meses = max(1, ceil(meses_calendario_restantes))`; `cuota = ceil(faltante / meses)` a 2 decimales; quincenal `cuota/2`, semanal `cuota/4.345`. |
 | 4 | Ritmo ideal tras reprogramar | `esperado = base + (meta - base) * dias_transcurridos / dias_totales`, con `base` = saldo al replanificar. |
 | 5 | Aviso "próxima a vencer" | **RATIFICADA** (ver L12): 7 días si el plazo total es menor a 6 meses, 14 días desde 6 meses. Una sola notificación por (sobre, evento, fecha_objetivo). |
-| 6 | Rendimiento nuevo en Free | Permitido: es dinero ya acreditado que el usuario conserva; bloquearlo rompe la trazabilidad del saldo real. |
+| 6 | Rendimiento nuevo en Free | **RATIFICADA**: permitido, es dinero ya acreditado que el usuario conserva. |
 | 7 | Edición histórica dependiente | **RATIFICADA** (ver L11): piso = lo ya rescatado de la porción; billetera y modalidad sólo si la porción no tiene rescates. |
 | 8 | Confirmación de archivado | Modal de confirmación explícita e irreversible. |
 | 9 | Aporte inicial fallido | Todo o nada: una sola transacción; si falla, no se crea el sobre. |
@@ -111,3 +111,8 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
   - Ejemplos: creado el 01/03 con fecha 01/08 (5 meses) avisa 7 días antes; creado el 01/03 con fecha 01/09 (exactamente 6 meses) y con fecha 01/12 (9 meses) avisan 14 días antes.
   - Un sobre sin fecha objetivo nunca avisa: no hay plazo. Si la meta ya está cumplida al abrirse la ventana, no hay "por vencer": corresponde el evento "meta alcanzada".
   - **Deduplicación**: una sola notificación por (sobre, evento, fecha objetivo), con `referencia_id = sobre_id` y la fecha en `metadata` de `p_notificaciones_enviadas`, que ya existe, igual que la categoría `cat_ahorro` de `p_notificaciones_config`. Reprogramar la fecha habilita un aviso nuevo; jamás recordatorios periódicos (DF-30).
+- **L13** (definición 43, ratificación del dueño, verbatim): "si". El ingreso del rendimiento **cuenta como cualquier otro ingreso** en reportes y proyecciones. No se escribió código nuevo.
+  - La proyección de capacidad (`fn_reporte_timeline_proyeccion`) no lee fuentes de ingreso: promedia `p_caja` con `tipo = 'income'` de los últimos 180 días y divide por 6. El rendimiento entra en ese promedio como cualquier otra entrada de plata.
+  - Fundamento: `p_ingresos` sólo distingue `es_pasivo` y `activo`; **no existe la noción de ingreso recurrente versus extraordinario en todo el sistema**. Un aguinaldo o un bono hoy cuentan igual que el sueldo, así que excluir sólo el rendimiento sería un caso especial sin principio. Además, un usuario que registra rendimiento todos los meses tiene capacidad real que la proyección debe ver.
+  - Costo que el dueño aceptó: un rendimiento grande y aislado infla el techo de capacidad durante seis meses (ejemplo: 120.000 de rendimiento único sobre 600.000 de sueldo semestral sube el promedio de 100.000 a 120.000 por mes). Si eso hubiera molestado, la solución de fondo era agregar la distinción recurrente/extraordinario para todos los ingresos, no un parche para este.
+  - En `fn_reporte_top_fuentes_ingreso` el rendimiento aparece con su propia fuente, **Rendimientos**, porque la plata entró a la billetera y tiene que verse.
