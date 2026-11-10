@@ -72,7 +72,7 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
 | 2 | Moneda tras primer aporte | Bloqueada si el sobre tiene movimientos; permitida si saldo 0 y sin movimientos. |
 | 3 | Cuota exacta | `meses = max(1, ceil(meses_calendario_restantes))`; `cuota = ceil(faltante / meses)` a 2 decimales; quincenal `cuota/2`, semanal `cuota/4.345`. |
 | 4 | Ritmo ideal tras reprogramar | `esperado = base + (meta - base) * dias_transcurridos / dias_totales`, con `base` = saldo al replanificar. |
-| 5 | Aviso "próxima a vencer" | 7 días antes; una sola notificación por (sobre, evento, fecha_objetivo). |
+| 5 | Aviso "próxima a vencer" | **RATIFICADA** (ver L12): 7 días si el plazo total es menor a 6 meses, 14 días desde 6 meses. Una sola notificación por (sobre, evento, fecha_objetivo). |
 | 6 | Rendimiento nuevo en Free | Permitido: es dinero ya acreditado que el usuario conserva; bloquearlo rompe la trazabilidad del saldo real. |
 | 7 | Edición histórica dependiente | **RATIFICADA** (ver L11): piso = lo ya rescatado de la porción; billetera y modalidad sólo si la porción no tiene rescates. |
 | 8 | Confirmación de archivado | Modal de confirmación explícita e irreversible. |
@@ -104,3 +104,10 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
   2. **Cambio de billetera de origen**: permitido sólo si esa porción no tiene rescates (`error_sobre_portion_in_use`). Si los tiene, reatribuirlos dejaría rescates apuntando a una billetera de la que nunca salió plata, así que se rechaza y el usuario corrige primero el rescate.
   3. **Cambio de real/virtual**: misma restricción y por el mismo motivo.
   La corrección **actualiza el movimiento original** y no crea un rescate ficticio (§8.2), y la devolución a la billetera va como `adjustment` para no contarse como ingreso ni como gasto. Queda registrada en `p_sobre_movimientos_auditoria`. **No implementado todavía**: hoy no existe ni RPC ni pantalla de corrección de aportes/rescates; esta definición habilita esa tarea.
+- **L12** (definición 32, corrección del dueño, verbatim): "7 dias en proyectos de menos de 6 meses y 14 en proyectos de mas de 6 meses". Ratifica la anticipación del aviso "meta próxima a vencer" (§16.5, DF-30, §10.5), escalonada por el plazo total del proyecto:
+  - **7 días** cuando el plazo total es **menor a 6 meses**.
+  - **14 días** cuando el plazo total es de **6 meses o más**. El dueño dijo "más de 6"; el caso exactamente igual a 6 meses no estaba nombrado y se resuelve del lado de los 14 días, porque avisar tarde es peor que avisar de más.
+  - **Plazo total** = `fecha_objetivo − plan_inicio_at`, con aritmética de calendario (`interval '6 months'`), no 180 días. Reprogramar la fecha reinicia `plan_inicio_at`, así que el plazo se vuelve a medir sobre el tramo nuevo.
+  - Ejemplos: creado el 01/03 con fecha 01/08 (5 meses) avisa 7 días antes; creado el 01/03 con fecha 01/09 (exactamente 6 meses) y con fecha 01/12 (9 meses) avisan 14 días antes.
+  - Un sobre sin fecha objetivo nunca avisa: no hay plazo. Si la meta ya está cumplida al abrirse la ventana, no hay "por vencer": corresponde el evento "meta alcanzada".
+  - **Deduplicación**: una sola notificación por (sobre, evento, fecha objetivo), con `referencia_id = sobre_id` y la fecha en `metadata` de `p_notificaciones_enviadas`, que ya existe, igual que la categoría `cat_ahorro` de `p_notificaciones_config`. Reprogramar la fecha habilita un aviso nuevo; jamás recordatorios periódicos (DF-30).
