@@ -78,10 +78,11 @@ Lista cerrada uno por uno sobre las 12 categorías que ya declara `p_notificacio
 | `cat_recurrentes` | los gastos recurrentes caen en cuarentena, y es ahí donde el sistema ve si hay con qué pagarlos |
 | `cat_score` | el score no hace falta mostrarlo |
 
-### Sin definir todavía
+### Resúmenes
 
-- `cat_resumen_semanal` y `cat_resumen_mensual`: el dueño no las nombró. El agente recomienda **no** hacerlas (material típico del usuario que deja de leer avisos), o dejarlas apagadas por defecto.
+- `cat_resumen_mensual`: **va**.
+- `cat_resumen_semanal`: **apagado** (existe pero nace desactivado).
 
-## Cabo suelto que abre la decisión de "rojo"
+### "Rojo" = conciliaciones
 
-Si las cuentas no pueden ir a negativo, `fn_reporte_alertas_home` está devolviendo `v_billeteras_rojas` con algún significado distinto —la captura del dueño mostraba **4**— o hay datos en un estado que no debería existir. Hay que mirar qué mide exactamente ese contador antes de descartar la categoría.
+El dueño aclaró que `v_billeteras_rojas` en realidad mide **conciliaciones**: ese "4" de la captura son cuentas desconciliadas, no saldos negativos. Encaja con que las cuentas no puedan ir a negativo, y con que el aviso de cuenta desconciliada sí vaya. Queda entonces: el aviso correcto ya existe (desconciliada) y la categoría "cuenta en rojo" como saldo negativo **no aplica**.
