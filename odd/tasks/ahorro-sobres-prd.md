@@ -60,7 +60,7 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
 | T4 | RPC de rendimiento + ingreso único en `p_caja` + modal | S11 | pending: autorización |
 | T3 | Integración presupuesto: reservas virtuales en `fn_obtener_saldo_a_asignar` | S8, DF-32 | pending: autorización |
 | T7 | Orden manual por arrastre persistente | S15 | hecho (ver L10); falta la prueba visual |
-| T8 | Plan Free en la UI (la base ya lo bloquea; falta deshabilitar el alta) | S16 | pending |
+| T8 | Plan Free en la UI | S16 | **sin objeto**: el dueño levantó la restricción (ver L14) |
 | T9 | Notificaciones por infraestructura general | DF-30 | pending |
 | T10b | Baja de las RPC legacy de Cuenta Madre y transferencia entre sobres | S10 | pending: autorización (DROP) |
 
@@ -116,3 +116,6 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
   - Fundamento: `p_ingresos` sólo distingue `es_pasivo` y `activo`; **no existe la noción de ingreso recurrente versus extraordinario en todo el sistema**. Un aguinaldo o un bono hoy cuentan igual que el sueldo, así que excluir sólo el rendimiento sería un caso especial sin principio. Además, un usuario que registra rendimiento todos los meses tiene capacidad real que la proyección debe ver.
   - Costo que el dueño aceptó: un rendimiento grande y aislado infla el techo de capacidad durante seis meses (ejemplo: 120.000 de rendimiento único sobre 600.000 de sueldo semestral sube el promedio de 100.000 a 120.000 por mes). Si eso hubiera molestado, la solución de fondo era agregar la distinción recurrente/extraordinario para todos los ingresos, no un parche para este.
   - En `fn_reporte_top_fuentes_ingreso` el rendimiento aparece con su propia fuente, **Rendimientos**, porque la plata entró a la billetera y tiene que verse.
+- **L14** (decisión del dueño, verbatim): "Quita la restricción de que Free no puede hacer actividades . Quitala." Levanta el bloqueo por plan en el módulo de ahorro. **Revierte DF-31 en lo que respecta a crear y aportar**: cualquier usuario, en cualquier plan, puede crear sobres, aportar y registrar rendimiento. Se eliminó el guard `IF v_plan = 'free'` de `fn_sobre_crear` y de `fn_sobre_aportar`, junto con la variable, la lectura de `usuarios.plan_tipo` y la clave i18n `error_sobre_plan_requires_premium` de los tres idiomas, para no dejar código muerto ni un texto que ya nunca se muestra.
+  - Verificado con 5 aserciones transaccionales (`PASS`) en `temp_sql/ahorro_free_sin_bloqueo_test.sql`, corriendo como **user 1** (`plan_tipo = 'free'`): crea un sobre, aporta 1.000, la billetera baja de 461.774,99 a 460.774,99, el sobre queda con 1.000 y ninguna de las dos funciones menciona ya el plan.
+  - Consecuencia operativa: el user 1 vuelve a servir para probar el alta de sobres, que era justamente lo que el bloqueo impedía.

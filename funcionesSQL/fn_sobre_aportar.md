@@ -1,8 +1,9 @@
 -- Aporte a un sobre. La plata sale de la billetera en LAS DOS modalidades:
 -- la diferencia entre real y virtual la resuelve Conciliacion, no el saldo.
 -- La billetera ya viene neta de lo apartado en otros sobres, asi que el
--- chequeo de saldo compara directo contra saldo_actual. En Free no se aporta.
--- PRD: DF-01, DF-03, DF-07, DF-08, DF-31.
+-- chequeo de saldo compara directo contra saldo_actual. No hay restriccion
+-- por plan: cualquier usuario puede aportar.
+-- PRD: DF-01, DF-03, DF-07, DF-08; el dueno levanto DF-31.
 
 CREATE OR REPLACE FUNCTION public.fn_sobre_aportar(p_sobre_id bigint, p_billetera_id bigint, p_importe numeric, p_modalidad text, p_genera_rendimiento boolean DEFAULT false, p_fecha date DEFAULT CURRENT_DATE)
  RETURNS bigint
@@ -12,19 +13,14 @@ CREATE OR REPLACE FUNCTION public.fn_sobre_aportar(p_sobre_id bigint, p_billeter
 AS $function$
 DECLARE
     v_user_id bigint;
-    v_plan text;
     v_sobre public.p_sobres;
     v_wallet public.p_billeteras;
     v_movimiento_id bigint;
     v_caja_id bigint;
 BEGIN
-    SELECT u.user_id, u.plan_tipo INTO v_user_id, v_plan
+    SELECT u.user_id INTO v_user_id
     FROM public.usuarios u WHERE u.auth_id = auth.uid();
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
-
-    IF v_plan = 'free' THEN
-        RAISE EXCEPTION '{"key": "error_sobre_plan_requires_premium", "params": {}}';
-    END IF;
 
     SELECT * INTO v_sobre FROM public.p_sobres b
     WHERE b.sobre_id = p_sobre_id AND b.user_id = v_user_id;
@@ -54,15 +50,15 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_sobre_currency_mismatch", "params": {"sobre": "{{sobre}}", "billetera": "{{billetera}}"}}';
     END IF;
 
-    -- La billetera ya viene neta de lo que estÃ¡ apartado en otros sobres (la
-    -- regla es que su saldo ES el disponible), asÃ­ que no hay que descontar
+    -- La billetera ya viene neta de lo que estÃƒÂ¡ apartado en otros sobres (la
+    -- regla es que su saldo ES el disponible), asÃƒÂ­ que no hay que descontar
     -- reservas previas: alcanza con comparar contra el saldo actual.
     IF v_wallet.saldo_actual < p_importe THEN
         RAISE EXCEPTION '{"key": "error_sobre_wallet_insufficient", "params": {"billetera": "{{billetera}}"}}';
     END IF;
 
     -- La plata sale de la billetera en LAS DOS modalidades: la diferencia entre
-    -- real y virtual la resuelve la conciliaciÃ³n, no el saldo.
+    -- real y virtual la resuelve la conciliaciÃƒÂ³n, no el saldo.
     v_caja_id := public.fn_sobre_pata_billetera(
         v_user_id, p_billetera_id, v_sobre.moneda, p_importe, true,
         'savings_envelope_aporte_real', p_sobre_id, v_sobre.nombre

@@ -2788,7 +2788,6 @@ export const sobres = {
   error_sobre_portion_insufficient: "Essa porção tem {disponible} disponível. Ajuste o valor.",
   error_sobre_archive_with_balance: "O envelope ainda tem {saldo}. Resgate antes de arquivar.",
   error_sobre_archived: "Esse envelope está arquivado e não pode ser alterado.",
-  error_sobre_plan_requires_premium: "No plano Free você pode ver, resgatar e corrigir seus envelopes, mas não criar nem aportar.",
   error_sobre_rescue_empty: "Escolha pelo menos uma origem para resgatar.",
   error_sobre_order_empty: "Não há envelopes para ordenar.",
   error_sobre_order_mismatch: "A ordem enviada não corresponde aos seus envelopes ativos.",

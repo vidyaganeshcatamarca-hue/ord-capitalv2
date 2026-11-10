@@ -3117,7 +3117,6 @@ export const sobres = {
   error_sobre_portion_insufficient: "Esa porción tiene {disponible} disponible. Ajustá el importe.",
   error_sobre_archive_with_balance: "El sobre tiene {saldo} adentro. Rescatalo antes de archivarlo.",
   error_sobre_archived: "Ese sobre está archivado y no se puede modificar.",
-  error_sobre_plan_requires_premium: "En el plan Free podés consultar, rescatar y corregir tus sobres, pero no crear ni aportar.",
   error_sobre_rescue_empty: "Elegí al menos un origen para rescatar.",
   error_sobre_order_empty: "No hay sobres para ordenar.",
   error_sobre_order_mismatch: "El orden enviado no coincide con tus sobres activos.",

@@ -2788,7 +2788,6 @@ export const sobres = {
   error_sobre_portion_insufficient: "That portion has {disponible} available. Adjust the amount.",
   error_sobre_archive_with_balance: "The envelope still holds {saldo}. Withdraw it before archiving.",
   error_sobre_archived: "That envelope is archived and cannot be changed.",
-  error_sobre_plan_requires_premium: "On the Free plan you can view, withdraw and correct your envelopes, but not create them or contribute.",
   error_sobre_rescue_empty: "Pick at least one origin to withdraw from.",
   error_sobre_order_empty: "There are no envelopes to sort.",
   error_sobre_order_mismatch: "The order you sent does not match your active envelopes.",

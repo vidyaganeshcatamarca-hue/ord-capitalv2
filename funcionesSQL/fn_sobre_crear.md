@@ -2,10 +2,10 @@
 -- ahorro libre (sin meta) y proyecto (con meta, y fecha opcional). La fecha
 -- sola no existe: pedirla sin meta se rechaza con error_sobre_date_requires_meta.
 -- El aporte inicial es todo o nada y descuenta la billetera en las dos
--- modalidades. En plan Free no se crean sobres.
--- PRD: DF-06, DF-07, DF-25, DF-31; replanteo DF-29.
+-- modalidades. No hay restriccion por plan: cualquier usuario puede crear.
+-- PRD: DF-06, DF-07, DF-25; replanteo DF-29; el dueno levanto DF-31.
 
-CREATE OR REPLACE FUNCTION public.fn_sobre_crear(p_nombre text, p_moneda text, p_monto_meta numeric DEFAULT NULL::numeric, p_fecha_objetivo date DEFAULT NULL::date, p_aporte_billetera_id bigint DEFAULT NULL::bigint, p_aporte_importe numeric DEFAULT NULL::numeric, p_aporte_modalidad text DEFAULT NULL::text, p_aporte_genera_rendimiento boolean DEFAULT false, p_icono text DEFAULT 'ðŸ’°'::text)
+CREATE OR REPLACE FUNCTION public.fn_sobre_crear(p_nombre text, p_moneda text, p_monto_meta numeric DEFAULT NULL::numeric, p_fecha_objetivo date DEFAULT NULL::date, p_aporte_billetera_id bigint DEFAULT NULL::bigint, p_aporte_importe numeric DEFAULT NULL::numeric, p_aporte_modalidad text DEFAULT NULL::text, p_aporte_genera_rendimiento boolean DEFAULT false, p_icono text DEFAULT 'Ã°Å¸â€™Â°'::text)
  RETURNS bigint
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -13,20 +13,15 @@ CREATE OR REPLACE FUNCTION public.fn_sobre_crear(p_nombre text, p_moneda text, p
 AS $function$
 DECLARE
     v_user_id bigint;
-    v_plan text;
     v_sobre_id bigint;
     v_orden integer;
     v_wallet public.p_billeteras;
     v_ya_reservado numeric;
     v_caja_id bigint;
 BEGIN
-    SELECT u.user_id, u.plan_tipo INTO v_user_id, v_plan
+    SELECT u.user_id INTO v_user_id
     FROM public.usuarios u WHERE u.auth_id = auth.uid();
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
-
-    IF v_plan = 'free' THEN
-        RAISE EXCEPTION '{"key": "error_sobre_plan_requires_premium", "params": {}}';
-    END IF;
 
     IF p_nombre IS NULL OR length(btrim(p_nombre)) = 0 THEN
         RAISE EXCEPTION '{"key": "error_sobre_name_required", "params": {}}';
@@ -42,7 +37,7 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_sobre_date_requires_meta", "params": {}}';
     END IF;
 
-    -- El aporte inicial, si viene, se valida ANTES de crear nada (Â§16.9).
+    -- El aporte inicial, si viene, se valida ANTES de crear nada (Ã‚Â§16.9).
     IF p_aporte_billetera_id IS NOT NULL OR p_aporte_importe IS NOT NULL THEN
         IF p_aporte_billetera_id IS NULL OR p_aporte_importe IS NULL
            OR p_aporte_importe <= 0 OR p_aporte_modalidad IS NULL THEN
@@ -65,9 +60,9 @@ BEGIN
             RAISE EXCEPTION '{"key": "error_sobre_currency_mismatch", "params": {"sobre": "{{sobre}}", "billetera": "{{billetera}}"}}';
         END IF;
 
-        -- Virtual: sÃ³lo se aparta lo que sigue libre en la billetera, descontando
+        -- Virtual: sÃƒÂ³lo se aparta lo que sigue libre en la billetera, descontando
         -- lo que otros sobres ya reservaron de la misma billetera.
-        -- Real: la plata sale de la billetera, asÃ­ que hace falta el saldo.
+        -- Real: la plata sale de la billetera, asÃƒÂ­ que hace falta el saldo.
         IF p_aporte_modalidad = 'virtual' THEN
             SELECT COALESCE(SUM(CASE WHEN m.tipo = 'rescate' THEN -m.importe ELSE m.importe END), 0)
             INTO v_ya_reservado
@@ -90,7 +85,7 @@ BEGIN
     FROM public.p_sobres b WHERE b.user_id = v_user_id;
 
     INSERT INTO public.p_sobres (user_id, nombre, moneda, monto_meta, fecha_objetivo, orden, icono)
-    VALUES (v_user_id, btrim(p_nombre), p_moneda, p_monto_meta, p_fecha_objetivo, v_orden, COALESCE(p_icono, 'ðŸ’°'))
+    VALUES (v_user_id, btrim(p_nombre), p_moneda, p_monto_meta, p_fecha_objetivo, v_orden, COALESCE(p_icono, 'Ã°Å¸â€™Â°'))
     RETURNING sobre_id INTO v_sobre_id;
 
     IF p_aporte_billetera_id IS NOT NULL THEN
