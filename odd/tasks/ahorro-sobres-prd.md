@@ -59,7 +59,7 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
 | T10a | Retiro de Cuenta Madre, transferencia entre sobres y gráfico inventado | S10, S9 | **done** `ecb2d1c` |
 | T4 | RPC de rendimiento + ingreso único en `p_caja` + modal | S11 | pending: autorización |
 | T3 | Integración presupuesto: reservas virtuales en `fn_obtener_saldo_a_asignar` | S8, DF-32 | pending: autorización |
-| T11 | Corregir aportes y rescates (DF-17, §8.2) | L11 | hecho: RPC y 10 aserciones en verde; falta la pantalla |
+| T11 | Corregir aportes y rescates (DF-17, §8.2) | L11, L16 | hecho: RPC, modal y botón en el historial; falta la prueba visual |
 | T7 | Orden manual por arrastre persistente | S15 | hecho (ver L10); falta la prueba visual |
 | T8 | Plan Free en la UI | S16 | **sin objeto**: el dueño levantó la restricción (ver L14) |
 | T9 | Notificaciones por infraestructura general | DF-30 | pending |
@@ -127,3 +127,7 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
   - Verificado con 10 aserciones transaccionales (`PASS`) en `temp_sql/ahorro_editar_movimiento_test.sql`, corriendo como user 1: rechazo por debajo de lo rescatado, corrección aceptada con el sobre y la billetera moviéndose juntos, la pata de caja editada sin duplicarse, rechazo de cambio de billetera y de modalidad con rescates en la porción, rechazo de rescate por encima de lo aportado, corrección aceptada del rescate, dos filas de auditoría, y rechazo de un rendimiento por esta vía.
   - Cuatro claves i18n nuevas en los tres idiomas: `error_sobre_not_a_contribution`, `error_sobre_aporte_below_rescued`, `error_sobre_rescate_above_contributed`, `error_sobre_portion_in_use`.
   - **Falta la pantalla** para corregir desde el detalle del sobre: la RPC está lista y probada, la UI todavía no existe.
+- **L16** — Pantalla de corrección de aportes y rescates, sobre la RPC de L15. Cada fila del historial que sea aporte o rescate gana un botón que abre `SobreMovimientoModal` con importe, billetera y modalidad precargados. El rendimiento no entra por acá: tiene su propia corrección (DF-28).
+  - Para poder precargar la billetera hizo falta **una línea autorizada por el dueño** en `fn_sobre_detalle`: el historial ahora expone `billetera_id` además de `billetera_nombre`. No se podía resolver por nombre porque **el mismo user 1 tiene dos billeteras llamadas "Dolar app"** (ids 400 y 1171): corregir contra la homónima equivocada habría sido exactamente el error que esta función existe para evitar. Verificado con 3 aserciones transaccionales (`PASS`): el id llega, coincide con el nombre que ya venía, y el resto del JSON no cambió.
+  - Cinco claves i18n nuevas en los tres idiomas: `sobres_correct_title`, `sobres_correct_hint`, `sobres_correct_success`, `sobres_correct_action`, `sobres_wallet_destination`.
+  - `tsc -b` limpio. **Sin prueba visual todavía**: entra en la pasada final pendiente (tarea 51).
