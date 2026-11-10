@@ -10853,6 +10853,498 @@
       "tour.ajustes.description": {
         "from": "Te mostramos cómo personalizar tu experiencia.",
         "to": "We show you how to personalize your experience."
+      },
+      "sobres.error_sobre_not_found": {
+        "from": "Ese sobre ya no existe.",
+        "to": "That envelope no longer exists."
+      },
+      "sobres.error_sobre_name_required": {
+        "from": "Poné un nombre al sobre.",
+        "to": "Give the envelope a name."
+      },
+      "sobres.error_sobre_currency_required": {
+        "from": "Elegí una moneda.",
+        "to": "Pick a currency."
+      },
+      "sobres.error_sobre_meta_invalid": {
+        "from": "La meta tiene que ser mayor que cero.",
+        "to": "The goal must be greater than zero."
+      },
+      "sobres.error_sobre_initial_aporte_invalid": {
+        "from": "Revisá el aporte inicial: importe, billetera y modalidad.",
+        "to": "Check the initial contribution: amount, wallet and modality."
+      },
+      "sobres.error_sobre_modality_invalid": {
+        "from": "Elegí dónde está el dinero: separado en la entidad o reservado sólo en ORD.",
+        "to": "Pick where the money is: set aside at the institution or reserved in ORD only."
+      },
+      "sobres.error_sobre_yield_requires_real": {
+        "from": "Sólo una reserva separada en la entidad puede generar rendimientos.",
+        "to": "Only a reserve set aside at the institution can earn returns."
+      },
+      "sobres.error_sobre_wallet_not_found": {
+        "from": "Esa billetera no existe o está inactiva.",
+        "to": "That wallet does not exist or is inactive."
+      },
+      "sobres.error_sobre_currency_mismatch": {
+        "from": "La billetera es de {billetera} y el sobre es de {sobre}. Un sobre no convierte monedas.",
+        "to": "The wallet is in {billetera} and the envelope is in {sobre}. An envelope never converts currencies."
+      },
+      "sobres.error_sobre_wallet_insufficient": {
+        "from": "No alcanza el saldo libre de {billetera} para reservar ese importe.",
+        "to": "{billetera} does not have enough free balance to reserve that amount."
+      },
+      "sobres.error_sobre_portion_insufficient": {
+        "from": "Esa porción tiene {disponible} disponible. Ajustá el importe.",
+        "to": "That portion has {disponible} available. Adjust the amount."
+      },
+      "sobres.error_sobre_archive_with_balance": {
+        "from": "El sobre tiene {saldo} adentro. Rescatalo antes de archivarlo.",
+        "to": "The envelope still holds {saldo}. Withdraw it before archiving."
+      },
+      "sobres.error_sobre_archived": {
+        "from": "Ese sobre está archivado y no se puede modificar.",
+        "to": "That envelope is archived and cannot be changed."
+      },
+      "sobres.error_sobre_rescue_empty": {
+        "from": "Elegí al menos un origen para rescatar.",
+        "to": "Pick at least one origin to withdraw from."
+      },
+      "sobres.error_sobre_order_empty": {
+        "from": "No hay sobres para ordenar.",
+        "to": "There are no envelopes to sort."
+      },
+      "sobres.error_sobre_order_mismatch": {
+        "from": "El orden enviado no coincide con tus sobres activos.",
+        "to": "The order you sent does not match your active envelopes."
+      },
+      "sobres.error_sobre_not_a_contribution": {
+        "from": "Sólo se pueden corregir aportes y rescates.",
+        "to": "Only contributions and withdrawals can be corrected."
+      },
+      "sobres.error_sobre_aporte_below_rescued": {
+        "from": "El aporte no puede quedar por debajo de lo que ya rescataste de esa billetera.",
+        "to": "A contribution cannot go below what you already withdrew from that wallet."
+      },
+      "sobres.error_sobre_rescate_above_contributed": {
+        "from": "El rescate no puede superar lo que aportaste en esa billetera.",
+        "to": "A withdrawal cannot exceed what you contributed from that wallet."
+      },
+      "sobres.error_sobre_portion_in_use": {
+        "from": "Para cambiar la billetera o el tipo de reserva, primero corregí los rescates de esa billetera.",
+        "to": "To change the wallet or the reserve type, correct the withdrawals from that wallet first."
+      },
+      "sobres.error_sobre_date_requires_meta": {
+        "from": "Una fecha objetivo necesita una meta: sin meta no hay plazo que medir.",
+        "to": "A target date needs a goal: without a goal there is no deadline to measure."
+      },
+      "sobres.error_sobre_amount_invalid": {
+        "from": "El importe tiene que ser mayor que cero.",
+        "to": "The amount must be greater than zero."
+      },
+      "sobres.sobres_title": {
+        "from": "Mis ahorros",
+        "to": "My savings"
+      },
+      "sobres.sobres_subtitle": {
+        "from": "Tus sobres y proyectos, con el dinero separado o reservado sólo en ORD.",
+        "to": "Your envelopes and projects, with the money set aside or reserved in ORD only."
+      },
+      "sobres.sobres_new": {
+        "from": "Nuevo sobre",
+        "to": "New envelope"
+      },
+      "sobres.sobres_archived_link": {
+        "from": "Sobres archivados",
+        "to": "Archived envelopes"
+      },
+      "sobres.sobres_order_auto": {
+        "from": "Orden automático",
+        "to": "Automatic order"
+      },
+      "sobres.sobres_order_hint": {
+        "from": "Mantené presionada una tarjeta para moverla",
+        "to": "Press and hold a card to move it"
+      },
+      "sobres.sobres_archived_title": {
+        "from": "Sobres archivados",
+        "to": "Archived envelopes"
+      },
+      "sobres.sobres_archived_empty": {
+        "from": "Todavía no archivaste ningún sobre.",
+        "to": "You have not archived any envelope yet."
+      },
+      "sobres.sobres_archived_note": {
+        "from": "Los sobres archivados se consultan pero no se reactivan. Para volver a ahorrar con ese objetivo, creá un sobre nuevo.",
+        "to": "Archived envelopes are read only and cannot be reactivated. To save for that goal again, create a new envelope."
+      },
+      "sobres.sobres_empty_title": {
+        "from": "Todavía no tenés sobres",
+        "to": "No envelopes yet"
+      },
+      "sobres.sobres_empty_text": {
+        "from": "Un sobre es una reserva con nombre. Podés ponerle meta y fecha, o dejar que crezca sola.",
+        "to": "An envelope is a named reserve. You can give it a goal and a date, or just let it grow."
+      },
+      "sobres.sobres_saved": {
+        "from": "Ahorrado",
+        "to": "Saved"
+      },
+      "sobres.sobres_active_count": {
+        "from": "sobres activos",
+        "to": "active envelopes"
+      },
+      "sobres.sobres_active_count_one": {
+        "from": "sobre activo",
+        "to": "active envelope"
+      },
+      "sobres.sobres_no_goal": {
+        "from": "Sin meta",
+        "to": "No goal"
+      },
+      "sobres.sobres_of_goal": {
+        "from": "de {meta}",
+        "to": "of {meta}"
+      },
+      "sobres.sobres_days_left": {
+        "from": "Faltan {dias} días",
+        "to": "{dias} days left"
+      },
+      "sobres.sobres_days_left_one": {
+        "from": "Falta 1 día",
+        "to": "1 day left"
+      },
+      "sobres.sobres_due_today": {
+        "from": "Vence hoy",
+        "to": "Due today"
+      },
+      "sobres.sobres_goal_overdue": {
+        "from": "Plazo vencido",
+        "to": "Past due"
+      },
+      "sobres.sobres_quota_monthly": {
+        "from": "Cuota mensual sugerida",
+        "to": "Suggested monthly amount"
+      },
+      "sobres.sobres_quota_short": {
+        "from": "Cuota",
+        "to": "Monthly"
+      },
+      "sobres.sobres_actions": {
+        "from": "Acciones del sobre",
+        "to": "Envelope actions"
+      },
+      "sobres.sobres_menu_more": {
+        "from": "Más acciones",
+        "to": "More actions"
+      },
+      "sobres.state_fulfilled": {
+        "from": "Meta cumplida",
+        "to": "Goal reached"
+      },
+      "sobres.state_overdue": {
+        "from": "Plazo vencido",
+        "to": "Past due"
+      },
+      "sobres.state_plan_started": {
+        "from": "Plan iniciado",
+        "to": "Plan started"
+      },
+      "sobres.state_green": {
+        "from": "En ritmo",
+        "to": "On track"
+      },
+      "sobres.state_yellow": {
+        "from": "Un poco atrasado",
+        "to": "A bit behind"
+      },
+      "sobres.state_red": {
+        "from": "Atrasado",
+        "to": "Behind"
+      },
+      "sobres.state_free_savings": {
+        "from": "Ahorro libre",
+        "to": "Free savings"
+      },
+      "sobres.state_project": {
+        "from": "Proyecto",
+        "to": "Project"
+      },
+      "sobres.sobres_create_title": {
+        "from": "Nuevo sobre",
+        "to": "New envelope"
+      },
+      "sobres.sobres_edit_title": {
+        "from": "Editar sobre",
+        "to": "Edit envelope"
+      },
+      "sobres.sobres_name": {
+        "from": "Nombre",
+        "to": "Name"
+      },
+      "sobres.sobres_name_placeholder": {
+        "from": "Vacaciones, auto, fondo de emergencia…",
+        "to": "Vacation, car, emergency fund…"
+      },
+      "sobres.sobres_currency": {
+        "from": "Moneda",
+        "to": "Currency"
+      },
+      "sobres.sobres_target_amount": {
+        "from": "Meta (opcional)",
+        "to": "Goal (optional)"
+      },
+      "sobres.sobres_target_date": {
+        "from": "Fecha objetivo",
+        "to": "Target date"
+      },
+      "sobres.sobres_target_date_needs_goal": {
+        "from": "Primero definí cuánto querés juntar.",
+        "to": "Set the amount you want to reach first."
+      },
+      "sobres.sobres_target_hint": {
+        "from": "La meta y la fecha son opcionales e independientes.",
+        "to": "The goal and the date are optional and independent."
+      },
+      "sobres.sobres_clear": {
+        "from": "Quitar",
+        "to": "Clear"
+      },
+      "sobres.sobres_initial_aporte": {
+        "from": "Aporte inicial (opcional)",
+        "to": "Initial contribution (optional)"
+      },
+      "sobres.sobres_modality": {
+        "from": "¿Dónde está este dinero?",
+        "to": "Where is this money?"
+      },
+      "sobres.sobres_modality_real": {
+        "from": "Lo separé en la entidad",
+        "to": "I set it aside at the institution"
+      },
+      "sobres.sobres_modality_virtual": {
+        "from": "Sigue en mi cuenta; lo reservo en ORD",
+        "to": "It is still in my account; I reserve it in ORD"
+      },
+      "sobres.sobres_modality_real_short": {
+        "from": "Separado",
+        "to": "Set aside"
+      },
+      "sobres.sobres_modality_virtual_short": {
+        "from": "Reservado en ORD",
+        "to": "Reserved in ORD"
+      },
+      "sobres.sobres_generates_yield": {
+        "from": "Esta reserva genera rendimientos",
+        "to": "This reserve earns returns"
+      },
+      "sobres.sobres_create": {
+        "from": "Crear sobre",
+        "to": "Create envelope"
+      },
+      "sobres.sobres_save": {
+        "from": "Guardar cambios",
+        "to": "Save changes"
+      },
+      "sobres.sobres_created": {
+        "from": "Sobre creado.",
+        "to": "Envelope created."
+      },
+      "sobres.sobres_updated": {
+        "from": "Sobre actualizado.",
+        "to": "Envelope updated."
+      },
+      "sobres.sobres_provision": {
+        "from": "Aportar",
+        "to": "Contribute"
+      },
+      "sobres.sobres_aporte_title": {
+        "from": "Aportar a {nombre}",
+        "to": "Contribute to {nombre}"
+      },
+      "sobres.sobres_amount": {
+        "from": "Importe",
+        "to": "Amount"
+      },
+      "sobres.sobres_wallet_origin": {
+        "from": "Billetera de origen",
+        "to": "Source wallet"
+      },
+      "sobres.sobres_no_wallets_currency": {
+        "from": "No tenés billeteras en {moneda}. Un sobre no convierte monedas.",
+        "to": "You have no wallets in {moneda}. An envelope never converts currencies."
+      },
+      "sobres.sobres_exceeds_goal_warning": {
+        "from": "Con este aporte superás la meta de {meta}. Podés seguir ahorrando.",
+        "to": "This contribution goes past the {meta} goal. You can keep saving."
+      },
+      "sobres.sobres_aporte_success": {
+        "from": "Aporte registrado.",
+        "to": "Contribution recorded."
+      },
+      "sobres.sobres_rescue": {
+        "from": "Rescatar",
+        "to": "Withdraw"
+      },
+      "sobres.sobres_rescue_title": {
+        "from": "Rescatar de {nombre}",
+        "to": "Withdraw from {nombre}"
+      },
+      "sobres.sobres_portion_available": {
+        "from": "Disponible: {monto}",
+        "to": "Available: {monto}"
+      },
+      "sobres.sobres_rescue_distribute": {
+        "from": "Elegí cuánto rescatar de cada origen. Cada importe vuelve a su billetera.",
+        "to": "Choose how much to withdraw from each origin. Each amount goes back to its own wallet."
+      },
+      "sobres.sobres_rescue_total": {
+        "from": "Total a rescatar",
+        "to": "Total to withdraw"
+      },
+      "sobres.sobres_rescue_exceeds": {
+        "from": "El total supera el saldo disponible del sobre.",
+        "to": "The total exceeds the envelope's available balance."
+      },
+      "sobres.sobres_rescue_real_warning": {
+        "from": "De la reserva separada en la entidad, acordate de liberar el dinero también ahí: ORD no mueve plata del banco.",
+        "to": "For the reserve you set aside at the institution, remember to release the money there too: ORD does not move money at the bank."
+      },
+      "sobres.sobres_rescue_success": {
+        "from": "Rescate registrado.",
+        "to": "Withdrawal recorded."
+      },
+      "sobres.sobres_confirm_rescue": {
+        "from": "Rescatar",
+        "to": "Withdraw"
+      },
+      "sobres.sobres_detail": {
+        "from": "Detalle del sobre",
+        "to": "Envelope detail"
+      },
+      "sobres.sobres_current_balance": {
+        "from": "Saldo actual",
+        "to": "Current balance"
+      },
+      "sobres.sobres_goal_amount": {
+        "from": "Meta",
+        "to": "Goal"
+      },
+      "sobres.sobres_missing_amount": {
+        "from": "Falta",
+        "to": "Missing"
+      },
+      "sobres.sobres_quota_weekly": {
+        "from": "Semanal",
+        "to": "Weekly"
+      },
+      "sobres.sobres_quota_fortnightly": {
+        "from": "Quincenal",
+        "to": "Fortnightly"
+      },
+      "sobres.sobres_quota_equivalences": {
+        "from": "Equivalencias",
+        "to": "Equivalents"
+      },
+      "sobres.sobres_porciones_title": {
+        "from": "De dónde salió este dinero",
+        "to": "Where this money came from"
+      },
+      "sobres.sobres_correct_title": {
+        "from": "Corregir movimiento",
+        "to": "Correct movement"
+      },
+      "sobres.sobres_correct_hint": {
+        "from": "Se corrige el movimiento original: no se agrega uno nuevo.",
+        "to": "The original movement is corrected: no new one is added."
+      },
+      "sobres.sobres_correct_success": {
+        "from": "Movimiento corregido",
+        "to": "Movement corrected"
+      },
+      "sobres.sobres_correct_action": {
+        "from": "Corregir",
+        "to": "Correct"
+      },
+      "sobres.sobres_wallet_destination": {
+        "from": "Billetera de destino",
+        "to": "Destination wallet"
+      },
+      "sobres.sobres_history_title": {
+        "from": "Historial",
+        "to": "History"
+      },
+      "sobres.sobres_history_empty": {
+        "from": "Todavía no hay movimientos.",
+        "to": "No movements yet."
+      },
+      "sobres.sobres_history_aporte": {
+        "from": "Aporte",
+        "to": "Contribution"
+      },
+      "sobres.sobres_history_rescate": {
+        "from": "Rescate",
+        "to": "Withdrawal"
+      },
+      "sobres.sobres_history_rendimiento": {
+        "from": "Rendimiento",
+        "to": "Return"
+      },
+      "sobres.sobres_edit": {
+        "from": "Editar",
+        "to": "Edit"
+      },
+      "sobres.sobres_archive": {
+        "from": "Archivar",
+        "to": "Archive"
+      },
+      "sobres.sobres_archive_confirm_title": {
+        "from": "Archivar el sobre",
+        "to": "Archive the envelope"
+      },
+      "sobres.sobres_archive_confirm_message": {
+        "from": "El sobre pasa al histórico y no se puede reactivar. Sus movimientos se conservan.",
+        "to": "The envelope moves to the history and cannot be reactivated. Its movements are kept."
+      },
+      "sobres.sobres_archived_toast": {
+        "from": "Sobre archivado.",
+        "to": "Envelope archived."
+      },
+      "sobres.sobres_yield_register": {
+        "from": "Registrar rendimiento",
+        "to": "Record return"
+      },
+      "sobres.sobres_yield_title": {
+        "from": "Registrar rendimiento de {nombre}",
+        "to": "Record return of {nombre}"
+      },
+      "sobres.sobres_yield_reserve": {
+        "from": "Reserva que generó el rendimiento",
+        "to": "Reserve that earned the return"
+      },
+      "sobres.sobres_yield_no_reserve": {
+        "from": "Este sobre no tiene una reserva separada que genere rendimientos.",
+        "to": "This envelope has no set-aside reserve that earns returns."
+      },
+      "sobres.sobres_yield_amount": {
+        "from": "Rendimiento acreditado",
+        "to": "Return credited"
+      },
+      "sobres.sobres_yield_hint": {
+        "from": "Se registra como ingreso «Rendimientos de ahorros» con la fecha de hoy.",
+        "to": "It is recorded as an income «Savings returns» dated today."
+      },
+      "sobres.sobres_yield_success": {
+        "from": "Rendimiento registrado.",
+        "to": "Return recorded."
+      },
+      "sobres.sobres_free_badge": {
+        "from": "Plan Free",
+        "to": "Free plan"
+      },
+      "sobres.sobres_free_note": {
+        "from": "Podés ver, rescatar, corregir y archivar, pero no crear sobres ni aportar.",
+        "to": "You can view, withdraw, correct and archive, but not create envelopes or contribute."
       }
     },
     "pt": {
@@ -21707,6 +22199,498 @@
       "tour.ajustes.description": {
         "from": "Te mostramos cómo personalizar tu experiencia.",
         "to": "Mostramos como personalizar sua experiência."
+      },
+      "sobres.error_sobre_not_found": {
+        "from": "Ese sobre ya no existe.",
+        "to": "Esse envelope não existe mais."
+      },
+      "sobres.error_sobre_name_required": {
+        "from": "Poné un nombre al sobre.",
+        "to": "Dê um nome ao envelope."
+      },
+      "sobres.error_sobre_currency_required": {
+        "from": "Elegí una moneda.",
+        "to": "Escolha uma moeda."
+      },
+      "sobres.error_sobre_meta_invalid": {
+        "from": "La meta tiene que ser mayor que cero.",
+        "to": "A meta precisa ser maior que zero."
+      },
+      "sobres.error_sobre_initial_aporte_invalid": {
+        "from": "Revisá el aporte inicial: importe, billetera y modalidad.",
+        "to": "Revise o aporte inicial: valor, carteira e modalidade."
+      },
+      "sobres.error_sobre_modality_invalid": {
+        "from": "Elegí dónde está el dinero: separado en la entidad o reservado sólo en ORD.",
+        "to": "Escolha onde o dinheiro está: separado na instituição ou reservado apenas no ORD."
+      },
+      "sobres.error_sobre_yield_requires_real": {
+        "from": "Sólo una reserva separada en la entidad puede generar rendimientos.",
+        "to": "Somente uma reserva separada na instituição pode gerar rendimentos."
+      },
+      "sobres.error_sobre_wallet_not_found": {
+        "from": "Esa billetera no existe o está inactiva.",
+        "to": "Essa carteira não existe ou está inativa."
+      },
+      "sobres.error_sobre_currency_mismatch": {
+        "from": "La billetera es de {billetera} y el sobre es de {sobre}. Un sobre no convierte monedas.",
+        "to": "A carteira é de {billetera} e o envelope é de {sobre}. Um envelope não converte moedas."
+      },
+      "sobres.error_sobre_wallet_insufficient": {
+        "from": "No alcanza el saldo libre de {billetera} para reservar ese importe.",
+        "to": "{billetera} não tem saldo livre suficiente para reservar esse valor."
+      },
+      "sobres.error_sobre_portion_insufficient": {
+        "from": "Esa porción tiene {disponible} disponible. Ajustá el importe.",
+        "to": "Essa porção tem {disponible} disponível. Ajuste o valor."
+      },
+      "sobres.error_sobre_archive_with_balance": {
+        "from": "El sobre tiene {saldo} adentro. Rescatalo antes de archivarlo.",
+        "to": "O envelope ainda tem {saldo}. Resgate antes de arquivar."
+      },
+      "sobres.error_sobre_archived": {
+        "from": "Ese sobre está archivado y no se puede modificar.",
+        "to": "Esse envelope está arquivado e não pode ser alterado."
+      },
+      "sobres.error_sobre_rescue_empty": {
+        "from": "Elegí al menos un origen para rescatar.",
+        "to": "Escolha pelo menos uma origem para resgatar."
+      },
+      "sobres.error_sobre_order_empty": {
+        "from": "No hay sobres para ordenar.",
+        "to": "Não há envelopes para ordenar."
+      },
+      "sobres.error_sobre_order_mismatch": {
+        "from": "El orden enviado no coincide con tus sobres activos.",
+        "to": "A ordem enviada não corresponde aos seus envelopes ativos."
+      },
+      "sobres.error_sobre_not_a_contribution": {
+        "from": "Sólo se pueden corregir aportes y rescates.",
+        "to": "Só aportes e resgates podem ser corrigidos."
+      },
+      "sobres.error_sobre_aporte_below_rescued": {
+        "from": "El aporte no puede quedar por debajo de lo que ya rescataste de esa billetera.",
+        "to": "O aporte não pode ficar abaixo do que você já resgatou dessa carteira."
+      },
+      "sobres.error_sobre_rescate_above_contributed": {
+        "from": "El rescate no puede superar lo que aportaste en esa billetera.",
+        "to": "O resgate não pode superar o que você aportou nessa carteira."
+      },
+      "sobres.error_sobre_portion_in_use": {
+        "from": "Para cambiar la billetera o el tipo de reserva, primero corregí los rescates de esa billetera.",
+        "to": "Para trocar a carteira ou o tipo de reserva, corrija primeiro os resgates dessa carteira."
+      },
+      "sobres.error_sobre_date_requires_meta": {
+        "from": "Una fecha objetivo necesita una meta: sin meta no hay plazo que medir.",
+        "to": "Uma data alvo precisa de uma meta: sem meta não há prazo a medir."
+      },
+      "sobres.error_sobre_amount_invalid": {
+        "from": "El importe tiene que ser mayor que cero.",
+        "to": "O valor precisa ser maior que zero."
+      },
+      "sobres.sobres_title": {
+        "from": "Mis ahorros",
+        "to": "Minhas economias"
+      },
+      "sobres.sobres_subtitle": {
+        "from": "Tus sobres y proyectos, con el dinero separado o reservado sólo en ORD.",
+        "to": "Seus envelopes e projetos, com o dinheiro separado ou reservado apenas no ORD."
+      },
+      "sobres.sobres_new": {
+        "from": "Nuevo sobre",
+        "to": "Novo envelope"
+      },
+      "sobres.sobres_archived_link": {
+        "from": "Sobres archivados",
+        "to": "Envelopes arquivados"
+      },
+      "sobres.sobres_order_auto": {
+        "from": "Orden automático",
+        "to": "Ordem automática"
+      },
+      "sobres.sobres_order_hint": {
+        "from": "Mantené presionada una tarjeta para moverla",
+        "to": "Segure um cartão para movê-lo"
+      },
+      "sobres.sobres_archived_title": {
+        "from": "Sobres archivados",
+        "to": "Envelopes arquivados"
+      },
+      "sobres.sobres_archived_empty": {
+        "from": "Todavía no archivaste ningún sobre.",
+        "to": "Você ainda não arquivou nenhum envelope."
+      },
+      "sobres.sobres_archived_note": {
+        "from": "Los sobres archivados se consultan pero no se reactivan. Para volver a ahorrar con ese objetivo, creá un sobre nuevo.",
+        "to": "Os envelopes arquivados são somente leitura e não podem ser reativados. Para voltar a economizar com esse objetivo, crie um envelope novo."
+      },
+      "sobres.sobres_empty_title": {
+        "from": "Todavía no tenés sobres",
+        "to": "Ainda não há envelopes"
+      },
+      "sobres.sobres_empty_text": {
+        "from": "Un sobre es una reserva con nombre. Podés ponerle meta y fecha, o dejar que crezca sola.",
+        "to": "Um envelope é uma reserva com nome. Você pode dar uma meta e uma data, ou deixar crescer sozinho."
+      },
+      "sobres.sobres_saved": {
+        "from": "Ahorrado",
+        "to": "Economizado"
+      },
+      "sobres.sobres_active_count": {
+        "from": "sobres activos",
+        "to": "envelopes ativos"
+      },
+      "sobres.sobres_active_count_one": {
+        "from": "sobre activo",
+        "to": "envelope ativo"
+      },
+      "sobres.sobres_no_goal": {
+        "from": "Sin meta",
+        "to": "Sem meta"
+      },
+      "sobres.sobres_of_goal": {
+        "from": "de {meta}",
+        "to": "de {meta}"
+      },
+      "sobres.sobres_days_left": {
+        "from": "Faltan {dias} días",
+        "to": "Faltam {dias} dias"
+      },
+      "sobres.sobres_days_left_one": {
+        "from": "Falta 1 día",
+        "to": "Falta 1 dia"
+      },
+      "sobres.sobres_due_today": {
+        "from": "Vence hoy",
+        "to": "Vence hoje"
+      },
+      "sobres.sobres_goal_overdue": {
+        "from": "Plazo vencido",
+        "to": "Prazo vencido"
+      },
+      "sobres.sobres_quota_monthly": {
+        "from": "Cuota mensual sugerida",
+        "to": "Valor mensal sugerido"
+      },
+      "sobres.sobres_quota_short": {
+        "from": "Cuota",
+        "to": "Mensal"
+      },
+      "sobres.sobres_actions": {
+        "from": "Acciones del sobre",
+        "to": "Ações do envelope"
+      },
+      "sobres.sobres_menu_more": {
+        "from": "Más acciones",
+        "to": "Mais ações"
+      },
+      "sobres.state_fulfilled": {
+        "from": "Meta cumplida",
+        "to": "Meta atingida"
+      },
+      "sobres.state_overdue": {
+        "from": "Plazo vencido",
+        "to": "Prazo vencido"
+      },
+      "sobres.state_plan_started": {
+        "from": "Plan iniciado",
+        "to": "Plano iniciado"
+      },
+      "sobres.state_green": {
+        "from": "En ritmo",
+        "to": "No ritmo"
+      },
+      "sobres.state_yellow": {
+        "from": "Un poco atrasado",
+        "to": "Um pouco atrasado"
+      },
+      "sobres.state_red": {
+        "from": "Atrasado",
+        "to": "Atrasado"
+      },
+      "sobres.state_free_savings": {
+        "from": "Ahorro libre",
+        "to": "Economia livre"
+      },
+      "sobres.state_project": {
+        "from": "Proyecto",
+        "to": "Projeto"
+      },
+      "sobres.sobres_create_title": {
+        "from": "Nuevo sobre",
+        "to": "Novo envelope"
+      },
+      "sobres.sobres_edit_title": {
+        "from": "Editar sobre",
+        "to": "Editar envelope"
+      },
+      "sobres.sobres_name": {
+        "from": "Nombre",
+        "to": "Nome"
+      },
+      "sobres.sobres_name_placeholder": {
+        "from": "Vacaciones, auto, fondo de emergencia…",
+        "to": "Férias, carro, fundo de emergência…"
+      },
+      "sobres.sobres_currency": {
+        "from": "Moneda",
+        "to": "Moeda"
+      },
+      "sobres.sobres_target_amount": {
+        "from": "Meta (opcional)",
+        "to": "Meta (opcional)"
+      },
+      "sobres.sobres_target_date": {
+        "from": "Fecha objetivo",
+        "to": "Data alvo"
+      },
+      "sobres.sobres_target_date_needs_goal": {
+        "from": "Primero definí cuánto querés juntar.",
+        "to": "Primeiro defina quanto quer juntar."
+      },
+      "sobres.sobres_target_hint": {
+        "from": "La meta y la fecha son opcionales e independientes.",
+        "to": "A meta e a data são opcionais e independentes."
+      },
+      "sobres.sobres_clear": {
+        "from": "Quitar",
+        "to": "Remover"
+      },
+      "sobres.sobres_initial_aporte": {
+        "from": "Aporte inicial (opcional)",
+        "to": "Aporte inicial (opcional)"
+      },
+      "sobres.sobres_modality": {
+        "from": "¿Dónde está este dinero?",
+        "to": "Onde está esse dinheiro?"
+      },
+      "sobres.sobres_modality_real": {
+        "from": "Lo separé en la entidad",
+        "to": "Separei na instituição"
+      },
+      "sobres.sobres_modality_virtual": {
+        "from": "Sigue en mi cuenta; lo reservo en ORD",
+        "to": "Continua na minha conta; reservo no ORD"
+      },
+      "sobres.sobres_modality_real_short": {
+        "from": "Separado",
+        "to": "Separado"
+      },
+      "sobres.sobres_modality_virtual_short": {
+        "from": "Reservado en ORD",
+        "to": "Reservado no ORD"
+      },
+      "sobres.sobres_generates_yield": {
+        "from": "Esta reserva genera rendimientos",
+        "to": "Esta reserva gera rendimentos"
+      },
+      "sobres.sobres_create": {
+        "from": "Crear sobre",
+        "to": "Criar envelope"
+      },
+      "sobres.sobres_save": {
+        "from": "Guardar cambios",
+        "to": "Salvar alterações"
+      },
+      "sobres.sobres_created": {
+        "from": "Sobre creado.",
+        "to": "Envelope criado."
+      },
+      "sobres.sobres_updated": {
+        "from": "Sobre actualizado.",
+        "to": "Envelope atualizado."
+      },
+      "sobres.sobres_provision": {
+        "from": "Aportar",
+        "to": "Aportar"
+      },
+      "sobres.sobres_aporte_title": {
+        "from": "Aportar a {nombre}",
+        "to": "Aportar em {nombre}"
+      },
+      "sobres.sobres_amount": {
+        "from": "Importe",
+        "to": "Valor"
+      },
+      "sobres.sobres_wallet_origin": {
+        "from": "Billetera de origen",
+        "to": "Carteira de origem"
+      },
+      "sobres.sobres_no_wallets_currency": {
+        "from": "No tenés billeteras en {moneda}. Un sobre no convierte monedas.",
+        "to": "Você não tem carteiras em {moneda}. Um envelope não converte moedas."
+      },
+      "sobres.sobres_exceeds_goal_warning": {
+        "from": "Con este aporte superás la meta de {meta}. Podés seguir ahorrando.",
+        "to": "Com este aporte você passa da meta de {meta}. Pode continuar economizando."
+      },
+      "sobres.sobres_aporte_success": {
+        "from": "Aporte registrado.",
+        "to": "Aporte registrado."
+      },
+      "sobres.sobres_rescue": {
+        "from": "Rescatar",
+        "to": "Resgatar"
+      },
+      "sobres.sobres_rescue_title": {
+        "from": "Rescatar de {nombre}",
+        "to": "Resgatar de {nombre}"
+      },
+      "sobres.sobres_portion_available": {
+        "from": "Disponible: {monto}",
+        "to": "Disponível: {monto}"
+      },
+      "sobres.sobres_rescue_distribute": {
+        "from": "Elegí cuánto rescatar de cada origen. Cada importe vuelve a su billetera.",
+        "to": "Escolha quanto resgatar de cada origem. Cada valor volta para a sua própria carteira."
+      },
+      "sobres.sobres_rescue_total": {
+        "from": "Total a rescatar",
+        "to": "Total a resgatar"
+      },
+      "sobres.sobres_rescue_exceeds": {
+        "from": "El total supera el saldo disponible del sobre.",
+        "to": "O total supera o saldo disponível do envelope."
+      },
+      "sobres.sobres_rescue_real_warning": {
+        "from": "De la reserva separada en la entidad, acordate de liberar el dinero también ahí: ORD no mueve plata del banco.",
+        "to": "Da reserva separada na instituição, lembre-se de liberar o dinheiro também lá: o ORD não movimenta dinheiro no banco."
+      },
+      "sobres.sobres_rescue_success": {
+        "from": "Rescate registrado.",
+        "to": "Resgate registrado."
+      },
+      "sobres.sobres_confirm_rescue": {
+        "from": "Rescatar",
+        "to": "Resgatar"
+      },
+      "sobres.sobres_detail": {
+        "from": "Detalle del sobre",
+        "to": "Detalhe do envelope"
+      },
+      "sobres.sobres_current_balance": {
+        "from": "Saldo actual",
+        "to": "Saldo atual"
+      },
+      "sobres.sobres_goal_amount": {
+        "from": "Meta",
+        "to": "Meta"
+      },
+      "sobres.sobres_missing_amount": {
+        "from": "Falta",
+        "to": "Falta"
+      },
+      "sobres.sobres_quota_weekly": {
+        "from": "Semanal",
+        "to": "Semanal"
+      },
+      "sobres.sobres_quota_fortnightly": {
+        "from": "Quincenal",
+        "to": "Quinzenal"
+      },
+      "sobres.sobres_quota_equivalences": {
+        "from": "Equivalencias",
+        "to": "Equivalências"
+      },
+      "sobres.sobres_porciones_title": {
+        "from": "De dónde salió este dinero",
+        "to": "De onde veio esse dinheiro"
+      },
+      "sobres.sobres_correct_title": {
+        "from": "Corregir movimiento",
+        "to": "Corrigir movimento"
+      },
+      "sobres.sobres_correct_hint": {
+        "from": "Se corrige el movimiento original: no se agrega uno nuevo.",
+        "to": "O movimento original é corrigido: nenhum novo é adicionado."
+      },
+      "sobres.sobres_correct_success": {
+        "from": "Movimiento corregido",
+        "to": "Movimento corrigido"
+      },
+      "sobres.sobres_correct_action": {
+        "from": "Corregir",
+        "to": "Corrigir"
+      },
+      "sobres.sobres_wallet_destination": {
+        "from": "Billetera de destino",
+        "to": "Carteira de destino"
+      },
+      "sobres.sobres_history_title": {
+        "from": "Historial",
+        "to": "Histórico"
+      },
+      "sobres.sobres_history_empty": {
+        "from": "Todavía no hay movimientos.",
+        "to": "Ainda não há movimentos."
+      },
+      "sobres.sobres_history_aporte": {
+        "from": "Aporte",
+        "to": "Aporte"
+      },
+      "sobres.sobres_history_rescate": {
+        "from": "Rescate",
+        "to": "Resgate"
+      },
+      "sobres.sobres_history_rendimiento": {
+        "from": "Rendimiento",
+        "to": "Rendimento"
+      },
+      "sobres.sobres_edit": {
+        "from": "Editar",
+        "to": "Editar"
+      },
+      "sobres.sobres_archive": {
+        "from": "Archivar",
+        "to": "Arquivar"
+      },
+      "sobres.sobres_archive_confirm_title": {
+        "from": "Archivar el sobre",
+        "to": "Arquivar o envelope"
+      },
+      "sobres.sobres_archive_confirm_message": {
+        "from": "El sobre pasa al histórico y no se puede reactivar. Sus movimientos se conservan.",
+        "to": "O envelope vai para o histórico e não pode ser reativado. Seus movimentos são mantidos."
+      },
+      "sobres.sobres_archived_toast": {
+        "from": "Sobre archivado.",
+        "to": "Envelope arquivado."
+      },
+      "sobres.sobres_yield_register": {
+        "from": "Registrar rendimiento",
+        "to": "Registrar rendimento"
+      },
+      "sobres.sobres_yield_title": {
+        "from": "Registrar rendimiento de {nombre}",
+        "to": "Registrar rendimento de {nombre}"
+      },
+      "sobres.sobres_yield_reserve": {
+        "from": "Reserva que generó el rendimiento",
+        "to": "Reserva que gerou o rendimento"
+      },
+      "sobres.sobres_yield_no_reserve": {
+        "from": "Este sobre no tiene una reserva separada que genere rendimientos.",
+        "to": "Este envelope não tem uma reserva separada que gere rendimentos."
+      },
+      "sobres.sobres_yield_amount": {
+        "from": "Rendimiento acreditado",
+        "to": "Rendimento creditado"
+      },
+      "sobres.sobres_yield_hint": {
+        "from": "Se registra como ingreso «Rendimientos de ahorros» con la fecha de hoy.",
+        "to": "É registrado como receita «Rendimentos de poupança» com a data de hoje."
+      },
+      "sobres.sobres_yield_success": {
+        "from": "Rendimiento registrado.",
+        "to": "Rendimento registrado."
+      },
+      "sobres.sobres_free_badge": {
+        "from": "Plan Free",
+        "to": "Plano Free"
+      },
+      "sobres.sobres_free_note": {
+        "from": "Podés ver, rescatar, corregir y archivar, pero no crear sobres ni aportar.",
+        "to": "Você pode ver, resgatar, corrigir e arquivar, mas não criar envelopes nem aportar."
       }
     }
   }
