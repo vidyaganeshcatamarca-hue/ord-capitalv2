@@ -14,6 +14,7 @@
 // repeated `ocr_job_id` under concurrency.
 
 import { rpc } from '@/lib/supabase';
+import { marcarEnvioCuarentena } from '@/lib/quarantineWatch';
 import { OCR_SCHEMA_VERSION } from './normalize';
 import type { OcrIssue, OcrItem, OcrPayment, OcrTicket } from './types';
 
@@ -77,6 +78,8 @@ export interface LoadOcrQuarantineInput {
  */
 export async function loadOcrQuarantine(input: LoadOcrQuarantineInput): Promise<OcrQuarantineLoadRow> {
   const { jobId, ticket, originalResult } = input;
+  // Abre la ventana de vigilancia del FAB: el ticket puede tardar en verse.
+  marcarEnvioCuarentena();
   const rows = await rpc<OcrQuarantineLoadRow[]>('fn_cargar_ticket_ocr_cuarentena', {
     p_job_id: jobId,
     p_ticket: toQuarantineTicketPayload(ticket),

@@ -11,6 +11,7 @@
 // double-invocation or repeated effect runs.
 import { useCallback, useRef, useState } from 'react';
 import { rpc } from '@/lib/supabase';
+import { marcarEnvioCuarentena } from '@/lib/quarantineWatch';
 import type { VoiceMovement } from './types';
 
 /** Per-movement result row returned by `fn_cargar_movimientos_voz`. */
@@ -59,6 +60,8 @@ export function useVoiceQuarantine(): UseVoiceQuarantineResult {
       setErrorI18nKey(null);
 
       try {
+        // Abre la ventana de vigilancia del FAB: el audio puede tardar en verse.
+        marcarEnvioCuarentena()
         const rows = await rpc<VoiceQuarantineLoadRow[]>('fn_cargar_movimientos_voz', {
           p_job_id: jobId,
           p_movements: movements,

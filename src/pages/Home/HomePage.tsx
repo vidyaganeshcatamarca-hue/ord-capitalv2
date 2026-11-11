@@ -1886,7 +1886,8 @@ export function HomePage() {
       </div>
 
       {/* ── QUARANTINE INBOX FAB (OCR + voice, one notice) ── */}
-      <QuarantineHomeFab />
+      {/* No pide nada hasta que el Home termino de cargar: el badge no demora los datos. */}
+      <QuarantineHomeFab listo={!loading} />
 
       {/* ── MODAL CONCILIACIÓN RÁPIDA ── */}
       {selectedBilletera && (
