@@ -45,6 +45,12 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_wallet_currency_mismatch", "params": {}}';
     END IF;
 
+    -- El importe tiene que ser un numero positivo: sin esto se acreditaba
+    -- cualquier cosa en la billetera, incluido un cero o un negativo.
+    IF p_monto_total_retirado IS NULL OR p_monto_total_retirado <= 0 THEN
+        RAISE EXCEPTION '{"key": "error_investment_amount_zero", "params": {}}';
+    END IF;
+
     -- El total que el usuario recebe no puede ser menor que lo ya retirado.
     v_ya_retirado := COALESCE(v_inversion.monto_liquidado, 0);
     IF p_monto_total_retirado < v_ya_retirado THEN

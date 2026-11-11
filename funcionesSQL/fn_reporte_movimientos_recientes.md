@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.fn_reporte_movimientos_recientes(p_limit integer DEFAULT 20, p_offset integer DEFAULT 0, p_filtro_tipo text DEFAULT 'all', p_billetera_id bigint DEFAULT NULL::bigint, p_fecha_inicio date DEFAULT NULL::date, p_fecha_fin date DEFAULT NULL::date, p_tarjeta_id bigint DEFAULT NULL::bigint)
+CREATE OR REPLACE FUNCTION public.fn_reporte_movimientos_recientes(p_limit integer DEFAULT 20, p_offset integer DEFAULT 0, p_filtro_tipo text DEFAULT 'all'::text, p_billetera_id bigint DEFAULT NULL::bigint, p_fecha_inicio date DEFAULT NULL::date, p_fecha_fin date DEFAULT NULL::date, p_tarjeta_id bigint DEFAULT NULL::bigint)
  RETURNS TABLE(p_caja_id bigint, fecha date, tipo text, monto numeric, moneda text, nombre_categoria text, icono_categoria text, color_categoria text, nombre_billetera text, detalle text, es_compartido boolean, pagado_por text, billetera_origen_id bigint, billetera_destino_id bigint, estructura_egreso_id bigint, cuenta_ingreso_id bigint, observaciones text, tarjeta_id bigint, cuotas_totales integer, padre_id bigint, nombre_rubro_padre text, color_rubro_padre text, es_usd boolean)
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -32,6 +32,9 @@ BEGIN
     CASE WHEN c.es_usd THEN 'USD' ELSE c.moneda END::text AS moneda,
     CASE
       WHEN c.detalle = 'adjustment_card_diff' THEN 'cat_card_diff'
+      -- Transfer legs (double insert) carry no category: their title is the
+      -- semantic i18n key stored by the approval (or the user's own note).
+      WHEN c.metadata->>'transfer_double_insert' = 'true' THEN COALESCE(c.detalle, 'transfer_entre_cuentas')
       ELSE COALESCE(e.nombre_cuenta, i.nombre,
         CASE c.tipo
           WHEN 'income' THEN 'type_income'
@@ -69,7 +72,9 @@ BEGIN
   LEFT JOIN public.usuarios u ON c.pagado_por_user_id = u.user_id
   WHERE ((c.user_id = v_user_id AND c.es_compartido = false)
       OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true))
-    AND (p_filtro_tipo = 'all' OR c.tipo = p_filtro_tipo)
+    -- Un filtro nulo se comporta como 'all': con NULL la comparacion daba NULL
+    -- y el cliente recibia cero filas sin ningun error.
+    AND (p_filtro_tipo IS NULL OR p_filtro_tipo = 'all' OR c.tipo = p_filtro_tipo)
     AND (p_billetera_id IS NULL OR c.billetera_origen_id = p_billetera_id)
     -- Cuando el usuario filtra por una tarjeta, excluimos el pago del resumen
     -- (que sale desde la billetera, no de la tarjeta).
@@ -79,4 +84,4 @@ BEGIN
   ORDER BY c.fecha DESC, c.p_caja_id DESC
   LIMIT p_limit OFFSET p_offset;
 END;
-$function$
+$function$;
