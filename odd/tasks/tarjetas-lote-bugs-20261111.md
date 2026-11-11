@@ -76,3 +76,13 @@ los 5 puntos transcritos en S1–S5. Rama pedida en el turno anterior: «olvide 
 - **T5 no observable**: la bandeja de cuarentena está vacía (OCR 0).
 - Evidencia: `C:/Users/Vidya Ganesh/ego/verif-lote-tarjetas-20261111/` (round-01 a round-10 y capturas `detalle-tarjeta.png`, `modal-ashram.png`, `modal-galicia.png`, `bandeja.png`) más el `-traza` de consola de cada ronda.
 - Nada se envió ni se guardó: los modales se abrieron y se cerraron sin confirmar pagos.
+
+**L5 (2026-11-11, prueba con datos de prueba propios — autorizada por el dueño)**
+- Cuenta real: `user_id = 1` (la del login). El 210 que había supuesto era otro usuario: lo delató que la bandeja de cuarentena mostraba los pendientes del 1 (1562 y 1563).
+- **T5 verificado**: fila temporal en `p_caja_cuarentena` (id 1566, clonada de un ticket real para que el parser no la descarte) → al abrir el ticket, `input#ocr-total-1566` trae `enterKeyHint="done"` e `inputMode="decimal"`.
+- **T2 verificado**: la tarjeta de prueba muestra el toggle con `["US$", "ARS"]`, sin el `$` literal.
+- **T3 verificado**: con una cuenta en dólares ya tomada, la segunda línea muestra «You don't have a USD wallet» en la hoja, en vez del cuerpo vacío. **Matiz**: ese texto también aparece cuando la cuenta existe pero ya está usada por otra línea, y ahí decir «no tenés» es impreciso. Requiere decisión: dejar un solo mensaje o separarlo en dos.
+- **T4 verificado**: la misma billetera (Mercado Pago) en la sección local y en la línea en dólares pagada en moneda local → `Confirm Payment` **habilitado** y sin aviso de elegir cuenta.
+- **Bug nuevo de la app (no del lote)**: el alta de tarjeta por UI está rota. `fn_crear_tarjeta_credito` responde **400 · 42601 · «INSERT has more expressions than target columns»** (capturado interceptando los `fetch` a `/rpc`). Por eso la tarjeta de prueba se creó por SQL. No se corrigió: es RPC y requiere autorización.
+- Limpieza verificada: 0 tarjetas QA, 0 cuotas de la tarjeta 982, 0 filas QA en cuarentena; quedan las 2 tarjetas activas y los 2 pendientes de cuarentena previos. Dev server detenido y task space cerrado.
+- Evidencia: `round-11` (T5), `round-17` (T2), `round-20` (T4), `round-21` (T3) y capturas en `C:/Users/Vidya Ganesh/ego/verif-lote-tarjetas-20261111/`.
