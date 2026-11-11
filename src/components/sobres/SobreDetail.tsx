@@ -1,4 +1,5 @@
 import { formatCurrency, formatDate, formatPercent } from '@/lib/format'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { t } from '@/locales/i18n'
 import { ChevronLeft, Pencil } from 'lucide-react'
 import type { Sobre, SobreDetalle, SobreMovimiento } from './types'
@@ -45,6 +46,8 @@ export function sobreDesdeDetalle(detalle: SobreDetalle): Sobre {
 }
 
 export function SobreDetail({ detalle, onBack, onProvision, onRescue, onEdit, onCorrect }: SobreDetailProps) {
+  // El formato de moneda llega por contexto: sin esto queda el del primer render.
+  useFormatRevision()
   const { sobre, plan, porciones, historial } = detalle
   const tieneMeta = sobre.monto_meta !== null && sobre.monto_meta > 0
   const tieneFecha = sobre.fecha_objetivo !== null

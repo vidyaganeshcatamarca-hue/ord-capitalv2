@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { haptics } from '@/lib/haptics'
 import { useToast } from '@/contexts/ToastContext'
 import { formatCurrency } from '@/lib/format'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { parseError, t } from '@/locales/i18n'
 import { normalizarPorcion, type AsignacionRescate, type ModalidadReserva, type Sobre, type SobrePorcion } from './types'
 import './sobresModal.css'
@@ -26,6 +27,8 @@ interface LineaPorcion {
  * automáticamente cuando una porción no alcanza.
  */
 export function SobreRescateModal({ isOpen, sobre, onClose, onSuccess }: SobreRescateModalProps) {
+  // El formato de moneda llega por contexto: sin esto queda el del primer render.
+  useFormatRevision()
   const { showToast } = useToast()
   const [lineas, setLineas] = useState<LineaPorcion[]>([])
   const [cargando, setCargando] = useState(false)

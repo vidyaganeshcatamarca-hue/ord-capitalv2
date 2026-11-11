@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { MoreVertical } from 'lucide-react'
 import { formatCurrency, formatDateShort } from '@/lib/format'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { t } from '@/locales/i18n'
 import type { Sobre } from './types'
 import './SobreCard.css'
@@ -51,6 +52,8 @@ export function SobreCard({
   onArchive,
   onYield,
 }: SobreCardProps) {
+  // El formato de moneda llega por contexto: sin esto queda el del primer render.
+  useFormatRevision()
   const [menuAbierto, setMenuAbierto] = useState(false)
   const menuRef = useRef<HTMLDivElement | null>(null)
 

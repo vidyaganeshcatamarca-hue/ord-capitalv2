@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { haptics } from '@/lib/haptics'
 import { useToast } from '@/contexts/ToastContext'
 import { formatCurrency } from '@/lib/format'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { parseError, t } from '@/locales/i18n'
 import { WalletDropdownSelect, type WalletOptionItem } from '@/components/WalletDropdownSelect'
 import type { BilleteraOperativa, ModalidadReserva, Sobre } from './types'
@@ -17,6 +18,8 @@ interface SobreAporteModalProps {
 }
 
 export function SobreAporteModal({ isOpen, sobre, billeteras, onClose, onSuccess }: SobreAporteModalProps) {
+  // El formato de moneda llega por contexto: sin esto queda el del primer render.
+  useFormatRevision()
   const { showToast } = useToast()
   const [importe, setImporte] = useState('')
   const [billeteraId, setBilleteraId] = useState<number | null>(null)

@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { haptics } from '@/lib/haptics'
 import { useToast } from '@/contexts/ToastContext'
 import { formatCurrency } from '@/lib/format'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { parseError, t } from '@/locales/i18n'
 import { normalizarPorcion, type Sobre, type SobrePorcion } from './types'
 import './sobresModal.css'
@@ -22,6 +23,8 @@ interface SobreRendimientoModalProps {
  * y con saldo vivo: un rendimiento va siempre a la reserva que lo generó.
  */
 export function SobreRendimientoModal({ isOpen, sobre, onClose, onSuccess }: SobreRendimientoModalProps) {
+  // El formato de moneda llega por contexto: sin esto queda el del primer render.
+  useFormatRevision()
   const { showToast } = useToast()
   const [reservas, setReservas] = useState<SobrePorcion[]>([])
   const [billeteraId, setBilleteraId] = useState<number | null>(null)
