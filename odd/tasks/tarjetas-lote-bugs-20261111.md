@@ -66,3 +66,13 @@ los 5 puntos transcritos en S1–S5. Rama pedida en el turno anterior: «olvide 
 - Emulación del instante de la foto (2026-11-11 02:40 UTC): **zona AR → hoy 10/11, resumen saldado, próximo 10/12, 30 días**; **zona GB → hoy 11/11, próximo 10/12, 29 días** (que es lo correcto para ese país). Es decir: el 29 solo se corrige cuando el país configurado es el que corresponde.
 - UI: el widget muestra «Hoy» cuando `dias_para_vencimiento` es 0, con clave `card_due_today` en es/en/pt.
 - Espejos: `funcionesSQL/fn_zona_horaria_pais.md` (nuevo, 82 líneas), `funcionesSQL/fn_reporte_vencimientos_tarjetas.md` reemplazado por la definición viva (205 líneas: antes tenía 341 con una copia inexistente en la base) e `start_info/indice de funciones.md` con la entrada 280 y la nota v3.
+- Commits: `1e1fd56` (UI «Hoy»), `edea0f8` (espejos + índice), `99a4509` (este documento).
+
+**L4 (2026-11-11, prueba visual con sesión iniciada — Google `vidyaganeshcatamarca@gmail.com`)**
+- Se entró con Google en `localhost:5174` con la cuenta del dueño (la UI quedó en inglés: `idioma_default = en`).
+- **T1 verificado en pantalla**: Ashram card «Next Due Date · Day 14 (3 days) · Estimated: ARS 188.483» y termómetro «due 11/14/2026»; Galicia gold «Day 25 (14 days)». Ambos coinciden con hoy 11/11 y con el día de vencimiento configurado: el RPC nuevo corre sin excepción contra datos reales.
+- **Lo que T1 todavía no prueba**: el caso «Hoy» (necesita un vencimiento igual a la fecha de hoy) y el corrimiento nocturno por UTC (aparece después de las 21:00 locales).
+- **T2, T3 y T4 no observables con estos datos**: las dos tarjetas activas del dueño (Ashram, Galicia gold) no tienen cuotas en USD en el resumen actual, así que la sección «Payment in dollars» no se renderiza (`.pay-section--usd` ausente). Se implementaron y compilan, pero la prueba en pantalla requiere una tarjeta con cuotas USD.
+- **T5 no observable**: la bandeja de cuarentena está vacía (OCR 0).
+- Evidencia: `C:/Users/Vidya Ganesh/ego/verif-lote-tarjetas-20261111/` (round-01 a round-10 y capturas `detalle-tarjeta.png`, `modal-ashram.png`, `modal-galicia.png`, `bandeja.png`) más el `-traza` de consola de cada ronda.
+- Nada se envió ni se guardó: los modales se abrieron y se cerraron sin confirmar pagos.
