@@ -212,3 +212,4 @@ tests/configuracion/*
 !tests/conexion-badge.test.js
 !tests/nav-modo-offline.test.js
 !tests/swipe-vencimientos.test.js
+!tests/presupuestos/barra-hijo-sin-asignacion.test.js

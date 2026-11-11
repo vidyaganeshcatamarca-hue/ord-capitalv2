@@ -141,6 +141,8 @@ const TIPO_CUPO_META: Record<string, { labelKey: string; icono: string }> = {
   tithe: { labelKey: 'budget_tipo_tithe', icono: '🙏' },
 }
 
+import { referenciaBarraHija, porcentajeBarra, colorDeBarra } from '../../lib/barraSobre'
+
 const getColorBarra = (estado: string) => {
   if (estado === 'verde') return 'verde'
   if (estado === 'amarillo_precaucion') return 'amarillo'
@@ -1788,6 +1790,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
                     hija
                     onAsignar={() => onAsignar(hija)}
                     onVerDetalle={() => onVerDetalle(hija)}
+                    libreGrupo={libreDe(cabecera.estructura_id)}
                     modoPresupuesto={modoPresupuesto}
                     soloLectura={soloLectura}
                     fmt={fmt}
@@ -1824,8 +1827,23 @@ interface FilaSobreProps {
 }
 
 function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
-  const pct = getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
-  const colorBarra = getColorBarra(sobre.estado_sobre)
+  // Ronda 10 (dueño): el hijo sin asignación se mide contra el libre del grupo, y sin
+  // techo no se dibuja barra. El padre queda como estaba: su barra compara el gasto de
+  // los hijos contra su propio techo.
+  const referenciaBarra = sobre.es_padre
+    ? null
+    : referenciaBarraHija({ montoAsignado: sobre.monto_asignado, libreGrupo })
+  const sinTecho = referenciaBarra?.origen === 'sin_techo'
+  const pctBarra = referenciaBarra && !sinTecho
+    ? porcentajeBarra(Number(sobre.monto_gastado), referenciaBarra.techo)
+    : null
+  const pct = sinTecho
+    ? 0
+    : pctBarra ?? getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
+  const colorBarra =
+    (referenciaBarra && !sinTecho
+      ? colorDeBarra(Number(sobre.monto_gastado), referenciaBarra.techo)
+      : null) ?? getColorBarra(sobre.estado_sobre)
   const sinDatos = sobre.estado_sobre === 'sin_movimiento'
   // En modo anticipado, el "disponible" del sobre NO arrastra el saldo del mes
   // anterior: cada mes arranca en 0 y se computa como asignado - gastado.
@@ -1912,10 +1930,10 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
       {/* Barra. Dueño (2026-11-02): «la línea roja del sobre que se ha excedido la hagas
           titilar, prender y apagar». Sólo el excedido: el que cubrió justo el total se
           queda quieto, porque en un celular el color solo no alcanza. */}
-      {!sinDatos && (
+      {!sinDatos && !sinTecho && (
         <div className="sobre-barra-wrap">
           <div
-            className={`sobre-barra-fill ${colorBarra}${sobre.estado_sobre === 'rojo_excedido' ? ' excedido' : ''}`}
+            className={`sobre-barra-fill ${colorBarra}${colorBarra === 'rojo' ? ' excedido' : ''}`}
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -1946,7 +1964,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
         {!sinDatos && (
           <span className="sobre-stat">
             <span className="sobre-stat-label">{t('budget_stat_progress')}</span>
-            <span className="sobre-stat-val">{pct}%</span>
+            <span className="sobre-stat-val">{sinTecho ? '—' : `${pct}%`}</span>
           </span>
         )}
       </div>
