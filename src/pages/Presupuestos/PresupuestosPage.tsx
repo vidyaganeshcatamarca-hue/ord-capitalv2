@@ -318,10 +318,16 @@ export function PresupuestosPage() {
    * posición del scroll no se toca. El spinner queda sólo para la primera carga y
    * para el cambio de ciclo, donde sí se está mirando otra cosa.
    */
+  // Ronda 10 (dueño): el disponible transferible lo calcula el SERVIDOR con una sola
+  // fórmula (fn_disponibles_transferibles). Antes la pantalla lo calculaba como techo
+  // menos lo asignado a los hijos, y un hijo con presupuesto negativo (Frescos −135.000)
+  // sumaba en vez de restar: el padre mostraba 29.454 cuando tiene 500.
+  const [disponiblesTransferibles, setDisponiblesTransferibles] = useState<Record<number, number> | null>(null)
+
   const cargarDatos = useCallback(async (silencioso: boolean = false) => {
     if (!silencioso) setLoading(true)
     try {
-      const [rSaldo, rSobres, rConfig, rCupos] = await Promise.all([
+      const [rSaldo, rSobres, rConfig, rCupos, rDisponibles] = await Promise.all([
         supabase.rpc('fn_obtener_saldo_a_asignar', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_reporte_sobres_detalle', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_obtener_config_presupuesto'),
@@ -332,6 +338,14 @@ export function PresupuestosPage() {
             return await supabase.rpc('fn_reporte_termometro_presupuestos', { p_mes_periodo: mesPeriodoStr })
           } catch {
             return { data: null, error: 'cupos-resumen-unavailable' }
+          }
+        })(),
+        // Opcional: si falla, la pantalla cae al cálculo viejo en vez de romperse.
+        (async () => {
+          try {
+            return await supabase.rpc('fn_disponibles_transferibles', { p_mes: mesPeriodoStr })
+          } catch {
+            return { data: null, error: 'disponibles-unavailable' }
           }
         })(),
       ])
@@ -347,6 +361,19 @@ export function PresupuestosPage() {
         }
       )
       setSobres(sobresFiltrados)
+
+      if (rDisponibles?.error || !Array.isArray(rDisponibles?.data)) {
+        setDisponiblesTransferibles(null)
+      } else {
+        setDisponiblesTransferibles(
+          Object.fromEntries(
+            (rDisponibles.data as { estructura_id: number; disponible: number }[]).map(fila => [
+              Number(fila.estructura_id),
+              Number(fila.disponible),
+            ]),
+          ),
+        )
+      }
 
       if (rCupos?.error || !Array.isArray(rCupos?.data)) {
         setCuposResumen(null)
@@ -624,9 +651,14 @@ export function PresupuestosPage() {
     return Math.max(techo - repartido, 0)
   }
 
-  /** Lo que un sobre puede aportar a una transferencia: el padre, sólo su fondo libre. */
-  const disponibleParaTransferir = (s: SobreDetalle) =>
-    s.es_padre ? fondoLibreDe(s.estructura_id) : disponibleDeSobre(s, config?.modo_presupuesto)
+  /** Lo que un sobre puede aportar a una transferencia: manda el servidor. */
+  const disponibleParaTransferir = (s: SobreDetalle) => {
+    // El respaldo existe sólo para que el modal no quede vacío si la RPC todavía no
+    // llegó o falló; el número bueno es el del servidor.
+    const delServidor = disponiblesTransferibles?.[Number(s.estructura_id)]
+    if (delServidor !== undefined) return delServidor
+    return s.es_padre ? fondoLibreDe(s.estructura_id) : disponibleDeSobre(s, config?.modo_presupuesto)
+  }
 
   const sobresConDisponible = sobres
     .filter(
@@ -635,8 +667,8 @@ export function PresupuestosPage() {
         disponibleParaTransferir(s) > 0
     )
     // El monto que se muestra y con el que se arranca el campo tiene que ser el mismo
-    // que se va a mover: en el padre, el fondo libre.
-    .map(s => (s.es_padre ? { ...s, monto_disponible: fondoLibreDe(s.estructura_id) } : s))
+    // que se va a mover: ahora lo dice el servidor para todos, padres e hijos.
+    .map(s => ({ ...s, monto_disponible: disponibleParaTransferir(s) }))
 
   // Tanda 4 telemetry: an overspent budget is on screen (no amounts;
   // once per app session, plan §3 Fase 8)
