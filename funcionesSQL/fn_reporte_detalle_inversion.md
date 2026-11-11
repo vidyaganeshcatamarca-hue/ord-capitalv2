@@ -10,8 +10,19 @@ DECLARE
     v_historial jsonb;
     v_rendimiento_nominal numeric;
     v_rendimiento_real numeric;
-    v_config_inflacion RECORD;
     v_valor_actual_teorico numeric;
+    v_liquidado numeric := 0;
+    -- Bloque de inflación calculado en vivo.
+    v_infl jsonb := '{}'::jsonb;
+    v_motivo text;
+    v_fuente text;
+    v_inflacion_disponible boolean := false;
+    v_inflacion_6m numeric;
+    -- Tasa ANUAL disponible (clave 'inflacion_anualizada' del bloque vivo).
+    v_inflacion_anual numeric;
+    -- Prorrateo por días de ESTA inversión.
+    v_dias_tenencia numeric;
+    v_inflacion_periodo numeric;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
     IF v_user_id IS NULL THEN
@@ -26,7 +37,8 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_investment_not_found", "params": {}}';
     END IF;
 
-    -- Calcular valor actual teórico
+    v_liquidado := COALESCE(v_inversion.monto_liquidado, 0);
+
     v_valor_actual_teorico := CASE
         WHEN v_inversion.valor_mercado_actual IS NOT NULL THEN v_inversion.valor_mercado_actual
         WHEN v_inversion.tasa_anual_tna > 0 THEN
@@ -34,30 +46,43 @@ BEGIN
         ELSE v_inversion.monto_invertido_original
     END;
 
+    -- S16: el nominal se mide contra el capital ORIGINAL más lo ya retirado:
+    -- lo que salió de la billetera fue un rescate, no una pérdida.
     v_rendimiento_nominal := CASE
         WHEN v_inversion.monto_invertido_original > 0
-        THEN ((v_valor_actual_teorico - v_inversion.monto_invertido_original) / v_inversion.monto_invertido_original) * 100
+        THEN (((v_valor_actual_teorico + v_liquidado) - v_inversion.monto_invertido_original) / v_inversion.monto_invertido_original) * 100
         ELSE 0
     END;
 
-    -- Intentar leer config de inflación del usuario
-    BEGIN
-        SELECT * INTO v_config_inflacion FROM p_config_inflacion WHERE user_id = v_user_id;
-    EXCEPTION WHEN OTHERS THEN
-        v_config_inflacion := NULL;
-    END;
+    -- Inflación VIGENTE (calculada en lectura, no congelada).
+    v_infl := public.fn_inflacion_vigente(v_user_id);
+    v_motivo := v_infl ->> 'motivo';
+    v_fuente := v_infl ->> 'fuente';
+    v_inflacion_disponible := (v_motivo = 'ok');
+    v_inflacion_6m := (v_infl ->> 'inflacion_6m')::numeric;
+    -- La anualizada es la tasa ANUAL del bloque vivo. Si viniera nula (no hay
+    -- ventana real para anualizar), se usa la acumulación de 12 meses, que ya
+    -- ES una tasa anual: no se inventa ningún número.
+    v_inflacion_anual := COALESCE(
+        (v_infl ->> 'inflacion_anualizada')::numeric,
+        (v_infl ->> 'inflacion_12m')::numeric
+    );
 
-    IF v_config_inflacion IS NOT NULL
-       AND v_config_inflacion.fuente_inflacion IS NOT NULL
-       AND v_config_inflacion.fuente_inflacion != 'desactivado'
-       AND COALESCE(v_config_inflacion.inflacion_acumulada_6m, 0) > 0
-    THEN
-        v_rendimiento_real := ((1 + (v_rendimiento_nominal / 100)) / (1 + (v_config_inflacion.inflacion_acumulada_6m / 100)) - 1) * 100;
+    IF v_inflacion_disponible AND v_inflacion_anual IS NOT NULL
+       AND v_inversion.fecha_inicio IS NOT NULL THEN
+        -- Días de tenencia DE ESTA inversión.
+        v_dias_tenencia := GREATEST((CURRENT_DATE - v_inversion.fecha_inicio), 0)::numeric;
+        -- Inflación del PERÍODO que duró la inversión, a partir de la tasa
+        -- ANUAL disponible (no se anualiza nada: la manual ya es anual).
+        v_inflacion_periodo := (POWER(1 + (v_inflacion_anual / 100), v_dias_tenencia / 365.0) - 1) * 100;
+
+        -- Real de ESTA inversión.
+        v_rendimiento_real := ((1 + (v_rendimiento_nominal / 100)) / (1 + (v_inflacion_periodo / 100)) - 1) * 100;
     ELSE
         v_rendimiento_real := NULL;
+        v_inflacion_disponible := false;
     END IF;
 
-    -- Historial de movimientos vinculados (busca por metadata->>'inversion_id')
     SELECT COALESCE(jsonb_agg(row_to_json(mov)), '[]'::jsonb) INTO v_historial
     FROM (
         SELECT c.fecha,
@@ -65,6 +90,11 @@ BEGIN
                CASE
                    WHEN c.tipo = 'expense' THEN -c.valor_egreso
                    WHEN c.tipo = 'income' THEN c.valor_ingreso
+                   -- El capital de la inversion vive como adjustment: mueve la
+                   -- billetera sin ser gasto ni ingreso, pero el historial de la
+                   -- inversion lo tiene que seguir mostrando.
+                   WHEN c.tipo = 'adjustment' THEN
+                       CASE WHEN c.valor_ingreso > 0 THEN c.valor_ingreso ELSE -c.valor_egreso END
                    ELSE 0
                END AS monto
         FROM p_caja c
@@ -78,6 +108,8 @@ BEGIN
         'nombre_activo', v_inversion.nombre_activo,
         'tipo_activo', CASE WHEN v_inversion.tasa_anual_tna > 0 THEN 'plazo_fijo' ELSE 'variable' END,
         'monto_invertido_original', v_inversion.monto_invertido_original,
+        'monto_liquidado', v_liquidado,
+        'billetera_origen_id', v_inversion.billetera_origen_id,
         'valor_actual_teorico', ROUND(v_valor_actual_teorico, 2),
         'valor_mercado_actual', v_inversion.valor_mercado_actual,
         'tasa_anual_tna', v_inversion.tasa_anual_tna,
@@ -92,7 +124,12 @@ BEGIN
         'estado_inversion', v_inversion.estado,
         'rendimiento_nominal', ROUND(v_rendimiento_nominal, 2),
         'rendimiento_real', CASE WHEN v_rendimiento_real IS NOT NULL THEN ROUND(v_rendimiento_real, 2) ELSE NULL END,
+        'inflacion_disponible', v_inflacion_disponible,
+        'inflacion_6m', CASE WHEN v_inflacion_disponible THEN ROUND(v_inflacion_6m, 2) ELSE NULL END,
+        'fuente_inflacion', COALESCE(v_fuente, 'desactivado'),
+        'motivo_inflacion', v_motivo,
+        'ventana_6m_meses', (v_infl ->> 'ventana_6m_meses')::numeric,
         'historial', v_historial
     );
 END;
-$function$
+$function$;

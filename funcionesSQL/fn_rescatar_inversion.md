@@ -1,9 +1,4 @@
-CREATE OR REPLACE FUNCTION public.fn_rescatar_inversion(
-    p_inversion_id bigint,
-    p_monto numeric,
-    p_billetera_destino_id bigint,
-    p_fecha date DEFAULT CURRENT_DATE
-)
+CREATE OR REPLACE FUNCTION public.fn_rescatar_inversion(p_inversion_id bigint, p_monto numeric, p_billetera_destino_id bigint, p_fecha date DEFAULT CURRENT_DATE)
  RETURNS bigint
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -42,24 +37,24 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_investment_rescue_exceeds_balance", "params": {}}';
     END IF;
 
+    -- Busqueda por tipo_cupo y no por nombre: el nombre es una key de i18n y
+    -- puede cambiar sin que este flujo se rompa (ver 84).
     SELECT estructura_id INTO v_categoria_inversion_id
     FROM p_estructuras_egresos
-    WHERE user_id = v_user_id AND nombre_cuenta = 'cat_investments' AND tipo_cupo = 'investment'
-    LIMIT 1;
+    WHERE user_id = v_user_id AND tipo_cupo = 'investment'
+    ORDER BY estructura_id LIMIT 1;
 
-    -- Registrar ingreso en p_caja (rescate parcial)
     INSERT INTO p_caja (
         user_id, tipo, billetera_origen_id, valor_ingreso,
         estructura_egreso_id, fecha, detalle, metadata
     ) VALUES (
-        v_user_id, 'income', p_billetera_destino_id, p_monto,
+        v_user_id, 'adjustment', p_billetera_destino_id, p_monto,
         v_categoria_inversion_id, p_fecha,
         'rescate_inversion: ' || v_inversion.nombre_activo,
-        jsonb_build_object('inversion_id', p_inversion_id, 'es_rescate_parcial', true)
+        jsonb_build_object('inversion_id', p_inversion_id, 'es_rescate_parcial', true, 'investment_capital', true)
     )
     RETURNING p_caja_id INTO v_movimiento_id;
 
-    -- Actualizar inversión: acumular monto liquidado
     UPDATE p_inversiones
     SET monto_liquidado = COALESCE(monto_liquidado, 0) + p_monto,
         valor_mercado_actual = GREATEST(0, COALESCE(valor_mercado_actual, monto_invertido_original) - p_monto),
@@ -75,4 +70,4 @@ BEGIN
 
     RETURN v_movimiento_id;
 END;
-$function$
+$function$;
