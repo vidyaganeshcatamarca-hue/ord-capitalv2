@@ -28,6 +28,10 @@ interface WalletDropdownSelectProps {
   selectedTarjetaId?: number | null
   onSelectTarjeta?: (id: number) => void
   placeholder?: string
+  /** Shown inside the sheet when there is nothing to pick. The caller decides
+   *  the wording: an empty USD list and an empty local list are different
+   *  problems (owner bug 2026-11-11). */
+  emptyMessage?: string
   formatMonto?: (val: string, moneda: string) => string
   style?: React.CSSProperties
   className?: string
@@ -41,6 +45,7 @@ export function WalletDropdownSelect({
   selectedTarjetaId = null,
   onSelectTarjeta,
   placeholder,
+  emptyMessage,
   formatMonto,
   style,
   className
@@ -261,6 +266,20 @@ export function WalletDropdownSelect({
                   </button>
                 )
               })}
+
+              {/* Nada para elegir: el caller decide qué decir. Sin este aviso la
+                  hoja quedaba con el título y el cuerpo vacío (dueño, 2026-11-11). */}
+              {wallets.length === 0 && tarjetas.length === 0 && emptyMessage && (
+                <div style={{
+                  padding: '22px 14px',
+                  textAlign: 'center',
+                  color: 'var(--text-2)',
+                  fontSize: 'calc(14px * var(--font-scale))',
+                  lineHeight: 1.4
+                }}>
+                  {emptyMessage}
+                </div>
+              )}
 
               {/* Section: Tarjetas de crédito (si existen) */}
               {tarjetas.length > 0 && (
