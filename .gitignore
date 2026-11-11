@@ -28,6 +28,9 @@ docs/
 docs/*
 !docs/i18n-toolchain.md
 start_info/
+!start_info/
+start_info/*
+!start_info/indice de funciones.md
 supabase/
 testeo/
 tests/
