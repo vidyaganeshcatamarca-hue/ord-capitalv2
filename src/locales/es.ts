@@ -3084,7 +3084,7 @@ export const sobres = {
   error_sobre_yield_requires_real: "Sólo una reserva separada en la entidad puede generar rendimientos.",
   error_sobre_wallet_not_found: "Esa billetera no existe o está inactiva.",
   error_sobre_currency_mismatch: "La billetera es de {billetera} y el sobre es de {sobre}. Un sobre no convierte monedas.",
-  error_sobre_wallet_insufficient: "No alcanza el saldo libre de {billetera} para reservar ese importe.",
+  error_sobre_wallet_insufficient: "No alcanza el saldo libre de {nombre} para reservar ese importe.",
   error_sobre_portion_insufficient: "Esa porción tiene {disponible} disponible. Ajustá el importe.",
   error_sobre_archive_with_balance: "El sobre tiene {saldo} adentro. Rescatalo antes de archivarlo.",
   error_sobre_archived: "Ese sobre está archivado y no se puede modificar.",

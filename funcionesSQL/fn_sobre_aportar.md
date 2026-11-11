@@ -47,18 +47,18 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_sobre_wallet_not_found", "params": {}}';
     END IF;
     IF COALESCE(v_wallet.moneda, 'ARS') <> v_sobre.moneda THEN
-        RAISE EXCEPTION '{"key": "error_sobre_currency_mismatch", "params": {"sobre": "{{sobre}}", "billetera": "{{billetera}}"}}';
+        RAISE EXCEPTION '{"key": "error_sobre_currency_mismatch", "params": {"sobre": "%", "billetera": "%"}}', v_sobre.moneda, v_wallet.moneda;
     END IF;
 
-    -- La billetera ya viene neta de lo que estÃƒÂ¡ apartado en otros sobres (la
-    -- regla es que su saldo ES el disponible), asÃƒÂ­ que no hay que descontar
+    -- La billetera ya viene neta de lo que estÃ¡ apartado en otros sobres (la
+    -- regla es que su saldo ES el disponible), asÃ­ que no hay que descontar
     -- reservas previas: alcanza con comparar contra el saldo actual.
     IF v_wallet.saldo_actual < p_importe THEN
-        RAISE EXCEPTION '{"key": "error_sobre_wallet_insufficient", "params": {"billetera": "{{billetera}}"}}';
+        RAISE EXCEPTION '{"key": "error_sobre_wallet_insufficient", "params": {"nombre": "%"}}', v_wallet.nombre;
     END IF;
 
     -- La plata sale de la billetera en LAS DOS modalidades: la diferencia entre
-    -- real y virtual la resuelve la conciliaciÃƒÂ³n, no el saldo.
+    -- real y virtual la resuelve la conciliaciÃ³n, no el saldo.
     v_caja_id := public.fn_sobre_pata_billetera(
         v_user_id, p_billetera_id, v_sobre.moneda, p_importe, true,
         'savings_envelope_aporte_real', p_sobre_id, v_sobre.nombre

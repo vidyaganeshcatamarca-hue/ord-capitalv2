@@ -57,14 +57,14 @@ BEGIN
             RAISE EXCEPTION '{"key": "error_sobre_wallet_not_found", "params": {}}';
         END IF;
         IF COALESCE(v_wallet.moneda, 'ARS') <> p_moneda THEN
-            RAISE EXCEPTION '{"key": "error_sobre_currency_mismatch", "params": {"sobre": "{{sobre}}", "billetera": "{{billetera}}"}}';
+            RAISE EXCEPTION '{"key": "error_sobre_currency_mismatch", "params": {"sobre": "%", "billetera": "%"}}', p_moneda, v_wallet.moneda;
         END IF;
 
         -- Toda modalidad descuenta de la billetera: la diferencia entre real y
         -- virtual esta en la conciliacion, no en el saldo. El saldo ya viene neto
         -- de lo reservado por otros sobres, asi que la validacion es una sola.
         IF v_wallet.saldo_actual < p_aporte_importe THEN
-            RAISE EXCEPTION '{"key": "error_sobre_wallet_insufficient", "params": {"billetera": "{{billetera}}"}}';
+            RAISE EXCEPTION '{"key": "error_sobre_wallet_insufficient", "params": {"nombre": "%"}}', v_wallet.nombre;
         END IF;
     END IF;
 

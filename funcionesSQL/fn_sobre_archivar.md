@@ -27,7 +27,7 @@ BEGIN
 
     v_saldo := public.fn_sobre_saldo(p_sobre_id);
     IF v_saldo <> 0 THEN
-        RAISE EXCEPTION '{"key": "error_sobre_archive_with_balance", "params": {"saldo": "{{saldo}}"}}';
+        RAISE EXCEPTION '{"key": "error_sobre_archive_with_balance", "params": {"saldo": "%"}}', v_sobre.moneda || ' ' || v_saldo::text;
     END IF;
 
     UPDATE public.p_sobres SET archivado_at = now(), actualizado_at = now()

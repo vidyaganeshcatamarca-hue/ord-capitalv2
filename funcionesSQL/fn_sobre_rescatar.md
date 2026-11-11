@@ -56,7 +56,7 @@ BEGIN
           AND m.modalidad = v_modalidad;
 
         IF v_disponible <= 0 OR v_disponible < v_importe THEN
-            RAISE EXCEPTION '{"key": "error_sobre_portion_insufficient", "params": {"disponible": "{{disponible}}"}}';
+            RAISE EXCEPTION '{"key": "error_sobre_portion_insufficient", "params": {"disponible": "%"}}', v_sobre.moneda || ' ' || v_disponible::text;
         END IF;
 
         -- Rescatar devuelve la plata a la billetera de origen en las dos

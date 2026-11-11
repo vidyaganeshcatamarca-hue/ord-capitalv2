@@ -2756,7 +2756,7 @@ export const sobres = {
   error_sobre_yield_requires_real: "Somente uma reserva separada na instituição pode gerar rendimentos.",
   error_sobre_wallet_not_found: "Essa carteira não existe ou está inativa.",
   error_sobre_currency_mismatch: "A carteira é de {billetera} e o envelope é de {sobre}. Um envelope não converte moedas.",
-  error_sobre_wallet_insufficient: "{billetera} não tem saldo livre suficiente para reservar esse valor.",
+  error_sobre_wallet_insufficient: "{nombre} não tem saldo livre suficiente para reservar esse valor.",
   error_sobre_portion_insufficient: "Essa porção tem {disponible} disponível. Ajuste o valor.",
   error_sobre_archive_with_balance: "O envelope ainda tem {saldo}. Resgate antes de arquivar.",
   error_sobre_archived: "Esse envelope está arquivado e não pode ser alterado.",

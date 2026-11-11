@@ -2756,7 +2756,7 @@ export const sobres = {
   error_sobre_yield_requires_real: "Only a reserve set aside at the institution can earn returns.",
   error_sobre_wallet_not_found: "That wallet does not exist or is inactive.",
   error_sobre_currency_mismatch: "The wallet is in {billetera} and the envelope is in {sobre}. An envelope never converts currencies.",
-  error_sobre_wallet_insufficient: "{billetera} does not have enough free balance to reserve that amount.",
+  error_sobre_wallet_insufficient: "{nombre} does not have enough free balance to reserve that amount.",
   error_sobre_portion_insufficient: "That portion has {disponible} available. Adjust the amount.",
   error_sobre_archive_with_balance: "The envelope still holds {saldo}. Withdraw it before archiving.",
   error_sobre_archived: "That envelope is archived and cannot be changed.",
