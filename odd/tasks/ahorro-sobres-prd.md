@@ -57,13 +57,13 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
 | T5 | UI completa + i18n es/en/pt (109 claves × 3 idiomas) | S6-S17 | **done** `ecb2d1c` |
 | T6 | Cuota dinámica, semáforo 85/60, período inicial, reprogramación | S12 | **done** en `fn_sobre_plan` |
 | T10a | Retiro de Cuenta Madre, transferencia entre sobres y gráfico inventado | S10, S9 | **done** `ecb2d1c` |
-| T4 | RPC de rendimiento + ingreso único en `p_caja` + modal | S11 | pending: autorización |
+| T4 | RPC de rendimiento + ingreso único en `p_caja` + modal | S11 | **done** `3071e08`; prueba visual en L17 |
 | T3 | Integración presupuesto: reservas virtuales en `fn_obtener_saldo_a_asignar` | S8, DF-32 | pending: autorización |
-| T11 | Corregir aportes y rescates (DF-17, §8.2) | L11, L16 | hecho: RPC, modal y botón en el historial; falta la prueba visual |
-| T7 | Orden manual por arrastre persistente | S15 | hecho (ver L10); falta la prueba visual |
+| T11 | Corregir aportes y rescates (DF-17, §8.2) | L11, L16 | **done**: RPC, modal, botón y prueba visual (L17) |
+| T7 | Orden manual por arrastre persistente | S15 | **done**: ver L10 y prueba visual en L17 |
 | T8 | Plan Free en la UI | S16 | **sin objeto**: el dueño levantó la restricción (ver L14) |
 | T9 | Notificaciones por infraestructura general | DF-30 | pending |
-| T10b | Baja de las RPC legacy de Cuenta Madre y transferencia entre sobres | S10 | pending: autorización (DROP) |
+| T10b | Baja de las RPC legacy de Cuenta Madre y transferencia entre sobres | S10 | **done** `c02bb37` (nueve RPC dropeadas; queda `fn_transferir_entre_sobres` por cupo de presupuesto) |
 
 ## Precisiones propuestas (§16, no aprobadas)
 
@@ -131,3 +131,12 @@ Rama `feat/ahorro-sobres-prd`. Fuente única de verdad:
   - Para poder precargar la billetera hizo falta **una línea autorizada por el dueño** en `fn_sobre_detalle`: el historial ahora expone `billetera_id` además de `billetera_nombre`. No se podía resolver por nombre porque **el mismo user 1 tiene dos billeteras llamadas "Dolar app"** (ids 400 y 1171): corregir contra la homónima equivocada habría sido exactamente el error que esta función existe para evitar. Verificado con 3 aserciones transaccionales (`PASS`): el id llega, coincide con el nombre que ya venía, y el resto del JSON no cambió.
   - Cinco claves i18n nuevas en los tres idiomas: `sobres_correct_title`, `sobres_correct_hint`, `sobres_correct_success`, `sobres_correct_action`, `sobres_wallet_destination`.
   - `tsc -b` limpio. **Sin prueba visual todavía**: entra en la pasada final pendiente (tarea 51).
+- **L17** — Prueba visual completa en móvil (390×844, ego, sesión de Google del **user 1**), capturas 42 a 54. Cierra los tres frentes que quedaban abiertos: orden por arrastre, corrección de aportes y **rendimiento**, que era el único sin evidencia en pantalla.
+  - **Fecha sin meta**: con meta la fecha se habilita; al quitar la meta se limpia y vuelve a quedar deshabilitada. Los tres estados verificados.
+  - **Orden**: la lista arranca en los tres grupos (proyecto con fecha → proyecto sin fecha → libre). Al arrastrar el sobre libre al tope aparece el botón "Orden automático"; al pulsarlo la lista vuelve al orden por alta y el botón desaparece, porque el sobre ya no está en modo manual.
+  - **Aporte y corrección**: aporte de 1.000 y corrección a 500 desde el lápiz del historial: queda **un** movimiento y **una** pata de caja editada, no dos.
+  - **Rendimiento** (la que faltaba). La causa del bloqueo anterior era de vocabulario: los dos botones de modalidad dicen *"It is still in my account; I reserve it in ORD"* y *"I set it aside at the institution"*, no "Real"/"Virtual", así que buscar por texto `real` nunca activaba la modalidad real y el checkbox `.sobre-check` no existía. Clickear el segundo botón por posición lo destraba. Flujo verificado: aporte **real** de 300 con el checkbox *"This reserve earns returns"* tildado → el detalle muestra la porción como **SET ASIDE** y los aportes virtuales como **RESERVED IN ORD** (4.500 y 325, la distinción se ve en pantalla) → menú de la tarjeta → *Record return* → importe 25 → el historial muestra **Return · Nov 11 · +ARS 25** y el saldo del sobre pasa a 4.825.
+    - En la base queda exactamente el diseño de S11: movimiento `rendimiento` (id 129) con `caja_ingreso_id` → fila de `p_caja` `tipo='income'`, `detalle='savings_yield'`, `cuenta_ingreso_id=219`, `valor_ingreso=25`; y la pata `adjustment` con `detalle='savings_envelope_aporte_real'` y `valor_egreso=25`. El ingreso acredita la billetera y la reserva la debita: **el saldo de la billetera queda igual**, el sobre sube. Un solo ingreso por rendimiento, como pide DF-21.
+    - El modal sólo ofrece reservas reales, con `genera_rendimiento` y saldo vivo (filtro sobre `fn_sobre_porciones`), y la porción virtual nunca aparece: un rendimiento va siempre a la reserva que lo generó.
+  - **Limpieza de los datos de prueba**, con el orden que exige el esquema y un paso que no estaba previsto: `p_sobre_movimientos_auditoria` tiene FK **RESTRICT** contra los movimientos, así que se borra **primero la auditoría**, después las patas de `p_caja`, después los movimientos y al final los sobres. Borrar una pata restaura el saldo por el trigger; la FK `caja_movimiento_id` es SET NULL, por eso el orden es seguro.
+  - Resultado de la limpieza: cero sobres, cero movimientos, cero filas de auditoría y cero patas. La billetera 2 volvió a **220.774,99**, que es exactamente el saldo que tenía antes de crear el primer sobre de prueba: no quedó ni un peso de residuo. La pantalla quedó en el estado vacío ("No envelopes yet").
