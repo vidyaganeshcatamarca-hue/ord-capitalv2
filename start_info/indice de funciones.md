@@ -203,7 +203,7 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 178. [fn_reporte_top_categorias_mes](../funcionesSQL/fn_reporte_top_categorias_mes.md)
 179. [fn_reporte_top_fuentes_ingreso](../funcionesSQL/fn_reporte_top_fuentes_ingreso.md) *(NUEVA Fase — Donut de fuentes de ingreso en Billeteras)*
 180. [fn_reporte_variacion_intermensual](../funcionesSQL/fn_reporte_variacion_intermensual.md)
-180. [fn_reporte_vencimientos_tarjetas](../funcionesSQL/fn_reporte_vencimientos_tarjetas.md) *(v2: +columna saldo_a_favor; monto_a_pagar neto de saldo)*
+180. [fn_reporte_vencimientos_tarjetas](../funcionesSQL/fn_reporte_vencimientos_tarjetas.md) *(v2: +columna saldo_a_favor; monto_a_pagar neto de saldo. v3 2026-11-11: `v_hoy` sale de la zona horaria del país configurado en vez de `CURRENT_DATE` (que en Supabase es UTC, y pasado las 21:00 de Argentina adelantaba un mes y contaba un día de menos), y si el resumen que vence no tiene nada impago el próximo vencimiento pasa al mes siguiente)*
 181. [fn_saldar_balance_hogar](../funcionesSQL/fn_saldar_balance_hogar.md)
 182. [fn_simular_pago_extra](../funcionesSQL/fn_simular_pago_extra.md)
 183. [fn_sugerir_distribucion_activacion](../funcionesSQL/fn_sugerir_distribucion_activacion.md)
@@ -344,3 +344,5 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 
 189c. [fn_disponible_transferible](../funcionesSQL/fn_disponible_transferible.md) *(NUEVA 2026-11, ronda 10: helper con la UNICA formula del disponible transferible de un sobre. Base cero arrastra salvo el ciclo de activacion, libertad no arrastra, y nunca descuenta a los hijos. El COALESCE dentro del CASE es obligatorio: sin fila en el ciclo anterior el SELECT INTO deja NULL y `GREATEST(NULL, 0)` devuelve 0, con lo que un sobre con techo quedaba en cero)*
 189d. [fn_disponibles_transferibles](../funcionesSQL/fn_disponibles_transferibles.md) *(NUEVA 2026-11, ronda 10: devuelve estructura_id y disponible de todas las filas en UNA sola llamada, para que la pantalla deje de calcular el disponible por su cuenta)*
+
+280. [fn_zona_horaria_pais](../funcionesSQL/fn_zona_horaria_pais.md) *(nueva 2026-11-11: código ISO del país → zona horaria IANA, para que los reportes usen la fecha local del usuario. IMMUTABLE; país desconocido o NULL cae a UTC. Para los países con varias zonas (US, CA, BR, AU, RU, MX, ID, CN) devuelve la principal: el país no dice dónde está el dispositivo)*
