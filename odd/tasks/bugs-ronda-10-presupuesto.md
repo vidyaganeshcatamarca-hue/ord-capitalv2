@@ -139,6 +139,22 @@ cuestiona la definición.
 > haciendo bien el cálculo involucrando a 50-30-20 que nada tiene que ver.
 > Captura: pi-clipboard-593936b5-ecb0-4b7a-9e80-e0a16dbf8ab0.png
 
+S16. Cada cambio de asignación de presupuesto tiene que dejar rastro: qué valor quedó,
+cuándo y con qué motivo (manual o promedio de 6 meses). Emergió de S1, porque sin
+rastro no se puede responder «cuánto había antes».
+
+> Yo veía el menos 50 en el padre, no en el hijo
+> vamos con 3.
+
+S17. Un hijo sin asignación propia no se mide contra cero: se mide contra el libre del
+padre, y con eso se dibuja la barra. Sin techo en el hijo ni en el padre, no se dibuja
+barra.
+
+> Además, ¿qué te parece la idea de que comparemos el gasto del hijo que no tiene
+> asignación contra la asignación del padre? Si la tiene. Entonces ahí sí podemos
+> dibujar la barra.
+> barra, vamos por 1.
+
 ## Tasks
 
 Las tareas de investigación se cierran con la causa medida contra Supabase y una
@@ -157,6 +173,8 @@ respuesta al dueño; las de código con su test y su commit.
 | T9  | S12       | Explicar el cálculo de disponible en libertad y corregir el cartel | — |
 | T10 | S9        | Quitar los tres botones flotantes de la edición de inversión | — |
 | T11 | S10       | Definir el comportamiento de actualizar valor en plazo fijo | — |
+| T12 | S16       | Auditoría de cada cambio de asignación (emergió de S1) | `3f2ecc1` |
+| T13 | S17       | Barra del hijo sin asignación contra el libre del padre | `bc0e323` |
 
 ## Log
 
@@ -212,3 +230,30 @@ L1 (pedido original del dueño, literal):
 > asignación, me genera mal el total... en total del grupo me parecen menos 4.000.
 > [13] En modo libertad tenemos el cálculo de lo disponible que quiero que me
 > expliques exactamente cómo está calculado...
+
+L2 (evidencia de S1, medida contra Supabase, user 1): el gasto del ciclo en
+Almacén/Despensa son cuatro movimientos reales (55.000 recurrente del 4/11, 6.500
+OCR del 5/11, 50.000 recurrente del 6/11, 50.000 recurrente del 9/11) = 161.500.
+La asignación previa era 111.500, de ahí el −50.000 que el dueño recordaba. Los
+85.506 salen del promedio `(50.000 + 257.000 + 25 + 35.000) ÷ 4`. **No hay error de
+cálculo**: el número bajó porque se reemplazó el techo por uno menor. El defecto real
+era que no quedaba rastro del valor anterior.
+
+L3 (decisión del dueño): el promedio de 6 meses se calcula contando días y pasándolos
+a meses con decimales para los meses parciales. El mes de 25 pesos **tiene que pesar**:
+«No hay ningún problema que tengamos un mes con 25 porque es real y eso debe afectar el
+promedio sí o sí».
+
+L4 (decisión del dueño, S17): un hijo sin asignación se mide contra la asignación del
+padre, y con eso sí se dibuja la barra. Denominador elegido: «barra, vamos por 1» = el
+libre del padre, el mismo para todos los hijos sin asignación, sin repartirlo.
+
+L5 (aclaración del dueño, corrige el análisis): el −50.000 que vio estaba en el
+**padre** Alimentos-Hogar, no en el hijo. La fórmula del padre es `0 + monto_limite
+− suma(gasto de los hijos)`; con techo 500 y 203.990 de hijos da −203.490, así que el
+snapshot exacto no es reconstruible sin historial — que es lo que T12 vino a arreglar.
+
+L6 (pedido del dueño): registrar un ingreso de 1.000.000 en la cuenta efectivo del
+user 1 para mover el saldo a asignar. Ejecutado por RPC `fn_registrar_movimiento_caja`
+(movimiento 18923, billetera 2 ARS): el saldo pasó de 220.774,99 a 1.220.774,99 y el
+saldo a asignar de −96.904,74 a +903.095,26.
