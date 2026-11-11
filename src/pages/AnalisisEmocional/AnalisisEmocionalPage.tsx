@@ -4,29 +4,16 @@ import { supabase } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { useHogar } from '@/contexts/HogarContext'
 import { parseError, t } from '@/locales/i18n'
-import { useActiveLocale } from '@/hooks/useActiveLocale'
 import { haptics } from '@/lib/haptics'
 import { BCGScatterPlot, type BCGPoint } from '@/components/bcg/BCGScatterPlot'
 import { BCGCuadranteAcordeon } from '@/components/bcg/BCGCuadranteAcordeon'
 import { BCGResumenCuadrantes, type ResumenCuadrante } from '@/components/bcg/BCGResumenCuadrantes'
 import { BCGSelectMes } from '@/components/bcg/BCGSelectMes'
 import { BCGPodora } from '@/components/bcg/BCGPodora'
-import { BCGHormigas } from '@/components/bcg/BCGHormigas'
 import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 import './AnalisisEmocionalPage.css'
 
-type BcgTab = 'matriz' | 'podadora' | 'hormigas'
-
-interface HormigaResumen {
-  estructura_id: number
-  nombre_cuenta: string
-  icono: string
-  color: string
-  frecuencia_mensual: number
-  gasto_mensual_estimado: number
-  impacto_anual: number
-  porcentaje_del_ingreso: number
-}
+type BcgTab = 'matriz' | 'podadora'
 
 interface PodoraCandidato {
   estructura_id: number
@@ -52,34 +39,17 @@ interface PodoraResponse {
   linea_base: PodoraLineaBase
 }
 
-interface RetoHormigas {
-  total_hormigas_mes: number
-  cantidad_hormigas: number
-  comparativa: { mes_anterior: number; mes_antepasado: number; tendencia_key: 'improving' | 'worsening' | 'stable' }
-  buzon_disponible: boolean
-  buzon_id: number | null
-  buzon_nombre: string | null
-  buzon_saldo_actual: number | null
-  proyeccion_6_meses: number
-  mensaje_key: 'msg_challenge_zero_ants' | 'msg_challenge_no_piggybank' | 'msg_challenge_transfer_to_piggybank'
-}
-
 export function AnalisisEmocionalPage() {
   const { showToast } = useToast()
   const { estado, loading: loadingHogar } = useHogar()
   const navigate = useNavigate()
-  // The amounts follow the language the user is reading in.
-  const locale = useActiveLocale()
   const [tab, setTab] = useState<BcgTab>('matriz')
 
   // Estado Vista 1
   const [mes, setMes] = useState<string | null>(null)
   const [points, setPoints] = useState<BCGPoint[]>([])
   const [resumen, setResumen] = useState<ResumenCuadrante[]>([])
-  const [hormigasTopList, setHormigasTopList] = useState<HormigaResumen[]>([])
-  const [hormigasResumen, setHormigasResumen] = useState<HormigaResumen | null>(null)
   const [podora, setPodora] = useState<PodoraResponse | null>(null)
-  const [retoHormigas, setRetoHormigas] = useState<RetoHormigas | null>(null)
 
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -88,18 +58,14 @@ export function AnalisisEmocionalPage() {
     setLoading(true)
     setError(null)
     try {
-      const [rMatriz, rResumen, rHormigas, rPodora, rReto] = await Promise.all([
+      const [rMatriz, rResumen, rPodora] = await Promise.all([
         supabase.rpc('fn_reporte_bcg_roi_emocional'),
         supabase.rpc('fn_reporte_resumen_cuadrantes'),
-        supabase.rpc('fn_reporte_fugas_silenciosas'),
         supabase.rpc('fn_reporte_podadora_bcg'),
-        supabase.rpc('fn_reporte_reto_hormigas'),
       ])
       if (rMatriz.error) throw rMatriz.error
       if (rResumen.error) throw rResumen.error
-      if (rHormigas.error) throw rHormigas.error
       if (rPodora.error) throw rPodora.error
-      if (rReto.error) throw rReto.error
 
       const puntos: BCGPoint[] = ((rMatriz.data ?? []) as any[]).map((row) => ({
         estructura_id: Number(row.nombre_categoria ? row.estructura_id ?? 0 : 0) || Number(row.estructura_id ?? 0),
@@ -136,21 +102,7 @@ export function AnalisisEmocionalPage() {
       setPoints(puntos.map((p) => ({ ...p, monto_total: montoPorNombre[p.nombre] ?? 0 })))
       setResumen(resumenData)
 
-      const hormigasData: HormigaResumen[] = ((rHormigas.data ?? []) as any[]).map((row) => ({
-        estructura_id: Number(row.estructura_id ?? 0),
-        nombre_cuenta: String(row.nombre_cuenta ?? ''),
-        icono: String(row.icono ?? '📊'),
-        color: String(row.color ?? '#FF6B6B'),
-        frecuencia_mensual: Number(row.frecuencia_mensual ?? 0),
-        gasto_mensual_estimado: Number(row.gasto_mensual_estimado ?? 0),
-        impacto_anual: Number(row.impacto_anual ?? 0),
-        porcentaje_del_ingreso: Number(row.porcentaje_del_ingreso ?? 0),
-      }))
-      setHormigasTopList(hormigasData)
-      setHormigasResumen(hormigasData[0] ?? null)
-
       setPodora((rPodora.data as unknown as PodoraResponse) ?? null)
-      setRetoHormigas((rReto.data as unknown as RetoHormigas) ?? null)
     } catch (err: any) {
       setError(parseError(err))
     } finally {
@@ -194,7 +146,7 @@ export function AnalisisEmocionalPage() {
       </header>
 
       <nav className="bcg-tabs" aria-label={t('bcg_tabs_label')}>
-        {(['matriz', 'podadora', 'hormigas'] as BcgTab[]).map((key) => (
+        {(['matriz', 'podadora'] as BcgTab[]).map((key) => (
           <button
             key={key}
             className={tab === key ? 'active' : ''}
@@ -292,32 +244,10 @@ export function AnalisisEmocionalPage() {
                   </div>
                 </>
               )}
-
-              {retoHormigas && retoHormigas.cantidad_hormigas > 0 && (
-                <>
-                  <h2 className="bcg-section-title bcg-section-title-mt">{t('bcg_hormiga_resumen_titulo')}</h2>
-                  <div className="bcg-hormigas-widget">
-                    <span className="bcg-hormigas-icon">🐜</span>
-                    <strong>
-                      {t('bcg_hormiga_total_label')}: {formatMoneyARSLocal(retoHormigas.total_hormigas_mes, locale)} ({retoHormigas.cantidad_hormigas})
-                    </strong>
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      onClick={() => {
-                        haptics.light()
-                        setTab('hormigas')
-                      }}
-                    >
-                      {t('bcg_tab_hormigas')} →
-                    </button>
-                  </div>
-                </>
-              )}
             </>
           )}
         </section>
-      ) : tab === 'podadora' ? (
+      ) : (
         <section className="bcg-tab-panel">
           <h2 className="bcg-section-title">{t('bcg_podora_titulo')}</h2>
           <BCGPodora
@@ -338,35 +268,15 @@ export function AnalisisEmocionalPage() {
             }}
           />
         </section>
-      ) : (
-        <section className="bcg-tab-panel">
-          <h2 className="bcg-section-title">{t('bcg_hormiga_resumen_titulo')}</h2>
-          <BCGHormigas
-            hormigas={hormigasTopList}
-            reto={retoHormigas}
-            onCategoriaClick={(estructuraId) => {
-              const pt = points.find((p) => p.estructura_id === estructuraId)
-              if (pt) handlePointClick(pt)
-            }}
-          />
-        </section>
       )}
 
-      {!estado?.tiene_pareja && (tab === 'hormigas' || tab === 'podadora') && (
+      {!estado?.tiene_pareja && tab === 'podadora' && (
         <p className="bcg-muted" style={{ textAlign: 'center', marginTop: 16 }}>
           {t("emotional_analysis_advanced_tip")}
         </p>
       )}
     </div>
   )
-}
-
-function formatMoneyARSLocal(v: number, locale: string): string {
-  try {
-    return new Intl.NumberFormat(locale, { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(Number(v ?? 0))
-  } catch {
-    return `$${Math.round(Number(v ?? 0)).toLocaleString(locale)}`
-  }
 }
 
 export default AnalisisEmocionalPage

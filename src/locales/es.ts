@@ -1030,7 +1030,6 @@ export const bcg = {
   bcg_tabs_label: "Secciones del análisis BCG",
   bcg_tab_matriz: "Matriz",
   bcg_tab_podadora: "Podadora",
-  bcg_tab_hormigas: "Hormigas",
   bcg_etapa0_placeholder: "Próximamente: vista de {tab}. Esta pantalla se completará en las siguientes etapas.",
 
   // Botones comunes
@@ -1130,43 +1129,8 @@ export const bcg = {
   bcg_podora_equiv_cenas: "{count} cenas en restaurante",
 
   // Hormigas (Vista 4)
-  bcg_hormiga_resumen_titulo: "📊 Resumen del Mes",
-  bcg_hormiga_total_label: "Total en hormigas",
-  bcg_hormiga_cantidad_label: "Cantidad",
-  bcg_hormiga_comparativa_titulo: "📈 Comparativa",
-  bcg_hormiga_mes_actual: "Este mes",
-  bcg_hormiga_mes_anterior: "Mes anterior",
-  bcg_hormiga_mes_antepasado: "Mes antepasado",
-  bcg_hormiga_tendencia_improving: "✅ Mejorando ({pct}%)",
-  bcg_hormiga_tendencia_worsening: "⚠️ Empeorando (+{pct}%)",
-  bcg_hormiga_tendencia_stable: "Sin cambios",
-  bcg_hormiga_top_titulo: "🐜 Top Hormigas del Mes",
-  bcg_hormiga_frecuencia_label: "{count} veces",
-  bcg_hormiga_promedio_label: "Promedio: {monto} por gasto",
-  bcg_hormiga_impacto_anual: "Impacto anual: {monto}",
-  bcg_hormiga_reto_titulo: "Reto del Buzón de Deseos",
-  bcg_hormiga_proyeccion_label: "Proyección a 6 meses",
-  bcg_hormiga_proyeccion_monto: "{monto}",
-  bcg_hormiga_estado_zero_titulo: "🏆  ¡Increíble!",
-  bcg_hormiga_estado_zero_desc: "No registraste gastos hormiga este mes.",
-  bcg_hormiga_estado_no_buzon_titulo: "🐜 Tus hormigas suman {monto}",
-  bcg_hormiga_estado_no_buzon_desc: "Crea un Sobre de Ahorro llamado \"Buzón de Deseos\"para atraparlas.",
-  bcg_hormiga_estado_no_buzon_cta: "Crear Buzón de Deseos",
-  bcg_hormiga_estado_transfer_titulo: "🐜 Atrapamos {monto} en hormigas",
-  bcg_hormiga_estado_transfer_desc: "¿Las transferimos a \"{buzon}\"? Saldo actual del buzón: {saldo}",
-  bcg_hormiga_estado_transfer_cta: "Transferir al Buzón",
-  bcg_hormiga_vacio: "No hay gastos hormiga este mes.  ¡Buen trabajo!",
-  bcg_hormiga_sin_datos: "Sigue registrando tus gastos para que el detector pueda trabajar.",
 
   // Transferencia al Buzón
-  bcg_buzon_modal_titulo: "Transferir al Buzón de Deseos",
-  bcg_buzon_modal_origen_label: "Billetera de origen",
-  bcg_buzon_modal_monto_label: "Monto a transferir",
-  bcg_buzon_modal_nota_label: "Nota (opcional)",
-  bcg_buzon_modal_confirmar: "Transferir",
-  bcg_buzon_modal_cancelar: "Cancelar",
-  bcg_buzon_modal_exito: "Transferencia al buzón realizada.",
-  bcg_buzon_modal_error: "No se pudo transferir al buzón.",
 
   // Empty states
   bcg_empty_sin_gastos: "📊 Aún no hay gastos este mes para analizar.",
