@@ -105,7 +105,7 @@ export function SobreDetail({ detalle, onBack, onProvision, onRescue, onEdit, on
             />
           </div>
           <span className="sobre-detalle-porcentaje">
-            {formatPercent(plan.porcentaje_progreso ?? 0, { decimals: 0, signed: false })}
+            {formatPercent(plan.porcentaje_progreso ?? 0, { decimals: 1, signed: false })}
           </span>
         </div>
       )}

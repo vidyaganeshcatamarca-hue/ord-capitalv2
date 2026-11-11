@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { MoreVertical } from 'lucide-react'
-import { formatCurrency, formatDateShort } from '@/lib/format'
+import { formatCurrency, formatDateShort, formatPercent } from '@/lib/format'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { t } from '@/locales/i18n'
 import type { Sobre } from './types'
@@ -106,7 +106,7 @@ export function SobreCard({
 
         {(tieneMeta || dias) && (
           <footer className="sobre-card-meta">
-            {tieneMeta && <span>{porcentaje}%</span>}
+            {tieneMeta && <span>{formatPercent(porcentaje, { decimals: 1, signed: false })}</span>}
             {dias && <span className={sobre.dias_restantes !== null && sobre.dias_restantes < 0 ? 'sobre-card-vencido' : ''}>{dias}</span>}
             {sobre.fecha_objetivo && !dias && <span>{formatDateShort(sobre.fecha_objetivo)}</span>}
           </footer>
