@@ -2302,6 +2302,7 @@ export const inversiones = {
   card_available_limit: "Limite disponível",
   card_next_due_date: "Próximo vencimento",
   card_due_date_format: "Dia {day} ({days} dias)",
+  card_due_today: "Hoje",
   card_due_date_overdue: "Dia {day}  — vencida há {days} dia(s)",
   card_stress_thermometer: "Termômetro de Estresse",
   card_stress_index: "Índice de estresse",

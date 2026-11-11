@@ -1070,9 +1070,14 @@ const handleLegacySubmit = async () => {
                 <div className="vencimiento-info">
                     <div className="vencimiento-label"><CategoryIcon name="Calendar" size={13} /> {t("card_next_due_date")}</div>
                   <div className="vencimiento-date">
-                    {/* Y-01: el atraso se avisa una sola vez, arriba de la pestaña. Acá el
-                        recuadro vuelve a su función: decir cuándo vence y cuánto falta. */}
-                    {t("card_due_date_format", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })}
+                    {/* Y-01: the overdue notice lives once, above the tab; this box only
+                        says when it is due and how long is left. Owner bug 2026-11-11: on
+                        the due day itself the count reaches zero, and the parenthesised
+                        days format reads as if something were missing, so that case says
+                        it is due today. */}
+                    {Number(venc.dias_para_vencimiento) === 0
+                      ? t('card_due_today')
+                      : t("card_due_date_format", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })}
                   </div>
                   {Number(venc.saldo_a_favor) > 0 && (
                     <div className="saldo-a-favor-chip">{t('saldo_a_favor_chip', { monto: fmtARS(Number(venc.saldo_a_favor)) })}</div>
