@@ -169,8 +169,10 @@
 }
 
 /* ---------- ACORDEÓN GRUPO ---------- */
+/* S6 (dueño): «La distancia, la separación entre una tarjeta y otra tarjeta es muy
+   pequeña. Tiene que ser por lo menos el doble.» Eran 12px entre rubros padre. */
 .acord-grupo {
-  margin: 0 16px 12px;
+  margin: 0 16px 24px;
   border-radius: 14px;
   overflow: hidden;
   background: var(--surface, #2D2D2D);
@@ -178,6 +180,25 @@
   transition: box-shadow 0.2s;
 }
 .acord-grupo:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
+
+/* S4: el dato de cuánto hay disponible viaja adentro del modal de monto manual, porque
+   el teclado numérico tapa el hero de la pantalla y el número queda inalcanzable. */
+.asignar-monto-disponible {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface-3, rgba(255, 255, 255, 0.06));
+  font-size: calc(12px * var(--font-scale));
+  opacity: 0.85;
+}
+.asignar-monto-disponible strong {
+  font-size: calc(15px * var(--font-scale));
+  opacity: 1;
+}
 
 .acord-grupo-header {
   display: flex;
@@ -462,9 +483,15 @@
   white-space: nowrap;
 }
 
-/* «por lo menos en los rubros padres»: la línea vertical que separa las columnas. */
+/* «por lo menos en los rubros padres»: la línea vertical que separa las columnas.
+   S8 (dueño): «refuerces las líneas separatorias entre asignado, gastado, libre y avance.
+   Hazla más evidente, más fuerte, para que se note bien la diferencia de cada cuadro.»
+   Estaba en 1px con --border; ahora 2px con --border-light, que es el token que el tema
+   ya define para el borde más marcado. Nada de colores fijos: el tema tiene versión
+   oscura y clara. */
 .sobre-stats--padre .sobre-stat + .sobre-stat {
-  border-left: 1px solid var(--border);
+  border-left: 2px solid var(--border-light);
+  padding-left: 10px;
 }
 
 /* arrastre badge */
@@ -1595,4 +1622,19 @@ button.asignar-opcion:focus-visible {
 .acord-grupo-body > * + *,
 .acord-grupo-body > .sobre-grupo-bloque + * {
   margin-top: 10px;
+}
+
+/* Modelo A (ronda 10). Segunda lectura de la barra: el azul es el consumo del pozo del
+   padre, medido en SU propia escala, no en la de la cuota del hijo. Por eso va como
+   franja fina al pie y cada color lleva su número al lado; sin los números, una misma
+   longitud estaría significando dos cosas distintas. */
+.sobre-barra-wrap { position: relative; }
+.sobre-barra-pozo {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(64, 132, 255, 0.9);
+  pointer-events: none;
 }

@@ -15,6 +15,12 @@ DECLARE
     v_mes_anterior date := v_mes_truncado - INTERVAL '1 month';
     v_f_inicio_ant date;
     v_f_fin_ant date;
+    v_padre_destino bigint;
+    v_techo_destino numeric;
+    v_repartido_destino numeric;
+    v_actual_destino numeric;
+    v_actual_origen numeric;
+    v_repartido_origen numeric;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
@@ -44,27 +50,87 @@ BEGIN
     v_f_inicio_ant := date_trunc('month', v_mes_anterior) + ((v_dia_ancla - 1) * INTERVAL '1 day');
     v_f_fin_ant := (v_f_inicio_ant + INTERVAL '1 month' - INTERVAL '1 day')::date;
 
-    SELECT 
-        (
-            COALESCE((SELECT monto_limite FROM p_presupuestos p2 WHERE p2.estructura_egreso_id = p_origen_id AND p2.mes_periodo = v_mes_anterior AND (p2.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND p2.hogar_id = v_hogar_id))), 0) -
-            COALESCE((SELECT SUM(valor_egreso) FROM p_caja c WHERE c.estructura_egreso_id = p_origen_id AND c.tipo = 'expense' AND c.fecha BETWEEN v_f_inicio_ant AND v_f_fin_ant AND ((c.user_id = v_user_id AND c.es_compartido = false) OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true))), 0)
-        ) + COALESCE(p.monto_limite, 0) - COALESCE((
-            SELECT SUM(valor_egreso) FROM p_caja c
-            WHERE c.estructura_egreso_id = p_origen_id
-              AND c.tipo = 'expense'
-              AND c.fecha BETWEEN v_f_inicio AND v_f_fin
-              AND ((c.user_id = v_user_id AND c.es_compartido = false) 
-                   OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true))
-        ), 0) INTO v_disponible_origen
-    FROM p_estructuras_egresos e
-    LEFT JOIN p_presupuestos p ON e.estructura_id = p.estructura_egreso_id 
-        AND p.mes_periodo = v_mes_truncado 
-        AND (p.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND p.hogar_id = v_hogar_id))
-    WHERE e.estructura_id = p_origen_id 
-      AND (e.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND e.hogar_id = v_hogar_id));
+    -- Ronda 10: una sola formula, la del helper. Antes estaba copiada aca adentro y sin
+    -- mirar el modo, asi que en libertad sumaba arrastre. El helper respeta el modo y no
+    -- descuenta a los hijos.
+    v_disponible_origen := public.fn_disponible_transferible(p_origen_id, p_mes_periodo);
 
     IF v_disponible_origen IS NULL OR v_disponible_origen < p_monto THEN
         RAISE EXCEPTION '{"key": "error_insufficient_funds_in_envelope", "params": {}}';
+    END IF;
+
+    -- S2/S7/S15: el techo del padre manda tambien en las transferencias, y en los dos
+    -- extremos. Tiene que ir antes de escribir: la funcion mueve plata con un UPDATE y un
+    -- INSERT sueltos, asi que un rechazo despues del UPDATE dejaria media transferencia.
+    --
+    -- Destino: si es hijo de un padre con presupuesto mayor a cero, el valor resultante no
+    -- puede pasarse de lo libre del techo (excluyendo al destino de la suma de hermanos).
+    SELECT padre_id INTO v_padre_destino
+      FROM public.p_estructuras_egresos
+     WHERE estructura_id = p_destino_id;
+
+    IF v_padre_destino IS NOT NULL THEN
+        SELECT monto_limite INTO v_techo_destino
+          FROM public.p_presupuestos
+         WHERE estructura_egreso_id = v_padre_destino
+           AND mes_periodo = v_mes_truncado
+           AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id));
+
+        IF COALESCE(v_techo_destino, 0) > 0 THEN
+            SELECT COALESCE(monto_limite, 0) INTO v_actual_destino
+              FROM public.p_presupuestos
+             WHERE estructura_egreso_id = p_destino_id
+               AND mes_periodo = v_mes_truncado
+               AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id));
+
+            SELECT COALESCE(SUM(pr.monto_limite), 0) INTO v_repartido_destino
+              FROM public.p_presupuestos pr
+              JOIN public.p_estructuras_egresos e ON e.estructura_id = pr.estructura_egreso_id
+             WHERE e.padre_id = v_padre_destino
+               AND pr.mes_periodo = v_mes_truncado
+               AND (pr.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND pr.hogar_id = v_hogar_id))
+               AND pr.estructura_egreso_id <> p_destino_id;
+
+            IF (COALESCE(v_actual_destino, 0) + p_monto) > (v_techo_destino - v_repartido_destino) THEN
+                RAISE EXCEPTION '%', json_build_object(
+                    'key', 'error_budget_child_over_parent',
+                    'params', json_build_object(
+                        'disponible', GREATEST(v_techo_destino - v_repartido_destino, 0),
+                        'intento', COALESCE(v_actual_destino, 0) + p_monto,
+                        'techo', v_techo_destino,
+                        'repartido', v_repartido_destino
+                    )
+                )::text;
+            END IF;
+        END IF;
+    END IF;
+
+    -- Origen: si es padre con hijos, sacarle plata no puede dejarlo por debajo de lo que
+    -- ya tiene repartido en ellos.
+    IF EXISTS (SELECT 1 FROM public.p_estructuras_egresos h WHERE h.padre_id = p_origen_id) THEN
+        SELECT COALESCE(monto_limite, 0) INTO v_actual_origen
+          FROM public.p_presupuestos
+         WHERE estructura_egreso_id = p_origen_id
+           AND mes_periodo = v_mes_truncado
+           AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id));
+
+        SELECT COALESCE(SUM(pr.monto_limite), 0) INTO v_repartido_origen
+          FROM public.p_presupuestos pr
+          JOIN public.p_estructuras_egresos e ON e.estructura_id = pr.estructura_egreso_id
+         WHERE e.padre_id = p_origen_id
+           AND pr.mes_periodo = v_mes_truncado
+           AND (pr.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND pr.hogar_id = v_hogar_id));
+
+        IF (COALESCE(v_actual_origen, 0) - p_monto) < v_repartido_origen THEN
+            RAISE EXCEPTION '%', json_build_object(
+                'key', 'error_budget_parent_below_children',
+                'params', json_build_object(
+                    'repartido', v_repartido_origen,
+                    'intento', COALESCE(v_actual_origen, 0) - p_monto,
+                    'recortar', v_repartido_origen - (COALESCE(v_actual_origen, 0) - p_monto)
+                )
+            )::text;
+        END IF;
     END IF;
 
     UPDATE p_presupuestos

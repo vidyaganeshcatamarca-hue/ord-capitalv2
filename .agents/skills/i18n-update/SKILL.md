@@ -26,7 +26,7 @@ Levantá esta skill cuando te pidan:
 
 | | |
 |---|---|
-| Maestros | `es.ts` (2291 keys, 10 secciones) |
+| Maestros | `es.ts` — la fuente de verdad; los demás diccionarios son su espejo |
 | Espejos | `en.ts`, `pt.ts` |
 | Idiomas soportados | `SUPPORTED` en `src/locales/language.ts` |
 | Registro | `i18n/ledger.json` — qué español se tradujo en cada key |

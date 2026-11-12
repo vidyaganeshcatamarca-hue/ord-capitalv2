@@ -8,6 +8,7 @@ import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 import { Trash2 } from 'lucide-react'
 import { investmentMovementAmount } from '@/lib/inversionesMovimientos'
 import { investmentNetCapital } from '@/lib/inversionesPatrimonio'
+import { valorSugeridoPlazoFijo } from '@/lib/inversionSugerida'
 import './DetalleInversionView.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 
@@ -25,6 +26,10 @@ export interface DetalleInversion {
   valor_actual_teorico: number | null
   valor_mercado_actual: number | null
   tasa_anual_tna: number | null
+  /** T11: el plazo se mide desde acá, no desde la última conciliación. */
+  fecha_inicio?: string | null
+  /** T11: si la posición ya se liquidó, los días se cortan en esa fecha. */
+  fecha_liquidacion?: string | null
   moneda: string | null
   ultima_conciliacion: string | null
   dias_desde_conciliacion: number | null
@@ -48,9 +53,9 @@ export interface DetalleInversion {
 interface DetalleInversionViewProps {
   inversionId: number
   onBack: () => void
-  onUpdateValue: (id: number) => void
-  onAddCapital?: (id: number) => void
-  onLiquidate: (id: number) => void
+  /// S9 (dueño): «actualizar valor, agregar capital y liquidar [...] ya están en la
+  /// pantalla anterior, así que no son necesarios en la edición de una inversión».
+  /// Las tres acciones se disparan desde la lista; acá sólo queda el borrado.
   /// Se llama despues de borrar una posicion preexistente. La lista tiene que
   /// recargarse y volver al panel: la fila ya no existe.
   onDeleted?: () => void
@@ -95,9 +100,6 @@ function movementClassFor(value: number | null | undefined): string {
 export function DetalleInversionView({
   inversionId,
   onBack,
-  onUpdateValue,
-  onAddCapital,
-  onLiquidate,
   onDeleted,
 }: DetalleInversionViewProps) {
   // Formato por moneda: se re-renderiza cuando cambia el contexto.
@@ -378,6 +380,41 @@ export function DetalleInversionView({
             </span>
           </div>
         )}
+        {/* S10 (dueño): «Solo monto sugerido por el cálculo, no hay edición». Para un
+            plazo fijo con tasa anual, el valor que sale de la cuenta por el tiempo
+            transcurrido. El período va de la FECHA DE INICIO —«todas las inversiones se
+            calculan a partir de la fecha de inicio»— hasta hoy, o hasta la fecha de
+            liquidación si la posición ya se cerró: si no, el valor seguiría creciendo
+            para siempre. Es una sugerencia, no un valor contable. */}
+        {(() => {
+          const diasPlazo = (() => {
+            if (!data.fecha_inicio) return null
+            const inicio = new Date(`${data.fecha_inicio}T00:00:00`)
+            const fin = data.fecha_liquidacion
+              ? new Date(`${data.fecha_liquidacion}T00:00:00`)
+              : new Date()
+            const dias = Math.floor((fin.getTime() - inicio.getTime()) / 86_400_000)
+            return Number.isFinite(dias) && dias > 0 ? dias : null
+          })()
+          const sugerencia = valorSugeridoPlazoFijo({
+            capital: data.monto_invertido_original,
+            tasaAnualPorcentaje: data.tasa_anual_tna,
+            dias: diasPlazo,
+          })
+          if (!sugerencia) return null
+          return (
+            <div
+              className="detalle-extra-row"
+              data-testid="detalle-valor-sugerido"
+              title={t('invest_suggested_hint', { dias: String(sugerencia.dias) })}
+            >
+              <span className="detalle-extra-label">{t('invest_suggested_value')}</span>
+              <span className="detalle-extra-value">
+                {formatCurrency(sugerencia.valorSugerido, moneda)}
+              </span>
+            </div>
+          )
+        })()}
         <div className="detalle-extra-row">
           <span className="detalle-extra-label">{t('label_currency')}</span>
           <span className="detalle-extra-value">{moneda}</span>
@@ -422,32 +459,6 @@ export function DetalleInversionView({
       </section>
 
       <footer className="detalle-actions">
-        <button
-          type="button"
-          className="detalle-action-btn detalle-action-btn--update"
-          onClick={() => onUpdateValue(data.inversion_id)}
-        >
-          <span aria-hidden="true">📊</span>
-          <span>{t('btn_update_value')}</span>
-        </button>
-        {onAddCapital && (
-          <button
-            type="button"
-            className="detalle-action-btn detalle-action-btn--add"
-            onClick={() => onAddCapital(data.inversion_id)}
-          >
-            <span aria-hidden="true">➕</span>
-            <span>{t('btn_add_capital')}</span>
-          </button>
-        )}
-        <button
-          type="button"
-          className="detalle-action-btn detalle-action-btn--liquidate"
-          onClick={() => onLiquidate(data.inversion_id)}
-        >
-          <span aria-hidden="true">💸</span>
-          <span>{t('btn_liquidate')}</span>
-        </button>
         {/* S7: solo para posiciones sin billetera y sin movimientos, que es
             exactamente la condicion que verifica fn_eliminar_inversion. Las que
             tienen egreso, aporte o rescate se borran desde Historial, donde cada

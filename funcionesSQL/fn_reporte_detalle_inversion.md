@@ -115,6 +115,8 @@ BEGIN
         'tasa_anual_tna', v_inversion.tasa_anual_tna,
         'moneda', COALESCE(v_inversion.moneda, 'ARS'),
         'ultima_conciliacion', v_inversion.ultima_conciliacion,
+        'fecha_inicio', v_inversion.fecha_inicio,
+        'fecha_liquidacion', v_inversion.fecha_liquidacion,
         'dias_desde_conciliacion', (CURRENT_DATE - v_inversion.ultima_conciliacion)::int,
         'estado_semaforo_key', CASE
             WHEN (CURRENT_DATE - v_inversion.ultima_conciliacion) <= 30 THEN 'green'
@@ -132,4 +134,4 @@ BEGIN
         'historial', v_historial
     );
 END;
-$function$;
+$function$

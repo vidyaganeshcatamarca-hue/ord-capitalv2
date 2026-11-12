@@ -284,9 +284,6 @@ export function InversionesPage() {
           key={`${selectedInversionId}-${detailRefreshKey}`}
           inversionId={selectedInversionId}
           onBack={handleBack}
-          onUpdateValue={handleUpdateValue}
-          onLiquidate={handleLiquidate}
-          onAddCapital={handleAddCapital}
           onDeleted={handleDeleted}
         />
       )

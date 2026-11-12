@@ -72,18 +72,23 @@ test('es solo un icono: no muestra el nombre de la acción', () => {
   assert.doesNotMatch(boton, /🗑/, 'no vuelve el emoji de papelera con etiqueta')
 })
 
-test('el pie de acciones reparte las otras tres, sin el borrado', () => {
-  const acciones = footer.match(/className="detalle-action-btn detalle-action-btn--(update|add|liquidate)"/g) ?? []
-
-  assert.deepEqual(
-    [...new Set(acciones.map((a) => a.match(/--(\w+)"/)[1]))],
-    ['update', 'add', 'liquidate'],
-    'el pie tiene que tener exactamente las tres acciones que quedan',
-  )
+test('el pie ya no dibuja las tres acciones: viven en la lista', () => {
+  // S9 (dueño, ronda 10): «actualizar valor, agregar capital y liquidar [...] ya están
+  // en la pantalla anterior, así que no son necesarios en la edición de una inversión».
+  // Cambio de contrato deliberado: antes este test exigía las tres en el pie.
+  //
+  // Se mira el manejador y el emoji, no la clase: el bloque de confirmación de borrado
+  // reusa detalle-action-btn--add y --liquidate para sus dos botones.
+  for (const manejador of ['onUpdateValue(data.inversion_id)', 'onAddCapital(data.inversion_id)', 'onLiquidate(data.inversion_id)']) {
+    assert.ok(!footer.includes(manejador), `el pie no puede disparar ${manejador}`)
+  }
+  for (const emoji of ['📊', '➕', '💸']) {
+    assert.ok(!footer.includes(emoji), `el pie no puede dibujar el icono ${emoji}`)
+  }
   assert.doesNotMatch(
     footer,
     /detalle-action-btn detalle-action-btn--delete/,
-    'el borrado ya no se dibuja en el pie',
+    'el borrado nunca se dibujó acá: vive en el header',
   )
 })
 

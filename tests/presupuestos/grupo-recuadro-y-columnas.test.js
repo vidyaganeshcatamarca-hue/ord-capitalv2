@@ -101,15 +101,22 @@ test('los datos del sobre son columnas con separador vertical', () => {
 
   const iSep = css.indexOf('.sobre-stats--padre .sobre-stat + .sobre-stat {')
   assert.ok(iSep > -1, 'falta el separador vertical entre columnas')
-  assert.ok(css.slice(iSep, iSep + 200).includes('border-left: 1px solid var(--border)'),
-    'el separador tiene que usar el token del tema, no un color fijo')
+  // S8 (dueño): «refuerces las líneas separatorias [...] Hazla más evidente, más fuerte».
+  // Cambio de contrato deliberado: era 1px con --border, ahora 2px con --border-light.
+  const sep = css.slice(iSep, iSep + 200)
+  assert.ok(sep.includes('border-left: 2px solid var(--border-light)'),
+    'el separador reforzado usa el token del tema, no un color fijo')
+  assert.ok(!sep.includes('rgba(') && !sep.includes('#'),
+    'nada de colores fijos: el tema tiene versión clara y oscura')
 })
 
 test('los rótulos de los datos son títulos, sin dos puntos', () => {
+  // S8 (dueño): «¿Qué etiqueta le podemos poner a libre...?» — eligió «Sin asignar».
+  // Cambio de contrato deliberado: la etiqueta era «Libre» en los tres idiomas.
   for (const [archivo, valores] of [
-    ['es.ts', ['Asignado', 'Gastado', 'Libre', 'Avance']],
-    ['en.ts', ['Assigned', 'Spent', 'Free', 'Progress']],
-    ['pt.ts', ['Atribuído', 'Gasto', 'Livre', 'Avanço']],
+    ['es.ts', ['Asignado', 'Gastado', 'Sin asignar', 'Avance']],
+    ['en.ts', ['Assigned', 'Spent', 'Unassigned', 'Progress']],
+    ['pt.ts', ['Atribuído', 'Gasto', 'Não atribuído', 'Avanço']],
   ]) {
     const dic = leer('src', 'locales', archivo)
     for (const clave of ['budget_stat_assigned', 'budget_stat_spent', 'budget_stat_group_free', 'budget_stat_progress']) {

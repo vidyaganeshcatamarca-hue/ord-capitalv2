@@ -397,11 +397,17 @@ test('los hijos se dibujan debajo del padre y no se repiten arriba', () => {
   assert.ok(bloque.includes('const hijas = s.es_padre && !estaCerrado(s.estructura_id)'), 'sólo se despliegan los grupos que no están cerrados')
 })
 
-test('el monto libre del grupo es el techo menos lo repartido', () => {
-  assert.ok(pagina.includes('const libreDe = (padreId: number) =>'), 'falta el cálculo del libre del grupo')
-  const bloque = pagina.slice(pagina.indexOf('const libreDe'), pagina.indexOf('const libreDe') + 400)
-  assert.ok(bloque.includes('monto_asignado ?? 0) -'), 'el libre tiene que restar lo repartido del techo')
-  assert.ok(bloque.includes('Number(x.padre_id) === Number(padreId)'), 'lo repartido se suma sobre los hijos del padre, con ids normalizados')
+test('el monto libre del grupo es el techo menos lo gastado', () => {
+  // S20 (ronda 10): el libre es la CAPACIDAD NO CONSUMIDA. La regla anterior restaba la
+  // plata asignada a los hijos, asi que un hijo con presupuesto negativo la inflaba y un
+  // hijo que habia gastado de mas no la bajaba. Caso real: Alimentos-Hogar con techo 500
+  // y sus hijos habiendo gastado 203.990 da 0, no los 29.454 de la regla vieja.
+  assert.ok(pagina.includes('const libreDe = (padreId: number): number | null =>'), 'falta el cálculo del libre del grupo')
+  const bloque = pagina.slice(pagina.indexOf('const libreDe'), pagina.indexOf('const libreDe') + 900)
+  assert.ok(bloque.includes('monto_gastado ?? 0'), 'el libre tiene que restar lo gastado del techo')
+  assert.ok(!bloque.includes('monto_asignado ?? 0) -'), 'la regla vieja de restar lo repartido ya no va')
+  assert.ok(bloque.includes('Number(x.padre_id) === Number(padreId)'), 'el gasto se suma sobre los hijos del padre, con ids normalizados')
+  assert.ok(bloque.includes('if (techo === null || techo === undefined'), 'sin techo no hay libre que calcular')
 })
 
 test('la fila del padre y la hija se distinguen en el marcado', () => {
@@ -501,11 +507,17 @@ test('la UI arranca con el grupo desplegado', () => {
   assert.ok(!pagina.includes('!p[sobre.estructura_id]'), 'el toggle no puede negar el valor crudo: el primer clic no contraía')
 })
 
-test('el grupo se mueve entero entre la lista y la alerta de excedidos', () => {
-  // T6d: en base cero el sobre en déficit se iba a la alerta. Con rubros padre eso partía
-  // el árbol: el hijo en rojo saltaba arriba y el padre quedaba solo en la lista.
-  assert.ok(pagina.includes('const padresEnAlerta = new Set('), 'falta decidir qué padres van a la alerta')
-  assert.ok(pagina.includes('aLaAlerta = padresEnAlerta.has(padreId as number)'), 'el hijo tiene que acompañar a su padre: ni se esconde solo ni reaparece suelto')
+test('el rubro en déficit se ve arriba en la alerta y también en su grupo', () => {
+  // S5 (ronda 10, dueño): «categorías padres y sub categorías que se muestren tanto
+  // arriba como en el déficit, como también dentro de su lugar original».
+  // Cambio de contrato deliberado: revierte T6d de la ronda 9, que sacaba el grupo entero
+  // de la lista y dejaba las subcategorías escondidas dentro de la alerta.
+  const iGrupos = pagina.indexOf('const gruposOrdenados')
+  assert.ok(iGrupos > -1, 'falta la agrupación de sobres')
+  const finGrupos = pagina.indexOf('HEADER DISPONIBLE', iGrupos)
+  const bloqueGrupos = pagina.slice(iGrupos, finGrupos > -1 ? finGrupos : iGrupos + 2000)
+  assert.ok(!bloqueGrupos.includes('aLaAlerta'), 'la agrupación ya no puede sacar a nadie de la lista')
+  assert.ok(!bloqueGrupos.includes('continue'), 'ningún sobre puede saltearse su grupo')
   // Dueño (2026-11-02): el número de un padre en déficit es la suma de sus hijos, así que
   // la alerta no puede listar a los dos con el mismo monto. El predicado tiene que ser
   // «el padre ESTÁ en la alerta», no «el padre tiene techo»: Transporte no lo tenía y

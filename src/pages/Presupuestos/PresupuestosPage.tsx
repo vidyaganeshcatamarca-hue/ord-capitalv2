@@ -10,6 +10,7 @@ import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { BASE_CERO_CONFIRM_TOKEN, isBaseCeroConfirmToken } from '@/lib/baseCeroConfirm'
 import { parseMontoInput } from '@/lib/parseMonto'
+import { leerConfirmacionDeMovimiento, textosDeConfirmacion, type ConfirmacionMovimiento } from '@/lib/exclusividadPlata'
 import { CuposResumenCard, type CupoResumen } from './CuposResumenCard'
 import './Presupuestos.css'
 
@@ -141,6 +142,8 @@ const TIPO_CUPO_META: Record<string, { labelKey: string; icono: string }> = {
   tithe: { labelKey: 'budget_tipo_tithe', icono: '🙏' },
 }
 
+import { referenciaBarraHija, referenciaBarraDeSobre, porcentajeBarra, colorDeBarra, porcentajeAvance, porcentajeDelPozo } from '../../lib/barraSobre'
+
 const getColorBarra = (estado: string) => {
   if (estado === 'verde') return 'verde'
   if (estado === 'amarillo_precaucion') return 'amarillo'
@@ -248,6 +251,12 @@ export function PresupuestosPage() {
   // primer guardado viaja mandan dos escrituras. La hoja se desmonta al volver, asi
   // que hoy no se duplica, pero la defensa no existia.
   const [guardandoAsignacion, setGuardandoAsignacion] = useState(false)
+  // La plata es exclusiva entre un padre y sus hijos. El servidor rechaza el primer
+  // intento y devuelve los números; la pantalla pregunta antes de mover nada (§ M4).
+  const [confirmacionPlata, setConfirmacionPlata] = useState<{
+    monto: number
+    confirmacion: ConfirmacionMovimiento
+  } | null>(null)
 
 
 
@@ -316,10 +325,20 @@ export function PresupuestosPage() {
    * posición del scroll no se toca. El spinner queda sólo para la primera carga y
    * para el cambio de ciclo, donde sí se está mirando otra cosa.
    */
+  // Ronda 10 (dueño): el disponible transferible lo calcula el SERVIDOR con una sola
+  // fórmula (fn_disponibles_transferibles). Antes la pantalla lo calculaba como techo
+  // menos lo asignado a los hijos, y un hijo con presupuesto negativo (Frescos −135.000)
+  // sumaba en vez de restar: el padre mostraba 29.454 cuando tiene 500.
+  const [disponiblesTransferibles, setDisponiblesTransferibles] = useState<Record<number, number> | null>(null)
+
+  // Modelo A (ronda 10): el techo es el tope de gasto y es otra cosa que la plata. Con
+  // `null` la fila no tiene techo y no hay contra qué medirla.
+  const [techosPorEstructura, setTechosPorEstructura] = useState<Record<number, number | null> | null>(null)
+
   const cargarDatos = useCallback(async (silencioso: boolean = false) => {
     if (!silencioso) setLoading(true)
     try {
-      const [rSaldo, rSobres, rConfig, rCupos] = await Promise.all([
+      const [rSaldo, rSobres, rConfig, rCupos, rDisponibles, rTechos] = await Promise.all([
         supabase.rpc('fn_obtener_saldo_a_asignar', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_reporte_sobres_detalle', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_obtener_config_presupuesto'),
@@ -330,6 +349,22 @@ export function PresupuestosPage() {
             return await supabase.rpc('fn_reporte_termometro_presupuestos', { p_mes_periodo: mesPeriodoStr })
           } catch {
             return { data: null, error: 'cupos-resumen-unavailable' }
+          }
+        })(),
+        // Opcional: si falla, la pantalla cae al cálculo viejo en vez de romperse.
+        (async () => {
+          try {
+            return await supabase.rpc('fn_disponibles_transferibles', { p_mes: mesPeriodoStr })
+          } catch {
+            return { data: null, error: 'disponibles-unavailable' }
+          }
+        })(),
+        // Opcional, igual criterio: sin techos la pantalla sigue midiendo como antes.
+        (async () => {
+          try {
+            return await supabase.rpc('fn_techos_por_estructura', { p_mes: mesPeriodoStr })
+          } catch {
+            return { data: null, error: 'techos-unavailable' }
           }
         })(),
       ])
@@ -345,6 +380,32 @@ export function PresupuestosPage() {
         }
       )
       setSobres(sobresFiltrados)
+
+      if (rTechos?.error || !Array.isArray(rTechos?.data)) {
+        setTechosPorEstructura(null)
+      } else {
+        setTechosPorEstructura(
+          Object.fromEntries(
+            (rTechos.data as { estructura_id: number; monto_techo: number | null }[]).map(fila => [
+              Number(fila.estructura_id),
+              fila.monto_techo === null ? null : Number(fila.monto_techo),
+            ]),
+          ),
+        )
+      }
+
+      if (rDisponibles?.error || !Array.isArray(rDisponibles?.data)) {
+        setDisponiblesTransferibles(null)
+      } else {
+        setDisponiblesTransferibles(
+          Object.fromEntries(
+            (rDisponibles.data as { estructura_id: number; disponible: number }[]).map(fila => [
+              Number(fila.estructura_id),
+              Number(fila.disponible),
+            ]),
+          ),
+        )
+      }
 
       if (rCupos?.error || !Array.isArray(rCupos?.data)) {
         setCuposResumen(null)
@@ -422,31 +483,17 @@ export function PresupuestosPage() {
 
   const gruposOrdenados = (() => {
     const mapa: Record<string, SobreDetalle[]> = {}
-    // T6d: en base cero el sobre en déficit se muestra arriba en la alerta y no en la
-    // lista. Pero con rubros padre eso partía el árbol: el hijo en rojo se iba a la
-    // alerta y el padre quedaba solo. Ahora el grupo se mueve entero, padre e hijos
-    // juntos, así el hijo se sigue anidando y la alerta muestra el grupo.
-    const enBaseCero = config?.modo_presupuesto === 'base_cero'
-    const padresPresentes = new Set(sobres.filter(x => x.es_padre).map(x => Number(x.estructura_id)))
-    const padresEnAlerta = new Set(
-      sobres
-        .filter(x => x.es_padre && enBaseCero && Number(x.monto_disponible) < 0)
-        .map(x => Number(x.estructura_id)),
-    )
+    // S5 (ronda 10, dueño): «me parece mejor idea para todos, categorías padres y sub
+    // categorías que se muestren tanto arriba como en el déficit, como también dentro de
+    // su lugar original, ya sea necesidades, deseos o diezmo».
+    //
+    // Revierte T6d de la ronda 9, que sacaba el grupo de la lista cuando estaba en
+    // déficit: el padre en rojo se iba arriba y arrastraba a sus hijos, así que el grupo
+    // desaparecía entero del lugar donde el usuario lo busca y las subcategorías quedaban
+    // escondidas dentro de la alerta. Ahora la alerta y la lista son dos vistas del mismo
+    // dato: arriba se ve el déficit y abajo el árbol completo, que es lo que se pide
+    // cuando se quiere asignarle plata a un hijo para cubrirlo.
     for (const s of sobres) {
-      const id = Number(s.estructura_id)
-      const padreId = s.padre_id == null ? null : Number(s.padre_id)
-      const hijaDePadrePresente = padreId !== null && padresPresentes.has(padreId)
-      let aLaAlerta: boolean
-      if (s.es_padre) {
-        aLaAlerta = padresEnAlerta.has(id)
-      } else if (hijaDePadrePresente) {
-        // El hijo acompaña a su padre: ni se esconde solo ni reaparece suelto.
-        aLaAlerta = padresEnAlerta.has(padreId as number)
-      } else {
-        aLaAlerta = enBaseCero && Number(s.monto_disponible) < 0
-      }
-      if (aLaAlerta) continue
       const tipo = s.tipo_cupo || 'other'
       // Unificar investment y saving bajo la misma clave
       const key = (tipo === 'saving' || tipo === 'investment') ? 'investment' : tipo
@@ -506,7 +553,7 @@ export function PresupuestosPage() {
     setShowDetalleSheet(true)
   }
 
-  const ejecutarAsignacion = async (monto: number) => {
+  const ejecutarAsignacion = async (monto: number, moverPlata = false) => {
     if (!sobreSeleccionado) return
     if (guardandoAsignacion) return
     // Guarda de fondo: aunque un botón se escape, un ciclo cerrado no escribe.
@@ -526,16 +573,32 @@ export function PresupuestosPage() {
         p_estructura_egreso_id: sobreSeleccionado.estructura_id,
         p_monto_asignado: monto,
         p_mes_periodo: mesPeriodoStr,
+        p_mover_plata: moverPlata,
       })
       if (error) throw error
       // Tanda 4 telemetry: only explicit user saves count (plan §3 Fase 8 —
       // avoids false positives from system UPDATEs)
       telemetry.track('budget_adjusted', {}, TELEMETRY_PRIORITY.MEDIUM)
-      showToast(`${formatMonto(monto)} ${t('toast_assigned_to')} ${t(sobreSeleccionado.nombre_categoria)}`, 'success')
+      // Si se movió plata ajena, el aviso es el movimiento: el dueño quiere enterarse
+      // de que tocó otra categoría, no del número que acaba de asignar.
+      showToast(
+        moverPlata
+          ? t('budget_move_done', { monto: formatMonto(monto) })
+          : `${formatMonto(monto)} ${t('toast_assigned_to')} ${t(sobreSeleccionado.nombre_categoria)}`,
+        'success',
+      )
       setShowAsignarSheet(false)
       setSobreSeleccionado(null)
       await cargarDatos(true)
     } catch (err: any) {
+      // Exclusividad de la plata: esto no es un error, es una pregunta. Se levanta el
+      // diálogo y, si el usuario acepta, se reintenta con p_mover_plata = true. Se sale
+      // por acá sin limpiar sobreSeleccionado: el diálogo lo necesita para el reintento.
+      const confirmacion = leerConfirmacionDeMovimiento(err)
+      if (confirmacion) {
+        setConfirmacionPlata({ monto, confirmacion })
+        return
+      }
       const rechazo = mensajeRechazoPresupuesto(err, t, formatMonto)
       const msg = rechazo
         ? rechazo
@@ -549,6 +612,10 @@ export function PresupuestosPage() {
       setGuardandoAsignacion(false)
     }
   }
+
+  const textosPlata = confirmacionPlata
+    ? textosDeConfirmacion(confirmacionPlata.confirmacion, confirmacionPlata.monto, t, formatMonto)
+    : null
 
   const handleLlenarHueco = async () => {
     if (!sobreSeleccionado || soloLectura) return
@@ -622,9 +689,18 @@ export function PresupuestosPage() {
     return Math.max(techo - repartido, 0)
   }
 
-  /** Lo que un sobre puede aportar a una transferencia: el padre, sólo su fondo libre. */
-  const disponibleParaTransferir = (s: SobreDetalle) =>
-    s.es_padre ? fondoLibreDe(s.estructura_id) : disponibleDeSobre(s, config?.modo_presupuesto)
+  /** Lo que un sobre puede aportar a una transferencia: manda el servidor. */
+  const disponibleParaTransferir = (s: SobreDetalle) => {
+    // El respaldo existe sólo para que el modal no quede vacío si la RPC todavía no
+    // llegó o falló; el número bueno es el del servidor.
+    const delServidor = disponiblesTransferibles?.[Number(s.estructura_id)]
+    if (delServidor !== undefined) return delServidor
+    return s.es_padre ? fondoLibreDe(s.estructura_id) : disponibleDeSobre(s, config?.modo_presupuesto)
+  }
+
+  /** Modelo A: techo del modelo, `null` cuando la fila no tiene tope. */
+  const techoDe = (estructuraId: number) =>
+    techosPorEstructura ? techosPorEstructura[Number(estructuraId)] : undefined
 
   const sobresConDisponible = sobres
     .filter(
@@ -633,8 +709,8 @@ export function PresupuestosPage() {
         disponibleParaTransferir(s) > 0
     )
     // El monto que se muestra y con el que se arranca el campo tiene que ser el mismo
-    // que se va a mover: en el padre, el fondo libre.
-    .map(s => (s.es_padre ? { ...s, monto_disponible: fondoLibreDe(s.estructura_id) } : s))
+    // que se va a mover: ahora lo dice el servidor para todos, padres e hijos.
+    .map(s => ({ ...s, monto_disponible: disponibleParaTransferir(s) }))
 
   // Tanda 4 telemetry: an overspent budget is on screen (no amounts;
   // once per app session, plan §3 Fase 8)
@@ -994,14 +1070,11 @@ export function PresupuestosPage() {
       <div className={`disponible-header ${soloLectura ? 'estado-cerrado' : getEstadoDisponible()}`}>
         <div className="disponible-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           {soloLectura ? t('budget_cycle_closed_label') : getLabelDisponible()}
-          {!soloLectura && config?.modo_presupuesto === 'anticipado' && (
-            <InfoBubble
-              text={t('budget_info_proyeccion', {
-                pct_nec: String(config?.porcentaje_necesidades ?? 50),
-                pct_des: String(config?.porcentaje_deseos ?? 30),
-                pct_aho: String(config?.porcentaje_ahorro ?? 20),
-              })}
-            />
+          {/* S12 (dueño): el globo explicaba la PROYECCIÓN con el 50-30-20, cuando el
+              número que tiene al lado es la liquidez: «¿qué tiene que ver esa definición
+              con el cálculo de lo supuesto disponible?». Explica su propio número. */}
+          {!soloLectura && (
+            <InfoBubble text={t('budget_info_disponible')} />
           )}
         </div>
         <div className="disponible-monto">
@@ -1089,6 +1162,7 @@ export function PresupuestosPage() {
                 modoPresupuesto={config?.modo_presupuesto}
                 soloLectura={soloLectura}
                 fmt={formatMonto}
+                techoDe={techoDe}
               />
             ))}
 
@@ -1315,7 +1389,18 @@ export function PresupuestosPage() {
                 )}
               </div>
             ) : (
-              <div className="asignar-monto-inline">
+              <>
+                {/* S4 (dueño): «pierdo de pantalla lo disponible que quedó atrás oculto [...]
+                    ponemos alguna indicación en ese modal que nos diga cuánto había
+                    disponible para asignar». El teclado numérico tapa el hero, así que el
+                    dato viaja adentro del modal. */}
+                {saldoAsignar !== null && (
+                  <p className="asignar-monto-disponible">
+                    <span>{t('hero_disponible_para_asignar')}</span>
+                    <strong>{formatMonto(saldoAsignar)}</strong>
+                  </p>
+                )}
+                <div className="asignar-monto-inline">
                 <input
                   ref={montoRef}
                   className="asignar-monto-input"
@@ -1341,6 +1426,7 @@ export function PresupuestosPage() {
                   {t('budget_btn_assign')}
                 </button>
               </div>
+              </>
             )}
 
             <div style={{ marginTop: 16 }}>
@@ -1668,6 +1754,21 @@ export function PresupuestosPage() {
         onCancel={() => setConfirmandoAnticipado(false)}
       />
 
+      <ConfirmModal
+        isOpen={confirmacionPlata !== null && textosPlata !== null}
+        type="primary"
+        title={textosPlata?.titulo ?? ''}
+        message={textosPlata?.mensaje ?? ''}
+        confirmText={t('btn_confirm')}
+        cancelText={t('btn_cancel')}
+        onConfirm={() => {
+          const pendiente = confirmacionPlata
+          setConfirmacionPlata(null)
+          if (pendiente) void ejecutarAsignacion(pendiente.monto, true)
+        }}
+        onCancel={() => setConfirmacionPlata(null)}
+      />
+
     </div>
   )
 }
@@ -1687,9 +1788,11 @@ interface GrupoProps {
   soloLectura?: boolean
   /** Montos en la moneda local del contexto, 0 decimales (viene de PresupuestosPage). */
   fmt: (n: number) => string
+  /** Modelo A: techo por estructura. `null` cuando la fila no tiene tope. */
+  techoDe: (estructuraId: number) => number | null | undefined
 }
 
-function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: GrupoProps) {
+function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt, techoDe }: GrupoProps) {
   const meta = TIPO_CUPO_META[tipo] ?? { labelKey: tipo.toUpperCase(), icono: '📦' }
   // T6/S15: el total del grupo cuenta una sola vez. Cuando un rubro padre tiene
   // presupuesto, sus hijos llegan con cuenta_en_totales = false y no se suman aparte.
@@ -1734,9 +1837,19 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
     bloques.push({ cabecera: s, hijas })
   }
   // S12/S14: lo que le queda al grupo es su techo menos lo ya repartido en sus hijos.
-  const libreDe = (padreId: number) =>
-    Number(items.find(x => Number(x.estructura_id) === Number(padreId))?.monto_asignado ?? 0) -
-    items.filter(x => Number(x.padre_id) === Number(padreId)).reduce((s, x) => s + Number(x.monto_asignado ?? 0), 0)
+  // S20 (ronda 10): el libre del grupo es la CAPACIDAD NO CONSUMIDA, no lo que falta
+  // repartir. Antes esto restaba la plata asignada a los hijos, así que un hijo con
+  // presupuesto negativo lo inflaba y un hijo que gastó de más no lo bajaba. Ahora:
+  // techo del padre menos lo GASTADO por el conjunto del grupo. Sin techo no hay libre
+  // que calcular (`null`), porque no hay contra qué medirlo.
+  const libreDe = (padreId: number): number | null => {
+    const techo = techoDe(padreId)
+    if (techo === null || techo === undefined || Number(techo) <= 0) return null
+    const gastado = items
+      .filter(x => Number(x.padre_id) === Number(padreId))
+      .reduce((s, x) => s + Number(x.monto_gastado ?? 0), 0)
+    return Math.max(Number(techo) - gastado, 0)
+  }
 
   return (
     <div className="acord-grupo">
@@ -1765,7 +1878,9 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
               onToggleGrupo={cabecera.es_padre
                 ? () => alternarGrupo(cabecera.estructura_id)
                 : undefined}
-              libreGrupo={cabecera.es_padre ? libreDe(cabecera.estructura_id) : undefined}
+              libreGrupo={cabecera.es_padre ? libreDe(cabecera.estructura_id) ?? undefined : undefined}
+              plataGrupo={cabecera.es_padre ? totalAsignado : undefined}
+              techo={techoDe(cabecera.estructura_id)}
               onAsignar={() => onAsignar(cabecera)}
               onVerDetalle={() => onVerDetalle(cabecera)}
               modoPresupuesto={modoPresupuesto}
@@ -1788,6 +1903,9 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
                     hija
                     onAsignar={() => onAsignar(hija)}
                     onVerDetalle={() => onVerDetalle(hija)}
+                    libreGrupo={libreDe(cabecera.estructura_id) ?? undefined}
+                    techo={techoDe(hija.estructura_id)}
+                    pozoPadre={Number(cabecera.monto_asignado ?? 0)}
                     modoPresupuesto={modoPresupuesto}
                     soloLectura={soloLectura}
                     fmt={fmt}
@@ -1812,8 +1930,19 @@ interface FilaSobreProps {
   /** T6: sólo en la fila del padre, si el grupo está desplegado. */
   expandido?: boolean
   onToggleGrupo?: () => void
-  /** T6/S12: techo del grupo menos lo repartido en sus hijos. */
+  /** T6: techo del grupo menos lo repartido en sus hijos. */
   libreGrupo?: number
+  /** Modelo A: tope de gasto de la fila. `null` = sin techo, distinto de cero. */
+  techo?: number | null
+  /** Plata disponible del padre: contra esto se mide el consumo del pozo (opción 1). */
+  pozoPadre?: number | null
+  /**
+   * S11 (ronda 10, dueño): la plata del GRUPO, o sea la suma de lo asignado a las filas
+   * que cuentan en totales. En libertad el padre puede estar en cero mientras sus hijos
+   * tienen la plata; sin esto el total del grupo mostraba «0 − gastado» y salía en
+   * negativo. Sólo se pasa a la cabecera de un padre.
+   */
+  plataGrupo?: number
   onAsignar: () => void
   onVerDetalle: () => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
@@ -1823,14 +1952,48 @@ interface FilaSobreProps {
   fmt: (n: number) => string
 }
 
-function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
-  const pct = getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
-  const colorBarra = getColorBarra(sobre.estado_sobre)
+function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, techo, pozoPadre, plataGrupo, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
+  // Ronda 10 (dueño): el hijo sin asignación se mide contra el libre del grupo, y sin
+  // techo no se dibuja barra. El padre queda como estaba: su barra compara el gasto de
+  // los hijos contra su propio techo.
+  const referenciaBarra = sobre.es_padre
+    ? (techo !== null && techo !== undefined && Number(techo) > 0
+        ? { techo: Number(techo), origen: 'techo' as const }
+        : null)
+    : referenciaBarraDeSobre({ techo, montoAsignado: sobre.monto_asignado, libreGrupo })
+  const sinTecho = referenciaBarra?.origen === 'sin_techo'
+  const pctBarra = referenciaBarra && !sinTecho
+    ? porcentajeBarra(Number(sobre.monto_gastado), referenciaBarra.techo)
+    : null
+  const pct = sinTecho
+    ? 0
+    : pctBarra ?? getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
+  // Dueño: el número del avance NO se topea (150% = se pasó un 50%). El relleno sí.
+  const avance = referenciaBarra && !sinTecho
+    ? porcentajeAvance(Number(sobre.monto_gastado), referenciaBarra.techo)
+    : null
+  // Segunda lectura, en azul: cuánto del pozo del padre se comió esta fila.
+  const pctPozo = referenciaBarra && !sinTecho
+    ? porcentajeDelPozo(Number(sobre.monto_gastado), Number(pozoPadre ?? 0))
+    : null
+  const colorBarra =
+    (referenciaBarra && !sinTecho
+      ? colorDeBarra(Number(sobre.monto_gastado), referenciaBarra.techo)
+      : null) ?? getColorBarra(sobre.estado_sobre)
   const sinDatos = sobre.estado_sobre === 'sin_movimiento'
   // En modo anticipado, el "disponible" del sobre NO arrastra el saldo del mes
   // anterior: cada mes arranca en 0 y se computa como asignado - gastado.
   // En base_cero, el arrastre si forma parte del disponible.
-  const disponibleEfectivo = disponibleDeSobre(sobre, modoPresupuesto)
+  const disponibleEfectivo = (() => {
+    // S11: en libertad el total del grupo del padre no es su propia plata menos el gasto
+    // del grupo. Con el padre en cero y los hijos con 105.500 asignados mostraba −4.000
+    // (0 − gastado) y los 105.500 desaparecían. La base es la plata del grupo cuando la
+    // hay; en base cero sigue mandando monto_disponible, que trae el arrastre.
+    if (modoPresupuesto === 'anticipado' && sobre.es_padre && plataGrupo !== undefined) {
+      return plataGrupo - Number(sobre.monto_gastado ?? 0)
+    }
+    return disponibleDeSobre(sobre, modoPresupuesto)
+  })()
   const arrastre = Number(sobre.arrastre_mes_anterior ?? 0)
 
   const colorDisponible = () => {
@@ -1912,12 +2075,25 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
       {/* Barra. Dueño (2026-11-02): «la línea roja del sobre que se ha excedido la hagas
           titilar, prender y apagar». Sólo el excedido: el que cubrió justo el total se
           queda quieto, porque en un celular el color solo no alcanza. */}
-      {!sinDatos && (
-        <div className="sobre-barra-wrap">
+      {!sinDatos && !sinTecho && (
+        <div
+          className="sobre-barra-wrap"
+          // M2c: la misma barra codifica DOS escalas, así que cada una lleva su leyenda.
+          // El relleno es el avance sobre la cuota; la franja azul, el consumo del pozo
+          // del padre. Sin esto el número solo no dice contra qué se compara.
+          title={`${t('budget_bar_quota')}: ${avance ?? pct}%`}
+        >
           <div
-            className={`sobre-barra-fill ${colorBarra}${sobre.estado_sobre === 'rojo_excedido' ? ' excedido' : ''}`}
+            className={`sobre-barra-fill ${colorBarra}${colorBarra === 'rojo' ? ' excedido' : ''}`}
             style={{ width: `${pct}%` }}
           />
+          {pctPozo !== null && pctPozo > 0 && (
+            <div
+              className="sobre-barra-pozo"
+              style={{ width: `${pctPozo}%` }}
+              title={`${t('budget_bar_pot')}: ${pctPozo}%`}
+            />
+          )}
         </div>
       )}
 
@@ -1930,6 +2106,15 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
         <span className="sobre-stat">
           <span className="sobre-stat-label">{t('budget_stat_assigned')}</span>
           <span className="sobre-stat-val">{fmt(Number(sobre.monto_asignado))}</span>
+        </span>
+        {/* S18: money and ceiling are two different concepts, so they are two
+            different numbers. A NULL ceiling is "no ceiling at all" and reads as a
+            dash: printing 0 would say "you cannot spend anything here". */}
+        <span className="sobre-stat">
+          <span className="sobre-stat-label">{t('budget_stat_ceiling')}</span>
+          <span className="sobre-stat-val">
+            {techo === null || techo === undefined ? '—' : fmt(Number(techo))}
+          </span>
         </span>
         <span className="sobre-stat">
           <span className="sobre-stat-label">{t('budget_stat_spent')}</span>
@@ -1946,7 +2131,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
         {!sinDatos && (
           <span className="sobre-stat">
             <span className="sobre-stat-label">{t('budget_stat_progress')}</span>
-            <span className="sobre-stat-val">{pct}%</span>
+            <span className="sobre-stat-val">{sinTecho ? '—' : `${avance ?? pct}%`}</span>
           </span>
         )}
       </div>

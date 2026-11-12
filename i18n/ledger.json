@@ -1838,6 +1838,10 @@
         "from": "Esta proyección está calculada en base a tus ingresos del mes y aplicando el porcentaje de distribución que has definido ({pct_nec} - {pct_des} - {pct_aho}) menos los gastos comprometidos de tus tarjetas.",
         "to": "This projection is calculated from your income for the month, applying the distribution percentages you have defined ({pct_nec} - {pct_des} - {pct_aho}) minus the committed expenses on your cards."
       },
+      "errors.budget_info_disponible": {
+        "from": "Es lo que tienes en tus billeteras menos lo que ya asignaste a las categorías menos las cuotas de tarjetas que vencen dentro de este ciclo.",
+        "to": "It is what you have in your wallets minus what you already assigned to the categories minus the card installments due within this cycle."
+      },
       "errors.budget_info_modo_anticipado": {
         "from": "Este modo de presupuesto te permite asignar un presupuesto para cada cuenta egreso libremente, es el recomendado para comenzar ya que no te exige asignar presupuesto en base a tu dinero real sino a tu previsión.",
         "to": "This budget mode lets you freely assign a budget to each expense account. It is the recommended way to start, because it does not require assigning budget based on your real money but on your forecast."
@@ -6294,6 +6298,14 @@
         "from": "Tasa Anual TNA (%)",
         "to": "TNA rate (%)"
       },
+      "inversiones.invest_suggested_value": {
+        "from": "Valor sugerido por el cálculo",
+        "to": "Suggested by the calculation"
+      },
+      "inversiones.invest_suggested_hint": {
+        "from": "Calculado con la tasa anual y los {dias} días desde la fecha de inicio. Es una sugerencia: manda lo que pague el banco.",
+        "to": "Calculated from the annual rate and the {dias} days since the start date. It is a suggestion: whatever the bank pays is what counts."
+      },
       "inversiones.label_currency": {
         "from": "Moneda",
         "to": "Currency"
@@ -8679,8 +8691,16 @@
         "to": "Group total"
       },
       "inversiones.budget_stat_group_free": {
-        "from": "Libre",
-        "to": "Free"
+        "from": "Sin asignar",
+        "to": "Unassigned"
+      },
+      "inversiones.budget_bar_quota": {
+        "from": "Avance sobre la cuota",
+        "to": "Progress against the quota"
+      },
+      "inversiones.budget_bar_pot": {
+        "from": "Consumo del pozo del padre",
+        "to": "Share of the parent pot"
       },
       "inversiones.budget_group_expand": {
         "from": "Mostrar subcategorías",
@@ -8702,9 +8722,29 @@
         "from": "Asignado",
         "to": "Assigned"
       },
+      "inversiones.budget_stat_ceiling": {
+        "from": "Techo",
+        "to": "Ceiling"
+      },
       "inversiones.budget_stat_spent": {
         "from": "Gastado",
         "to": "Spent"
+      },
+      "inversiones.budget_move_to_parent_title": {
+        "from": "Mover la plata al rubro padre",
+        "to": "Move the money to the parent category"
+      },
+      "inversiones.budget_move_to_parent_msg": {
+        "from": "Para asignarle {monto} al rubro padre hay que mover la plata de {hijos} subcategorías. ¿Confirmás?",
+        "to": "Assigning {monto} to the parent category moves money out of {hijos} subcategories. Continue?"
+      },
+      "inversiones.budget_move_from_parent_msg": {
+        "from": "Esta subcategoría se va a llevar {monto} de la plata del rubro padre. ¿Confirmás?",
+        "to": "This subcategory will take {monto} from the parent category money. Continue?"
+      },
+      "inversiones.budget_move_done": {
+        "from": "Se movió {monto}.",
+        "to": "Moved {monto}."
       },
       "inversiones.budget_stat_progress": {
         "from": "Avance",
@@ -13184,6 +13224,10 @@
         "from": "Esta proyección está calculada en base a tus ingresos del mes y aplicando el porcentaje de distribución que has definido ({pct_nec} - {pct_des} - {pct_aho}) menos los gastos comprometidos de tus tarjetas.",
         "to": "Esta projeção é calculada com base nas suas receitas do mês e aplicando a porcentagem de distribuição que você definiu ({pct_nec} - {pct_des} - {pct_aho}) menos as despesas comprometidas dos seus cartões."
       },
+      "errors.budget_info_disponible": {
+        "from": "Es lo que tienes en tus billeteras menos lo que ya asignaste a las categorías menos las cuotas de tarjetas que vencen dentro de este ciclo.",
+        "to": "É o que você tem nas suas carteiras menos o que você já atribuiu às categorias menos as parcelas de cartão que vencem dentro deste ciclo."
+      },
       "errors.budget_info_modo_anticipado": {
         "from": "Este modo de presupuesto te permite asignar un presupuesto para cada cuenta egreso libremente, es el recomendado para comenzar ya que no te exige asignar presupuesto en base a tu dinero real sino a tu previsión.",
         "to": "Este modo de orçamento permite atribuir um orçamento livremente a cada conta de despesa. É o recomendado para começar já, porque não exige que você atribua orçamento com base no seu dinheiro real, e sim na sua previsão."
@@ -17640,6 +17684,14 @@
         "from": "Tasa Anual TNA (%)",
         "to": "Taxa Anual TNA (%)"
       },
+      "inversiones.invest_suggested_value": {
+        "from": "Valor sugerido por el cálculo",
+        "to": "Valor sugerido pelo cálculo"
+      },
+      "inversiones.invest_suggested_hint": {
+        "from": "Calculado con la tasa anual y los {dias} días desde la fecha de inicio. Es una sugerencia: manda lo que pague el banco.",
+        "to": "Calculado com a taxa anual e os {dias} dias desde a data de início. É uma sugestão: vale o que o banco pagar."
+      },
       "inversiones.label_currency": {
         "from": "Moneda",
         "to": "Moeda"
@@ -20025,8 +20077,16 @@
         "to": "Total do grupo"
       },
       "inversiones.budget_stat_group_free": {
-        "from": "Libre",
-        "to": "Livre"
+        "from": "Sin asignar",
+        "to": "Não atribuído"
+      },
+      "inversiones.budget_bar_quota": {
+        "from": "Avance sobre la cuota",
+        "to": "Avanço sobre a cota"
+      },
+      "inversiones.budget_bar_pot": {
+        "from": "Consumo del pozo del padre",
+        "to": "Consumo do poço do pai"
       },
       "inversiones.budget_group_expand": {
         "from": "Mostrar subcategorías",
@@ -20048,9 +20108,29 @@
         "from": "Asignado",
         "to": "Atribuído"
       },
+      "inversiones.budget_stat_ceiling": {
+        "from": "Techo",
+        "to": "Teto"
+      },
       "inversiones.budget_stat_spent": {
         "from": "Gastado",
         "to": "Gasto"
+      },
+      "inversiones.budget_move_to_parent_title": {
+        "from": "Mover la plata al rubro padre",
+        "to": "Mover o dinheiro para a categoria pai"
+      },
+      "inversiones.budget_move_to_parent_msg": {
+        "from": "Para asignarle {monto} al rubro padre hay que mover la plata de {hijos} subcategorías. ¿Confirmás?",
+        "to": "Para atribuir {monto} à categoria pai é preciso mover o dinheiro de {hijos} subcategorias. Confirma?"
+      },
+      "inversiones.budget_move_from_parent_msg": {
+        "from": "Esta subcategoría se va a llevar {monto} de la plata del rubro padre. ¿Confirmás?",
+        "to": "Esta subcategoria vai levar {monto} do dinheiro da categoria pai. Confirma?"
+      },
+      "inversiones.budget_move_done": {
+        "from": "Se movió {monto}.",
+        "to": "Moveu {monto}."
       },
       "inversiones.budget_stat_progress": {
         "from": "Avance",

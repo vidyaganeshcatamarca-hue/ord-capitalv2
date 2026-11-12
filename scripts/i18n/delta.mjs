@@ -58,7 +58,10 @@ for (const [section, entries] of Object.entries(es)) {
     } else {
       const esPh = placeholders(esValue)
       const ph = placeholders(value)
-      if (esPh.join('|') !== ph.join('|')) reason = 'drifted'
+      // Same rule the ledger follows: `t()` interpolates by name, so a translation is
+      // free to reorder the placeholders. Comparing in order kept flagging the English
+      // short date ("{mes} {dia}" against "{dia} de {mes}") as drifted forever.
+      if ([...esPh].sort().join('|') !== [...ph].sort().join('|')) reason = 'drifted'
     }
     if (!reason) continue
 

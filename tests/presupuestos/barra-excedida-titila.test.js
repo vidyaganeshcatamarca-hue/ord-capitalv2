@@ -26,10 +26,13 @@ const leer = (...p) => fs.readFileSync(path.join(raiz, ...p), 'utf8')
 const pagina = leer('src', 'pages', 'Presupuestos', 'PresupuestosPage.tsx')
 const css = leer('src', 'pages', 'Presupuestos', 'Presupuestos.css')
 
+// Modelo A (ronda 10): «excedido» dejó de ser un estado del servidor y pasó a ser «se
+// pasó de su techo». `colorBarra === 'rojo'` es exactamente eso por los dos caminos: con
+// techo lo decide colorDeBarra, y sin techo sigue cayendo en getColorBarra(estado_sobre).
 test('la barra lleva la marca de excedido solo en ese estado', () => {
   assert.match(
     pagina,
-    /sobre\.estado_sobre === 'rojo_excedido' \? ' excedido' : ''/,
+    /colorBarra === 'rojo' \? ' excedido' : ''/,
     'la barra no distingue el sobre excedido del que solo cubrio el total',
   )
 })
