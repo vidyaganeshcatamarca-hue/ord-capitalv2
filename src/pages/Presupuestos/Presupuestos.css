@@ -181,6 +181,25 @@
 }
 .acord-grupo:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
 
+/* S4: el dato de cuánto hay disponible viaja adentro del modal de monto manual, porque
+   el teclado numérico tapa el hero de la pantalla y el número queda inalcanzable. */
+.asignar-monto-disponible {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--surface-3, rgba(255, 255, 255, 0.06));
+  font-size: calc(12px * var(--font-scale));
+  opacity: 0.85;
+}
+.asignar-monto-disponible strong {
+  font-size: calc(15px * var(--font-scale));
+  opacity: 1;
+}
+
 .acord-grupo-header {
   display: flex;
   align-items: center;

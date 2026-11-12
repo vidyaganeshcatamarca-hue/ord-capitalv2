@@ -1406,7 +1406,18 @@ export function PresupuestosPage() {
                 )}
               </div>
             ) : (
-              <div className="asignar-monto-inline">
+              <>
+                {/* S4 (dueño): «pierdo de pantalla lo disponible que quedó atrás oculto [...]
+                    ponemos alguna indicación en ese modal que nos diga cuánto había
+                    disponible para asignar». El teclado numérico tapa el hero, así que el
+                    dato viaja adentro del modal. */}
+                {saldoAsignar !== null && (
+                  <p className="asignar-monto-disponible">
+                    <span>{t('hero_disponible_para_asignar')}</span>
+                    <strong>{formatMonto(saldoAsignar)}</strong>
+                  </p>
+                )}
+                <div className="asignar-monto-inline">
                 <input
                   ref={montoRef}
                   className="asignar-monto-input"
@@ -1432,6 +1443,7 @@ export function PresupuestosPage() {
                   {t('budget_btn_assign')}
                 </button>
               </div>
+              </>
             )}
 
             <div style={{ marginTop: 16 }}>
