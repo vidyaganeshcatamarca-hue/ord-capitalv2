@@ -6298,6 +6298,14 @@
         "from": "Tasa Anual TNA (%)",
         "to": "TNA rate (%)"
       },
+      "inversiones.invest_suggested_value": {
+        "from": "Valor sugerido por el cálculo",
+        "to": "Suggested by the calculation"
+      },
+      "inversiones.invest_suggested_hint": {
+        "from": "Calculado con la tasa anual y los {dias} días desde la última conciliación. Es una sugerencia: manda lo que pague el banco.",
+        "to": "Calculated from the annual rate and the {dias} days since the last reconciliation. It is a suggestion: whatever the bank pays is what counts."
+      },
       "inversiones.label_currency": {
         "from": "Moneda",
         "to": "Currency"
@@ -17675,6 +17683,14 @@
       "inversiones.label_tna": {
         "from": "Tasa Anual TNA (%)",
         "to": "Taxa Anual TNA (%)"
+      },
+      "inversiones.invest_suggested_value": {
+        "from": "Valor sugerido por el cálculo",
+        "to": "Valor sugerido pelo cálculo"
+      },
+      "inversiones.invest_suggested_hint": {
+        "from": "Calculado con la tasa anual y los {dias} días desde la última conciliación. Es una sugerencia: manda lo que pague el banco.",
+        "to": "Calculado com a taxa anual e os {dias} dias desde a última conciliação. É uma sugestão: vale o que o banco pagar."
       },
       "inversiones.label_currency": {
         "from": "Moneda",

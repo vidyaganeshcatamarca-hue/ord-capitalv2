@@ -223,3 +223,4 @@ tests/configuracion/*
 !tests/presupuestos/cartel-disponible-sin-50-30-20.test.js
 !tests/presupuestos/total-grupo-libertad.test.js
 !tests/presupuestos/leyendas-barra.test.js
+!tests/inversiones/valor-sugerido-plazo-fijo.test.js

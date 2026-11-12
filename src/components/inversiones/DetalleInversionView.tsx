@@ -8,6 +8,7 @@ import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 import { Trash2 } from 'lucide-react'
 import { investmentMovementAmount } from '@/lib/inversionesMovimientos'
 import { investmentNetCapital } from '@/lib/inversionesPatrimonio'
+import { valorSugeridoPlazoFijo } from '@/lib/inversionSugerida'
 import './DetalleInversionView.css'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 
@@ -375,6 +376,31 @@ export function DetalleInversionView({
             </span>
           </div>
         )}
+        {/* S10 (dueño): «Solo monto sugerido por el cálculo, no hay edición». Para un
+            plazo fijo con tasa anual, el valor que sale de la cuenta por el tiempo
+            transcurrido. La base son los días desde la última conciliación, que es la
+            única fecha que el detalle conoce: el texto lo dice para no mentir sobre el
+            período. Es una sugerencia, no un valor contable. */}
+        {(() => {
+          const sugerencia = valorSugeridoPlazoFijo({
+            capital: data.monto_invertido_original,
+            tasaAnualPorcentaje: data.tasa_anual_tna,
+            dias: data.dias_desde_conciliacion,
+          })
+          if (!sugerencia) return null
+          return (
+            <div
+              className="detalle-extra-row"
+              data-testid="detalle-valor-sugerido"
+              title={t('invest_suggested_hint', { dias: String(sugerencia.dias) })}
+            >
+              <span className="detalle-extra-label">{t('invest_suggested_value')}</span>
+              <span className="detalle-extra-value">
+                {formatCurrency(sugerencia.valorSugerido, moneda)}
+              </span>
+            </div>
+          )
+        })()}
         <div className="detalle-extra-row">
           <span className="detalle-extra-label">{t('label_currency')}</span>
           <span className="detalle-extra-value">{moneda}</span>
