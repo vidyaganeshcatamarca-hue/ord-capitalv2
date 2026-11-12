@@ -8706,6 +8706,22 @@
         "from": "Gastado",
         "to": "Spent"
       },
+      "inversiones.budget_move_to_parent_title": {
+        "from": "Mover la plata al rubro padre",
+        "to": "Move the money to the parent category"
+      },
+      "inversiones.budget_move_to_parent_msg": {
+        "from": "Para asignarle {monto} al rubro padre hay que mover la plata de {hijos} subcategorías. ¿Confirmás?",
+        "to": "Assigning {monto} to the parent category moves money out of {hijos} subcategories. Continue?"
+      },
+      "inversiones.budget_move_from_parent_msg": {
+        "from": "Esta subcategoría se va a llevar {monto} de la plata del rubro padre. ¿Confirmás?",
+        "to": "This subcategory will take {monto} from the parent category money. Continue?"
+      },
+      "inversiones.budget_move_done": {
+        "from": "Se movió {monto}.",
+        "to": "Moved {monto}."
+      },
       "inversiones.budget_stat_progress": {
         "from": "Avance",
         "to": "Progress"
@@ -20051,6 +20067,22 @@
       "inversiones.budget_stat_spent": {
         "from": "Gastado",
         "to": "Gasto"
+      },
+      "inversiones.budget_move_to_parent_title": {
+        "from": "Mover la plata al rubro padre",
+        "to": "Mover o dinheiro para a categoria pai"
+      },
+      "inversiones.budget_move_to_parent_msg": {
+        "from": "Para asignarle {monto} al rubro padre hay que mover la plata de {hijos} subcategorías. ¿Confirmás?",
+        "to": "Para atribuir {monto} à categoria pai é preciso mover o dinheiro de {hijos} subcategorias. Confirma?"
+      },
+      "inversiones.budget_move_from_parent_msg": {
+        "from": "Esta subcategoría se va a llevar {monto} de la plata del rubro padre. ¿Confirmás?",
+        "to": "Esta subcategoria vai levar {monto} do dinheiro da categoria pai. Confirma?"
+      },
+      "inversiones.budget_move_done": {
+        "from": "Se movió {monto}.",
+        "to": "Moveu {monto}."
       },
       "inversiones.budget_stat_progress": {
         "from": "Avance",

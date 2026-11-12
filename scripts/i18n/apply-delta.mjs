@@ -100,7 +100,11 @@ for (const [id, value] of translated) {
   }
   const esPh = placeholders(esValue)
   const ph = placeholders(value)
-  if (esPh.join('|') !== ph.join('|')) {
+  // Compare as a SET of names, not in order: `t()` interpolates by name, so reordering
+  // placeholders breaks nothing. Comparing in order blocks legitimate translations (a
+  // short date reads "{mes} {dia}" in English and "{dia} de {mes}" in Spanish). Same
+  // decision the ledger and the i18n tests already follow since round 9.
+  if ([...esPh].sort().join('|') !== [...ph].sort().join('|')) {
     problems.push(
       `PLACEHOLDER MISMATCH: ${id}\n    es: [${esPh.join(', ')}]\n    ${TARGET_LANG}: [${ph.join(', ')}]`
     )
