@@ -17,11 +17,14 @@ import { formatCurrencyNumber } from '@/lib/format'
 import { currencyName } from '@/lib/countryCatalog'
 import { translateDetalle } from '@/lib/transferTitles'
 import { useCountUp } from '@/hooks/useCountUp'
+import { useNotificationCount } from '@/hooks/useNotificationCount'
+import { derivarAlertasFilas, filasVisiblesAlertas, ALERTAS_DESCARTADAS_KEY, type AlertaFila } from '@/lib/alertas'
 import { useHideAmounts } from '@/hooks/useHideAmounts'
 import { generateColorShade } from '@/lib/colorUtils'
 import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { DonutChart as DonutChartComponent } from '@/components/charts/DonutChart'
 import { QuarantineHomeFab } from '@/components/cuarentena/QuarantineHomeFab'
+import { NotificationItem } from '@/components/notificaciones/NotificationItem'
 import { syncBadge, useOnlineStatus } from '@/lib/connection'
 import { isDismissSwipe } from '@/lib/swipeDismiss'
 import './Home.css'
@@ -291,6 +294,11 @@ export function HomePage() {
     vencimientos_3_dias: any[]
     dias_asfixia_proximos: number
   } | null>(null)
+  // Una sola fuente para el numero de la campanita: avisos operativos sin leer
+  // mas alertas activas. Aca no se piden las alertas porque el Home ya las trae
+  // en su propia carga.
+  const { avisos: avisosNoLeidos } = useNotificationCount({ conAlertas: false })
+
   const [billeteras, setBilleteras] = useState<any[]>([])
   const [tarjetas, setTarjetas] = useState<any[]>([])
   const [topCategorias, setTopCategorias] = useState<any[]>([])
@@ -996,15 +1004,43 @@ export function HomePage() {
   // cantidad en cada render. Si los movemos despues del return temprano
   // del spinner, la primera render (loading=true) llama N hooks y la
   // segunda (datos cargados) llama N+K → React error #310.
-  interface AlertaFila {
-    key: string
-    texto: string
-    conteo: number
-    navegar?: string
-  }
-
-  const ALERTAS_DESCARTADAS_KEY = 'home_alertas_descartadas'
   const [descartadas, setDescartadas] = useState<Record<string, number>>({})
+
+  // Los avisos que entrega el productor viven en la misma bandeja que las
+  // alertas: si el badge los suma, tienen que estar a la vista al abrir.
+  const [avisosPanel, setAvisosPanel] = useState<Array<{
+    notificacion_id: number
+    tipo_notificacion: string
+    titulo: string
+    mensaje: string
+    leida: boolean
+    enviado_at: string
+  }>>([])
+
+  useEffect(() => {
+    if (!alertsOpen) return
+    let vivo = true
+    void (async () => {
+      try {
+        const filas = await rpc<any[]>('fn_obtener_notificaciones_no_leidas', { p_limit: 20 })
+        if (vivo) setAvisosPanel((filas || []).filter((f: any) => !f.leida))
+      } catch {
+        if (vivo) setAvisosPanel([])
+      }
+    })()
+    return () => {
+      vivo = false
+    }
+  }, [alertsOpen])
+
+  const marcarAvisoLeido = async (id: number) => {
+    try {
+      await rpc('fn_marcar_notificacion_leida', { p_notificacion_id: id })
+      setAvisosPanel((prev) => prev.filter((a) => a.notificacion_id !== id))
+    } catch {
+      // Silencioso: si falla, el aviso sigue en la lista.
+    }
+  }
 
   // Dismissals persist per alert type: tapping the row records the count it
   // was seen at; the row re-appears whenever that count changes again (a new
@@ -1046,23 +1082,11 @@ export function HomePage() {
 
   const gestoVencimiento = useRef<{ x: number; y: number; swipe: boolean } | null>(null)
 
-  const alertasFilas = useMemo((): AlertaFila[] => {
-    if (!alerts) return []
-    const filas: AlertaFila[] = []
-    if (alerts.egresos_cuarentena > 0) {
-      filas.push({ key: 'cuarentena', texto: '📥 Transacciones en Cuarentena', conteo: alerts.egresos_cuarentena, navegar: '/cuarentena' })
-    }
-    if (alerts.billeteras_rojas > 0) {
-      filas.push({ key: 'rojas', texto: '🔴 Cuentas desconciliadas / en rojo', conteo: alerts.billeteras_rojas })
-    }
-    if (alerts.dias_asfixia_proximos > 0) {
-      filas.push({ key: 'asfixia', texto: t('home_alert_asfixia'), conteo: alerts.dias_asfixia_proximos })
-    }
-    return filas
-  }, [alerts, t])
+  const alertasFilas = useMemo(() => derivarAlertasFilas(alerts, t), [alerts])
 
   // A row stays hidden only while its count has not changed since dismissal.
-  const filasVisibles = alertasFilas.filter((fila) => descartadas[fila.key] !== fila.conteo)
+  const filasVisibles = filasVisiblesAlertas(alertasFilas, descartadas)
+  const badgeCampanita = filasVisibles.length + avisosNoLeidos
   const patrimonioARS = patrimonio?.total_pesos ?? 0
   // S18: la línea USD fija del hero pasó a buildHeroLines (dinámica por moneda).
   // total_dolares sigue vinienendo del RPC (los reportes legados lo consumen).
@@ -1136,9 +1160,9 @@ export function HomePage() {
             style={{ position: 'relative' }}
           >
             🔔
-            {filasVisibles.length > 0 && (
+            {badgeCampanita > 0 && (
               <span className="badge badge-red animate-pulse" style={{ position: 'absolute', top: -4, right: -4, fontSize: 'calc(10px * var(--font-scale))' }}>
-                {filasVisibles.length}
+                {badgeCampanita}
               </span>
             )}
           </button>
@@ -1217,7 +1241,19 @@ export function HomePage() {
                 })}
               </div>
             )}
-            {filasVisibles.length === 0 && (
+            {avisosPanel.length > 0 && (
+              <>
+                <p className="text-xs text-muted font-semibold mt-1">{t('notif_title')}</p>
+                {avisosPanel.map((aviso) => (
+                  <NotificationItem
+                    key={aviso.notificacion_id}
+                    item={aviso}
+                    onClick={() => void marcarAvisoLeido(aviso.notificacion_id)}
+                  />
+                ))}
+              </>
+            )}
+            {filasVisibles.length === 0 && avisosPanel.length === 0 && (
               <p className="text-xs text-muted text-center py-2">{t('alert_all_ok_no_alerts')}</p>
             )}
           </div>
