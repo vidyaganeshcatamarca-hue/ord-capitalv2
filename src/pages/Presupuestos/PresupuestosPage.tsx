@@ -1879,6 +1879,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
                 ? () => alternarGrupo(cabecera.estructura_id)
                 : undefined}
               libreGrupo={cabecera.es_padre ? libreDe(cabecera.estructura_id) ?? undefined : undefined}
+              plataGrupo={cabecera.es_padre ? totalAsignado : undefined}
               techo={techoDe(cabecera.estructura_id)}
               onAsignar={() => onAsignar(cabecera)}
               onVerDetalle={() => onVerDetalle(cabecera)}
@@ -1935,6 +1936,13 @@ interface FilaSobreProps {
   techo?: number | null
   /** Plata disponible del padre: contra esto se mide el consumo del pozo (opción 1). */
   pozoPadre?: number | null
+  /**
+   * S11 (ronda 10, dueño): la plata del GRUPO, o sea la suma de lo asignado a las filas
+   * que cuentan en totales. En libertad el padre puede estar en cero mientras sus hijos
+   * tienen la plata; sin esto el total del grupo mostraba «0 − gastado» y salía en
+   * negativo. Sólo se pasa a la cabecera de un padre.
+   */
+  plataGrupo?: number
   onAsignar: () => void
   onVerDetalle: () => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
@@ -1944,7 +1952,7 @@ interface FilaSobreProps {
   fmt: (n: number) => string
 }
 
-function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, techo, pozoPadre, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
+function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, techo, pozoPadre, plataGrupo, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
   // Ronda 10 (dueño): el hijo sin asignación se mide contra el libre del grupo, y sin
   // techo no se dibuja barra. El padre queda como estaba: su barra compara el gasto de
   // los hijos contra su propio techo.
@@ -1976,7 +1984,16 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
   // En modo anticipado, el "disponible" del sobre NO arrastra el saldo del mes
   // anterior: cada mes arranca en 0 y se computa como asignado - gastado.
   // En base_cero, el arrastre si forma parte del disponible.
-  const disponibleEfectivo = disponibleDeSobre(sobre, modoPresupuesto)
+  const disponibleEfectivo = (() => {
+    // S11: en libertad el total del grupo del padre no es su propia plata menos el gasto
+    // del grupo. Con el padre en cero y los hijos con 105.500 asignados mostraba −4.000
+    // (0 − gastado) y los 105.500 desaparecían. La base es la plata del grupo cuando la
+    // hay; en base cero sigue mandando monto_disponible, que trae el arrastre.
+    if (modoPresupuesto === 'anticipado' && sobre.es_padre && plataGrupo !== undefined) {
+      return plataGrupo - Number(sobre.monto_gastado ?? 0)
+    }
+    return disponibleDeSobre(sobre, modoPresupuesto)
+  })()
   const arrastre = Number(sobre.arrastre_mes_anterior ?? 0)
 
   const colorDisponible = () => {

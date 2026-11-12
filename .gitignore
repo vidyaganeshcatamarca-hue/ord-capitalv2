@@ -221,3 +221,4 @@ tests/configuracion/*
 !tests/presupuestos/techo-y-plata-separados.test.js
 !tests/presupuestos/disponible-en-monto-manual.test.js
 !tests/presupuestos/cartel-disponible-sin-50-30-20.test.js
+!tests/presupuestos/total-grupo-libertad.test.js
