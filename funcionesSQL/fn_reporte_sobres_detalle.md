@@ -84,28 +84,45 @@ BEGIN
         ) gm ON true
         WHERE (e.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND e.hogar_id = v_hogar_id))
     ),
-    -- Last 6 completed cycles (window k = [v_f_inicio - k months,
-    -- v_f_inicio - (k-1) months - 1 day]); window 1 = the previous cycle.
+    -- S3 (ronda 10, dueño): «Los meses de uso de la app y si hay diferencia de días, toma
+    -- los días y divide pasando a meses». El divisor es el tiempo REAL de uso y no la
+    -- cantidad de meses de calendario que tuvieron gasto: antes un rubro con un solo mes
+    -- de gasto promediaba dividiendo por 1, y un mes de 25 pesos pesaba como un mes entero.
+    -- Ventana: desde el primer gasto registrado hasta el inicio del ciclo, con tope de 6
+    -- meses. Un mes parcial pesa por sus días.
     gastos_6m AS (
-        SELECT agg.estructura_id as estructura_egreso_id,
-               AVG(agg.gasto_mensual)::numeric AS gasto_promedio_6m
-        FROM (
-            SELECT e.estructura_id, g.i,
-                   COALESCE((
-                       SELECT SUM(c.valor_egreso)
-                       FROM v_p_caja_reportable c
-                       WHERE c.estructura_egreso_id = e.estructura_id
-                         AND c.tipo = 'expense'
-                         AND c.fecha >= (v_f_inicio - (g.i * INTERVAL '1 month'))::date
-                         AND c.fecha <= (v_f_inicio - ((g.i - 1) * INTERVAL '1 month') - INTERVAL '1 day')::date
-                         AND ((c.user_id = v_user_id AND c.es_compartido = false) OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true))
-                   ), 0) AS gasto_mensual
-            FROM p_estructuras_egresos e
-            CROSS JOIN generate_series(1, 6) AS g(i)
-            WHERE (e.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND e.hogar_id = v_hogar_id))
-        ) agg
-        WHERE agg.gasto_mensual > 0
-        GROUP BY agg.estructura_id
+        WITH uso AS (
+            SELECT
+                GREATEST(
+                    (SELECT MIN(c2.fecha)::date
+                       FROM v_p_caja_reportable c2
+                      WHERE c2.tipo = 'expense'
+                        AND ((c2.user_id = v_user_id AND c2.es_compartido = false)
+                             OR (v_hogar_id IS NOT NULL AND c2.hogar_id = v_hogar_id AND c2.es_compartido = true))),
+                    (v_f_inicio - INTERVAL '6 months')::date
+                ) AS desde,
+                v_f_inicio::date AS hasta
+        ),
+        divisor AS (
+            SELECT GREATEST(
+                       LEAST(6::numeric, (hasta - desde)::numeric / 30.4375),
+                       1::numeric / 30.4375
+                   ) AS meses
+            FROM uso
+        )
+        SELECT e.estructura_id AS estructura_egreso_id,
+               (COALESCE(SUM(c.valor_egreso), 0) / (SELECT meses FROM divisor))::numeric AS gasto_promedio_6m
+        FROM p_estructuras_egresos e
+        CROSS JOIN uso u
+        LEFT JOIN v_p_caja_reportable c
+               ON c.estructura_egreso_id = e.estructura_id
+              AND c.tipo = 'expense'
+              AND c.fecha >= u.desde
+              AND c.fecha < u.hasta
+              AND ((c.user_id = v_user_id AND c.es_compartido = false)
+                   OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true))
+        WHERE (e.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND e.hogar_id = v_hogar_id))
+        GROUP BY e.estructura_id
     ),
     -- Las filas de abajo son las de siempre (hijos y rubros sin hijos).
     filas(estructura_id, nombre_categoria, icono, color, tipo_cupo, padre_id, monto_asignado, monto_gastado, monto_disponible, arrastre_mes_anterior, estado_sobre, metodo_sobregasto, monto_asignado_anterior, monto_gastado_anterior, gasto_promedio_6m, es_padre, cuenta_en_totales) AS (
@@ -198,109 +215,17 @@ BEGIN
     ORDER BY CASE u.tipo_cupo WHEN 'need' THEN 1 WHEN 'want' THEN 2 WHEN 'investment' THEN 3 WHEN 'saving' THEN 4 WHEN 'tithe' THEN 5 ELSE 6 END, u.monto_gastado DESC;
 END;
 
-$function$;
+$function$
 
-
-DECLARE
-    v_user_id bigint;
-    v_hogar_id bigint;
-    v_mes_truncado date := date_trunc('month', p_mes_periodo);
-    v_mes_anterior date := v_mes_truncado - INTERVAL '1 month';
-    v_f_inicio date;
-    v_f_fin date;
-    v_f_inicio_ant date;
-    v_f_fin_ant date;
-    v_dia_ancla int2;
-    v_modo_presupuesto text;
-BEGIN
-    SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
-    IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
-    SELECT hogar_id INTO v_hogar_id FROM p_hogar_participantes WHERE user_id = v_user_id;
-
-    SELECT dia_ancla_ciclo INTO v_dia_ancla FROM p_presupuestos_config WHERE user_id = v_user_id;
-    IF v_dia_ancla IS NULL THEN v_dia_ancla := 1; END IF;
-    SELECT modo_presupuesto INTO v_modo_presupuesto FROM p_presupuestos_config WHERE user_id = v_user_id;
-
-    v_f_inicio := date_trunc('month', p_mes_periodo) + ((v_dia_ancla - 1) * INTERVAL '1 day');
-    v_f_fin := (v_f_inicio + INTERVAL '1 month' - INTERVAL '1 day')::date;
-
-    v_f_inicio_ant := date_trunc('month', v_mes_anterior) + ((v_dia_ancla - 1) * INTERVAL '1 day');
-    v_f_fin_ant := (v_f_inicio_ant + INTERVAL '1 month' - INTERVAL '1 day')::date;
-
-    RETURN QUERY
-    WITH gastos_mes AS (
-        SELECT c.estructura_egreso_id, SUM(c.valor_egreso) as total_gastado, BOOL_OR(c.tarjeta_id IS NOT NULL) as hay_tarjeta, BOOL_OR(c.tarjeta_id IS NULL AND c.tipo = 'expense') as hay_debito
-        FROM p_caja c WHERE c.tipo = 'expense' AND c.fecha >= v_f_inicio AND c.fecha <= v_f_fin
-          AND ((c.user_id = v_user_id AND c.es_compartido = false) OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true))
-        GROUP BY c.estructura_egreso_id
-    ),
-    arrastres AS (
-        SELECT e.estructura_id as estructura_egreso_id,
-               COALESCE(p.monto_limite, 0) as monto_asignado_anterior,
-               COALESCE(gm.total_gastado, 0) as monto_gastado_anterior,
-               COALESCE(p.monto_limite, 0) - COALESCE(gm.total_gastado, 0) as balance_mes_anterior
-        FROM p_estructuras_egresos e
-        LEFT JOIN p_presupuestos p ON e.estructura_id = p.estructura_egreso_id AND p.mes_periodo = v_mes_anterior AND (p.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND p.hogar_id = v_hogar_id))
-        LEFT JOIN LATERAL (
-            SELECT SUM(valor_egreso) as total_gastado
-            FROM p_caja
-            WHERE estructura_egreso_id = e.estructura_id
-              AND tipo = 'expense'
-              AND fecha >= (date_trunc('month', v_mes_anterior) + ((COALESCE(p.dia_ancla, v_dia_ancla) - 1) * INTERVAL '1 day'))::date
-              AND fecha <= ((date_trunc('month', v_mes_anterior) + ((COALESCE(p.dia_ancla, v_dia_ancla) - 1) * INTERVAL '1 day')) + INTERVAL '1 month' - INTERVAL '1 day')::date
-              AND ((user_id = v_user_id AND es_compartido = false) OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id AND es_compartido = true))
-        ) gm ON true
-        WHERE (e.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND e.hogar_id = v_hogar_id))
-    ),
-    -- Last 6 completed cycles (window k = [v_f_inicio - k months,
-    -- v_f_inicio - (k-1) months - 1 day]); window 1 = the previous cycle.
-    gastos_6m AS (
-        SELECT agg.estructura_id as estructura_egreso_id,
-               AVG(agg.gasto_mensual)::numeric AS gasto_promedio_6m
-        FROM (
-            SELECT e.estructura_id, g.i,
-                   COALESCE((
-                       SELECT SUM(c.valor_egreso)
-                       FROM p_caja c
-                       WHERE c.estructura_egreso_id = e.estructura_id
-                         AND c.tipo = 'expense'
-                         AND c.fecha >= (v_f_inicio - (g.i * INTERVAL '1 month'))::date
-                         AND c.fecha <= (v_f_inicio - ((g.i - 1) * INTERVAL '1 month') - INTERVAL '1 day')::date
-                         AND ((c.user_id = v_user_id AND c.es_compartido = false) OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true))
-                   ), 0) AS gasto_mensual
-            FROM p_estructuras_egresos e
-            CROSS JOIN generate_series(1, 6) AS g(i)
-            WHERE (e.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND e.hogar_id = v_hogar_id))
-        ) agg
-        WHERE agg.gasto_mensual > 0
-        GROUP BY agg.estructura_id
-    )
-    SELECT e.estructura_id, e.nombre_cuenta::text, e.icono::text, e.color::text, COALESCE(padre.tipo_cupo, e.tipo_cupo)::text, e.padre_id,
-           COALESCE(p.monto_limite, 0)::numeric, COALESCE(gm.total_gastado, 0)::numeric,
-           (COALESCE(arr.balance_mes_anterior, 0) + COALESCE(p.monto_limite, 0) - COALESCE(gm.total_gastado, 0))::numeric,
-           COALESCE(arr.balance_mes_anterior, 0)::numeric,
-           CASE
-               WHEN (CASE WHEN v_modo_presupuesto = 'anticipado' THEN 0::numeric ELSE COALESCE(arr.balance_mes_anterior, 0) END + COALESCE(p.monto_limite, 0)) = 0 AND COALESCE(gm.total_gastado, 0) = 0 THEN 'sin_movimiento'::text
-               WHEN COALESCE(gm.total_gastado, 0) <= (CASE WHEN v_modo_presupuesto = 'anticipado' THEN 0::numeric ELSE COALESCE(arr.balance_mes_anterior, 0) END + COALESCE(p.monto_limite, 0)) * 0.70 THEN 'verde'::text
-               WHEN COALESCE(gm.total_gastado, 0) <= (CASE WHEN v_modo_presupuesto = 'anticipado' THEN 0::numeric ELSE COALESCE(arr.balance_mes_anterior, 0) END + COALESCE(p.monto_limite, 0)) THEN 'amarillo_precaucion'::text
-               ELSE 'rojo_excedido'::text
-           END,
-           CASE WHEN COALESCE(gm.total_gastado, 0) > (CASE WHEN v_modo_presupuesto = 'anticipado' THEN 0::numeric ELSE COALESCE(arr.balance_mes_anterior, 0) END + COALESCE(p.monto_limite, 0)) THEN
-               CASE WHEN gm.hay_tarjeta AND NOT gm.hay_debito THEN 'credito'::text WHEN gm.hay_debito AND NOT gm.hay_tarjeta THEN 'debito'::text ELSE 'mixto'::text END
-           ELSE NULL END,
-           COALESCE(arr.monto_asignado_anterior, 0)::numeric,
-           COALESCE(arr.monto_gastado_anterior, 0)::numeric,
-           COALESCE(g6.gasto_promedio_6m, 0)::numeric
-    FROM p_estructuras_egresos e
-    LEFT JOIN p_estructuras_egresos padre ON e.padre_id = padre.estructura_id
-    LEFT JOIN p_presupuestos p ON e.estructura_id = p.estructura_egreso_id AND p.mes_periodo = v_mes_truncado AND (p.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND p.hogar_id = v_hogar_id))
-    LEFT JOIN gastos_mes gm ON e.estructura_id = gm.estructura_egreso_id
-    LEFT JOIN arrastres arr ON e.estructura_id = arr.estructura_egreso_id
-    LEFT JOIN gastos_6m g6 ON e.estructura_id = g6.estructura_egreso_id
-    WHERE (e.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND e.hogar_id = v_hogar_id))
-      AND (e.padre_id IS NOT NULL OR NOT EXISTS (SELECT 1 FROM p_estructuras_egresos h WHERE h.padre_id = e.estructura_id))
-    ORDER BY CASE COALESCE(padre.tipo_cupo, e.tipo_cupo) WHEN 'need' THEN 1 WHEN 'want' THEN 2 WHEN 'investment' THEN 3 WHEN 'saving' THEN 4 WHEN 'tithe' THEN 5 ELSE 6 END, COALESCE(gm.total_gastado, 0) DESC;
-END;
-
-
-$function$;
+-- NOTA (ronda 10, T14): el promedio de 6 meses pasó a medirse por DÍAS DE USO REAL.
+-- Antes el CTE gastos_6m hacía AVG sobre las ventanas de mes calendario que tuvieran
+-- gasto (WHERE agg.gasto_mensual > 0), así que un rubro con un solo mes de gasto
+-- promediaba dividiendo por 1 y un mes de 25 pesos pesaba como un mes entero.
+-- Ahora el divisor es LEAST(6, días cubiertos / 30,4375) y la ventana arranca en
+-- MAX(primer gasto registrado, inicio del ciclo − 6 meses): los meses parciales pesan
+-- por sus días y una cuenta joven divide por el tiempo que lleva usándose.
+-- Decisión del dueño: «Los meses de uso de la app y si hay diferencia de días, toma los
+-- días y divide pasando a meses» + «no hay ningún problema que tengamos un mes con 25
+-- porque es real y eso debe afectar el promedio sí o sí».
+-- La agregación de los rubros padre vive FUERA de ese CTE y quedó intacta: el promedio
+-- de un padre sigue saliendo de sus hijos.
