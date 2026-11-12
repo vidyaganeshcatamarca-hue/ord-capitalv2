@@ -46,9 +46,9 @@ estado desde el servidor.
 | M1  | S22            | Agregar `monto_techo` a `p_presupuestos` y sembrarlo con el valor actual | — |
 | M2  | S21            | Estado y avance calculados contra `monto_techo` en el reporte | — |
 | M3  | S20            | Libre del grupo = techo del padre menos gasto del grupo | — |
-| M4  | S19, S23       | Exclusividad de la plata impuesta en `fn_asignar_presupuesto` | — |
-| M5  | S18            | La pantalla muestra techo y plata por separado | — |
-| M6  | S23            | Resolver los casos imposibles existentes (Alimentos-Hogar: padre 500 vs hijos 106.046) | — |
+| M4  | S19, S23       | Exclusividad de la plata impuesta en `fn_asignar_presupuesto` | `c2bc0e0` |
+| M5  | S18            | La pantalla muestra techo y plata por separado | `d8c00ff` |
+| M6  | S23            | Resolver los casos imposibles existentes (Alimentos-Hogar: padre 500 vs hijos 106.046) | datos, sin commit |
 
 ## Log
 
@@ -65,3 +65,22 @@ L7 (pedido original, literal):
 L8: el dueño eligió la opción A (dos números por fila) sobre la C (solo plata con el techo
 en el padre) y descartó la B (papel declarado con un solo número, que no resuelve el caso
 de un hijo con techo 40.000 y plata 25.000).
+
+L9 (decisión de M6, literal): «ok para el user 1» y después «B». La plata se concentra en
+el padre; los hijos conservan su techo y quedan con plata 0.
+
+Aplicado por la RPC `fn_asignar_presupuesto` con `p_mover_plata = true`, no por INSERT, así
+que cada movimiento dejó su fila en `p_presupuestos_historial`: `movido_al_padre` para los
+hijos que se vaciaron y `manual` para los padres. Valores finales (noviembre 2026, user 1):
+Alimentos-Hogar 106.546, Ocio 60.000, Tecnología 31.000; hijos 3, 7, 11, 166 y 406 en 0 con
+su techo intacto. Quedaron 0 grupos imposibles y 0 filas con plata negativa.
+
+Dos cosas que este paso dejó a la vista y no resuelve:
+
+1. **Frescos.** `p_mover_plata` sólo vacía a los hijos con plata POSITIVA, así que el
+   −135.000 de Frescos sobrevivía al movimiento del padre. Necesitó su propia llamada. Un
+   saldo negativo de una subcategoría no lo absorbe nadie: si vuelve a aparecer, hay que
+   asignarle 0 explícitamente.
+2. **El techo de los padres quedó por debajo de su plata** (500 contra 106.546, 50.000
+   contra 60.000, 28.000 contra 31.000). Es la próxima decisión: el techo del padre es el
+   techo del grupo y hoy es un resto de datos de prueba.
