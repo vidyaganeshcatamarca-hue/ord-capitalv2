@@ -52,7 +52,7 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 43. [fn_crear_proyecto_compartido](../funcionesSQL/fn_crear_proyecto_compartido.md)
 44. [fn_crear_subcuenta_egreso](../funcionesSQL/fn_crear_subcuenta_egreso.md)
 45. [fn_crear_subcuenta_predeterminada](../funcionesSQL/fn_crear_subcuenta_predeterminada.md)
-46. [fn_crear_tarjeta_credito](../funcionesSQL/fn_crear_tarjeta_credito.md)
+46. [fn_crear_tarjeta_credito](../funcionesSQL/fn_crear_tarjeta_credito.md) *(v2 2026-11-11: el INSERT declaraba 9 columnas y pasaba 10 valores —un 0 de más antes de la moneda—, así que el alta desde la UI fallaba siempre con 42601 «INSERT has more expressions than target columns». Se nombró `saldo_a_favor` como décima columna)*
 47. [fn_debug_get_source](../funcionesSQL/fn_debug_get_source.md)
 48. [fn_debug_triggers](../funcionesSQL/fn_debug_triggers.md)
 49. [fn_desarchivar_tarjeta_credito](../funcionesSQL/fn_desarchivar_tarjeta_credito.md)
@@ -203,7 +203,7 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 178. [fn_reporte_top_categorias_mes](../funcionesSQL/fn_reporte_top_categorias_mes.md)
 179. [fn_reporte_top_fuentes_ingreso](../funcionesSQL/fn_reporte_top_fuentes_ingreso.md) *(NUEVA Fase — Donut de fuentes de ingreso en Billeteras)*
 180. [fn_reporte_variacion_intermensual](../funcionesSQL/fn_reporte_variacion_intermensual.md)
-180. [fn_reporte_vencimientos_tarjetas](../funcionesSQL/fn_reporte_vencimientos_tarjetas.md) *(v2: +columna saldo_a_favor; monto_a_pagar neto de saldo)*
+180. [fn_reporte_vencimientos_tarjetas](../funcionesSQL/fn_reporte_vencimientos_tarjetas.md) *(v2: +columna saldo_a_favor; monto_a_pagar neto de saldo. v3 2026-11-11: `v_hoy` sale de la zona horaria del país configurado en vez de `CURRENT_DATE` (que en Supabase es UTC, y pasado las 21:00 de Argentina adelantaba un mes y contaba un día de menos), y si el resumen que vence no tiene nada impago el próximo vencimiento pasa al mes siguiente)*
 181. [fn_saldar_balance_hogar](../funcionesSQL/fn_saldar_balance_hogar.md)
 182. [fn_simular_pago_extra](../funcionesSQL/fn_simular_pago_extra.md)
 183. [fn_sugerir_distribucion_activacion](../funcionesSQL/fn_sugerir_distribucion_activacion.md)
@@ -352,3 +352,5 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 287. [fn_aviso_ahorro_en_riesgo](../funcionesSQL/fn_aviso_ahorro_en_riesgo.md) *(NUEVA 2026-11: sexto productor. Sobre en semaforo rojo a 7 dias (plazo menor a 6 meses) o 14 dias (desde 6 meses) de la fecha objetivo, Definicion 32. Replica el calculo de fn_sobre_plan sin auth.uid)*
 288. [fn_avisos_ejecutar](../funcionesSQL/fn_avisos_ejecutar.md) *(NUEVA 2026-11: unica entrada del cron. Corre los cinco productores y devuelve cuantos encolo cada uno. Cuarentena NO esta: la informa el FAB del Home)*
 282. [fn_aviso_cuarentena](../funcionesSQL/fn_aviso_cuarentena.md) *(NUEVA 2026-11, vuelve con la regla de 24 h: el FAB del Home informa al instante; este aviso solo nace si el pendiente sigue sin resolver 24 horas despues, y su dedupe_key incluye el conteo para que un lote nuevo genere un aviso nuevo)*
+289. [fn_zona_horaria_pais](../funcionesSQL/fn_zona_horaria_pais.md) *(nueva 2026-11-11: código ISO del país → zona horaria IANA, para que los reportes usen la fecha local del usuario. IMMUTABLE; país desconocido o NULL cae a UTC. Para los países con varias zonas (US, CA, BR, AU, RU, MX, ID, CN) devuelve la principal: el país no dice dónde está el dispositivo)*
+

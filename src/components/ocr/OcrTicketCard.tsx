@@ -543,6 +543,12 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
                 id={`ocr-total-${item.pendiente_id}`}
                 type="text"
                 inputMode="decimal"
+                // Owner bug 2026-11-11: the numeric keyboard offered "IR" (Go)
+                // here and the value felt unconfirmed. Same contract as the
+                // item net amount and the subcategory total: the key becomes
+                // "Listo/Realizar", cancels the implicit submit and blurs, so
+                // the typed value stays and only Guardar saves.
+                {...NUMERIC_INPUT_ENTER_PROPS}
                 value={totalInput}
                 onChange={(event) => setTotalInput(event.target.value)}
               />

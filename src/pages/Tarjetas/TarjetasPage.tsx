@@ -1070,9 +1070,14 @@ const handleLegacySubmit = async () => {
                 <div className="vencimiento-info">
                     <div className="vencimiento-label"><CategoryIcon name="Calendar" size={13} /> {t("card_next_due_date")}</div>
                   <div className="vencimiento-date">
-                    {/* Y-01: el atraso se avisa una sola vez, arriba de la pestaña. Acá el
-                        recuadro vuelve a su función: decir cuándo vence y cuánto falta. */}
-                    {t("card_due_date_format", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })}
+                    {/* Y-01: the overdue notice lives once, above the tab; this box only
+                        says when it is due and how long is left. Owner bug 2026-11-11: on
+                        the due day itself the count reaches zero, and the parenthesised
+                        days format reads as if something were missing, so that case says
+                        it is due today. */}
+                    {Number(venc.dias_para_vencimiento) === 0
+                      ? t('card_due_today')
+                      : t("card_due_date_format", { day: venc.dia_vencimiento, days: venc.dias_para_vencimiento })}
                   </div>
                   {Number(venc.saldo_a_favor) > 0 && (
                     <div className="saldo-a-favor-chip">{t('saldo_a_favor_chip', { monto: fmtARS(Number(venc.saldo_a_favor)) })}</div>
@@ -2090,6 +2095,16 @@ export function PagarModal({
   const totalPagarArsEquiv = sectionUsdPayIn === 'USD'
     ? totalPagarPesos + totalPagarUsd * cotizacionUsdModal
     : totalPagarPesos
+  // Owner bug 2026-11-11: the duplicate check used to span both sections, so the
+  // same wallet chosen for the local part and for the USD part paid in the local
+  // currency disabled the button and blamed a missing account. Those are two
+  // legitimate debits on one account: the balance is what limits them, not the
+  // repetition. The rule stays inside each section, where the picker already
+  // filters out the wallets taken by the other lines.
+  const billeteraRepetida = (lineas: PagarLine[]) => {
+    const ids = lineas.filter(l => l.billetera_id != null).map(l => l.billetera_id!)
+    return new Set(ids).size !== ids.length
+  }
   const lineasInvalidas = allLines.some(l => {
     // Linea de saldo a favor: siempre valida (no requiere billetera). Cuando
     // el total esta cubierto por favor, el pago se confirma sin elegir cuenta.
@@ -2097,10 +2112,7 @@ export function PagarModal({
     const hasWallet = l.billetera_id != null
     const monto = l.monto !== '' ? parseFloat(l.monto) : NaN
     return (hasWallet && isNaN(monto)) || (!hasWallet && !isNaN(monto) && l.monto !== '')
-  }) || (() => {
-    const ids = allLines.filter(l => l.billetera_id != null).map(l => l.billetera_id!)
-    return new Set(ids).size !== ids.length
-  })()
+  }) || billeteraRepetida(pagarLineas) || billeteraRepetida(pagarLineasUsd)
   const allLinesEmpty = pagarLineas.every(l => l.billetera_id == null && l.monto === '') && pagarLineasUsd.every(l => l.billetera_id == null && l.monto === '')
   const [resumenRealOn, setResumenRealOn] = useState(false)
   const [overpayMode, setOverpayMode] = useState<'accumulate' | 'cancel'>('accumulate')
@@ -2670,7 +2682,12 @@ export function PagarModal({
                     className={sectionUsdPayIn === 'ARS' ? 'active' : ''}
                     onClick={() => handleSetSectionUsdPayIn('ARS')}
                   >
-                    {t('pay_resumen_usd_toggle_pesos')}
+                    {/* Owner bug 2026-11-11: the label used to be the literal "$",
+                        which is only right when the local currency is ARS. Paying
+                        the USD portion in the local currency (GBP, ILS...) showed a
+                        peso sign. The ISO code names the currency in every locale
+                        and pairs with the "US$" on the left. */}
+                    {localMon}
                   </button>
                 </div>
               </div>
@@ -2738,6 +2755,7 @@ export function PagarModal({
                               })
                             }}
                             placeholder={t('pay_multi_wallet_placeholder')}
+                            emptyMessage={t('pay_usd_no_wallet')}
                             formatMonto={(val, moneda) => fmtMoneda(Number(val), (moneda ?? localMon) as 'ARS'|'USD')}
                           />
                           {payInPesos && montoNum > 0 && (
