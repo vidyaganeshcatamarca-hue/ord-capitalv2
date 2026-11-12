@@ -48,9 +48,9 @@ export interface DetalleInversion {
 interface DetalleInversionViewProps {
   inversionId: number
   onBack: () => void
-  onUpdateValue: (id: number) => void
-  onAddCapital?: (id: number) => void
-  onLiquidate: (id: number) => void
+  /// S9 (dueño): «actualizar valor, agregar capital y liquidar [...] ya están en la
+  /// pantalla anterior, así que no son necesarios en la edición de una inversión».
+  /// Las tres acciones se disparan desde la lista; acá sólo queda el borrado.
   /// Se llama despues de borrar una posicion preexistente. La lista tiene que
   /// recargarse y volver al panel: la fila ya no existe.
   onDeleted?: () => void
@@ -95,9 +95,6 @@ function movementClassFor(value: number | null | undefined): string {
 export function DetalleInversionView({
   inversionId,
   onBack,
-  onUpdateValue,
-  onAddCapital,
-  onLiquidate,
   onDeleted,
 }: DetalleInversionViewProps) {
   // Formato por moneda: se re-renderiza cuando cambia el contexto.
@@ -422,32 +419,6 @@ export function DetalleInversionView({
       </section>
 
       <footer className="detalle-actions">
-        <button
-          type="button"
-          className="detalle-action-btn detalle-action-btn--update"
-          onClick={() => onUpdateValue(data.inversion_id)}
-        >
-          <span aria-hidden="true">📊</span>
-          <span>{t('btn_update_value')}</span>
-        </button>
-        {onAddCapital && (
-          <button
-            type="button"
-            className="detalle-action-btn detalle-action-btn--add"
-            onClick={() => onAddCapital(data.inversion_id)}
-          >
-            <span aria-hidden="true">➕</span>
-            <span>{t('btn_add_capital')}</span>
-          </button>
-        )}
-        <button
-          type="button"
-          className="detalle-action-btn detalle-action-btn--liquidate"
-          onClick={() => onLiquidate(data.inversion_id)}
-        >
-          <span aria-hidden="true">💸</span>
-          <span>{t('btn_liquidate')}</span>
-        </button>
         {/* S7: solo para posiciones sin billetera y sin movimientos, que es
             exactamente la condicion que verifica fn_eliminar_inversion. Las que
             tienen egreso, aporte o rescate se borran desde Historial, donde cada
