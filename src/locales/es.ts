@@ -249,7 +249,7 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   cards_debt_usd_includes: 'incluye {monto} en dólares',
   cards_debt_usd_unconverted: '{monto} en dólares sin convertir (falta la cotización)',
   card_cmp_usd_line: 'Dólares: ciclo anterior {anterior} → actual {actual}',
-  card_cmp_usd_line_unconverted: 'En dólares, sin convertir: anterior {anterior} → actual {actual}',
+  card_cmp_usd_line_unconverted: 'Dólares, sin convertir: ciclo anterior {anterior} → actual {actual}',
   card_legacy_created_toast_one: '{cantidad} cuota cargada, empieza a correr en {fecha}',
   card_edit_tooltip: 'Editar',
   card_activate_btn: 'Activar',
