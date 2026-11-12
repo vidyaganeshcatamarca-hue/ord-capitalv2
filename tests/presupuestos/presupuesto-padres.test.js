@@ -397,11 +397,17 @@ test('los hijos se dibujan debajo del padre y no se repiten arriba', () => {
   assert.ok(bloque.includes('const hijas = s.es_padre && !estaCerrado(s.estructura_id)'), 'sólo se despliegan los grupos que no están cerrados')
 })
 
-test('el monto libre del grupo es el techo menos lo repartido', () => {
-  assert.ok(pagina.includes('const libreDe = (padreId: number) =>'), 'falta el cálculo del libre del grupo')
-  const bloque = pagina.slice(pagina.indexOf('const libreDe'), pagina.indexOf('const libreDe') + 400)
-  assert.ok(bloque.includes('monto_asignado ?? 0) -'), 'el libre tiene que restar lo repartido del techo')
-  assert.ok(bloque.includes('Number(x.padre_id) === Number(padreId)'), 'lo repartido se suma sobre los hijos del padre, con ids normalizados')
+test('el monto libre del grupo es el techo menos lo gastado', () => {
+  // S20 (ronda 10): el libre es la CAPACIDAD NO CONSUMIDA. La regla anterior restaba la
+  // plata asignada a los hijos, asi que un hijo con presupuesto negativo la inflaba y un
+  // hijo que habia gastado de mas no la bajaba. Caso real: Alimentos-Hogar con techo 500
+  // y sus hijos habiendo gastado 203.990 da 0, no los 29.454 de la regla vieja.
+  assert.ok(pagina.includes('const libreDe = (padreId: number): number | null =>'), 'falta el cálculo del libre del grupo')
+  const bloque = pagina.slice(pagina.indexOf('const libreDe'), pagina.indexOf('const libreDe') + 900)
+  assert.ok(bloque.includes('monto_gastado ?? 0'), 'el libre tiene que restar lo gastado del techo')
+  assert.ok(!bloque.includes('monto_asignado ?? 0) -'), 'la regla vieja de restar lo repartido ya no va')
+  assert.ok(bloque.includes('Number(x.padre_id) === Number(padreId)'), 'el gasto se suma sobre los hijos del padre, con ids normalizados')
+  assert.ok(bloque.includes('if (techo === null || techo === undefined'), 'sin techo no hay libre que calcular')
 })
 
 test('la fila del padre y la hija se distinguen en el marcado', () => {

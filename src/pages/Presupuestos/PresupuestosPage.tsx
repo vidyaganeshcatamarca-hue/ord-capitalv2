@@ -1800,9 +1800,19 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
     bloques.push({ cabecera: s, hijas })
   }
   // S12/S14: lo que le queda al grupo es su techo menos lo ya repartido en sus hijos.
-  const libreDe = (padreId: number) =>
-    Number(items.find(x => Number(x.estructura_id) === Number(padreId))?.monto_asignado ?? 0) -
-    items.filter(x => Number(x.padre_id) === Number(padreId)).reduce((s, x) => s + Number(x.monto_asignado ?? 0), 0)
+  // S20 (ronda 10): el libre del grupo es la CAPACIDAD NO CONSUMIDA, no lo que falta
+  // repartir. Antes esto restaba la plata asignada a los hijos, así que un hijo con
+  // presupuesto negativo lo inflaba y un hijo que gastó de más no lo bajaba. Ahora:
+  // techo del padre menos lo GASTADO por el conjunto del grupo. Sin techo no hay libre
+  // que calcular (`null`), porque no hay contra qué medirlo.
+  const libreDe = (padreId: number): number | null => {
+    const techo = techoDe(padreId)
+    if (techo === null || techo === undefined || Number(techo) <= 0) return null
+    const gastado = items
+      .filter(x => Number(x.padre_id) === Number(padreId))
+      .reduce((s, x) => s + Number(x.monto_gastado ?? 0), 0)
+    return Math.max(Number(techo) - gastado, 0)
+  }
 
   return (
     <div className="acord-grupo">
@@ -1831,7 +1841,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
               onToggleGrupo={cabecera.es_padre
                 ? () => alternarGrupo(cabecera.estructura_id)
                 : undefined}
-              libreGrupo={cabecera.es_padre ? libreDe(cabecera.estructura_id) : undefined}
+              libreGrupo={cabecera.es_padre ? libreDe(cabecera.estructura_id) ?? undefined : undefined}
               techo={techoDe(cabecera.estructura_id)}
               onAsignar={() => onAsignar(cabecera)}
               onVerDetalle={() => onVerDetalle(cabecera)}
@@ -1855,7 +1865,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
                     hija
                     onAsignar={() => onAsignar(hija)}
                     onVerDetalle={() => onVerDetalle(hija)}
-                    libreGrupo={libreDe(cabecera.estructura_id)}
+                    libreGrupo={libreDe(cabecera.estructura_id) ?? undefined}
                     techo={techoDe(hija.estructura_id)}
                     pozoPadre={Number(cabecera.monto_asignado ?? 0)}
                     modoPresupuesto={modoPresupuesto}

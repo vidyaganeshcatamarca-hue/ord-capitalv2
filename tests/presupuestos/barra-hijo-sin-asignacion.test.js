@@ -93,9 +93,9 @@ test('la página cablea el helper en las filas hijas y no dibuja barra sin techo
 
   // El libre del grupo tiene que llegar también a las filas hijas: antes solo lo
   // recibía la cabecera y el hijo no tenía contra qué medirse.
-  const pasesDelLibre = pagina.match(/libreGrupo=\{libreDe\(cabecera\.estructura_id\)\}/g) ?? []
+  const pasesDelLibre = pagina.match(/libreGrupo=\{libreDe\(cabecera\.estructura_id\) \?\? undefined\}/g) ?? []
   assert.equal(pasesDelLibre.length, 1, 'el hijo recibe el libre del grupo')
-  const paseCondicional = /libreGrupo=\{cabecera\.es_padre \? libreDe\(cabecera\.estructura_id\) : undefined\}/
+  const paseCondicional = /libreGrupo=\{cabecera\.es_padre \? libreDe\(cabecera\.estructura_id\) \?\? undefined : undefined\}/
   assert.match(pagina, paseCondicional, 'la cabecera sigue recibiendo el libre como antes')
 })
 
