@@ -1838,6 +1838,24 @@ export const inversiones = {
   notif_cat_resumen_semanal: "Weekly summary",
   notif_cat_resumen_mensual: "Monthly summary",
   notif_balance_threshold: "Imbalance threshold (ARS)",
+  notif_cuarentena_pendiente_titulo: "Transactions in quarantine",
+  notif_cuarentena_pendiente_mensaje: "Some movements are waiting for review.",
+
+  notif_cuenta_desconciliada_titulo: "Unreconciled accounts",
+  notif_cuenta_desconciliada_mensaje: "Some accounts haven't been reconciled in over 10 days.",
+
+  notif_vencimiento_tarjeta_titulo: "Card due soon",
+  notif_vencimiento_tarjeta_mensaje: "You have a card payment due in the next few days.",
+
+  notif_deuda_por_vencer_titulo: "Debt due soon",
+  notif_deuda_por_vencer_mensaje: "You have a debt due this week.",
+
+  notif_categoria_en_rojo_titulo: "Category over budget",
+  notif_categoria_en_rojo_mensaje: "A category spent more than it was assigned this cycle.",
+
+  notif_ahorro_en_riesgo_titulo: "Savings at risk",
+  notif_ahorro_en_riesgo_mensaje: "A savings goal is due soon and is behind schedule.",
+
   bell_empty: "No notifications",
   bell_mark_all: "Mark all as read",
   bell_view_all: "View all",

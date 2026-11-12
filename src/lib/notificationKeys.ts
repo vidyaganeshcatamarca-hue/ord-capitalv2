@@ -11,6 +11,18 @@ export type NotifMessageKey =
   | 'notif_recordatorio_personal_unico_titulo'
   | 'notif_cargar_gastos_titulo'
   | 'notif_cargar_gastos_mensaje'
+  | 'notif_cuarentena_pendiente_titulo'
+  | 'notif_cuarentena_pendiente_mensaje'
+  | 'notif_cuenta_desconciliada_titulo'
+  | 'notif_cuenta_desconciliada_mensaje'
+  | 'notif_vencimiento_tarjeta_titulo'
+  | 'notif_vencimiento_tarjeta_mensaje'
+  | 'notif_deuda_por_vencer_titulo'
+  | 'notif_deuda_por_vencer_mensaje'
+  | 'notif_categoria_en_rojo_titulo'
+  | 'notif_categoria_en_rojo_mensaje'
+  | 'notif_ahorro_en_riesgo_titulo'
+  | 'notif_ahorro_en_riesgo_mensaje'
 
 export interface NotifContent {
   tituloKey: NotifMessageKey
@@ -58,6 +70,42 @@ export function resolveNotifKeys(
       }
     }
     return DEFAULT_PERSONAL
+  }
+  if (tipoNotificacion === 'cuarentena_pendiente') {
+    return {
+      tituloKey: 'notif_cuarentena_pendiente_titulo',
+      mensajeKey: 'notif_cuarentena_pendiente_mensaje',
+    }
+  }
+  if (tipoNotificacion === 'cuenta_desconciliada') {
+    return {
+      tituloKey: 'notif_cuenta_desconciliada_titulo',
+      mensajeKey: 'notif_cuenta_desconciliada_mensaje',
+    }
+  }
+  if (tipoNotificacion === 'vencimiento_tarjeta') {
+    return {
+      tituloKey: 'notif_vencimiento_tarjeta_titulo',
+      mensajeKey: 'notif_vencimiento_tarjeta_mensaje',
+    }
+  }
+  if (tipoNotificacion === 'deuda_por_vencer') {
+    return {
+      tituloKey: 'notif_deuda_por_vencer_titulo',
+      mensajeKey: 'notif_deuda_por_vencer_mensaje',
+    }
+  }
+  if (tipoNotificacion === 'categoria_en_rojo') {
+    return {
+      tituloKey: 'notif_categoria_en_rojo_titulo',
+      mensajeKey: 'notif_categoria_en_rojo_mensaje',
+    }
+  }
+  if (tipoNotificacion === 'ahorro_en_riesgo') {
+    return {
+      tituloKey: 'notif_ahorro_en_riesgo_titulo',
+      mensajeKey: 'notif_ahorro_en_riesgo_mensaje',
+    }
   }
   if (tipoNotificacion === 'reminder_daily_expenses') {
     return DEFAULT_DAILY

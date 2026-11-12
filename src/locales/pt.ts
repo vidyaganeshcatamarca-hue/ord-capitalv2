@@ -1838,6 +1838,24 @@ export const inversiones = {
   notif_cat_resumen_semanal: "Resumo semanal",
   notif_cat_resumen_mensual: "Resumo mensal",
   notif_balance_threshold: "Limite de saldo desequilibrado (ARS)",
+  notif_cuarentena_pendiente_titulo: "Transações em quarentena",
+  notif_cuarentena_pendiente_mensaje: "Há movimentos aguardando revisão.",
+
+  notif_cuenta_desconciliada_titulo: "Contas desconciliadas",
+  notif_cuenta_desconciliada_mensaje: "Há contas sem conciliar há mais de 10 dias.",
+
+  notif_vencimiento_tarjeta_titulo: "Vencimento de cartão",
+  notif_vencimiento_tarjeta_mensaje: "Você tem um cartão a vencer nos próximos dias.",
+
+  notif_deuda_por_vencer_titulo: "Dívida a vencer",
+  notif_deuda_por_vencer_mensaje: "Você tem uma dívida a vencer esta semana.",
+
+  notif_categoria_en_rojo_titulo: "Categoria no vermelho",
+  notif_categoria_en_rojo_mensaje: "Uma categoria gastou mais do que o atribuído neste ciclo.",
+
+  notif_ahorro_en_riesgo_titulo: "Poupança em risco",
+  notif_ahorro_en_riesgo_mensaje: "Uma poupança está a vencer e vai atrasada em relação ao plano.",
+
   bell_empty: "Sem notificações",
   bell_mark_all: "Marcar todas como lidas",
   bell_view_all: "Ver todas",

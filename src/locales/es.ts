@@ -2062,6 +2062,24 @@ export const inversiones = {
   notif_cat_resumen_mensual: "Resumen mensual",
   notif_balance_threshold: "Umbral de balance desequilibrado (ARS)",
 
+  notif_cuarentena_pendiente_titulo: "Transacciones en cuarentena",
+  notif_cuarentena_pendiente_mensaje: "Hay movimientos esperando revisión.",
+
+  notif_cuenta_desconciliada_titulo: "Cuentas desconciliadas",
+  notif_cuenta_desconciliada_mensaje: "Hay cuentas sin conciliar hace más de 10 días.",
+
+  notif_vencimiento_tarjeta_titulo: "Vencimiento de tarjeta",
+  notif_vencimiento_tarjeta_mensaje: "Tenés una tarjeta que vence en los próximos días.",
+
+  notif_deuda_por_vencer_titulo: "Deuda por vencer",
+  notif_deuda_por_vencer_mensaje: "Tenés una deuda que vence esta semana.",
+
+  notif_categoria_en_rojo_titulo: "Categoría en rojo",
+  notif_categoria_en_rojo_mensaje: "Una categoría gastó más de lo que tenía asignado este ciclo.",
+
+  notif_ahorro_en_riesgo_titulo: "Ahorro en riesgo",
+  notif_ahorro_en_riesgo_mensaje: "Un ahorro está por vencer y va atrasado respecto del plan.",
+
   bell_empty: "Sin notificaciones",
   bell_mark_all: "Marcar todas como leídas",
   bell_view_all: "Ver todas",
