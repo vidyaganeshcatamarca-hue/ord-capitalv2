@@ -18,7 +18,7 @@
 // informa cuánto del libre se comió ese hijo, y si dos van al 60% el grupo está
 // desbordado: eso es lo que tiene que mostrar.
 
-export type OrigenTecho = 'propia' | 'libre_padre' | 'sin_techo'
+export type OrigenTecho = 'propia' | 'libre_padre' | 'sin_techo' | 'techo'
 export type ColorBarra = 'verde' | 'amarillo' | 'rojo'
 
 export interface ReferenciaBarra {
@@ -60,4 +60,24 @@ export function colorDeBarra(gastado: number, techo: number): ColorBarra | null 
   if (g <= techo * UMBRAL_AMARILLO) return 'verde'
   if (g <= techo) return 'amarillo'
   return 'rojo'
+}
+
+/**
+ * Referencia de la barra con el techo del modelo A.
+ *
+ * Dueño (2026-11-11): el techo dice lo que se puede gastar y la plata cuánto se asignó;
+ * son dos cosas distintas. La barra y el rojo se miden contra el TECHO.
+ *
+ * Precedencia: techo propio > plata propia > libre del padre > sin barra.
+ * Un techo `null` es SIN tope, no un tope de cero: si la fila igual tiene plata propia se
+ * sigue midiendo contra su plata, que es la lectura vieja y sigue siendo útil.
+ */
+export function referenciaBarraDeSobre(args: {
+  techo: number | null | undefined
+  montoAsignado: number | null | undefined
+  libreGrupo: number | null | undefined
+}): ReferenciaBarra {
+  const techo = args.techo === null || args.techo === undefined ? null : Number(args.techo)
+  if (techo !== null && techo > 0) return { techo, origen: 'techo' }
+  return referenciaBarraHija({ montoAsignado: args.montoAsignado, libreGrupo: args.libreGrupo })
 }

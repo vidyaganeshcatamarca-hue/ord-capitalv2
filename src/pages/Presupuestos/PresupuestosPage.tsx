@@ -141,7 +141,7 @@ const TIPO_CUPO_META: Record<string, { labelKey: string; icono: string }> = {
   tithe: { labelKey: 'budget_tipo_tithe', icono: '🙏' },
 }
 
-import { referenciaBarraHija, porcentajeBarra, colorDeBarra } from '../../lib/barraSobre'
+import { referenciaBarraHija, referenciaBarraDeSobre, porcentajeBarra, colorDeBarra } from '../../lib/barraSobre'
 
 const getColorBarra = (estado: string) => {
   if (estado === 'verde') return 'verde'
@@ -324,10 +324,14 @@ export function PresupuestosPage() {
   // sumaba en vez de restar: el padre mostraba 29.454 cuando tiene 500.
   const [disponiblesTransferibles, setDisponiblesTransferibles] = useState<Record<number, number> | null>(null)
 
+  // Modelo A (ronda 10): el techo es el tope de gasto y es otra cosa que la plata. Con
+  // `null` la fila no tiene techo y no hay contra qué medirla.
+  const [techosPorEstructura, setTechosPorEstructura] = useState<Record<number, number | null> | null>(null)
+
   const cargarDatos = useCallback(async (silencioso: boolean = false) => {
     if (!silencioso) setLoading(true)
     try {
-      const [rSaldo, rSobres, rConfig, rCupos, rDisponibles] = await Promise.all([
+      const [rSaldo, rSobres, rConfig, rCupos, rDisponibles, rTechos] = await Promise.all([
         supabase.rpc('fn_obtener_saldo_a_asignar', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_reporte_sobres_detalle', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_obtener_config_presupuesto'),
@@ -348,6 +352,14 @@ export function PresupuestosPage() {
             return { data: null, error: 'disponibles-unavailable' }
           }
         })(),
+        // Opcional, igual criterio: sin techos la pantalla sigue midiendo como antes.
+        (async () => {
+          try {
+            return await supabase.rpc('fn_techos_por_estructura', { p_mes: mesPeriodoStr })
+          } catch {
+            return { data: null, error: 'techos-unavailable' }
+          }
+        })(),
       ])
 
       if (rSaldo.error) throw rSaldo.error
@@ -361,6 +373,19 @@ export function PresupuestosPage() {
         }
       )
       setSobres(sobresFiltrados)
+
+      if (rTechos?.error || !Array.isArray(rTechos?.data)) {
+        setTechosPorEstructura(null)
+      } else {
+        setTechosPorEstructura(
+          Object.fromEntries(
+            (rTechos.data as { estructura_id: number; monto_techo: number | null }[]).map(fila => [
+              Number(fila.estructura_id),
+              fila.monto_techo === null ? null : Number(fila.monto_techo),
+            ]),
+          ),
+        )
+      }
 
       if (rDisponibles?.error || !Array.isArray(rDisponibles?.data)) {
         setDisponiblesTransferibles(null)
@@ -659,6 +684,10 @@ export function PresupuestosPage() {
     if (delServidor !== undefined) return delServidor
     return s.es_padre ? fondoLibreDe(s.estructura_id) : disponibleDeSobre(s, config?.modo_presupuesto)
   }
+
+  /** Modelo A: techo del modelo, `null` cuando la fila no tiene tope. */
+  const techoDe = (estructuraId: number) =>
+    techosPorEstructura ? techosPorEstructura[Number(estructuraId)] : undefined
 
   const sobresConDisponible = sobres
     .filter(
@@ -1123,6 +1152,7 @@ export function PresupuestosPage() {
                 modoPresupuesto={config?.modo_presupuesto}
                 soloLectura={soloLectura}
                 fmt={formatMonto}
+                techoDe={techoDe}
               />
             ))}
 
@@ -1721,9 +1751,11 @@ interface GrupoProps {
   soloLectura?: boolean
   /** Montos en la moneda local del contexto, 0 decimales (viene de PresupuestosPage). */
   fmt: (n: number) => string
+  /** Modelo A: techo por estructura. `null` cuando la fila no tiene tope. */
+  techoDe: (estructuraId: number) => number | null | undefined
 }
 
-function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: GrupoProps) {
+function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt, techoDe }: GrupoProps) {
   const meta = TIPO_CUPO_META[tipo] ?? { labelKey: tipo.toUpperCase(), icono: '📦' }
   // T6/S15: el total del grupo cuenta una sola vez. Cuando un rubro padre tiene
   // presupuesto, sus hijos llegan con cuenta_en_totales = false y no se suman aparte.
@@ -1800,6 +1832,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
                 ? () => alternarGrupo(cabecera.estructura_id)
                 : undefined}
               libreGrupo={cabecera.es_padre ? libreDe(cabecera.estructura_id) : undefined}
+              techo={techoDe(cabecera.estructura_id)}
               onAsignar={() => onAsignar(cabecera)}
               onVerDetalle={() => onVerDetalle(cabecera)}
               modoPresupuesto={modoPresupuesto}
@@ -1823,6 +1856,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
                     onAsignar={() => onAsignar(hija)}
                     onVerDetalle={() => onVerDetalle(hija)}
                     libreGrupo={libreDe(cabecera.estructura_id)}
+                    techo={techoDe(hija.estructura_id)}
                     modoPresupuesto={modoPresupuesto}
                     soloLectura={soloLectura}
                     fmt={fmt}
@@ -1847,8 +1881,10 @@ interface FilaSobreProps {
   /** T6: sólo en la fila del padre, si el grupo está desplegado. */
   expandido?: boolean
   onToggleGrupo?: () => void
-  /** T6/S12: techo del grupo menos lo repartido en sus hijos. */
+  /** T6: techo del grupo menos lo repartido en sus hijos. */
   libreGrupo?: number
+  /** Modelo A: tope de gasto de la fila. `null` = sin techo, distinto de cero. */
+  techo?: number | null
   onAsignar: () => void
   onVerDetalle: () => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
@@ -1858,13 +1894,15 @@ interface FilaSobreProps {
   fmt: (n: number) => string
 }
 
-function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
+function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, techo, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
   // Ronda 10 (dueño): el hijo sin asignación se mide contra el libre del grupo, y sin
   // techo no se dibuja barra. El padre queda como estaba: su barra compara el gasto de
   // los hijos contra su propio techo.
   const referenciaBarra = sobre.es_padre
-    ? null
-    : referenciaBarraHija({ montoAsignado: sobre.monto_asignado, libreGrupo })
+    ? (techo !== null && techo !== undefined && Number(techo) > 0
+        ? { techo: Number(techo), origen: 'techo' as const }
+        : null)
+    : referenciaBarraDeSobre({ techo, montoAsignado: sobre.monto_asignado, libreGrupo })
   const sinTecho = referenciaBarra?.origen === 'sin_techo'
   const pctBarra = referenciaBarra && !sinTecho
     ? porcentajeBarra(Number(sobre.monto_gastado), referenciaBarra.techo)

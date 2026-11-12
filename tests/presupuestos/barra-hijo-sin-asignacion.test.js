@@ -16,6 +16,7 @@ import fs from 'node:fs'
 
 import {
   referenciaBarraHija,
+  referenciaBarraDeSobre,
   porcentajeBarra,
   colorDeBarra,
 } from '../../src/lib/barraSobre.ts'
@@ -84,7 +85,7 @@ test('la página cablea el helper en las filas hijas y no dibuja barra sin techo
   const pagina = fs.readFileSync('src/pages/Presupuestos/PresupuestosPage.tsx', 'utf8')
 
   assert.match(pagina, /from '\.\.\/\.\.\/lib\/barraSobre'/, 'la página tiene que importar el helper')
-  assert.match(pagina, /referenciaBarraHija\(\{ montoAsignado: sobre\.monto_asignado, libreGrupo \}\)/)
+  assert.match(pagina, /referenciaBarraDeSobre\(\{ techo, montoAsignado: sobre\.monto_asignado, libreGrupo \}\)/)
   assert.match(pagina, /!sinDatos && !sinTecho/, 'sin techo no se dibuja la barra')
   assert.match(pagina, /sinTecho \? '—'/, 'sin techo el avance no es un porcentaje inventado')
 
@@ -94,4 +95,34 @@ test('la página cablea el helper en las filas hijas y no dibuja barra sin techo
   assert.equal(pasesDelLibre.length, 1, 'el hijo recibe el libre del grupo')
   const paseCondicional = /libreGrupo=\{cabecera\.es_padre \? libreDe\(cabecera\.estructura_id\) : undefined\}/
   assert.match(pagina, paseCondicional, 'la cabecera sigue recibiendo el libre como antes')
+})
+
+test('el techo manda sobre cualquier otra referencia', () => {
+  // Modelo A: el techo dice lo que se puede gastar; la plata, cuánto se asignó.
+  const referencia = referenciaBarraDeSobre({ techo: 25_000, montoAsignado: 40_000, libreGrupo: 30_000 })
+  assert.equal(referencia.origen, 'techo')
+  assert.equal(referencia.techo, 25_000)
+  assert.equal(porcentajeBarra(20_000, referencia.techo), 80)
+})
+
+test('sin techo se cae a la plata propia, y después al libre del grupo', () => {
+  // Techo null es SIN tope, no tope cero: la fila sigue midiéndose contra su plata.
+  const conPlata = referenciaBarraDeSobre({ techo: null, montoAsignado: 40_000, libreGrupo: 30_000 })
+  assert.equal(conPlata.origen, 'propia')
+  assert.equal(conPlata.techo, 40_000)
+
+  const sinNada = referenciaBarraDeSobre({ techo: null, montoAsignado: 0, libreGrupo: 30_000 })
+  assert.equal(sinNada.origen, 'libre_padre')
+
+  const sinNadaNiLibre = referenciaBarraDeSobre({ techo: null, montoAsignado: 0, libreGrupo: 0 })
+  assert.equal(sinNadaNiLibre.origen, 'sin_techo')
+  assert.equal(porcentajeBarra(15_000, sinNadaNiLibre.techo), null)
+})
+
+test('un techo de cero no es lo mismo que sin techo, pero ninguno pinta barra', () => {
+  // Techo cero sería "no podés gastar nada". Igual no hay barra que dibujar porque el
+  // denominador es cero; lo importante es que NO se confunda con la plata.
+  const cero = referenciaBarraDeSobre({ techo: 0, montoAsignado: 40_000, libreGrupo: 0 })
+  assert.equal(cero.origen, 'propia')
+  assert.equal(cero.techo, 40_000)
 })
