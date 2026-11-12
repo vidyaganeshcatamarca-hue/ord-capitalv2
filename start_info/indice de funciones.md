@@ -52,7 +52,7 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 43. [fn_crear_proyecto_compartido](../funcionesSQL/fn_crear_proyecto_compartido.md)
 44. [fn_crear_subcuenta_egreso](../funcionesSQL/fn_crear_subcuenta_egreso.md)
 45. [fn_crear_subcuenta_predeterminada](../funcionesSQL/fn_crear_subcuenta_predeterminada.md)
-46. [fn_crear_tarjeta_credito](../funcionesSQL/fn_crear_tarjeta_credito.md)
+46. [fn_crear_tarjeta_credito](../funcionesSQL/fn_crear_tarjeta_credito.md) *(v2 2026-11-11: el INSERT declaraba 9 columnas y pasaba 10 valores —un 0 de más antes de la moneda—, así que el alta desde la UI fallaba siempre con 42601 «INSERT has more expressions than target columns». Se nombró `saldo_a_favor` como décima columna)*
 47. [fn_debug_get_source](../funcionesSQL/fn_debug_get_source.md)
 48. [fn_debug_triggers](../funcionesSQL/fn_debug_triggers.md)
 49. [fn_desarchivar_tarjeta_credito](../funcionesSQL/fn_desarchivar_tarjeta_credito.md)

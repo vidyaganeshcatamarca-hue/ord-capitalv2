@@ -12,7 +12,9 @@ BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
 
-    INSERT INTO p_tarjetas_credito (user_id, nombre_tarjeta, banco, dia_vencimiento, dia_cierre, color, limite_un_pago, limite_cuotas, moneda_iso)
+    -- 2026-11-11: la lista declaraba 9 columnas y el VALUES pasaba 10 valores
+    -- (un 0 de mas antes de la moneda), por eso el alta fallaba con 42601.
+    INSERT INTO p_tarjetas_credito (user_id, nombre_tarjeta, banco, dia_vencimiento, dia_cierre, color, limite_un_pago, limite_cuotas, saldo_a_favor, moneda_iso)
     VALUES (v_user_id, p_nombre_tarjeta, p_banco, p_dia_vencimiento, p_dia_cierre, p_color, p_limite_un_pago, p_limite_cuotas, 0, COALESCE((SELECT moneda_default FROM public.p_config_region WHERE user_id = v_user_id), 'ARS'))
     RETURNING tarjeta_id INTO v_tarjeta_id;
 
