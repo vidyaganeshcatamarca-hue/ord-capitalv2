@@ -81,6 +81,11 @@ Dos cosas que este paso dejó a la vista y no resuelve:
    −135.000 de Frescos sobrevivía al movimiento del padre. Necesitó su propia llamada. Un
    saldo negativo de una subcategoría no lo absorbe nadie: si vuelve a aparecer, hay que
    asignarle 0 explícitamente.
-2. **El techo de los padres quedó por debajo de su plata** (500 contra 106.546, 50.000
-   contra 60.000, 28.000 contra 31.000). Es la próxima decisión: el techo del padre es el
-   techo del grupo y hoy es un resto de datos de prueba.
+2. **El techo de los padres.** Resuelto por el dueño, literal: «pon los techos de los
+   padres en 20% mayor del dinero que tienen, que queden todos en positivo». No existe RPC
+   que escriba `monto_techo`, así que fue por UPDATE directo con su autorización. Quedó:
+   Alimentos-Hogar 127.855 (plata 106.546), Ocio 72.000 (60.000), Tecnología 37.200 (31.000),
+   Transporte 413.400 (344.500) y Ropa 192.000 (160.000). Transporte y Ropa no estaban en el
+   diagnóstico: aparecieron al verificar todos los padres, con el techo sembrado igual a su
+   plata por M1. Verificado: los cinco padres con plata del ciclo tienen techo que supera su
+   plata, ninguno se quedó sin techo.
