@@ -2497,6 +2497,7 @@ export const inversiones = {
   error_budget_child_over_parent: "No entra: el grupo tiene {techo} y ya hay {repartido} repartido. A este rubro le quedan {disponible}.",
   error_budget_parent_below_children: "No podés bajar el grupo por debajo de lo repartido. Tiene {repartido}: recortá {recortar} antes.",
   budget_stat_assigned: "Asignado",
+  budget_stat_ceiling: "Techo",
   budget_stat_spent: "Gastado",
   budget_move_to_parent_title: "Mover la plata al rubro padre",
   budget_move_to_parent_msg: "Para asignarle {monto} al rubro padre hay que mover la plata de {hijos} subcategorías. ¿Confirmás?",

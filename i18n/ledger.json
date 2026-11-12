@@ -8702,6 +8702,10 @@
         "from": "Asignado",
         "to": "Assigned"
       },
+      "inversiones.budget_stat_ceiling": {
+        "from": "Techo",
+        "to": "Ceiling"
+      },
       "inversiones.budget_stat_spent": {
         "from": "Gastado",
         "to": "Spent"
@@ -20063,6 +20067,10 @@
       "inversiones.budget_stat_assigned": {
         "from": "Asignado",
         "to": "Atribuído"
+      },
+      "inversiones.budget_stat_ceiling": {
+        "from": "Techo",
+        "to": "Teto"
       },
       "inversiones.budget_stat_spent": {
         "from": "Gastado",

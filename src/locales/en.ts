@@ -2236,6 +2236,7 @@ export const inversiones = {
   error_budget_child_over_parent: "Does not fit: the group has {techo} and {repartido} is already allocated. This category has {disponible} left.",
   error_budget_parent_below_children: "You cannot lower the group below what is allocated. It has {repartido}: cut {recortar} first.",
   budget_stat_assigned: "Assigned",
+  budget_stat_ceiling: "Ceiling",
   budget_stat_spent: "Spent",
   budget_move_to_parent_title: "Move the money to the parent category",
   budget_move_to_parent_msg: "Assigning {monto} to the parent category moves money out of {hijos} subcategories. Continue?",

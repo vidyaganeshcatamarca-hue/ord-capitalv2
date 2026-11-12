@@ -218,3 +218,4 @@ tests/configuracion/*
 !tests/presupuestos/barra-hijo-sin-asignacion.test.js
 !tests/presupuestos/modal-disponible-del-servidor.test.js
 !tests/presupuestos/exclusividad-plata.test.js
+!tests/presupuestos/techo-y-plata-separados.test.js

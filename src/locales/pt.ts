@@ -2236,6 +2236,7 @@ export const inversiones = {
   error_budget_child_over_parent: "Não entra: o grupo tem {techo} e já há {repartido} distribuído. A esta categoria restam {disponible}.",
   error_budget_parent_below_children: "Não pode baixar o grupo abaixo do que está distribuído. Tem {repartido}: reduza {recortar} antes.",
   budget_stat_assigned: "Atribuído",
+  budget_stat_ceiling: "Teto",
   budget_stat_spent: "Gasto",
   budget_move_to_parent_title: "Mover o dinheiro para a categoria pai",
   budget_move_to_parent_msg: "Para atribuir {monto} à categoria pai é preciso mover o dinheiro de {hijos} subcategorias. Confirma?",

@@ -2089,6 +2089,15 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
           <span className="sobre-stat-label">{t('budget_stat_assigned')}</span>
           <span className="sobre-stat-val">{fmt(Number(sobre.monto_asignado))}</span>
         </span>
+        {/* S18: money and ceiling are two different concepts, so they are two
+            different numbers. A NULL ceiling is "no ceiling at all" and reads as a
+            dash: printing 0 would say "you cannot spend anything here". */}
+        <span className="sobre-stat">
+          <span className="sobre-stat-label">{t('budget_stat_ceiling')}</span>
+          <span className="sobre-stat-val">
+            {techo === null || techo === undefined ? '—' : fmt(Number(techo))}
+          </span>
+        </span>
         <span className="sobre-stat">
           <span className="sobre-stat-label">{t('budget_stat_spent')}</span>
           <span className="sobre-stat-val">{fmt(Number(sobre.monto_gastado))}</span>
