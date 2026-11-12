@@ -1084,14 +1084,11 @@ export function PresupuestosPage() {
       <div className={`disponible-header ${soloLectura ? 'estado-cerrado' : getEstadoDisponible()}`}>
         <div className="disponible-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           {soloLectura ? t('budget_cycle_closed_label') : getLabelDisponible()}
-          {!soloLectura && config?.modo_presupuesto === 'anticipado' && (
-            <InfoBubble
-              text={t('budget_info_proyeccion', {
-                pct_nec: String(config?.porcentaje_necesidades ?? 50),
-                pct_des: String(config?.porcentaje_deseos ?? 30),
-                pct_aho: String(config?.porcentaje_ahorro ?? 20),
-              })}
-            />
+          {/* S12 (dueño): el globo explicaba la PROYECCIÓN con el 50-30-20, cuando el
+              número que tiene al lado es la liquidez: «¿qué tiene que ver esa definición
+              con el cálculo de lo supuesto disponible?». Explica su propio número. */}
+          {!soloLectura && (
+            <InfoBubble text={t('budget_info_disponible')} />
           )}
         </div>
         <div className="disponible-monto">

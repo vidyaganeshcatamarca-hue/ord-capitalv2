@@ -474,6 +474,7 @@ export const errors = {
   budget_label_transfer_no_envelopes: "Não há envelopes com saldo disponível para transferir.",
   budget_label_ideal_distribution: "Distribuição ideal da sua receita",
   budget_info_proyeccion: "Esta projeção é calculada com base nas suas receitas do mês e aplicando a porcentagem de distribuição que você definiu ({pct_nec} - {pct_des} - {pct_aho}) menos as despesas comprometidas dos seus cartões.",
+  budget_info_disponible: "É o que você tem nas suas carteiras menos o que você já atribuiu às categorias menos as parcelas de cartão que vencem dentro deste ciclo.",
   budget_info_modo_anticipado: "Este modo de orçamento permite atribuir um orçamento livremente a cada conta de despesa. É o recomendado para começar já, porque não exige que você atribua orçamento com base no seu dinheiro real, e sim na sua previsão.",
   budget_info_modo_base_cero: "Este modo te disciplina. Recomendado se você quiser ajustar seus gastos em cada conta de despesa à sua disponibilidade real, ajudando de verdade a fazer uma mudança importante de hábitos na sua administração pessoal.",
   budget_modal_title_golden_rules: "% Distribuição ideal da sua receita",

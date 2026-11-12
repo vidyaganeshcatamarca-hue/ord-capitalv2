@@ -485,6 +485,7 @@ saldo_a_favor_chip: "Saldo a favor: {monto}",
 
   // Info bubbles (i) - textos informativos de presupuesto
   budget_info_proyeccion: "Esta proyección está calculada en base a tus ingresos del mes y aplicando el porcentaje de distribución que has definido ({pct_nec} - {pct_des} - {pct_aho}) menos los gastos comprometidos de tus tarjetas.",
+  budget_info_disponible: "Es lo que tienes en tus billeteras menos lo que ya asignaste a las categorías menos las cuotas de tarjetas que vencen dentro de este ciclo.",
   budget_info_modo_anticipado: "Este modo de presupuesto te permite asignar un presupuesto para cada cuenta egreso libremente, es el recomendado para comenzar ya que no te exige asignar presupuesto en base a tu dinero real sino a tu previsión.",
   budget_info_modo_base_cero: "Este modo te disciplina. Recomendado si quieres ajustar tu gasto por cada cuenta egreso a tu disponibilidad real, ayudándote realmente a hacer un cambio de hábitos importante en tu administración personal.",
   budget_modal_title_golden_rules: "% Distribución ideal de tu ingreso",

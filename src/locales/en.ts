@@ -474,6 +474,7 @@ export const errors = {
   budget_label_transfer_no_envelopes: "There are no envelopes with available balance to transfer.",
   budget_label_ideal_distribution: "Ideal distribution of your income",
   budget_info_proyeccion: "This projection is calculated from your income for the month, applying the distribution percentages you have defined ({pct_nec} - {pct_des} - {pct_aho}) minus the committed expenses on your cards.",
+  budget_info_disponible: "It is what you have in your wallets minus what you already assigned to the categories minus the card installments due within this cycle.",
   budget_info_modo_anticipado: "This budget mode lets you freely assign a budget to each expense account. It is the recommended way to start, because it does not require assigning budget based on your real money but on your forecast.",
   budget_info_modo_base_cero: "This mode keeps you disciplined. Recommended if you want to adjust your spending on each expense account to your real availability, truly helping you make an important habit change in how you manage your personal finances.",
   budget_modal_title_golden_rules: "% Ideal distribution of your income",

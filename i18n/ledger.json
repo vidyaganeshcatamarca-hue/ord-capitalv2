@@ -1838,6 +1838,10 @@
         "from": "Esta proyección está calculada en base a tus ingresos del mes y aplicando el porcentaje de distribución que has definido ({pct_nec} - {pct_des} - {pct_aho}) menos los gastos comprometidos de tus tarjetas.",
         "to": "This projection is calculated from your income for the month, applying the distribution percentages you have defined ({pct_nec} - {pct_des} - {pct_aho}) minus the committed expenses on your cards."
       },
+      "errors.budget_info_disponible": {
+        "from": "Es lo que tienes en tus billeteras menos lo que ya asignaste a las categorías menos las cuotas de tarjetas que vencen dentro de este ciclo.",
+        "to": "It is what you have in your wallets minus what you already assigned to the categories minus the card installments due within this cycle."
+      },
       "errors.budget_info_modo_anticipado": {
         "from": "Este modo de presupuesto te permite asignar un presupuesto para cada cuenta egreso libremente, es el recomendado para comenzar ya que no te exige asignar presupuesto en base a tu dinero real sino a tu previsión.",
         "to": "This budget mode lets you freely assign a budget to each expense account. It is the recommended way to start, because it does not require assigning budget based on your real money but on your forecast."
@@ -13203,6 +13207,10 @@
       "errors.budget_info_proyeccion": {
         "from": "Esta proyección está calculada en base a tus ingresos del mes y aplicando el porcentaje de distribución que has definido ({pct_nec} - {pct_des} - {pct_aho}) menos los gastos comprometidos de tus tarjetas.",
         "to": "Esta projeção é calculada com base nas suas receitas do mês e aplicando a porcentagem de distribuição que você definiu ({pct_nec} - {pct_des} - {pct_aho}) menos as despesas comprometidas dos seus cartões."
+      },
+      "errors.budget_info_disponible": {
+        "from": "Es lo que tienes en tus billeteras menos lo que ya asignaste a las categorías menos las cuotas de tarjetas que vencen dentro de este ciclo.",
+        "to": "É o que você tem nas suas carteiras menos o que você já atribuiu às categorias menos as parcelas de cartão que vencem dentro deste ciclo."
       },
       "errors.budget_info_modo_anticipado": {
         "from": "Este modo de presupuesto te permite asignar un presupuesto para cada cuenta egreso libremente, es el recomendado para comenzar ya que no te exige asignar presupuesto en base a tu dinero real sino a tu previsión.",
