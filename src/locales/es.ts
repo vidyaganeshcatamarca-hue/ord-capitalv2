@@ -2491,7 +2491,7 @@ export const inversiones = {
   budget_assign_btn: "+ Asignar",
   budget_group_tag: "(grupal libre)",
   budget_group_total: "Total del grupo",
-  budget_stat_group_free: "Libre",
+  budget_stat_group_free: "Sin asignar",
   budget_group_expand: "Mostrar subcategorías",
   budget_group_collapse: "Ocultar subcategorías",
   error_budget_child_over_parent: "No entra: el grupo tiene {techo} y ya hay {repartido} repartido. A este rubro le quedan {disponible}.",

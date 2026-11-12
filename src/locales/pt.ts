@@ -2230,7 +2230,7 @@ export const inversiones = {
   budget_assign_btn: "+ Atribuir",
   budget_group_tag: "(grupo livre)",
   budget_group_total: "Total do grupo",
-  budget_stat_group_free: "Livre",
+  budget_stat_group_free: "Não atribuído",
   budget_group_expand: "Mostrar subcategorias",
   budget_group_collapse: "Ocultar subcategorias",
   error_budget_child_over_parent: "Não entra: o grupo tem {techo} e já há {repartido} distribuído. A esta categoria restam {disponible}.",

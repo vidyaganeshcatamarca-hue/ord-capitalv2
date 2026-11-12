@@ -8679,8 +8679,8 @@
         "to": "Group total"
       },
       "inversiones.budget_stat_group_free": {
-        "from": "Libre",
-        "to": "Free"
+        "from": "Sin asignar",
+        "to": "Unassigned"
       },
       "inversiones.budget_group_expand": {
         "from": "Mostrar subcategorías",
@@ -20045,8 +20045,8 @@
         "to": "Total do grupo"
       },
       "inversiones.budget_stat_group_free": {
-        "from": "Libre",
-        "to": "Livre"
+        "from": "Sin asignar",
+        "to": "Não atribuído"
       },
       "inversiones.budget_group_expand": {
         "from": "Mostrar subcategorías",
