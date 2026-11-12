@@ -217,3 +217,4 @@ tests/configuracion/*
 !tests/swipe-vencimientos.test.js
 !tests/presupuestos/barra-hijo-sin-asignacion.test.js
 !tests/presupuestos/modal-disponible-del-servidor.test.js
+!tests/presupuestos/exclusividad-plata.test.js

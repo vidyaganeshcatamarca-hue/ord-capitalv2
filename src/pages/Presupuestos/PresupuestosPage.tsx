@@ -10,6 +10,7 @@ import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { BASE_CERO_CONFIRM_TOKEN, isBaseCeroConfirmToken } from '@/lib/baseCeroConfirm'
 import { parseMontoInput } from '@/lib/parseMonto'
+import { leerConfirmacionDeMovimiento, textosDeConfirmacion, type ConfirmacionMovimiento } from '@/lib/exclusividadPlata'
 import { CuposResumenCard, type CupoResumen } from './CuposResumenCard'
 import './Presupuestos.css'
 
@@ -250,6 +251,12 @@ export function PresupuestosPage() {
   // primer guardado viaja mandan dos escrituras. La hoja se desmonta al volver, asi
   // que hoy no se duplica, pero la defensa no existia.
   const [guardandoAsignacion, setGuardandoAsignacion] = useState(false)
+  // La plata es exclusiva entre un padre y sus hijos. El servidor rechaza el primer
+  // intento y devuelve los números; la pantalla pregunta antes de mover nada (§ M4).
+  const [confirmacionPlata, setConfirmacionPlata] = useState<{
+    monto: number
+    confirmacion: ConfirmacionMovimiento
+  } | null>(null)
 
 
 
@@ -560,7 +567,7 @@ export function PresupuestosPage() {
     setShowDetalleSheet(true)
   }
 
-  const ejecutarAsignacion = async (monto: number) => {
+  const ejecutarAsignacion = async (monto: number, moverPlata = false) => {
     if (!sobreSeleccionado) return
     if (guardandoAsignacion) return
     // Guarda de fondo: aunque un botón se escape, un ciclo cerrado no escribe.
@@ -580,16 +587,32 @@ export function PresupuestosPage() {
         p_estructura_egreso_id: sobreSeleccionado.estructura_id,
         p_monto_asignado: monto,
         p_mes_periodo: mesPeriodoStr,
+        p_mover_plata: moverPlata,
       })
       if (error) throw error
       // Tanda 4 telemetry: only explicit user saves count (plan §3 Fase 8 —
       // avoids false positives from system UPDATEs)
       telemetry.track('budget_adjusted', {}, TELEMETRY_PRIORITY.MEDIUM)
-      showToast(`${formatMonto(monto)} ${t('toast_assigned_to')} ${t(sobreSeleccionado.nombre_categoria)}`, 'success')
+      // Si se movió plata ajena, el aviso es el movimiento: el dueño quiere enterarse
+      // de que tocó otra categoría, no del número que acaba de asignar.
+      showToast(
+        moverPlata
+          ? t('budget_move_done', { monto: formatMonto(monto) })
+          : `${formatMonto(monto)} ${t('toast_assigned_to')} ${t(sobreSeleccionado.nombre_categoria)}`,
+        'success',
+      )
       setShowAsignarSheet(false)
       setSobreSeleccionado(null)
       await cargarDatos(true)
     } catch (err: any) {
+      // Exclusividad de la plata: esto no es un error, es una pregunta. Se levanta el
+      // diálogo y, si el usuario acepta, se reintenta con p_mover_plata = true. Se sale
+      // por acá sin limpiar sobreSeleccionado: el diálogo lo necesita para el reintento.
+      const confirmacion = leerConfirmacionDeMovimiento(err)
+      if (confirmacion) {
+        setConfirmacionPlata({ monto, confirmacion })
+        return
+      }
       const rechazo = mensajeRechazoPresupuesto(err, t, formatMonto)
       const msg = rechazo
         ? rechazo
@@ -603,6 +626,10 @@ export function PresupuestosPage() {
       setGuardandoAsignacion(false)
     }
   }
+
+  const textosPlata = confirmacionPlata
+    ? textosDeConfirmacion(confirmacionPlata.confirmacion, confirmacionPlata.monto, t, formatMonto)
+    : null
 
   const handleLlenarHueco = async () => {
     if (!sobreSeleccionado || soloLectura) return
@@ -1730,6 +1757,21 @@ export function PresupuestosPage() {
         cancelText={t('btn_cancel')}
         onConfirm={() => { void confirmarVueltaAAnticipado() }}
         onCancel={() => setConfirmandoAnticipado(false)}
+      />
+
+      <ConfirmModal
+        isOpen={confirmacionPlata !== null && textosPlata !== null}
+        type="primary"
+        title={textosPlata?.titulo ?? ''}
+        message={textosPlata?.mensaje ?? ''}
+        confirmText={t('btn_confirm')}
+        cancelText={t('btn_cancel')}
+        onConfirm={() => {
+          const pendiente = confirmacionPlata
+          setConfirmacionPlata(null)
+          if (pendiente) void ejecutarAsignacion(pendiente.monto, true)
+        }}
+        onCancel={() => setConfirmacionPlata(null)}
       />
 
     </div>
