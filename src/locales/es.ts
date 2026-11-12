@@ -2493,6 +2493,8 @@ export const inversiones = {
   budget_group_tag: "(grupal libre)",
   budget_group_total: "Total del grupo",
   budget_stat_group_free: "Sin asignar",
+  budget_bar_quota: "Avance sobre la cuota",
+  budget_bar_pot: "Consumo del pozo del padre",
   budget_group_expand: "Mostrar subcategorías",
   budget_group_collapse: "Ocultar subcategorías",
   error_budget_child_over_parent: "No entra: el grupo tiene {techo} y ya hay {repartido} repartido. A este rubro le quedan {disponible}.",

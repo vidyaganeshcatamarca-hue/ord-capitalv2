@@ -2076,7 +2076,13 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
           titilar, prender y apagar». Sólo el excedido: el que cubrió justo el total se
           queda quieto, porque en un celular el color solo no alcanza. */}
       {!sinDatos && !sinTecho && (
-        <div className="sobre-barra-wrap">
+        <div
+          className="sobre-barra-wrap"
+          // M2c: la misma barra codifica DOS escalas, así que cada una lleva su leyenda.
+          // El relleno es el avance sobre la cuota; la franja azul, el consumo del pozo
+          // del padre. Sin esto el número solo no dice contra qué se compara.
+          title={`${t('budget_bar_quota')}: ${avance ?? pct}%`}
+        >
           <div
             className={`sobre-barra-fill ${colorBarra}${colorBarra === 'rojo' ? ' excedido' : ''}`}
             style={{ width: `${pct}%` }}
@@ -2085,7 +2091,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
             <div
               className="sobre-barra-pozo"
               style={{ width: `${pctPozo}%` }}
-              title={`${pctPozo}%`}
+              title={`${t('budget_bar_pot')}: ${pctPozo}%`}
             />
           )}
         </div>

@@ -2232,6 +2232,8 @@ export const inversiones = {
   budget_group_tag: "(group free)",
   budget_group_total: "Group total",
   budget_stat_group_free: "Unassigned",
+  budget_bar_quota: "Progress against the quota",
+  budget_bar_pot: "Share of the parent pot",
   budget_group_expand: "Show subcategories",
   budget_group_collapse: "Hide subcategories",
   error_budget_child_over_parent: "Does not fit: the group has {techo} and {repartido} is already allocated. This category has {disponible} left.",

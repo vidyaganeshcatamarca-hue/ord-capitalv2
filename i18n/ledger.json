@@ -8686,6 +8686,14 @@
         "from": "Sin asignar",
         "to": "Unassigned"
       },
+      "inversiones.budget_bar_quota": {
+        "from": "Avance sobre la cuota",
+        "to": "Progress against the quota"
+      },
+      "inversiones.budget_bar_pot": {
+        "from": "Consumo del pozo del padre",
+        "to": "Share of the parent pot"
+      },
       "inversiones.budget_group_expand": {
         "from": "Mostrar subcategorías",
         "to": "Show subcategories"
@@ -20055,6 +20063,14 @@
       "inversiones.budget_stat_group_free": {
         "from": "Sin asignar",
         "to": "Não atribuído"
+      },
+      "inversiones.budget_bar_quota": {
+        "from": "Avance sobre la cuota",
+        "to": "Avanço sobre a cota"
+      },
+      "inversiones.budget_bar_pot": {
+        "from": "Consumo del pozo del padre",
+        "to": "Consumo do poço do pai"
       },
       "inversiones.budget_group_expand": {
         "from": "Mostrar subcategorías",

@@ -2232,6 +2232,8 @@ export const inversiones = {
   budget_group_tag: "(grupo livre)",
   budget_group_total: "Total do grupo",
   budget_stat_group_free: "Não atribuído",
+  budget_bar_quota: "Avanço sobre a cota",
+  budget_bar_pot: "Consumo do poço do pai",
   budget_group_expand: "Mostrar subcategorias",
   budget_group_collapse: "Ocultar subcategorias",
   error_budget_child_over_parent: "Não entra: o grupo tem {techo} e já há {repartido} distribuído. A esta categoria restam {disponible}.",
