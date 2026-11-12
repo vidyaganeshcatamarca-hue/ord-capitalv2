@@ -1,0 +1,42 @@
+/* Tarjeta de captura rapida: la puerta de entrada a la notificacion
+   permanente del sistema. Estilos movidos desde NotificationPanel.css para
+   que la tarjeta sobreviva sola cuando llegue el APK. */
+
+.notif-persistent-card {
+  margin: 12px 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 230, 109, 0.32);
+  border-radius: 12px;
+  background: rgba(255, 230, 109, 0.08);
+  display: grid;
+  gap: 8px;
+}
+
+.notif-persistent-card h3 {
+  margin: 0;
+  color: #ffe66d;
+  font-size: 0.95rem;
+}
+
+.notif-persistent-card p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.notif-persistent-button {
+  align-self: flex-start;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: var(--mint, #00B127);
+  color: #042f2e;
+  border: 0;
+  font-weight: 600;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.notif-persistent-button:hover {
+  filter: brightness(1.06);
+}

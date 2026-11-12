@@ -110,6 +110,19 @@ function AppLayout() {
   const [addConfig, setAddConfig] = useState<{ defaultTipo?: 'expense' | 'income' | 'transfer', initialBilleteraId?: number } | null>(null)
   const navigate = useNavigate()
 
+  // La notificacion permanente del sistema abre la app y deja el alta lista.
+  // Hoy en web no hay quien lo emita; en el APK es la via de carga rapida.
+  useEffect(() => {
+    const alAbrirRegistro = (evento: Event) => {
+      const detalle = (evento as CustomEvent<{ defaultTipo?: 'expense' | 'income' | 'transfer' }>).detail
+      setAddConfig({ defaultTipo: detalle?.defaultTipo ?? 'expense' })
+      setShowAdd(true)
+    }
+
+    window.addEventListener('open-registro-modal', alAbrirRegistro)
+    return () => window.removeEventListener('open-registro-modal', alAbrirRegistro)
+  }, [])
+
   // Ronda 7 (S11, dueño): con "Base 0 como pantalla de inicio" prendido, la
   // primera pantalla al entrar a la app es Base 0 y no HOME. El redirect corre
   // UNA sola vez por apertura (el layout se monta una vez): así el botón Inicio

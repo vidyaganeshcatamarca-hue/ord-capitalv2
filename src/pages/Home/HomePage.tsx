@@ -25,6 +25,7 @@ import { telemetry, TELEMETRY_PRIORITY } from '@/lib/telemetry'
 import { DonutChart as DonutChartComponent } from '@/components/charts/DonutChart'
 import { QuarantineHomeFab } from '@/components/cuarentena/QuarantineHomeFab'
 import { NotificationItem } from '@/components/notificaciones/NotificationItem'
+import { CapturaRapidaCard } from '@/components/notificaciones/CapturaRapidaCard'
 import { syncBadge, useOnlineStatus } from '@/lib/connection'
 import { isDismissSwipe } from '@/lib/swipeDismiss'
 import './Home.css'
@@ -1177,6 +1178,9 @@ export function HomePage() {
               <span className="home-alerts-title">Alertas Activas ({filasVisibles.length})</span>
               <button className="text-xs text-muted" onClick={() => setAlertsOpen(false)}>Cerrar ✕</button>
             </div>
+            {/* Captura rapida: entrada de la notificacion permanente del sistema.
+                Hoy en web no se muestra; queda lista para el APK. */}
+            <CapturaRapidaCard />
             {filasVisibles.map((fila) => (
               <div
                 key={fila.key}

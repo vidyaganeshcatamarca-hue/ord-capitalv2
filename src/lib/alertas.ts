@@ -10,6 +10,8 @@ export interface AlertasHome {
   total_alertas: number
   egresos_cuarentena: number
   ingresos_cuarentena: number
+  /** Transferencias y filas sin tipo. Puede faltar si el backend es viejo. */
+  otros_cuarentena?: number
   billeteras_rojas: number
   vencimientos_3_dias: unknown[]
   dias_asfixia_proximos: number
@@ -43,11 +45,14 @@ export function derivarAlertasFilas(
 
   const filas: AlertaFila[] = []
 
-  if (alerts.egresos_cuarentena > 0) {
+  if (alerts.egresos_cuarentena > 0 || alerts.ingresos_cuarentena > 0 || (alerts.otros_cuarentena ?? 0) > 0) {
+    // La fila muestra el total real: gastos, ingresos y el resto que espera
+    // revision. El backend los separa; aca se suman para no subestimar.
+    const pendientes = alerts.egresos_cuarentena + alerts.ingresos_cuarentena + (alerts.otros_cuarentena ?? 0)
     filas.push({
       key: 'cuarentena',
       texto: '📥 Transacciones en Cuarentena',
-      conteo: alerts.egresos_cuarentena,
+      conteo: pendientes,
       navegar: '/cuarentena',
     })
   }

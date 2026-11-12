@@ -1,7 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { NAV_ITEMS } from '@/constants/navigation'
 import { t } from '@/locales/i18n'
-import { NotificationBell } from '@/components/notificaciones/NotificationBell'
 import { useModoApp } from '@/contexts/ModoAppContext'
 import './SideNav.css'
 
@@ -37,9 +36,9 @@ export function SideNav({ onAddPress }: SideNavProps) {
         <span>{t('menu_registrar')}</span>
       </button>
 
-      <div className="side-nav-bell-row">
-        <NotificationBell />
-      </div>
+      {/* La campanita vive solo en el header del Home. Antes habia otra aca,
+          visible solo desde 768px, y mostraba un panel distinto: dos iconos,
+          dos badges y dos listas para la misma informacion. */}
 
       {/* Separador */}
       <div className="side-nav-divider" />
