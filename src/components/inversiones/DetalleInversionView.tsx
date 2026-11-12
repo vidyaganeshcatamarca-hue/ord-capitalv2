@@ -26,6 +26,10 @@ export interface DetalleInversion {
   valor_actual_teorico: number | null
   valor_mercado_actual: number | null
   tasa_anual_tna: number | null
+  /** T11: el plazo se mide desde acá, no desde la última conciliación. */
+  fecha_inicio?: string | null
+  /** T11: si la posición ya se liquidó, los días se cortan en esa fecha. */
+  fecha_liquidacion?: string | null
   moneda: string | null
   ultima_conciliacion: string | null
   dias_desde_conciliacion: number | null
@@ -378,14 +382,24 @@ export function DetalleInversionView({
         )}
         {/* S10 (dueño): «Solo monto sugerido por el cálculo, no hay edición». Para un
             plazo fijo con tasa anual, el valor que sale de la cuenta por el tiempo
-            transcurrido. La base son los días desde la última conciliación, que es la
-            única fecha que el detalle conoce: el texto lo dice para no mentir sobre el
-            período. Es una sugerencia, no un valor contable. */}
+            transcurrido. El período va de la FECHA DE INICIO —«todas las inversiones se
+            calculan a partir de la fecha de inicio»— hasta hoy, o hasta la fecha de
+            liquidación si la posición ya se cerró: si no, el valor seguiría creciendo
+            para siempre. Es una sugerencia, no un valor contable. */}
         {(() => {
+          const diasPlazo = (() => {
+            if (!data.fecha_inicio) return null
+            const inicio = new Date(`${data.fecha_inicio}T00:00:00`)
+            const fin = data.fecha_liquidacion
+              ? new Date(`${data.fecha_liquidacion}T00:00:00`)
+              : new Date()
+            const dias = Math.floor((fin.getTime() - inicio.getTime()) / 86_400_000)
+            return Number.isFinite(dias) && dias > 0 ? dias : null
+          })()
           const sugerencia = valorSugeridoPlazoFijo({
             capital: data.monto_invertido_original,
             tasaAnualPorcentaje: data.tasa_anual_tna,
-            dias: data.dias_desde_conciliacion,
+            dias: diasPlazo,
           })
           if (!sugerencia) return null
           return (

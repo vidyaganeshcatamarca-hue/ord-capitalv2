@@ -1636,7 +1636,7 @@ export const inversiones = {
   label_start_date: "Start date",
   label_tna: "TNA rate (%)",
   invest_suggested_value: "Suggested by the calculation",
-  invest_suggested_hint: "Calculated from the annual rate and the {dias} days since the last reconciliation. It is a suggestion: whatever the bank pays is what counts.",
+  invest_suggested_hint: "Calculated from the annual rate and the {dias} days since the start date. It is a suggestion: whatever the bank pays is what counts.",
   label_currency: "Currency",
   label_source_wallet: "Source wallet",
   label_destination_wallet: "Destination wallet",

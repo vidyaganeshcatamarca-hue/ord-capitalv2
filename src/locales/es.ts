@@ -1828,7 +1828,7 @@ export const inversiones = {
   label_start_date: "Fecha de inicio",
   label_tna: "Tasa Anual TNA (%)",
   invest_suggested_value: "Valor sugerido por el cálculo",
-  invest_suggested_hint: "Calculado con la tasa anual y los {dias} días desde la última conciliación. Es una sugerencia: manda lo que pague el banco.",
+  invest_suggested_hint: "Calculado con la tasa anual y los {dias} días desde la fecha de inicio. Es una sugerencia: manda lo que pague el banco.",
   label_currency: "Moneda",
   label_source_wallet: "Billetera de origen",
   label_destination_wallet: "Billetera de destino",
