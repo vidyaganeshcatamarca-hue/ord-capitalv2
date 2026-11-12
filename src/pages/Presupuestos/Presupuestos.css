@@ -1596,3 +1596,18 @@ button.asignar-opcion:focus-visible {
 .acord-grupo-body > .sobre-grupo-bloque + * {
   margin-top: 10px;
 }
+
+/* Modelo A (ronda 10). Segunda lectura de la barra: el azul es el consumo del pozo del
+   padre, medido en SU propia escala, no en la de la cuota del hijo. Por eso va como
+   franja fina al pie y cada color lleva su número al lado; sin los números, una misma
+   longitud estaría significando dos cosas distintas. */
+.sobre-barra-wrap { position: relative; }
+.sobre-barra-pozo {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(64, 132, 255, 0.9);
+  pointer-events: none;
+}

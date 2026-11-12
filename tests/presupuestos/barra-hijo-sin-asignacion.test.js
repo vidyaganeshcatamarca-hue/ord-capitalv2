@@ -17,6 +17,8 @@ import fs from 'node:fs'
 import {
   referenciaBarraHija,
   referenciaBarraDeSobre,
+  porcentajeAvance,
+  porcentajeDelPozo,
   porcentajeBarra,
   colorDeBarra,
 } from '../../src/lib/barraSobre.ts'
@@ -125,4 +127,23 @@ test('un techo de cero no es lo mismo que sin techo, pero ninguno pinta barra', 
   const cero = referenciaBarraDeSobre({ techo: 0, montoAsignado: 40_000, libreGrupo: 0 })
   assert.equal(cero.origen, 'propia')
   assert.equal(cero.techo, 40_000)
+})
+
+test('el avance no se topea: 150 es haberse pasado un 50%', () => {
+  // Dueño: "cuando me paso de la barra, la barra se pinta completa y el número indica el
+  // porcentaje en el que me pasé". El relleno se corta; el número no.
+  assert.equal(porcentajeAvance(15_000, 10_000), 150)
+  assert.equal(porcentajeAvance(10_000, 10_000), 100)
+  assert.equal(porcentajeAvance(0, 10_000), 0)
+  assert.equal(porcentajeAvance(5, 0), null)
+})
+
+test('el consumo del pozo es individual: dos hijos pueden sumar más de 100', () => {
+  // Dueño: "lo que comió ese hijo en relación a lo que el padre tenía disponible".
+  assert.equal(porcentajeDelPozo(15_000, 50_000), 30)
+  // Dos hijos distintos, 30% cada uno: el rótulo dice consumo individual, no saldo.
+  assert.equal(porcentajeDelPozo(15_000, 50_000) + porcentajeDelPozo(15_000, 50_000), 60)
+  // El relleno sí se corta en el ancho de la barra.
+  assert.equal(porcentajeDelPozo(60_000, 50_000), 100)
+  assert.equal(porcentajeDelPozo(1, 0), null)
 })

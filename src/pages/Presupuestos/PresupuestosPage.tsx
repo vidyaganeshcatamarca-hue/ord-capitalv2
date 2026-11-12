@@ -141,7 +141,7 @@ const TIPO_CUPO_META: Record<string, { labelKey: string; icono: string }> = {
   tithe: { labelKey: 'budget_tipo_tithe', icono: '🙏' },
 }
 
-import { referenciaBarraHija, referenciaBarraDeSobre, porcentajeBarra, colorDeBarra } from '../../lib/barraSobre'
+import { referenciaBarraHija, referenciaBarraDeSobre, porcentajeBarra, colorDeBarra, porcentajeAvance, porcentajeDelPozo } from '../../lib/barraSobre'
 
 const getColorBarra = (estado: string) => {
   if (estado === 'verde') return 'verde'
@@ -1857,6 +1857,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
                     onVerDetalle={() => onVerDetalle(hija)}
                     libreGrupo={libreDe(cabecera.estructura_id)}
                     techo={techoDe(hija.estructura_id)}
+                    pozoPadre={Number(cabecera.monto_asignado ?? 0)}
                     modoPresupuesto={modoPresupuesto}
                     soloLectura={soloLectura}
                     fmt={fmt}
@@ -1885,6 +1886,8 @@ interface FilaSobreProps {
   libreGrupo?: number
   /** Modelo A: tope de gasto de la fila. `null` = sin techo, distinto de cero. */
   techo?: number | null
+  /** Plata disponible del padre: contra esto se mide el consumo del pozo (opción 1). */
+  pozoPadre?: number | null
   onAsignar: () => void
   onVerDetalle: () => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
@@ -1894,7 +1897,7 @@ interface FilaSobreProps {
   fmt: (n: number) => string
 }
 
-function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, techo, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
+function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, techo, pozoPadre, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
   // Ronda 10 (dueño): el hijo sin asignación se mide contra el libre del grupo, y sin
   // techo no se dibuja barra. El padre queda como estaba: su barra compara el gasto de
   // los hijos contra su propio techo.
@@ -1910,6 +1913,14 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
   const pct = sinTecho
     ? 0
     : pctBarra ?? getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
+  // Dueño: el número del avance NO se topea (150% = se pasó un 50%). El relleno sí.
+  const avance = referenciaBarra && !sinTecho
+    ? porcentajeAvance(Number(sobre.monto_gastado), referenciaBarra.techo)
+    : null
+  // Segunda lectura, en azul: cuánto del pozo del padre se comió esta fila.
+  const pctPozo = referenciaBarra && !sinTecho
+    ? porcentajeDelPozo(Number(sobre.monto_gastado), Number(pozoPadre ?? 0))
+    : null
   const colorBarra =
     (referenciaBarra && !sinTecho
       ? colorDeBarra(Number(sobre.monto_gastado), referenciaBarra.techo)
@@ -2006,6 +2017,13 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
             className={`sobre-barra-fill ${colorBarra}${colorBarra === 'rojo' ? ' excedido' : ''}`}
             style={{ width: `${pct}%` }}
           />
+          {pctPozo !== null && pctPozo > 0 && (
+            <div
+              className="sobre-barra-pozo"
+              style={{ width: `${pctPozo}%` }}
+              title={`${pctPozo}%`}
+            />
+          )}
         </div>
       )}
 
@@ -2034,7 +2052,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
         {!sinDatos && (
           <span className="sobre-stat">
             <span className="sobre-stat-label">{t('budget_stat_progress')}</span>
-            <span className="sobre-stat-val">{sinTecho ? '—' : `${pct}%`}</span>
+            <span className="sobre-stat-val">{sinTecho ? '—' : `${avance ?? pct}%`}</span>
           </span>
         )}
       </div>

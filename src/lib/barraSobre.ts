@@ -81,3 +81,29 @@ export function referenciaBarraDeSobre(args: {
   if (techo !== null && techo > 0) return { techo, origen: 'techo' }
   return referenciaBarraHija({ montoAsignado: args.montoAsignado, libreGrupo: args.libreGrupo })
 }
+
+/**
+ * Avance contra el techo, SIN tope.
+ *
+ * Dueño (2026-11-11): «cuando me paso de la barra, la barra se pinta completa y el número
+ * indica el porcentaje en el que me pasé». O sea: el relleno se corta en el ancho, el
+ * número no. 150 significa que se pasó un 50% de su cuota.
+ */
+export function porcentajeAvance(gastado: number, techo: number): number | null {
+  if (!(techo > 0)) return null
+  const g = Math.max(Number(gastado) || 0, 0)
+  return Math.round((g / techo) * 100)
+}
+
+/**
+ * Cuánto del pozo del padre consumió esta fila, en porcentaje del pozo.
+ *
+ * Dueño: «lo que comió ese hijo en relación a lo que el padre tenía disponible». Es
+ * consumo INDIVIDUAL: dos hijos pueden mostrar 30% cada uno y sumar 60% del mismo pozo,
+ * y eso es correcto porque no es saldo restante. El tope en 100 es sólo del relleno.
+ */
+export function porcentajeDelPozo(gastado: number, pozoDelPadre: number): number | null {
+  if (!(pozoDelPadre > 0)) return null
+  const g = Math.max(Number(gastado) || 0, 0)
+  return Math.min(Math.round((g / pozoDelPadre) * 100), 100)
+}
