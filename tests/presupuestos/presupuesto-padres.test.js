@@ -507,11 +507,17 @@ test('la UI arranca con el grupo desplegado', () => {
   assert.ok(!pagina.includes('!p[sobre.estructura_id]'), 'el toggle no puede negar el valor crudo: el primer clic no contraía')
 })
 
-test('el grupo se mueve entero entre la lista y la alerta de excedidos', () => {
-  // T6d: en base cero el sobre en déficit se iba a la alerta. Con rubros padre eso partía
-  // el árbol: el hijo en rojo saltaba arriba y el padre quedaba solo en la lista.
-  assert.ok(pagina.includes('const padresEnAlerta = new Set('), 'falta decidir qué padres van a la alerta')
-  assert.ok(pagina.includes('aLaAlerta = padresEnAlerta.has(padreId as number)'), 'el hijo tiene que acompañar a su padre: ni se esconde solo ni reaparece suelto')
+test('el rubro en déficit se ve arriba en la alerta y también en su grupo', () => {
+  // S5 (ronda 10, dueño): «categorías padres y sub categorías que se muestren tanto
+  // arriba como en el déficit, como también dentro de su lugar original».
+  // Cambio de contrato deliberado: revierte T6d de la ronda 9, que sacaba el grupo entero
+  // de la lista y dejaba las subcategorías escondidas dentro de la alerta.
+  const iGrupos = pagina.indexOf('const gruposOrdenados')
+  assert.ok(iGrupos > -1, 'falta la agrupación de sobres')
+  const finGrupos = pagina.indexOf('HEADER DISPONIBLE', iGrupos)
+  const bloqueGrupos = pagina.slice(iGrupos, finGrupos > -1 ? finGrupos : iGrupos + 2000)
+  assert.ok(!bloqueGrupos.includes('aLaAlerta'), 'la agrupación ya no puede sacar a nadie de la lista')
+  assert.ok(!bloqueGrupos.includes('continue'), 'ningún sobre puede saltearse su grupo')
   // Dueño (2026-11-02): el número de un padre en déficit es la suma de sus hijos, así que
   // la alerta no puede listar a los dos con el mismo monto. El predicado tiene que ser
   // «el padre ESTÁ en la alerta», no «el padre tiene techo»: Transporte no lo tenía y

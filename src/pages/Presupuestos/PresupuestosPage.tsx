@@ -483,31 +483,17 @@ export function PresupuestosPage() {
 
   const gruposOrdenados = (() => {
     const mapa: Record<string, SobreDetalle[]> = {}
-    // T6d: en base cero el sobre en déficit se muestra arriba en la alerta y no en la
-    // lista. Pero con rubros padre eso partía el árbol: el hijo en rojo se iba a la
-    // alerta y el padre quedaba solo. Ahora el grupo se mueve entero, padre e hijos
-    // juntos, así el hijo se sigue anidando y la alerta muestra el grupo.
-    const enBaseCero = config?.modo_presupuesto === 'base_cero'
-    const padresPresentes = new Set(sobres.filter(x => x.es_padre).map(x => Number(x.estructura_id)))
-    const padresEnAlerta = new Set(
-      sobres
-        .filter(x => x.es_padre && enBaseCero && Number(x.monto_disponible) < 0)
-        .map(x => Number(x.estructura_id)),
-    )
+    // S5 (ronda 10, dueño): «me parece mejor idea para todos, categorías padres y sub
+    // categorías que se muestren tanto arriba como en el déficit, como también dentro de
+    // su lugar original, ya sea necesidades, deseos o diezmo».
+    //
+    // Revierte T6d de la ronda 9, que sacaba el grupo de la lista cuando estaba en
+    // déficit: el padre en rojo se iba arriba y arrastraba a sus hijos, así que el grupo
+    // desaparecía entero del lugar donde el usuario lo busca y las subcategorías quedaban
+    // escondidas dentro de la alerta. Ahora la alerta y la lista son dos vistas del mismo
+    // dato: arriba se ve el déficit y abajo el árbol completo, que es lo que se pide
+    // cuando se quiere asignarle plata a un hijo para cubrirlo.
     for (const s of sobres) {
-      const id = Number(s.estructura_id)
-      const padreId = s.padre_id == null ? null : Number(s.padre_id)
-      const hijaDePadrePresente = padreId !== null && padresPresentes.has(padreId)
-      let aLaAlerta: boolean
-      if (s.es_padre) {
-        aLaAlerta = padresEnAlerta.has(id)
-      } else if (hijaDePadrePresente) {
-        // El hijo acompaña a su padre: ni se esconde solo ni reaparece suelto.
-        aLaAlerta = padresEnAlerta.has(padreId as number)
-      } else {
-        aLaAlerta = enBaseCero && Number(s.monto_disponible) < 0
-      }
-      if (aLaAlerta) continue
       const tipo = s.tipo_cupo || 'other'
       // Unificar investment y saving bajo la misma clave
       const key = (tipo === 'saving' || tipo === 'investment') ? 'investment' : tipo
