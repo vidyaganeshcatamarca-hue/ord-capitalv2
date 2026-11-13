@@ -15,6 +15,26 @@
 
 import type { OcrJobStatus } from './types';
 
+/**
+ * Terminal statuses as a VALUE.
+ *
+ * `src/ocr/types.ts` is imported with `import type` on purpose: a runtime import
+ * without an extension cannot be resolved by Node's ESM loader, which is how the
+ * storage test suite loads this module. Keeping the list here (and asserting it
+ * matches `OCR_TERMINAL_STATUSES` in the ownership test) avoids both a broken
+ * test bootstrap and a silent divergence.
+ */
+export const OCR_STORAGE_TERMINAL_STATUSES: readonly OcrJobStatus[] = [
+  'completed',
+  'needs_review',
+  'failed',
+  'cancelled',
+];
+
+function isTerminalStatus(status: OcrJobStatus | null): boolean {
+  return status !== null && OCR_STORAGE_TERMINAL_STATUSES.includes(status);
+}
+
 /** Job snapshots still being followed. */
 export const OCR_JOBS_STORAGE_KEY = 'ord.ocr.v1.active_jobs' as const;
 
@@ -223,6 +243,54 @@ function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
     server_created_at: toUtcIso(value.server_created_at),
     quarantine_dispatched_at: toUtcIso(value.quarantine_dispatched_at),
   };
+}
+
+/**
+ * Failures that describe the SESSION, not the job.
+ *
+ * The backend answers a poll with `job_id + user_id` and deliberately does not
+ * distinguish "no such job" from "someone else's job" (both are 404). That 404
+ * is therefore a fact about whoever is signed in, not about the ticket: it must
+ * never be written as a permanent job outcome, because the real owner signing
+ * back in would find a ticket that can never be resumed.
+ */
+export const OCR_SESSION_ERROR_CODES = ['NOT_FOUND', 'UNAUTHORIZED', 'FORBIDDEN'] as const;
+
+export function isOcrSessionErrorCode(code: string | null | undefined): boolean {
+  if (typeof code !== 'string') return false;
+  return (OCR_SESSION_ERROR_CODES as readonly string[]).includes(code.trim());
+}
+
+/**
+ * The rows this owner may resume right now.
+ *
+ * Partitioning is a strict filter on `owner_user_id` over one shared collection:
+ * the existing code already reads and writes a single array keyed by `job_id`,
+ * so a per-user storage key would have meant rewriting every read path for no
+ * behavioural gain.
+ *
+ * Rules, in order:
+ *   - another owner's row is never selected;
+ *   - a legacy row (owner unknown) is selected so a single GET can prove whose
+ *     it is, and adopted only if the backend confirms;
+ *   - an already confirmed quarantine has nothing left to do;
+ *   - a business-terminal job is not polled again, UNLESS the last failure was a
+ *     session error: 404 -> owner returns -> 200 -> dispatch must still happen.
+ */
+export function selectResumableOcrJobs(
+  jobs: readonly StoredOcrJob[],
+  ownerUserId: string | null
+): StoredOcrJob[] {
+  if (!ownerUserId) return [];
+  return jobs.filter((job) => {
+    if (job.owner_user_id !== null && job.owner_user_id !== ownerUserId) return false;
+    if (job.quarantine_dispatched && job.pendiente_id !== null) return false;
+    const blockedBySession = isOcrSessionErrorCode(job.last_error_code);
+    if (!blockedBySession && isTerminalStatus(job.last_status)) {
+      return false;
+    }
+    return true;
+  });
 }
 
 /** Reads every followed job. Corrupted payloads resolve to an empty list. */

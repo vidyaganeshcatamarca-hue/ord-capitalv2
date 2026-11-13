@@ -30,18 +30,18 @@ import {
   adoptOcrJobOwner,
   clearOcrJobError,
   isOcrCacheMaintenanceDue,
-  loadLegacyOcrJobs,
+  isOcrSessionErrorCode,
   loadOcrJobs,
-  loadOcrJobsForOwner,
   patchOcrJob,
   recordOcrJobError,
   pruneDispatchedOcrJobs,
+  selectResumableOcrJobs,
   removeOcrJob,
   upsertOcrJob,
   writeOcrCacheMaintenanceAt,
 } from './storage';
 import { OCR_EVENTS, trackOcrError, trackOcrEvent } from './telemetry';
-import { isOcrDispatchStatus, isOcrTerminalStatus, type OcrJob, type OcrJobStatus } from './types';
+import { isOcrDispatchStatus, type OcrJob, type OcrJobStatus } from './types';
 import type { OcrContext } from './contextTypes';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -281,6 +281,15 @@ export function useOcrJobs(): UseOcrJobsResult {
           pollersRef.current.delete(jobId);
           recordOcrJobError(jobId, code);
           if (terminal) {
+            // A 404 here is the backend refusing THIS session, not a verdict on
+            // the job: the real owner signing back in must still be able to
+            // resume it. Persisting `failed` would drop it from the circuit for
+            // good, which is exactly what the incident logs showed.
+            if (isOcrSessionErrorCode(code)) {
+              patchOcrJob(jobId, { last_checked_at: new Date().toISOString() });
+              patch(jobId, { phase: 'failed', status: null, errorCode: code });
+              return;
+            }
             // `failed`/`cancelled` are terminal: the job keeps its id but stops
             // being followed, and the stored status is terminal too, so a
             // reload cannot resurrect it as "processing" (§S6).
@@ -347,12 +356,11 @@ export function useOcrJobs(): UseOcrJobsResult {
     // start polling tickets the backend is right to refuse with a 404.
     if (!owner) return;
 
-    // Own rows plus legacy rows (owner unknown). Legacy rows are not assumed to
-    // belong to this user: they are polled once and adopted only if the backend
-    // answers, which is the only evidence that the ticket is theirs.
-    const own = loadOcrJobsForOwner(owner).value;
-    const legacy = loadLegacyOcrJobs().value;
-    const stored = [...own, ...legacy];
+    // One selector owns the rule: this owner's rows, plus legacy rows whose
+    // owner is still unknown (polled once, adopted only on a 200), minus the
+    // jobs that are genuinely finished. A job whose last failure was a session
+    // error stays in, so returning as its owner resumes it.
+    const stored = selectResumableOcrJobs(loadOcrJobs().value, owner);
     if (stored.length === 0) return;
 
     for (const job of stored) {
@@ -371,9 +379,6 @@ export function useOcrJobs(): UseOcrJobsResult {
           createdAt: job.created_at,
         },
       });
-      // A stored terminal is not polled again; it is only waiting for a retry
-      // of its dispatch.
-      if (job.last_status !== null && isOcrTerminalStatus(job.last_status)) continue;
       if (!accessToken) {
         // Missing auth is a state the user has to see, not a silent "processing".
         patchOcrJob(job.job_id, { last_status: 'failed' });
@@ -402,7 +407,7 @@ export function useOcrJobs(): UseOcrJobsResult {
   const retryPendingDispatches = useCallback(async (): Promise<void> => {
     const owner = ownerRef.current;
     if (!owner) return;
-    const failed = loadOcrJobsForOwner(owner).value.filter(
+    const failed = selectResumableOcrJobs(loadOcrJobs().value, owner).filter(
       (job) =>
         !job.quarantine_dispatched &&
         job.last_error_code !== null &&
