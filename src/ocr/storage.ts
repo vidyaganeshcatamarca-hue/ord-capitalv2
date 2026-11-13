@@ -27,6 +27,18 @@ export const OCR_CACHE_MAINTENANCE_STORAGE_KEY = 'ord.ocr.v1.cache_maintenance' 
 /** Minimal snapshot persisted for a job that is still in flight (PRD §81). */
 export interface StoredOcrJob {
   job_id: string;
+  /**
+   * Supabase user id that owns the ticket on this device.
+   *
+   * The backend answers a poll with `job_id + user_id`, so a job persisted by
+   * another account can only ever return 404 here. Storing the owner is what
+   * lets this client stop polling work that is no longer its own instead of
+   * hammering an endpoint that is right to refuse it.
+   *
+   * `null` means legacy: the row was written before this field existed, so its
+   * owner is genuinely unknown and must never be assumed to be the current one.
+   */
+  owner_user_id: string | null;
   created_at: string;
   last_status: OcrJobStatus | null;
   last_checked_at: string | null;
@@ -187,6 +199,12 @@ export function readOcrQuarantineLatencyMs(jobId: string): number | null {
 function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
   return {
     job_id: value.job_id,
+    // An absent owner stays absent: assuming the current user would silently
+    // hand a stranger's ticket to whoever opened the app next (§S5).
+    owner_user_id:
+      typeof value.owner_user_id === 'string' && value.owner_user_id.trim() !== ''
+        ? value.owner_user_id.trim()
+        : null,
     created_at: typeof value.created_at === 'string' ? value.created_at : new Date().toISOString(),
     last_status: (value.last_status ?? null) as OcrJobStatus | null,
     last_checked_at: typeof value.last_checked_at === 'string' ? value.last_checked_at : null,
@@ -212,6 +230,39 @@ export function loadOcrJobs(): StorageRead<StoredOcrJob[]> {
   const { raw, durable } = readRaw(OCR_JOBS_STORAGE_KEY);
   const jobs = parseArray(raw).filter(isStoredOcrJob).map(normalizeStoredJob);
   return { value: jobs, durable };
+}
+
+/**
+ * Jobs this owner may safely poll.
+ *
+ * Legacy rows (no owner) are deliberately excluded: the client cannot prove
+ * they belong to the signed-in user, and polling them is exactly what produced
+ * a 404 storm in the incident. They are resumed by the caller with a single
+ * opportunistic GET and adopted only if the backend confirms them.
+ */
+export function loadOcrJobsForOwner(ownerUserId: string | null): StorageRead<StoredOcrJob[]> {
+  const all = loadOcrJobs();
+  if (!ownerUserId) return { value: [], durable: all.durable };
+  return {
+    value: all.value.filter((job) => job.owner_user_id === ownerUserId),
+    durable: all.durable,
+  };
+}
+
+/** Rows written before owner tracking: owner unknown, never assumed. */
+export function loadLegacyOcrJobs(): StorageRead<StoredOcrJob[]> {
+  const all = loadOcrJobs();
+  return { value: all.value.filter((job) => job.owner_user_id === null), durable: all.durable };
+}
+
+/**
+ * Binds a legacy row to an owner AFTER the backend proved the ticket is theirs.
+ * Adoption is evidence-based: a 200 on the poll, never an inference.
+ */
+export function adoptOcrJobOwner(jobId: string, ownerUserId: string): { durable: boolean } {
+  const owner = typeof ownerUserId === 'string' ? ownerUserId.trim() : '';
+  if (owner === '') return { durable: true };
+  return patchOcrJob(jobId, { owner_user_id: owner });
 }
 
 function saveOcrJobs(jobs: readonly StoredOcrJob[]): { durable: boolean } {

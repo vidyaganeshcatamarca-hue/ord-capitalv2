@@ -23,12 +23,16 @@ import { ocrFileRejectionI18nKey } from './errors';
 import { rekeyOcrImages, saveOcrImages, sweepOcrImages, markOcrImagesProcessed } from './imageStore';
 import { syncPendingOcrMemory } from './memory';
 import { patchOcrHistory, recordOcrHistory, type OcrHistoryStatus } from './history';
+import { createOcrDispatcher, type OcrDispatcher } from './dispatch';
 import { runOcrPollingLoop, type OcrPollingController } from './polling';
 import { loadOcrQuarantine } from './quarantine';
 import {
+  adoptOcrJobOwner,
   clearOcrJobError,
   isOcrCacheMaintenanceDue,
+  loadLegacyOcrJobs,
   loadOcrJobs,
+  loadOcrJobsForOwner,
   patchOcrJob,
   recordOcrJobError,
   pruneDispatchedOcrJobs,
@@ -37,8 +41,9 @@ import {
   writeOcrCacheMaintenanceAt,
 } from './storage';
 import { OCR_EVENTS, trackOcrError, trackOcrEvent } from './telemetry';
-import { isOcrDispatchStatus, type OcrJob, type OcrJobStatus } from './types';
+import { isOcrDispatchStatus, isOcrTerminalStatus, type OcrJob, type OcrJobStatus } from './types';
 import type { OcrContext } from './contextTypes';
+import { useAuth } from '@/contexts/AuthContext';
 
 /** Frontend lifecycle of an OCR job. */
 export type OcrJobPhase =
@@ -94,7 +99,8 @@ type OcrJobsState = Record<string, OcrJobState>;
 type Action =
   | { type: 'upsert'; job: OcrJobState }
   | { type: 'patch'; jobId: string; patch: Partial<OcrJobState> }
-  | { type: 'remove'; jobId: string };
+  | { type: 'remove'; jobId: string }
+  | { type: 'clear' };
 
 function reducer(state: OcrJobsState, action: Action): OcrJobsState {
   switch (action.type) {
@@ -111,6 +117,10 @@ function reducer(state: OcrJobsState, action: Action): OcrJobsState {
       delete next[action.jobId];
       return next;
     }
+    case 'clear':
+      // Only the followed view is dropped: the persisted rows stay, because
+      // signing back in as the same user must resume them.
+      return {};
     default:
       return state;
   }
@@ -148,11 +158,15 @@ function newLocalUploadId(): string {
 
 export function useOcrJobs(): UseOcrJobsResult {
   const [jobs, dispatch] = useReducer(reducer, {});
+  const { user } = useAuth();
 
   const pollersRef = useRef<Map<string, OcrPollingController>>(new Map());
-  const dispatchedRef = useRef<Set<string>>(new Set());
   const mountedRef = useRef(true);
   const jobsRef = useRef<OcrJobsState>({});
+  // Owner of the jobs this bridge is allowed to follow. A ref as well as state:
+  // the polling callbacks are created once and must read the CURRENT owner.
+  const ownerRef = useRef<string | null>(user?.id ?? null);
+  ownerRef.current = user?.id ?? null;
 
   useEffect(() => {
     jobsRef.current = jobs;
@@ -167,65 +181,68 @@ export function useOcrJobs(): UseOcrJobsResult {
    * Hands a finished job to the quarantine exactly once. The guard is marked
    * BEFORE the await so a StrictMode re-run is a no-op (PRD §77).
    */
-  const dispatchToQuarantine = useCallback(async (job: OcrJob): Promise<boolean> => {
-    if (!job.ticket) return false;
-    const jobId = job.job_id;
-    if (dispatchedRef.current.has(jobId)) return true;
-    dispatchedRef.current.add(jobId);
+  /**
+   * One dispatcher per mounted bridge. It owns the per-`job_id` guard, so the
+   * concurrency contract lives in `dispatch.ts` and can be tested on its own.
+   */
+  const dispatcherRef = useRef<OcrDispatcher | null>(null);
+  if (dispatcherRef.current === null) {
+    dispatcherRef.current = createOcrDispatcher({
+      createQuarantine: ({ jobId, ticket, originalResult }) =>
+        loadOcrQuarantine({ jobId, ticket, originalResult }),
+      onTerminalPersisted: (job) => {
+        patchOcrJob(job.job_id, {
+          last_status: job.status,
+          last_checked_at: new Date().toISOString(),
+        });
+      },
+      onDispatched: (job, pendienteId) => {
+        const jobId = job.job_id;
+        patchOcrJob(jobId, {
+          last_status: job.status,
+          last_checked_at: new Date().toISOString(),
+          quarantine_dispatched: true,
+          pendiente_id: pendienteId,
+          last_error_code: null,
+          server_created_at: job.created_at || null,
+          quarantine_dispatched_at: new Date().toISOString(),
+        });
+        patchOcrHistory(jobId, { status: 'quarantine', pendiente_id: pendienteId });
+        patch(jobId, {
+          phase: 'dispatched',
+          status: job.status,
+          itemCount: job.ticket?.items.length ?? 0,
+          issueCount: job.ticket?.issues.length ?? 0,
+          pendienteId,
+          errorCode: null,
+        });
+      },
+      onFailed: (job, code) => {
+        trackOcrError('quarantine_dispatch', code, { job_id: job.job_id, status: job.status });
+        patchOcrJob(job.job_id, { last_status: job.status, quarantine_dispatched: false });
+        recordOcrJobError(job.job_id, code);
+        patch(
+          job.job_id,
+          code === 'NO_TICKET' ? { phase: 'failed', errorCode: code } : { errorCode: code }
+        );
+      },
+      markImagesProcessed: (jobId) => {
+        void markOcrImagesProcessed(jobId);
+      },
+      announce: () => {
+        try {
+          window.dispatchEvent(new CustomEvent('ocr-quarantine-landed'));
+        } catch {
+          // No DOM (tests): nothing to announce.
+        }
+      },
+    });
+  }
 
-    // The 7-day image window starts when processing finished (§44).
-    void markOcrImagesProcessed(jobId);
-
-    try {
-      const row = await loadOcrQuarantine({
-        jobId,
-        ticket: job.ticket,
-        originalResult: job.raw_result,
-      });
-      upsertOcrJob({
-        job_id: jobId,
-        created_at: job.created_at || new Date().toISOString(),
-        last_status: job.status,
-        last_checked_at: new Date().toISOString(),
-        quarantine_dispatched: true,
-        pendiente_id: row.pendiente_id,
-        last_error_code: null,
-        server_created_at: job.created_at || null,
-        // Closing stamp of the measurement: backend receipt -> quarantine row.
-        quarantine_dispatched_at: new Date().toISOString(),
-      });
-      // The owner's timeline advances even though the job is about to be pruned.
-      patchOcrHistory(jobId, { status: 'quarantine', pendiente_id: row.pendiente_id });
-      patch(jobId, {
-        phase: 'dispatched',
-        status: job.status,
-        itemCount: job.ticket.items.length,
-        issueCount: job.ticket.issues.length,
-        pendienteId: row.pendiente_id,
-        errorCode: null,
-      });
-      // Announce the landing so the tray refreshes from any screen.
-      try {
-        window.dispatchEvent(new CustomEvent('ocr-quarantine-landed'));
-      } catch {
-        // No DOM (tests): nothing to announce.
-      }
-      return true;
-    } catch (error) {
-      // The guard is released so a later retry can still land the ticket: the
-      // alternative is a job the user can never review.
-      dispatchedRef.current.delete(jobId);
-      const code =
-        typeof error === 'object' && error !== null && 'code' in error
-          ? String((error as { code?: unknown }).code ?? 'DISPATCH_FAILED')
-          : 'DISPATCH_FAILED';
-      trackOcrError('quarantine_dispatch', code, { job_id: jobId, status: job.status });
-      patchOcrJob(jobId, { last_status: job.status, quarantine_dispatched: false });
-      recordOcrJobError(jobId, code);
-      patch(jobId, { errorCode: 'DISPATCH_FAILED' });
-      return false;
-    }
-  }, [patch]);
+  const dispatchToQuarantine = useCallback(
+    (job: OcrJob): Promise<boolean> => dispatcherRef.current!.dispatch(job),
+    [patch]
+  );
 
   const startPolling = useCallback(
     (jobId: string, accessToken: string): void => {
@@ -235,6 +252,10 @@ export function useOcrJobs(): UseOcrJobsResult {
         jobId,
         accessToken,
         onUpdate: (job) => {
+          // A 200 is the backend confirming this ticket belongs to the current
+          // user: only then does a legacy row get its owner.
+          const currentOwner = ownerRef.current;
+          if (currentOwner) adoptOcrJobOwner(jobId, currentOwner);
           patchOcrJob(jobId, {
             last_status: job.status,
             last_checked_at: new Date().toISOString(),
@@ -260,12 +281,18 @@ export function useOcrJobs(): UseOcrJobsResult {
           pollersRef.current.delete(jobId);
           recordOcrJobError(jobId, code);
           if (terminal) {
-            // `failed`/`cancelled` keep the job id but stop following it: no
-            // automatic re-upload (§36).
-            patchOcrJob(jobId, { last_status: null, last_checked_at: new Date().toISOString() });
+            // `failed`/`cancelled` are terminal: the job keeps its id but stops
+            // being followed, and the stored status is terminal too, so a
+            // reload cannot resurrect it as "processing" (§S6).
+            const terminalStatus: OcrJobStatus = code === 'CANCELLED' ? 'cancelled' : 'failed';
+            patchOcrJob(jobId, {
+              last_status: terminalStatus,
+              last_checked_at: new Date().toISOString(),
+            });
+            patchOcrHistory(jobId, { status: 'rejected' });
             patch(jobId, {
               phase: code === 'CANCELLED' ? 'cancelled' : 'failed',
-              status: code === 'CANCELLED' ? 'cancelled' : 'failed',
+              status: terminalStatus,
               errorCode: code,
             });
           } else {
@@ -315,8 +342,17 @@ export function useOcrJobs(): UseOcrJobsResult {
       }
     }
 
-    if (jobsRef.current && Object.keys(jobsRef.current).length > 0) return;
-    const stored = loadOcrJobs().value;
+    const owner = ownerRef.current;
+    // Without a session there is no owner to match against: hydrating now would
+    // start polling tickets the backend is right to refuse with a 404.
+    if (!owner) return;
+
+    // Own rows plus legacy rows (owner unknown). Legacy rows are not assumed to
+    // belong to this user: they are polled once and adopted only if the backend
+    // answers, which is the only evidence that the ticket is theirs.
+    const own = loadOcrJobsForOwner(owner).value;
+    const legacy = loadLegacyOcrJobs().value;
+    const stored = [...own, ...legacy];
     if (stored.length === 0) return;
 
     for (const job of stored) {
@@ -327,7 +363,7 @@ export function useOcrJobs(): UseOcrJobsResult {
           jobId: job.job_id,
           phase: job.last_status ? phaseFromStatus(job.last_status) : 'processing',
           status: job.last_status,
-          errorCode: null,
+          errorCode: job.last_error_code,
           duplicate: false,
           itemCount: null,
           issueCount: 0,
@@ -335,8 +371,13 @@ export function useOcrJobs(): UseOcrJobsResult {
           createdAt: job.created_at,
         },
       });
+      // A stored terminal is not polled again; it is only waiting for a retry
+      // of its dispatch.
+      if (job.last_status !== null && isOcrTerminalStatus(job.last_status)) continue;
       if (!accessToken) {
-        patch(job.job_id, { errorCode: 'UNAUTHORIZED' });
+        // Missing auth is a state the user has to see, not a silent "processing".
+        patchOcrJob(job.job_id, { last_status: 'failed' });
+        patch(job.job_id, { phase: 'failed', errorCode: 'UNAUTHORIZED' });
         continue;
       }
       startPolling(job.job_id, accessToken);
@@ -353,11 +394,33 @@ export function useOcrJobs(): UseOcrJobsResult {
     [applyMemorySyncResult]
   );
 
+  /**
+   * Re-polls the jobs whose quarantine dispatch failed. The ticket is still on
+   * the backend and still owned by this user, so one GET re-delivers the result
+   * without a second upload.
+   */
+  const retryPendingDispatches = useCallback(async (): Promise<void> => {
+    const owner = ownerRef.current;
+    if (!owner) return;
+    const failed = loadOcrJobsForOwner(owner).value.filter(
+      (job) =>
+        !job.quarantine_dispatched &&
+        job.last_error_code !== null &&
+        job.last_status !== null &&
+        isOcrDispatchStatus(job.last_status)
+    );
+    if (failed.length === 0) return;
+    const accessToken = await readOcrAccessToken();
+    if (!accessToken) return;
+    for (const job of failed) startPolling(job.job_id, accessToken);
+  }, [startPolling]);
+
   useEffect(() => {
     mountedRef.current = true;
     const pollers = pollersRef.current;
 
     void resumePending().catch(() => undefined);
+    void retryPendingDispatches().catch(() => undefined);
     // The monthly sweep runs once per app open only when it is due: never a full
     // scan on every start (PRD §45).
     if (isOcrCacheMaintenanceDue()) {
@@ -377,15 +440,37 @@ export function useOcrJobs(): UseOcrJobsResult {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Retry the pending memory sync when the app comes back to the foreground.
+  // Retry the pending memory sync and any dead dispatch when the app comes back
+  // to the foreground. A failed RPC used to wait for a manual tap that the user
+  // never knew about.
   useEffect(() => {
     if (typeof document === 'undefined') return undefined;
     const onVisible = (): void => {
-      if (document.visibilityState === 'visible') void syncMemory();
+      if (document.visibilityState !== 'visible') return;
+      void syncMemory();
+      void retryPendingDispatches().catch(() => undefined);
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
-  }, [syncMemory]);
+  }, [syncMemory, retryPendingDispatches]);
+
+  /**
+   * A different account can never read these jobs: the backend answers
+   * `job_id + user_id`, so polling them is a guaranteed 404. The pollers stop and
+   * the followed view is cleared, but the persisted rows stay, so signing back in
+   * as the original user resumes them.
+   */
+  useEffect(() => {
+    const ownerId = user?.id ?? null;
+    for (const controller of pollersRef.current.values()) controller.cancel();
+    pollersRef.current.clear();
+    dispatcherRef.current?.reset();
+    dispatch({ type: 'clear' });
+    if (ownerId) void resumePending().catch(() => undefined);
+    // `resumePending` is recreated when `startPolling` changes; keying on the
+    // owner alone keeps this effect from re-running on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   const submit = useCallback(
     async (input: SubmitOcrTicketInput): Promise<SubmitOcrTicketResult> => {
@@ -470,6 +555,7 @@ export function useOcrJobs(): UseOcrJobsResult {
 
         upsertOcrJob({
           job_id: accepted.job_id,
+          owner_user_id: ownerRef.current,
           created_at: new Date().toISOString(),
           last_status: accepted.status,
           last_checked_at: new Date().toISOString(),
@@ -533,7 +619,7 @@ export function useOcrJobs(): UseOcrJobsResult {
       // the backend, so a single GET is enough and avoids a second upload.
       const accessToken = await readOcrAccessToken();
       if (!accessToken) return false;
-      dispatchedRef.current.delete(jobId);
+      dispatcherRef.current?.release(jobId);
       startPolling(jobId, accessToken);
       return true;
     },
