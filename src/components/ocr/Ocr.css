@@ -635,6 +635,24 @@
   color: var(--danger, #f85149);
 }
 
+/* Tono del estado fino del backend: se suma al color del estado del envio, para
+   que "Leyendo ticket" y "Clasificando productos" no se lean igual. */
+.ocr-history-status--neutral {
+  color: var(--text-3);
+}
+
+.ocr-history-status--active {
+  color: var(--warning, #d29922);
+}
+
+.ocr-history-status--ready {
+  color: var(--success, #3fb950);
+}
+
+.ocr-history-status--error {
+  color: var(--danger, #f85149);
+}
+
 .ocr-viewer-nav {
   display: flex;
   align-items: center;

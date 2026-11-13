@@ -22,6 +22,8 @@ export type OcrHistoryStatus =
   | 'approved'
   | 'rejected';
 
+import type { OcrJobStatus } from './types';
+
 export interface OcrHistoryEntry {
   job_id: string;
   /** Cuando se envio, en ISO. Es lo que se muestra en la fila. */
@@ -33,6 +35,14 @@ export interface OcrHistoryEntry {
   updated_at: string;
   /** Fila de cuarentena, cuando ya existe: permite saltar a ella. */
   pendiente_id: number | null;
+  /**
+   * Ultimo estado real del backend para ese envio. La fila lo usa para decir
+   * que esta pasando (leyendo, clasificando, en espera) en vez de un
+   * "Procesando" plano que a los diez minutos no informa nada.
+   * Opcional: las entradas viejas no lo tienen y se leen como desconocido.
+   */
+  last_status?: OcrJobStatus | null;
+  last_stage?: string | null;
 }
 
 export const OCR_HISTORY_STORAGE_KEY = 'ord.ocr.v1.history' as const;

@@ -15,6 +15,26 @@
 
 import type { OcrJobStatus } from './types';
 
+/**
+ * Terminal statuses as a VALUE.
+ *
+ * `src/ocr/types.ts` is imported with `import type` on purpose: a runtime import
+ * without an extension cannot be resolved by Node's ESM loader, which is how the
+ * storage test suite loads this module. Keeping the list here (and asserting it
+ * matches `OCR_TERMINAL_STATUSES` in the ownership test) avoids both a broken
+ * test bootstrap and a silent divergence.
+ */
+export const OCR_STORAGE_TERMINAL_STATUSES: readonly OcrJobStatus[] = [
+  'completed',
+  'needs_review',
+  'failed',
+  'cancelled',
+];
+
+function isTerminalStatus(status: OcrJobStatus | null): boolean {
+  return status !== null && OCR_STORAGE_TERMINAL_STATUSES.includes(status);
+}
+
 /** Job snapshots still being followed. */
 export const OCR_JOBS_STORAGE_KEY = 'ord.ocr.v1.active_jobs' as const;
 
@@ -27,8 +47,26 @@ export const OCR_CACHE_MAINTENANCE_STORAGE_KEY = 'ord.ocr.v1.cache_maintenance' 
 /** Minimal snapshot persisted for a job that is still in flight (PRD §81). */
 export interface StoredOcrJob {
   job_id: string;
+  /**
+   * Supabase user id that owns the ticket on this device.
+   *
+   * The backend answers a poll with `job_id + user_id`, so a job persisted by
+   * another account can only ever return 404 here. Storing the owner is what
+   * lets this client stop polling work that is no longer its own instead of
+   * hammering an endpoint that is right to refuse it.
+   *
+   * `null` means legacy: the row was written before this field existed, so its
+   * owner is genuinely unknown and must never be assumed to be the current one.
+   */
+  owner_user_id: string | null;
   created_at: string;
   last_status: OcrJobStatus | null;
+  /**
+   * Finer backend phase inside `processing` (for example `extracting`), when the
+   * backend publishes one. Traceability only: an absent stage is not an error
+   * and never changes the owner-facing text on its own.
+   */
+  last_stage: string | null;
   last_checked_at: string | null;
   /** True once the quarantine row exists for this job (PRD §40). */
   quarantine_dispatched: boolean;
@@ -44,6 +82,14 @@ export interface StoredOcrJob {
    * diagnose; no stack traces or free-form messages are stored (PRD §80).
    */
   last_error_code: string | null;
+  /** When `last_error_code` was recorded, so a stale code is distinguishable. */
+  last_error_at: string | null;
+  /**
+   * Last GET that answered 2xx. Deliberately separate from `last_checked_at`:
+   * a failed attempt updates the latter but must not move this stamp, which is
+   * the only proof that the backend is still answering for this job.
+   */
+  last_successful_poll_at: string | null;
   /**
    * When the BACKEND says it received the ticket (the `created_at` of the job),
    * not when the browser started uploading. The two are deliberately different:
@@ -131,14 +177,19 @@ function isStoredOcrJob(value: unknown): value is StoredOcrJob {
  * outlives the problem it described.
  */
 export function clearOcrJobError(jobId: string): { durable: boolean } {
-  return patchOcrJob(jobId, { last_error_code: null });
+  // The timestamp belongs to the code: clearing one without the other leaves a
+  // row claiming a failure happened at an unknown moment.
+  return patchOcrJob(jobId, { last_error_code: null, last_error_at: null });
 }
 
 /** Records the stable code of the failure that stopped this job. */
 export function recordOcrJobError(jobId: string, code: string): { durable: boolean } {
   const trimmed = typeof code === 'string' ? code.trim() : '';
   if (trimmed === '') return { durable: true };
-  return patchOcrJob(jobId, { last_error_code: trimmed });
+  return patchOcrJob(jobId, {
+    last_error_code: trimmed,
+    last_error_at: new Date().toISOString(),
+  });
 }
 
 /**
@@ -187,8 +238,18 @@ export function readOcrQuarantineLatencyMs(jobId: string): number | null {
 function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
   return {
     job_id: value.job_id,
+    // An absent owner stays absent: assuming the current user would silently
+    // hand a stranger's ticket to whoever opened the app next (§S5).
+    owner_user_id:
+      typeof value.owner_user_id === 'string' && value.owner_user_id.trim() !== ''
+        ? value.owner_user_id.trim()
+        : null,
     created_at: typeof value.created_at === 'string' ? value.created_at : new Date().toISOString(),
     last_status: (value.last_status ?? null) as OcrJobStatus | null,
+    last_stage:
+      typeof value.last_stage === 'string' && value.last_stage.trim() !== ''
+        ? value.last_stage.trim()
+        : null,
     last_checked_at: typeof value.last_checked_at === 'string' ? value.last_checked_at : null,
     quarantine_dispatched: value.quarantine_dispatched === true,
     pendiente_id:
@@ -201,10 +262,60 @@ function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
       typeof value.last_error_code === 'string' && value.last_error_code.trim() !== ''
         ? value.last_error_code
         : null,
+    last_error_at: toUtcIso(value.last_error_at),
+    last_successful_poll_at: toUtcIso(value.last_successful_poll_at),
     // Normalized to UTC on every read and write, whatever offset came in.
     server_created_at: toUtcIso(value.server_created_at),
     quarantine_dispatched_at: toUtcIso(value.quarantine_dispatched_at),
   };
+}
+
+/**
+ * Failures that describe the SESSION, not the job.
+ *
+ * The backend answers a poll with `job_id + user_id` and deliberately does not
+ * distinguish "no such job" from "someone else's job" (both are 404). That 404
+ * is therefore a fact about whoever is signed in, not about the ticket: it must
+ * never be written as a permanent job outcome, because the real owner signing
+ * back in would find a ticket that can never be resumed.
+ */
+export const OCR_SESSION_ERROR_CODES = ['NOT_FOUND', 'UNAUTHORIZED', 'FORBIDDEN'] as const;
+
+export function isOcrSessionErrorCode(code: string | null | undefined): boolean {
+  if (typeof code !== 'string') return false;
+  return (OCR_SESSION_ERROR_CODES as readonly string[]).includes(code.trim());
+}
+
+/**
+ * The rows this owner may resume right now.
+ *
+ * Partitioning is a strict filter on `owner_user_id` over one shared collection:
+ * the existing code already reads and writes a single array keyed by `job_id`,
+ * so a per-user storage key would have meant rewriting every read path for no
+ * behavioural gain.
+ *
+ * Rules, in order:
+ *   - another owner's row is never selected;
+ *   - a legacy row (owner unknown) is selected so a single GET can prove whose
+ *     it is, and adopted only if the backend confirms;
+ *   - an already confirmed quarantine has nothing left to do;
+ *   - a business-terminal job is not polled again, UNLESS the last failure was a
+ *     session error: 404 -> owner returns -> 200 -> dispatch must still happen.
+ */
+export function selectResumableOcrJobs(
+  jobs: readonly StoredOcrJob[],
+  ownerUserId: string | null
+): StoredOcrJob[] {
+  if (!ownerUserId) return [];
+  return jobs.filter((job) => {
+    if (job.owner_user_id !== null && job.owner_user_id !== ownerUserId) return false;
+    if (job.quarantine_dispatched && job.pendiente_id !== null) return false;
+    const blockedBySession = isOcrSessionErrorCode(job.last_error_code);
+    if (!blockedBySession && isTerminalStatus(job.last_status)) {
+      return false;
+    }
+    return true;
+  });
 }
 
 /** Reads every followed job. Corrupted payloads resolve to an empty list. */
@@ -212,6 +323,39 @@ export function loadOcrJobs(): StorageRead<StoredOcrJob[]> {
   const { raw, durable } = readRaw(OCR_JOBS_STORAGE_KEY);
   const jobs = parseArray(raw).filter(isStoredOcrJob).map(normalizeStoredJob);
   return { value: jobs, durable };
+}
+
+/**
+ * Jobs this owner may safely poll.
+ *
+ * Legacy rows (no owner) are deliberately excluded: the client cannot prove
+ * they belong to the signed-in user, and polling them is exactly what produced
+ * a 404 storm in the incident. They are resumed by the caller with a single
+ * opportunistic GET and adopted only if the backend confirms them.
+ */
+export function loadOcrJobsForOwner(ownerUserId: string | null): StorageRead<StoredOcrJob[]> {
+  const all = loadOcrJobs();
+  if (!ownerUserId) return { value: [], durable: all.durable };
+  return {
+    value: all.value.filter((job) => job.owner_user_id === ownerUserId),
+    durable: all.durable,
+  };
+}
+
+/** Rows written before owner tracking: owner unknown, never assumed. */
+export function loadLegacyOcrJobs(): StorageRead<StoredOcrJob[]> {
+  const all = loadOcrJobs();
+  return { value: all.value.filter((job) => job.owner_user_id === null), durable: all.durable };
+}
+
+/**
+ * Binds a legacy row to an owner AFTER the backend proved the ticket is theirs.
+ * Adoption is evidence-based: a 200 on the poll, never an inference.
+ */
+export function adoptOcrJobOwner(jobId: string, ownerUserId: string): { durable: boolean } {
+  const owner = typeof ownerUserId === 'string' ? ownerUserId.trim() : '';
+  if (owner === '') return { durable: true };
+  return patchOcrJob(jobId, { owner_user_id: owner });
 }
 
 function saveOcrJobs(jobs: readonly StoredOcrJob[]): { durable: boolean } {

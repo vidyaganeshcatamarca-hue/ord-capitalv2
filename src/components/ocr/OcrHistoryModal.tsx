@@ -15,6 +15,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { t } from '@/locales/i18n'
 import { loadOcrHistory, type OcrHistoryEntry, type OcrHistoryStatus } from '@/ocr/history'
+import { describeOcrJobStatus } from '@/ocr/jobStatusLabel'
 import './Ocr.css'
 
 interface OcrHistoryModalProps {
@@ -70,6 +71,14 @@ export function OcrHistoryModal({ onClose }: OcrHistoryModalProps) {
               {entries.map((entry) => {
                 const inQuarantine = entry.status === 'quarantine'
                 const Row = inQuarantine ? 'button' : 'div'
+                // The real backend state, when the ticket is still travelling.
+                // A ten-minute ticket must say "reading" or "classifying", not
+                // a flat "processing" that tells the owner nothing.
+                const fine = describeOcrJobStatus(entry.last_status ?? null, entry.last_stage ?? null)
+                const statusText = fine ? t(fine.key) : statusLabel(entry.status)
+                const statusClass = `ocr-history-status ocr-history-status--${entry.status}${
+                  fine ? ` ocr-history-status--${fine.tone}` : ''
+                }`
                 return (
                   <li key={entry.job_id}>
                     <Row
@@ -82,10 +91,8 @@ export function OcrHistoryModal({ onClose }: OcrHistoryModalProps) {
                       <span className="ocr-history-images">
                         {t('ocr.history_images', { count: String(entry.image_count) })}
                       </span>
-                      <span
-                        className={`ocr-history-status ocr-history-status--${entry.status}`}
-                      >
-                        {statusLabel(entry.status)}
+                      <span className={statusClass}>
+                        {statusText}
                       </span>
                     </Row>
                   </li>
