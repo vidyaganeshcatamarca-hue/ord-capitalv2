@@ -53,7 +53,10 @@ const ESTADO_COLOR: Record<Estado, string> = {
 const mapEstado = (estado: unknown): Estado => {
   if (estado === 'verde') return 'verde'
   if (estado === 'amarillo_precaucion') return 'amarillo'
-  if (estado === 'rojo_excedido') return 'rojo'
+  // Dueño (2026-11-13): «ninguno de los dos es alerta, es informativo». El reparto es
+  // una referencia, no una regla que se pueda incumplir: Savings al 0% no se «excedió»,
+  // y Tithing al 0% salía verde con el mismo valor. El porcentaje y la barra siguen
+  // contando la historia; lo que se apaga es la alarma.
   return 'sin_datos'
 }
 
@@ -76,7 +79,7 @@ const estadoPorLlenado = mapEstado
 
 const peorEstado = (cupos: CupoResumen[]): Estado => {
   const estados = cupos.map(c => mapEstado(c.estado))
-  if (estados.some(e => e === 'rojo')) return 'rojo'
+  // Sin rama de rojo a propósito: esta tarjeta no alarma (ver mapEstado).
   if (estados.some(e => e === 'amarillo')) return 'amarillo'
   return estados.some(e => e === 'verde') ? 'verde' : 'sin_datos'
 }

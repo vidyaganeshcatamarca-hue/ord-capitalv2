@@ -226,3 +226,4 @@ tests/configuracion/*
 !tests/inversiones/valor-sugerido-plazo-fijo.test.js
 !tests/presupuestos/fila-sin-pisarse.test.js
 !tests/presupuestos/transferencia-mensaje-especifico.test.js
+!tests/presupuestos/cupos-sin-alarma.test.js
