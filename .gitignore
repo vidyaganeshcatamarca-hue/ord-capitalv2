@@ -224,3 +224,4 @@ tests/configuracion/*
 !tests/presupuestos/total-grupo-libertad.test.js
 !tests/presupuestos/leyendas-barra.test.js
 !tests/inversiones/valor-sugerido-plazo-fijo.test.js
+!tests/presupuestos/fila-sin-pisarse.test.js

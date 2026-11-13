@@ -339,11 +339,16 @@
 .sobre-toggle-grupo.abierto { color: var(--mint); }
 .sobre-toggle-grupo:focus-visible { outline: 2px solid var(--mint); outline-offset: 2px; }
 
+/* Un nombre largo no empuja el importe fuera de su lugar: se recorta con puntos. */
 .sobre-nombre-texto {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 1px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Ronda 8/S2 (dueño): «total del grupo como título alineado a la derecha abajo de
@@ -383,9 +388,15 @@
 
 .sobre-fila-top {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  /* Los tres elementos no entran en una línea de 390 px: con el botón reservado quedan
+     186 px y ahí no caben icono + nombre + importe. En columna, el nombre usa todo el
+     ancho libre y el importe va abajo; nada se pisa y ningún nombre se recorta. */
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
   margin-bottom: 8px;
+  /* El botón «+ Assign» es absoluto (right 14, top 14) y no ocupa lugar en el flujo. */
+  padding-right: 84px;
 }
 
 .sobre-nombre {
@@ -492,6 +503,19 @@
 .sobre-stats--padre .sobre-stat + .sobre-stat {
   border-left: 2px solid var(--border-light);
   padding-left: 10px;
+}
+
+/* Dueño: los cinco datos del padre se leían pegados, «UNASSIGNEDPROGRESS», y los
+   importes corridos. Con cuatro separadores de 12 px las celdas quedan en 58 px y
+   «Unassigned» mide 73 con la tipografía del tema: no entra recortando, entra
+   envolviendo. Tres arriba y dos abajo, sin tocar el texto de las etiquetas. */
+.sobre-stats--padre {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+.sobre-stats--padre .sobre-stat {
+  flex: 1 1 30%;
 }
 
 /* arrastre badge */
