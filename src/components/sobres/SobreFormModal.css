@@ -62,3 +62,45 @@
 .sobre-check input {
   margin-top: 2px;
 }
+
+/* Grilla de iconos: cuatro filas visibles y el resto se recorre con scroll.
+   Se elige con un toque y el emoji se ve antes de confirmar. */
+.sobre-iconos {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  /* Alto fijo de exactamente cuatro filas: 4×36 + 3 gaps de 6 = 162 de contenido,
+     más 8 de padding y 2 de borde. Con max-height el navegador dejaba entrar una
+     quinta fila. */
+  box-sizing: border-box;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  height: calc(4 * 36px + 3 * 6px + 10px);
+  overflow-y: auto;
+  padding: 4px;
+  scrollbar-width: thin;
+}
+
+.sobre-icono {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  font-size: calc(19px * var(--font-scale));
+  height: 36px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+}
+
+.sobre-icono:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sobre-icono--activo {
+  background: color-mix(in srgb, var(--mint) 20%, transparent);
+  border-color: var(--mint);
+}

@@ -4,6 +4,8 @@ import { t } from '@/locales/i18n'
 import { ChevronLeft, Pencil } from 'lucide-react'
 import type { Sobre, SobreDetalle, SobreMovimiento } from './types'
 import './SobreDetail.css'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
+import { claseEstado } from './SobreCard'
 
 interface SobreDetailProps {
   detalle: SobreDetalle
@@ -64,8 +66,15 @@ export function SobreDetail({ detalle, onBack, onProvision, onRescue, onEdit, on
       <header className="sobre-detalle-header">
         <div>
           <p className="sobre-detalle-kicker">{t('sobres_detail')}</p>
-          <h2 id="sobre-detalle-titulo">{sobre.nombre}</h2>
-          <span className={`sobre-estado sobre-estado--${plan.estado_key.replace('state_', '')}`}>
+          <h2 id="sobre-detalle-titulo">
+            {sobre.icono && (
+              <span aria-hidden="true" className="sobre-detalle-icono">
+                {sobre.icono}
+              </span>
+            )}
+            {sobre.nombre}
+          </h2>
+          <span className={`sobre-estado ${claseEstado[plan.estado_key] ?? 'sobre-estado--neutral'}`}>
             {t(plan.estado_key)}
           </span>
         </div>
@@ -150,7 +159,7 @@ export function SobreDetail({ detalle, onBack, onProvision, onRescue, onEdit, on
             {porciones.map((porcion) => (
               <li key={`${porcion.billetera_id}_${porcion.modalidad}`}>
                 <div>
-                  <strong>{porcion.billetera_nombre}</strong>
+                  <strong>{catalogDisplayName(porcion.billetera_nombre)}</strong>
                   <span className={`sobre-porcion-modalidad sobre-porcion-modalidad--${porcion.modalidad}`}>
                     {t(
                       porcion.modalidad === 'real'
@@ -177,24 +186,22 @@ export function SobreDetail({ detalle, onBack, onProvision, onRescue, onEdit, on
                 <div>
                   <strong>{t(ETIQUETA_TIPO[movimiento.tipo] ?? movimiento.tipo)}</strong>
                   <small>
-                    {formatDate(movimiento.fecha)} · {movimiento.billetera_nombre}
+                    {formatDate(movimiento.fecha)} · {catalogDisplayName(movimiento.billetera_nombre)}
                   </small>
                 </div>
                 <span className={movimiento.tipo === 'rescate' ? 'sobre-detalle-negativo' : 'sobre-detalle-positivo'}>
                   {movimiento.tipo === 'rescate' ? '−' : '+'}
                   {formatCurrency(movimiento.importe, sobre.moneda)}
                 </span>
-                {movimiento.tipo !== 'rendimiento' && (
-                  <button
-                    type="button"
-                    className="sobre-detalle-corregir"
-                    onClick={() => onCorrect(movimiento)}
-                    aria-label={t('sobres_correct_action')}
-                    title={t('sobres_correct_action')}
-                  >
-                    <Pencil size={14} />
-                  </button>
-                )}
+                <button
+                  type="button"
+                  className="sobre-detalle-corregir"
+                  onClick={() => onCorrect(movimiento)}
+                  aria-label={t('sobres_correct_action')}
+                  title={t('sobres_correct_action')}
+                >
+                  <Pencil size={14} />
+                </button>
               </li>
             ))}
           </ul>

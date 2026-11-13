@@ -8,6 +8,7 @@ import { parseError, t } from '@/locales/i18n'
 import { normalizarPorcion, type Sobre, type SobrePorcion } from './types'
 import './sobresModal.css'
 import './SobreRescateModal.css'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 
 interface SobreRendimientoModalProps {
   isOpen: boolean
@@ -127,7 +128,7 @@ export function SobreRendimientoModal({ isOpen, sobre, onClose, onSuccess }: Sob
                     className={`sobre-modalidad ${billeteraId === reserva.billetera_id ? 'sobre-modalidad--activa' : ''}`}
                     onClick={() => setBilleteraId(reserva.billetera_id)}
                   >
-                    {reserva.billetera_nombre} · {formatCurrency(reserva.saldo, reserva.moneda)}
+                    {catalogDisplayName(reserva.billetera_nombre)} · {formatCurrency(reserva.saldo, reserva.moneda)}
                   </button>
                 ))}
               </div>
@@ -137,7 +138,7 @@ export function SobreRendimientoModal({ isOpen, sobre, onClose, onSuccess }: Sob
           {reservas.length === 1 && (
             <div className="sobre-porcion">
               <div className="sobre-porcion-info">
-                <strong>{reservas[0].billetera_nombre}</strong>
+                <strong>{catalogDisplayName(reservas[0].billetera_nombre)}</strong>
                 <span className="sobre-porcion-modalidad sobre-porcion-modalidad--real">
                   {t('sobres_modality_real_short')}
                 </span>

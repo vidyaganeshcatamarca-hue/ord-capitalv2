@@ -1,10 +1,5 @@
--- Lista de sobres del usuario. El orden inicial agrupa por tipo: primero los
--- proyectos con fecha, despues los proyectos sin fecha y al final los ahorros
--- libres. Archivados al final; el orden manual manda cuando existe.
--- PRD: replanteo DF-29.
-
 CREATE OR REPLACE FUNCTION public.fn_sobres_listar(p_incluir_archivados boolean DEFAULT false)
- RETURNS TABLE(sobre_id bigint, nombre text, moneda text, saldo numeric, monto_meta numeric, fecha_objetivo date, plan_inicio_at date, porcentaje_progreso numeric, monto_faltante numeric, dias_restantes integer, estado_key text, cuota_mensual numeric, cuota_quincenal numeric, cuota_semanal numeric, orden integer, orden_manual boolean, archivado_at timestamp with time zone, tiene_rendimiento boolean)
+ RETURNS TABLE(sobre_id bigint, nombre text, moneda text, saldo numeric, monto_meta numeric, fecha_objetivo date, plan_inicio_at date, porcentaje_progreso numeric, monto_faltante numeric, dias_restantes integer, estado_key text, cuota_mensual numeric, cuota_quincenal numeric, cuota_semanal numeric, orden integer, orden_manual boolean, archivado_at timestamp with time zone, tiene_rendimiento boolean, icono text)
  LANGUAGE plpgsql
  STABLE SECURITY DEFINER
  SET search_path TO 'public'
@@ -55,7 +50,8 @@ BEGIN
         b.orden,
         b.orden_manual,
         b.archivado_at,
-        COALESCE(rs.tiene_rendimiento, false)
+        COALESCE(rs.tiene_rendimiento, false),
+        b.icono
     FROM public.p_sobres b
     LEFT JOIN resumen rs ON rs.sobre_id = b.sobre_id
     CROSS JOIN LATERAL public.fn_sobre_plan(

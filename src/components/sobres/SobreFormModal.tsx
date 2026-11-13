@@ -8,6 +8,7 @@ import { parseError, t } from '@/locales/i18n'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { WalletDropdownSelect, type WalletOptionItem } from '@/components/WalletDropdownSelect'
 import type { BilleteraOperativa, ModalidadReserva, Sobre } from './types'
+import { ICONOS_SOBRE } from './iconosSobre'
 import './sobresModal.css'
 import './SobreFormModal.css'
 
@@ -31,6 +32,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
   const [moneda, setMoneda] = useState('')
   const [meta, setMeta] = useState('')
   const [fecha, setFecha] = useState('')
+  const [icono, setIcono] = useState('💰')
   const [aporteImporte, setAporteImporte] = useState('')
   const [aporteBilleteraId, setAporteBilleteraId] = useState<number | null>(null)
   const [aporteModalidad, setAporteModalidad] = useState<ModalidadReserva>('virtual')
@@ -55,6 +57,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
     setMoneda(sobre?.moneda ?? localCurrency ?? 'ARS')
     setMeta(sobre?.monto_meta ? String(sobre.monto_meta) : '')
     setFecha(sobre?.fecha_objetivo ?? '')
+    setIcono(sobre?.icono ?? '💰')
     setAporteImporte('')
     setAporteBilleteraId(null)
     setAporteModalidad('virtual')
@@ -125,6 +128,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
           p_nombre: nombre.trim(),
           p_monto_meta: metaNum,
           p_fecha_objetivo: fecha || null,
+          p_icono: icono,
           p_quitar_meta: metaNum === null,
           p_quitar_fecha: !fecha,
         })
@@ -136,6 +140,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
           p_moneda: moneda,
           p_monto_meta: metaNum,
           p_fecha_objetivo: fecha || null,
+          p_icono: icono,
           p_aporte_billetera_id: quiereAporte ? aporteBilleteraId : null,
           p_aporte_importe: quiereAporte ? aporteNum : null,
           p_aporte_modalidad: quiereAporte ? aporteModalidad : null,
@@ -192,6 +197,27 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
                 ))}
               </select>
             )}
+          </div>
+
+          <div className="sobre-grupo">
+            <label id="sobre-icono-label">{t('sobres_icon')}</label>
+            <div className="sobre-iconos" role="group" aria-labelledby="sobre-icono-label">
+              {ICONOS_SOBRE.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  className={`sobre-icono${icono === emoji ? ' sobre-icono--activo' : ''}`}
+                  aria-label={emoji}
+                  aria-pressed={icono === emoji}
+                  onClick={() => {
+                    setIcono(emoji)
+                    haptics.light()
+                  }}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="sobre-grupo">

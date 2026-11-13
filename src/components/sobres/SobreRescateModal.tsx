@@ -8,6 +8,7 @@ import { parseError, t } from '@/locales/i18n'
 import { normalizarPorcion, type AsignacionRescate, type ModalidadReserva, type Sobre, type SobrePorcion } from './types'
 import './sobresModal.css'
 import './SobreRescateModal.css'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 
 interface SobreRescateModalProps {
   isOpen: boolean
@@ -146,7 +147,7 @@ export function SobreRescateModal({ isOpen, sobre, onClose, onSuccess }: SobreRe
           {lineas.map((linea, indice) => (
             <div className="sobre-porcion" key={`${linea.porcion.billetera_id}_${linea.porcion.modalidad}`}>
               <div className="sobre-porcion-info">
-                <strong>{linea.porcion.billetera_nombre}</strong>
+                <strong>{catalogDisplayName(linea.porcion.billetera_nombre)}</strong>
                 <span className={`sobre-porcion-modalidad sobre-porcion-modalidad--${linea.porcion.modalidad}`}>
                   {t(
                     linea.porcion.modalidad === 'real'
@@ -173,9 +174,10 @@ export function SobreRescateModal({ isOpen, sobre, onClose, onSuccess }: SobreRe
                 <button
                   type="button"
                   className="sobre-porcion-todo"
+                  aria-label={t('sobres_rescue_all')}
                   onClick={() => cambiarImporte(indice, String(linea.porcion.saldo))}
                 >
-                  {t('sobres_rescue')}
+                  {t('sobres_rescue_all')}
                 </button>
               </div>
             </div>

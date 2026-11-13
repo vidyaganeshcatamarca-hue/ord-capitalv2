@@ -19,6 +19,11 @@ interface Opciones {
  * arrastre convierte la lista en orden manual (fn_sobres_reordenar pone
  * orden_manual = true). Se descarta el orden local cuando llegan datos nuevos
  * del servidor, que ya vienen ordenados.
+ *
+ * El cierre del arrastre se escucha en el documento: al capturar el puntero el
+ * navegador emite lostpointercapture antes del pointerup, y ese pointerup ya no
+ * apunta a la tarjeta, así que un handler montado solo en la tarjeta nunca ve
+ * el final del gesto.
  */
 export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
   const [orden, setOrden] = useState<number[] | null>(null)
@@ -29,6 +34,8 @@ export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
   const origen = useRef<{ id: number; x: number; y: number; pointerId: number; el: HTMLElement } | null>(null)
   const ordenRef = useRef<number[] | null>(null)
   const ignorarClick = useRef(false)
+  /** Espejo del estado para que soltar no dependa de un closure que puede venir viejo. */
+  const arrastrandoRef = useRef<number | null>(null)
 
   useEffect(() => {
     ordenRef.current = null
@@ -68,6 +75,7 @@ export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
         const actual = origen.current
         if (!actual) return
         ordenRef.current = ids
+        arrastrandoRef.current = actual.id
         setOrden(ids)
         setArrastrando(actual.id)
         ignorarClick.current = true
@@ -75,7 +83,7 @@ export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
         try {
           actual.el.setPointerCapture(actual.pointerId)
         } catch {
-          // Si no se puede capturar, el arrastre sigue por los eventos del contenedor.
+          // Si no se puede capturar, el arrastre sigue por los eventos del documento.
         }
       }, LARGO_PRESION)
     },
@@ -83,11 +91,12 @@ export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
   )
 
   const mover = useCallback(
-    (event: ReactPointerEvent) => {
+    (event: { clientX: number; clientY: number }) => {
       const actual = origen.current
       if (!actual) return
+      const idArrastrado = arrastrandoRef.current
 
-      if (arrastrando === null) {
+      if (idArrastrado === null) {
         const lejos =
           Math.abs(event.clientX - actual.x) > TOLERANCIA || Math.abs(event.clientY - actual.y) > TOLERANCIA
         if (lejos) cancelarTimer()
@@ -98,7 +107,7 @@ export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
       if (!nodos || nodos.length === 0) return
 
       const lista = ordenRef.current ?? []
-      const desde = lista.indexOf(arrastrando)
+      const desde = lista.indexOf(idArrastrado)
       if (desde < 0) return
 
       // El objetivo es la tarjeta cuyo centro está más cerca del dedo: sirve en
@@ -124,7 +133,7 @@ export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
       setOrden(siguiente)
       haptics.light()
     },
-    [arrastrando, cancelarTimer],
+    [cancelarTimer],
   )
 
   const soltar = useCallback(async () => {
@@ -139,7 +148,10 @@ export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
       }
     }
 
-    if (arrastrando === null) return
+    const idArrastrado = arrastrandoRef.current
+    arrastrandoRef.current = null
+    if (idArrastrado === null) return
+
     const ids = ordenRef.current ?? []
     setArrastrando(null)
     if (ids.length < 2) return
@@ -153,7 +165,34 @@ export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
     window.setTimeout(() => {
       ignorarClick.current = false
     }, 0)
-  }, [arrastrando, cancelarTimer, onPersistir])
+  }, [cancelarTimer, onPersistir])
+
+  /**
+   * Mientras hay un arrastre activo, el final del gesto se escucha en el
+   * documento. Con la captura del puntero el navegador emite
+   * lostpointercapture antes del pointerup y ese pointerup ya no llega a la
+   * tarjeta; sin esto el arrastre nunca se cerraba ni se guardaba.
+   */
+  useEffect(() => {
+    if (arrastrando === null) return
+
+    const alSoltar = () => {
+      void soltar()
+    }
+    const alMover = (event: PointerEvent) => {
+      mover(event)
+    }
+
+    document.addEventListener('pointerup', alSoltar, true)
+    document.addEventListener('pointercancel', alSoltar, true)
+    document.addEventListener('pointermove', alMover, true)
+
+    return () => {
+      document.removeEventListener('pointerup', alSoltar, true)
+      document.removeEventListener('pointercancel', alSoltar, true)
+      document.removeEventListener('pointermove', alMover, true)
+    }
+  }, [arrastrando, soltar, mover])
 
   const propsItem = useCallback(
     (sobre: Sobre) => ({
