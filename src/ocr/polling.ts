@@ -50,6 +50,14 @@ export interface RunOcrPollingLoopInput {
   signal?: AbortSignal;
   /** Injectable for tests; defaults to the real timer/document. */
   now?: () => number;
+  /**
+   * Injectable for tests; defaults to the real transport.
+   *
+   * The loop's only network call is this GET, so tests need to control it to
+   * prove what happens across a visibility cycle without a live backend. Same
+   * pattern as `now`: a seam, not a second implementation.
+   */
+  fetchJob?: (input: { jobId: string; accessToken: string; signal?: AbortSignal }) => Promise<OcrJob>;
 }
 
 function isRetryable(error: OcrApiError): boolean {
@@ -75,6 +83,7 @@ function isDocumentHidden(): boolean {
  */
 export function runOcrPollingLoop(input: RunOcrPollingLoopInput): OcrPollingController {
   const { jobId, accessToken, onUpdate, onResult, onStopped, signal } = input;
+  const fetchJob = input.fetchJob ?? getOcrJob;
 
   let cancelled = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
@@ -116,7 +125,7 @@ export function runOcrPollingLoop(input: RunOcrPollingLoopInput): OcrPollingCont
 
     let job: OcrJob;
     try {
-      job = await getOcrJob({ jobId, accessToken, signal });
+      job = await fetchJob({ jobId, accessToken, signal });
     } catch (error) {
       if (cancelled) return;
       if (error instanceof Error && error.name === 'AbortError') {
