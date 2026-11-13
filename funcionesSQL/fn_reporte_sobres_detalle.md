@@ -127,7 +127,14 @@ BEGIN
     -- Las filas de abajo son las de siempre (hijos y rubros sin hijos).
     filas(estructura_id, nombre_categoria, icono, color, tipo_cupo, padre_id, monto_asignado, monto_gastado, monto_disponible, arrastre_mes_anterior, estado_sobre, metodo_sobregasto, monto_asignado_anterior, monto_gastado_anterior, gasto_promedio_6m, es_padre, cuenta_en_totales) AS (
     SELECT e.estructura_id, e.nombre_cuenta::text, e.icono::text, e.color::text, COALESCE(padre.tipo_cupo, e.tipo_cupo)::text, e.padre_id,
-           COALESCE(p.monto_limite, 0)::numeric, COALESCE(gm.total_gastado, 0)::numeric,
+           -- Dueño (2026-11-13): «el arrastre del mes anterior se suma al asignado este
+           -- mes. Es el dinero o deuda del mes anterior, y modifica el actual y lo asignado
+           -- ahora». Antes el arrastre entraba solo en el disponible, así que una misma
+           -- fila decía «Asignado 0» y disponible 2.000. En libertad no arrastra: el guard
+           -- es el mismo que ya usan el estado y el disponible.
+           (CASE WHEN v_modo_presupuesto = 'anticipado' THEN 0::numeric
+                 ELSE COALESCE(arr.balance_mes_anterior, 0) END
+            + COALESCE(p.monto_limite, 0))::numeric, COALESCE(gm.total_gastado, 0)::numeric,
            (COALESCE(arr.balance_mes_anterior, 0) + COALESCE(p.monto_limite, 0) - COALESCE(gm.total_gastado, 0))::numeric,
            COALESCE(arr.balance_mes_anterior, 0)::numeric,
            CASE
