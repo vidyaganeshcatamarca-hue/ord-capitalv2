@@ -860,6 +860,11 @@ export const ocr = {
   capture_keep_using: "Continuar",
   capture_retry: "Reintentar envío",
   // Estados del job
+  job_status_received: "Recibido · En espera",
+  job_status_reading: "Leyendo ticket",
+  job_status_waiting: "En espera de procesamiento",
+  job_status_classifying: "Clasificando productos",
+  job_status_ready: "Listo para revisar",
   status_queued: "Ticket recibido. Pendiente de procesamiento.",
   status_processing: "Procesando ticket...",
   status_waiting_for_inference: "Ticket recibido y guardado. Lo procesaremos automáticamente cuando el servicio esté disponible. No hace falta volver a cargarlo.",

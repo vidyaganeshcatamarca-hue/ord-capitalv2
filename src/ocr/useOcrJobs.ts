@@ -24,6 +24,7 @@ import { rekeyOcrImages, saveOcrImages, sweepOcrImages, markOcrImagesProcessed }
 import { syncPendingOcrMemory } from './memory';
 import { patchOcrHistory, recordOcrHistory, type OcrHistoryStatus } from './history';
 import { createOcrDispatcher, type OcrDispatcher } from './dispatch';
+import { isStaleSessionCallback } from './sessionGuard';
 import { runOcrPollingLoop, type OcrPollingController } from './polling';
 import { loadOcrQuarantine } from './quarantine';
 import {
@@ -61,6 +62,8 @@ export interface OcrJobState {
   jobId: string;
   phase: OcrJobPhase;
   status: OcrJobStatus | null;
+  /** Backend phase inside `processing`, when one was reported. */
+  stage: string | null;
   errorCode: string | null;
   duplicate: boolean;
   itemCount: number | null;
@@ -248,33 +251,58 @@ export function useOcrJobs(): UseOcrJobsResult {
     (jobId: string, accessToken: string): void => {
       pollersRef.current.get(jobId)?.cancel();
 
+      // The session this poll belongs to, captured once. A response that arrives
+      // after the account changed is stale: applying it would touch another
+      // user's view and could even dispatch their quarantine.
+      const sessionOwner = ownerRef.current;
+
       const controller = runOcrPollingLoop({
         jobId,
         accessToken,
         onUpdate: (job) => {
+          if (isStaleSessionCallback(sessionOwner, ownerRef.current)) return;
           // A 200 is the backend confirming this ticket belongs to the current
           // user: only then does a legacy row get its owner.
           const currentOwner = ownerRef.current;
           if (currentOwner) adoptOcrJobOwner(jobId, currentOwner);
+          const now = new Date().toISOString();
           patchOcrJob(jobId, {
             last_status: job.status,
-            last_checked_at: new Date().toISOString(),
+            // Traceability only: an absent stage stays absent, never invented.
+            last_stage: job.stage,
+            last_checked_at: now,
+            // The proof the backend is still answering for this job.
+            last_successful_poll_at: now,
             // The backend's own receipt stamp, used later to report latency.
             server_created_at: job.created_at || null,
           });
-          // A successful GET proves the failure is gone.
+          // A successful GET proves the polling failure is gone.
           clearOcrJobError(jobId);
-          patch(jobId, { phase: phaseFromStatus(job.status), status: job.status, errorCode: null });
+          patch(jobId, {
+            phase: phaseFromStatus(job.status),
+            status: job.status,
+            stage: job.stage,
+            errorCode: null,
+          });
           // The owner's own view of what happened: a job the backend finished
           // classifying is no longer "processing", even before it lands in
-          // quarantine (which can take minutes with several photos).
+          // quarantine (which can take minutes with several photos). The real
+          // status travels too, so the row can say what is happening instead of
+          // a flat "Procesando".
           const historyStatus: OcrHistoryStatus = isOcrDispatchStatus(job.status)
             ? 'classified'
             : 'processing';
-          patchOcrHistory(jobId, { status: historyStatus });
+          patchOcrHistory(jobId, {
+            status: historyStatus,
+            last_status: job.status,
+            last_stage: job.stage,
+          });
         },
         onResult: (job) => {
           pollersRef.current.delete(jobId);
+          // Same guard: a finished ticket from a previous session never lands
+          // in the quarantine of the account that is signed in now.
+          if (isStaleSessionCallback(sessionOwner, ownerRef.current)) return;
           void dispatchToQuarantine(job);
         },
         onStopped: ({ code, terminal }) => {
@@ -371,6 +399,7 @@ export function useOcrJobs(): UseOcrJobsResult {
           jobId: job.job_id,
           phase: job.last_status ? phaseFromStatus(job.last_status) : 'processing',
           status: job.last_status,
+          stage: job.last_stage,
           errorCode: job.last_error_code,
           duplicate: false,
           itemCount: null,
@@ -519,6 +548,7 @@ export function useOcrJobs(): UseOcrJobsResult {
             jobId: localId,
             phase: 'uploading',
             status: null,
+            stage: null,
             errorCode: null,
             duplicate: false,
             itemCount: null,
@@ -549,6 +579,7 @@ export function useOcrJobs(): UseOcrJobsResult {
             jobId: accepted.job_id,
             phase: phaseFromStatus(accepted.status),
             status: accepted.status,
+            stage: null,
             errorCode: null,
             duplicate: accepted.duplicate,
             itemCount: null,
@@ -563,7 +594,10 @@ export function useOcrJobs(): UseOcrJobsResult {
           owner_user_id: ownerRef.current,
           created_at: new Date().toISOString(),
           last_status: accepted.status,
+          last_stage: null,
           last_checked_at: new Date().toISOString(),
+          last_successful_poll_at: null,
+          last_error_at: null,
           quarantine_dispatched: false,
           pendiente_id: null,
           // A fresh job starts clean; the code is set only when a stage fails.

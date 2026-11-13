@@ -61,6 +61,12 @@ export interface StoredOcrJob {
   owner_user_id: string | null;
   created_at: string;
   last_status: OcrJobStatus | null;
+  /**
+   * Finer backend phase inside `processing` (for example `extracting`), when the
+   * backend publishes one. Traceability only: an absent stage is not an error
+   * and never changes the owner-facing text on its own.
+   */
+  last_stage: string | null;
   last_checked_at: string | null;
   /** True once the quarantine row exists for this job (PRD §40). */
   quarantine_dispatched: boolean;
@@ -76,6 +82,14 @@ export interface StoredOcrJob {
    * diagnose; no stack traces or free-form messages are stored (PRD §80).
    */
   last_error_code: string | null;
+  /** When `last_error_code` was recorded, so a stale code is distinguishable. */
+  last_error_at: string | null;
+  /**
+   * Last GET that answered 2xx. Deliberately separate from `last_checked_at`:
+   * a failed attempt updates the latter but must not move this stamp, which is
+   * the only proof that the backend is still answering for this job.
+   */
+  last_successful_poll_at: string | null;
   /**
    * When the BACKEND says it received the ticket (the `created_at` of the job),
    * not when the browser started uploading. The two are deliberately different:
@@ -163,14 +177,19 @@ function isStoredOcrJob(value: unknown): value is StoredOcrJob {
  * outlives the problem it described.
  */
 export function clearOcrJobError(jobId: string): { durable: boolean } {
-  return patchOcrJob(jobId, { last_error_code: null });
+  // The timestamp belongs to the code: clearing one without the other leaves a
+  // row claiming a failure happened at an unknown moment.
+  return patchOcrJob(jobId, { last_error_code: null, last_error_at: null });
 }
 
 /** Records the stable code of the failure that stopped this job. */
 export function recordOcrJobError(jobId: string, code: string): { durable: boolean } {
   const trimmed = typeof code === 'string' ? code.trim() : '';
   if (trimmed === '') return { durable: true };
-  return patchOcrJob(jobId, { last_error_code: trimmed });
+  return patchOcrJob(jobId, {
+    last_error_code: trimmed,
+    last_error_at: new Date().toISOString(),
+  });
 }
 
 /**
@@ -227,6 +246,10 @@ function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
         : null,
     created_at: typeof value.created_at === 'string' ? value.created_at : new Date().toISOString(),
     last_status: (value.last_status ?? null) as OcrJobStatus | null,
+    last_stage:
+      typeof value.last_stage === 'string' && value.last_stage.trim() !== ''
+        ? value.last_stage.trim()
+        : null,
     last_checked_at: typeof value.last_checked_at === 'string' ? value.last_checked_at : null,
     quarantine_dispatched: value.quarantine_dispatched === true,
     pendiente_id:
@@ -239,6 +262,8 @@ function normalizeStoredJob(value: StoredOcrJob): StoredOcrJob {
       typeof value.last_error_code === 'string' && value.last_error_code.trim() !== ''
         ? value.last_error_code
         : null,
+    last_error_at: toUtcIso(value.last_error_at),
+    last_successful_poll_at: toUtcIso(value.last_successful_poll_at),
     // Normalized to UTC on every read and write, whatever offset came in.
     server_created_at: toUtcIso(value.server_created_at),
     quarantine_dispatched_at: toUtcIso(value.quarantine_dispatched_at),
