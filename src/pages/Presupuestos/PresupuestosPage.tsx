@@ -790,6 +790,9 @@ export function PresupuestosPage() {
           p_mes_periodo: mesPeriodoStr,
         })
         if (error) throw error
+        // La transferencia movía plata en silencio: cerraba el modal y no decía nada.
+        // El camino del sobre virtual y el de la asignación sí avisan; este no.
+        showToast(t('budget_move_done', { monto: formatMonto(monto) }), 'success')
       }
       
       const nuevoDeficit = sobreSeleccionado.monto_disponible + monto
@@ -810,9 +813,16 @@ export function PresupuestosPage() {
       }
       await cargarDatos(true)
     } catch (err: any) {
-      const msg = err?.message?.includes('error_insufficient_funds_in_envelope')
-        ? t('budget_error_insufficient_source')
-        : t('budget_error_transfer')
+      // El servidor ya explica por qué se niega, con clave y montos (por ejemplo
+      // error_budget_parent_below_children, «no podés bajar el grupo por debajo de lo
+      // repartido»). Tirar el mensaje genérico deja al usuario sin saber qué hacer:
+      // este catch resolvía sólo el caso de fondos insuficientes.
+      const rechazo = mensajeRechazoPresupuesto(err, t, formatMonto)
+      const msg = rechazo
+        ? rechazo
+        : err?.message?.includes('error_insufficient_funds_in_envelope')
+          ? t('budget_error_insufficient_source')
+          : t('budget_error_transfer')
       showToast(msg, 'error')
     } finally {
       setLoadingTransferir(false)
