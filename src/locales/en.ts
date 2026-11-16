@@ -1861,6 +1861,7 @@ export const inversiones = {
 
   notif_categoria_en_rojo_titulo: "Category over budget",
   notif_categoria_en_rojo_mensaje: "A category spent more than it was assigned this cycle.",
+  notif_categoria_en_rojo_mensaje_nombres: "Over budget: {categorias}. Spent more than assigned this cycle.",
 
   notif_ahorro_en_riesgo_titulo: "Savings at risk",
   notif_ahorro_en_riesgo_mensaje: "A savings goal is due soon and is behind schedule.",

@@ -2087,6 +2087,7 @@ export const inversiones = {
 
   notif_categoria_en_rojo_titulo: "Categoría en rojo",
   notif_categoria_en_rojo_mensaje: "Una categoría gastó más de lo que tenía asignado este ciclo.",
+  notif_categoria_en_rojo_mensaje_nombres: "En rojo: {categorias}. Gastó más de lo asignado este ciclo.",
 
   notif_ahorro_en_riesgo_titulo: "Ahorro en riesgo",
   notif_ahorro_en_riesgo_mensaje: "Un ahorro está por vencer y va atrasado respecto del plan.",
