@@ -891,3 +891,32 @@
     max-height: calc(100dvh - 16px);
   }
 }
+
+/* Rescate de un envio que el servidor ya no tiene: reenviar o borrar. */
+.ocr-history-actions {
+  display: flex;
+  gap: 8px;
+  padding: 0 12px 10px;
+}
+
+.ocr-history-action {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.ocr-history-action:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.ocr-history-action--danger {
+  color: var(--danger, #b3261e);
+  border-color: rgba(179, 38, 30, 0.35);
+}

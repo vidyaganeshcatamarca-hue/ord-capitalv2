@@ -9,6 +9,10 @@
 // sepa en que quedo cada envio sin depender de las tablas.
 //
 // La fila que ya esta en cuarentena es un boton: lleva directo a la bandeja.
+//
+// Una fila cuyo upload el backend ya no conoce ofrece dos salidas: reenviar las
+// mismas fotos o borrarla del historial. Sin eso quedaba "Recibido · En espera"
+// para siempre, que es peor que un error visible.
 
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
@@ -16,10 +20,16 @@ import { useNavigate } from 'react-router-dom'
 import { t } from '@/locales/i18n'
 import { loadOcrHistory, type OcrHistoryEntry, type OcrHistoryStatus } from '@/ocr/history'
 import { describeOcrJobStatus } from '@/ocr/jobStatusLabel'
+import { loadOcrJobs } from '@/ocr/storage'
+import { isLostOcrHistoryEntry } from '@/ocr/recovery'
 import './Ocr.css'
 
 interface OcrHistoryModalProps {
   onClose: () => void
+  /** Reenvía las fotos guardadas de un envío que el backend ya no conoce. */
+  onResend?: (jobId: string) => Promise<void>
+  /** Borra del historial un envío descartado. */
+  onDiscard?: (jobId: string) => Promise<void>
 }
 
 /** Fecha y hora cortas, en el locale del dispositivo. */
@@ -38,13 +48,37 @@ function statusLabel(status: OcrHistoryStatus): string {
   return t(`ocr.history_status_${status}`)
 }
 
-export function OcrHistoryModal({ onClose }: OcrHistoryModalProps) {
+export function OcrHistoryModal({ onClose, onResend, onDiscard }: OcrHistoryModalProps) {
   const navigate = useNavigate()
-  const [entries] = useState<OcrHistoryEntry[]>(() => loadOcrHistory().value)
+  const [entries, setEntries] = useState<OcrHistoryEntry[]>(() => loadOcrHistory().value)
+  const [busy, setBusy] = useState<string | null>(null)
+  const [errorKey, setErrorKey] = useState<string | null>(null)
+
+  // The row is lost only when the backend answered NOT_FOUND (or nothing is
+  // following it any more). A network failure is not lost: the upload exists.
+  const jobs = loadOcrJobs().value
 
   const openQuarantine = (): void => {
     onClose()
     navigate('/cuarentena')
+  }
+
+  const run = async (
+    jobId: string,
+    action: ((id: string) => Promise<void>) | undefined
+  ): Promise<void> => {
+    if (!action || busy !== null) return
+    setBusy(jobId)
+    setErrorKey(null)
+    try {
+      await action(jobId)
+      // Re-read: both actions change what the phone remembers.
+      setEntries(loadOcrHistory().value)
+    } catch {
+      setErrorKey('ocr.history_action_failed')
+    } finally {
+      setBusy(null)
+    }
   }
 
   return createPortal(
@@ -64,16 +98,15 @@ export function OcrHistoryModal({ onClose }: OcrHistoryModalProps) {
         </div>
 
         <div className="ocr-modal-body">
+          {errorKey !== null && <p className="ocr-note ocr-note--warn">{t(errorKey)}</p>}
           {entries.length === 0 ? (
             <p className="ocr-note">{t('ocr.history_empty')}</p>
           ) : (
             <ul className="ocr-history-list">
               {entries.map((entry) => {
                 const inQuarantine = entry.status === 'quarantine'
+                const lost = isLostOcrHistoryEntry(entry, jobs)
                 const Row = inQuarantine ? 'button' : 'div'
-                // The real backend state, when the ticket is still travelling.
-                // A ten-minute ticket must say "reading" or "classifying", not
-                // a flat "processing" that tells the owner nothing.
                 // The fine backend state only describes a ticket that is still
                 // travelling. Once it sits in the quarantine — or is already
                 // approved — the lifecycle status is the truth; a stale
@@ -83,9 +116,13 @@ export function OcrHistoryModal({ onClose }: OcrHistoryModalProps) {
                 const fine = stillTravelling
                   ? describeOcrJobStatus(entry.last_status ?? null, entry.last_stage ?? null)
                   : null
-                const statusText = fine ? t(fine.key) : statusLabel(entry.status)
+                const statusText = lost
+                  ? t('ocr.history_lost')
+                  : fine
+                    ? t(fine.key)
+                    : statusLabel(entry.status)
                 const statusClass = `ocr-history-status ocr-history-status--${entry.status}${
-                  fine ? ` ocr-history-status--${fine.tone}` : ''
+                  fine && !lost ? ` ocr-history-status--${fine.tone}` : ''
                 }`
                 return (
                   <li key={entry.job_id}>
@@ -103,6 +140,30 @@ export function OcrHistoryModal({ onClose }: OcrHistoryModalProps) {
                         {statusText}
                       </span>
                     </Row>
+                    {lost && (onResend !== undefined || onDiscard !== undefined) && (
+                      <div className="ocr-history-actions">
+                        {onResend !== undefined && (
+                          <button
+                            type="button"
+                            className="ocr-history-action"
+                            disabled={busy !== null}
+                            onClick={() => void run(entry.job_id, onResend)}
+                          >
+                            {t('ocr.history_resend')}
+                          </button>
+                        )}
+                        {onDiscard !== undefined && (
+                          <button
+                            type="button"
+                            className="ocr-history-action ocr-history-action--danger"
+                            disabled={busy !== null}
+                            onClick={() => void run(entry.job_id, onDiscard)}
+                          >
+                            {t('ocr.history_discard')}
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </li>
                 )
               })}

@@ -150,6 +150,19 @@ export function patchOcrHistory(
   return save(next)
 }
 
+/**
+ * Borra un envio del historial del telefono.
+ *
+ * Se usa cuando el dueño descarta un ticket que el backend ya no conoce: no
+ * hay nada que seguir y dejarlo "en espera" para siempre solo confunde.
+ */
+export function removeOcrHistoryEntry(jobId: string): { durable: boolean } {
+  const current = loadOcrHistory().value
+  const remaining = current.filter((item) => item.job_id !== jobId)
+  if (remaining.length === current.length) return { durable: true }
+  return save(remaining)
+}
+
 export function clearOcrHistory(): { durable: boolean } {
   const store = storage()
   if (!store) return { durable: false }

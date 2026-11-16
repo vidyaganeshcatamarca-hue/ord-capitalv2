@@ -21,6 +21,9 @@ import {
   validateOcrFiles,
 } from '@/ocr/contract'
 import { ocrFileRejectionI18nKey } from '@/ocr/errors'
+import { removeOcrHistoryEntry } from '@/ocr/history'
+import { removeOcrJob } from '@/ocr/storage'
+import { deleteOcrImages, listOcrImages, readOcrImage } from '@/ocr/imageStore'
 import { isOcrPdfFile } from '@/ocr/contract'
 import { OcrHistoryModal } from './OcrHistoryModal'
 import './Ocr.css'
@@ -131,6 +134,47 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
     setAccepted({ duplicate: result.duplicate })
     setStage('accepted')
     setFiles([])
+  }
+
+  /**
+   * Drops an upload the backend no longer knows about.
+   *
+   * The history row is what the owner sees; the job and its photos are what the
+   * phone kept. Leaving either behind means the row comes back on the next
+   * open, which is the state this action exists to end.
+   */
+  const discardHistoryEntry = async (jobId: string): Promise<void> => {
+    removeOcrHistoryEntry(jobId)
+    removeOcrJob(jobId)
+    await deleteOcrImages(jobId)
+  }
+
+  /**
+   * Re-uploads the photos already stored for a lost ticket.
+   *
+   * Nothing is invented: if the phone no longer has the images, the action
+   * fails instead of sending an empty ticket. The old row and its photos are
+   * dropped only after a new job was accepted, so a failed resend leaves the
+   * owner exactly where they were.
+   */
+  const resendHistoryEntry = async (jobId: string): Promise<void> => {
+    const stored = await listOcrImages(jobId)
+    const usable = stored
+      .filter((image) => image.available)
+      .sort((a, b) => a.file_index - b.file_index)
+    const files: File[] = []
+    for (const image of usable) {
+      const blob = await readOcrImage(jobId, image.file_index)
+      if (!blob) continue
+      files.push(new File([blob], `ticket-${image.file_index + 1}`, { type: image.mime_type }))
+    }
+    if (files.length === 0 || context === null) {
+      throw new Error('OCR_HISTORY_RESEND_UNAVAILABLE')
+    }
+    const result = await submit({ files, context })
+    if (!result.jobId) throw new Error('OCR_HISTORY_RESEND_FAILED')
+    removeOcrHistoryEntry(jobId)
+    await deleteOcrImages(jobId)
   }
 
   // Portaled to `document.body`: the sheet is mounted from AppLayout, so a
@@ -296,7 +340,13 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
             <span aria-hidden="true">›</span>
           </button>
 
-          {showHistory && <OcrHistoryModal onClose={() => setShowHistory(false)} />}
+          {showHistory && (
+            <OcrHistoryModal
+              onClose={() => setShowHistory(false)}
+              onResend={resendHistoryEntry}
+              onDiscard={discardHistoryEntry}
+            />
+          )}
         </div>
       </div>
     </div>,
