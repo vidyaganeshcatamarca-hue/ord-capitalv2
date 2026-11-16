@@ -45,6 +45,16 @@ export interface RunOcrPollingLoopInput {
   onUpdate?: (job: OcrJob) => void;
   /** Terminal status with a result to dispatch into the quarantine. */
   onResult: (job: OcrJob) => void;
+  /**
+   * Runs on EVERY 200, before the terminal/non-terminal split.
+   *
+   * A successful GET is the backend confirming that this ticket belongs to the
+   * session that authorized it — as true for `needs_review` as for `processing`.
+   * Owner adoption and the successful-poll timestamp therefore live here, not
+   * inside `onUpdate`: a terminal never reaches `onUpdate`, and a legacy row
+   * whose FIRST answer is already terminal would never be adopted.
+   */
+  onPolled?: (job: OcrJob) => void;
   /** Terminal status without a result (`failed`, `cancelled`) or a dead loop. */
   onStopped: (info: { code: string; terminal: boolean }) => void;
   signal?: AbortSignal;
@@ -82,7 +92,7 @@ function isDocumentHidden(): boolean {
  * either through `onResult` or `onStopped`.
  */
 export function runOcrPollingLoop(input: RunOcrPollingLoopInput): OcrPollingController {
-  const { jobId, accessToken, onUpdate, onResult, onStopped, signal } = input;
+  const { jobId, accessToken, onUpdate, onResult, onStopped, onPolled, signal } = input;
   const fetchJob = input.fetchJob ?? getOcrJob;
 
   let cancelled = false;
@@ -167,6 +177,10 @@ export function runOcrPollingLoop(input: RunOcrPollingLoopInput): OcrPollingCont
 
     if (cancelled) return;
     consecutiveFailures = 0;
+
+    // Every 200 is a successful poll: record it BEFORE deciding what kind of
+    // answer it is, so `last_successful_poll_at` also covers terminals.
+    onPolled?.(job);
 
     if (isOcrDispatchStatus(job.status)) {
       cancel();

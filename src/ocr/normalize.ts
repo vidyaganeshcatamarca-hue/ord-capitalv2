@@ -285,6 +285,28 @@ function resolveTicketIssues(
  * Builds the normalized ticket from a backend result.
  * Returns null when there is nothing ticket-shaped to read.
  */
+/**
+ * Normalizes a backend `result` into a ticket, or returns `null` when the
+ * payload is not a ticket.
+ *
+ * Returning `null` on a terminal 200 is legitimate, and there are exactly two
+ * paths that reach it — both are data conditions, never a transport failure:
+ *
+ *   1. The parsed result is not an object. `unwrapOcrResult` accepts either the
+ *      canonical v1 value or today's `{ ticket: ... }` wrapper, and each level
+ *      gets one `parseMaybeJson`, so a twice-encoded JSON string is still read.
+ *      What is left is a value that is not a record at all: an empty/absent
+ *      `result`, a bare scalar, an array, or a string that is not JSON.
+ *   2. The record has neither items nor an explicit total. A ticket without a
+ *      single product and without a total carries nothing to review, so
+ *      inventing an empty quarantine row would be worse than reporting it.
+ *
+ * The caller turns `null` into `NO_TICKET`. That is deliberately NOT relaxed
+ * here: without evidence that the backend publishes a recognized-looking shape
+ * this parser rejects, accepting more would fabricate tickets. `NO_TICKET` is a
+ * recoverable error — the job stays open and the next reconciliation re-polls,
+ * because the defect may be transient on the backend side too.
+ */
 export function normalizeOcrResult(jobId: string, raw: unknown): OcrTicket | null {
   const { ticketSource, extraIssues } = unwrapOcrResult(raw);
   const record = asRecord(parseMaybeJson(ticketSource));
@@ -311,7 +333,8 @@ export function normalizeOcrResult(jobId: string, raw: unknown): OcrTicket | nul
       : Math.abs(num(scalarDiscount) ?? 0);
 
   // A ticket without items and without a total is not a ticket: the caller
-  // reports a malformed result instead of inventing an empty quarantine.
+  // reports a malformed result (`NO_TICKET`) instead of inventing an empty
+  // quarantine. Recoverable by design: the job is not closed by it.
   if (items.length === 0 && explicitTotal === null) return null;
 
   const total = Math.round((explicitTotal ?? itemsTotal - generalDiscount) * 100) / 100;

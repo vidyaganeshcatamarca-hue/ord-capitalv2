@@ -22,7 +22,7 @@ import { validateOcrFiles } from './contract';
 import { ocrFileRejectionI18nKey } from './errors';
 import { rekeyOcrImages, saveOcrImages, sweepOcrImages, markOcrImagesProcessed } from './imageStore';
 import { syncPendingOcrMemory } from './memory';
-import { patchOcrHistory, recordOcrHistory, type OcrHistoryStatus } from './history';
+import { patchOcrHistory, recordOcrHistory } from './history';
 import { createOcrDispatcher, type OcrDispatcher } from './dispatch';
 import { isStaleSessionCallback } from './sessionGuard';
 import { runOcrPollingLoop, type OcrPollingController } from './polling';
@@ -259,10 +259,13 @@ export function useOcrJobs(): UseOcrJobsResult {
       const controller = runOcrPollingLoop({
         jobId,
         accessToken,
-        onUpdate: (job) => {
+        onPolled: (job) => {
           if (isStaleSessionCallback(sessionOwner, ownerRef.current)) return;
-          // A 200 is the backend confirming this ticket belongs to the current
-          // user: only then does a legacy row get its owner.
+          // A 200 proves this ticket belongs to the session that authorized the
+          // GET — terminal or not. That is the only evidence allowed to bind a
+          // legacy row, and it has to run BEFORE the terminal split, because a
+          // legacy whose first answer is already terminal never reaches
+          // `onUpdate`.
           const currentOwner = ownerRef.current;
           if (currentOwner) adoptOcrJobOwner(jobId, currentOwner);
           const now = new Date().toISOString();
@@ -271,13 +274,16 @@ export function useOcrJobs(): UseOcrJobsResult {
             // Traceability only: an absent stage stays absent, never invented.
             last_stage: job.stage,
             last_checked_at: now,
-            // The proof the backend is still answering for this job.
+            // Every 200 is a successful poll, terminals included.
             last_successful_poll_at: now,
             // The backend's own receipt stamp, used later to report latency.
             server_created_at: job.created_at || null,
           });
           // A successful GET proves the polling failure is gone.
           clearOcrJobError(jobId);
+        },
+        onUpdate: (job) => {
+          if (isStaleSessionCallback(sessionOwner, ownerRef.current)) return;
           patch(jobId, {
             phase: phaseFromStatus(job.status),
             status: job.status,
@@ -289,11 +295,8 @@ export function useOcrJobs(): UseOcrJobsResult {
           // quarantine (which can take minutes with several photos). The real
           // status travels too, so the row can say what is happening instead of
           // a flat "Procesando".
-          const historyStatus: OcrHistoryStatus = isOcrDispatchStatus(job.status)
-            ? 'classified'
-            : 'processing';
           patchOcrHistory(jobId, {
-            status: historyStatus,
+            status: 'processing',
             last_status: job.status,
             last_stage: job.stage,
           });
@@ -410,7 +413,11 @@ export function useOcrJobs(): UseOcrJobsResult {
       });
       if (!accessToken) {
         // Missing auth is a state the user has to see, not a silent "processing".
-        patchOcrJob(job.job_id, { last_status: 'failed' });
+        // It must never overwrite a terminal that still owes its quarantine:
+        // that would turn a recoverable ticket into a "failed" one.
+        if (job.last_status === null || !isOcrDispatchStatus(job.last_status)) {
+          patchOcrJob(job.job_id, { last_status: 'failed' });
+        }
         patch(job.job_id, { phase: 'failed', errorCode: 'UNAUTHORIZED' });
         continue;
       }
@@ -429,24 +436,29 @@ export function useOcrJobs(): UseOcrJobsResult {
   );
 
   /**
-   * Re-polls the jobs whose quarantine dispatch failed. The ticket is still on
-   * the backend and still owned by this user, so one GET re-delivers the result
-   * without a second upload.
+   * Re-polls the jobs whose quarantine never landed.
+   *
+   * Recovery goes through the EXISTING loop: one GET re-delivers the normalized
+   * ticket and `onResult` dispatches it. Re-dispatching the stored object would
+   * only replay a possibly null `ticket` and reproduce NO_TICKET forever, which
+   * is exactly why the retry must revalidate against the backend.
    */
   const retryPendingDispatches = useCallback(async (): Promise<void> => {
     const owner = ownerRef.current;
     if (!owner) return;
-    const failed = selectResumableOcrJobs(loadOcrJobs().value, owner).filter(
+    // Any dispatch-status terminal that was never confirmed. `last_error_code`
+    // is deliberately NOT required: the app can die between the terminal and the
+    // RPC, which leaves no error at all and still owes a quarantine.
+    const pending = selectResumableOcrJobs(loadOcrJobs().value, owner).filter(
       (job) =>
         !job.quarantine_dispatched &&
-        job.last_error_code !== null &&
         job.last_status !== null &&
         isOcrDispatchStatus(job.last_status)
     );
-    if (failed.length === 0) return;
+    if (pending.length === 0) return;
     const accessToken = await readOcrAccessToken();
     if (!accessToken) return;
-    for (const job of failed) startPolling(job.job_id, accessToken);
+    for (const job of pending) startPolling(job.job_id, accessToken);
   }, [startPolling]);
 
   useEffect(() => {

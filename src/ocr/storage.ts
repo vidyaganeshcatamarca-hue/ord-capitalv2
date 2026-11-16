@@ -31,6 +31,21 @@ export const OCR_STORAGE_TERMINAL_STATUSES: readonly OcrJobStatus[] = [
   'cancelled',
 ];
 
+/**
+ * Statuses that carry a result which belongs in the quarantine.
+ *
+ * Mirrored locally for the same reason as the terminal list above (ESM loader),
+ * and asserted against `OCR_DISPATCH_STATUSES` in the ownership test.
+ */
+export const OCR_STORAGE_DISPATCH_STATUSES: readonly OcrJobStatus[] = [
+  'completed',
+  'needs_review',
+];
+
+function isDispatchStatus(status: OcrJobStatus | null): boolean {
+  return status !== null && OCR_STORAGE_DISPATCH_STATUSES.includes(status);
+}
+
 function isTerminalStatus(status: OcrJobStatus | null): boolean {
   return status !== null && OCR_STORAGE_TERMINAL_STATUSES.includes(status);
 }
@@ -296,9 +311,15 @@ export function isOcrSessionErrorCode(code: string | null | undefined): boolean 
  *
  * Rules, in order:
  *   - another owner's row is never selected;
+ *   - CLOSED means the quarantine row exists and is confirmed: nothing else
+ *     closes a job. `backend terminal` is not `frontend finished`;
+ *   - a dispatch-status terminal that was never confirmed is ALWAYS recoverable,
+ *     whatever `last_error_code` it carries: the ticket is still on the backend
+ *     and one GET re-delivers it. This is the rule that used to be missing —
+ *     a failed dispatch left `last_status` terminal, and the old selector threw
+ *     the row away before the retry could ever look at it;
  *   - a legacy row (owner unknown) is selected so a single GET can prove whose
  *     it is, and adopted only if the backend confirms;
- *   - an already confirmed quarantine has nothing left to do;
  *   - a business-terminal job is not polled again, UNLESS the last failure was a
  *     session error: 404 -> owner returns -> 200 -> dispatch must still happen.
  */
@@ -309,11 +330,12 @@ export function selectResumableOcrJobs(
   if (!ownerUserId) return [];
   return jobs.filter((job) => {
     if (job.owner_user_id !== null && job.owner_user_id !== ownerUserId) return false;
+    // Closed = the quarantine row exists. This is the only closing condition.
     if (job.quarantine_dispatched && job.pendiente_id !== null) return false;
-    const blockedBySession = isOcrSessionErrorCode(job.last_error_code);
-    if (!blockedBySession && isTerminalStatus(job.last_status)) {
-      return false;
-    }
+    // A result that never landed stays recoverable, even with an error code.
+    if (isDispatchStatus(job.last_status)) return true;
+    if (isOcrSessionErrorCode(job.last_error_code)) return true;
+    if (isTerminalStatus(job.last_status)) return false;
     return true;
   });
 }
