@@ -55,6 +55,15 @@ Functional definition that governs every spec below:
 | T6 | S9 | inline | `tests/ocr_terminal_recovery.test.js` A–G |
 | T7 | — | inline | OCR suite + `tsc --noEmit` |
 
+## Commits
+
+- `977be92` — fix: selector closes only on a confirmed quarantine row, `onPolled`
+  adoption/trace on every 200, recovery through the existing GET, `resumePending`
+  no longer degrades a pending dispatch, `NO_TICKET` documented (T1–T5).
+- `6bae80c` — test: regressions A–G plus the dispatch-list tie (T6).
+
+Verified: 147/147 OCR tests, `tsc --noEmit` exit 0.
+
 ## Log
 
 L1 (owner, verbatim):
