@@ -10,7 +10,7 @@ BEGIN
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
 
     RETURN QUERY
-    SELECT 
+    SELECT
         n.notificacion_id,
         n.tipo_notificacion,
         n.titulo,
@@ -23,7 +23,8 @@ BEGIN
     FROM public.p_notificaciones_enviadas n
     WHERE n.user_id = v_user_id
       AND (n.pausada_hasta IS NULL OR n.pausada_hasta < now())
+      AND (n.expira_at IS NULL OR n.expira_at > now())
     ORDER BY n.enviado_at DESC
     LIMIT p_limit;
 END;
-$function$
+$function$;

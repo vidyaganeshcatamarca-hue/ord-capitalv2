@@ -22,7 +22,7 @@ BEGIN
             p_categoria  => 'cuarentena',
             p_metadata   => jsonb_build_object('pendientes', v_fila.pendientes),
             p_prioridad  => 10::smallint,
-            p_dedupe_key => 'cuarentena:' || v_fila.pendientes || ':' || to_char(CURRENT_DATE, 'YYYYMMDD'),
+            p_dedupe_key => 'cuarentena:' || v_fila.pendientes,
             p_expira_at  => (CURRENT_DATE + 1)::timestamptz
         );
 
@@ -33,4 +33,4 @@ BEGIN
 
     RETURN v_encolados;
 END;
-$function$
+$function$;

@@ -12,8 +12,6 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_notification_payload_invalid", "params": {}}';
     END IF;
 
-    -- La preferencia se busca por nombre de categoria, no por columna fija:
-    -- cuando Engage agregue sus categorias, esta funcion no cambia.
     IF p_categoria IS NOT NULL THEN
         SELECT to_jsonb(c) INTO v_config
         FROM public.p_notificaciones_config c
@@ -26,7 +24,10 @@ BEGIN
         END IF;
     END IF;
 
-    -- Idempotente: si el cron corre dos veces, devuelve la misma fila.
+    -- Idempotente, pero ademas REACTIVA: si el hecho sigue vigente, la fila
+    -- vuelve a estar sin leer y con la expiracion nueva en vez de crear otra.
+    -- Sin esto el mismo hecho encolaba una fila por corrida y las viejas
+    -- quedaban en la bandeja para siempre.
     IF p_dedupe_key IS NOT NULL THEN
         SELECT notificacion_id INTO v_id
         FROM public.p_notificaciones_enviadas
@@ -34,6 +35,15 @@ BEGIN
         LIMIT 1;
 
         IF v_id IS NOT NULL THEN
+            UPDATE public.p_notificaciones_enviadas
+               SET enviado_at     = now(),
+                   expira_at      = p_expira_at,
+                   leida          = false,
+                   leida_at       = NULL,
+                   pausada_hasta  = NULL,
+                   prioridad      = p_prioridad,
+                   metadata       = COALESCE(p_metadata, metadata)
+             WHERE notificacion_id = v_id;
             RETURN v_id;
         END IF;
     END IF;
@@ -50,4 +60,4 @@ BEGIN
 
     RETURN v_id;
 END;
-$function$
+$function$;

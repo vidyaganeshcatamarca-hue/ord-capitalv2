@@ -94,6 +94,9 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   alert_upcoming_card_dues: "Próximos vencimientos de tarjeta:",
   alert_card_due_in_days: "(vence en {dias} días)",
   alert_all_ok_no_alerts: "Todo en orden. Sin alertas financieras.",
+  // S1 (notificaciones): el titulo del panel estaba hardcodeado en espanol
+  // dentro de HomePage. El conteo es el de filas de alerta visibles.
+  alert_active_count: "Alertas activas ({count})",
   hero_title_to_assign: "A Asignar",
   hero_title_safe_to_spend: "Safe-to-Spend",
   hero_title_total: "Total",
@@ -2088,6 +2091,7 @@ export const inversiones = {
 
   notif_categoria_en_rojo_titulo: "Categoría en rojo",
   notif_categoria_en_rojo_mensaje: "Una categoría gastó más de lo que tenía asignado este ciclo.",
+  notif_categoria_en_rojo_mensaje_nombres: "En rojo: {categorias}. Gastó más de lo asignado este ciclo.",
 
   notif_ahorro_en_riesgo_titulo: "Ahorro en riesgo",
   notif_ahorro_en_riesgo_mensaje: "Un ahorro está por vencer y va atrasado respecto del plan.",

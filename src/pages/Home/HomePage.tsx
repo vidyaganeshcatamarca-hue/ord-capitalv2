@@ -298,7 +298,9 @@ export function HomePage() {
   // Una sola fuente para el numero de la campanita: avisos operativos sin leer
   // mas alertas activas. Aca no se piden las alertas porque el Home ya las trae
   // en su propia carga.
-  const { avisos: avisosNoLeidos } = useNotificationCount({ conAlertas: false })
+  // `refresco` sube en cada reconsulta del contador: la bandeja del panel se
+  // refresca con esa misma cadencia, para que el numero y la lista no divergan.
+  const { avisos: avisosNoLeidos, refresco: refrescoAvisos } = useNotificationCount({ conAlertas: false })
 
   const [billeteras, setBilleteras] = useState<any[]>([])
   const [tarjetas, setTarjetas] = useState<any[]>([])
@@ -1009,6 +1011,11 @@ export function HomePage() {
 
   // Los avisos que entrega el productor viven en la misma bandeja que las
   // alertas: si el badge los suma, tienen que estar a la vista al abrir.
+  // La bandeja se carga siempre, no solo al abrir el panel: el numero de la
+  // campanita y la supresion del aviso de cuarentena se apoyan en la MISMA
+  // lista que el usuario ve cuando abre. `metadata` se conserva porque la
+  // traduccion depende de ella (recurrencia de recordatorios, y el nombre de
+  // la categoria cuando el productor lo mande).
   const [avisosPanel, setAvisosPanel] = useState<Array<{
     notificacion_id: number
     tipo_notificacion: string
@@ -1016,23 +1023,23 @@ export function HomePage() {
     mensaje: string
     leida: boolean
     enviado_at: string
+    metadata?: Record<string, unknown> | null
   }>>([])
 
   useEffect(() => {
-    if (!alertsOpen) return
     let vivo = true
     void (async () => {
       try {
-        const filas = await rpc<any[]>('fn_obtener_notificaciones_no_leidas', { p_limit: 20 })
+        const filas = await rpc<any[]>('fn_obtener_notificaciones_no_leidas', { p_limit: 50 })
         if (vivo) setAvisosPanel((filas || []).filter((f: any) => !f.leida))
       } catch {
-        if (vivo) setAvisosPanel([])
+        // Un fallo de la bandeja no borra lo que ya esta en pantalla.
       }
     })()
     return () => {
       vivo = false
     }
-  }, [alertsOpen])
+  }, [alertsOpen, refrescoAvisos])
 
   const marcarAvisoLeido = async (id: number) => {
     try {
@@ -1042,6 +1049,25 @@ export function HomePage() {
       // Silencioso: si falla, el aviso sigue en la lista.
     }
   }
+
+  // S2: un clic afuera cierra el panel. El panel es un bloque en el flujo, no un
+  // modal: no hay overlay, se escucha `pointerdown` en captura sobre `document`
+  // (cubre mouse, dedo y lapiz) y se ignora lo que ocurre dentro del panel o en
+  // la campanita, que tiene su propio toggle.
+  const alertsPanelRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!alertsOpen) return
+    const cerrarSiEsAfuera = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+      if (alertsPanelRef.current?.contains(target)) return
+      if (target.closest('.home-bell-target')) return
+      setAlertsOpen(false)
+    }
+    document.addEventListener('pointerdown', cerrarSiEsAfuera, true)
+    return () => document.removeEventListener('pointerdown', cerrarSiEsAfuera, true)
+  }, [alertsOpen])
 
   // Dismissals persist per alert type: tapping the row records the count it
   // was seen at; the row re-appears whenever that count changes again (a new
@@ -1087,7 +1113,28 @@ export function HomePage() {
 
   // A row stays hidden only while its count has not changed since dismissal.
   const filasVisibles = filasVisiblesAlertas(alertasFilas, descartadas)
-  const badgeCampanita = filasVisibles.length + avisosNoLeidos
+
+  // S4: la alerta de cuarentena es el estado vivo (trae el conteo y la
+  // navegacion) y su aviso homonimo repite la misma informacion, asi que mientras
+  // la alerta exista el aviso se suprime. Se mira `alertasFilas` y no
+  // `filasVisibles`: descartar la fila no debe resucitar el aviso redundante.
+  const alertaCuarentenaViva = alertasFilas.some((fila) => fila.key === 'cuarentena')
+
+  const avisosVisibles = avisosPanel.filter(
+    (aviso) => !(alertaCuarentenaViva && aviso.tipo_notificacion === 'cuarentena_pendiente'),
+  )
+
+  // S3: filas de alerta visibles + avisos sin leer. Dos ajustes sobre el numero
+  // crudo del contador:
+  //  - los avisos suprimidos por S4 no pueden inflar el badge (el usuario no los
+  //    ve, pero siguen sin leer y fn_notificaciones_contar los cuenta);
+  //  - `fn_notificaciones_contar` descarta los avisos vencidos y los de familia
+  //    engage, mientras `fn_obtener_notificaciones_no_leidas` los lista igual.
+  //    Por eso el badge nunca puede quedar por debajo de la lista visible: ese
+  //    era el caso del dueño, donde el badge mostraba solo las alertas.
+  const avisosCuarentenaOcultos = avisosPanel.length - avisosVisibles.length
+  const avisosContados = Math.max(0, avisosNoLeidos - avisosCuarentenaOcultos)
+  const badgeCampanita = filasVisibles.length + Math.max(avisosContados, avisosVisibles.length)
   const patrimonioARS = patrimonio?.total_pesos ?? 0
   // S18: la línea USD fija del hero pasó a buildHeroLines (dinámica por moneda).
   // total_dolares sigue vinienendo del RPC (los reportes legados lo consumen).
@@ -1173,10 +1220,10 @@ export function HomePage() {
       {/* ── ALERTS PANEL ── */}
       {alertsOpen && alerts && (
         <div className="section" style={{ paddingTop: 0 }}>
-          <div className="home-alerts-panel">
+          <div className="home-alerts-panel" ref={alertsPanelRef}>
             <div className="home-alerts-header">
-              <span className="home-alerts-title">Alertas Activas ({filasVisibles.length})</span>
-              <button className="text-xs text-muted" onClick={() => setAlertsOpen(false)}>Cerrar ✕</button>
+              <span className="home-alerts-title">{t('alert_active_count', { count: filasVisibles.length })}</span>
+              <button className="text-xs text-muted" onClick={() => setAlertsOpen(false)}>{t('btn_cerrar_x')}</button>
             </div>
             {/* Captura rapida: entrada de la notificacion permanente del sistema.
                 Hoy en web no se muestra; queda lista para el APK. */}
@@ -1245,10 +1292,10 @@ export function HomePage() {
                 })}
               </div>
             )}
-            {avisosPanel.length > 0 && (
+            {avisosVisibles.length > 0 && (
               <>
                 <p className="text-xs text-muted font-semibold mt-1">{t('notif_title')}</p>
-                {avisosPanel.map((aviso) => (
+                {avisosVisibles.map((aviso) => (
                   <NotificationItem
                     key={aviso.notificacion_id}
                     item={aviso}
@@ -1257,7 +1304,7 @@ export function HomePage() {
                 ))}
               </>
             )}
-            {filasVisibles.length === 0 && avisosPanel.length === 0 && (
+            {filasVisibles.length === 0 && avisosVisibles.length === 0 && (
               <p className="text-xs text-muted text-center py-2">{t('alert_all_ok_no_alerts')}</p>
             )}
           </div>

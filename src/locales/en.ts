@@ -91,6 +91,7 @@ export const errors = {
   alert_upcoming_card_dues: "Upcoming card due dates:",
   alert_card_due_in_days: "(due in {dias} days)",
   alert_all_ok_no_alerts: "All good. No financial alerts.",
+  alert_active_count: "Active alerts ({count})",
   hero_title_to_assign: "To Assign",
   hero_title_safe_to_spend: "Safe-to-Spend",
   hero_title_total: "Total",
@@ -1864,6 +1865,7 @@ export const inversiones = {
 
   notif_categoria_en_rojo_titulo: "Category over budget",
   notif_categoria_en_rojo_mensaje: "A category spent more than it was assigned this cycle.",
+  notif_categoria_en_rojo_mensaje_nombres: "Over budget: {categorias}. Spent more than assigned this cycle.",
 
   notif_ahorro_en_riesgo_titulo: "Savings at risk",
   notif_ahorro_en_riesgo_mensaje: "A savings goal is due soon and is behind schedule.",

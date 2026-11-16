@@ -91,6 +91,7 @@ export const errors = {
   alert_upcoming_card_dues: "Próximos vencimentos de cartão:",
   alert_card_due_in_days: "(vence em {dias} dias)",
   alert_all_ok_no_alerts: "Tudo em ordem. Sem alertas financeiros.",
+  alert_active_count: "Alertas ativos ({count})",
   hero_title_to_assign: "A Atribuir",
   hero_title_safe_to_spend: "Safe-to-Spend",
   hero_title_total: "Total",
@@ -1864,6 +1865,7 @@ export const inversiones = {
 
   notif_categoria_en_rojo_titulo: "Categoria no vermelho",
   notif_categoria_en_rojo_mensaje: "Uma categoria gastou mais do que o atribuído neste ciclo.",
+  notif_categoria_en_rojo_mensaje_nombres: "No vermelho: {categorias}. Gastou mais do que o atribuído neste ciclo.",
 
   notif_ahorro_en_riesgo_titulo: "Poupança em risco",
   notif_ahorro_en_riesgo_mensaje: "Uma poupança está a vencer e vai atrasada em relação ao plano.",
