@@ -91,6 +91,7 @@ export const errors = {
   alert_upcoming_card_dues: "Upcoming card due dates:",
   alert_card_due_in_days: "(due in {dias} days)",
   alert_all_ok_no_alerts: "All good. No financial alerts.",
+  alert_active_count: "Active alerts ({count})",
   hero_title_to_assign: "To Assign",
   hero_title_safe_to_spend: "Safe-to-Spend",
   hero_title_total: "Total",

@@ -791,7 +791,7 @@
 
 .alert-item-badge {
   background: var(--coral-dim);
-  color: var(--coral);
+  color: var(--coral-ink);
   padding: 2px 8px;
   border-radius: var(--radius-full);
   font-size: calc(11px * var(--font-scale));

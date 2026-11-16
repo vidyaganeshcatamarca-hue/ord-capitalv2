@@ -94,6 +94,9 @@ error_transfer_different_currencies: "Operación inválida: No se permiten trans
   alert_upcoming_card_dues: "Próximos vencimientos de tarjeta:",
   alert_card_due_in_days: "(vence en {dias} días)",
   alert_all_ok_no_alerts: "Todo en orden. Sin alertas financieras.",
+  // S1 (notificaciones): el titulo del panel estaba hardcodeado en espanol
+  // dentro de HomePage. El conteo es el de filas de alerta visibles.
+  alert_active_count: "Alertas activas ({count})",
   hero_title_to_assign: "A Asignar",
   hero_title_safe_to_spend: "Safe-to-Spend",
   hero_title_total: "Total",
