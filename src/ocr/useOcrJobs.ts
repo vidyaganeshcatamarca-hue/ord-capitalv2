@@ -210,7 +210,14 @@ export function useOcrJobs(): UseOcrJobsResult {
           server_created_at: job.created_at || null,
           quarantine_dispatched_at: new Date().toISOString(),
         });
-        patchOcrHistory(jobId, { status: 'quarantine', pendiente_id: pendienteId });
+        patchOcrHistory(jobId, {
+          status: 'quarantine',
+          // The pipeline is over: leaving the last non-terminal status here made
+          // an approved ticket keep saying "reading" in the history for good.
+          last_status: job.status,
+          last_stage: job.stage,
+          pendiente_id: pendienteId,
+        });
         patch(jobId, {
           phase: 'dispatched',
           status: job.status,

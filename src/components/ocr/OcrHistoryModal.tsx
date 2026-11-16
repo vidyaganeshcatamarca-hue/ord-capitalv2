@@ -74,7 +74,15 @@ export function OcrHistoryModal({ onClose }: OcrHistoryModalProps) {
                 // The real backend state, when the ticket is still travelling.
                 // A ten-minute ticket must say "reading" or "classifying", not
                 // a flat "processing" that tells the owner nothing.
-                const fine = describeOcrJobStatus(entry.last_status ?? null, entry.last_stage ?? null)
+                // The fine backend state only describes a ticket that is still
+                // travelling. Once it sits in the quarantine — or is already
+                // approved — the lifecycle status is the truth; a stale
+                // `last_status` would keep saying "reading" forever.
+                const stillTravelling =
+                  entry.status === 'processing' || entry.status === 'classified'
+                const fine = stillTravelling
+                  ? describeOcrJobStatus(entry.last_status ?? null, entry.last_stage ?? null)
+                  : null
                 const statusText = fine ? t(fine.key) : statusLabel(entry.status)
                 const statusClass = `ocr-history-status ocr-history-status--${entry.status}${
                   fine ? ` ocr-history-status--${fine.tone}` : ''
