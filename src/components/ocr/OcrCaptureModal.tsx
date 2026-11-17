@@ -88,15 +88,32 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
     setErrorI18nKey(null)
   }
 
+  // Which row the owner just moved.
+  //
+  // Camera captures arrive with near-identical automatic names ("17944547078…"),
+  // so after a swap the list looked untouched: the numbers traded places but
+  // nothing else showed the move had landed, and the owner read it as a broken
+  // button. The row that arrives is highlighted briefly instead of carrying a
+  // permanent badge, which would make every row look special.
+  const [movedIndex, setMovedIndex] = useState<number | null>(null)
+  const movedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const markMoved = (index: number): void => {
+    setMovedIndex(index)
+    if (movedTimerRef.current !== null) clearTimeout(movedTimerRef.current)
+    movedTimerRef.current = setTimeout(() => setMovedIndex(null), 1200)
+  }
+
   const move = (index: number, direction: -1 | 1): void => {
+    const target = index + direction
+    if (target < 0 || target >= files.length) return
     setFiles((current) => {
-      const target = index + direction
-      if (target < 0 || target >= current.length) return current
       const next = [...current]
       const [moved] = next.splice(index, 1)
       next.splice(target, 0, moved)
       return next
     })
+    markMoved(target)
   }
 
   const reset = (): void => {
@@ -260,7 +277,14 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                   </p>
                   <ul className="ocr-file-list">
                     {files.map((file, index) => (
-                      <li className="ocr-file-row" key={`${file.name}-${index}`}>
+                      <li
+                        className={
+                          movedIndex === index
+                            ? 'ocr-file-row ocr-file-row--moved'
+                            : 'ocr-file-row'
+                        }
+                        key={`${file.name}-${index}`}
+                      >
                         <span className="ocr-file-index">{index + 1}</span>
                         <span className="ocr-file-name">
                           {file.name || (isOcrPdfFile(file) ? 'PDF' : 'image')}

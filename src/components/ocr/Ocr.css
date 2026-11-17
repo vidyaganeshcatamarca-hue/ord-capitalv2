@@ -932,3 +932,23 @@
   overscroll-behavior: contain;
   touch-action: pan-y;
 }
+
+/* Camera captures arrive with near-identical automatic names, so swapping two
+   rows left the list looking untouched. The row that lands is highlighted just
+   long enough to confirm the move, then the list returns to normal: a permanent
+   badge would make every row look special. */
+.ocr-file-row {
+  transition: background-color 200ms ease, border-color 200ms ease;
+}
+
+.ocr-file-row--moved {
+  border-color: var(--accent, #3aa76d);
+  background: var(--surface-2, #21262d);
+  background: color-mix(in srgb, var(--accent, #3aa76d) 14%, var(--surface));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ocr-file-row {
+    transition: none;
+  }
+}
