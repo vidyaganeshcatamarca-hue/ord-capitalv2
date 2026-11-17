@@ -16,6 +16,8 @@
 
 /** Etapa en la que el dueño puede reconocer su envio. */
 export type OcrHistoryStatus =
+  | 'upload_pending'
+  | 'upload_failed'
   | 'processing'
   | 'classified'
   | 'quarantine'
@@ -43,6 +45,15 @@ export interface OcrHistoryEntry {
    */
   last_status?: OcrJobStatus | null;
   last_stage?: string | null;
+  /**
+   * Dueño del envío.
+   *
+   * Sin esto el historial mezclaba las cargas de todos los usuarios del
+   * teléfono, y un envío ajeno podía ofrecer "reenviar" o "borrar" sobre un
+   * ticket que no era de quien estaba mirando. Las entradas anteriores a este
+   * campo no lo tienen y se resuelven por el job asociado.
+   */
+  owner_user_id?: string | null;
 }
 
 export const OCR_HISTORY_STORAGE_KEY = 'ord.ocr.v1.history' as const;
@@ -51,12 +62,56 @@ export const OCR_HISTORY_STORAGE_KEY = 'ord.ocr.v1.history' as const;
 export const OCR_HISTORY_LIMIT = 5;
 
 const STATUSES: readonly OcrHistoryStatus[] = [
+  'upload_pending',
+  'upload_failed',
   'processing',
   'classified',
   'quarantine',
   'approved',
   'rejected',
 ];
+
+/**
+ * Estados en los que el ticket TODAVIA no llego al servidor.
+ *
+ * Son los unicos que el reintento puede volver a mandar. Las fotos de los demas
+ * siguen en el telefono a proposito — siete dias, para poder mirar el ticket
+ * guardado — y reenviarlas crearia un segundo ticket de algo que ya viajo.
+ */
+export const OCR_HISTORY_UNSENT_STATUSES: readonly OcrHistoryStatus[] = [
+  'upload_pending',
+  'upload_failed',
+];
+
+/**
+ * Los envios que se pueden reintentar: nada mas que los no enviados.
+ *
+ * La regla vive aca y no en el que la llama porque es la que impide reenviar el
+ * catalogo entero de fotos guardadas: una entrada `processing` o posterior ya
+ * tiene `job_id` del servidor y volver a subirla duplicaria el ticket.
+ */
+export function selectPendingUploadEntries(
+  entries: readonly OcrHistoryEntry[],
+): OcrHistoryEntry[] {
+  return entries.filter((entry) => OCR_HISTORY_UNSENT_STATUSES.includes(entry.status));
+}
+
+/**
+ * Recorta a `OCR_HISTORY_LIMIT` sin perder nada que todavia no viajo.
+ *
+ * Un envio sin subir es el unico que no se puede reconstruir: el servidor no
+ * sabe de el y sus fotos se barren a los ocho dias. Si el recorte lo descarta,
+ * se pierde el ticket entero. Las entradas ya enviadas si se pueden tirar: su
+ * ticket vive en el backend.
+ */
+function trimHistory(entries: readonly OcrHistoryEntry[]): OcrHistoryEntry[] {
+  const sorted = sortByRecency([...entries])
+  const kept = sorted.slice(0, OCR_HISTORY_LIMIT)
+  const unsent = sorted.filter(
+    (entry) => OCR_HISTORY_UNSENT_STATUSES.includes(entry.status) && !kept.includes(entry),
+  )
+  return [...kept, ...unsent]
+}
 
 export interface HistoryRead {
   value: OcrHistoryEntry[];
@@ -104,7 +159,7 @@ export function loadOcrHistory(): HistoryRead {
     if (!raw) return { value: [], durable: true }
     const parsed: unknown = JSON.parse(raw)
     if (!Array.isArray(parsed)) return { value: [], durable: true }
-    const value = sortByRecency(parsed.filter(isValidEntry)).slice(0, OCR_HISTORY_LIMIT)
+    const value = trimHistory(parsed.filter(isValidEntry))
     return { value, durable: true }
   } catch {
     // Storage corrupto nunca rompe la pantalla (mismo criterio que storage.ts).
@@ -116,7 +171,7 @@ function save(entries: OcrHistoryEntry[]): { durable: boolean } {
   const store = storage()
   if (!store) return { durable: false }
   try {
-    store.setItem(OCR_HISTORY_STORAGE_KEY, JSON.stringify(entries.slice(0, OCR_HISTORY_LIMIT)))
+    store.setItem(OCR_HISTORY_STORAGE_KEY, JSON.stringify(trimHistory(entries)))
     return { durable: true }
   } catch {
     return { durable: false }
@@ -127,7 +182,7 @@ function save(entries: OcrHistoryEntry[]): { durable: boolean } {
 export function recordOcrHistory(entry: OcrHistoryEntry): { durable: boolean } {
   const current = loadOcrHistory().value
   const withoutJob = current.filter((item) => item.job_id !== entry.job_id)
-  return save(sortByRecency([entry, ...withoutJob]).slice(0, OCR_HISTORY_LIMIT))
+  return save(trimHistory([entry, ...withoutJob]))
 }
 
 /**

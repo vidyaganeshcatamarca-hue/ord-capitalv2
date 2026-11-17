@@ -931,6 +931,8 @@ export const ocr = {
   history_title: "Últimos envíos",
   history_empty: "Todavía no enviaste ningún ticket.",
   history_images: "{count} imagen(es)",
+  history_status_upload_pending: "Enviando…",
+  history_status_upload_failed: "No se pudo enviar",
   history_status_processing: "Procesando",
   history_status_classified: "Clasificado",
   history_status_quarantine: "Para aprobar",

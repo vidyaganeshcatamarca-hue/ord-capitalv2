@@ -884,6 +884,8 @@ export const ocr = {
   history_title: "Últimos envios",
   history_empty: "Você ainda não enviou nenhum comprovante.",
   history_images: "{count} imagem(ns)",
+  history_status_upload_pending: "Enviando…",
+  history_status_upload_failed: "Não foi possível enviar",
   history_status_processing: "Processando",
   history_status_classified: "Classificado",
   history_status_quarantine: "Para aprovar",

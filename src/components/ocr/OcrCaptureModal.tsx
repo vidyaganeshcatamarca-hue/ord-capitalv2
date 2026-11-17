@@ -60,6 +60,11 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
   const [files, setFiles] = useState<File[]>([])
   const [errorI18nKey, setErrorI18nKey] = useState<string | null>(null)
   const [stage, setStage] = useState<'idle' | 'sending' | 'accepted'>('idle')
+  // While the POST is in flight the batch is frozen: adding, removing or reordering
+  // photos mid-send would upload a set the owner did not accept. The lock lives and
+  // dies with `sending`, and the bridge keeps following the job from the background
+  // once the server has accepted it.
+  const locked = stage === 'sending'
   const [accepted, setAccepted] = useState<{ duplicate: boolean } | null>(null)
 
   const validation = useMemo(() => validateOcrFiles(files), [files])
@@ -88,15 +93,32 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
     setErrorI18nKey(null)
   }
 
+  // Which row the owner just moved.
+  //
+  // Camera captures arrive with near-identical automatic names ("17944547078…"),
+  // so after a swap the list looked untouched: the numbers traded places but
+  // nothing else showed the move had landed, and the owner read it as a broken
+  // button. The row that arrives is highlighted briefly instead of carrying a
+  // permanent badge, which would make every row look special.
+  const [movedIndex, setMovedIndex] = useState<number | null>(null)
+  const movedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const markMoved = (index: number): void => {
+    setMovedIndex(index)
+    if (movedTimerRef.current !== null) clearTimeout(movedTimerRef.current)
+    movedTimerRef.current = setTimeout(() => setMovedIndex(null), 1200)
+  }
+
   const move = (index: number, direction: -1 | 1): void => {
+    const target = index + direction
+    if (target < 0 || target >= files.length) return
     setFiles((current) => {
-      const target = index + direction
-      if (target < 0 || target >= current.length) return current
       const next = [...current]
       const [moved] = next.splice(index, 1)
       next.splice(target, 0, moved)
       return next
     })
+    markMoved(target)
   }
 
   const reset = (): void => {
@@ -114,7 +136,18 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
     onClose(reason)
   }
 
-  const send = async (): Promise<void> => {
+  /**
+   * How long the modal waits for the server before letting the send continue in
+   * the background.
+   *
+   * Waiting forever is what made the owner stare at a frozen screen while a 12 MB
+   * ticket crawled on bad signal. A fast server still gets its confirmation; a
+   * slow one releases the phone, and the provider — which owns the photos and the
+   * history row since before the POST — finishes the job on its own.
+   */
+  const UPLOAD_GRACE_MS = 1500
+
+  const send = (): void => {
     if (!validation.ok) {
       setErrorI18nKey(ocrFileRejectionI18nKey(validation.reason))
       return
@@ -125,15 +158,30 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
     }
     setStage('sending')
     setErrorI18nKey(null)
-    const result = await submit({ files, context })
-    if (!result.jobId) {
-      setStage('idle')
-      setErrorI18nKey(result.errorI18nKey ?? 'ocr.error_upload_failed')
-      return
-    }
-    setAccepted({ duplicate: result.duplicate })
-    setStage('accepted')
-    setFiles([])
+
+    // `submit` keeps running after this component is gone: it lives in the
+    // provider, and the row it wrote is what the history shows as "Sending".
+    let settled = false
+    const timer = setTimeout(() => {
+      if (settled) return
+      settled = true
+      reset()
+      onClose('submitted')
+    }, UPLOAD_GRACE_MS)
+
+    void submit({ files, context }).then((result) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      if (!result.jobId) {
+        setStage('idle')
+        setErrorI18nKey(result.errorI18nKey ?? 'ocr.error_upload_failed')
+        return
+      }
+      setAccepted({ duplicate: result.duplicate })
+      setStage('accepted')
+      setFiles([])
+    })
   }
 
   /**
@@ -212,11 +260,12 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
               <p className="ocr-capture-hint">{t('ocr.capture_limits')}</p>
 
               <div className="ocr-capture-sources">
-                <label className="ocr-file-btn">
+                <label className="ocr-file-btn" aria-disabled={locked || undefined}>
                   📷 {t('ocr.capture_take_photo')}
                   <input
                     ref={cameraRef}
                     type="file"
+                    disabled={locked}
                     accept="image/jpeg,image/png,image/webp"
                     capture="environment"
                     onChange={(event) => {
@@ -225,11 +274,12 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                     }}
                   />
                 </label>
-                <label className="ocr-file-btn">
+                <label className="ocr-file-btn" aria-disabled={locked || undefined}>
                   🖼️ {t('ocr.capture_add_images')}
                   <input
                     ref={galleryRef}
                     type="file"
+                    disabled={locked}
                     accept="image/jpeg,image/png,image/webp"
                     multiple
                     onChange={(event) => {
@@ -238,11 +288,12 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                     }}
                   />
                 </label>
-                <label className="ocr-file-btn">
+                <label className="ocr-file-btn" aria-disabled={locked || undefined}>
                   📄 {t('ocr.capture_add_pdf')}
                   <input
                     ref={pdfRef}
                     type="file"
+                    disabled={locked}
                     accept="application/pdf"
                     onChange={(event) => {
                       addFiles(event.target.files)
@@ -260,7 +311,14 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                   </p>
                   <ul className="ocr-file-list">
                     {files.map((file, index) => (
-                      <li className="ocr-file-row" key={`${file.name}-${index}`}>
+                      <li
+                        className={
+                          movedIndex === index
+                            ? 'ocr-file-row ocr-file-row--moved'
+                            : 'ocr-file-row'
+                        }
+                        key={`${file.name}-${index}`}
+                      >
                         <span className="ocr-file-index">{index + 1}</span>
                         <span className="ocr-file-name">
                           {file.name || (isOcrPdfFile(file) ? 'PDF' : 'image')}
@@ -270,7 +328,7 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                           type="button"
                           className="ocr-icon-btn"
                           onClick={() => move(index, -1)}
-                          disabled={index === 0}
+                          disabled={locked || index === 0}
                           aria-label={t('ocr.capture_move_up')}
                         >
                           ↑
@@ -279,7 +337,7 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                           type="button"
                           className="ocr-icon-btn"
                           onClick={() => move(index, 1)}
-                          disabled={index === files.length - 1}
+                          disabled={locked || index === files.length - 1}
                           aria-label={t('ocr.capture_move_down')}
                         >
                           ↓
@@ -288,6 +346,7 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                           type="button"
                           className="ocr-icon-btn"
                           onClick={() => removeAt(index)}
+                          disabled={locked}
                           aria-label={t('ocr.capture_remove')}
                         >
                           ✕
@@ -299,10 +358,6 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
               )}
 
               {errorI18nKey && <p className="ocr-error">{t(errorI18nKey)}</p>}
-
-              <p className="ocr-note ocr-capture-total">
-                {MAX_OCR_IMAGES} × {formatBytes(MAX_OCR_FILE_BYTES)} · {formatBytes(MAX_OCR_TOTAL_BYTES)}
-              </p>
 
               <div className="ocr-capture-actions">
                 <button
