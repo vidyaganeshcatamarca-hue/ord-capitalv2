@@ -50,8 +50,39 @@ export interface OcrDispatchDeps {
   announce?: () => void;
 }
 
+/**
+ * The job patch a FAILED dispatch is allowed to write.
+ *
+ * A confirmed quarantine is final. `pendiente_id` is the proof the RPC landed, so
+ * once it exists a later dispatch error must not mark the job as not dispatched:
+ * that put it back into the recovery set, and the next reconciliation re-dispatched
+ * a ticket that was already waiting for review.
+ *
+ * Kept pure and exported so the invariant is pinned by a test instead of living
+ * only inside the hook.
+ */
+export function failedDispatchPatch(input: {
+  status: OcrJob['status'];
+  pendienteId: number | null | undefined;
+}): { last_status: OcrJob['status']; quarantine_dispatched?: false } {
+  const confirmed = input.pendienteId != null;
+  return confirmed
+    ? { last_status: input.status }
+    : { last_status: input.status, quarantine_dispatched: false };
+}
+
 export interface OcrDispatcher {
-  /** Dispatches one finished job. Returns true when the row exists. */
+  /**
+   * Dispatches one finished job.
+   *
+   * Returns `true` only when the quarantine row is confirmed by the RPC. It also
+   * returns `true` when another dispatch for the same job is already in flight —
+   * that is "this job is being handed over right now", NOT "the row exists". The
+   * two cases are indistinguishable through this boolean, so a caller must never
+   * read `true` as proof of a confirmed quarantine: only `onDispatched`, which
+   * receives the `pendiente_id`, proves that. No caller branches on the result
+   * today; this note exists so the next one does not.
+   */
   dispatch(job: OcrJob): Promise<boolean>;
   /** True while this job's RPC is in flight. */
   isInFlight(jobId: string): boolean;
@@ -86,7 +117,9 @@ export function createOcrDispatcher(deps: OcrDispatchDeps): OcrDispatcher {
     async dispatch(job: OcrJob): Promise<boolean> {
       const jobId = job.job_id;
 
-      // Already handed over (or being handed over right now): success, no-op.
+      // A dispatch for this job is already running. This is NOT proof that the
+      // quarantine row exists: the RPC may still fail. Callers must not treat it
+      // as confirmation; only `onDispatched` carries the `pendiente_id`.
       if (inFlight.has(jobId)) return true;
 
       // Persisted before anything can fail, so a crash here leaves a finished

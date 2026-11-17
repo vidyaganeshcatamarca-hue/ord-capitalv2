@@ -23,7 +23,7 @@ import { ocrFileRejectionI18nKey } from './errors';
 import { rekeyOcrImages, saveOcrImages, sweepOcrImages, markOcrImagesProcessed } from './imageStore';
 import { syncPendingOcrMemory } from './memory';
 import { patchOcrHistory, recordOcrHistory } from './history';
-import { createOcrDispatcher, type OcrDispatcher } from './dispatch';
+import { createOcrDispatcher, failedDispatchPatch, type OcrDispatcher } from './dispatch';
 import { isStaleSessionCallback } from './sessionGuard';
 import { runOcrPollingLoop, type OcrPollingController } from './polling';
 import { loadOcrQuarantine } from './quarantine';
@@ -229,7 +229,13 @@ export function useOcrJobs(): UseOcrJobsResult {
       },
       onFailed: (job, code) => {
         trackOcrError('quarantine_dispatch', code, { job_id: job.job_id, status: job.status });
-        patchOcrJob(job.job_id, { last_status: job.status, quarantine_dispatched: false });
+        // A confirmed quarantine is final: a later dispatch error must not reopen a
+        // job the tray already holds. See `failedDispatchPatch`.
+        const stored = loadOcrJobs().value.find((entry) => entry.job_id === job.job_id);
+        patchOcrJob(
+          job.job_id,
+          failedDispatchPatch({ status: job.status, pendienteId: stored?.pendiente_id })
+        );
         recordOcrJobError(job.job_id, code);
         patch(
           job.job_id,
