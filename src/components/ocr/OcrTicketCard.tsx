@@ -16,6 +16,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { t } from '@/locales/i18n'
 import { useToast } from '@/contexts/ToastContext'
+import { resolveOcrIssueLabels } from '@/ocr/issues'
 import { parseError } from '@/locales/i18n'
 import { formatCurrency, formatDate } from '@/lib/format'
 import { parseMontoInput } from '@/lib/parseMonto'
@@ -398,9 +399,9 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
       */}
       {issues.length > 0 && blocker !== null && (
         <div className="ocr-issues" aria-label={t('ocr.issue_title')}>
-          {issues.map((issue) => (
-            <span className="ocr-issue-chip" key={issue}>
-              {issue.startsWith('ocr.') ? t(issue) : t('ocr.issue_generic')}
+          {resolveOcrIssueLabels(issues, t).map((label) => (
+            <span className="ocr-issue-chip" key={label}>
+              {label}
             </span>
           ))}
         </div>
