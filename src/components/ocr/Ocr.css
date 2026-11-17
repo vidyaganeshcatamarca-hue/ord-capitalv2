@@ -952,3 +952,12 @@
     transition: none;
   }
 }
+
+/* While the POST is in flight the batch is frozen. The input carries `disabled`
+   so the picker cannot open; the label carries the state so it also looks and
+   feels inert instead of accepting a tap that goes nowhere. */
+.ocr-file-btn[aria-disabled='true'] {
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+}

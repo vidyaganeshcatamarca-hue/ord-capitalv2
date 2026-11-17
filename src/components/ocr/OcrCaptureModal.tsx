@@ -60,6 +60,11 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
   const [files, setFiles] = useState<File[]>([])
   const [errorI18nKey, setErrorI18nKey] = useState<string | null>(null)
   const [stage, setStage] = useState<'idle' | 'sending' | 'accepted'>('idle')
+  // While the POST is in flight the batch is frozen: adding, removing or reordering
+  // photos mid-send would upload a set the owner did not accept. The lock lives and
+  // dies with `sending`, and the bridge keeps following the job from the background
+  // once the server has accepted it.
+  const locked = stage === 'sending'
   const [accepted, setAccepted] = useState<{ duplicate: boolean } | null>(null)
 
   const validation = useMemo(() => validateOcrFiles(files), [files])
@@ -229,11 +234,12 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
               <p className="ocr-capture-hint">{t('ocr.capture_limits')}</p>
 
               <div className="ocr-capture-sources">
-                <label className="ocr-file-btn">
+                <label className="ocr-file-btn" aria-disabled={locked || undefined}>
                   📷 {t('ocr.capture_take_photo')}
                   <input
                     ref={cameraRef}
                     type="file"
+                    disabled={locked}
                     accept="image/jpeg,image/png,image/webp"
                     capture="environment"
                     onChange={(event) => {
@@ -242,11 +248,12 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                     }}
                   />
                 </label>
-                <label className="ocr-file-btn">
+                <label className="ocr-file-btn" aria-disabled={locked || undefined}>
                   🖼️ {t('ocr.capture_add_images')}
                   <input
                     ref={galleryRef}
                     type="file"
+                    disabled={locked}
                     accept="image/jpeg,image/png,image/webp"
                     multiple
                     onChange={(event) => {
@@ -255,11 +262,12 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                     }}
                   />
                 </label>
-                <label className="ocr-file-btn">
+                <label className="ocr-file-btn" aria-disabled={locked || undefined}>
                   📄 {t('ocr.capture_add_pdf')}
                   <input
                     ref={pdfRef}
                     type="file"
+                    disabled={locked}
                     accept="application/pdf"
                     onChange={(event) => {
                       addFiles(event.target.files)
@@ -294,7 +302,7 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                           type="button"
                           className="ocr-icon-btn"
                           onClick={() => move(index, -1)}
-                          disabled={index === 0}
+                          disabled={locked || index === 0}
                           aria-label={t('ocr.capture_move_up')}
                         >
                           ↑
@@ -303,7 +311,7 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                           type="button"
                           className="ocr-icon-btn"
                           onClick={() => move(index, 1)}
-                          disabled={index === files.length - 1}
+                          disabled={locked || index === files.length - 1}
                           aria-label={t('ocr.capture_move_down')}
                         >
                           ↓
@@ -312,6 +320,7 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
                           type="button"
                           className="ocr-icon-btn"
                           onClick={() => removeAt(index)}
+                          disabled={locked}
                           aria-label={t('ocr.capture_remove')}
                         >
                           ✕
