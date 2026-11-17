@@ -635,6 +635,9 @@ export function useOcrJobs(): UseOcrJobsResult {
           status: 'processing',
           updated_at: new Date().toISOString(),
           pendiente_id: null,
+          // Whose upload this is: the history is shared by every account on the
+          // phone, and the tray must only show its own.
+          owner_user_id: ownerRef.current,
         });
 
         trackOcrEvent(OCR_EVENTS.uploadAccepted, {

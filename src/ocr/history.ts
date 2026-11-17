@@ -43,6 +43,15 @@ export interface OcrHistoryEntry {
    */
   last_status?: OcrJobStatus | null;
   last_stage?: string | null;
+  /**
+   * Dueño del envío.
+   *
+   * Sin esto el historial mezclaba las cargas de todos los usuarios del
+   * teléfono, y un envío ajeno podía ofrecer "reenviar" o "borrar" sobre un
+   * ticket que no era de quien estaba mirando. Las entradas anteriores a este
+   * campo no lo tienen y se resuelven por el job asociado.
+   */
+  owner_user_id?: string | null;
 }
 
 export const OCR_HISTORY_STORAGE_KEY = 'ord.ocr.v1.history' as const;

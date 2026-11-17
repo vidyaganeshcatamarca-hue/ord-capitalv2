@@ -920,3 +920,15 @@
   color: var(--danger, #b3261e);
   border-color: rgba(179, 38, 30, 0.35);
 }
+
+/* La lista de envíos puede crecer sin límite: el modal toma una altura de
+   pantalla fija y el cuerpo scrollea. Sin esto el modal crecía con el
+   contenido y las filas de abajo quedaban fuera del viewport en el teléfono. */
+.ocr-modal--history {
+  max-height: min(82vh, 680px);
+}
+
+.ocr-modal--history .ocr-modal-body {
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+}

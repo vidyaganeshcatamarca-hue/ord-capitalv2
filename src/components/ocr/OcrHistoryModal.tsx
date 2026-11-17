@@ -14,13 +14,14 @@
 // mismas fotos o borrarla del historial. Sin eso quedaba "Recibido · En espera"
 // para siempre, que es peor que un error visible.
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { t } from '@/locales/i18n'
+import { useAuth } from '@/contexts/AuthContext'
 import { loadOcrHistory, type OcrHistoryEntry, type OcrHistoryStatus } from '@/ocr/history'
 import { describeOcrJobStatus } from '@/ocr/jobStatusLabel'
-import { loadOcrJobs } from '@/ocr/storage'
+import { loadOcrJobs, type StoredOcrJob } from '@/ocr/storage'
 import { isLostOcrHistoryEntry } from '@/ocr/recovery'
 import './Ocr.css'
 
@@ -50,6 +51,7 @@ function statusLabel(status: OcrHistoryStatus): string {
 
 export function OcrHistoryModal({ onClose, onResend, onDiscard }: OcrHistoryModalProps) {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [entries, setEntries] = useState<OcrHistoryEntry[]>(() => loadOcrHistory().value)
   const [busy, setBusy] = useState<string | null>(null)
   const [errorKey, setErrorKey] = useState<string | null>(null)
@@ -57,6 +59,20 @@ export function OcrHistoryModal({ onClose, onResend, onDiscard }: OcrHistoryModa
   // The row is lost only when the backend answered NOT_FOUND (or nothing is
   // following it any more). A network failure is not lost: the upload exists.
   const jobs = loadOcrJobs().value
+
+  // Two accounts share this phone. A row belongs to whoever uploaded it: the
+  // entry records its owner, and the older ones that predate that field are
+  // resolved through the job they point at. A row nobody can be attributed to
+  // is never shown, because showing it would offer a stranger's ticket.
+  const visibleEntries = useMemo(() => {
+    const currentOwner = user?.id ?? null
+    if (!currentOwner) return entries
+    const ownerOf = (entry: OcrHistoryEntry, all: readonly StoredOcrJob[]): string | null => {
+      if (entry.owner_user_id) return entry.owner_user_id
+      return all.find((job) => job.job_id === entry.job_id)?.owner_user_id ?? null
+    }
+    return entries.filter((entry) => ownerOf(entry, jobs) === currentOwner)
+  }, [entries, jobs, user?.id])
 
   const openQuarantine = (): void => {
     onClose()
@@ -89,7 +105,7 @@ export function OcrHistoryModal({ onClose, onResend, onDiscard }: OcrHistoryModa
       aria-modal="true"
       aria-label={t('ocr.history_title')}
     >
-      <div className="ocr-modal" onClick={(event) => event.stopPropagation()}>
+      <div className="ocr-modal ocr-modal--history" onClick={(event) => event.stopPropagation()}>
         <div className="ocr-modal-header">
           <h3>{t('ocr.history_title')}</h3>
           <button className="ocr-modal-close" onClick={onClose} aria-label={t('ocr.capture_cancel')}>
@@ -99,11 +115,11 @@ export function OcrHistoryModal({ onClose, onResend, onDiscard }: OcrHistoryModa
 
         <div className="ocr-modal-body">
           {errorKey !== null && <p className="ocr-note ocr-note--warn">{t(errorKey)}</p>}
-          {entries.length === 0 ? (
+          {visibleEntries.length === 0 ? (
             <p className="ocr-note">{t('ocr.history_empty')}</p>
           ) : (
             <ul className="ocr-history-list">
-              {entries.map((entry) => {
+              {visibleEntries.map((entry) => {
                 const inQuarantine = entry.status === 'quarantine'
                 const lost = isLostOcrHistoryEntry(entry, jobs)
                 const Row = inQuarantine ? 'button' : 'div'
