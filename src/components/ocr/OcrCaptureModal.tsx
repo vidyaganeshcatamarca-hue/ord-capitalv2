@@ -136,7 +136,18 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
     onClose(reason)
   }
 
-  const send = async (): Promise<void> => {
+  /**
+   * How long the modal waits for the server before letting the send continue in
+   * the background.
+   *
+   * Waiting forever is what made the owner stare at a frozen screen while a 12 MB
+   * ticket crawled on bad signal. A fast server still gets its confirmation; a
+   * slow one releases the phone, and the provider — which owns the photos and the
+   * history row since before the POST — finishes the job on its own.
+   */
+  const UPLOAD_GRACE_MS = 1500
+
+  const send = (): void => {
     if (!validation.ok) {
       setErrorI18nKey(ocrFileRejectionI18nKey(validation.reason))
       return
@@ -147,15 +158,30 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
     }
     setStage('sending')
     setErrorI18nKey(null)
-    const result = await submit({ files, context })
-    if (!result.jobId) {
-      setStage('idle')
-      setErrorI18nKey(result.errorI18nKey ?? 'ocr.error_upload_failed')
-      return
-    }
-    setAccepted({ duplicate: result.duplicate })
-    setStage('accepted')
-    setFiles([])
+
+    // `submit` keeps running after this component is gone: it lives in the
+    // provider, and the row it wrote is what the history shows as "Sending".
+    let settled = false
+    const timer = setTimeout(() => {
+      if (settled) return
+      settled = true
+      reset()
+      onClose('submitted')
+    }, UPLOAD_GRACE_MS)
+
+    void submit({ files, context }).then((result) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timer)
+      if (!result.jobId) {
+        setStage('idle')
+        setErrorI18nKey(result.errorI18nKey ?? 'ocr.error_upload_failed')
+        return
+      }
+      setAccepted({ duplicate: result.duplicate })
+      setStage('accepted')
+      setFiles([])
+    })
   }
 
   /**

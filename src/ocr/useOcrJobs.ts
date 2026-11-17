@@ -22,7 +22,7 @@ import { validateOcrFiles } from './contract';
 import { ocrFileRejectionI18nKey } from './errors';
 import { rekeyOcrImages, saveOcrImages, sweepOcrImages, markOcrImagesProcessed } from './imageStore';
 import { syncPendingOcrMemory } from './memory';
-import { patchOcrHistory, recordOcrHistory } from './history';
+import { patchOcrHistory, recordOcrHistory, removeOcrHistoryEntry } from './history';
 import { createOcrDispatcher, failedDispatchPatch, type OcrDispatcher } from './dispatch';
 import { isStaleSessionCallback } from './sessionGuard';
 import { runOcrPollingLoop, type OcrPollingController } from './polling';
@@ -566,6 +566,20 @@ export function useOcrJobs(): UseOcrJobsResult {
         trackOcrError('local_image_store', 'STORAGE_UNAVAILABLE', { file_count: files.length });
       }
 
+      // The row exists before the upload does. That is what makes the send
+      // survivable: the modal no longer waits for it, and if the phone closes
+      // the app mid-upload the row is still here, marked unsent, with its photos.
+      const uploadStartedIso = new Date().toISOString();
+      recordOcrHistory({
+        job_id: localId,
+        created_at: uploadStartedIso,
+        image_count: files.length,
+        status: 'upload_pending',
+        updated_at: uploadStartedIso,
+        pendiente_id: null,
+        owner_user_id: ownerRef.current,
+      });
+
       if (mountedRef.current) {
         dispatch({
           type: 'upsert',
@@ -634,9 +648,12 @@ export function useOcrJobs(): UseOcrJobsResult {
 
         // The local history outlives the job: the job is pruned once dispatched
         // and removed on confirm/reject, but the owner still wants to see it.
+        // The unsent row is replaced by the real one, keeping the original stamp
+        // so the send does not look newer than it was.
+        removeOcrHistoryEntry(localId);
         recordOcrHistory({
           job_id: accepted.job_id,
-          created_at: new Date().toISOString(),
+          created_at: uploadStartedIso,
           image_count: files.length,
           status: 'processing',
           updated_at: new Date().toISOString(),
@@ -668,6 +685,9 @@ export function useOcrJobs(): UseOcrJobsResult {
         }
         const code = error instanceof OcrApiError ? error.code : 'UNKNOWN';
         const i18nKey = error instanceof OcrApiError ? error.i18nKey : 'ocr.error_upload_failed';
+        // The photos stay on disk and the row says unsent: the retry reads it
+        // from here, and nothing was created on the server for this ticket.
+        patchOcrHistory(localId, { status: 'upload_failed', updated_at: new Date().toISOString() });
         trackOcrError('upload', code, {
           file_count: files.length,
           ...describeOcrNetworkFailure(error, Date.now() - uploadStartedAt),
