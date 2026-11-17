@@ -6,25 +6,7 @@
   gap: 16px;
 }
 
-.sobre-detalle-volver {
-  align-items: center;
-  background: transparent;
-  border: 0;
-  color: var(--text-2);
-  cursor: pointer;
-  display: inline-flex;
-  font-family: var(--font-sans);
-  font-size: calc(13px * var(--font-scale));
-  gap: 4px;
-  padding: 0;
-  width: fit-content;
-}
-
-.sobre-detalle-volver:hover {
-  color: var(--text);
-}
-
-.sobre-detalle-header {
+.sobre-detalle {
   align-items: flex-start;
   display: flex;
   gap: 12px;

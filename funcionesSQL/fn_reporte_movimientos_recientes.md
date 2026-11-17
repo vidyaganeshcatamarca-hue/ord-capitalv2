@@ -32,6 +32,14 @@ BEGIN
     CASE WHEN c.es_usd THEN 'USD' ELSE c.moneda END::text AS moneda,
     CASE
       WHEN c.detalle = 'adjustment_card_diff' THEN 'cat_card_diff'
+      -- Patas de sobre: salen del disponible (aporte) o lo devuelven (rescate).
+      -- No tienen categoria ni estructura: el titulo es propio, no 'misterio'.
+      WHEN COALESCE(c.metadata ? 'savings', false) THEN
+        CASE
+          WHEN c.detalle = 'savings_envelope_rendimiento' THEN 'type_savings_rendimiento'
+          WHEN c.valor_ingreso > 0 THEN 'type_savings_rescate'
+          ELSE 'type_savings_aporte'
+        END
       -- Transfer legs (double insert) carry no category: their title is the
       -- semantic i18n key stored by the approval (or the user's own note).
       WHEN c.metadata->>'transfer_double_insert' = 'true' THEN COALESCE(c.detalle, 'transfer_entre_cuentas')
@@ -49,7 +57,7 @@ BEGIN
     COALESCE(e.icono, i.icono, CASE c.tipo WHEN 'pago_tarjeta' THEN 'credit-card' ELSE NULL END)::text AS icono_categoria,
     COALESCE(e.color, i.color, CASE c.tipo WHEN 'pago_tarjeta' THEN '#8b5cf6' ELSE NULL END)::text AS color_categoria,
     COALESCE(b.nombre, tc.nombre_tarjeta)::text AS nombre_billetera,
-    c.detalle,
+    CASE WHEN COALESCE(c.metadata ? 'savings', false) THEN c.metadata->>'sobre_nombre' ELSE c.detalle END::text AS detalle,
     c.es_compartido,
     u.nombre::text,
     c.billetera_origen_id,
@@ -72,12 +80,8 @@ BEGIN
   LEFT JOIN public.usuarios u ON c.pagado_por_user_id = u.user_id
   WHERE ((c.user_id = v_user_id AND c.es_compartido = false)
       OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true))
-    -- Un filtro nulo se comporta como 'all': con NULL la comparacion daba NULL
-    -- y el cliente recibia cero filas sin ningun error.
     AND (p_filtro_tipo IS NULL OR p_filtro_tipo = 'all' OR c.tipo = p_filtro_tipo)
     AND (p_billetera_id IS NULL OR c.billetera_origen_id = p_billetera_id)
-    -- Cuando el usuario filtra por una tarjeta, excluimos el pago del resumen
-    -- (que sale desde la billetera, no de la tarjeta).
     AND (p_tarjeta_id IS NULL OR (c.tarjeta_id = p_tarjeta_id AND c.tipo <> 'pago_tarjeta'))
     AND (p_fecha_inicio IS NULL OR c.fecha >= p_fecha_inicio)
     AND (p_fecha_fin IS NULL OR c.fecha <= p_fecha_fin)

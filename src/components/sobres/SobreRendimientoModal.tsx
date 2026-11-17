@@ -162,7 +162,7 @@ export function SobreRendimientoModal({ isOpen, sobre, onClose, onSuccess }: Sob
               value={importe}
               onChange={(e) => setImporte(e.target.value)}
               placeholder="0"
-              autoFocus
+              enterKeyHint="done"
             />
           </div>
 

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { haptics } from '@/lib/haptics'
 import { useToast } from '@/contexts/ToastContext'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, fechaLocalISO } from '@/lib/format'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { parseError, t } from '@/locales/i18n'
 import { normalizarPorcion, type AsignacionRescate, type ModalidadReserva, type Sobre, type SobrePorcion } from './types'
@@ -112,6 +112,9 @@ export function SobreRescateModal({ isOpen, sobre, onClose, onSuccess }: SobreRe
       const { error: rpcError } = await supabase.rpc('fn_sobre_rescatar', {
         p_sobre_id: sobre.sobre_id,
         p_asignaciones: asignaciones,
+        // La fecha la pone el dispositivo: el servidor esta en UTC y a la noche
+        // guardaria el dia siguiente.
+        p_fecha: fechaLocalISO(),
       })
       if (rpcError) throw rpcError
       showToast(t('sobres_rescue_success'), 'success')
@@ -170,6 +173,7 @@ export function SobreRescateModal({ isOpen, sobre, onClose, onSuccess }: SobreRe
                   placeholder="0"
                   value={linea.importe}
                   onChange={(e) => cambiarImporte(indice, e.target.value)}
+                  enterKeyHint="done"
                 />
                 <button
                   type="button"

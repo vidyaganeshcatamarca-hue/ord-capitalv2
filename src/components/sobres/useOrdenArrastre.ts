@@ -81,6 +81,12 @@ export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
         ignorarClick.current = true
         haptics.medium()
         try {
+          // El CSS de la tarjeta declara touch-action: pan-y, asi que el navegador
+          // se queda con el gesto vertical para scrollear y cancela el arrastre en
+          // el telefono (con mouse no aplica). Al activarse la presion larga el dedo
+          // todavia no se movio: sacarle el touch-action ahora evita que el scroll
+          // arranque y deja el gesto en manos del arrastre.
+          actual.el.style.touchAction = 'none'
           actual.el.setPointerCapture(actual.pointerId)
         } catch {
           // Si no se puede capturar, el arrastre sigue por los eventos del documento.
@@ -146,6 +152,7 @@ export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
       } catch {
         // La captura ya no estaba; no hay nada que liberar.
       }
+      actual.el.style.touchAction = ''
     }
 
     const idArrastrado = arrastrandoRef.current
@@ -182,15 +189,24 @@ export function useOrdenArrastre({ sobres, onPersistir }: Opciones) {
     const alMover = (event: PointerEvent) => {
       mover(event)
     }
+    // touch-action se decide al empezar el gesto, asi que ponerlo en none al
+    // activar la presion larga llega tarde: el navegador ya tomo el gesto como
+    // scroll vertical y emite pointercancel al primer movimiento. Un touchmove
+    // no pasivo cancela el scroll de verdad y deja viva la secuencia del arrastre.
+    const bloquearScroll = (event: TouchEvent) => {
+      if (event.cancelable) event.preventDefault()
+    }
 
     document.addEventListener('pointerup', alSoltar, true)
     document.addEventListener('pointercancel', alSoltar, true)
     document.addEventListener('pointermove', alMover, true)
+    document.addEventListener('touchmove', bloquearScroll, { capture: true, passive: false })
 
     return () => {
       document.removeEventListener('pointerup', alSoltar, true)
       document.removeEventListener('pointercancel', alSoltar, true)
       document.removeEventListener('pointermove', alMover, true)
+      document.removeEventListener('touchmove', bloquearScroll, true)
     }
   }, [arrastrando, soltar, mover])
 

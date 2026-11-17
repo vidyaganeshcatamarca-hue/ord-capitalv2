@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { haptics } from '@/lib/haptics'
 import { useToast } from '@/contexts/ToastContext'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, fechaLocalISO } from '@/lib/format'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { parseError, t } from '@/locales/i18n'
 import { WalletDropdownSelect, type WalletOptionItem } from '@/components/WalletDropdownSelect'
 import type { BilleteraOperativa, ModalidadReserva, Sobre } from './types'
+import { ToggleSwitch } from '@/components/configuracion/ToggleSwitch'
 import './sobresModal.css'
 
 interface SobreAporteModalProps {
@@ -49,8 +50,9 @@ export function SobreAporteModal({ isOpen, sobre, billeteras, onClose, onSuccess
 
   useEffect(() => {
     if (!isOpen) return
-    // La cuota dinámica sugiere el importe, nunca lo ejecuta (DF-09).
-    setImporte(sobre?.cuota_mensual ? String(sobre.cuota_mensual) : '')
+    // El importe arranca vacío: la cuota del plan se ofrece como sugerencia y
+    // solo entra al campo si el usuario la toca (DF-09).
+    setImporte('')
     setBilleteraId(disponibles[0]?.billetera_id ?? null)
     setModalidad('virtual')
     setGenera(false)
@@ -63,6 +65,8 @@ export function SobreAporteModal({ isOpen, sobre, billeteras, onClose, onSuccess
 
   const importeNum = Number(importe)
   const importeValido = Number.isFinite(importeNum) && importeNum > 0
+  const sugeridoMensual = sobre.cuota_mensual ?? 0
+  const sugeridoSemanal = sobre.cuota_semanal ?? 0
   const superaMeta =
     importeValido && sobre.monto_meta !== null && sobre.saldo + importeNum > sobre.monto_meta
 
@@ -85,6 +89,9 @@ export function SobreAporteModal({ isOpen, sobre, billeteras, onClose, onSuccess
         p_importe: importeNum,
         p_modalidad: modalidad,
         p_genera_rendimiento: modalidad === 'real' ? genera : false,
+        // La fecha la pone el dispositivo: el servidor esta en UTC y a la noche
+        // guardaria el dia siguiente.
+        p_fecha: fechaLocalISO(),
       })
       if (rpcError) throw rpcError
       showToast(t('sobres_aporte_success'), 'success')
@@ -127,8 +134,30 @@ export function SobreAporteModal({ isOpen, sobre, billeteras, onClose, onSuccess
               value={importe}
               onChange={(e) => setImporte(e.target.value)}
               placeholder="0"
-              autoFocus
+              enterKeyHint="done"
             />
+            {(sugeridoMensual > 0 || sugeridoSemanal > 0) && (
+              <div className="sobre-sugerencias">
+                {sugeridoMensual > 0 && (
+                  <button
+                    type="button"
+                    className="sobre-sugerencia"
+                    onClick={() => setImporte(String(sugeridoMensual))}
+                  >
+                    {t('sobres_suggest_monthly', { monto: formatCurrency(sugeridoMensual, sobre.moneda) })}
+                  </button>
+                )}
+                {sugeridoSemanal > 0 && (
+                  <button
+                    type="button"
+                    className="sobre-sugerencia"
+                    onClick={() => setImporte(String(sugeridoSemanal))}
+                  >
+                    {t('sobres_suggest_weekly', { monto: formatCurrency(sugeridoSemanal, sobre.moneda) })}
+                  </button>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="sobre-grupo">
@@ -170,10 +199,10 @@ export function SobreAporteModal({ isOpen, sobre, billeteras, onClose, onSuccess
           </div>
 
           {modalidad === 'real' && (
-            <label className="sobre-check">
-              <input type="checkbox" checked={genera} onChange={(e) => setGenera(e.target.checked)} />
+            <div className="sobre-switch">
               <span>{t('sobres_generates_yield')}</span>
-            </label>
+              <ToggleSwitch checked={genera} onChange={setGenera} size="sm" />
+            </div>
           )}
 
           {superaMeta && (

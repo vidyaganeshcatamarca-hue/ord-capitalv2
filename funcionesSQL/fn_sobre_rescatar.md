@@ -1,9 +1,4 @@
--- Rescate con reparto explicito entre porciones. Cada importe vuelve a SU
--- billetera de origen y la acredita en las dos modalidades.
--- p_asignaciones: [{"billetera_id": 1, "modalidad": "virtual", "importe": 60000}, ...]
--- PRD: DF-04, DF-05, DF-29.
-
-CREATE OR REPLACE FUNCTION public.fn_sobre_rescatar(p_sobre_id bigint, p_asignaciones jsonb)
+CREATE OR REPLACE FUNCTION public.fn_sobre_rescatar(p_sobre_id bigint, p_asignaciones jsonb, p_fecha date DEFAULT CURRENT_DATE)
  RETURNS integer
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -63,15 +58,15 @@ BEGIN
         -- modalidades, igual que el aporte la saca.
         v_caja_id := public.fn_sobre_pata_billetera(
             v_user_id, v_billetera_id, v_sobre.moneda, v_importe, false,
-            'savings_envelope_rescate_real', p_sobre_id, v_sobre.nombre
+            'savings_envelope_rescate_real', p_sobre_id, v_sobre.nombre, COALESCE(p_fecha, CURRENT_DATE)
         );
 
         INSERT INTO public.p_sobre_movimientos (
             sobre_id, user_id, tipo, importe, moneda, billetera_id, modalidad,
-            genera_rendimiento, caja_movimiento_id
+            genera_rendimiento, fecha, caja_movimiento_id
         ) VALUES (
             p_sobre_id, v_user_id, 'rescate', v_importe, v_sobre.moneda,
-            v_billetera_id, v_modalidad, false, v_caja_id
+            v_billetera_id, v_modalidad, false, COALESCE(p_fecha, CURRENT_DATE), v_caja_id
         );
         v_n := v_n + 1;
     END LOOP;

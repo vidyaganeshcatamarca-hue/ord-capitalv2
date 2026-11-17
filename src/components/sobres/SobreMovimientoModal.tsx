@@ -7,6 +7,7 @@ import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { parseError, t } from '@/locales/i18n'
 import { WalletDropdownSelect, type WalletOptionItem } from '@/components/WalletDropdownSelect'
 import type { BilleteraOperativa, ModalidadReserva, SobreMovimiento } from './types'
+import { ToggleSwitch } from '@/components/configuracion/ToggleSwitch'
 import './sobresModal.css'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
 
@@ -145,7 +146,7 @@ export function SobreMovimientoModal({
               value={importe}
               onChange={(e) => setImporte(e.target.value)}
               placeholder="0"
-              autoFocus
+              enterKeyHint="done"
             />
           </div>
 
@@ -191,15 +192,13 @@ export function SobreMovimientoModal({
           </div>
 
           {movimiento.tipo === 'aporte' && modalidad === 'real' && (
-            <label className="sobre-check">
-              <input type="checkbox" checked={genera} onChange={(e) => setGenera(e.target.checked)} />
+            <div className="sobre-switch">
               <span>{t('sobres_generates_yield')}</span>
-            </label>
+              <ToggleSwitch checked={genera} onChange={setGenera} size="sm" />
+            </div>
           )}
           </>
           )}
-
-          <p className="sobre-aviso">{t('sobres_correct_hint')}</p>
 
           {error && <div className="sobre-error">{error}</div>}
         </div>

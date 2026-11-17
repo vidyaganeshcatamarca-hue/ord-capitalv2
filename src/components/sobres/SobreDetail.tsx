@@ -1,7 +1,8 @@
 import { formatCurrency, formatDate, formatPercent } from '@/lib/format'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { t } from '@/locales/i18n'
-import { ChevronLeft, Pencil } from 'lucide-react'
+import { Pencil } from 'lucide-react'
+import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 import type { Sobre, SobreDetalle, SobreMovimiento } from './types'
 import './SobreDetail.css'
 import { catalogDisplayName } from '@/lib/catalogRegistry'
@@ -58,10 +59,12 @@ export function SobreDetail({ detalle, onBack, onProvision, onRescue, onEdit, on
 
   return (
     <section className="sobre-detalle" aria-labelledby="sobre-detalle-titulo">
-      <button type="button" className="sobre-detalle-volver" onClick={onBack}>
-        <ChevronLeft size={18} />
-        {t('btn_back')}
-      </button>
+      <PageBackButton
+        variant="plain"
+        className="page-back-button"
+        onBack={onBack}
+        ariaLabel={t('btn_back')}
+      />
 
       <header className="sobre-detalle-header">
         <div>

@@ -9,6 +9,7 @@ import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { WalletDropdownSelect, type WalletOptionItem } from '@/components/WalletDropdownSelect'
 import type { BilleteraOperativa, ModalidadReserva, Sobre } from './types'
 import { ICONOS_SOBRE } from './iconosSobre'
+import { ToggleSwitch } from '@/components/configuracion/ToggleSwitch'
 import './sobresModal.css'
 import './SobreFormModal.css'
 
@@ -182,7 +183,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder={t('sobres_name_placeholder')}
-              autoFocus
+              enterKeyHint="done"
             />
           </div>
 
@@ -235,6 +236,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
                 if (e.target.value.trim() === '') setFecha('')
               }}
               placeholder="0"
+              enterKeyHint="done"
             />
           </div>
 
@@ -247,6 +249,11 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
               disabled={meta.trim() === ''}
               onChange={(e) => setFecha(e.target.value)}
             />
+            {fecha !== '' && (
+              <button type="button" className="sobre-quitar-fecha" onClick={() => setFecha('')}>
+                {t('sobres_remove_date')}
+              </button>
+            )}
             {meta.trim() === '' && (
               <p className="sobre-grupo-hint">{t('sobres_target_date_needs_goal')}</p>
             )}
@@ -267,6 +274,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
                   value={aporteImporte}
                   onChange={(e) => setAporteImporte(e.target.value)}
                   placeholder="0"
+                  enterKeyHint="done"
                 />
               </div>
 
@@ -311,14 +319,10 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
                   </div>
 
                   {aporteModalidad === 'real' && (
-                    <label className="sobre-check">
-                      <input
-                        type="checkbox"
-                        checked={aporteGenera}
-                        onChange={(e) => setAporteGenera(e.target.checked)}
-                      />
+                    <div className="sobre-switch">
                       <span>{t('sobres_generates_yield')}</span>
-                    </label>
+                      <ToggleSwitch checked={aporteGenera} onChange={setAporteGenera} size="sm" />
+                    </div>
                   )}
                 </>
               )}
