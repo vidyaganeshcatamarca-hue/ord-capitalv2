@@ -961,3 +961,15 @@
   pointer-events: none;
   cursor: not-allowed;
 }
+
+/* An upload that has not reached the server yet. "Sending" is neutral on purpose:
+   it is not a problem, it is work in progress that the owner can walk away from. */
+.ocr-history-status--upload_pending {
+  background: var(--surface-2, #21262d);
+  color: var(--text-muted, #8b949e);
+}
+
+.ocr-history-status--upload_failed {
+  background: color-mix(in srgb, #d9534f 14%, var(--surface));
+  color: #f0a9a6;
+}

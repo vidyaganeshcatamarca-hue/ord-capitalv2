@@ -884,6 +884,8 @@ export const ocr = {
   history_title: "Recent uploads",
   history_empty: "You haven't sent any ticket yet.",
   history_images: "{count} image(s)",
+  history_status_upload_pending: "Sending…",
+  history_status_upload_failed: "Could not send",
   history_status_processing: "Processing",
   history_status_classified: "Classified",
   history_status_quarantine: "Ready to approve",
