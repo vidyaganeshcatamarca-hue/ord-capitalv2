@@ -300,10 +300,6 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
 
               {errorI18nKey && <p className="ocr-error">{t(errorI18nKey)}</p>}
 
-              <p className="ocr-note ocr-capture-total">
-                {MAX_OCR_IMAGES} × {formatBytes(MAX_OCR_FILE_BYTES)} · {formatBytes(MAX_OCR_TOTAL_BYTES)}
-              </p>
-
               <div className="ocr-capture-actions">
                 <button
                   type="button"
