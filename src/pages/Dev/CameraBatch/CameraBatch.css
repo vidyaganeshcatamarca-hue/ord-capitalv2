@@ -1,0 +1,407 @@
+/* Isolated spike page for the persistent-camera batch test. It lives OUTSIDE
+   AppLayout, so this file owns its own scroll container and safe-area padding:
+   `#root` is a flex column with `overflow: hidden`, and without `flex: 1` +
+   `overflow-y: auto` the report would be clipped on a phone.
+   Mobile first, single column, no new UI primitives. */
+
+.camera-batch-page {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-4);
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: calc(var(--safe-top) + var(--space-4)) var(--space-4)
+    calc(var(--safe-bottom) + var(--space-6));
+  scrollbar-width: none;
+}
+
+.camera-batch-page::-webkit-scrollbar {
+  display: none;
+}
+
+.camera-batch-header h1 {
+  color: var(--text);
+  font-size: calc(22px * var(--font-scale));
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+
+.camera-batch-intro {
+  color: var(--text-3);
+  font-size: calc(13px * var(--font-scale));
+  line-height: 1.45;
+  margin: 0;
+}
+
+.camera-batch-section-title {
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  margin: 0 0 var(--space-2);
+  text-transform: uppercase;
+}
+
+/* ─── Live preview ─── */
+/* A fixed height, not `aspect-ratio`: inside a scrolling flex column Chrome
+   shrinks aspect-ratio children down to 0px, which made the preview box
+   invisible while the canvas kept capturing frames. `flex: 0 0 auto` keeps
+   the box from being squeezed by the rest of the column. */
+.camera-batch-stage {
+  align-items: center;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex: 0 0 auto;
+  height: min(52vh, 420px);
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.camera-batch-video {
+  display: block;
+  height: 100%;
+  object-fit: contain;
+  width: 100%;
+}
+
+.camera-batch-stage-hint {
+  color: var(--text-3);
+  font-size: calc(13px * var(--font-scale));
+  left: 0;
+  padding: 0 var(--space-4);
+  position: absolute;
+  right: 0;
+  text-align: center;
+}
+
+/* Framing guide: pure decoration, positioned OUT OF FLOW. As a flex child it
+   became a second column and squeezed the video into the left half, so it must
+   stay absolute and centred over the stage. `9/16` matches the stream, which
+   makes the box land exactly on the area the video paints under
+   `object-fit: contain`. No edge detection, no crop, no math. */
+.camera-batch-frame {
+  aspect-ratio: 9 / 16;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 10px;
+  height: 100%;
+  left: 50%;
+  max-width: 100%;
+  overflow: hidden;
+  pointer-events: none;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.camera-batch-frame-corner {
+  border-color: rgba(255, 255, 255, 0.95);
+  border-style: solid;
+  border-width: 0;
+  height: 20px;
+  position: absolute;
+  width: 20px;
+}
+
+.camera-batch-frame-corner.is-tl {
+  border-left-width: 3px;
+  border-top-left-radius: 10px;
+  border-top-width: 3px;
+  left: 0;
+  top: 0;
+}
+
+.camera-batch-frame-corner.is-tr {
+  border-right-width: 3px;
+  border-top-right-radius: 10px;
+  border-top-width: 3px;
+  right: 0;
+  top: 0;
+}
+
+.camera-batch-frame-corner.is-bl {
+  border-bottom-left-radius: 10px;
+  border-bottom-width: 3px;
+  border-left-width: 3px;
+  bottom: 0;
+  left: 0;
+}
+
+.camera-batch-frame-corner.is-br {
+  border-bottom-right-radius: 10px;
+  border-bottom-width: 3px;
+  border-right-width: 3px;
+  bottom: 0;
+  right: 0;
+}
+
+/* Bottom fifth of the previous capture, shown over the top of the frame so the
+   owner can line up the next page by eye. It is a reference image, not a
+   comparison: nothing measures the alignment. Opacity is deliberately high:
+   the point is reading the text inside the strip, and at 0.35-0.4 the live
+   image underneath washed it out completely. */
+.camera-batch-guide {
+  border-bottom: 2px solid rgba(255, 255, 255, 0.95);
+  display: block;
+  height: 20%;
+  left: 0;
+  object-fit: cover;
+  opacity: 0.8;
+  position: absolute;
+  top: 0;
+  width: 100%;
+  z-index: 1;
+}
+
+/* Sits on the video, not under it: below the stage the label was already out of
+   view when the owner was framing the shot. */
+.camera-batch-guide-label {
+  background: rgba(0, 0, 0, 0.55);
+  border-radius: var(--radius-sm);
+  color: #fff;
+  font-size: calc(11px * var(--font-scale));
+  left: 6px;
+  line-height: 1.3;
+  padding: 3px 6px;
+  position: absolute;
+  right: 6px;
+  text-align: center;
+  top: calc(20% + 6px);
+  z-index: 2;
+}
+
+.camera-batch-capture-bar {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: calc(var(--space-2) * -1);
+}
+
+.camera-batch-status {
+  border-radius: var(--radius-full);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0;
+  padding: 4px 12px;
+  text-transform: uppercase;
+  align-self: flex-start;
+}
+
+.camera-batch-status.is-live {
+  background: var(--mint-dim);
+  border: 1px solid var(--mint);
+  color: var(--mint);
+}
+
+.camera-batch-status.is-idle {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text-3);
+}
+
+/* ─── Actions ─── */
+.camera-batch-actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+/* ─── Readouts (definition lists) ─── */
+.camera-batch-meta {
+  column-gap: var(--space-3);
+  display: grid;
+  font-size: calc(12px * var(--font-scale));
+  grid-template-columns: auto 1fr;
+  margin: 0;
+  row-gap: 2px;
+}
+
+.camera-batch-meta dt {
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.camera-batch-meta dd {
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.camera-batch-note {
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+  margin: 0;
+}
+
+.camera-batch-error {
+  color: var(--coral);
+  font-size: calc(12px * var(--font-scale));
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ─── Captured photos ─── */
+.camera-batch-captures {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.camera-batch-thumbs {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.camera-batch-thumb {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-2);
+}
+
+.camera-batch-thumb-img {
+  aspect-ratio: 3 / 4;
+  background: #000;
+  border-radius: var(--radius-sm);
+  display: block;
+  object-fit: contain;
+  width: 100%;
+}
+
+.camera-batch-thumb-img.is-empty {
+  align-items: center;
+  color: var(--text-4);
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--font-scale));
+  justify-content: center;
+}
+
+/* One column inside a thumbnail: a `dt` with `white-space: nowrap` (e.g.
+   "Resolución del stream") ate the whole card width and left the value as a
+   single-letter column. */
+.camera-batch-thumb .camera-batch-meta {
+  font-size: calc(11px * var(--font-scale));
+  gap: 0;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 6px;
+}
+
+.camera-batch-thumb .camera-batch-meta dt {
+  font-size: calc(10px * var(--font-scale));
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: normal;
+}
+
+.camera-batch-thumb .btn {
+  font-size: calc(12px * var(--font-scale));
+  padding: var(--space-2);
+}
+
+/* ─── OCR measurement for the whole ticket ─── */
+/* One job for the batch, so the panel lives in the captures section, above the
+   grid: a card carrying a job id, issue codes and a ticket JSON is unreadable
+   in half of a 385 px viewport, so it takes the full width. No modal, no
+   second screen, no new primitive. */
+.camera-batch-ocr {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
+}
+
+.camera-batch-ocr-phase {
+  align-self: flex-start;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text-3);
+  font-size: calc(10px * var(--font-scale));
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0;
+  padding: 2px 10px;
+  text-transform: uppercase;
+}
+
+.camera-batch-ocr-phase.is-polling,
+.camera-batch-ocr-phase.is-sending {
+  border-color: var(--mint);
+  color: var(--mint);
+}
+
+.camera-batch-ocr-phase.is-failed {
+  border-color: var(--coral);
+  color: var(--coral);
+}
+
+.camera-batch-ocr-label {
+  color: var(--text-3);
+  font-size: calc(10px * var(--font-scale));
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.camera-batch-ocr-issues {
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: calc(10px * var(--font-scale));
+  line-height: 1.5;
+  margin: 0;
+  overflow-wrap: anywhere;
+  padding-left: var(--space-4);
+}
+
+/* The raw answer is the deliverable, so it is selectable and scrollable but
+   capped: an unbounded JSON dump would push the photo grid out of reach. */
+.camera-batch-ocr-json {
+  font-size: calc(10px * var(--font-scale));
+  max-height: 280px;
+}
+
+/* ─── Report ─── */
+.camera-batch-report-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* The global reset kills text selection, but this block is meant to be copied
+   by hand when the clipboard API is unavailable, so it opts back in. */
+.camera-batch-report {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: calc(11px * var(--font-scale));
+  line-height: 1.5;
+  margin: 0;
+  max-height: 340px;
+  overflow: auto;
+  padding: var(--space-3);
+  white-space: pre-wrap;
+  word-break: break-word;
+  -webkit-touch-callout: default;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}

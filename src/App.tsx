@@ -52,6 +52,10 @@ const FamiliaPage = lazy(() => import('@/pages/Familia/FamiliaPage').then(module
 const AnalisisEmocionalPage = lazy(() => import('@/pages/AnalisisEmocional/AnalisisEmocionalPage').then(module => ({ default: module.AnalisisEmocionalPage })))
 const BCGDetalleCategoria = lazy(() => import('@/components/bcg/BCGDetalleCategoria').then(module => ({ default: module.BCGDetalleCategoria })))
 const SupervivenciaPage = lazy(() => import('@/pages/Supervivencia/SupervivenciaPage').then(module => ({ default: module.SupervivenciaPage })))
+// Isolated measurement spike: persistent-camera batch capture for OCR.
+// Deliberately outside AppLayout and reachable in production builds because
+// the owner tests it on a phone against a deployed build.
+const CameraBatchPage = lazy(() => import('@/pages/Dev/CameraBatch/CameraBatchPage').then(m => ({ default: m.CameraBatchPage })))
 const SaneamientoPage = lazy(() => import('@/pages/Saneamiento/SaneamientoPage').then(module => ({ default: module.SaneamientoPage })))
 
 /** /cuarentena lands on the unified Bandeja de Entrada. The page wrapper
@@ -378,6 +382,9 @@ export default function App() {
 
                   {/* Rutas privadas */}
                   <Route element={<PrivateRoute />}>
+                    {/* Spike page: sibling of the catch-all route on purpose, so
+                     * it renders full-screen without AppLayout's BottomNav/SideNav. */}
+                    <Route path="/dev/camera-batch" element={<CameraBatchPage />} />
                     <Route path="/*" element={<AppLayout />} />
                   </Route>
                 </Routes>
