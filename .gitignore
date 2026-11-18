@@ -232,3 +232,4 @@ tests/configuracion/*
 !tests/presupuestos/transferencia-mensaje-especifico.test.js
 !tests/presupuestos/cupos-sin-alarma.test.js
 !tests/presupuestos/sin-asignar-en-subcategorias.test.js
+!tests/presupuestos/techo-editable-y-historial.test.js

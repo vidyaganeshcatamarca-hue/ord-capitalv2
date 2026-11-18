@@ -51,6 +51,14 @@ function mensajeRechazoPresupuesto(
   if (parsed?.key === 'error_budget_child_holds_no_money') {
     return t('error_budget_child_holds_no_money')
   }
+  // Etapa 3: los dos rechazos del techo. Sin esto, un tope de cero o un llamado sobre
+  // un rubro padre mostraban la key cruda del servidor en el toast.
+  if (parsed?.key === 'error_ceiling_must_be_positive') {
+    return t('error_ceiling_must_be_positive')
+  }
+  if (parsed?.key === 'error_ceiling_only_for_subcategory') {
+    return t('error_ceiling_only_for_subcategory')
+  }
   return null
 }
 
@@ -87,6 +95,38 @@ function esSubcategoriaDeRubro(sobre: Pick<SobreDetalle, 'padre_id' | 'es_padre'
   return sobre.padre_id != null && !sobre.es_padre
 }
 
+/**
+ * Etapa 3 · el rastro. `fn_historial_presupuesto` devuelve una fila por cambio, con lo
+ * que quedó anotado en ese momento: la plata (`monto_limite`) y/o el techo
+ * (`monto_techo`). Las dos columnas son anulables, así que una entrada puede hablar de
+ * una sola de las dos cosas: un cambio de techo no toca la plata asignada.
+ */
+interface HistorialPresupuestoFila {
+  creado_at: string
+  monto_limite: number | null
+  monto_techo: number | null
+  motivo: string | null
+  modo_origen: string | null
+  modo_destino: string | null
+}
+
+/** Cuántas entradas del rastro se muestran; el servidor devuelve hasta 50. */
+const HISTORIAL_VISIBLE = 10
+
+/**
+ * `motivo` es un dato del servidor ('techo', 'manual', 'transferencia_salida'...), no
+ * copy de la pantalla: se traduce con una clave y el valor crudo nunca se imprime
+ * (regla 9). Un motivo que no esté acá cae en «otro cambio».
+ */
+const MOTIVO_HISTORIAL_A_CLAVE: Record<string, string> = {
+  techo: 'budget_history_reason_ceiling',
+  manual: 'budget_history_reason_manual',
+  transferencia_salida: 'budget_history_reason_transfer_out',
+  transferencia_entrada: 'budget_history_reason_transfer_in',
+  cambio_a_base_cero: 'budget_history_reason_to_base_zero',
+  vuelta_a_anticipado: 'budget_history_reason_to_freedom',
+}
+
 interface ConfigPresupuesto {
   modo_presupuesto: 'base_cero' | 'anticipado'
   porcentaje_necesidades: number
@@ -118,6 +158,17 @@ const getMesPeriodo = (offset: number = 0): Date => {
 const formatMesLabel = (d: Date, locale: string) =>
   d.toLocaleDateString(locale, { month: 'short', year: 'numeric' })
     .replace(/^\w/, c => c.toUpperCase())
+
+/**
+ * Etapa 3 · el rastro en 390 px. La fecha va en forma corta («14 sep.») porque la
+ * entrada comparte la línea con el monto y el motivo: con la fecha larga no entra.
+ * Se resuelve en el render, donde el idioma y la región ya son los vigentes.
+ */
+const formatFechaHistorial = (iso: string, locale: string) => {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString(locale, { day: '2-digit', month: 'short' })
+}
 
 // Solo se guarda la CLAVE de traduccion: si el texto traducido viviera aqui,
 // `t()` se evaluaria al importar el modulo y quedaria congelado en el idioma
@@ -232,6 +283,16 @@ export function PresupuestosPage() {
   // no las opciones de asignar. Es un panel aparte del de asignar: el de asignar
   // queda para el botón "+ Asignar".
   const [showDetalleSheet, setShowDetalleSheet] = useState(false)
+  // Etapa 3: el techo de una subcategoría se edita en su propia hoja. `sobreTecho` va
+  // aparte de `sobreSeleccionado` a propósito: abrir el editor no tiene que cerrar ni
+  // reemplazar la hoja de detalle que el usuario pueda tener abierta.
+  const [sobreTecho, setSobreTecho] = useState<SobreDetalle | null>(null)
+  const [techoManual, setTechoManual] = useState('')
+  const [guardandoTecho, setGuardandoTecho] = useState(false)
+  // Etapa 3 · el rastro: historial de la categoría cuya hoja de detalle está abierta.
+  // `null` = todavía no llegó; `[]` = llegó y no hay nada (se dice en una línea).
+  const [historial, setHistorial] = useState<HistorialPresupuestoFila[] | null>(null)
+  const [cargandoHistorial, setCargandoHistorial] = useState(false)
   const [showTransferirModal, setShowTransferirModal] = useState(false)
   // Clave de operación de la transferencia. Se reusa mientras se reintente la MISMA
   // transferencia (doble toque, red lenta, respuesta perdida): el servidor la reconoce
@@ -288,12 +349,14 @@ export function PresupuestosPage() {
       if (e.key !== 'Escape') return
       if (showBaseCeroModal) { setShowBaseCeroModal(false); return }
       if (showTransferirModal) { setShowTransferirModal(false); setOrigenSeleccionado(null); return }
+      // Etapa 3: la hoja del techo es la capa más nueva, así que se cierra primero.
+      if (sobreTecho) { setSobreTecho(null); return }
       if (showAsignarSheet) { setShowAsignarSheet(false); setSobreSeleccionado(null); return }
       if (showDetalleSheet) { setShowDetalleSheet(false); setSobreSeleccionado(null); return }
     }
     window.addEventListener('keydown', alPresionar)
     return () => window.removeEventListener('keydown', alPresionar)
-  }, [showBaseCeroModal, showTransferirModal, showAsignarSheet, showDetalleSheet])
+  }, [showBaseCeroModal, showTransferirModal, sobreTecho, showAsignarSheet, showDetalleSheet])
 
 
   const mesPeriodo = getMesPeriodo(mesOffset)
@@ -309,6 +372,41 @@ export function PresupuestosPage() {
   // botón Asignar, el Cubrir déficit y el encabezado de disponible— se apagan juntas.
   const esCicloActivo = mesOffset === activeOffset
   const soloLectura = !esCicloActivo
+
+  /**
+   * Etapa 3 · el rastro de la categoría que abrió la hoja de detalle. Se pide al
+   * servidor acotado a esa categoría y a ESTE ciclo: el pasado se lee igual, en solo
+   * lectura, y no hay nada que apagar en la consulta.
+   *
+   * Un fallo no rompe la hoja: se muestra la línea de «sin historial», que es la misma
+   * que ve una categoría sin cambios.
+   */
+  useEffect(() => {
+    if (!showDetalleSheet || !sobreSeleccionado) return
+    let cancelado = false
+    const cargarHistorial = async () => {
+      setCargandoHistorial(true)
+      setHistorial(null)
+      try {
+        const { data, error } = await supabase.rpc('fn_historial_presupuesto', {
+          p_estructura_egreso_id: sobreSeleccionado.estructura_id,
+          p_mes_periodo: mesPeriodoStr,
+        })
+        if (cancelado) return
+        if (error) throw error
+        const filas = Array.isArray(data) ? (data as HistorialPresupuestoFila[]) : []
+        // El servidor ya viene ordenado del más nuevo al más viejo y devuelve hasta 50:
+        // en pantalla entran las últimas HISTORIAL_VISIBLE.
+        setHistorial(filas.slice(0, HISTORIAL_VISIBLE))
+      } catch {
+        if (!cancelado) setHistorial([])
+      } finally {
+        if (!cancelado) setCargandoHistorial(false)
+      }
+    }
+    void cargarHistorial()
+    return () => { cancelado = true }
+  }, [showDetalleSheet, sobreSeleccionado, mesPeriodoStr])
 
   const getLabelForOffset = (offset: number) => {
     if (offset === activeOffset) return t('budget_cycle_current_check')
@@ -771,6 +869,82 @@ export function PresupuestosPage() {
     ]
   }, [sobresConDisponible, saldoAsignar])
 
+  // ─── TECHO DE LA SUBCATEGORÍA ─────────────────────────────────────────────
+  // Etapa 3: el techo es opcional y vive en su propio eje. La plata se asigna al rubro
+  // padre; a la subcategoría se le pone un tope de gasto. `fn_asignar_techo` no toca el
+  // monto asignado y acepta `null` para dejar la fila sin techo (el caso «vacío»).
+
+  const cerrarTechoSheet = () => {
+    setSobreTecho(null)
+    setTechoManual('')
+  }
+
+  const handleAbrirTecho = (sobre: SobreDetalle) => {
+    // Un ciclo cerrado no se edita: ni el techo ni la plata.
+    if (soloLectura) {
+      showToast(t('budget_readonly_cycle_toast'), 'error')
+      return
+    }
+    // El padre no lleva techo: su referencia es la plata que tiene asignada.
+    if (!esSubcategoriaDeRubro(sobre)) {
+      showToast(t('error_ceiling_only_for_subcategory'), 'error')
+      return
+    }
+    const actual = techoDe(sobre.estructura_id)
+    setTechoManual(actual !== null && actual !== undefined && Number(actual) > 0
+      ? String(Math.round(Number(actual)))
+      : '')
+    setSobreTecho(sobre)
+  }
+
+  /** `null` = quitar el techo. Cero y negativo los rechaza el servidor, y acá también. */
+  const handleGuardarTecho = async (techo: number | null) => {
+    if (!sobreTecho || guardandoTecho) return
+    if (soloLectura) {
+      showToast(t('budget_readonly_cycle_toast'), 'error')
+      return
+    }
+    if (techo !== null && (isNaN(techo) || techo <= 0)) {
+      showToast(t('error_ceiling_must_be_positive'), 'error')
+      return
+    }
+    setGuardandoTecho(true)
+    try {
+      const { error } = await supabase.rpc('fn_asignar_techo', {
+        p_estructura_egreso_id: sobreTecho.estructura_id,
+        p_techo: techo,
+        p_mes_periodo: mesPeriodoStr,
+      })
+      if (error) throw error
+      showToast(
+        techo === null
+          ? t('budget_ceiling_removed')
+          : t('budget_ceiling_saved', { monto: formatMonto(techo) }),
+        'success',
+      )
+      cerrarTechoSheet()
+      // Misma recarga silenciosa que usa la asignación: el scroll y la lista no se mueven.
+      await cargarDatos(true)
+    } catch (err: any) {
+      // El servidor explica por qué se niega con clave y params: se traduce, nunca se
+      // imprime la key cruda ni se tapa con el mensaje genérico.
+      const rechazo = mensajeRechazoPresupuesto(err, t, formatMonto)
+      showToast(rechazo ?? t('budget_ceiling_error'), 'error')
+    } finally {
+      setGuardandoTecho(false)
+    }
+  }
+
+  /** El valor del input, con la guarda de «cero o vacío no es un techo válido». */
+  const guardarTechoDelInput = () => {
+    const techo = parseMontoInput(techoManual)
+    if (isNaN(techo) || techo <= 0) {
+      showToast(t('error_ceiling_must_be_positive'), 'error')
+      return
+    }
+    void handleGuardarTecho(techo)
+  }
+
   const handleTransferir = async () => {
     if (!origenSeleccionado || !sobreSeleccionado) return
     if (soloLectura) {
@@ -1202,6 +1376,7 @@ export function PresupuestosPage() {
                 onToggle={() => toggleAcordeon(tipo)}
                 onAsignar={handleAbrirAsignar}
                 onVerDetalle={handleAbrirDetalle}
+                onEditarTecho={handleAbrirTecho}
                 modoPresupuesto={config?.modo_presupuesto}
                 soloLectura={soloLectura}
                 fmt={formatMonto}
@@ -1292,6 +1467,48 @@ export function PresupuestosPage() {
                   </span>
                 </span>
               </div>
+            </div>
+
+            {/* Etapa 3 · el rastro: qué pasó con esta categoría y por qué. Es de
+                lectura siempre, también en un ciclo cerrado: lo que cambia ahí es
+                que no se puede editar, no que se oculte la historia. */}
+            <div className="presupuesto-historial">
+              <div className="presupuesto-historial-titulo">{t('budget_history_title')}</div>
+              {cargandoHistorial ? (
+                <div className="presupuesto-historial-vacio">{t('budget_history_loading')}</div>
+              ) : !historial || historial.length === 0 ? (
+                // Sin historial se dice en una línea: un recuadro vacío parece un error.
+                <div className="presupuesto-historial-vacio">{t('budget_history_empty')}</div>
+              ) : (
+                <ul className="presupuesto-historial-lista">
+                  {historial.slice(0, HISTORIAL_VISIBLE).map((fila, i) => (
+                    <li key={`${fila.creado_at}-${i}`} className="presupuesto-historial-item">
+                      <span className="presupuesto-historial-fecha">
+                        {formatFechaHistorial(fila.creado_at, locale)}
+                      </span>
+                      <span className="presupuesto-historial-cambio">
+                        {/* Una entrada puede hablar de las dos cosas o de una sola: el
+                            techo no toca la plata, y la plata no toca el techo. */}
+                        {Number(fila.monto_limite ?? 0) !== 0 && (
+                          <span className="presupuesto-historial-monto">
+                            {t('budget_history_money', { monto: formatMonto(Number(fila.monto_limite)) })}
+                          </span>
+                        )}
+                        {(fila.monto_techo !== null || fila.motivo === 'techo') && (
+                          <span className="presupuesto-historial-techo">
+                            {fila.monto_techo !== null
+                              ? t('budget_history_ceiling', { monto: formatMonto(Number(fila.monto_techo)) })
+                              : t('budget_history_ceiling_none')}
+                          </span>
+                        )}
+                      </span>
+                      <span className="presupuesto-historial-motivo">
+                        {t(MOTIVO_HISTORIAL_A_CLAVE[fila.motivo ?? ''] ?? 'budget_history_reason_other')}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
         </div>
@@ -1475,6 +1692,95 @@ export function PresupuestosPage() {
             <div style={{ marginTop: 16 }}>
               <button className="btn-cancelar" style={{ width: '100%' }}
                 onClick={() => setShowAsignarSheet(false)}>
+                {t('btn_cancel')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════
+          HOJA: TECHO DE LA SUBCATEGORÍA (Etapa 3)
+          El techo es opcional: se puede guardar un tope o quitarlo (null).
+          Reusa los estilos de hoja e input que ya tiene la pantalla.
+          ══════════════════════════════════════════════════════════ */}
+      {sobreTecho && (
+        <div className="modal-overlay" onClick={cerrarTechoSheet}>
+          <div className="modal-sheet" onClick={e => e.stopPropagation()}>
+            <div className="modal-handle" />
+            <button
+              type="button"
+              className="asignar-sheet-close"
+              onClick={cerrarTechoSheet}
+              aria-label={t('btn_close')}
+            >
+              ✕
+            </button>
+            <div className="modal-titulo">{t('budget_ceiling_sheet_title')}</div>
+
+            <div className="asignar-sheet-sobre">
+              <span style={{
+                width: 32, height: 32, borderRadius: 8,
+                background: sobreTecho.color || 'var(--mint, #00B127)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                <CategoryIcon name={sobreTecho.icono} size={18} />
+              </span>
+              <div>
+                <div className="asignar-sheet-sobre-nombre">{t(sobreTecho.nombre_categoria)}</div>
+                <div className="asignar-sheet-sobre-saldo">
+                  {(() => {
+                    const actual = techosPorEstructura?.[Number(sobreTecho.estructura_id)]
+                    return actual !== null && actual !== undefined && Number(actual) > 0
+                      ? t('budget_history_ceiling', { monto: formatMonto(Number(actual)) })
+                      : t('budget_history_ceiling_none')
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* Qué es el techo y que no toca la plata: la hoja no puede dar por
+                sabido que el usuario ya lo sabe. */}
+            <p className="presupuesto-techo-hint">{t('budget_ceiling_sheet_hint')}</p>
+
+            <div className="asignar-monto-inline">
+              <input
+                className="asignar-monto-input"
+                type="number"
+                inputMode="numeric"
+                placeholder="0"
+                autoFocus
+                value={techoManual}
+                onChange={e => setTechoManual(e.target.value)}
+                onFocus={e => e.target.select()}
+                onKeyDown={e => {
+                  if (e.key !== 'Enter') return
+                  guardarTechoDelInput()
+                }}
+                aria-label={t('budget_ceiling_sheet_title')}
+              />
+              <button
+                type="button"
+                className="btn-confirmar-monto"
+                onClick={guardarTechoDelInput}
+                disabled={guardandoTecho}
+              >
+                {t('budget_ceiling_save')}
+              </button>
+            </div>
+
+            {/* El camino del `null`: dejar la subcategoría sin techo. */}
+            <button
+              type="button"
+              className="btn-cancelar presupuesto-quitar-techo"
+              onClick={() => void handleGuardarTecho(null)}
+              disabled={guardandoTecho}
+            >
+              {t('budget_ceiling_remove')}
+            </button>
+
+            <div style={{ marginTop: 8 }}>
+              <button className="btn-cancelar" style={{ width: '100%' }} onClick={cerrarTechoSheet}>
                 {t('btn_cancel')}
               </button>
             </div>
@@ -1826,6 +2132,11 @@ interface GrupoProps {
   onAsignar: (s: SobreDetalle) => void
   /** S1 (ronda 4): tocar la tarjeta muestra información, no las opciones de asignar. */
   onVerDetalle: (s: SobreDetalle) => void
+  /**
+   * Etapa 3: el techo de una subcategoría se edita tocando su valor. Sólo la
+   * subcategoría lo ofrece: el rubro padre no lleva techo.
+   */
+  onEditarTecho?: (s: SobreDetalle) => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
   /** Ronda 8: un ciclo cerrado es solo lectura (sin botón Asignar). */
   soloLectura?: boolean
@@ -1835,7 +2146,7 @@ interface GrupoProps {
   techoDe: (estructuraId: number) => number | null | undefined
 }
 
-function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt, techoDe }: GrupoProps) {
+function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, onEditarTecho, modoPresupuesto, soloLectura, fmt, techoDe }: GrupoProps) {
   const meta = TIPO_CUPO_META[tipo] ?? { labelKey: tipo.toUpperCase(), icono: '📦' }
   // T6/S15: el total del grupo cuenta una sola vez. Cuando un rubro padre tiene
   // presupuesto, sus hijos llegan con cuenta_en_totales = false y no se suman aparte.
@@ -1926,6 +2237,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
               techo={techoDe(cabecera.estructura_id)}
               onAsignar={() => onAsignar(cabecera)}
               onVerDetalle={() => onVerDetalle(cabecera)}
+              onEditarTecho={() => onEditarTecho?.(cabecera)}
               modoPresupuesto={modoPresupuesto}
               soloLectura={soloLectura}
               fmt={fmt}
@@ -1946,6 +2258,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
                     hija
                     onAsignar={() => onAsignar(hija)}
                     onVerDetalle={() => onVerDetalle(hija)}
+                    onEditarTecho={() => onEditarTecho?.(hija)}
                     libreGrupo={libreDe(cabecera.estructura_id) ?? undefined}
                     techo={techoDe(hija.estructura_id)}
                     pozoPadre={Number(cabecera.monto_asignado ?? 0)}
@@ -1988,6 +2301,8 @@ interface FilaSobreProps {
   plataGrupo?: number
   onAsignar: () => void
   onVerDetalle: () => void
+  /** Etapa 3: abre la hoja del techo. Sólo se dibuja en una subcategoría. */
+  onEditarTecho?: () => void
   modoPresupuesto?: 'base_cero' | 'anticipado'
   /** Ronda 8: sin botón Asignar en un ciclo cerrado. */
   soloLectura?: boolean
@@ -1995,7 +2310,7 @@ interface FilaSobreProps {
   fmt: (n: number) => string
 }
 
-function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, techo, pozoPadre, plataGrupo, onAsignar, onVerDetalle, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
+function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, techo, pozoPadre, plataGrupo, onAsignar, onVerDetalle, onEditarTecho, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
   // Ronda 10 (dueño): el hijo sin asignación se mide contra el libre del grupo, y sin
   // techo no se dibuja barra. El padre queda como estaba: su barra compara el gasto de
   // los hijos contra su propio techo.
@@ -2045,6 +2360,13 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
   // desalineada respecto de las demás.
   const esSubcategoria = esSubcategoriaDeRubro(sobre)
   const puedeAsignar = !soloLectura && !esSubcategoria
+  // Etapa 3: el techo se edita tocando el valor de la celda. La subcategoría es la única
+  // que lo ofrece (el padre no tiene techo) y un ciclo cerrado no edita nada.
+  const puedeEditarTecho = esSubcategoria && !soloLectura && !!onEditarTecho
+  const tieneTecho = techo !== null && techo !== undefined && Number(techo) > 0
+  const valorTecho = tieneTecho
+    ? fmt(Number(techo))
+    : libreGrupo !== undefined ? fmt(Math.max(libreGrupo, 0)) : '—'
 
   const colorDisponible = () => {
     if (disponibleEfectivo < 0) return 'rojo'
@@ -2170,15 +2492,21 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
         ) : (
           <span className="sobre-stat">
             <span className="sobre-stat-label">
-              {techo !== null && techo !== undefined && Number(techo) > 0
-                ? t('budget_stat_ceiling')
-                : t('budget_stat_group_free')}
+              {tieneTecho ? t('budget_stat_ceiling') : t('budget_stat_group_free')}
             </span>
-            <span className="sobre-stat-val">
-              {techo !== null && techo !== undefined && Number(techo) > 0
-                ? fmt(Number(techo))
-                : libreGrupo !== undefined ? fmt(Math.max(libreGrupo, 0)) : '—'}
-            </span>
+            {puedeEditarTecho ? (
+              <button
+                type="button"
+                className="sobre-stat-val sobre-stat-val--editable"
+                onClick={e => { e.stopPropagation(); onEditarTecho?.() }}
+                title={t('budget_ceiling_edit_hint')}
+                aria-label={t('budget_ceiling_edit_hint')}
+              >
+                {valorTecho}
+              </button>
+            ) : (
+              <span className="sobre-stat-val">{valorTecho}</span>
+            )}
           </span>
         )}
         <span className="sobre-stat">

@@ -8626,6 +8626,98 @@
         "from": "La plata se asigna al rubro padre. A la subcategoría se le pone un techo de gasto, no plata asignada.",
         "to": "Money is assigned to the parent category. A subcategory gets a spending ceiling, not assigned money."
       },
+      "inversiones.budget_ceiling_sheet_title": {
+        "from": "Techo de gasto",
+        "to": "Spending ceiling"
+      },
+      "inversiones.budget_ceiling_sheet_hint": {
+        "from": "El techo es el tope de gasto de esta subcategoría. Quitalo para no poner tope: el techo y la plata asignada son dos cosas distintas.",
+        "to": "The ceiling is the spending cap of this subcategory. Remove it to have no cap: the ceiling and the assigned money are two different things."
+      },
+      "inversiones.budget_ceiling_edit_hint": {
+        "from": "Tocar para editar el techo",
+        "to": "Tap to edit the ceiling"
+      },
+      "inversiones.budget_ceiling_save": {
+        "from": "Guardar techo",
+        "to": "Save ceiling"
+      },
+      "inversiones.budget_ceiling_remove": {
+        "from": "Quitar techo",
+        "to": "Remove ceiling"
+      },
+      "inversiones.budget_ceiling_saved": {
+        "from": "Techo actualizado: {monto}.",
+        "to": "Ceiling updated: {monto}."
+      },
+      "inversiones.budget_ceiling_removed": {
+        "from": "Esta subcategoría quedó sin techo.",
+        "to": "This subcategory no longer has a ceiling."
+      },
+      "inversiones.budget_ceiling_error": {
+        "from": "No se pudo guardar el techo.",
+        "to": "The ceiling could not be saved."
+      },
+      "inversiones.error_ceiling_must_be_positive": {
+        "from": "El techo tiene que ser mayor que cero. Si no querés tope, quitá el techo.",
+        "to": "The ceiling must be greater than zero. If you want no cap, remove the ceiling."
+      },
+      "inversiones.error_ceiling_only_for_subcategory": {
+        "from": "El techo es de una subcategoría. El rubro padre no lleva techo: su referencia es la plata que tiene asignada.",
+        "to": "Only a subcategory has a ceiling. The parent category has none: its reference is the money assigned to it."
+      },
+      "inversiones.budget_history_title": {
+        "from": "Historial",
+        "to": "History"
+      },
+      "inversiones.budget_history_loading": {
+        "from": "Cargando historial...",
+        "to": "Loading history..."
+      },
+      "inversiones.budget_history_empty": {
+        "from": "Todavía no hay cambios de presupuesto en esta categoría para este ciclo.",
+        "to": "No budget changes for this category in this cycle yet."
+      },
+      "inversiones.budget_history_money": {
+        "from": "Plata: {monto}",
+        "to": "Money: {monto}"
+      },
+      "inversiones.budget_history_ceiling": {
+        "from": "Techo: {monto}",
+        "to": "Ceiling: {monto}"
+      },
+      "inversiones.budget_history_ceiling_none": {
+        "from": "Techo: sin techo",
+        "to": "Ceiling: none"
+      },
+      "inversiones.budget_history_reason_ceiling": {
+        "from": "Cambió el techo",
+        "to": "Ceiling changed"
+      },
+      "inversiones.budget_history_reason_manual": {
+        "from": "Asignación manual",
+        "to": "Manual assignment"
+      },
+      "inversiones.budget_history_reason_transfer_out": {
+        "from": "Salió a otro rubro",
+        "to": "Sent to another category"
+      },
+      "inversiones.budget_history_reason_transfer_in": {
+        "from": "Llegó de otro rubro",
+        "to": "Received from another category"
+      },
+      "inversiones.budget_history_reason_to_base_zero": {
+        "from": "Se pasó a Base Cero",
+        "to": "Switched to Zero Base"
+      },
+      "inversiones.budget_history_reason_to_freedom": {
+        "from": "Volvió a Modo Libertad",
+        "to": "Back to Freedom Mode"
+      },
+      "inversiones.budget_history_reason_other": {
+        "from": "Otro cambio",
+        "to": "Other change"
+      },
       "inversiones.budget_stat_assigned": {
         "from": "Asignado",
         "to": "Assigned"
@@ -19927,6 +20019,98 @@
       "inversiones.error_budget_child_holds_no_money": {
         "from": "La plata se asigna al rubro padre. A la subcategoría se le pone un techo de gasto, no plata asignada.",
         "to": "O dinheiro é atribuído à categoria pai. A subcategoria recebe um teto de gasto, não dinheiro atribuído."
+      },
+      "inversiones.budget_ceiling_sheet_title": {
+        "from": "Techo de gasto",
+        "to": "Teto de gasto"
+      },
+      "inversiones.budget_ceiling_sheet_hint": {
+        "from": "El techo es el tope de gasto de esta subcategoría. Quitalo para no poner tope: el techo y la plata asignada son dos cosas distintas.",
+        "to": "O teto é o limite de gasto desta subcategoria. Remova-o para não ter limite: o teto e o dinheiro atribuído são duas coisas diferentes."
+      },
+      "inversiones.budget_ceiling_edit_hint": {
+        "from": "Tocar para editar el techo",
+        "to": "Toque para editar o teto"
+      },
+      "inversiones.budget_ceiling_save": {
+        "from": "Guardar techo",
+        "to": "Salvar teto"
+      },
+      "inversiones.budget_ceiling_remove": {
+        "from": "Quitar techo",
+        "to": "Remover teto"
+      },
+      "inversiones.budget_ceiling_saved": {
+        "from": "Techo actualizado: {monto}.",
+        "to": "Teto atualizado: {monto}."
+      },
+      "inversiones.budget_ceiling_removed": {
+        "from": "Esta subcategoría quedó sin techo.",
+        "to": "Esta subcategoria ficou sem teto."
+      },
+      "inversiones.budget_ceiling_error": {
+        "from": "No se pudo guardar el techo.",
+        "to": "Não foi possível salvar o teto."
+      },
+      "inversiones.error_ceiling_must_be_positive": {
+        "from": "El techo tiene que ser mayor que cero. Si no querés tope, quitá el techo.",
+        "to": "O teto precisa ser maior que zero. Se não quiser limite, remova o teto."
+      },
+      "inversiones.error_ceiling_only_for_subcategory": {
+        "from": "El techo es de una subcategoría. El rubro padre no lleva techo: su referencia es la plata que tiene asignada.",
+        "to": "O teto é de uma subcategoria. A categoria pai não tem teto: sua referência é o dinheiro atribuído a ela."
+      },
+      "inversiones.budget_history_title": {
+        "from": "Historial",
+        "to": "Histórico"
+      },
+      "inversiones.budget_history_loading": {
+        "from": "Cargando historial...",
+        "to": "Carregando histórico..."
+      },
+      "inversiones.budget_history_empty": {
+        "from": "Todavía no hay cambios de presupuesto en esta categoría para este ciclo.",
+        "to": "Ainda não há mudanças de orçamento nesta categoria para este ciclo."
+      },
+      "inversiones.budget_history_money": {
+        "from": "Plata: {monto}",
+        "to": "Dinheiro: {monto}"
+      },
+      "inversiones.budget_history_ceiling": {
+        "from": "Techo: {monto}",
+        "to": "Teto: {monto}"
+      },
+      "inversiones.budget_history_ceiling_none": {
+        "from": "Techo: sin techo",
+        "to": "Teto: sem teto"
+      },
+      "inversiones.budget_history_reason_ceiling": {
+        "from": "Cambió el techo",
+        "to": "O teto mudou"
+      },
+      "inversiones.budget_history_reason_manual": {
+        "from": "Asignación manual",
+        "to": "Atribuição manual"
+      },
+      "inversiones.budget_history_reason_transfer_out": {
+        "from": "Salió a otro rubro",
+        "to": "Saiu para outra categoria"
+      },
+      "inversiones.budget_history_reason_transfer_in": {
+        "from": "Llegó de otro rubro",
+        "to": "Chegou de outra categoria"
+      },
+      "inversiones.budget_history_reason_to_base_zero": {
+        "from": "Se pasó a Base Cero",
+        "to": "Mudou para Base Zero"
+      },
+      "inversiones.budget_history_reason_to_freedom": {
+        "from": "Volvió a Modo Libertad",
+        "to": "Voltou ao Modo Liberdade"
+      },
+      "inversiones.budget_history_reason_other": {
+        "from": "Otro cambio",
+        "to": "Outra mudança"
       },
       "inversiones.budget_stat_assigned": {
         "from": "Asignado",

@@ -1675,3 +1675,129 @@ button.asignar-opcion:focus-visible {
   background: rgba(64, 132, 255, 0.9);
   pointer-events: none;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Etapa 3 · el techo editable y el rastro del presupuesto
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* El techo de una subcategoría se edita tocando su valor. Es un <button> para que
+   el teclado llegue, pero tiene que verse como el número que era antes: el
+   subrayado punteado es la única señal de que se puede tocar. Los tamaños y la
+   tipografía siguen viniendo de `.sobre-stat-val`, así la fila no cambia. */
+button.sobre-stat-val--editable {
+  background: none;
+  border: 0;
+  margin: 0;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+button.sobre-stat-val--editable:active {
+  opacity: 0.7;
+}
+
+button.sobre-stat-val--editable:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
+}
+
+/* La acción destructiva de la hoja del techo («quitar techo») vive separada del
+   guardado: son dos acciones distintas y una deja la fila sin tope. */
+.presupuesto-quitar-techo {
+  width: 100%;
+  margin-top: 8px;
+  color: var(--warning, #f59e0b);
+  border-color: color-mix(in srgb, var(--warning, #f59e0b) 45%, transparent);
+}
+
+/* La explicación del techo va fuera de la cabecera de la hoja: adentro, con el icono
+   al lado, una frase larga se parte en cuatro líneas en 390 px. */
+.presupuesto-techo-hint {
+  margin: 0 0 4px;
+  font-size: calc(12px * var(--font-scale));
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
+/* El rastro, en la hoja de detalle. Una entrada por cambio, con la fecha corta a
+   la izquierda: en 390 px la fecha larga empuja el monto fuera de la línea. */
+.presupuesto-historial {
+  margin: 0 0 var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--bg-2, rgba(127, 127, 127, 0.08));
+}
+
+.presupuesto-historial-titulo {
+  font-size: calc(10px * var(--font-scale));
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  opacity: 0.65;
+  margin-bottom: 6px;
+}
+
+/* Sin historial se dice en una línea, no se dibuja un recuadro vacío. */
+.presupuesto-historial-vacio {
+  font-size: calc(12px * var(--font-scale));
+  color: var(--text-2);
+  line-height: 1.35;
+}
+
+.presupuesto-historial-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.presupuesto-historial-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 8px;
+  row-gap: 1px;
+  align-items: baseline;
+  font-size: calc(12px * var(--font-scale));
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+}
+
+.presupuesto-historial-lista > .presupuesto-historial-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.presupuesto-historial-fecha {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-3);
+  white-space: nowrap;
+}
+
+.presupuesto-historial-cambio {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.presupuesto-historial-techo {
+  color: var(--text-2);
+  font-weight: 500;
+}
+
+.presupuesto-historial-motivo {
+  grid-column: 2;
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-3);
+}
