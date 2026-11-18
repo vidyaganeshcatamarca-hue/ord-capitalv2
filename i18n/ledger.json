@@ -1743,12 +1743,12 @@
         "to": "Covers the deficit or carryover of this category"
       },
       "errors.budget_opcion_ingresar_monto_title": {
-        "from": "Ingresar Monto",
-        "to": "Enter Amount"
+        "from": "Sumar al asignado",
+        "to": "Add to assigned"
       },
       "errors.budget_opcion_ingresar_monto_desc": {
-        "from": "Escribe el monto manualmente",
-        "to": "Type the amount manually"
+        "from": "Se suma al monto que esta categoría ya tiene",
+        "to": "It adds to the amount this category already has"
       },
       "errors.budget_opcion_asignar_todo_title": {
         "from": "Asignar Todo lo Disponible",
@@ -1779,8 +1779,8 @@
         "to": "Average of the last 6 months"
       },
       "errors.budget_option_avg_six_months_desc": {
-        "from": "Promedio mensual con gastos registrados: {monto}",
-        "to": "Monthly average with recorded expenses: {monto}"
+        "from": "Promedio de los últimos 6 meses, según los días de uso: {monto}",
+        "to": "Average of the last 6 months, based on days of use: {monto}"
       },
       "errors.budget_prev_month_avg": {
         "from": "Promedio últimos 6 meses",
@@ -13041,12 +13041,12 @@
         "to": "Cobre o déficit ou o saldo negativo herdado desta categoria"
       },
       "errors.budget_opcion_ingresar_monto_title": {
-        "from": "Ingresar Monto",
-        "to": "Informar valor"
+        "from": "Sumar al asignado",
+        "to": "Somar ao atribuído"
       },
       "errors.budget_opcion_ingresar_monto_desc": {
-        "from": "Escribe el monto manualmente",
-        "to": "Digite o valor manualmente"
+        "from": "Se suma al monto que esta categoría ya tiene",
+        "to": "Soma ao valor que esta categoria já tem"
       },
       "errors.budget_opcion_asignar_todo_title": {
         "from": "Asignar Todo lo Disponible",
@@ -13077,8 +13077,8 @@
         "to": "Média dos últimos 6 meses"
       },
       "errors.budget_option_avg_six_months_desc": {
-        "from": "Promedio mensual con gastos registrados: {monto}",
-        "to": "Média mensal com despesas registradas: {monto}"
+        "from": "Promedio de los últimos 6 meses, según los días de uso: {monto}",
+        "to": "Média dos últimos 6 meses, conforme os dias de uso: {monto}"
       },
       "errors.budget_prev_month_avg": {
         "from": "Promedio últimos 6 meses",

@@ -53,6 +53,17 @@ saldo libre, arrastre o historial. Verificar Base Cero y Libertad con el mismo r
 - T6 · Pantalla: sin «Asignar» en subcategorías, mensaje propio en los tres idiomas, y la clave de
   operación enviada desde la transferencia — hecho en el repo, **sin publicar**.
 - T7 · Prueba de integridad transaccional en `tests/sql/etapa1_integridad.sql` + runner — hecho, 6/6.
+- T8 · Recorrido en móvil 390x844, servidor local 5174, las dos cuentas — hecho.
+  Base 0 (dueño, 30 filas): 0 de 20 subcategorías con botón, las 20 con hueco 0; 10 de 10 rubros con
+  botón y hueco de 84 px. Libertad (198, 14 filas): 0 de 5 subcategorías con botón; 9 de 9 rubros con
+  botón. Cero solapes medidos en todas las franjas.
+- T9 · Escritura real en Libertad (198): asignar 12.345 sobre Food-Home lo llevó de 105.500 a 117.845,
+  con aviso en pantalla. Revertido a 105.500 por la RPC, con motivo `revertir_prueba_etapa1`. La única
+  fila que queda de la prueba es ese registro del historial.
+- T10 · Dos arreglos que salieron del recorrido: la franja de cuatro datos de la fila hija envuelve dos
+  y dos (68 px → 135 px por celda) y la subcategoría deja de mostrar las pistas de asignación.
+- T11 · Etiquetas que mentían: «Ingresar Monto» suma al valor existente, ahora «Sumar al asignado» con
+  su descripción; el promedio de seis meses ya dice que se calcula por días de uso. Los tres idiomas.
 
 ## Evidencia
 
