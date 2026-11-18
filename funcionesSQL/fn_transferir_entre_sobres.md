@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION public.fn_transferir_entre_sobres(p_origen_id bigint, p_destino_id bigint, p_monto numeric, p_mes_periodo date DEFAULT date_trunc('month'::text, (CURRENT_DATE)::timestamp with time zone))
+CREATE OR REPLACE FUNCTION public.fn_transferir_entre_sobres(p_origen_id bigint, p_destino_id bigint, p_monto numeric, p_mes_periodo date DEFAULT date_trunc('month'::text, (CURRENT_DATE)::timestamp with time zone), p_idempotency_key text DEFAULT NULL::text)
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -9,18 +9,17 @@ DECLARE
     v_hogar_id bigint;
     v_disponible_origen numeric;
     v_mes_truncado date := date_trunc('month', p_mes_periodo);
-    v_f_inicio date;
-    v_f_fin date;
     v_dia_ancla int2;
-    v_mes_anterior date := v_mes_truncado - INTERVAL '1 month';
-    v_f_inicio_ant date;
-    v_f_fin_ant date;
     v_padre_destino bigint;
     v_techo_destino numeric;
     v_repartido_destino numeric;
     v_actual_destino numeric;
     v_actual_origen numeric;
     v_repartido_origen numeric;
+    v_filas int;
+    v_origen_existe boolean;
+    v_presupuesto_origen bigint;
+    v_presupuesto_destino bigint;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
@@ -34,6 +33,14 @@ BEGIN
         RAISE EXCEPTION '{"key": "error_cannot_transfer_to_same_envelope", "params": {}}';
     END IF;
 
+    -- Idempotencia: si esta clave ya se aplicó, no se vuelve a mover dinero.
+    IF p_idempotency_key IS NOT NULL THEN
+        IF EXISTS (SELECT 1 FROM public.p_presupuestos_historial
+                    WHERE user_id = v_user_id AND idempotency_key = p_idempotency_key) THEN
+            RETURN;
+        END IF;
+    END IF;
+
     SELECT dia_ancla INTO v_dia_ancla
     FROM public.p_presupuestos
     WHERE user_id = v_user_id AND mes_periodo = v_mes_truncado
@@ -44,27 +51,14 @@ BEGIN
         IF v_dia_ancla IS NULL THEN v_dia_ancla := 1; END IF;
     END IF;
 
-    v_f_inicio := date_trunc('month', p_mes_periodo) + ((v_dia_ancla - 1) * INTERVAL '1 day');
-    v_f_fin := (v_f_inicio + INTERVAL '1 month' - INTERVAL '1 day')::date;
-
-    v_f_inicio_ant := date_trunc('month', v_mes_anterior) + ((v_dia_ancla - 1) * INTERVAL '1 day');
-    v_f_fin_ant := (v_f_inicio_ant + INTERVAL '1 month' - INTERVAL '1 day')::date;
-
-    -- Ronda 10: una sola formula, la del helper. Antes estaba copiada aca adentro y sin
-    -- mirar el modo, asi que en libertad sumaba arrastre. El helper respeta el modo y no
-    -- descuenta a los hijos.
+    -- Una sola formula, la del helper: respeta el modo y no descuenta a los hijos.
     v_disponible_origen := public.fn_disponible_transferible(p_origen_id, p_mes_periodo);
 
     IF v_disponible_origen IS NULL OR v_disponible_origen < p_monto THEN
-        RAISE EXCEPTION '{"key": "error_insufficient_funds_in_envelope", "params": {}}';
+        RAISE EXCEPTION '{"key": "error_insufficient_funds_in_envelope", "params": {"disponible": %}}', COALESCE(v_disponible_origen, 0);
     END IF;
 
-    -- S2/S7/S15: el techo del padre manda tambien en las transferencias, y en los dos
-    -- extremos. Tiene que ir antes de escribir: la funcion mueve plata con un UPDATE y un
-    -- INSERT sueltos, asi que un rechazo despues del UPDATE dejaria media transferencia.
-    --
-    -- Destino: si es hijo de un padre con presupuesto mayor a cero, el valor resultante no
-    -- puede pasarse de lo libre del techo (excluyendo al destino de la suma de hermanos).
+    -- S2/S7/S15: el techo del padre manda en los dos extremos. Tiene que ir antes de escribir.
     SELECT padre_id INTO v_padre_destino
       FROM public.p_estructuras_egresos
      WHERE estructura_id = p_destino_id;
@@ -105,8 +99,7 @@ BEGIN
         END IF;
     END IF;
 
-    -- Origen: si es padre con hijos, sacarle plata no puede dejarlo por debajo de lo que
-    -- ya tiene repartido en ellos.
+    -- Origen: si es padre con hijos, sacarle plata no puede dejarlo por debajo de lo repartido.
     IF EXISTS (SELECT 1 FROM public.p_estructuras_egresos h WHERE h.padre_id = p_origen_id) THEN
         SELECT COALESCE(monto_limite, 0) INTO v_actual_origen
           FROM public.p_presupuestos
@@ -133,18 +126,53 @@ BEGIN
         END IF;
     END IF;
 
-    UPDATE p_presupuestos
-    SET monto_limite = monto_limite - p_monto
-    WHERE estructura_egreso_id = p_origen_id 
-      AND mes_periodo = v_mes_truncado
-      AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id));
+    -- ─── DÉBITO: tiene que ocurrir. Si el origen no tiene fila, se crea en negativo. ───
+    UPDATE public.p_presupuestos
+       SET monto_limite = monto_limite - p_monto
+     WHERE estructura_egreso_id = p_origen_id
+       AND mes_periodo = v_mes_truncado
+       AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id));
+    GET DIAGNOSTICS v_filas = ROW_COUNT;
 
-    INSERT INTO p_presupuestos (
-        user_id, hogar_id, estructura_egreso_id, mes_periodo, monto_limite, dia_ancla
-    )
+    IF v_filas > 0 THEN
+        SELECT presupuesto_id INTO v_presupuesto_origen
+          FROM public.p_presupuestos
+         WHERE estructura_egreso_id = p_origen_id
+           AND mes_periodo = v_mes_truncado
+           AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id))
+         LIMIT 1;
+    ELSE
+        -- El origen no tenia fila este ciclo: el descuento se escribe como ajuste negativo.
+        -- NO se copia el arrastre: el saldo ya lo cuenta por su lado y se contaria dos veces.
+        INSERT INTO public.p_presupuestos (user_id, hogar_id, estructura_egreso_id, mes_periodo, monto_limite, dia_ancla)
+        VALUES (v_user_id, v_hogar_id, p_origen_id, v_mes_truncado, -p_monto, v_dia_ancla)
+        ON CONFLICT (estructura_egreso_id, mes_periodo, user_id, COALESCE(hogar_id, 0))
+        DO UPDATE SET monto_limite = p_presupuestos.monto_limite - p_monto
+        RETURNING presupuesto_id INTO v_presupuesto_origen;
+    END IF;
+
+    -- ─── CRÉDITO: sólo si el destino existe y es del usuario o de su hogar ───
+    INSERT INTO public.p_presupuestos (user_id, hogar_id, estructura_egreso_id, mes_periodo, monto_limite, dia_ancla)
     SELECT v_user_id, v_hogar_id, p_destino_id, v_mes_truncado, p_monto, v_dia_ancla
-    WHERE EXISTS (SELECT 1 FROM p_estructuras_egresos WHERE estructura_id = p_destino_id)
-    ON CONFLICT (estructura_egreso_id, mes_periodo, user_id, COALESCE(hogar_id, 0)) 
-    DO UPDATE SET monto_limite = p_presupuestos.monto_limite + EXCLUDED.monto_limite;
+      FROM public.p_estructuras_egresos e
+     WHERE e.estructura_id = p_destino_id
+       AND (e.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND e.hogar_id = v_hogar_id))
+    ON CONFLICT (estructura_egreso_id, mes_periodo, user_id, COALESCE(hogar_id, 0))
+    DO UPDATE SET monto_limite = p_presupuestos.monto_limite + EXCLUDED.monto_limite
+    RETURNING presupuesto_id INTO v_presupuesto_destino;
+
+    IF v_presupuesto_destino IS NULL THEN
+        RAISE EXCEPTION '{"key": "error_category_parent_not_found", "params": {}}';
+    END IF;
+
+    -- ─── RASTRO: las dos patas ───
+    INSERT INTO public.p_presupuestos_historial
+        (presupuesto_id, estructura_egreso_id, user_id, hogar_id, mes_periodo,
+         dia_ancla, monto_limite, motivo, modo_origen, modo_destino, idempotency_key)
+    VALUES
+        (v_presupuesto_origen, p_origen_id, v_user_id, v_hogar_id, v_mes_truncado,
+         v_dia_ancla, -p_monto, 'transferencia_salida', NULL, NULL, p_idempotency_key),
+        (v_presupuesto_destino, p_destino_id, v_user_id, v_hogar_id, v_mes_truncado,
+         v_dia_ancla, p_monto, 'transferencia_entrada', NULL, NULL, p_idempotency_key);
 END;
 $function$

@@ -9,6 +9,8 @@ DECLARE
     v_modo_actual text;
     v_fecha_activacion date;
     v_inicio_ciclo_actual date;
+    -- Clave de fila del ciclo ACTIVO (el que el usuario esta viviendo).
+    v_mes_ciclo_actual date;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
@@ -29,6 +31,11 @@ BEGIN
     FROM p_presupuestos_config WHERE user_id = v_user_id;
 
     SELECT fecha_inicio INTO v_inicio_ciclo_actual FROM public.fn_obtener_fechas_ciclo_presupuesto(CURRENT_DATE);
+    -- B3/S3: p_presupuestos se indexa por el primer dia del mes del ciclo. Con
+    -- dia_ancla > 1 y hoy antes del ancla, el ciclo activo empezo el mes ANTERIOR:
+    -- date_trunc('month', CURRENT_DATE) apuntaba al ciclo siguiente y dejaba
+    -- intactas las asignaciones del ciclo vigente.
+    v_mes_ciclo_actual := date_trunc('month', v_inicio_ciclo_actual);
 
     IF v_modo_actual = 'base_cero' AND p_modo = 'anticipado' THEN
         -- Si cambió a base cero ESTE ciclo presupuestario, no puede volver a anticipado hasta el ciclo que viene
@@ -38,20 +45,23 @@ BEGIN
     END IF;
 
     IF p_modo = 'base_cero' AND COALESCE(v_modo_actual, '') != 'base_cero' THEN
-        -- Reiniciar todas las asignaciones al cambiar de modo
-        UPDATE p_presupuestos 
-        SET monto_limite = 0 
-        WHERE user_id = v_user_id AND mes_periodo = date_trunc('month', CURRENT_DATE);
+        -- Reiniciar las asignaciones del ciclo ACTIVO (no del mes calendario).
+        -- Antes de ponerlas en 0 se archivan: el reset es del modo, no un borrado.
+        PERFORM public.fn_archivar_presupuestos_ciclo(v_user_id, v_mes_ciclo_actual, 'cambio_a_base_cero', v_modo_actual, p_modo);
+        UPDATE p_presupuestos
+        SET monto_limite = 0
+        WHERE user_id = v_user_id AND mes_periodo = v_mes_ciclo_actual;
 
         INSERT INTO p_presupuestos_config (user_id, modo_presupuesto, fecha_activacion_base_cero)
         VALUES (v_user_id, p_modo, CURRENT_DATE)
         ON CONFLICT (user_id) 
         DO UPDATE SET modo_presupuesto = EXCLUDED.modo_presupuesto, fecha_activacion_base_cero = EXCLUDED.fecha_activacion_base_cero;
     ELSIF COALESCE(v_modo_actual, '') != p_modo THEN
-        -- Reiniciar todas las asignaciones al cambiar de modo (de base_cero a anticipado u otro cambio)
-        UPDATE p_presupuestos 
-        SET monto_limite = 0 
-        WHERE user_id = v_user_id AND mes_periodo = date_trunc('month', CURRENT_DATE);
+        -- Lo mismo al volver a anticipado: se archiva y se reinicia el ciclo activo.
+        PERFORM public.fn_archivar_presupuestos_ciclo(v_user_id, v_mes_ciclo_actual, 'vuelta_a_anticipado', v_modo_actual, p_modo);
+        UPDATE p_presupuestos
+        SET monto_limite = 0
+        WHERE user_id = v_user_id AND mes_periodo = v_mes_ciclo_actual;
 
         INSERT INTO p_presupuestos_config (user_id, modo_presupuesto)
         VALUES (v_user_id, p_modo)

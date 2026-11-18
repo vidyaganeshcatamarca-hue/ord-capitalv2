@@ -51,7 +51,3 @@ BEGIN
     RETURN v_total_ingresos - v_total_asignado - v_total_tarjetas;
 END;
 $function$
-
--- NOTA: Guard explicito: sin pais confirmado devuelve 0 en lugar de comparar contra NULL.
--- NOTA (ronda 8): el espejo estaba desactualizado; se copio la definicion viva, que es
--- la que incluye el fix de la ronda 7 (GREATEST + cuenta_en_totales).

@@ -13,7 +13,7 @@ BEGIN
     SELECT hogar_id INTO v_hogar_id FROM p_hogar_participantes WHERE user_id = v_user_id;
 
     SELECT COALESCE(SUM(valor_ingreso), 0) / 3.0 INTO v_ingreso_promedio
-    FROM p_caja WHERE user_id = v_user_id AND tipo = 'income' AND fecha >= CURRENT_DATE - INTERVAL '90 days';
+    FROM v_p_caja_reportable WHERE user_id = v_user_id AND tipo = 'income' AND fecha >= CURRENT_DATE - INTERVAL '90 days';
     IF v_ingreso_promedio IS NULL THEN v_ingreso_promedio := 0; END IF;
 
     FOR v_i IN 0..5 LOOP
@@ -21,7 +21,16 @@ BEGIN
         SELECT COALESCE(SUM(monto_cuota), 0) INTO v_compromisos FROM p_compromisos_tarjeta
         WHERE mes_periodo = v_mes AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND user_id IN (SELECT user_id FROM p_hogar_participantes WHERE hogar_id = v_hogar_id)));
         SELECT COALESCE(SUM(monto_limite), 0) INTO v_presupuestos FROM p_presupuestos
-        WHERE mes_periodo = v_mes AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id));
+        WHERE mes_periodo = v_mes AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id))
+          AND NOT EXISTS (
+            SELECT 1 FROM public.p_estructuras_egresos ee
+            JOIN public.p_presupuestos pp ON pp.estructura_egreso_id = ee.padre_id
+            WHERE ee.estructura_id = p_presupuestos.estructura_egreso_id
+              AND pp.mes_periodo = p_presupuestos.mes_periodo
+              AND pp.user_id = p_presupuestos.user_id
+              AND COALESCE(pp.monto_limite, 0) > 0
+          )
+        ;
 
         mes_proyectado := v_mes;
         ingresos_estimados := v_ingreso_promedio;

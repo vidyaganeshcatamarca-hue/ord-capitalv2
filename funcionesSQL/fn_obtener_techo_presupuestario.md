@@ -14,12 +14,12 @@ BEGIN
     SELECT COALESCE(SUM(valor_income), 0) / 3 INTO v_techo
     FROM (
         SELECT SUM(valor_ingreso) as valor_income 
-        FROM p_caja 
+        FROM v_p_caja_reportable 
         WHERE user_id = v_user_id AND tipo = 'income' AND fecha >= CURRENT_DATE - INTERVAL '90 days'
     ) as sub;
     
     IF v_techo = 0 THEN 
-        SELECT COALESCE(SUM(valor_ingreso), 0) INTO v_techo FROM p_caja WHERE user_id = v_user_id AND tipo = 'income';
+        SELECT COALESCE(SUM(valor_ingreso), 0) INTO v_techo FROM v_p_caja_reportable WHERE user_id = v_user_id AND tipo = 'income';
     END IF;
 
     RETURN ROUND(v_techo, 2);

@@ -23,7 +23,7 @@ BEGIN
     -- Calcular el número de meses activos con transacciones en los últimos 90 días (máximo 3, mínimo 1)
     SELECT COALESCE(NULLIF(COUNT(DISTINCT date_trunc('month', c.fecha)), 0), 1)::numeric
     INTO v_meses_activos
-    FROM p_caja c
+    FROM v_p_caja_reportable c
     WHERE (c.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id))
       AND c.tipo = 'expense'
       AND c.fecha >= CURRENT_DATE - INTERVAL '90 days';
@@ -45,7 +45,7 @@ BEGIN
             SELECT e.estructura_id, e.nombre_cuenta, COALESCE(padre.tipo_cupo, e.tipo_cupo) AS tipo_cupo_efectivo,
                    COALESCE((
                        SELECT SUM(valor_egreso) 
-                       FROM p_caja c 
+                       FROM v_p_caja_reportable c 
                        WHERE c.estructura_egreso_id = e.estructura_id
                          AND c.tipo = 'expense'
                          AND c.fecha >= CURRENT_DATE - INTERVAL '90 days'
@@ -76,7 +76,7 @@ BEGIN
             'diezmo', v_pct_diez
         ),
         'sugerencias', v_sugerencias,
-        'mensaje_ux_key', 'suggestion_ux_message' -- ⭐ Normalizado a clave
+        'mensaje_ux_key', 'suggestion_ux_message'
     );
 END;
 $function$

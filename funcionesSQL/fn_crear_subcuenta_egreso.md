@@ -47,7 +47,7 @@ BEGIN
             RETURNING estructura_id INTO v_nd_id;
         END IF;
 
-        -- Migrate all parent-pointing rows to no_detail
+        -- Migrate all parent-pointing rows to no_detail (historia, no dinero)
         UPDATE public.p_caja
         SET estructura_egreso_id = v_nd_id
         WHERE estructura_egreso_id = p_padre_id AND user_id = v_user_id;
@@ -64,16 +64,8 @@ BEGIN
         SET estructura_egreso_id = v_nd_id
         WHERE estructura_egreso_id = p_padre_id AND user_id = v_user_id;
 
-        -- Budget merge: INSERT parent rows into no_detail, sum on conflict, then DELETE originals
-        INSERT INTO public.p_presupuestos (estructura_egreso_id, user_id, hogar_id, monto_limite, mes_periodo, dia_ancla)
-        SELECT v_nd_id, user_id, hogar_id, monto_limite, mes_periodo, dia_ancla
-        FROM public.p_presupuestos
-        WHERE estructura_egreso_id = p_padre_id AND user_id = v_user_id
-        ON CONFLICT (estructura_egreso_id, mes_periodo, user_id, COALESCE(hogar_id, 0))
-        DO UPDATE SET monto_limite = p_presupuestos.monto_limite + EXCLUDED.monto_limite;
-
-        DELETE FROM public.p_presupuestos
-        WHERE estructura_egreso_id = p_padre_id AND user_id = v_user_id;
+        -- ETAPA 1.2: el presupuesto del padre NO se toca. Antes se sumaba en no_detail
+        -- y se borraba la fila del padre: por eso aparecia plata en las hijas.
     END IF;
 
     INSERT INTO public.p_estructuras_egresos (

@@ -1,12 +1,5 @@
 CREATE OR REPLACE FUNCTION public.fn_obtener_config_presupuesto()
- RETURNS TABLE(
-   modo_presupuesto text,
-   porcentaje_necesidades numeric,
-   porcentaje_deseos numeric,
-   porcentaje_ahorro numeric,
-   porcentaje_diezmo numeric,
-   dia_ancla_ciclo smallint
- )
+ RETURNS TABLE(modo_presupuesto text, porcentaje_necesidades numeric, porcentaje_deseos numeric, porcentaje_ahorro numeric, porcentaje_diezmo numeric, dia_ancla_ciclo smallint)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'

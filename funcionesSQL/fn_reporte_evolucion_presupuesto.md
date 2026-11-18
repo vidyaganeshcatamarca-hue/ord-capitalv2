@@ -35,12 +35,17 @@ BEGIN
         v_pct_nec_config := 50; v_pct_des_config := 30; v_pct_ahorro_config := 20; v_pct_diezmo_config := 0;
     END IF;
     
-    FOR v_i IN 5..0 BY -1 LOOP
+    -- PL/pgSQL rechaza BY negativo ('BY value of FOR loop must be greater than
+    -- zero') y la funcion fallaba siempre. Ojo con REVERSE: los limites van de
+    -- mayor a menor. Medido con bucles minimos: 'REVERSE 5..0' recorre 5,4,3,2,1,0;
+    -- 'REVERSE 0..5' no ejecuta ni una vuelta (y no da error, asi que devuelve la
+    -- lista vacia sin avisar).
+    FOR v_i IN REVERSE 5..0 LOOP
         v_mes := date_trunc('month', CURRENT_DATE - (v_i || ' months')::interval);
         SELECT fecha_inicio, fecha_fin INTO v_f_inicio, v_f_fin FROM public.fn_obtener_fechas_ciclo_presupuesto(v_mes);
         
         SELECT COALESCE(SUM(valor_ingreso), 0) INTO v_ingreso_mes
-        FROM p_caja
+        FROM v_p_caja_reportable
         WHERE user_id = v_user_id AND tipo = 'income'
           AND fecha >= v_f_inicio AND fecha <= v_f_fin;
         
@@ -49,19 +54,19 @@ BEGIN
         END IF;
         
         SELECT COALESCE(SUM(c.valor_egreso), 0) INTO v_cons_nec
-        FROM p_caja c
+        FROM v_p_caja_reportable c
         INNER JOIN p_estructuras_egresos e ON c.estructura_egreso_id = e.estructura_id
         WHERE c.user_id = v_user_id AND c.tipo = 'expense' AND e.tipo_cupo = 'need'
           AND c.fecha >= v_f_inicio AND c.fecha <= v_f_fin;
         
         SELECT COALESCE(SUM(c.valor_egreso), 0) INTO v_cons_des
-        FROM p_caja c
+        FROM v_p_caja_reportable c
         INNER JOIN p_estructuras_egresos e ON c.estructura_egreso_id = e.estructura_id
         WHERE c.user_id = v_user_id AND c.tipo = 'expense' AND e.tipo_cupo = 'want'
           AND c.fecha >= v_f_inicio AND c.fecha <= v_f_fin;
         
         SELECT COALESCE(SUM(c.valor_egreso), 0) INTO v_cons_diezmo
-        FROM p_caja c
+        FROM v_p_caja_reportable c
         INNER JOIN p_estructuras_egresos e ON c.estructura_egreso_id = e.estructura_id
         WHERE c.user_id = v_user_id AND c.tipo = 'expense' AND e.tipo_cupo = 'tithe'
           AND c.fecha >= v_f_inicio AND c.fecha <= v_f_fin;
@@ -88,5 +93,4 @@ BEGIN
         'evolucion', v_evolucion
     );
 END;
-$function$;
-
+$function$

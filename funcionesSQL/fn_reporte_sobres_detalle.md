@@ -223,16 +223,3 @@ BEGIN
 END;
 
 $function$
-
--- NOTA (ronda 10, T14): el promedio de 6 meses pasó a medirse por DÍAS DE USO REAL.
--- Antes el CTE gastos_6m hacía AVG sobre las ventanas de mes calendario que tuvieran
--- gasto (WHERE agg.gasto_mensual > 0), así que un rubro con un solo mes de gasto
--- promediaba dividiendo por 1 y un mes de 25 pesos pesaba como un mes entero.
--- Ahora el divisor es LEAST(6, días cubiertos / 30,4375) y la ventana arranca en
--- MAX(primer gasto registrado, inicio del ciclo − 6 meses): los meses parciales pesan
--- por sus días y una cuenta joven divide por el tiempo que lleva usándose.
--- Decisión del dueño: «Los meses de uso de la app y si hay diferencia de días, toma los
--- días y divide pasando a meses» + «no hay ningún problema que tengamos un mes con 25
--- porque es real y eso debe afectar el promedio sí o sí».
--- La agregación de los rubros padre vive FUERA de ese CTE y quedó intacta: el promedio
--- de un padre sigue saliendo de sus hijos.

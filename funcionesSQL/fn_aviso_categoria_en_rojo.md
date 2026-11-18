@@ -11,6 +11,7 @@ DECLARE
     v_hogar      bigint;
     v_categorias integer;
     v_exceso     numeric;
+    v_nombres    jsonb;
     v_encolados  integer := 0;
     v_id         bigint;
 BEGIN
@@ -19,7 +20,6 @@ BEGIN
         FROM public.p_presupuestos_config c
         WHERE c.modo_presupuesto = 'base_cero'
     LOOP
-        -- Misma formula que fn_obtener_fechas_ciclo_presupuesto.
         IF EXTRACT(DAY FROM CURRENT_DATE) >= v_cfg.dia_ancla THEN
             v_inicio := date_trunc('month', CURRENT_DATE) + ((v_cfg.dia_ancla - 1) * INTERVAL '1 day');
         ELSE
@@ -32,13 +32,18 @@ BEGIN
         WHERE hp.user_id = v_cfg.user_id
         LIMIT 1;
 
-        SELECT COUNT(*)::integer, COALESCE(SUM(x.exceso), 0)
-          INTO v_categorias, v_exceso
+        SELECT COUNT(*)::integer,
+               COALESCE(SUM(x.exceso), 0),
+               COALESCE(jsonb_agg(DISTINCT x.nombre) FILTER (WHERE x.nombre IS NOT NULL), '[]'::jsonb)
+          INTO v_categorias, v_exceso, v_nombres
         FROM (
             SELECT p.monto_limite,
                    COALESCE(con.total, 0) AS consumido,
-                   COALESCE(con.total, 0) - p.monto_limite AS exceso
+                   COALESCE(con.total, 0) - p.monto_limite AS exceso,
+                   e2.nombre_cuenta AS nombre
             FROM public.p_presupuestos p
+            LEFT JOIN public.p_estructuras_egresos e2
+                   ON e2.estructura_id = p.estructura_egreso_id
             LEFT JOIN (
                 SELECT COALESCE(e.padre_id, e.estructura_id) AS rubro_id,
                        SUM(c.valor_egreso) AS total
@@ -64,9 +69,10 @@ BEGIN
                 p_metadata   => jsonb_build_object(
                                     'categorias', v_categorias,
                                     'exceso', v_exceso,
-                                    'ciclo_inicio', v_inicio),
+                                    'ciclo_inicio', v_inicio,
+                                    'categorias_nombres', v_nombres),
                 p_prioridad  => 25::smallint,
-                p_dedupe_key => 'categoria_en_rojo:' || to_char(CURRENT_DATE, 'YYYYMMDD'),
+                p_dedupe_key => 'categoria_en_rojo:' || v_inicio::text,
                 p_expira_at  => (CURRENT_DATE + 1)::timestamptz
             );
 
