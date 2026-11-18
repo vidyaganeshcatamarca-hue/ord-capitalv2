@@ -36,6 +36,8 @@ start_info/*
 # tipos, defaults). Nunca credenciales ni datos.
 !start_info/tablas todas.md
 !start_info/relaciones_tablas.md
+# Respaldos de reversion: deben viajar con el repo o no son respaldos.
+!start_info/rollback_*.sql
 
 # Tests del modulo de prestamos y saneamiento
 !tests/prestamos/
