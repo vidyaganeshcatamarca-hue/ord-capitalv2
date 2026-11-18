@@ -915,12 +915,12 @@
         "to": "{monto} in dollars not converted (rate missing)"
       },
       "errors.card_cmp_usd_line": {
-        "from": "En dólares: anterior {anterior} → actual {actual}",
-        "to": "In dollars: previous {anterior} → current {actual}"
+        "from": "Dólares: ciclo anterior {anterior} → actual {actual}",
+        "to": "Dollars: previous cycle {anterior} → current {actual}"
       },
       "errors.card_cmp_usd_line_unconverted": {
-        "from": "En dólares, sin convertir: anterior {anterior} → actual {actual}",
-        "to": "In dollars, not converted: previous {anterior} → current {actual}"
+        "from": "Dólares, sin convertir: ciclo anterior {anterior} → actual {actual}",
+        "to": "In dollars, not converted: previous cycle {anterior} → current {actual}"
       },
       "errors.card_legacy_created_toast_one": {
         "from": "{cantidad} cuota cargada, empieza a correr en {fecha}",
@@ -1090,13 +1090,13 @@
         "from": "Seleccioná la cuenta...",
         "to": "Select the account..."
       },
-      "errors.pay_resumen_usd_toggle_pesos": {
-        "from": "$",
-        "to": "$"
-      },
       "errors.pay_resumen_usd_toggle_dollars": {
         "from": "US$",
         "to": "US$"
+      },
+      "errors.pay_usd_no_wallet": {
+        "from": "No tenés una billetera en dólares",
+        "to": "You don't have a USD wallet"
       },
       "errors.pay_resumen_usd_equiv_preview": {
         "from": "Equivale a {monto}",
@@ -1147,8 +1147,8 @@
         "to": "Is the actual bank statement different?"
       },
       "errors.pay_resumen_real_label": {
-        "from": "Resumen real del banco",
-        "to": "Actual bank statement"
+        "from": "Ingresa monto real del pago",
+        "to": "Enter the real payment amount"
       },
       "errors.pay_resumen_real_hint": {
         "from": "Se registra un ajuste por la diferencia, sin tocar tus cuotas.",
@@ -3770,10 +3770,6 @@
         "from": "Podadora",
         "to": "Mower"
       },
-      "bcg.bcg_tab_hormigas": {
-        "from": "Hormigas",
-        "to": "Ants"
-      },
       "bcg.bcg_etapa0_placeholder": {
         "from": "Próximamente: vista de {tab}. Esta pantalla se completará en las siguientes etapas.",
         "to": "Coming soon: {tab} view. This screen will be completed in upcoming stages."
@@ -4089,146 +4085,6 @@
       "bcg.bcg_podora_equiv_cenas": {
         "from": "{count} cenas en restaurante",
         "to": "{count} restaurant dinners"
-      },
-      "bcg.bcg_hormiga_resumen_titulo": {
-        "from": "📊 Resumen del Mes",
-        "to": "📊 Monthly Summary"
-      },
-      "bcg.bcg_hormiga_total_label": {
-        "from": "Total en hormigas",
-        "to": "Total in ants"
-      },
-      "bcg.bcg_hormiga_cantidad_label": {
-        "from": "Cantidad",
-        "to": "Count"
-      },
-      "bcg.bcg_hormiga_comparativa_titulo": {
-        "from": "📈 Comparativa",
-        "to": "📈 Comparison"
-      },
-      "bcg.bcg_hormiga_mes_actual": {
-        "from": "Este mes",
-        "to": "This month"
-      },
-      "bcg.bcg_hormiga_mes_anterior": {
-        "from": "Mes anterior",
-        "to": "Previous month"
-      },
-      "bcg.bcg_hormiga_mes_antepasado": {
-        "from": "Mes antepasado",
-        "to": "Month before last"
-      },
-      "bcg.bcg_hormiga_tendencia_improving": {
-        "from": "✅ Mejorando ({pct}%)",
-        "to": "✅ Improving ({pct}%)"
-      },
-      "bcg.bcg_hormiga_tendencia_worsening": {
-        "from": "⚠️ Empeorando (+{pct}%)",
-        "to": "⚠️ Getting worse (+{pct}%)"
-      },
-      "bcg.bcg_hormiga_tendencia_stable": {
-        "from": "Sin cambios",
-        "to": "No change"
-      },
-      "bcg.bcg_hormiga_top_titulo": {
-        "from": "🐜 Top Hormigas del Mes",
-        "to": "🐜 Top Ants of the Month"
-      },
-      "bcg.bcg_hormiga_frecuencia_label": {
-        "from": "{count} veces",
-        "to": "{count} times"
-      },
-      "bcg.bcg_hormiga_promedio_label": {
-        "from": "Promedio: {monto} por gasto",
-        "to": "Average: {monto} per expense"
-      },
-      "bcg.bcg_hormiga_impacto_anual": {
-        "from": "Impacto anual: {monto}",
-        "to": "Annual impact: {monto}"
-      },
-      "bcg.bcg_hormiga_reto_titulo": {
-        "from": "Reto del Buzón de Deseos",
-        "to": "Wish Mailbox Challenge"
-      },
-      "bcg.bcg_hormiga_proyeccion_label": {
-        "from": "Proyección a 6 meses",
-        "to": "6-month projection"
-      },
-      "bcg.bcg_hormiga_proyeccion_monto": {
-        "from": "{monto}",
-        "to": "{monto}"
-      },
-      "bcg.bcg_hormiga_estado_zero_titulo": {
-        "from": "🏆  ¡Increíble!",
-        "to": "🏆  Amazing!"
-      },
-      "bcg.bcg_hormiga_estado_zero_desc": {
-        "from": "No registraste gastos hormiga este mes.",
-        "to": "You did not record any ant expenses this month."
-      },
-      "bcg.bcg_hormiga_estado_no_buzon_titulo": {
-        "from": "🐜 Tus hormigas suman {monto}",
-        "to": "🐜 Your ants add up to {monto}"
-      },
-      "bcg.bcg_hormiga_estado_no_buzon_desc": {
-        "from": "Crea un Sobre de Ahorro llamado \"Buzón de Deseos\"para atraparlas.",
-        "to": "Create a Savings Envelope called \"Wish Mailbox\"to catch them."
-      },
-      "bcg.bcg_hormiga_estado_no_buzon_cta": {
-        "from": "Crear Buzón de Deseos",
-        "to": "Create Wish Mailbox"
-      },
-      "bcg.bcg_hormiga_estado_transfer_titulo": {
-        "from": "🐜 Atrapamos {monto} en hormigas",
-        "to": "🐜 We caught {monto} in ants"
-      },
-      "bcg.bcg_hormiga_estado_transfer_desc": {
-        "from": "¿Las transferimos a \"{buzon}\"? Saldo actual del buzón: {saldo}",
-        "to": "Shall we move them to \"{buzon}\"? Current mailbox balance: {saldo}"
-      },
-      "bcg.bcg_hormiga_estado_transfer_cta": {
-        "from": "Transferir al Buzón",
-        "to": "Transfer to Mailbox"
-      },
-      "bcg.bcg_hormiga_vacio": {
-        "from": "No hay gastos hormiga este mes.  ¡Buen trabajo!",
-        "to": "No ant expenses this month.  Good job!"
-      },
-      "bcg.bcg_hormiga_sin_datos": {
-        "from": "Sigue registrando tus gastos para que el detector pueda trabajar.",
-        "to": "Keep recording your expenses so the detector can work."
-      },
-      "bcg.bcg_buzon_modal_titulo": {
-        "from": "Transferir al Buzón de Deseos",
-        "to": "Transfer to Wish Mailbox"
-      },
-      "bcg.bcg_buzon_modal_origen_label": {
-        "from": "Billetera de origen",
-        "to": "Source wallet"
-      },
-      "bcg.bcg_buzon_modal_monto_label": {
-        "from": "Monto a transferir",
-        "to": "Amount to transfer"
-      },
-      "bcg.bcg_buzon_modal_nota_label": {
-        "from": "Nota (opcional)",
-        "to": "Note (optional)"
-      },
-      "bcg.bcg_buzon_modal_confirmar": {
-        "from": "Transferir",
-        "to": "Transfer"
-      },
-      "bcg.bcg_buzon_modal_cancelar": {
-        "from": "Cancelar",
-        "to": "Cancel"
-      },
-      "bcg.bcg_buzon_modal_exito": {
-        "from": "Transferencia al buzón realizada.",
-        "to": "Transfer to the mailbox completed."
-      },
-      "bcg.bcg_buzon_modal_error": {
-        "from": "No se pudo transferir al buzón.",
-        "to": "Could not transfer to the mailbox."
       },
       "bcg.bcg_empty_sin_gastos": {
         "from": "📊 Aún no hay gastos este mes para analizar.",
@@ -7266,6 +7122,54 @@
         "from": "Umbral de balance desequilibrado (ARS)",
         "to": "Imbalance threshold (ARS)"
       },
+      "inversiones.notif_cuarentena_pendiente_titulo": {
+        "from": "Transacciones en cuarentena",
+        "to": "Transactions in quarantine"
+      },
+      "inversiones.notif_cuarentena_pendiente_mensaje": {
+        "from": "Hay movimientos esperando revisión.",
+        "to": "Some movements are waiting for review."
+      },
+      "inversiones.notif_cuenta_desconciliada_titulo": {
+        "from": "Cuentas desconciliadas",
+        "to": "Unreconciled accounts"
+      },
+      "inversiones.notif_cuenta_desconciliada_mensaje": {
+        "from": "Hay cuentas sin conciliar hace más de 10 días.",
+        "to": "Some accounts haven't been reconciled in over 10 days."
+      },
+      "inversiones.notif_vencimiento_tarjeta_titulo": {
+        "from": "Vencimiento de tarjeta",
+        "to": "Card due soon"
+      },
+      "inversiones.notif_vencimiento_tarjeta_mensaje": {
+        "from": "Tenés una tarjeta que vence en los próximos días.",
+        "to": "You have a card payment due in the next few days."
+      },
+      "inversiones.notif_deuda_por_vencer_titulo": {
+        "from": "Deuda por vencer",
+        "to": "Debt due soon"
+      },
+      "inversiones.notif_deuda_por_vencer_mensaje": {
+        "from": "Tenés una deuda que vence esta semana.",
+        "to": "You have a debt due this week."
+      },
+      "inversiones.notif_categoria_en_rojo_titulo": {
+        "from": "Categoría en rojo",
+        "to": "Category over budget"
+      },
+      "inversiones.notif_categoria_en_rojo_mensaje": {
+        "from": "Una categoría gastó más de lo que tenía asignado este ciclo.",
+        "to": "A category spent more than it was assigned this cycle."
+      },
+      "inversiones.notif_ahorro_en_riesgo_titulo": {
+        "from": "Ahorro en riesgo",
+        "to": "Savings at risk"
+      },
+      "inversiones.notif_ahorro_en_riesgo_mensaje": {
+        "from": "Un ahorro está por vencer y va atrasado respecto del plan.",
+        "to": "A savings goal is due soon and is behind schedule."
+      },
       "inversiones.bell_empty": {
         "from": "Sin notificaciones",
         "to": "No notifications"
@@ -8718,6 +8622,10 @@
         "from": "No podés bajar el grupo por debajo de lo repartido. Tiene {repartido}: recortá {recortar} antes.",
         "to": "You cannot lower the group below what is allocated. It has {repartido}: cut {recortar} first."
       },
+      "inversiones.error_budget_child_holds_no_money": {
+        "from": "La plata se asigna al rubro padre. A la subcategoría se le pone un techo de gasto, no plata asignada.",
+        "to": "Money is assigned to the parent category. A subcategory gets a spending ceiling, not assigned money."
+      },
       "inversiones.budget_stat_assigned": {
         "from": "Asignado",
         "to": "Assigned"
@@ -9005,6 +8913,10 @@
       "inversiones.card_due_date_format": {
         "from": "Día {day} ({days} días)",
         "to": "Day {day} ({days} days)"
+      },
+      "inversiones.card_due_today": {
+        "from": "Hoy",
+        "to": "Today"
       },
       "inversiones.card_due_date_overdue": {
         "from": "Día {day}  — vencida hace {days} día(s)",
@@ -10931,8 +10843,8 @@
         "to": "The wallet is in {billetera} and the envelope is in {sobre}. An envelope never converts currencies."
       },
       "sobres.error_sobre_wallet_insufficient": {
-        "from": "No alcanza el saldo libre de {billetera} para reservar ese importe.",
-        "to": "{billetera} does not have enough free balance to reserve that amount."
+        "from": "No alcanza el saldo libre de {nombre} para reservar ese importe.",
+        "to": "{nombre} does not have enough free balance to reserve that amount."
       },
       "sobres.error_sobre_portion_insufficient": {
         "from": "Esa porción tiene {disponible} disponible. Ajustá el importe.",
@@ -12301,12 +12213,12 @@
         "to": "{monto} em dólares sem converter (falta a cotação)"
       },
       "errors.card_cmp_usd_line": {
-        "from": "En dólares: anterior {anterior} → actual {actual}",
-        "to": "Em dólares: anterior {anterior} → atual {actual}"
+        "from": "Dólares: ciclo anterior {anterior} → actual {actual}",
+        "to": "Dólares: ciclo anterior {anterior} → atual {actual}"
       },
       "errors.card_cmp_usd_line_unconverted": {
-        "from": "En dólares, sin convertir: anterior {anterior} → actual {actual}",
-        "to": "Em dólares, sem converter: anterior {anterior} → atual {actual}"
+        "from": "Dólares, sin convertir: ciclo anterior {anterior} → actual {actual}",
+        "to": "Em dólares, sem converter: ciclo anterior {anterior} → atual {actual}"
       },
       "errors.card_legacy_created_toast_one": {
         "from": "{cantidad} cuota cargada, empieza a correr en {fecha}",
@@ -12476,13 +12388,13 @@
         "from": "Seleccioná la cuenta...",
         "to": "Selecione a conta..."
       },
-      "errors.pay_resumen_usd_toggle_pesos": {
-        "from": "$",
-        "to": "$"
-      },
       "errors.pay_resumen_usd_toggle_dollars": {
         "from": "US$",
         "to": "US$"
+      },
+      "errors.pay_usd_no_wallet": {
+        "from": "No tenés una billetera en dólares",
+        "to": "Você não tem uma carteira em dólares"
       },
       "errors.pay_resumen_usd_equiv_preview": {
         "from": "Equivale a {monto}",
@@ -12533,8 +12445,8 @@
         "to": "O extrato real do banco é diferente?"
       },
       "errors.pay_resumen_real_label": {
-        "from": "Resumen real del banco",
-        "to": "Extrato real do banco"
+        "from": "Ingresa monto real del pago",
+        "to": "Informe o valor real do pagamento"
       },
       "errors.pay_resumen_real_hint": {
         "from": "Se registra un ajuste por la diferencia, sin tocar tus cuotas.",
@@ -15156,10 +15068,6 @@
         "from": "Podadora",
         "to": "Podadeira"
       },
-      "bcg.bcg_tab_hormigas": {
-        "from": "Hormigas",
-        "to": "Formigas"
-      },
       "bcg.bcg_etapa0_placeholder": {
         "from": "Próximamente: vista de {tab}. Esta pantalla se completará en las siguientes etapas.",
         "to": "Em breve: visão de {tab}. Esta tela será completada nas próximas etapas."
@@ -15475,146 +15383,6 @@
       "bcg.bcg_podora_equiv_cenas": {
         "from": "{count} cenas en restaurante",
         "to": "{count} jantares em restaurante"
-      },
-      "bcg.bcg_hormiga_resumen_titulo": {
-        "from": "📊 Resumen del Mes",
-        "to": "📊 Resumo do Mês"
-      },
-      "bcg.bcg_hormiga_total_label": {
-        "from": "Total en hormigas",
-        "to": "Total em formigas"
-      },
-      "bcg.bcg_hormiga_cantidad_label": {
-        "from": "Cantidad",
-        "to": "Quantidade"
-      },
-      "bcg.bcg_hormiga_comparativa_titulo": {
-        "from": "📈 Comparativa",
-        "to": "📈 Comparativo"
-      },
-      "bcg.bcg_hormiga_mes_actual": {
-        "from": "Este mes",
-        "to": "Este mês"
-      },
-      "bcg.bcg_hormiga_mes_anterior": {
-        "from": "Mes anterior",
-        "to": "Mês anterior"
-      },
-      "bcg.bcg_hormiga_mes_antepasado": {
-        "from": "Mes antepasado",
-        "to": "Dois meses atrás"
-      },
-      "bcg.bcg_hormiga_tendencia_improving": {
-        "from": "✅ Mejorando ({pct}%)",
-        "to": "✅ Melhorando ({pct}%)"
-      },
-      "bcg.bcg_hormiga_tendencia_worsening": {
-        "from": "⚠️ Empeorando (+{pct}%)",
-        "to": "⚠️ Piorando (+{pct}%)"
-      },
-      "bcg.bcg_hormiga_tendencia_stable": {
-        "from": "Sin cambios",
-        "to": "Sem mudanças"
-      },
-      "bcg.bcg_hormiga_top_titulo": {
-        "from": "🐜 Top Hormigas del Mes",
-        "to": "🐜 Top Formigas do Mês"
-      },
-      "bcg.bcg_hormiga_frecuencia_label": {
-        "from": "{count} veces",
-        "to": "{count} vezes"
-      },
-      "bcg.bcg_hormiga_promedio_label": {
-        "from": "Promedio: {monto} por gasto",
-        "to": "Média: {monto} por gasto"
-      },
-      "bcg.bcg_hormiga_impacto_anual": {
-        "from": "Impacto anual: {monto}",
-        "to": "Impacto anual: {monto}"
-      },
-      "bcg.bcg_hormiga_reto_titulo": {
-        "from": "Reto del Buzón de Deseos",
-        "to": "Desafio do Buzão de Desejos"
-      },
-      "bcg.bcg_hormiga_proyeccion_label": {
-        "from": "Proyección a 6 meses",
-        "to": "Projeção para 6 meses"
-      },
-      "bcg.bcg_hormiga_proyeccion_monto": {
-        "from": "{monto}",
-        "to": "{monto}"
-      },
-      "bcg.bcg_hormiga_estado_zero_titulo": {
-        "from": "🏆  ¡Increíble!",
-        "to": "🏆  Incrível!"
-      },
-      "bcg.bcg_hormiga_estado_zero_desc": {
-        "from": "No registraste gastos hormiga este mes.",
-        "to": "Você não registrou gastos formiga este mês."
-      },
-      "bcg.bcg_hormiga_estado_no_buzon_titulo": {
-        "from": "🐜 Tus hormigas suman {monto}",
-        "to": "🐜 Suas formigas somam {monto}"
-      },
-      "bcg.bcg_hormiga_estado_no_buzon_desc": {
-        "from": "Crea un Sobre de Ahorro llamado \"Buzón de Deseos\"para atraparlas.",
-        "to": "Crie um envelope de poupança chamado \"Buzão de Desejos\" para guardar essas formigas."
-      },
-      "bcg.bcg_hormiga_estado_no_buzon_cta": {
-        "from": "Crear Buzón de Deseos",
-        "to": "Criar Buzão de Desejos"
-      },
-      "bcg.bcg_hormiga_estado_transfer_titulo": {
-        "from": "🐜 Atrapamos {monto} en hormigas",
-        "to": "🐜 Pegamos {monto} em formigas"
-      },
-      "bcg.bcg_hormiga_estado_transfer_desc": {
-        "from": "¿Las transferimos a \"{buzon}\"? Saldo actual del buzón: {saldo}",
-        "to": "Transferimos para \"{buzon}\"? Saldo atual do buzão: {saldo}"
-      },
-      "bcg.bcg_hormiga_estado_transfer_cta": {
-        "from": "Transferir al Buzón",
-        "to": "Transferir para o Buzão"
-      },
-      "bcg.bcg_hormiga_vacio": {
-        "from": "No hay gastos hormiga este mes.  ¡Buen trabajo!",
-        "to": "Não há gastos formiga este mês.  Bom trabalho!"
-      },
-      "bcg.bcg_hormiga_sin_datos": {
-        "from": "Sigue registrando tus gastos para que el detector pueda trabajar.",
-        "to": "Continue registrando seus gastos para que o detector possa funcionar."
-      },
-      "bcg.bcg_buzon_modal_titulo": {
-        "from": "Transferir al Buzón de Deseos",
-        "to": "Transferir para o Buzão de Desejos"
-      },
-      "bcg.bcg_buzon_modal_origen_label": {
-        "from": "Billetera de origen",
-        "to": "Carteira de origem"
-      },
-      "bcg.bcg_buzon_modal_monto_label": {
-        "from": "Monto a transferir",
-        "to": "Valor a transferir"
-      },
-      "bcg.bcg_buzon_modal_nota_label": {
-        "from": "Nota (opcional)",
-        "to": "Nota (opcional)"
-      },
-      "bcg.bcg_buzon_modal_confirmar": {
-        "from": "Transferir",
-        "to": "Transferir"
-      },
-      "bcg.bcg_buzon_modal_cancelar": {
-        "from": "Cancelar",
-        "to": "Cancelar"
-      },
-      "bcg.bcg_buzon_modal_exito": {
-        "from": "Transferencia al buzón realizada.",
-        "to": "Transferência para o buzão realizada."
-      },
-      "bcg.bcg_buzon_modal_error": {
-        "from": "No se pudo transferir al buzón.",
-        "to": "Não foi possível transferir para o buzão."
       },
       "bcg.bcg_empty_sin_gastos": {
         "from": "📊 Aún no hay gastos este mes para analizar.",
@@ -18652,6 +18420,54 @@
         "from": "Umbral de balance desequilibrado (ARS)",
         "to": "Limite de saldo desequilibrado (ARS)"
       },
+      "inversiones.notif_cuarentena_pendiente_titulo": {
+        "from": "Transacciones en cuarentena",
+        "to": "Transações em quarentena"
+      },
+      "inversiones.notif_cuarentena_pendiente_mensaje": {
+        "from": "Hay movimientos esperando revisión.",
+        "to": "Há movimentos aguardando revisão."
+      },
+      "inversiones.notif_cuenta_desconciliada_titulo": {
+        "from": "Cuentas desconciliadas",
+        "to": "Contas desconciliadas"
+      },
+      "inversiones.notif_cuenta_desconciliada_mensaje": {
+        "from": "Hay cuentas sin conciliar hace más de 10 días.",
+        "to": "Há contas sem conciliar há mais de 10 dias."
+      },
+      "inversiones.notif_vencimiento_tarjeta_titulo": {
+        "from": "Vencimiento de tarjeta",
+        "to": "Vencimento de cartão"
+      },
+      "inversiones.notif_vencimiento_tarjeta_mensaje": {
+        "from": "Tenés una tarjeta que vence en los próximos días.",
+        "to": "Você tem um cartão a vencer nos próximos dias."
+      },
+      "inversiones.notif_deuda_por_vencer_titulo": {
+        "from": "Deuda por vencer",
+        "to": "Dívida a vencer"
+      },
+      "inversiones.notif_deuda_por_vencer_mensaje": {
+        "from": "Tenés una deuda que vence esta semana.",
+        "to": "Você tem uma dívida a vencer esta semana."
+      },
+      "inversiones.notif_categoria_en_rojo_titulo": {
+        "from": "Categoría en rojo",
+        "to": "Categoria no vermelho"
+      },
+      "inversiones.notif_categoria_en_rojo_mensaje": {
+        "from": "Una categoría gastó más de lo que tenía asignado este ciclo.",
+        "to": "Uma categoria gastou mais do que o atribuído neste ciclo."
+      },
+      "inversiones.notif_ahorro_en_riesgo_titulo": {
+        "from": "Ahorro en riesgo",
+        "to": "Poupança em risco"
+      },
+      "inversiones.notif_ahorro_en_riesgo_mensaje": {
+        "from": "Un ahorro está por vencer y va atrasado respecto del plan.",
+        "to": "Uma poupança está a vencer e vai atrasada em relação ao plano."
+      },
       "inversiones.bell_empty": {
         "from": "Sin notificaciones",
         "to": "Sem notificações"
@@ -20104,6 +19920,10 @@
         "from": "No podés bajar el grupo por debajo de lo repartido. Tiene {repartido}: recortá {recortar} antes.",
         "to": "Não pode baixar o grupo abaixo do que está distribuído. Tem {repartido}: reduza {recortar} antes."
       },
+      "inversiones.error_budget_child_holds_no_money": {
+        "from": "La plata se asigna al rubro padre. A la subcategoría se le pone un techo de gasto, no plata asignada.",
+        "to": "O dinheiro é atribuído à categoria pai. A subcategoria recebe um teto de gasto, não dinheiro atribuído."
+      },
       "inversiones.budget_stat_assigned": {
         "from": "Asignado",
         "to": "Atribuído"
@@ -20391,6 +20211,10 @@
       "inversiones.card_due_date_format": {
         "from": "Día {day} ({days} días)",
         "to": "Dia {day} ({days} dias)"
+      },
+      "inversiones.card_due_today": {
+        "from": "Hoy",
+        "to": "Hoje"
       },
       "inversiones.card_due_date_overdue": {
         "from": "Día {day}  — vencida hace {days} día(s)",
@@ -22317,8 +22141,8 @@
         "to": "A carteira é de {billetera} e o envelope é de {sobre}. Um envelope não converte moedas."
       },
       "sobres.error_sobre_wallet_insufficient": {
-        "from": "No alcanza el saldo libre de {billetera} para reservar ese importe.",
-        "to": "{billetera} não tem saldo livre suficiente para reservar esse valor."
+        "from": "No alcanza el saldo libre de {nombre} para reservar ese importe.",
+        "to": "{nombre} não tem saldo livre suficiente para reservar esse valor."
       },
       "sobres.error_sobre_portion_insufficient": {
         "from": "Esa porción tiene {disponible} disponible. Ajustá el importe.",

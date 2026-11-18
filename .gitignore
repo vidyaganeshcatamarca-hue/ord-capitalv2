@@ -52,6 +52,8 @@ tests/sql/*
 !tests/sql/fn_run_delete_confirmation_test.sql
 !tests/sql/apply_delete_confirmation_words.js
 !tests/sql/run_modo_testing_flag_test.js
+!tests/sql/etapa1_integridad.sql
+!tests/sql/run_etapa1_integridad.js
 !tests/i18n/
 tests/i18n/*
 !tests/i18n/language-resolver.test.js
@@ -227,3 +229,4 @@ tests/configuracion/*
 !tests/presupuestos/fila-sin-pisarse.test.js
 !tests/presupuestos/transferencia-mensaje-especifico.test.js
 !tests/presupuestos/cupos-sin-alarma.test.js
+!tests/presupuestos/sin-asignar-en-subcategorias.test.js

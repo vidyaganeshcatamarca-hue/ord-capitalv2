@@ -73,8 +73,14 @@ test('el botón Asignar de cada sobre no se dibuja en un ciclo cerrado', () => {
   assert.match(pagina, /function FilaSobre\(\{[^}]*soloLectura/)
   assert.match(
     pagina,
-    /\{!soloLectura && \(\s*<button className="sobre-btn-asignar"/,
+    /\{puedeAsignar && \(\s*<button className="sobre-btn-asignar"/,
     'el botón Asignar va dentro del gate',
+  )
+  // Ronda 14: el gate suma la subcategoría (la plata se asigna al rubro padre).
+  assert.match(
+    pagina,
+    /const puedeAsignar = !soloLectura && !esSubcategoria/,
+    'el gate del botón sigue mirando soloLectura',
   )
   // El margen derecho existía para dejar lugar al botón: sin botón, sin margen.
   assert.match(pagina, /marginRight: soloLectura \? 0 : 80/)

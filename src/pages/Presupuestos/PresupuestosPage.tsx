@@ -45,6 +45,12 @@ function mensajeRechazoPresupuesto(
       recortar: fmt(Number(p.recortar ?? 0)),
     })
   }
+  // Ronda 14: la plata se asigna al rubro padre. El servidor rechaza cualquier monto
+  // positivo sobre una subcategoría con esta key; si igual llega (otro call site), se
+  // muestra el texto traducido y no la key cruda.
+  if (parsed?.key === 'error_budget_child_holds_no_money') {
+    return t('error_budget_child_holds_no_money')
+  }
   return null
 }
 
@@ -69,6 +75,16 @@ interface SobreDetalle {
   /** T6/S15: false cuando su padre tiene presupuesto y entonces no se cuenta aparte. */
   cuenta_en_totales?: boolean
   isVirtualDisponible?: boolean
+}
+
+/**
+ * Ronda 14 (dueño): «la plata se asigna al rubro padre». Una fila es subcategoría
+ * cuando su categoría tiene padre (`padre_id` viene de `fn_reporte_sobres_detalle`).
+ * `es_padre` manda primero: un rubro padre conserva su asignación como hasta hoy, y un
+ * rubro suelto (sin padre) también. No hace falta ningún campo nuevo.
+ */
+function esSubcategoriaDeRubro(sobre: Pick<SobreDetalle, 'padre_id' | 'es_padre'>): boolean {
+  return sobre.padre_id != null && !sobre.es_padre
 }
 
 interface ConfigPresupuesto {
@@ -217,6 +233,10 @@ export function PresupuestosPage() {
   // queda para el botón "+ Asignar".
   const [showDetalleSheet, setShowDetalleSheet] = useState(false)
   const [showTransferirModal, setShowTransferirModal] = useState(false)
+  // Clave de operación de la transferencia. Se reusa mientras se reintente la MISMA
+  // transferencia (doble toque, red lenta, respuesta perdida): el servidor la reconoce
+  // y no vuelve a mover el dinero.
+  const claveTransferenciaRef = useRef<{ firma: string; clave: string } | null>(null)
   const [showReglasModal, setShowReglasModal] = useState(false)
   const [showBaseCeroModal, setShowBaseCeroModal] = useState(false)
   // Ronda 7 (B3): volver a Modo Libertad reinicia las asignaciones del ciclo, así
@@ -538,6 +558,13 @@ export function PresupuestosPage() {
       showToast(t('budget_readonly_cycle_toast'), 'error')
       return
     }
+    // Ronda 14: la fila de una subcategoría no ofrece asignar, pero la hoja puede
+    // alcanzarse desde otro lado. Se corta acá con el mismo texto que devuelve el
+    // servidor, en vez de dejar que el guardado falle con la key cruda.
+    if (esSubcategoriaDeRubro(sobre)) {
+      showToast(t('error_budget_child_holds_no_money'), 'error')
+      return
+    }
     setSobreSeleccionado(sobre)
     setMostrando('opciones')
     setMontoManual('')
@@ -783,13 +810,19 @@ export function PresupuestosPage() {
         if (error) throw error
         showToast(t('budget_success_deficit_covered'), 'success')
       } else {
+        const firmaTransferencia = `${origenSeleccionado.estructura_id}:${sobreSeleccionado.estructura_id}:${monto}`
+        if (!claveTransferenciaRef.current || claveTransferenciaRef.current.firma !== firmaTransferencia) {
+          claveTransferenciaRef.current = { firma: firmaTransferencia, clave: crypto.randomUUID() }
+        }
         const { error } = await supabase.rpc('fn_transferir_entre_sobres', {
           p_origen_id: origenSeleccionado.estructura_id,
           p_destino_id: sobreSeleccionado.estructura_id,
           p_monto: monto,
           p_mes_periodo: mesPeriodoStr,
+          p_idempotency_key: claveTransferenciaRef.current.clave,
         })
         if (error) throw error
+        claveTransferenciaRef.current = null
         // La transferencia movía plata en silencio: cerraba el modal y no decía nada.
         // El camino del sobre virtual y el de la asignación sí avisan; este no.
         showToast(t('budget_move_done', { monto: formatMonto(monto) }), 'success')
@@ -2006,6 +2039,12 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
   })()
   const arrastre = Number(sobre.arrastre_mes_anterior ?? 0)
 
+  // Ronda 14: en una subcategoría no se ofrece asignar (la plata va al rubro padre) y
+  // tampoco se reserva el lugar del botón: ese hueco de 84 px dejaba la fila hija
+  // desalineada respecto de las demás.
+  const esSubcategoria = esSubcategoriaDeRubro(sobre)
+  const puedeAsignar = !soloLectura && !esSubcategoria
+
   const colorDisponible = () => {
     if (disponibleEfectivo < 0) return 'rojo'
     if (disponibleEfectivo === 0 && sobre.monto_asignado > 0) return 'neutro'
@@ -2027,15 +2066,21 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
       // ingresar asignaciones". La fila abre el detalle; el botón, la asignación.
       onClick={onVerDetalle}
     >
-      {/* Botón asignar: no existe en un ciclo cerrado */}
-      {!soloLectura && (
+      {/* Botón asignar: no existe en un ciclo cerrado ni en una subcategoría. */}
+      {puedeAsignar && (
         <button className="sobre-btn-asignar" onClick={e => { e.stopPropagation(); onAsignar() }}>
           {t('budget_assign_btn')}
         </button>
       )}
 
       {/* Nombre */}
-      <div className="sobre-fila-top">
+      <div
+        className="sobre-fila-top"
+        // El botón «+ Asignar» es absoluto (right 14, top 14) y su lugar se reserva con
+        // padding. Sin botón no hay nada que reservar: con los 84 px la fila quedaba con
+        // un hueco a la derecha y el nombre se recortaba antes de tiempo en 390 px.
+        style={puedeAsignar ? undefined : { paddingRight: 0 }}
+      >
         {sobre.es_padre && onToggleGrupo && (
           <button
             type="button"

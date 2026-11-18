@@ -2222,6 +2222,7 @@ export const inversiones = {
   budget_group_collapse: "Ocultar subcategorias",
   error_budget_child_over_parent: "Não entra: o grupo tem {techo} e já há {repartido} distribuído. A esta categoria restam {disponible}.",
   error_budget_parent_below_children: "Não pode baixar o grupo abaixo do que está distribuído. Tem {repartido}: reduza {recortar} antes.",
+  error_budget_child_holds_no_money: "O dinheiro é atribuído à categoria pai. A subcategoria recebe um teto de gasto, não dinheiro atribuído.",
   budget_stat_assigned: "Atribuído",
   budget_stat_ceiling: "Teto",
   budget_stat_spent: "Gasto",

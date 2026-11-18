@@ -2483,6 +2483,7 @@ export const inversiones = {
   budget_group_collapse: "Ocultar subcategorías",
   error_budget_child_over_parent: "No entra: el grupo tiene {techo} y ya hay {repartido} repartido. A este rubro le quedan {disponible}.",
   error_budget_parent_below_children: "No podés bajar el grupo por debajo de lo repartido. Tiene {repartido}: recortá {recortar} antes.",
+  error_budget_child_holds_no_money: "La plata se asigna al rubro padre. A la subcategoría se le pone un techo de gasto, no plata asignada.",
   budget_stat_assigned: "Asignado",
   budget_stat_ceiling: "Techo",
   budget_stat_spent: "Gastado",

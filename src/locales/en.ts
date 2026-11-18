@@ -2222,6 +2222,7 @@ export const inversiones = {
   budget_group_collapse: "Hide subcategories",
   error_budget_child_over_parent: "Does not fit: the group has {techo} and {repartido} is already allocated. This category has {disponible} left.",
   error_budget_parent_below_children: "You cannot lower the group below what is allocated. It has {repartido}: cut {recortar} first.",
+  error_budget_child_holds_no_money: "Money is assigned to the parent category. A subcategory gets a spending ceiling, not assigned money.",
   budget_stat_assigned: "Assigned",
   budget_stat_ceiling: "Ceiling",
   budget_stat_spent: "Spent",
