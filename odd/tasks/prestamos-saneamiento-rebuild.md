@@ -152,14 +152,14 @@ previo, no requisitos.
 | ID | Tarea | Specs | Ruta | Estado |
 |---|---|---|---|---|
 | T1 | Introspección read-only del esquema desplegado | S14, S15, S25 | inline | **hecha** |
-| T2 | Migraciones no destructivas + tablas nuevas | S6, S7, S15 | TBD | pendiente (T1) |
-| T3 | Lectura: resumen, listado y detalle | S1, S3, S7 | TBD | pendiente (T2) |
-| T4 | Alta de préstamo nuevo e histórico | S4, S5, S6, S12 | TBD | pendiente (T2) |
+| T2 | Migraciones no destructivas + tablas nuevas | S6, S7, S15 | inline | **hecha** |
+| T3 | Lectura: resumen, listado y detalle | S1, S3, S7 | inline | **hecha** |
+| T4 | Alta de préstamo nuevo e histórico | S4, S5, S6, S12 | inline | **hecha** |
 | T5 | Edición de condiciones | S11 | TBD | pendiente (T4) |
-| T6 | Registro de pago y cobro, multimoneda | S9, S10, S15 | TBD | pendiente (T2) |
+| T6 | Registro de pago y cobro, multimoneda | S9, S10, S15 | inline | **hecha** (RPC) |
 | T7 | Sobrepago con confirmación de intereses | S10 | TBD | pendiente (T6) |
 | T8 | Corrección de operaciones | S11 | TBD | pendiente (T6) |
-| T9 | Estados derivados y saldado automático | S7 | TBD | pendiente (T6) |
+| T9 | Estados derivados y saldado automático | S7 | inline | **hecha** |
 | T10 | Eliminación lógica del historial | S8 | TBD | pendiente (T9) |
 | T11 | Plan de Ataque sólo préstamos «Debo» | S2, S16 | TBD | pendiente (T3) |
 | T12 | Desempates deterministas Matemática/Emocional | S16 | TBD | pendiente (T11) |
