@@ -46,7 +46,7 @@ BEGIN
                    ON e2.estructura_id = p.estructura_egreso_id
             LEFT JOIN (
                 SELECT COALESCE(e.padre_id, e.estructura_id) AS rubro_id,
-                       SUM(c.valor_egreso) AS total
+                       SUM(COALESCE(c.valor_local, c.valor_egreso)) AS total
                 FROM public.p_caja c
                 INNER JOIN public.p_estructuras_egresos e ON c.estructura_egreso_id = e.estructura_id
                 WHERE c.fecha BETWEEN v_inicio AND v_fin

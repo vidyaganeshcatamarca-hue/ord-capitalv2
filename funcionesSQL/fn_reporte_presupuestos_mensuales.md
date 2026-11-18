@@ -15,7 +15,7 @@ BEGIN
     WITH consumos AS (
         SELECT 
             COALESCE(e.padre_id, e.estructura_id) as rubro_id,
-            SUM(c.valor_egreso) as total_consumido
+            SUM(COALESCE(c.valor_local, c.valor_egreso)) as total_consumido
         FROM public.p_caja c
         INNER JOIN public.p_estructuras_egresos e ON c.estructura_egreso_id = e.estructura_id
         WHERE c.fecha BETWEEN v_f_inicio AND v_f_fin AND c.tipo = 'expense'
