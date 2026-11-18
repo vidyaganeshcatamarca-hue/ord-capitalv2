@@ -54,6 +54,7 @@ tests/sql/*
 !tests/sql/run_modo_testing_flag_test.js
 !tests/sql/etapa1_integridad.sql
 !tests/sql/run_etapa1_integridad.js
+!tests/sql/etapa2_bolsa.sql
 !tests/i18n/
 tests/i18n/*
 !tests/i18n/language-resolver.test.js
