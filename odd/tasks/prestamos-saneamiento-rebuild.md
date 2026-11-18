@@ -151,7 +151,7 @@ previo, no requisitos.
 
 | ID | Tarea | Specs | Ruta | Estado |
 |---|---|---|---|---|
-| T1 | Introspección read-only del esquema desplegado | S14, S15, S25 | inline | bloqueada (SOLICITUD A) |
+| T1 | Introspección read-only del esquema desplegado | S14, S15, S25 | inline | **hecha** |
 | T2 | Migraciones no destructivas + tablas nuevas | S6, S7, S15 | TBD | pendiente (T1) |
 | T3 | Lectura: resumen, listado y detalle | S1, S3, S7 | TBD | pendiente (T2) |
 | T4 | Alta de préstamo nuevo e histórico | S4, S5, S6, S12 | TBD | pendiente (T2) |
@@ -279,4 +279,18 @@ Hechos duros:
 ## Radio de impacto a verificar antes de tocar funciones compartidas
 
 54 funciones desplegadas + 9 triggers de `p_caja` + 5 de `p_estructuras_egresos`. Obligatorios: `fn_borrar_datos_usuario`, `fn_clonar_usuario_admin`, `fn_exportar_backup_maestro`, `fn_exportar_datos_usuario_rango`, `fn_exportar_pasaporte_financiero`, `fn_t_limpiar_dependencias_caja`, `fn_editar_movimiento_caja` (3 overloads), `fn_eliminar_movimiento_caja`, y los once reportes que leen `p_prestamos`.
+
+## Fronteras de entrega (commits)
+
+La rama se cortó de `origin/produccion` @ `c592f68`. `main` está retirado y no se
+usa para entregar, así que el historial se mide contra `origin/produccion`
+(`git rev-list origin/produccion..HEAD`), no contra `origin/main`, cuya
+divergencia histórica no pertenece a esta feature.
+
+| Corte | Commit | Contenido |
+|---|---|---|
+| 1 | `64b0fec` | Esquema versionado y regenerado + utilidades de introspección |
+| 2 | `12a4fbe` | Documento de tareas del módulo |
+
+Próximo corte: migraciones DDL no destructivas (etapa 1).
 
