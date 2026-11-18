@@ -80,11 +80,13 @@
   text-align: center;
 }
 
-/* Framing guide: pure decoration, positioned OUT OF FLOW. As a flex child it
+/* Framing box: pure decoration, positioned OUT OF FLOW. As a flex child it
    became a second column and squeezed the video into the left half, so it must
    stay absolute and centred over the stage. `9/16` matches the stream, which
    makes the box land exactly on the area the video paints under
-   `object-fit: contain`. No edge detection, no crop, no math. */
+   `object-fit: contain`. No edge detection, no crop, no math. It is the only
+   thing left on top of the video: the overlap strip, the anchor line and the
+   paper edges were unreadable on a homogeneous receipt and were removed. */
 .camera-batch-frame {
   aspect-ratio: 9 / 16;
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -140,39 +142,132 @@
   right: 0;
 }
 
-/* Bottom fifth of the previous capture, shown over the top of the frame so the
-   owner can line up the next page by eye. It is a reference image, not a
-   comparison: nothing measures the alignment. Opacity is deliberately high:
-   the point is reading the text inside the strip, and at 0.35-0.4 the live
-   image underneath washed it out completely. */
-.camera-batch-guide {
-  border-bottom: 2px solid rgba(255, 255, 255, 0.95);
-  display: block;
-  height: 20%;
-  left: 0;
-  object-fit: cover;
-  opacity: 0.8;
-  position: absolute;
-  top: 0;
-  width: 100%;
-  z-index: 1;
+/* Vertical displacement meter: the ONE aid the owner kept, and it lives in
+   normal flow below the shutter, never over the video. The fill is the NET
+   travel accumulated frame to frame since the last capture: one full frame of
+   travel is 100%, and 70% leaves the ~30% overlap. It can go back down, because
+   coming back up the receipt undoes travel. It advises; it never gates the
+   capture button. */
+.camera-batch-shift {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-3);
 }
 
-/* Sits on the video, not under it: below the stage the label was already out of
-   view when the owner was framing the shot. */
-.camera-batch-guide-label {
-  background: rgba(0, 0, 0, 0.55);
-  border-radius: var(--radius-sm);
-  color: #fff;
+/* Big on purpose: this has to be readable at arm's length on a 385 px phone
+   while the operator is holding the paper. */
+.camera-batch-shift-head {
+  align-items: baseline;
+  display: flex;
+  gap: var(--space-2);
+  justify-content: space-between;
+}
+
+.camera-batch-shift-label {
+  color: var(--text-3);
   font-size: calc(11px * var(--font-scale));
-  left: 6px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.camera-batch-shift-value {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: calc(28px * var(--font-scale));
+  font-weight: 700;
+  line-height: 1;
+}
+
+.camera-batch-shift-track {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  display: block;
+  height: 14px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.camera-batch-shift-fill {
+  background: var(--text-3);
+  display: block;
+  height: 100%;
+  transition: width 120ms linear;
+}
+
+.camera-batch-shift-state {
+  color: var(--text-2);
+  font-size: calc(13px * var(--font-scale));
+  font-weight: 600;
+  line-height: 1.35;
+  margin: 0;
+}
+
+/* TEMPORARY DIAGNOSTICS -- DELETE before the spike is integrated into the
+   product. Small, muted and monospace so it reads as a developer readout and
+   never competes with the number above it. It may wrap on a 385 px phone; that
+   is fine, nobody but a developer looks at it. */
+.camera-batch-shift-debug {
+  color: var(--text-4);
+  font-family: var(--font-mono);
+  font-size: calc(10px * var(--font-scale));
   line-height: 1.3;
-  padding: 3px 6px;
-  position: absolute;
-  right: 6px;
-  text-align: center;
-  top: calc(20% + 6px);
-  z-index: 2;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Waiting for the first photo: neutral and completely still. It must not look
+   like a measurement in progress, and it must not pulse: there is nothing to
+   act on yet. */
+.camera-batch-shift.is-waiting .camera-batch-shift-fill {
+  background: var(--text-4);
+}
+
+.camera-batch-shift.is-waiting .camera-batch-shift-value {
+  color: var(--text-3);
+}
+
+/* At the target the whole indicator turns danger-red and blinks: the operator
+   is looking at the paper, not at the screen, so colour alone is not enough. */
+.camera-batch-shift.is-ready {
+  animation: camera-batch-shift-pulse 900ms ease-in-out infinite;
+  border-color: var(--coral);
+}
+
+.camera-batch-shift.is-ready .camera-batch-shift-fill {
+  background: var(--coral);
+}
+
+.camera-batch-shift.is-ready .camera-batch-shift-state,
+.camera-batch-shift.is-ready .camera-batch-shift-value {
+  color: var(--coral);
+}
+
+@keyframes camera-batch-shift-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* Reduced motion keeps the red state and drops the pulse. */
+@media (prefers-reduced-motion: reduce) {
+  .camera-batch-shift.is-ready {
+    animation: none;
+  }
+
+  .camera-batch-shift-fill {
+    transition: none;
+  }
 }
 
 .camera-batch-capture-bar {

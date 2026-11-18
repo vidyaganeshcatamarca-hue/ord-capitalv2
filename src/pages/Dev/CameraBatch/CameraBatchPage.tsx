@@ -10,6 +10,14 @@ import {
   type OcrJobAccepted,
   type OcrJobStatus,
 } from '@/ocr/types'
+import {
+  accumulateTravel,
+  classifyTravel,
+  estimateVerticalShiftDetailed,
+  travelPercent,
+  verticalProfile,
+  type TravelVerdict,
+} from './displacement'
 import './CameraBatch.css'
 
 /**
@@ -35,9 +43,88 @@ import './CameraBatch.css'
 
 /** Product cap for one ticket: the OCR flow accepts up to 10 pages. */
 const MAX_CAPTURES = 10
-/** Share of a capture shown as the overlap guide for the next one. */
-const GUIDE_STRIP_RATIO = 0.2
+
 const JPEG_QUALITY = 0.92
+
+/**
+ * Cadence of the displacement meter: 125 ms is eight samples a second, fast
+ * enough to follow a moving hand. It was 200 ms, which made each step larger and
+ * pushed real movements out of the narrow search window (a whole sample
+ * rejected), so the meter undercounted. Smaller steps also mean less lag: the
+ * number catches up with the hand in a quarter of a second.
+ */
+const SHIFT_SAMPLE_INTERVAL_MS = 125
+/**
+ * Downscaled sampler for the displacement meter. 120 x 480 is the whole point
+ * of this rewrite: a 1920 px tall stream squeezed into 480 profile rows means
+ * ONE profile row is 4 real pixels, so a ~30 px printed line spans ~7-8 rows
+ * and the receipt's periodicity is resolvable. At 240 rows one row was 8 real
+ * pixels and a line spanned ~4, which aliased the signal and gave the
+ * correlation dozens of near-identical peaks. Never go below 480 rows.
+ *
+ * The caps are independent (no aspect ratio): the profile only needs ROWS, so
+ * the frame is squashed horizontally. Keeping the aspect ratio would cap a
+ * 1080x1920 stream at ~213 rows, right back on the alias.
+ */
+const SHIFT_SAMPLE_MAX_WIDTH = 120
+const SHIFT_SAMPLE_MAX_HEIGHT = 480
+/**
+ * Share of the frame width dropped on EACH side before sampling.
+ *
+ * The profile averages a whole row, so every column that is not receipt dilutes
+ * the signal. On a phone held over a supermarket ticket the outer 12% of each
+ * side is the table, the operator's hand or the shop behind the paper: content
+ * with its own vertical structure, unrelated to the receipt, that the
+ * correlation will happily try to align. Cropping to the central band keeps the
+ * measurement inside the paper. There is no ticket detection and no
+ * thresholding on purpose: it is a fixed band, and the framing box already asks
+ * the operator to fill it.
+ */
+const SHIFT_SAMPLE_SIDE_CROP_RATIO = 0.12
+/**
+ * Search window per side, as a share of ONE frame's rows: 12% per 125 ms sample
+ * is far above normal hand movement and small enough that the frame-to-frame
+ * peak cannot reach the neighbouring identical line.
+ *
+ * KEEP IT. If the phone test still shows UNDERCOUNTING because real steps exceed
+ * this window (whole samples rejected as too wide), the next step is 80-100 ms
+ * per sample so each step is smaller -- NOT a wider window, which would let the
+ * peak reach the next identical receipt line and destroy the reason this design
+ * works at all.
+ */
+const SHIFT_MAX_STEP_RATIO = 0.12
+/**
+ * Smoothing of the DISPLAYED percentage (the offset itself stays exact). The
+ * number must not flicker between neighbouring values while the operator is
+ * moving: alpha 0.5 follows a real move in a sample or two and still hides a
+ * single line-height wobble. It was 0.35, which lagged the operator enough that
+ * the number read behind the paper he could see.
+ *
+ * The displayed value DECREASES when the operator comes back up the receipt.
+ * It has to: the real position goes back, and a number that only ever grows
+ * reports an overlap that is no longer there.
+ */
+const SHIFT_DISPLAY_ALPHA = 0.5
+/**
+ * Measured travel -> physical travel. Calibrated on the owner's phone: the meter
+ * reached 70% of the bar when the receipt had already moved one full frame, so
+ * every reading is scaled by 100/70. The measurement itself is unchanged; only
+ * the number the operator reads is corrected. If another device shows a
+ * different bias, this single constant is what gets adjusted.
+ */
+const TRAVEL_CALIBRATION = 100 / 70
+/**
+ * Entering "ready": travel that leaves ~30% overlap with the last capture.
+ */
+const TARGET_SHIFT_PERCENT = 70
+/**
+ * Leaving "ready". The two thresholds are deliberate (hysteresis): with a single
+ * one, a hand resting near the target makes the red pulse stutter on and off at
+ * the sampling rate, and the operator -- who is looking at the paper, not the
+ * screen -- reads that as a broken meter. Between 65 and 70 the previous state
+ * holds, so the target has to be genuinely lost to lose the pulse.
+ */
+const READY_EXIT_PERCENT = 65
 
 /** Bounded measurement window: one poll every 2 s for at most 90 s. */
 const OCR_POLL_INTERVAL_MS = 2000
@@ -65,9 +152,6 @@ type Capture = {
   blob: Blob | null
   url: string | null
   fileName: string
-  /** Bottom 20% of this capture as a data URL: the visual reference for the
-   *  next shot. Null when the capture failed or the strip could not be built. */
-  guideStrip: string | null
 }
 
 /** A capture that actually produced bytes, so it can travel in a job. */
@@ -92,6 +176,26 @@ type VideoInfo = {
 }
 
 type CameraError = 'no_camera' | 'permission_denied' | 'camera_error'
+
+/**
+ * TEMPORARY DIAGNOSTICS (delete before integrating the spike into the product):
+ * everything one meter sample measured and what the accumulator did with it.
+ *
+ * `shift` and `score` come from `estimateVerticalShiftDetailed`, `verdict` and
+ * `delta` from `classifyTravel`, and `offset`/`percent` are the values the meter
+ * displays right after the sample. `null` means the sample had no number at all.
+ */
+type ShiftDebug = {
+  shift: number | null
+  score: number | null
+  verdict: TravelVerdict
+  /** Rows this sample moved the offset by; 0 whenever it was not applied. */
+  delta: number
+  offset: number
+  rows: number
+  percent: number
+  ready: boolean
+}
 
 type View = 'capture' | 'report'
 
@@ -161,26 +265,6 @@ function formatKb(bytes: number): string {
 function describeError(err: unknown): string {
   if (err instanceof Error) return err.message || err.name
   return String(err)
-}
-
-/**
- * Bottom fifth of a capture, as a data URL. It is built from the SAME canvas
- * that produced the photo, so there is nothing to decode and nothing to
- * analyse: this is a visual reference for the operator, never a measurement.
- */
-function buildGuideStrip(canvas: HTMLCanvasElement, width: number, height: number): string | null {
-  const stripHeight = Math.max(1, Math.round(height * GUIDE_STRIP_RATIO))
-  const strip = document.createElement('canvas')
-  strip.width = width
-  strip.height = stripHeight
-  const ctx = strip.getContext('2d')
-  if (!ctx) return null
-  try {
-    ctx.drawImage(canvas, 0, height - stripHeight, width, stripHeight, 0, 0, width, stripHeight)
-    return strip.toDataURL('image/jpeg', 0.85)
-  } catch {
-    return null
-  }
 }
 
 function isAbort(error: unknown): boolean {
@@ -414,6 +498,26 @@ export function CameraBatchPage() {
   /** The one in-flight upload/poll of the ticket job, so every teardown path
    *  can abort it. There is only ever one: the batch is one job. */
   const ocrControllerRef = useRef<AbortController | null>(null)
+  /** Downscaled offscreen canvas for the displacement meter, reused on every
+   *  tick: one 120x480 buffer, never the full frame. */
+  const samplerCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  /** The PREVIOUS sample's row profile. The meter measures frame to frame, not
+   *  against a fixed reference: the accumulation lives in the offset below, so
+   *  travelling away from the capture frame cannot dilute the signal. Reset on
+   *  capture, on open and on any frame that cannot be read. */
+  const prevProfileRef = useRef<Float32Array | null>(null)
+  /** Exact net travel down the receipt since the last capture, in sampler rows. */
+  const travelOffsetRef = useRef(0)
+  /** Smoothed percentage on screen, 0..100. It can go DOWN: the real position
+   *  goes back when the operator comes back up the receipt. */
+  const shownPercentRef = useRef(0)
+  /** The hysteresis state of the meter, kept outside React so a sample decides
+   *  with the value it just computed instead of a stale render. `true` = the
+   *  red "you can capture now" state. */
+  const shiftReadyRef = useRef(false)
+  /** The meter is INACTIVE until the first capture: with no page captured there
+   *  is no page to travel down, so nothing is estimated. */
+  const meterArmedRef = useRef(false)
 
   const [stream, setStream] = useState<MediaStream | null>(null)
   const [settings, setSettings] = useState<MediaTrackSettings | null>(null)
@@ -425,6 +529,25 @@ export function CameraBatchPage() {
   const [platform] = useState<PlatformInfo>(readPlatformInfo)
   /** The job's state. One entry for the whole ticket, not one per photo. */
   const [send, setSend] = useState<OcrSend | null>(null)
+  /** Travel down the receipt since the last capture, 0..100. NEVER null: a
+   *  frame that cannot be measured keeps the last reading, and before the first
+   *  capture the meter shows 0%. A meter that disappears is worse than an
+   *  approximate one. */
+  const [shiftPercent, setShiftPercent] = useState(0)
+  /** False until the first capture of the current page: the meter waits instead
+   *  of pretending to measure. */
+  const [shiftArmed, setShiftArmed] = useState(false)
+  /** Hysteresis state on screen, mirrored from `shiftReadyRef` after every
+   *  sample. The pulse follows THIS, not the number. */
+  const [shiftReady, setShiftReady] = useState(false)
+  /**
+   * TEMPORARY DIAGNOSTICS (delete before integrating the spike into the
+   * product): the last sample, verbatim, for the physical test on the phone.
+   * Without it a rejected sample and a genuinely short movement look identical
+   * in the number alone, which is exactly the ambiguity the phone test has to
+   * resolve.
+   */
+  const [shiftDebug, setShiftDebug] = useState<ShiftDebug | null>(null)
 
   // The ORD snapshot the backend expects with every ticket. Read-only here:
   // the spike sends it and prints the answer, it never mutates anything.
@@ -453,11 +576,40 @@ export function CameraBatchPage() {
       mountedRef.current = false
       ocrControllerRef.current?.abort()
       ocrControllerRef.current = null
+      // The meter's interval is cleared by its own effect; clearing its state
+      // here guarantees no sampler can resume on a dead component.
+      prevProfileRef.current = null
+      travelOffsetRef.current = 0
+      shownPercentRef.current = 0
+      shiftReadyRef.current = false
+      meterArmedRef.current = false
       stopStream(false)
       for (const url of urls) URL.revokeObjectURL(url)
       urls.clear()
     }
   }, [stopStream])
+
+  /**
+   * The ONE reset point of the meter: exact offset, displayed value and the
+   * frame-to-frame baseline go back to zero together, because keeping any of
+   * them would make the next page start from the previous page's travel.
+   *
+   * `armed` is the only difference between the two ways in: `false` is "waiting
+   * for the first photo" (open camera, unmount, lost stream) and `true` is "a
+   * photo exists, measure the next page" (capture).
+   */
+  const resetShiftMeter = useCallback((armed: boolean) => {
+    prevProfileRef.current = null
+    travelOffsetRef.current = 0
+    shownPercentRef.current = 0
+    shiftReadyRef.current = false
+    meterArmedRef.current = armed
+    if (!mountedRef.current) return
+    setShiftPercent(0)
+    setShiftArmed(armed)
+    setShiftReady(false)
+    setShiftDebug(null)
+  }, [])
 
   /** Aborts the in-flight upload/poll and leaves the panel in a readable
    *  state: the job keeps running on the backend, we just stop watching it, so
@@ -518,6 +670,131 @@ export function CameraBatchPage() {
     if (!mountedRef.current) return
     setSend(previous => ({ ...(previous ?? startSend(0)), ...patch }))
   }, [])
+
+  /**
+   * One sample of the live frame -> row profile -> frame-to-frame displacement
+   * -> NET offset. Nothing here gates the capture button and nothing here hides
+   * the meter: an unmeasurable frame keeps the last reading.
+   */
+  const sampleShift = useCallback(() => {
+    if (!mountedRef.current) return
+    // Before the first capture there is no page to measure: no estimation work
+    // at all, the meter sits on its waiting state.
+    if (!meterArmedRef.current) return
+    const video = videoRef.current
+    if (!video) return
+    const sourceWidth = video.videoWidth
+    const sourceHeight = video.videoHeight
+    if (sourceWidth === 0 || sourceHeight === 0) return
+
+    // Only the central band reaches the sampler: the outer 12% of each side is
+    // table, hand or shop, not receipt. `sx`/`sw` crop the SOURCE, and the
+    // cropped width is what gets downscaled, so the band fills the canvas.
+    const sideCrop = Math.round(sourceWidth * SHIFT_SAMPLE_SIDE_CROP_RATIO)
+    const bandWidth = Math.max(1, sourceWidth - sideCrop * 2)
+    const width = Math.max(1, Math.min(SHIFT_SAMPLE_MAX_WIDTH, bandWidth))
+    const height = Math.max(1, Math.min(SHIFT_SAMPLE_MAX_HEIGHT, sourceHeight))
+
+    let canvas = samplerCanvasRef.current
+    if (canvas === null) {
+      canvas = document.createElement('canvas')
+      samplerCanvasRef.current = canvas
+    }
+    if (canvas.width !== width) canvas.width = width
+    if (canvas.height !== height) canvas.height = height
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
+    if (!ctx) return
+
+    let profile: Float32Array
+    try {
+      ctx.drawImage(video, sideCrop, 0, bandWidth, sourceHeight, 0, 0, width, height)
+      profile = verticalProfile(ctx.getImageData(0, 0, width, height).data, width, height)
+    } catch {
+      // A tainted, locked or not-yet-painted frame: drop the BASELINE so the
+      // next good tick starts a fresh comparison. The offset and the reading
+      // stay: one bad sample is not a reset.
+      prevProfileRef.current = null
+      return
+    }
+    if (profile.length === 0 || !mountedRef.current) return
+
+    const rows = profile.length
+    const previous = prevProfileRef.current
+    // The new profile becomes the baseline immediately: this is a frame-to-frame
+    // measurement, so there is never a fixed reference to drift away from. The
+    // very first sample after a capture only seeds it.
+    prevProfileRef.current = profile
+    if (previous === null || previous.length !== rows) return
+
+    const maxStep = Math.max(4, Math.round(rows * SHIFT_MAX_STEP_RATIO))
+    // The detailed estimate is the SAME search: it only also hands back the
+    // correlation score, which the temporary diagnostics need and the meter
+    // itself ignores.
+    const estimate = estimateVerticalShiftDetailed(previous, profile, maxStep)
+    const shift = estimate === null ? null : estimate.shift
+    // A null estimate (or a rejected one) leaves the offset exactly where it
+    // was: the operator never sees the meter fall back to 0.
+    const offset = accumulateTravel(travelOffsetRef.current, shift, rows, maxStep)
+    travelOffsetRef.current = offset
+    if (!mountedRef.current) return
+
+    // One full frame of travel is one page, so the percentage is the offset over
+    // the sampler rows, corrected by the device calibration. The offset is exact;
+    // only the number on screen is smoothed. It is allowed to DECREASE: coming
+    // back up the receipt undoes travel, and a number that only grew would
+    // advertise an overlap that is no longer there.
+    const percent = travelPercent(offset, rows, TRAVEL_CALIBRATION)
+    const smoothed =
+      shownPercentRef.current + SHIFT_DISPLAY_ALPHA * (percent - shownPercentRef.current)
+    const shown = Math.min(100, Math.max(0, Math.round(smoothed)))
+    shownPercentRef.current = shown
+
+    // Hysteresis, decided on the SMOOTHED value: enter the red state at the
+    // target, leave it only well below it. Between the two thresholds the
+    // previous state holds, so a hand resting near 70% cannot make the pulse
+    // stutter. The pulse follows this boolean, never the raw number.
+    const wasReady = shiftReadyRef.current
+    const ready = wasReady ? shown >= READY_EXIT_PERCENT : shown >= TARGET_SHIFT_PERCENT
+    shiftReadyRef.current = ready
+
+    setShiftPercent(shown)
+    if (ready !== wasReady) setShiftReady(ready)
+
+    // TEMPORARY DIAGNOSTICS (see ShiftDebug): one line per sample in the console,
+    // which is exactly the 125 ms cadence of the interval -- nothing per frame.
+    const applied = classifyTravel(shift, rows, maxStep)
+    const debug: ShiftDebug = {
+      shift,
+      score: estimate === null ? null : estimate.score,
+      verdict: applied.verdict,
+      delta: applied.delta,
+      offset,
+      rows,
+      percent: shown,
+      ready,
+    }
+    setShiftDebug(debug)
+    console.info(
+      'camera_batch_shift',
+      `shift=${debug.shift ?? 'null'}`,
+      `score=${debug.score === null ? 'null' : debug.score.toFixed(3)}`,
+      `${debug.verdict} delta=${debug.delta}`,
+      `offset=${debug.offset}/${debug.rows} shown=${debug.percent}% ready=${String(debug.ready)}`,
+    )
+  }, [])
+
+  // The meter's lifetime is the stream's lifetime. Opening the camera clears the
+  // offset and the reading and leaves the meter WAITING for the first photo; the
+  // cleanup owns the interval, so no tick survives a lost stream, the report
+  // view or the unmount of the page.
+  useEffect(() => {
+    resetShiftMeter(false)
+    if (!stream) return
+    const timer = window.setInterval(sampleShift, SHIFT_SAMPLE_INTERVAL_MS)
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [stream, sampleShift, resetShiftMeter])
 
   /** Reads the one job until a terminal status or the 90 s window ends. */
   const pollOcrJob = useCallback(
@@ -641,12 +918,11 @@ export function CameraBatchPage() {
   const sendableCount = captures.reduce((total, item) => (item.blob !== null ? total + 1 : total), 0)
   const capReached = photoCount >= MAX_CAPTURES
   const isLive = stream !== null
-  /** Overlap reference for the NEXT shot: the bottom strip of the newest
-   *  capture that has bytes. Derived instead of stored, so deleting the last
-   *  photo falls back to the previous one and deleting everything removes the
-   *  guide. Only visible while the camera is live: closing it clears the guide. */
-  const guideStrip =
-    (isLive ? ([...captures].reverse().find(item => item.blob !== null)?.guideStrip ?? null) : null)
+  // Red only once the meter is actually measuring: the waiting state is neutral,
+  // never pulsing, so it cannot be mistaken for "move along". The value itself
+  // carries the hysteresis decided in `sampleShift`; it is NOT recomputed from
+  // the number here, or the pulse would flip at 70% again.
+  const shiftIsReady = shiftArmed && shiftReady
   const ocrBusy = send !== null && (send.phase === 'sending' || send.phase === 'polling')
 
   const addCapture = (item: Capture) => {
@@ -662,6 +938,8 @@ export function CameraBatchPage() {
     stopStream()
     // Leaving the spike's OCR measurement behind: no poll may keep running.
     resetOcrPoll()
+    // A new camera run starts on a new page: the meter waits for the first photo.
+    resetShiftMeter(false)
 
     if (!navigator.mediaDevices?.getUserMedia) {
       setCameraError('no_camera')
@@ -694,6 +972,12 @@ export function CameraBatchPage() {
     if (!video || !current) return
     if (photoCount >= MAX_CAPTURES) return
 
+    // The page just captured is the page that was travelled: the next shot
+    // measures ITS OWN travel from its own frame, so the accumulation, the
+    // displayed value and the frame-to-frame baseline all start over. The meter
+    // stays armed: keep going down the same receipt.
+    resetShiftMeter(true)
+
     const index = nextIndexRef.current
     nextIndexRef.current += 1
     const fileName = `batch-${index}.jpg`
@@ -723,7 +1007,6 @@ export function CameraBatchPage() {
         blob: null,
         url: null,
         fileName,
-        guideStrip: null,
       })
     }
 
@@ -765,7 +1048,6 @@ export function CameraBatchPage() {
             blob: null,
             url: null,
             fileName,
-            guideStrip: null,
           })
           return
         }
@@ -784,7 +1066,6 @@ export function CameraBatchPage() {
           blob,
           url,
           fileName,
-          guideStrip: buildGuideStrip(canvas, width, height),
         })
       },
       'image/jpeg',
@@ -862,14 +1143,6 @@ export function CameraBatchPage() {
                 <span className="camera-batch-frame-corner is-tr" />
                 <span className="camera-batch-frame-corner is-bl" />
                 <span className="camera-batch-frame-corner is-br" />
-                {guideStrip && (
-                  <>
-                    <img className="camera-batch-guide" src={guideStrip} alt="" />
-                    <span className="camera-batch-guide-label">
-                      {t('dev_camera_batch_msg_align_guide')}
-                    </span>
-                  </>
-                )}
               </div>
             )}
             {!isLive && (
@@ -890,9 +1163,67 @@ export function CameraBatchPage() {
             </button>
           </div>
 
-          {isLive && photoCount > 0 && !guideStrip && (
-            <p className="camera-batch-error">{t('dev_camera_batch_msg_guide_missing')}</p>
-          )}
+          {/* The one aid the owner kept. It lives OUTSIDE the stage, right below
+              the shutter, in normal flow: over a homogeneous receipt every
+              overlay became unreadable. It advises and never disables the
+              button above, and it stays on screen before the first capture on
+              purpose: it says what to do instead of showing a fake 0%. */}
+          <div
+            className={`camera-batch-shift${shiftIsReady ? ' is-ready' : ''}${
+              shiftArmed ? '' : ' is-waiting'
+            }`}
+            data-state={!shiftArmed ? 'waiting' : shiftIsReady ? 'ready' : 'below-target'}
+          >
+            <div className="camera-batch-shift-head">
+              <span className="camera-batch-shift-label">
+                {t('dev_camera_batch_label_shift')}
+              </span>
+              <span className="camera-batch-shift-value">{shiftPercent}%</span>
+            </div>
+            <span
+              className="camera-batch-shift-track"
+              role="meter"
+              aria-label={t('dev_camera_batch_label_shift')}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={shiftPercent}
+              aria-valuetext={
+                shiftArmed
+                  ? `${shiftPercent}%`
+                  : t('dev_camera_batch_msg_shift_waiting')
+              }
+            >
+              <span className="camera-batch-shift-fill" style={{ width: `${shiftPercent}%` }} />
+            </span>
+            <p className="camera-batch-shift-state">
+              {!shiftArmed
+                ? t('dev_camera_batch_msg_shift_waiting')
+                : shiftIsReady
+                  ? t('dev_camera_batch_msg_shift_ready')
+                  : t('dev_camera_batch_msg_shift_keep_going')}
+            </p>
+            {/* TEMPORARY DIAGNOSTICS -- DELETE before this spike is integrated
+                into the product. One compact line so the physical test on the
+                phone can tell WHY a sample moved the meter or did not:
+                  shift: the frame-to-frame estimate in sampler rows
+                  score: its normalised correlation, -1..1
+                  verdict: applied | jitter | out_of_window | not_measured
+                  delta: rows this sample added (or subtracted)
+                  off: the exact internal offset in rows, and the frame height
+                  %: the smoothed value the operator sees
+                  R: the hysteresis state (pulse) at that moment
+                aria-hidden because it is a developer readout, not a message for
+                the operator. */}
+            {shiftDebug !== null && (
+              <p className="camera-batch-shift-debug" aria-hidden="true">
+                {`shift=${shiftDebug.shift ?? 'null'} score=${
+                  shiftDebug.score === null ? 'null' : shiftDebug.score.toFixed(2)
+                } ${shiftDebug.verdict} d=${shiftDebug.delta > 0 ? '+' : ''}${shiftDebug.delta} off=${
+                  shiftDebug.offset
+                }/${shiftDebug.rows} ${shiftDebug.percent}% R=${shiftDebug.ready ? 1 : 0}`}
+              </p>
+            )}
+          </div>
 
           <p className={`camera-batch-status ${isLive ? 'is-live' : 'is-idle'}`}>
             {isLive ? t('dev_camera_batch_status_live') : t('dev_camera_batch_status_idle')}
