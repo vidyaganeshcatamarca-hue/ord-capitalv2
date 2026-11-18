@@ -3,7 +3,7 @@
 <!-- GENERADO AUTOMATICAMENTE. No editar a mano.
      Origen: catalogo desplegado, proyecto bjszdmheddcxjdhcvibi.
      Generador: scripts/prestamos/dump-schema.mjs
-     Tablas: 72
+     Tablas: 70
      Solo estructura. Sin datos, sin credenciales. -->
 
 Regenerar con: `node scripts/prestamos/dump-schema.mjs`
@@ -361,34 +361,6 @@ Regenerar con: `node scripts/prestamos/dump-schema.mjs`
 - `FK` p_caja_cuarentena_tarjeta_id_fkey: FOREIGN KEY (tarjeta_id) REFERENCES p_tarjetas_credito(tarjeta_id)
 - `FK` p_caja_cuarentena_user_id_fkey: FOREIGN KEY (user_id) REFERENCES usuarios(user_id) ON DELETE CASCADE
 - `PK` p_caja_cuarentena_pkey: PRIMARY KEY (pendiente_id)
-
-## `p_categorias_plantilla`
-
-| # | Columna | Tipo | Largo | Nulo | Default |
-|---|---|---|---|---|---|
-| 1 | `key_categoria` | text |  | NO |  |
-| 2 | `tipo_cupo` | text |  | NO |  |
-| 3 | `icono_default` | text |  | YES |  |
-| 4 | `color_default` | text |  | YES |  |
-| 5 | `es_sistema` | boolean |  | YES | false |
-
-**Restricciones**
-
-- `PK` p_categorias_plantilla_pkey: PRIMARY KEY (key_categoria)
-
-## `p_categorias_traduccion`
-
-| # | Columna | Tipo | Largo | Nulo | Default |
-|---|---|---|---|---|---|
-| 1 | `key_categoria` | text |  | NO |  |
-| 2 | `idioma` | text |  | NO |  |
-| 3 | `nombre_localizado` | text |  | NO |  |
-| 4 | `descripcion_localizada` | text |  | YES |  |
-
-**Restricciones**
-
-- `FK` p_categorias_traduccion_key_categoria_fkey: FOREIGN KEY (key_categoria) REFERENCES p_categorias_plantilla(key_categoria) ON DELETE CASCADE
-- `PK` p_categorias_traduccion_pkey: PRIMARY KEY (key_categoria, idioma)
 
 ## `p_compromisos_tarjeta`
 
