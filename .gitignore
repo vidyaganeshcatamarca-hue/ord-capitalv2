@@ -234,3 +234,5 @@ tests/configuracion/*
 !tests/presupuestos/techo-editable-y-historial.test.js
 !tests/presupuestos/deficit-y-avance-sin-topes.test.js
 !tests/sql/etapa4_moneda.sql
+!tests/presupuestos/repeticion-mensual.test.js
+!tests/sql/etapa4_repeticion.sql

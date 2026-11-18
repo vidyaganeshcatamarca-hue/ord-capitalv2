@@ -2248,6 +2248,7 @@ export const inversiones = {
   budget_history_reason_transfer_in: "Received from another category",
   budget_history_reason_to_base_zero: "Switched to Zero Base",
   budget_history_reason_to_freedom: "Back to Freedom Mode",
+  budget_history_reason_repetition: "Carried over from last month",
   budget_history_reason_other: "Other change",
   budget_stat_assigned: "Assigned",
   budget_stat_ceiling: "Ceiling",

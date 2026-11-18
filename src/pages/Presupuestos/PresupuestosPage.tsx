@@ -124,6 +124,7 @@ const MOTIVO_HISTORIAL_A_CLAVE: Record<string, string> = {
   transferencia_entrada: 'budget_history_reason_transfer_in',
   cambio_a_base_cero: 'budget_history_reason_to_base_zero',
   vuelta_a_anticipado: 'budget_history_reason_to_freedom',
+  repeticion_mensual: 'budget_history_reason_repetition',
 }
 
 interface ConfigPresupuesto {
@@ -476,6 +477,17 @@ export function PresupuestosPage() {
   const cargarDatos = useCallback(async (silencioso: boolean = false) => {
     if (!silencioso) setLoading(true)
     try {
+      // Etapa 4 (dueño): en libertad, al abrir un ciclo vacio se copian las
+      // asignaciones que el usuario escribio a mano en el anterior. En base cero no
+      // repite nada, porque el saldo llega por el arrastre; la funcion lo resuelve
+      // sola y ademas ignora cualquier ciclo que no sea el vigente. Si falla, la
+      // pantalla abre igual: la repeticion es una comodidad, no un requisito.
+      try {
+        await supabase.rpc('fn_repetir_presupuestos_ciclo', { p_mes: mesPeriodoStr })
+      } catch {
+        /* opcional: nunca bloquea la carga */
+      }
+
       const [rSaldo, rSobres, rConfig, rCupos, rDisponibles, rTechos] = await Promise.all([
         supabase.rpc('fn_obtener_saldo_a_asignar', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_reporte_sobres_detalle', { p_mes_periodo: mesPeriodoStr }),
