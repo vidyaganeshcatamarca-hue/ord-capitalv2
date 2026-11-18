@@ -208,6 +208,7 @@ tests/cuarentena/*
 !tests/add-movement/
 tests/add-movement/*
 !tests/add-movement/recientes-una-linea.test.js
+!tests/add-movement/padre-con-hijos-exige-subcategoria.test.js
 
 !tests/configuracion/
 tests/configuracion/*

@@ -2327,6 +2327,7 @@ export const inversiones = {
   placeholder_search_category: "Search category...",
   btn_see_all_categories: "See all categories",
   add_move_see_all: "See all",
+  add_move_choose_subcategory: "This category is split into subcategories. Choose one to assign the expense.",
   title_add_subcategory: "Add subcategory",
   label_category: "Category",
   step_when: "When?",

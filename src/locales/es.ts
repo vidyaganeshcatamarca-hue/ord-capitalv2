@@ -2600,6 +2600,7 @@ export const inversiones = {
   placeholder_search_category: "Buscar categoría...",
   btn_see_all_categories: "Ver todas las categorías",
   add_move_see_all: "Ver todas",
+  add_move_choose_subcategory: "Esta categoría está dividida en subcategorías. Elegí una para imputar el gasto.",
   title_add_subcategory: "Agregar sub-categoría",
   label_category: "Categoría",
   step_when: "¿Cuándo?",

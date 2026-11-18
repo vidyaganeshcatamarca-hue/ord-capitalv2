@@ -330,6 +330,9 @@ export function AddMovementModal({ onClose, onSuccess, defaultTipo = 'expense', 
   const [frecuentesRecientes, setFrecuentesRecientes] = useState<CategoriaSeleccionada[]>([])
   const [showCalculator, setShowCalculator] = useState(true)
   const [mobileShowAllCat, setMobileShowAllCat] = useState(false)
+  // Parent that still needs a subcategory: while this is set the expense has NO
+  // destination and the UI asks for the child (see resolverCategoriaEgreso).
+  const [catPadrePendienteId, setCatPadrePendienteId] = useState<number | null>(null)
 
   // ── Superficie de entrada: formulario manual + botón de micrófono (Voice v1) ──
   // Voice capture is feature-gated by the backend flag 'menu_carga_voz'
@@ -828,21 +831,56 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
   const frecuentesMobile: CategoriaSeleccionada[] = frecuentesRecientes.slice(0, 5)
 
   // ── Selección de categoría egreso ──
-  const selectCatEgreso = useCallback((cat: CategoriaSeleccionada, rubro?: Rubro, forceParent = false) => {
-    // Si es padre con hijos y no se fuerza la categoría padre, buscar el "[Sin Detalle]" hijo o usar el primero
-    let finalCat = cat
-    if (!forceParent && cat.es_padre && rubro && rubro.hijos.length > 0) {
-      const sinDetalle = rubro.hijos.find(h => h.nombre_cuenta === 'no_detail' || h.nombre_cuenta.toLowerCase().includes('sin detalle') || h.nombre_cuenta.toLowerCase().includes('[sin'))
-      const hijo = sinDetalle ?? rubro.hijos[0]
-      finalCat = { estructura_id: hijo.estructura_id, nombre: `${t(rubro.nombre_cuenta)} › ${t(hijo.nombre_cuenta)}`, icono: hijo.icono, color: rubro.color, es_padre: false }
+  // Owner rule: a parent that has children is NOT a destination for a new expense.
+  // The movement must land on a child the person picked. The only child resolved
+  // automatically is the "no detail" one, because it exists precisely to say
+  // "no subcategory". The rest are never chosen for the user: the old
+  // first-child fallback imputed money to an arbitrary subcategory.
+  const resolverCategoriaEgreso = useCallback((cat: CategoriaSeleccionada, rubro?: Rubro): CategoriaSeleccionada | null => {
+    if (!cat.es_padre || !rubro || rubro.hijos.length === 0) return cat
+    const sinDetalle = rubro.hijos.find(h => h.nombre_cuenta === 'no_detail' || h.nombre_cuenta.toLowerCase().includes('sin detalle') || h.nombre_cuenta.toLowerCase().includes('[sin'))
+    if (!sinDetalle) return null
+    return {
+      estructura_id: sinDetalle.estructura_id,
+      nombre: `${t(rubro.nombre_cuenta)} › ${t(sinDetalle.nombre_cuenta)}`,
+      icono: sinDetalle.icono,
+      color: rubro.color,
+      es_padre: false,
     }
-    setCategoriaEgreso(finalCat)
+  }, [])
+
+  // Expands that parent's children and shows the notice: the user must tap one, and
+  // the same list lets them back out and pick another category instead.
+  const pedirSubcategoria = useCallback((rubro?: Rubro) => {
+    if (!rubro) return
+    setCatPadrePendienteId(rubro.estructura_id)
+    setExpandedRubros(prev => ({ ...prev, [rubro.estructura_id]: true }))
+    setShowAllCat(true)
+    if (isMobile) setMobileShowAllCat(true)
+    setQueryCat('')
+  }, [isMobile])
+
+  const selectCatEgreso = useCallback((cat: CategoriaSeleccionada, rubro?: Rubro, forceParent = false) => {
+    const resuelta = forceParent ? cat : resolverCategoriaEgreso(cat, rubro)
+    if (!resuelta) {
+      // No child was chosen: stay on the category step and show the children.
+      pedirSubcategoria(rubro)
+      return
+    }
+    setCatPadrePendienteId(null)
+    setCategoriaEgreso(resuelta)
     // Excluyente con proyecto compartido
     if (proyectoSeleccionadoId !== null) setProyectoSeleccionadoId(null)
     setShowAllCat(false)
     setQueryCat('')
     setPaso('monto')
-  }, [proyectoSeleccionadoId])
+  }, [proyectoSeleccionadoId, resolverCategoriaEgreso, pedirSubcategoria])
+
+  // The notice only applies while the mobile category sheet is open; closing it
+  // without choosing leaves the expense without a destination, which is correct.
+  useEffect(() => {
+    if (isMobile && !mobileShowAllCat) setCatPadrePendienteId(null)
+  }, [isMobile, mobileShowAllCat])
 
   // ── Selección de proyecto compartido (excluyente con categoriaEgreso) ──
   const selectProyecto = useCallback((proyectoId: number | null) => {
@@ -1331,7 +1369,7 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                       {showAllCat && !categoriaEgreso ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
                           <div className="step-title" style={{ margin: 0 }}>2. {t('step_category')}</div>
-                          <button type="button" className="btn-back-recents" onClick={() => { setShowAllCat(false); setQueryCat(''); }} style={{
+                          <button type="button" className="btn-back-recents" onClick={() => { setShowAllCat(false); setQueryCat(''); setCatPadrePendienteId(null); }} style={{
                             background: 'var(--surface-3)',
                             border: 'none',
                             color: 'var(--text-2)',
@@ -1392,6 +1430,21 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                               onChange={e => { setQueryCat(e.target.value); setShowAllCat(true) }}
                               className="cat-quick-input" />
                           </div>
+
+                          {catPadrePendienteId !== null && (
+                            <div role="status" style={{
+                              margin: '10px 0 2px',
+                              padding: '8px 10px',
+                              borderRadius: '8px',
+                              border: '1px solid var(--border)',
+                              background: 'var(--surface-3)',
+                              color: 'var(--text-2)',
+                              fontSize: '12px',
+                              lineHeight: 1.45
+                            }}>
+                              {t('add_move_choose_subcategory')}
+                            </div>
+                          )}
                           
                           {!showAllCat && frecuentesMobile.length > 0 ? (
                             <>
@@ -1938,8 +1991,16 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                                       boxShadow: categoriaEgreso?.estructura_id === cat.estructura_id ? `0 0 10px ${cat.color}` : 'none'
                                     }}
                                     onClick={() => {
-                                      setCategoriaEgreso(cat)
+                                      // A recent chip can be a parent (old movements imputed to it).
+                                      // Same rule as selectCatEgreso: no silent child, no parent default.
+                                      const rubro = rubros.find(r => r.estructura_id === cat.estructura_id || r.hijos?.some(h => h.estructura_id === cat.estructura_id))
+                                      const resuelta = resolverCategoriaEgreso(cat, rubro)
                                       setShowCalculator(false)
+                                      if (!resuelta) {
+                                        pedirSubcategoria(rubro)
+                                        return
+                                      }
+                                      setCategoriaEgreso(resuelta)
                                     }}
                                   >
                                     <CategoryIcon name={cat.icono} size={30} />
@@ -1971,6 +2032,20 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
                           <button className="centered-cat-modal-close" onClick={() => setMobileShowAllCat(false)}>✕</button>
                         </div>
                         <div className="centered-cat-modal-body">
+                          {catPadrePendienteId !== null && (
+                            <div role="status" style={{
+                              margin: '0 0 10px',
+                              padding: '8px 10px',
+                              borderRadius: '8px',
+                              border: '1px solid var(--border)',
+                              background: 'var(--surface-3)',
+                              color: 'var(--text-2)',
+                              fontSize: '12px',
+                              lineHeight: 1.45
+                            }}>
+                              {t('add_move_choose_subcategory')}
+                            </div>
+                          )}
                           <div className="cat-acordeon" style={{ maxHeight: 'none' }}>
                             {filteredRubrosDesktop.map(rubro => {
                               const hasChildren = rubro.hijos && rubro.hijos.length > 0

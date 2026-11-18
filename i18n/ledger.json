@@ -9042,6 +9042,10 @@
         "from": "Ver todas",
         "to": "See all"
       },
+      "inversiones.add_move_choose_subcategory": {
+        "from": "Esta categoría está dividida en subcategorías. Elegí una para imputar el gasto.",
+        "to": "This category is split into subcategories. Choose one to assign the expense."
+      },
       "inversiones.title_add_subcategory": {
         "from": "Agregar sub-categoría",
         "to": "Add subcategory"
@@ -20339,6 +20343,10 @@
       "inversiones.add_move_see_all": {
         "from": "Ver todas",
         "to": "Ver todas"
+      },
+      "inversiones.add_move_choose_subcategory": {
+        "from": "Esta categoría está dividida en subcategorías. Elegí una para imputar el gasto.",
+        "to": "Esta categoria está dividida em subcategorias. Escolha uma para atribuir a despesa."
       },
       "inversiones.title_add_subcategory": {
         "from": "Agregar sub-categoría",
