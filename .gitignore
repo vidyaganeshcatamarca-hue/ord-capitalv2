@@ -44,6 +44,7 @@ start_info/*
 tests/prestamos/*
 !tests/prestamos/*.test.js
 !tests/prestamos/*.mjs
+!tests/prestamos/*.sql
 supabase/.temp/
 testeo/
 tests/
