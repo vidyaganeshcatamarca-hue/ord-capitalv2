@@ -514,6 +514,19 @@
   row-gap: 8px;
 }
 
+/* Cuatro datos en una fila hija: a 390 px cada celda queda en 68 px y «ARS 85.506» se lee
+   pegado al importe de al lado, aunque no lleguen a pisarse. Se envuelve dos y dos, como el
+   padre. Las filas hijas con tres datos quedan como están, y el padre no se toca: su regla
+   de tres y dos es más específica para él. */
+.sobre-stats--columnas:not(.sobre-stats--padre):has(> .sobre-stat:nth-child(4)) {
+  flex-wrap: wrap;
+  row-gap: 8px;
+}
+
+.sobre-stats--columnas:not(.sobre-stats--padre):has(> .sobre-stat:nth-child(4)) .sobre-stat {
+  flex: 1 1 45%;
+}
+
 .sobre-stats--padre .sobre-stat {
   flex: 1 1 30%;
 }

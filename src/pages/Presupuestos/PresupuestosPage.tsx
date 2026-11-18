@@ -2207,10 +2207,12 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
       {/* Bloque informativo modo anticipado: mientras el mes nuevo no tenga
           asignacion, mostrar el asignado y gastado del mes anterior para que
           el usuario pueda decidir cuanto asignar este mes. Se oculta en
-          cuanto ya hay asignacion para el mes nuevo. Misma tipografia y
+          cuanto ya hay asignacion para el mes nuevo, y tambien donde no se
+          puede asignar (subcategorias): sin boton, las referencias solo
+          invitan a una accion que el servidor rechaza. Misma tipografia y
           tamano que los stats de la fila (Asig/Gast/Avance) para que no
           rompa la jerarquia visual de la tarjeta. */}
-      {modoPresupuesto === 'anticipado' && Number(sobre.monto_asignado ?? 0) === 0 && (
+      {modoPresupuesto === 'anticipado' && puedeAsignar && Number(sobre.monto_asignado ?? 0) === 0 && (
         <>
           <div className="sobre-stats">
             <span className="sobre-stat">
