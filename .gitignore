@@ -221,7 +221,6 @@ tests/configuracion/*
 !tests/swipe-vencimientos.test.js
 !tests/presupuestos/barra-hijo-sin-asignacion.test.js
 !tests/presupuestos/modal-disponible-del-servidor.test.js
-!tests/presupuestos/exclusividad-plata.test.js
 !tests/presupuestos/techo-y-plata-separados.test.js
 !tests/presupuestos/disponible-en-monto-manual.test.js
 !tests/presupuestos/cartel-disponible-sin-50-30-20.test.js
@@ -233,3 +232,4 @@ tests/configuracion/*
 !tests/presupuestos/cupos-sin-alarma.test.js
 !tests/presupuestos/sin-asignar-en-subcategorias.test.js
 !tests/presupuestos/techo-editable-y-historial.test.js
+!tests/sql/etapa4_moneda.sql

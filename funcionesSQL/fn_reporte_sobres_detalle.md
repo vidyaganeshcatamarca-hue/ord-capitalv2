@@ -45,7 +45,7 @@ BEGIN
 
     RETURN QUERY
     WITH gastos_mes AS (
-        SELECT c.estructura_egreso_id, SUM(c.valor_egreso) as total_gastado, BOOL_OR(c.tarjeta_id IS NOT NULL) as hay_tarjeta, BOOL_OR(c.tarjeta_id IS NULL AND c.tipo = 'expense') as hay_debito
+        SELECT c.estructura_egreso_id, SUM(COALESCE(c.valor_local, c.valor_egreso)) as total_gastado, BOOL_OR(c.tarjeta_id IS NOT NULL) as hay_tarjeta, BOOL_OR(c.tarjeta_id IS NULL AND c.tipo = 'expense') as hay_debito
         FROM v_p_caja_reportable c WHERE c.tipo = 'expense' AND c.fecha >= v_f_efectiva AND c.fecha <= v_f_fin
           AND ((c.user_id = v_user_id AND c.es_compartido = false) OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true))
         GROUP BY c.estructura_egreso_id
@@ -59,7 +59,7 @@ BEGIN
         FROM p_estructuras_egresos e
         LEFT JOIN p_presupuestos p ON e.estructura_id = p.estructura_egreso_id AND p.mes_periodo = v_mes_anterior AND (p.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND p.hogar_id = v_hogar_id))
         LEFT JOIN LATERAL (
-            SELECT SUM(valor_egreso) as total_gastado
+            SELECT SUM(COALESCE(valor_local, valor_egreso)) as total_gastado
             FROM v_p_caja_reportable
             WHERE estructura_egreso_id = e.estructura_id
               AND tipo = 'expense'
@@ -90,7 +90,7 @@ BEGIN
             FROM uso
         )
         SELECT e.estructura_id AS estructura_egreso_id,
-               (COALESCE(SUM(c.valor_egreso), 0) / (SELECT meses FROM divisor))::numeric AS gasto_promedio_6m
+               (COALESCE(SUM(COALESCE(c.valor_local, c.valor_egreso)), 0) / (SELECT meses FROM divisor))::numeric AS gasto_promedio_6m
         FROM p_estructuras_egresos e
         CROSS JOIN uso u
         LEFT JOIN v_p_caja_reportable c
@@ -188,13 +188,13 @@ BEGIN
         SELECT public.fn_disponible_transferible(e.estructura_id, v_mes_truncado) AS bolsa
     ) b
     CROSS JOIN LATERAL (
-        SELECT COALESCE((SELECT SUM(c.valor_egreso) FROM v_p_caja_reportable c
+        SELECT COALESCE((SELECT SUM(COALESCE(c.valor_local, c.valor_egreso)) FROM v_p_caja_reportable c
                           WHERE c.estructura_egreso_id = e.estructura_id
                             AND c.tipo = 'expense'
                             AND c.fecha >= v_f_efectiva AND c.fecha <= v_f_fin
                             AND ((c.user_id = v_user_id AND c.es_compartido = false)
                                  OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true))), 0) AS gasto_propio,
-               COALESCE((SELECT SUM(c.valor_egreso) FROM v_p_caja_reportable c
+               COALESCE((SELECT SUM(COALESCE(c.valor_local, c.valor_egreso)) FROM v_p_caja_reportable c
                           WHERE c.estructura_egreso_id = e.estructura_id
                             AND c.tipo = 'expense'
                             AND c.fecha >= v_f_inicio_ant AND c.fecha <= v_f_fin_ant

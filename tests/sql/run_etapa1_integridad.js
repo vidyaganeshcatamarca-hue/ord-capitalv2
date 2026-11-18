@@ -1,5 +1,5 @@
 // Corre tests/sql/etapa1_integridad.sql contra el proyecto real.
-//   node tests/sql/run_etapa1_integridad.js
+//   node tests/sql/run_etapa1_integridad.js [archivo.sql]   (por defecto, etapa1)
 //
 // La prueba corre en una transaccion que termina en RAISE EXCEPTION: el error es el
 // resultado, no un fallo. La sentencia esperada viene en el mensaje, como JSON.
@@ -21,7 +21,8 @@ if (!url || !token) {
 }
 const ref = url.replace(/^https?:\/\//, '').split('.')[0]
 
-const sql = fs.readFileSync(path.join(raiz, 'tests', 'sql', 'etapa1_integridad.sql'), 'utf-8')
+const archivoSql = process.argv[2] || 'etapa1_integridad.sql'
+const sql = fs.readFileSync(path.join(raiz, 'tests', 'sql', archivoSql), 'utf-8')
 const r = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
   method: 'POST',
   headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },

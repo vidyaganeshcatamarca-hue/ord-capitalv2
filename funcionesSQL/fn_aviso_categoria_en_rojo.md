@@ -55,7 +55,7 @@ BEGIN
                        OR (v_hogar IS NOT NULL AND c.hogar_id = v_hogar AND c.es_compartido = true))
                 GROUP BY COALESCE(e.padre_id, e.estructura_id)
             ) con ON con.rubro_id = p.estructura_egreso_id
-            WHERE p.mes_periodo = v_inicio
+            WHERE p.mes_periodo = date_trunc('month', v_inicio)::date
               AND p.monto_limite > 0
               AND (p.user_id = v_cfg.user_id OR (v_hogar IS NOT NULL AND p.hogar_id = v_hogar))
         ) x

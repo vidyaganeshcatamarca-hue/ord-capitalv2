@@ -31,7 +31,7 @@ BEGIN
     FROM public.p_presupuestos p
     INNER JOIN public.p_estructuras_egresos e ON p.estructura_egreso_id = e.estructura_id
     LEFT JOIN consumos con ON con.rubro_id = e.estructura_id
-    WHERE p.mes_periodo = v_f_inicio
+    WHERE p.mes_periodo = date_trunc('month', v_f_inicio)::date
       AND (p.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND p.hogar_id = v_hogar_id));
 END;
 $function$
