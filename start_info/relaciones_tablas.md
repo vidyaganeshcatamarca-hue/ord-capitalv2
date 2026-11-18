@@ -3,7 +3,7 @@
 <!-- GENERADO AUTOMATICAMENTE. No editar a mano.
      Origen: catalogo desplegado, proyecto bjszdmheddcxjdhcvibi.
      Generador: scripts/prestamos/dump-schema.mjs
-     Tablas: 70
+     Tablas: 72
      Solo estructura. Sin datos, sin credenciales. -->
 
 Regenerar con: `node scripts/prestamos/dump-schema.mjs`
@@ -1114,15 +1114,84 @@ Regenerar con: `node scripts/prestamos/dump-schema.mjs`
 | 16 | `cuota_mensual` | numeric |  | YES | 0 |
 | 17 | `proximo_vencimiento` | date |  | YES |  |
 | 18 | `monto_original` | numeric |  | NO |  |
+| 19 | `saldo_al_ingreso` | numeric |  | NO | 0 |
+| 20 | `modalidad` | text |  | NO | 'libre'::text |
+| 21 | `condicion_interes` | text |  | NO | 'desconocido'::text |
+| 22 | `interes_total_acordado` | numeric |  | YES |  |
+| 23 | `tasa_informada` | boolean |  | NO | false |
+| 24 | `puntos_vinculo` | smallint |  | YES |  |
+| 25 | `eliminado_at` | timestamp with time zone |  | YES |  |
 
 **Restricciones**
 
-- `CHECK` p_prestamos_estado_check: CHECK ((estado = ANY (ARRAY['activo'::text, 'archivado'::text, 'pagado'::text, 'refinanciado'::text, 'pendiente'::text, 'parcial'::text, 'cancelado'::text])))
+- `CHECK` p_prestamos_condicion_interes_check: CHECK ((condicion_interes = ANY (ARRAY['ninguno'::text, 'importe_final'::text, 'tasa'::text, 'desconocido'::text])))
+- `CHECK` p_prestamos_estado_check: CHECK ((estado = ANY (ARRAY['activo'::text, 'archivado'::text, 'pagado'::text, 'refinanciado'::text, 'pendiente'::text, 'parcial'::text, 'cancelado'::text, 'eliminado'::text])))
+- `CHECK` p_prestamos_modalidad_check: CHECK ((modalidad = ANY (ARRAY['cuotas'::text, 'vencimiento_unico'::text, 'libre'::text])))
+- `CHECK` p_prestamos_puntos_vinculo_check: CHECK (((puntos_vinculo IS NULL) OR (puntos_vinculo = ANY (ARRAY[0, 3, 5, 6, 8, 11]))))
 - `CHECK` p_prestamos_tipo_entidad_check: CHECK ((tipo_entidad = ANY (ARRAY['banco'::text, 'tarjeta'::text, 'familiar'::text, 'otro'::text, 'bancario'::text, 'tercero'::text, 'entidad_financiera'::text])))
 - `CHECK` p_prestamos_tipo_flujo_check: CHECK ((tipo_flujo = ANY (ARRAY['debo'::text, 'me_deben'::text])))
 - `FK` p_prestamos_p_caja_id_fkey: FOREIGN KEY (p_caja_id) REFERENCES p_caja(p_caja_id) ON DELETE CASCADE
 - `FK` p_prestamos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES usuarios(user_id) ON DELETE CASCADE
 - `PK` p_prestamos_pkey: PRIMARY KEY (prestamo_id)
+
+## `p_prestamos_cuotas`
+
+| # | Columna | Tipo | Largo | Nulo | Default |
+|---|---|---|---|---|---|
+| 1 | `cuota_id` | bigint |  | NO |  |
+| 2 | `prestamo_id` | bigint |  | NO |  |
+| 3 | `user_id` | bigint |  | NO |  |
+| 4 | `numero_cuota` | integer |  | NO |  |
+| 5 | `fecha_vencimiento` | date |  | NO |  |
+| 6 | `monto_cuota` | numeric |  | NO |  |
+| 7 | `capital_componente` | numeric |  | YES |  |
+| 8 | `interes_componente` | numeric |  | YES |  |
+| 9 | `moneda` | text |  | NO |  |
+| 10 | `creado_at` | timestamp with time zone |  | NO | now() |
+
+**Restricciones**
+
+- `CHECK` p_prestamos_cuotas_componentes_no_negativos: CHECK ((((capital_componente IS NULL) OR (capital_componente >= (0)::numeric)) AND ((interes_componente IS NULL) OR (interes_componente >= (0)::numeric))))
+- `CHECK` p_prestamos_cuotas_monto_positivo: CHECK ((monto_cuota > (0)::numeric))
+- `CHECK` p_prestamos_cuotas_numero_positivo: CHECK ((numero_cuota > 0))
+- `FK` p_prestamos_cuotas_prestamo_id_fkey: FOREIGN KEY (prestamo_id) REFERENCES p_prestamos(prestamo_id) ON DELETE CASCADE
+- `FK` p_prestamos_cuotas_user_id_fkey: FOREIGN KEY (user_id) REFERENCES usuarios(user_id) ON DELETE CASCADE
+- `PK` p_prestamos_cuotas_pkey: PRIMARY KEY (cuota_id)
+- `UNIQUE` p_prestamos_cuotas_numero_unico: UNIQUE (prestamo_id, numero_cuota)
+
+## `p_prestamos_pagos`
+
+| # | Columna | Tipo | Largo | Nulo | Default |
+|---|---|---|---|---|---|
+| 1 | `pago_id` | bigint |  | NO |  |
+| 2 | `prestamo_id` | bigint |  | NO |  |
+| 3 | `user_id` | bigint |  | NO |  |
+| 4 | `p_caja_id` | bigint |  | YES |  |
+| 5 | `direccion` | text |  | NO |  |
+| 6 | `fecha` | date |  | NO |  |
+| 7 | `billetera_id` | bigint |  | YES |  |
+| 8 | `moneda_billetera` | text |  | NO |  |
+| 9 | `monto_billetera` | numeric |  | NO |  |
+| 10 | `moneda_prestamo` | text |  | NO |  |
+| 11 | `monto_aplicado` | numeric |  | NO |  |
+| 12 | `capital_aplicado` | numeric |  | YES |  |
+| 13 | `interes_aplicado` | numeric |  | YES |  |
+| 14 | `interes_excedente` | numeric |  | YES |  |
+| 15 | `nota` | text |  | YES |  |
+| 16 | `estado` | text |  | NO | 'activo'::text |
+| 17 | `corregido_at` | timestamp with time zone |  | YES |  |
+| 18 | `creado_at` | timestamp with time zone |  | NO | now() |
+
+**Restricciones**
+
+- `CHECK` p_prestamos_pagos_direccion_check: CHECK ((direccion = ANY (ARRAY['pago'::text, 'cobro'::text])))
+- `CHECK` p_prestamos_pagos_estado_check: CHECK ((estado = ANY (ARRAY['activo'::text, 'anulado'::text])))
+- `CHECK` p_prestamos_pagos_montos_no_negativos: CHECK (((monto_billetera > (0)::numeric) AND (monto_aplicado >= (0)::numeric) AND ((capital_aplicado IS NULL) OR (capital_aplicado >= (0)::numeric)) AND ((interes_aplicado IS NULL) OR (interes_aplicado >= (0)::numeric)) AND ((interes_excedente IS NULL) OR (interes_excedente >= (0)::numeric))))
+- `FK` p_prestamos_pagos_billetera_id_fkey: FOREIGN KEY (billetera_id) REFERENCES p_billeteras(billetera_id) ON DELETE SET NULL
+- `FK` p_prestamos_pagos_p_caja_id_fkey: FOREIGN KEY (p_caja_id) REFERENCES p_caja(p_caja_id) ON DELETE CASCADE
+- `FK` p_prestamos_pagos_prestamo_id_fkey: FOREIGN KEY (prestamo_id) REFERENCES p_prestamos(prestamo_id) ON DELETE CASCADE
+- `FK` p_prestamos_pagos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES usuarios(user_id) ON DELETE CASCADE
+- `PK` p_prestamos_pagos_pkey: PRIMARY KEY (pago_id)
 
 ## `p_presupuestos`
 

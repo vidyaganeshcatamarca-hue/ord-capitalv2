@@ -4898,9 +4898,334 @@
                 "column_default": null,
                 "character_maximum_length": null,
                 "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "saldo_al_ingreso",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "0",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "text",
+                "column_name": "modalidad",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "'libre'::text",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "text",
+                "column_name": "condicion_interes",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "'desconocido'::text",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "interes_total_acordado",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "boolean",
+                "column_name": "tasa_informada",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "false",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "smallint",
+                "column_name": "puntos_vinculo",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "timestamp with time zone",
+                "column_name": "eliminado_at",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
             }
         ],
         "table_name": "p_prestamos"
+    },
+    {
+        "columns": [
+            {
+                "data_type": "bigint",
+                "column_name": "cuota_id",
+                "is_identity": "YES",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "prestamo_id",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "user_id",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "integer",
+                "column_name": "numero_cuota",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "date",
+                "column_name": "fecha_vencimiento",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "monto_cuota",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "capital_componente",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "interes_componente",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "text",
+                "column_name": "moneda",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "timestamp with time zone",
+                "column_name": "creado_at",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "now()",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            }
+        ],
+        "table_name": "p_prestamos_cuotas"
+    },
+    {
+        "columns": [
+            {
+                "data_type": "bigint",
+                "column_name": "pago_id",
+                "is_identity": "YES",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "prestamo_id",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "user_id",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "p_caja_id",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "text",
+                "column_name": "direccion",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "date",
+                "column_name": "fecha",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "billetera_id",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "text",
+                "column_name": "moneda_billetera",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "monto_billetera",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "text",
+                "column_name": "moneda_prestamo",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "monto_aplicado",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "capital_aplicado",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "interes_aplicado",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "interes_excedente",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "text",
+                "column_name": "nota",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "text",
+                "column_name": "estado",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "'activo'::text",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "timestamp with time zone",
+                "column_name": "corregido_at",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "timestamp with time zone",
+                "column_name": "creado_at",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "now()",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            }
+        ],
+        "table_name": "p_prestamos_pagos"
     },
     {
         "columns": [
