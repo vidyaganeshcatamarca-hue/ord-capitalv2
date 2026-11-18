@@ -24,10 +24,17 @@ test('la fila muestra la plata y el techo como dos números con su etiqueta', ()
   assert.ok(pagina.includes("t('budget_stat_ceiling')"), 'falta la etiqueta del techo')
 })
 
-test('un techo NULL se dibuja como guion y no como cero', () => {
+test('un techo sin valor no se dibuja como cero', () => {
+  // Etapa 3: la subcategoría sin tope muestra el margen que comparte con sus hermanas, no un
+  // guion ni un cero. Lo que sigue prohibido es imprimir 0: diría «acá no podés gastar».
   assert.ok(
-    pagina.includes("techo === null || techo === undefined ? '—' : fmt(Number(techo))"),
-    'el techo sin valor tiene que leerse como guion',
+    !pagina.includes("'—' : fmt(Number(techo))"),
+    'el techo sin valor no se imprime como número',
+  )
+  const bloque = pagina.slice(pagina.indexOf('budget_stat_ceiling'), pagina.indexOf('budget_stat_ceiling') + 600)
+  assert.ok(
+    bloque.includes('budget_stat_group_free'),
+    'sin techo, la celda muestra el margen compartido',
   )
 })
 

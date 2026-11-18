@@ -1885,13 +1885,13 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
   // presupuesto negativo lo inflaba y un hijo que gastó de más no lo bajaba. Ahora:
   // techo del padre menos lo GASTADO por el conjunto del grupo. Sin techo no hay libre
   // que calcular (`null`), porque no hay contra qué medirlo.
+  // Etapa 3: el margen compartido es la bolsa del padre, el mismo número que muestra su
+  // fila y que usa el validador de transferencias. Antes se calculaba con el techo del
+  // padre, que en el modelo nuevo no existe: su referencia es su plata.
   const libreDe = (padreId: number): number | null => {
-    const techo = techoDe(padreId)
-    if (techo === null || techo === undefined || Number(techo) <= 0) return null
-    const gastado = items
-      .filter(x => Number(x.padre_id) === Number(padreId))
-      .reduce((s, x) => s + Number(x.monto_gastado ?? 0), 0)
-    return Math.max(Number(techo) - gastado, 0)
+    const padre = items.find(x => Number(x.estructura_id) === Number(padreId))
+    if (!padre) return null
+    return Math.max(Number(padre.monto_disponible ?? 0), 0)
   }
 
   return (
@@ -1999,10 +1999,11 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
   // Ronda 10 (dueño): el hijo sin asignación se mide contra el libre del grupo, y sin
   // techo no se dibuja barra. El padre queda como estaba: su barra compara el gasto de
   // los hijos contra su propio techo.
+  // Etapa 3: el padre no lleva techo. Su barra mide lo gastado contra su plata, no contra
+  // un techo que era un resto del modelo anterior. Las subcategorías siguen midiendo contra
+  // su techo, o contra el margen compartido si no tienen.
   const referenciaBarra = sobre.es_padre
-    ? (techo !== null && techo !== undefined && Number(techo) > 0
-        ? { techo: Number(techo), origen: 'techo' as const }
-        : null)
+    ? null
     : referenciaBarraDeSobre({ techo, montoAsignado: sobre.monto_asignado, libreGrupo })
   const sinTecho = referenciaBarra?.origen === 'sin_techo'
   const pctBarra = referenciaBarra && !sinTecho
@@ -2158,19 +2159,28 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
           el monto abajo, en columnas del mismo ancho; en el rubro padre las columnas
           se separan con una línea vertical. */}
       <div className={`sobre-stats sobre-stats--columnas${sobre.es_padre ? ' sobre-stats--padre' : ''}`}>
-        <span className="sobre-stat">
-          <span className="sobre-stat-label">{t('budget_stat_assigned')}</span>
-          <span className="sobre-stat-val">{fmt(Number(sobre.monto_asignado))}</span>
-        </span>
-        {/* S18: money and ceiling are two different concepts, so they are two
-            different numbers. A NULL ceiling is "no ceiling at all" and reads as a
-            dash: printing 0 would say "you cannot spend anything here". */}
-        <span className="sobre-stat">
-          <span className="sobre-stat-label">{t('budget_stat_ceiling')}</span>
-          <span className="sobre-stat-val">
-            {techo === null || techo === undefined ? '—' : fmt(Number(techo))}
+        {/* Etapa 3: «Asignado» es del padre, porque la plata es del padre. En la
+            subcategoría esa celda dice «Tope», y si no tiene tope muestra el margen que
+            comparte con sus hermanas: la bolsa del padre. */}
+        {sobre.es_padre ? (
+          <span className="sobre-stat">
+            <span className="sobre-stat-label">{t('budget_stat_assigned')}</span>
+            <span className="sobre-stat-val">{fmt(Number(sobre.monto_asignado))}</span>
           </span>
-        </span>
+        ) : (
+          <span className="sobre-stat">
+            <span className="sobre-stat-label">
+              {techo !== null && techo !== undefined && Number(techo) > 0
+                ? t('budget_stat_ceiling')
+                : t('budget_stat_group_free')}
+            </span>
+            <span className="sobre-stat-val">
+              {techo !== null && techo !== undefined && Number(techo) > 0
+                ? fmt(Number(techo))
+                : libreGrupo !== undefined ? fmt(Math.max(libreGrupo, 0)) : '—'}
+            </span>
+          </span>
+        )}
         <span className="sobre-stat">
           <span className="sobre-stat-label">{t('budget_stat_spent')}</span>
           <span className="sobre-stat-val">{fmt(Number(sobre.monto_gastado))}</span>

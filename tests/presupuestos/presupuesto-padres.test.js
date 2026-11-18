@@ -397,17 +397,16 @@ test('los hijos se dibujan debajo del padre y no se repiten arriba', () => {
   assert.ok(bloque.includes('const hijas = s.es_padre && !estaCerrado(s.estructura_id)'), 'sólo se despliegan los grupos que no están cerrados')
 })
 
-test('el monto libre del grupo es el techo menos lo gastado', () => {
-  // S20 (ronda 10): el libre es la CAPACIDAD NO CONSUMIDA. La regla anterior restaba la
-  // plata asignada a los hijos, asi que un hijo con presupuesto negativo la inflaba y un
-  // hijo que habia gastado de mas no la bajaba. Caso real: Alimentos-Hogar con techo 500
-  // y sus hijos habiendo gastado 203.990 da 0, no los 29.454 de la regla vieja.
+test('el monto libre del grupo es lo que queda de la bolsa del padre', () => {
+  // Etapa 3: el margen compartido ya no se calcula con el techo del padre —que en el modelo
+  // nuevo no existe— ni restando la plata repartida a los hijos. Es la bolsa del padre: el
+  // mismo número que muestra su fila y que usa el validador de transferencias.
   assert.ok(pagina.includes('const libreDe = (padreId: number): number | null =>'), 'falta el cálculo del libre del grupo')
-  const bloque = pagina.slice(pagina.indexOf('const libreDe'), pagina.indexOf('const libreDe') + 900)
-  assert.ok(bloque.includes('monto_gastado ?? 0'), 'el libre tiene que restar lo gastado del techo')
+  const bloque = pagina.slice(pagina.indexOf('const libreDe'), pagina.indexOf('const libreDe') + 600)
+  assert.ok(bloque.includes('monto_disponible'), 'el libre tiene que leer la bolsa del padre')
   assert.ok(!bloque.includes('monto_asignado ?? 0) -'), 'la regla vieja de restar lo repartido ya no va')
-  assert.ok(bloque.includes('Number(x.padre_id) === Number(padreId)'), 'el gasto se suma sobre los hijos del padre, con ids normalizados')
-  assert.ok(bloque.includes('if (techo === null || techo === undefined'), 'sin techo no hay libre que calcular')
+  assert.ok(!bloque.includes('techoDe('), 'el libre no depende de un techo del padre: el padre no lleva techo')
+  assert.ok(bloque.includes('Math.max('), 'el margen compartido no puede ser negativo')
 })
 
 test('la fila del padre y la hija se distinguen en el marcado', () => {
