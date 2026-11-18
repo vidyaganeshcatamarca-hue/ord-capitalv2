@@ -62,6 +62,12 @@ asignar a un hijo rechazado sin mover nada · crear subcategoría deja el padre 
 20.000 · el reintento con la misma clave no mueve · sin déficit el libre no cambia · el origen sin
 fila queda en −10.000 y su disponible baja de 40.000 a 30.000.
 
+## Commits
+
+- `1af3e83` — espejos del módulo en línea con producción (T1).
+- `bbbaa8e` — integridad: padre con la plata, rechazo a subcategorías, transferencia atómica e
+  idempotente, pantalla e idiomas, prueba transaccional (T2 a T7).
+
 ## Log
 
 - L1. «aprobado, implementa»
