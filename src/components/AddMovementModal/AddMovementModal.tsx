@@ -895,41 +895,6 @@ let cachedProyectosHogar: ProyectoHogar[] | null = null;
     }
   }, [])
 
-  const handleMobileCategoryChange = useCallback((val: string) => {
-    if (!val) {
-      setCategoriaEgreso(null)
-      return
-    }
-    const [type, idStr] = val.split(':')
-    const id = parseInt(idStr)
-    if (type === 'parent') {
-      const rubro = rubros.find(r => r.estructura_id === id)
-      if (rubro) {
-        setCategoriaEgreso({
-          estructura_id: rubro.estructura_id,
-          nombre: t(rubro.nombre_cuenta),
-          icono: rubro.icono,
-          color: rubro.color,
-          es_padre: true
-        })
-      }
-    } else {
-      for (const rubro of rubros) {
-        const hijo = rubro.hijos?.find(h => h.estructura_id === id)
-        if (hijo) {
-          setCategoriaEgreso({
-            estructura_id: hijo.estructura_id,
-            nombre: `${t(rubro.nombre_cuenta)} › ${t(hijo.nombre_cuenta)}`,
-            icono: hijo.icono,
-            color: rubro.color,
-            es_padre: false
-          })
-          break
-        }
-      }
-    }
-  }, [rubros])
-
   // ── Confirmar monto calculadora ──
   const handleConfirmMonto = useCallback(() => {
     const n = parseFloat(monto)
