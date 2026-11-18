@@ -31,6 +31,17 @@ start_info/
 !start_info/
 start_info/*
 !start_info/indice de funciones.md
+# Esquema desplegado: documentacion que debe viajar con el repo y estar
+# disponible en los tres worktrees. Contiene solo estructura (tablas, columnas,
+# tipos, defaults). Nunca credenciales ni datos.
+!start_info/tablas todas.md
+!start_info/relaciones_tablas.md
+
+# Tests del modulo de prestamos y saneamiento
+!tests/prestamos/
+tests/prestamos/*
+!tests/prestamos/*.test.js
+!tests/prestamos/*.mjs
 supabase/.temp/
 testeo/
 tests/
