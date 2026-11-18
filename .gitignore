@@ -39,12 +39,6 @@ start_info/*
 # Respaldos de reversion: deben viajar con el repo o no son respaldos.
 !start_info/rollback_*.sql
 
-# Tests del modulo de prestamos y saneamiento
-!tests/prestamos/
-tests/prestamos/*
-!tests/prestamos/*.test.js
-!tests/prestamos/*.mjs
-!tests/prestamos/*.sql
 supabase/.temp/
 testeo/
 tests/
@@ -238,3 +232,12 @@ tests/configuracion/*
 !tests/presupuestos/total-grupo-libertad.test.js
 !tests/presupuestos/leyendas-barra.test.js
 !tests/inversiones/valor-sugerido-plazo-fijo.test.js
+
+# Tests del modulo de prestamos y saneamiento.
+# Va al final a proposito: en .gitignore gana la ultima regla que coincide, y la
+# seccion tests/* de arriba volveria a ignorar todo lo que se agregue antes.
+!tests/prestamos/
+tests/prestamos/*
+!tests/prestamos/*.test.js
+!tests/prestamos/*.mjs
+!tests/prestamos/*.sql
