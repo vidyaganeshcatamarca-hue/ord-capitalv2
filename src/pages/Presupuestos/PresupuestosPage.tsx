@@ -169,6 +169,18 @@ const formatFechaHistorial = (iso: string, locale: string) => {
   return d.toLocaleDateString(locale, { day: '2-digit', month: 'short' })
 }
 
+/**
+ * Un monto del rastro, o un guion cuando el registro no tiene ese valor.
+ *
+ * Dueño: una entrada que cambiaba la plata a CERO no imprimía nada, así que la fila
+ * quedaba en «12 nov · Otro cambio» y el motivo aparecía corrido como si faltara una
+ * columna. Un valor nulo se dice con un guion: la celda vacía no se lee.
+ */
+function montoHistorial(valor: number | null | undefined, fmt: (n: number) => string): string {
+  if (valor === null || valor === undefined) return '—'
+  return fmt(Number(valor))
+}
+
 // Solo se guarda la CLAVE de traduccion: si el texto traducido viviera aqui,
 // `t()` se evaluaria al importar el modulo y quedaria congelado en el idioma
 // de arranque (no reacciona al cambio de idioma). El texto se resuelve en el
@@ -208,7 +220,7 @@ const TIPO_CUPO_META: Record<string, { labelKey: string; icono: string }> = {
   tithe: { labelKey: 'budget_tipo_tithe', icono: '🙏' },
 }
 
-import { referenciaBarraHija, referenciaBarraDeSobre, porcentajeBarra, colorDeBarra, porcentajeAvance, porcentajeDelPozo } from '../../lib/barraSobre'
+import { referenciaBarraDeSobre, colorDeBarra, porcentajeAvance, porcentajeDelPozo, margenCompartidoDeSobre } from '../../lib/barraSobre'
 
 const getColorBarra = (estado: string) => {
   if (estado === 'verde') return 'verde'
@@ -217,9 +229,26 @@ const getColorBarra = (estado: string) => {
   return 'verde'
 }
 
-const getPctBarra = (gastado: number, asignado: number) => {
-  if (asignado <= 0) return gastado > 0 ? 100 : 0
-  return Math.min(Math.round((gastado / asignado) * 100), 100)
+/**
+ * Hasta acá el porcentaje entra en la celda de un teléfono de 390 px; más allá se dice
+ * «>999%», que informa lo mismo sin empujar el resto de la fila fuera de su columna.
+ */
+const AVANCE_MAXIMO_LEGIBLE = 999
+
+/**
+ * El número del avance, ya formateado.
+ *
+ * Dos reglas del dueño, en este orden:
+ *   1. El número NO se topea: 269% es el dato (se gastó 2,69 veces la cuota). Lo que se
+ *      recorta es el ancho del relleno, nunca el número.
+ *   2. Sin base no hay porcentaje que calcular. `gastado > 0` con base 0 imprimía 100%,
+ *      que es una división por cero disfrazada de dato: ahí va «sin cuota».
+ */
+function etiquetaAvance(gastado: number, base: number): string {
+  const pct = porcentajeAvance(gastado, base)
+  if (pct === null) return t('budget_progress_no_quota')
+  if (pct > AVANCE_MAXIMO_LEGIBLE) return t('budget_progress_over_max', { max: AVANCE_MAXIMO_LEGIBLE })
+  return `${pct}%`
 }
 
 // ─── COMPONENTE PRINCIPAL ─────────────────────────────────────────────────────
@@ -1434,10 +1463,10 @@ export function PresupuestosPage() {
                 <span className="sobre-stat">
                   <span className="sobre-stat-label">{t('budget_stat_progress')} </span>
                   <span className="sobre-stat-val">
-                    {getPctBarra(
+                    {etiquetaAvance(
                       Number(sobreSeleccionado.monto_gastado),
                       Number(sobreSeleccionado.monto_asignado)
-                    )}%
+                    )}
                   </span>
                 </span>
               </div>
@@ -1462,16 +1491,16 @@ export function PresupuestosPage() {
                       </span>
                       <span className="presupuesto-historial-cambio">
                         {/* Una entrada puede hablar de las dos cosas o de una sola: el
-                            techo no toca la plata, y la plata no toca el techo. */}
-                        {Number(fila.monto_limite ?? 0) !== 0 && (
-                          <span className="presupuesto-historial-monto">
-                            {t('budget_history_money', { monto: formatMonto(Number(fila.monto_limite)) })}
-                          </span>
-                        )}
+                            techo no toca la plata, y la plata no toca el techo. Un valor
+                            nulo se dice con un guion: la celda vacía se leía como si
+                            faltara una columna. */}
+                        <span className="presupuesto-historial-monto">
+                          {t('budget_history_money', { monto: montoHistorial(fila.monto_limite, formatMonto) })}
+                        </span>
                         {(fila.monto_techo !== null || fila.motivo === 'techo') && (
                           <span className="presupuesto-historial-techo">
                             {fila.monto_techo !== null
-                              ? t('budget_history_ceiling', { monto: formatMonto(Number(fila.monto_techo)) })
+                              ? t('budget_history_ceiling', { monto: montoHistorial(fila.monto_techo, formatMonto) })
                               : t('budget_history_ceiling_none')}
                           </span>
                         )}
@@ -2158,11 +2187,12 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
   // Etapa 3: el margen compartido es la bolsa del padre, el mismo número que muestra su
   // fila y que usa el validador de transferencias. Antes se calculaba con el techo del
   // padre, que en el modelo nuevo no existe: su referencia es su plata.
-  const libreDe = (padreId: number): number | null => {
-    const padre = items.find(x => Number(x.estructura_id) === Number(padreId))
-    if (!padre) return null
-    return Math.max(Number(padre.monto_disponible ?? 0), 0)
-  }
+  //
+  // Dueño: el margen va CON SIGNO. El piso en cero escondía el déficit del grupo: con el
+  // pozo en −326.227 la fila del padre decía «Sin asignar 0», que se lee «no les queda
+  // nada» cuando en realidad falta plata. Las hermanas heredan este mismo número.
+  const libreDe = (padreId: number): number | null =>
+    margenCompartidoDeSobre(items.find(x => Number(x.estructura_id) === Number(padreId)))
 
   return (
     <div className="acord-grupo">
@@ -2280,16 +2310,19 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
     ? null
     : referenciaBarraDeSobre({ techo, montoAsignado: sobre.monto_asignado, libreGrupo })
   const sinTecho = referenciaBarra?.origen === 'sin_techo'
-  const pctBarra = referenciaBarra && !sinTecho
-    ? porcentajeBarra(Number(sobre.monto_gastado), referenciaBarra.techo)
-    : null
-  const pct = sinTecho
-    ? 0
-    : pctBarra ?? getPctBarra(Number(sobre.monto_gastado), Number(sobre.monto_asignado))
-  // Dueño: el número del avance NO se topea (150% = se pasó un 50%). El relleno sí.
-  const avance = referenciaBarra && !sinTecho
-    ? porcentajeAvance(Number(sobre.monto_gastado), referenciaBarra.techo)
-    : null
+  // Base del avance: el techo de la referencia para una subcategoría. El padre no lleva
+  // techo, así que su referencia es su propia plata.
+  const baseAvance = referenciaBarra && !sinTecho
+    ? referenciaBarra.techo
+    : Number(sobre.monto_asignado ?? 0)
+  // Dueño: el NÚMERO del avance NO se topea (269% es el dato: se gastó 2,69 veces la
+  // cuota). Lo que se corta es el RELLENO, que no puede medir más que el ancho de la
+  // barra. Sin números distintos no hay forma de decir «se pasó» con el ancho solo.
+  const avance = sinTecho ? null : porcentajeAvance(Number(sobre.monto_gastado), baseAvance)
+  const relleno = avance === null ? 0 : Math.min(avance, 100)
+  const avanceEtiqueta = sinTecho
+    ? '—'
+    : etiquetaAvance(Number(sobre.monto_gastado), baseAvance)
   // Segunda lectura, en azul: cuánto del pozo del padre se comió esta fila.
   const pctPozo = referenciaBarra && !sinTecho
     ? porcentajeDelPozo(Number(sobre.monto_gastado), Number(pozoPadre ?? 0))
@@ -2313,6 +2346,9 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
     return disponibleDeSobre(sobre, modoPresupuesto)
   })()
   const arrastre = Number(sobre.arrastre_mes_anterior ?? 0)
+  // Un monto con su signo. Un margen negativo es plata que FALTA, y el signo es el dato:
+  // sin él, −326.227 se lee «no queda nada» en vez de «faltan 326.227».
+  const montoConSigno = (n: number) => (n >= 0 ? fmt(n) : `-${fmt(Math.abs(n))}`)
 
   // Ronda 14: en una subcategoría no se ofrece asignar (la plata va al rubro padre) y
   // tampoco se reserva el lugar del botón: ese hueco de 84 px dejaba la fila hija
@@ -2323,9 +2359,11 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
   // que lo ofrece (el padre no tiene techo) y un ciclo cerrado no edita nada.
   const puedeEditarTecho = esSubcategoria && !soloLectura && !!onEditarTecho
   const tieneTecho = techo !== null && techo !== undefined && Number(techo) > 0
+  // Sin techo propio, la celda muestra el margen que comparte con sus hermanas: el mismo
+  // número para todas, y CON SIGNO (fix 3), porque un margen negativo no es un cero.
   const valorTecho = tieneTecho
     ? fmt(Number(techo))
-    : libreGrupo !== undefined ? fmt(Math.max(libreGrupo, 0)) : '—'
+    : libreGrupo !== undefined ? montoConSigno(libreGrupo) : '—'
 
   const colorDisponible = () => {
     if (disponibleEfectivo < 0) return 'rojo'
@@ -2334,9 +2372,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
     return 'verde'
   }
 
-  const montoVisible = disponibleEfectivo >= 0
-    ? fmt(disponibleEfectivo)
-    : `-${fmt(Math.abs(disponibleEfectivo))}`
+  const montoVisible = montoConSigno(disponibleEfectivo)
 
   return (
     <div
@@ -2418,11 +2454,11 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
           // M2c: la misma barra codifica DOS escalas, así que cada una lleva su leyenda.
           // El relleno es el avance sobre la cuota; la franja azul, el consumo del pozo
           // del padre. Sin esto el número solo no dice contra qué se compara.
-          title={`${t('budget_bar_quota')}: ${avance ?? pct}%`}
+          title={`${t('budget_bar_quota')}: ${avanceEtiqueta}`}
         >
           <div
             className={`sobre-barra-fill ${colorBarra}${colorBarra === 'rojo' ? ' excedido' : ''}`}
-            style={{ width: `${pct}%` }}
+            style={{ width: `${relleno}%` }}
           />
           {pctPozo !== null && pctPozo > 0 && (
             <div
@@ -2473,17 +2509,18 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
           <span className="sobre-stat-val">{fmt(Number(sobre.monto_gastado))}</span>
         </span>
         {/* Lo que queda del techo del grupo para los hijos sin presupuesto propio.
-            Antes iba pegado al nombre; ahora vive acá, con su etiqueta. */}
+            Antes iba pegado al nombre; ahora vive acá, con su etiqueta. Con signo: un
+            pozo negativo es déficit del grupo, no «no queda nada». */}
         {sobre.es_padre && libreGrupo !== undefined && (
           <span className="sobre-stat">
             <span className="sobre-stat-label">{t('budget_stat_group_free')}</span>
-            <span className="sobre-stat-val">{fmt(Math.max(libreGrupo, 0))}</span>
+            <span className="sobre-stat-val">{montoConSigno(libreGrupo)}</span>
           </span>
         )}
         {!sinDatos && (
           <span className="sobre-stat">
             <span className="sobre-stat-label">{t('budget_stat_progress')}</span>
-            <span className="sobre-stat-val">{sinTecho ? '—' : `${avance ?? pct}%`}</span>
+            <span className="sobre-stat-val">{avanceEtiqueta}</span>
           </span>
         )}
       </div>

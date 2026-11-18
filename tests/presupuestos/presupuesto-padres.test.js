@@ -397,16 +397,27 @@ test('los hijos se dibujan debajo del padre y no se repiten arriba', () => {
   assert.ok(bloque.includes('const hijas = s.es_padre && !estaCerrado(s.estructura_id)'), 'sólo se despliegan los grupos que no están cerrados')
 })
 
-test('el monto libre del grupo es lo que queda de la bolsa del padre', () => {
+test('el monto libre del grupo es la bolsa del padre, CON SU SIGNO', () => {
   // Etapa 3: el margen compartido ya no se calcula con el techo del padre —que en el modelo
   // nuevo no existe— ni restando la plata repartida a los hijos. Es la bolsa del padre: el
   // mismo número que muestra su fila y que usa el validador de transferencias.
+  //
+  // Cambio de contrato deliberado: el margen ya NO se recorta en cero. El piso hacía que un
+  // grupo con el pozo en −326.227 dijera «Sin asignar 0», que se lee «no les queda nada»
+  // cuando en realidad falta plata.
   assert.ok(pagina.includes('const libreDe = (padreId: number): number | null =>'), 'falta el cálculo del libre del grupo')
   const bloque = pagina.slice(pagina.indexOf('const libreDe'), pagina.indexOf('const libreDe') + 600)
-  assert.ok(bloque.includes('monto_disponible'), 'el libre tiene que leer la bolsa del padre')
+  assert.ok(bloque.includes('margenCompartidoDeSobre('), 'la bolsa y su signo salen del helper del módulo')
+  assert.ok(!bloque.includes('Math.max('), 'el margen compartido no se recorta en cero: el piso escondía el déficit')
   assert.ok(!bloque.includes('monto_asignado ?? 0) -'), 'la regla vieja de restar lo repartido ya no va')
   assert.ok(!bloque.includes('techoDe('), 'el libre no depende de un techo del padre: el padre no lleva techo')
-  assert.ok(bloque.includes('Math.max('), 'el margen compartido no puede ser negativo')
+  // El helper es el que lee la bolsa del reporte, y la devuelve tal cual viene.
+  const helper = leer('src', 'lib', 'barraSobre.ts')
+  const iHelper = helper.indexOf('export function margenCompartidoDeSobre(')
+  assert.ok(iHelper > -1, 'falta margenCompartidoDeSobre en el módulo de la barra')
+  const cuerpo = helper.slice(iHelper, helper.indexOf('\n}', iHelper))
+  assert.ok(cuerpo.includes('monto_disponible'), 'el margen tiene que leer la bolsa del padre')
+  assert.ok(!cuerpo.includes('Math.max('), 'sin piso: el déficit del grupo es un dato, no un cero')
 })
 
 test('la fila del padre y la hija se distinguen en el marcado', () => {

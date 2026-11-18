@@ -34,12 +34,21 @@ test('el nombre no se recorta en las filas normales', () => {
     'con space-between el importe se va al borde y choca con el botón absoluto')
 })
 
-test('la franja del rubro padre envuelve en dos filas', () => {
+test('la franja del rubro padre envuelve en dos columnas, como la de la hija', () => {
   const franja = bloque('.sobre-stats--padre')
   assert.match(franja, /flex-wrap:\s*wrap/)
-  // Cinco columnas en 290 px dan celdas de 58 px y «Unassigned» mide 73 con la
-  // tipografía del tema: no entra recortando, entra envolviendo.
-  assert.match(css, /\.sobre-stats--padre \.sobre-stat \{[^}]*flex:\s*1 1 30%/)
+  // Cambio de contrato deliberado: era `flex: 1 1 30%`, o sea tres celdas arriba y la
+  // cuarta sola abajo, estirada a todo el ancho y con su raya vertical a la izquierda
+  // separando nada. Dos y dos —igual que la franja de la hija— dejan cada celda en
+  // ~145 px en 390 px, donde la etiqueta más larga y su importe entran sin recortarse.
+  assert.match(css, /\.sobre-stats--padre \.sobre-stat \{[^}]*flex:\s*1 1 45%/, 'la franja del padre tiene que envolver dos y dos')
+  assert.doesNotMatch(css, /\.sobre-stats--padre \.sobre-stat \{[^}]*flex:\s*1 1 30%/, 'tres y una deja la última celda sola y con raya huérfana')
+  // La primera celda de cada renglón no lleva raya: no tiene nada a su izquierda.
+  assert.match(
+    css,
+    /\.sobre-stats--padre \.sobre-stat:nth-child\(odd\) \{[^}]*border-left:\s*0/,
+    'la raya huérfana del renglón nuevo tiene que desaparecer',
+  )
 })
 
 test('el botón Assign sigue siendo el que no ocupa lugar en el flujo', () => {

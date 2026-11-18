@@ -8738,6 +8738,14 @@
         "from": "Avance",
         "to": "Progress"
       },
+      "inversiones.budget_progress_no_quota": {
+        "from": "Sin cuota",
+        "to": "No quota"
+      },
+      "inversiones.budget_progress_over_max": {
+        "from": ">{max}%",
+        "to": ">{max}%"
+      },
       "inversiones.budget_total_must_be_100": {
         "from": "⚠️ Total: {total}% — Debe ser exactamente 100%",
         "to": "⚠️ Total: {total}% — Must be exactly 100%"
@@ -20119,6 +20127,14 @@
       "inversiones.budget_stat_progress": {
         "from": "Avance",
         "to": "Avanço"
+      },
+      "inversiones.budget_progress_no_quota": {
+        "from": "Sin cuota",
+        "to": "Sem cota"
+      },
+      "inversiones.budget_progress_over_max": {
+        "from": ">{max}%",
+        "to": ">{max}%"
       },
       "inversiones.budget_total_must_be_100": {
         "from": "⚠️ Total: {total}% — Debe ser exactamente 100%",

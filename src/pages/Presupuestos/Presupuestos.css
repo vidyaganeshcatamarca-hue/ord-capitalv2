@@ -443,6 +443,11 @@
   height: 100%;
   border-radius: 3px;
   transition: width 0.5s ease, background-color 0.3s ease;
+  /* Se pinta POR ENCIMA de la franja del pozo (fix 6). El relleno es la cuota y, cuando
+     está excedida, el rojo es la lectura que manda: la franja azul tapándolo hacía que
+     la fila dijera «azul» mientras el número decía 327%. */
+  position: relative;
+  z-index: 1;
 }
 .sobre-barra-fill.verde { background: var(--mint); }
 .sobre-barra-fill.amarillo { background: var(--amber); }
@@ -505,19 +510,18 @@
   padding-left: 10px;
 }
 
-/* Dueño: los cinco datos del padre se leían pegados, «UNASSIGNEDPROGRESS», y los
-   importes corridos. Con cuatro separadores de 12 px las celdas quedan en 58 px y
-   «Unassigned» mide 73 con la tipografía del tema: no entra recortando, entra
-   envolviendo. Tres arriba y dos abajo, sin tocar el texto de las etiquetas. */
+/* Dueño: los datos del padre se leían pegados, «UNASSIGNEDPROGRESS», y los importes
+   corridos. Con dos columnas la etiqueta más larga («Sin asignar», 62 px con la
+   tipografía del tema) y su importe entran sin recortarse ni envolverse. */
 .sobre-stats--padre {
   flex-wrap: wrap;
   row-gap: 8px;
 }
 
 /* Cuatro datos en una fila hija: a 390 px cada celda queda en 68 px y «ARS 85.506» se lee
-   pegado al importe de al lado, aunque no lleguen a pisarse. Se envuelve dos y dos, como el
-   padre. Las filas hijas con tres datos quedan como están, y el padre no se toca: su regla
-   de tres y dos es más específica para él. */
+   pegado al importe de al lado, aunque no lleguen a pisarse. Se envuelve dos y dos, igual
+   que el padre. Las filas hijas con tres datos quedan como están, y el padre no se toca:
+   su propia regla ya declara dos y dos. */
 .sobre-stats--columnas:not(.sobre-stats--padre):has(> .sobre-stat:nth-child(4)) {
   flex-wrap: wrap;
   row-gap: 8px;
@@ -528,7 +532,16 @@
 }
 
 .sobre-stats--padre .sobre-stat {
-  flex: 1 1 30%;
+  flex: 1 1 45%;
+}
+
+/* Dos y dos, como la franja de la hija. Con tres celdas al 30% la cuarta caía sola al
+   segundo renglón y se estiraba a todo el ancho: quedaba una raya vertical huérfana a
+   su izquierda, como si le faltara la columna de al lado. La primera celda de cada
+   renglón no lleva raya, porque no tiene nada a su izquierda. */
+.sobre-stats--padre .sobre-stat:nth-child(odd) {
+  border-left: 0;
+  padding-left: 0;
 }
 
 /* arrastre badge */
@@ -1666,6 +1679,9 @@ button.asignar-opcion:focus-visible {
    franja fina al pie y cada color lleva su número al lado; sin los números, una misma
    longitud estaría significando dos cosas distintas. */
 .sobre-barra-wrap { position: relative; }
+/* La franja del pozo se apoya DEBAJO del relleno. Antes se pintaba encima y tapaba el
+   rojo: una subcategoría al 327% de su techo mostraba la fila en azul, contradiciendo
+   el número. El relleno lleva su propio nivel de pintado; la franja queda de fondo. */
 .sobre-barra-pozo {
   position: absolute;
   left: 0;
@@ -1797,7 +1813,9 @@ button.sobre-stat-val--editable:focus-visible {
 }
 
 .presupuesto-historial-motivo {
-  grid-column: 2;
+  /* El motivo ocupa el renglón entero: pegado a la columna 2 aparecía corrido a la
+     derecha, como si antes hubiera una columna que no existe. */
+  grid-column: 1 / -1;
   font-size: calc(11px * var(--font-scale));
   color: var(--text-3);
 }

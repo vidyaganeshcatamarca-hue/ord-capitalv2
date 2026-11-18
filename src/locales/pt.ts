@@ -2254,6 +2254,8 @@ export const inversiones = {
   budget_stat_spent: "Gasto",
   budget_move_done: "Moveu {monto}.",
   budget_stat_progress: "Avanço",
+  budget_progress_no_quota: "Sem cota",
+  budget_progress_over_max: ">{max}%",
   budget_total_must_be_100: "⚠️ Total: {total}% — Deve ser exatamente 100%",
   budget_error_loading: "Erro ao carregar orçamentos:",
   budget_error_load: "Erro ao carregar orçamentos",

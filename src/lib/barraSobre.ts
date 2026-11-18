@@ -83,6 +83,25 @@ export function referenciaBarraDeSobre(args: {
 }
 
 /**
+ * EL MARGEN QUE COMPARTEN LAS SUBCATEGORÍAS DE UN GRUPO: la bolsa del padre, CON SIGNO.
+ *
+ * Dueño: un pozo negativo es plata que FALTA, no plata que no sobra. El piso en cero
+ * hacía leer «Sin asignar 0» en un grupo cuyo pozo era −326.227, o sea «no les queda
+ * nada» cuando en realidad el grupo está en déficit. El número es el mismo para todas
+ * las hermanas porque la bolsa es una sola.
+ *
+ * El piso sigue existiendo donde el cero es una respuesta y no un disfraz: lo que un
+ * sobre puede aportar a una transferencia nunca puede ser negativo (ver `fondoLibreDe`
+ * en la pantalla), y ahí sí se recorta.
+ */
+export function margenCompartidoDeSobre(
+  padre: { monto_disponible: number | null | undefined } | null | undefined,
+): number | null {
+  if (!padre) return null
+  return Number(padre.monto_disponible ?? 0)
+}
+
+/**
  * Avance contra el techo, SIN tope.
  *
  * Dueño (2026-11-11): «cuando me paso de la barra, la barra se pinta completa y el número

@@ -89,7 +89,7 @@ test('la página cablea el helper en las filas hijas y no dibuja barra sin techo
   assert.match(pagina, /from '\.\.\/\.\.\/lib\/barraSobre'/, 'la página tiene que importar el helper')
   assert.match(pagina, /referenciaBarraDeSobre\(\{ techo, montoAsignado: sobre\.monto_asignado, libreGrupo \}\)/)
   assert.match(pagina, /!sinDatos && !sinTecho/, 'sin techo no se dibuja la barra')
-  assert.match(pagina, /sinTecho \? '—'/, 'sin techo el avance no es un porcentaje inventado')
+  assert.match(pagina, /sinTecho\s*\?\s*'—'/, 'sin techo el avance no es un porcentaje inventado')
 
   // El libre del grupo tiene que llegar también a las filas hijas: antes solo lo
   // recibía la cabecera y el hijo no tenía contra qué medirse.

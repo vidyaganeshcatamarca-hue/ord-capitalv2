@@ -15,8 +15,11 @@ const pagina = fs.readFileSync('src/pages/Presupuestos/PresupuestosPage.tsx', 'u
 const dic = (lang) => fs.readFileSync(`src/locales/${lang}.ts`, 'utf-8')
 
 test('cada escala de la barra lleva su leyenda', () => {
+  // El relleno sigue siendo el avance sobre la cuota, pero el número ya no se topea:
+  // se imprime el avance real (269%) o su forma acotada («>999%»), nunca 100 cuando
+  // se gastó 2,69 veces la cuota.
   assert.ok(
-    pagina.includes("title={`${t('budget_bar_quota')}: ${avance ?? pct}%`}"),
+    pagina.includes("title={`${t('budget_bar_quota')}: ${avanceEtiqueta}`}"),
     'el relleno tiene que decir que el porcentaje es sobre la cuota',
   )
   assert.ok(

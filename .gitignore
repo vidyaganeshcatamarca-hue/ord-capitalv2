@@ -232,4 +232,5 @@ tests/configuracion/*
 !tests/presupuestos/cupos-sin-alarma.test.js
 !tests/presupuestos/sin-asignar-en-subcategorias.test.js
 !tests/presupuestos/techo-editable-y-historial.test.js
+!tests/presupuestos/deficit-y-avance-sin-topes.test.js
 !tests/sql/etapa4_moneda.sql
