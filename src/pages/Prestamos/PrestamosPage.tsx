@@ -8,6 +8,7 @@ import { haptics } from '@/lib/haptics'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { type PrestamoResumenFila } from '@/components/prestamos/types'
 import { montoONoCalculable } from '@/components/prestamos/formato'
+import { PrestamoFormModal } from '@/components/prestamos/PrestamoFormModal'
 import '@/components/prestamos/prestamos.css'
 
 const SECCIONES = [
@@ -55,6 +56,7 @@ export function PrestamosPage() {
   const [filas, setFilas] = useState<PrestamoResumenFila[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [altaAbierta, setAltaAbierta] = useState(false)
 
   const cargar = useCallback(async () => {
     setCargando(true)
@@ -87,6 +89,16 @@ export function PrestamosPage() {
           <h1 className="font-display">{t('prestamos_title')}</h1>
           <p className="prestamos-hint">{t('prestamos_subtitle')}</p>
         </div>
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={() => {
+            haptics.light()
+            setAltaAbierta(true)
+          }}
+        >
+          {t('prestamos_alta_abrir')}
+        </button>
       </header>
 
       {cargando ? (
@@ -143,6 +155,13 @@ export function PrestamosPage() {
           )
         })}
       </nav>
+
+      <PrestamoFormModal
+        isOpen={altaAbierta}
+        direccionInicial="debo"
+        onClose={() => setAltaAbierta(false)}
+        onSuccess={() => void cargar()}
+      />
     </div>
   )
 }

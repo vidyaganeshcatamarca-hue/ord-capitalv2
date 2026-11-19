@@ -7,6 +7,7 @@ import { haptics } from '@/lib/haptics'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { RegistrarPagoModal } from './RegistrarPagoModal'
 import { PrestamoDetalleView } from './PrestamoDetalle'
+import { PrestamoFormModal } from './PrestamoFormModal'
 import {
   estadoKey,
   estadoTono,
@@ -40,6 +41,7 @@ export function PrestamoLista({ direccion }: PrestamoListaProps) {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [pagoTarget, setPagoTarget] = useState<PrestamoPagoTarget | null>(null)
+  const [altaAbierta, setAltaAbierta] = useState(false)
   const [recargarToken, setRecargarToken] = useState(0)
 
   const esCobro = direccion === 'me_deben'
@@ -71,6 +73,14 @@ export function PrestamoLista({ direccion }: PrestamoListaProps) {
   useEffect(() => {
     void cargar()
   }, [cargar, recargarToken])
+
+  // El detalle y el modal de pago avisan acá: sin esto, al volver de quitar un
+  // préstamo del historial la lista seguiría mostrándolo.
+  useEffect(() => {
+    const alCambiar = () => setRecargarToken((n) => n + 1)
+    window.addEventListener('movement-added', alCambiar)
+    return () => window.removeEventListener('movement-added', alCambiar)
+  }, [])
 
   const abrirDetalle = (id: number) => {
     haptics.light()
@@ -129,14 +139,26 @@ export function PrestamoLista({ direccion }: PrestamoListaProps) {
         <button type="button" className="prestamos-back" onClick={() => navigate('/prestamos')}>
           {t('prestamos_volver_prestamos')}
         </button>
-        <label className="prestamos-toggle">
-          <input
-            type="checkbox"
-            checked={incluirSaldados}
-            onChange={(e) => setIncluirSaldados(e.target.checked)}
-          />
-          <span>{t('prestamos_lista_incluir_saldados')}</span>
-        </label>
+        <div className="prestamos-toolbar-acciones">
+          <label className="prestamos-toggle">
+            <input
+              type="checkbox"
+              checked={incluirSaldados}
+              onChange={(e) => setIncluirSaldados(e.target.checked)}
+            />
+            <span>{t('prestamos_lista_incluir_saldados')}</span>
+          </label>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => {
+              haptics.light()
+              setAltaAbierta(true)
+            }}
+          >
+            {t('prestamos_alta_abrir')}
+          </button>
+        </div>
       </div>
 
       {cargando ? (
@@ -186,6 +208,13 @@ export function PrestamoLista({ direccion }: PrestamoListaProps) {
           onSuccess={alRegistrar}
         />
       )}
+
+      <PrestamoFormModal
+        isOpen={altaAbierta}
+        direccionInicial={direccion}
+        onClose={() => setAltaAbierta(false)}
+        onSuccess={() => setRecargarToken((n) => n + 1)}
+      />
     </div>
   )
 }

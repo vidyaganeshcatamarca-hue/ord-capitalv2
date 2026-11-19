@@ -23,7 +23,22 @@
 }
 
 .prestamos-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
   margin-bottom: 16px;
+}
+
+/* El botón de alta no empuja al título fuera de la pantalla en 390px. */
+.prestamos-header > div {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.prestamos-header .btn {
+  flex: 0 0 auto;
 }
 
 .prestamos-header h1 {
@@ -886,4 +901,189 @@
 
 .prestamos-vinculos-actions .btn {
   flex: 1 1 auto;
+}
+
+/* ─── Toolbar con acciones (lista) ─── */
+
+.prestamos-toolbar-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ─── Alta y edición: agrupaciones del formulario ─── */
+
+.prestamos-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.prestamos-fieldset legend {
+  padding: 0;
+  color: var(--text-2);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+/* Dos campos lado a lado siguen entrando en 390px; el resto se apila. */
+.prestamos-field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.prestamos-alta-derivado {
+  display: block;
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: var(--text-2);
+  font-size: calc(13px * var(--font-scale));
+  line-height: 1.4;
+}
+
+.prestamos-nota-destacada {
+  background: var(--surface-2);
+  border-left: 3px solid var(--amber-ink);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0;
+}
+
+/* ─── Editor de cronograma ─── */
+
+.prestamos-cuotas-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+}
+
+.prestamos-cuotas-editor-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--text-2);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prestamos-cuota-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.prestamos-cuota-edit-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.prestamos-cuota-edit-num {
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.prestamos-cuota-edit-quitar {
+  background: transparent;
+  border: none;
+  color: var(--coral-ink);
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ─── Acciones del detalle y del historial ─── */
+
+.prestamos-detalle-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prestamos-pago-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.prestamos-evento-link.is-peligro {
+  color: var(--coral-ink);
+}
+
+.prestamos-zona-peligro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  margin-top: 8px;
+}
+
+/* ─── Tipo de evento del calendario ─── */
+
+.prestamos-tipo-evento {
+  display: inline-flex;
+  align-self: flex-start;
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: calc(10px * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.prestamos-tipo-evento.is-prestamo {
+  background: var(--mint-dim);
+  color: var(--mint-ink);
+}
+
+.prestamos-tipo-evento.is-tarjeta {
+  background: var(--purple-dim);
+  color: var(--text-2);
+}
+
+.prestamos-tipo-evento.is-recurrente {
+  background: var(--surface-3);
+  color: var(--text-2);
+}
+
+/* ─── 390px: nada se sale del ancho ─── */
+
+@media (max-width: 400px) {
+  .prestamos-field-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .prestamos-header .btn {
+    width: 100%;
+  }
 }

@@ -12,6 +12,18 @@
 export type Direccion = 'debo' | 'me_deben'
 export type Estrategia = 'math' | 'emotional' | 'relationships'
 export type Modalidad = 'cuotas' | 'vencimiento_unico' | 'libre'
+export type CondicionInteres = 'ninguno' | 'importe_final' | 'tasa' | 'desconocido'
+
+/**
+ * One installment of the schedule the user types. `capital_componente` is never
+ * sent: if the user only informed the interest portion, the capital portion is
+ * not known here and the backend stores NULL, which means exactly that.
+ */
+export interface CuotaInput {
+  fecha_vencimiento: string
+  monto_cuota: number
+  interes_componente?: number | null
+}
 
 export interface PrestamoResumenFila {
   direccion: Direccion
@@ -54,6 +66,7 @@ export interface PrestamoPago {
   pago_id: number
   direccion: string
   fecha: string
+  p_caja_id: number | null
   billetera_id: number | null
   moneda_billetera: string | null
   monto_billetera: number | null
@@ -72,9 +85,12 @@ export interface PrestamoDetalle {
   nombre: string
   moneda: string
   monto_original: number | null
+  saldo_al_ingreso: number | null
   saldo_pendiente: number | null
   pagado_registrado: number | null
   modalidad: Modalidad
+  condicion_interes: CondicionInteres | null
+  interes_total_acordado: number | null
   tasa: number | null
   tasa_informada: boolean
   estado: string
@@ -96,6 +112,45 @@ export interface EventoCalendarioPrestamo {
   pagado: boolean
   prestamo_id: number
   cuota_id: number | null
+  numero_cuota: number | null
+}
+
+/**
+ * Row of `fn_reporte_calendario_financiero`. Deliberately has no currency: card
+ * amounts arrive already expressed in the user's local currency and a recurring
+ * expense has no currency of its own (that module shows it as a plain number).
+ */
+export interface EventoCalendarioFinanciero {
+  evento_id: string
+  tipo_evento: string
+  fecha: string
+  nombre: string | null
+  monto: number | null
+  criticidad: string
+  pagado: boolean
+}
+
+/** Why an amount is formatted as currency or as a plain number. */
+export type FormatoMontoEvento = 'moneda' | 'numero'
+
+/**
+ * One row of the merged calendar (S20, decision 17). The three sources keep
+ * their own identity: a loan event carries the `prestamo_id` column, and the
+ * card and recurring events never pretend to be a loan.
+ */
+export interface EventoCalendarioUnificado {
+  clave: string
+  fecha: string
+  tipo: 'prestamo' | 'tarjeta' | 'recurrente'
+  nombre: string
+  monto: number | null
+  moneda: string | null
+  formato: FormatoMontoEvento
+  criticidad: string
+  pagado: boolean
+  /** Only present on loan events, and always read from the column. */
+  prestamo_id: number | null
+  direccion: Direccion | null
   numero_cuota: number | null
 }
 
@@ -206,6 +261,18 @@ const MODALIDAD_KEYS: Record<string, string> = {
 export function modalidadKey(modalidad: string | null | undefined): string | null {
   if (!modalidad) return null
   return MODALIDAD_KEYS[modalidad] ?? null
+}
+
+const CONDICION_KEYS: Record<string, string> = {
+  ninguno: 'prestamos_condicion_ninguno',
+  importe_final: 'prestamos_condicion_importe_final',
+  tasa: 'prestamos_condicion_tasa',
+  desconocido: 'prestamos_condicion_desconocido',
+}
+
+export function condicionKey(condicion: string | null | undefined): string | null {
+  if (!condicion) return null
+  return CONDICION_KEYS[condicion] ?? null
 }
 
 const MOTIVO_KEYS: Record<string, string> = {

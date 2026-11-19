@@ -6,7 +6,7 @@ import { fechaLocalISO, formatCurrency } from '@/lib/format'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { parseError, t } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
-import { numero, type PrestamoPagoTarget } from './types'
+import { numero, type PrestamoPago, type PrestamoPagoTarget } from './types'
 import { montoONoCalculable } from './formato'
 import './prestamos.css'
 
@@ -20,15 +20,28 @@ interface BilleteraOption {
 interface RegistrarPagoModalProps {
   isOpen: boolean
   target: PrestamoPagoTarget
+  /**
+   * When present the modal corrects THAT operation instead of creating a new one.
+   * The original cash row is edited in place, so the wallet moves by the
+   * difference only: nothing is duplicated and the loan keeps one operation (S11).
+   */
+  pago?: PrestamoPago | null
   onClose: () => void
   onSuccess: () => void
 }
 
 /** The one RPC that registers both a payment (Debo) and a collection (Me deben). */
 const RPC_PAGO = 'fn_prestamo_registrar_pago'
+const RPC_CORREGIR = 'fn_prestamo_corregir_pago'
 const ERROR_SOBREPAGO = 'error_overpayment_confirmation_required'
 
-export function RegistrarPagoModal({ isOpen, target, onClose, onSuccess }: RegistrarPagoModalProps) {
+export function RegistrarPagoModal({
+  isOpen,
+  target,
+  pago = null,
+  onClose,
+  onSuccess,
+}: RegistrarPagoModalProps) {
   // El formato de moneda llega por contexto: sin esto queda el del primer render.
   useFormatRevision()
   const { showToast } = useToast()
@@ -48,18 +61,22 @@ export function RegistrarPagoModal({ isOpen, target, onClose, onSuccess }: Regis
   const [excedente, setExcedente] = useState<number | null>(null)
 
   const esCobro = direccion === 'me_deben'
+  const correccion = pago !== null
+  const pagoId = pago?.pago_id ?? null
 
   useEffect(() => {
     if (!isOpen) return
-    setMontoBilletera('')
-    setMontoAplicado('')
-    setAplicadoManual(false)
-    setFecha(fechaLocalISO())
-    setNota('')
+    // In correction mode both money legs start at what the operation says today, so
+    // the user sees the two numbers they are about to change.
+    setMontoBilletera(pago?.monto_billetera != null ? String(pago.monto_billetera) : '')
+    setMontoAplicado(pago?.monto_aplicado != null ? String(pago.monto_aplicado) : '')
+    setAplicadoManual(correccion)
+    setFecha(pago?.fecha ?? fechaLocalISO())
+    setNota(pago?.nota ?? '')
     setError(null)
     setGuardando(false)
     setExcedente(null)
-  }, [isOpen, prestamoId])
+  }, [isOpen, prestamoId, pagoId, correccion, pago])
 
   useEffect(() => {
     if (!isOpen) return
@@ -72,7 +89,11 @@ export function RegistrarPagoModal({ isOpen, target, onClose, onSuccess }: Regis
         setBilleteras(lista)
         // La billetera de la moneda del préstamo es la que no exige conversión.
         const mismaMoneda = lista.find((b) => b.moneda === moneda)
-        setBilleteraId((actual) => actual ?? (mismaMoneda ?? lista[0])?.billetera_id ?? null)
+        setBilleteraId((actual) => {
+          // A correction starts on the wallet the operation already used.
+          if (correccion && pago?.billetera_id) return pago.billetera_id
+          return actual ?? (mismaMoneda ?? lista[0])?.billetera_id ?? null
+        })
       })
       .catch((err) => {
         if (!vigente) return
@@ -84,7 +105,7 @@ export function RegistrarPagoModal({ isOpen, target, onClose, onSuccess }: Regis
     return () => {
       vigente = false
     }
-  }, [isOpen, moneda, showToast])
+  }, [isOpen, moneda, showToast, correccion, pago])
 
   // El `<select>` siempre muestra una opción: si el estado todavía no tiene id,
   // manda la primera de la lista. Si no, el formulario mostraría una billetera y
@@ -111,6 +132,18 @@ export function RegistrarPagoModal({ isOpen, target, onClose, onSuccess }: Regis
     Number.isFinite(aplicadoNum) &&
     aplicadoNum > 0
 
+  /**
+   * How much of the loan can still be settled by this operation. A correction
+   * already took part of the balance, so its ceiling is what is pending today plus
+   * what this very operation applied — never the pending balance alone, which would
+   * flag every correction as an overpayment.
+   */
+  const topeAplicable = useMemo(() => {
+    const saldo = numero(saldoPendiente) ?? 0
+    const yaAplicado = correccion ? numero(pago?.monto_aplicado) ?? 0 : 0
+    return saldo + yaAplicado
+  }, [saldoPendiente, correccion, pago])
+
   const registrar = async (confirmarExcedente: boolean) => {
     // Un doble toque en «Sí, son intereses» no puede registrar el pago dos veces.
     if (guardando) return
@@ -125,8 +158,7 @@ export function RegistrarPagoModal({ isOpen, target, onClose, onSuccess }: Regis
     }
     setGuardando(true)
     try {
-      await rpc(RPC_PAGO, {
-        p_prestamo_id: prestamoId,
+      const comun = {
         p_billetera_id: billeteraEfectivaId,
         p_monto_billetera: montoBilleteraNum,
         p_moneda_billetera: monedaBilletera,
@@ -134,9 +166,14 @@ export function RegistrarPagoModal({ isOpen, target, onClose, onSuccess }: Regis
         p_fecha: fecha,
         p_nota: nota.trim() === '' ? null : nota.trim(),
         p_confirmar_excedente: confirmarExcedente,
-      })
+      }
+      if (correccion && pagoId !== null) {
+        await rpc(RPC_CORREGIR, { p_pago_id: pagoId, ...comun })
+      } else {
+        await rpc(RPC_PAGO, { p_prestamo_id: prestamoId, ...comun })
+      }
       haptics.success()
-      showToast(t('prestamos_pago_exito'), 'success')
+      showToast(t(correccion ? 'prestamos_correccion_exito' : 'prestamos_pago_exito'), 'success')
       setExcedente(null)
       onSuccess()
       onClose()
@@ -145,8 +182,7 @@ export function RegistrarPagoModal({ isOpen, target, onClose, onSuccess }: Regis
       if (crudo.includes(ERROR_SOBREPAGO)) {
         // Sobrepago: la diferencia se muestra y NADA se registra hasta que el
         // usuario confirme que son intereses no registrados (S10).
-        const saldo = numero(saldoPendiente) ?? 0
-        setExcedente(Math.max(0, aplicadoNum - saldo))
+        setExcedente(Math.max(0, aplicadoNum - topeAplicable))
         return
       }
       setError(parseError(err))
@@ -172,7 +208,9 @@ export function RegistrarPagoModal({ isOpen, target, onClose, onSuccess }: Regis
           <header className="prestamos-modal-header">
             <div>
               <h2 className="font-display">
-                {t(esCobro ? 'prestamos_pago_titulo_cobro' : 'prestamos_pago_titulo_pago')}
+                {correccion
+                  ? t(esCobro ? 'prestamos_correccion_titulo_cobro' : 'prestamos_correccion_titulo_pago')
+                  : t(esCobro ? 'prestamos_pago_titulo_cobro' : 'prestamos_pago_titulo_pago')}
               </h2>
               <p className="prestamos-modal-sub">
                 {nombre} · {montoONoCalculable(saldoPendiente, moneda)}
@@ -189,6 +227,13 @@ export function RegistrarPagoModal({ isOpen, target, onClose, onSuccess }: Regis
           </header>
 
           <div className="prestamos-modal-body">
+            {correccion && (
+              // The user must know that this edits the ORIGINAL operation: one
+              // movement adjusted, not a second one added.
+              <p className="prestamos-nota prestamos-nota-destacada">
+                {t('prestamos_correccion_aviso')}
+              </p>
+            )}
             {cargandoBilleteras ? (
               <p className="prestamos-hint">{t('prestamos_loading')}</p>
             ) : billeteras.length === 0 ? (
@@ -282,7 +327,13 @@ export function RegistrarPagoModal({ isOpen, target, onClose, onSuccess }: Regis
               className="btn btn-primary"
               disabled={guardando || cargandoBilleteras || billeteras.length === 0}
             >
-              {guardando ? t('prestamos_pago_guardando') : t('prestamos_pago_guardar')}
+              {correccion
+                ? guardando
+                  ? t('prestamos_correccion_guardando')
+                  : t('prestamos_correccion_guardar')
+                : guardando
+                  ? t('prestamos_pago_guardando')
+                  : t('prestamos_pago_guardar')}
             </button>
           </footer>
         </form>

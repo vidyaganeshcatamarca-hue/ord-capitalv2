@@ -3,30 +3,52 @@ import { useNavigate } from 'react-router-dom'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
-import { formatDate } from '@/lib/format'
+import { formatDate, getFormatContext } from '@/lib/format'
 import { haptics } from '@/lib/haptics'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
-import { numero, rutaPorDireccion, type EventoCalendarioPrestamo } from './types'
-import { montoONoCalculable } from './formato'
+import {
+  numero,
+  rutaPorDireccion,
+  type EventoCalendarioFinanciero,
+  type EventoCalendarioPrestamo,
+  type EventoCalendarioUnificado,
+} from './types'
+import { montoEvento } from './formato'
 import './prestamos.css'
 
 const RANGOS = [30, 60, 90] as const
 
+/** Display order inside one day: what you owe first, then cards, then recurring. */
+const PESO_TIPO: Record<EventoCalendarioUnificado['tipo'], number> = {
+  prestamo: 0,
+  tarjeta: 1,
+  recurrente: 2,
+}
+
 /**
- * Loan events of the calendar (S20, S24).
+ * Full financial calendar (S20, functional decision 17).
  *
- * The loan is identified by the `prestamo_id` COLUMN: the contract carries
- * `prestamo_id` and `cuota_id` explicitly, so nothing here ever parses an
- * `evento_id` string. The calendar is not the authority for any balance: it
- * opens the loan, and the payment happens there, through the same single path.
+ * Three sources, three identities, one chronological list:
+ *   * loans come from `fn_prestamos_calendario`, and the loan is identified by the
+ *     `prestamo_id` COLUMN — nothing here ever parses an `evento_id` string (S24);
+ *   * card due dates and recurring expenses come from
+ *     `fn_reporte_calendario_financiero`.
+ *
+ * The financial report also emits a legacy `cuota_prestamo` branch. It is dropped
+ * on purpose: loans are already covered by their own call, so including it would
+ * duplicate every installment — and its ids live in a different space.
+ *
+ * The calendar is not the authority of any balance: it opens the loan, and the
+ * payment happens there, through the single path that already exists.
  */
 export function PrestamosCalendario() {
-  useFormatRevision()
+  const revisionFormato = useFormatRevision()
   const { showToast } = useToast()
   const navigate = useNavigate()
 
   const [dias, setDias] = useState<number>(30)
-  const [eventos, setEventos] = useState<EventoCalendarioPrestamo[]>([])
+  const [prestamos, setPrestamos] = useState<EventoCalendarioPrestamo[]>([])
+  const [financieros, setFinancieros] = useState<EventoCalendarioFinanciero[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -34,10 +56,14 @@ export function PrestamosCalendario() {
     setCargando(true)
     setError(null)
     try {
-      const data = await rpc<EventoCalendarioPrestamo[]>('fn_prestamos_calendario', {
-        p_dias_adelante: dias,
-      })
-      setEventos(Array.isArray(data) ? data : [])
+      const [filasPrestamos, filasFinancieras] = await Promise.all([
+        rpc<EventoCalendarioPrestamo[]>('fn_prestamos_calendario', { p_dias_adelante: dias }),
+        rpc<EventoCalendarioFinanciero[]>('fn_reporte_calendario_financiero', {
+          p_dias_adelante: dias,
+        }),
+      ])
+      setPrestamos(Array.isArray(filasPrestamos) ? filasPrestamos : [])
+      setFinancieros(Array.isArray(filasFinancieras) ? filasFinancieras : [])
     } catch (err) {
       const mensaje = parseError(err) || t('error_generic')
       setError(mensaje)
@@ -51,8 +77,58 @@ export function PrestamosCalendario() {
     void cargar()
   }, [cargar])
 
+  const eventos = useMemo<EventoCalendarioUnificado[]>(() => {
+    const monedaLocal = getFormatContext().localCurrency
+
+    const dePrestamos: EventoCalendarioUnificado[] = prestamos.map((evento) => ({
+      clave: `prestamo-${evento.prestamo_id}-${evento.cuota_id ?? 'unico'}`,
+      fecha: evento.fecha,
+      tipo: 'prestamo',
+      nombre: evento.nombre,
+      monto: numero(evento.monto),
+      moneda: evento.moneda,
+      formato: 'moneda',
+      criticidad: evento.criticidad,
+      pagado: Boolean(evento.pagado),
+      // Read from the column, never derived from a string (S24).
+      prestamo_id: evento.prestamo_id,
+      direccion: evento.direccion,
+      numero_cuota: evento.numero_cuota,
+    }))
+
+    const deFinancieros: EventoCalendarioUnificado[] = financieros
+      .filter((evento) => evento.tipo_evento === 'vencimiento_tarjeta' || evento.tipo_evento === 'gasto_recurrente')
+      .map((evento) => {
+        const esTarjeta = evento.tipo_evento === 'vencimiento_tarjeta'
+        return {
+          clave: `${evento.tipo_evento}-${evento.evento_id}`,
+          fecha: evento.fecha,
+          tipo: esTarjeta ? 'tarjeta' : 'recurrente',
+          // A recurring expense with no custom name arrives null on purpose: the
+          // backend refuses to send a Spanish literal and lets the UI name it.
+          nombre: evento.nombre ?? t('prestamos_calendario_sin_nombre'),
+          monto: numero(evento.monto),
+          moneda: esTarjeta ? monedaLocal : null,
+          formato: esTarjeta ? 'moneda' : 'numero',
+          criticidad: evento.criticidad,
+          pagado: Boolean(evento.pagado),
+          prestamo_id: null,
+          direccion: null,
+          numero_cuota: null,
+        }
+      })
+
+    return [...dePrestamos, ...deFinancieros].sort((a, b) => {
+      if (a.fecha !== b.fecha) return a.fecha < b.fecha ? -1 : 1
+      if (PESO_TIPO[a.tipo] !== PESO_TIPO[b.tipo]) return PESO_TIPO[a.tipo] - PESO_TIPO[b.tipo]
+      return a.nombre.localeCompare(b.nombre)
+    })
+    // `revisionFormato` entra en las dependencias porque la moneda local se lee
+    // dentro del memo: sin esto, cambiarla dejaría los importes en la anterior.
+  }, [prestamos, financieros, revisionFormato])
+
   const porFecha = useMemo(() => {
-    const mapa = new Map<string, EventoCalendarioPrestamo[]>()
+    const mapa = new Map<string, EventoCalendarioUnificado[]>()
     for (const evento of eventos) {
       const lista = mapa.get(evento.fecha) ?? []
       lista.push(evento)
@@ -61,10 +137,17 @@ export function PrestamosCalendario() {
     return [...mapa.entries()]
   }, [eventos])
 
-  const abrirPrestamo = (prestamoId: number, direccion: string) => {
+  const abrirPrestamo = (prestamoId: number | null, direccion: string | null) => {
+    // No id, no navigation: an event that is not a loan cannot open a loan.
     if (!prestamoId) return
     haptics.light()
     navigate(`${rutaPorDireccion(direccion)}?prestamo=${prestamoId}`)
+  }
+
+  const etiquetaTipo = (tipo: EventoCalendarioUnificado['tipo']) => {
+    if (tipo === 'tarjeta') return t('prestamos_calendario_tipo_tarjeta')
+    if (tipo === 'recurrente') return t('prestamos_calendario_tipo_recurrente')
+    return t('prestamos_calendario_tipo_prestamo')
   }
 
   return (
@@ -73,6 +156,7 @@ export function PrestamosCalendario() {
         <div>
           <span className="prestamos-kicker">{t('prestamos_kicker')}</span>
           <h1 className="font-display">{t('prestamos_calendario_titulo')}</h1>
+          <p className="prestamos-hint">{t('prestamos_calendario_subtitulo')}</p>
         </div>
       </header>
 
@@ -118,13 +202,22 @@ export function PrestamosCalendario() {
               <h2 className="prestamos-dia-fecha">{formatDate(fecha)}</h2>
               <ul className="prestamos-dia-lista">
                 {lista.map((evento) => (
-                  <li key={`${evento.prestamo_id}-${evento.cuota_id ?? evento.fecha}`} className="prestamos-evento">
+                  <li key={evento.clave} className="prestamos-evento">
                     <div className="prestamos-evento-info">
+                      <span className={`prestamos-tipo-evento is-${evento.tipo}`}>
+                        {etiquetaTipo(evento.tipo)}
+                      </span>
                       <strong className="prestamos-evento-nombre">{evento.nombre}</strong>
                       <span className="prestamos-hint">
-                        {evento.numero_cuota != null
-                          ? t('prestamos_calendario_cuota', { n: evento.numero_cuota })
-                          : t(evento.direccion === 'me_deben' ? 'prestamos_menu_me_deben' : 'prestamos_menu_debo')}
+                        {evento.tipo === 'prestamo'
+                          ? evento.numero_cuota != null
+                            ? t('prestamos_calendario_cuota', { n: evento.numero_cuota })
+                            : t(
+                                evento.direccion === 'me_deben'
+                                  ? 'prestamos_menu_me_deben'
+                                  : 'prestamos_menu_debo',
+                              )
+                          : etiquetaTipo(evento.tipo)}
                       </span>
                       <div className="prestamos-evento-badges">
                         <span className={`prestamos-badge ${evento.pagado ? 'is-saldado' : 'is-proximo'}`}>
@@ -133,20 +226,23 @@ export function PrestamosCalendario() {
                         {!evento.pagado && evento.criticidad === 'vencido' && (
                           <span className="prestamos-badge is-vencido">{t('prestamos_calendario_vencido')}</span>
                         )}
-                        {!evento.pagado && (evento.criticidad === 'critico' || evento.criticidad === 'atencion') && (
-                          <span className="prestamos-badge is-proximo">{t('prestamos_calendario_critico')}</span>
-                        )}
+                        {!evento.pagado &&
+                          (evento.criticidad === 'critico' || evento.criticidad === 'atencion') && (
+                            <span className="prestamos-badge is-proximo">{t('prestamos_calendario_critico')}</span>
+                          )}
                       </div>
                     </div>
                     <div className="prestamos-evento-monto">
-                      <strong>{montoONoCalculable(numero(evento.monto), evento.moneda)}</strong>
-                      <button
-                        type="button"
-                        className="prestamos-evento-link"
-                        onClick={() => abrirPrestamo(evento.prestamo_id, evento.direccion)}
-                      >
-                        {t('prestamos_calendario_ver_prestamo')}
-                      </button>
+                      <strong>{montoEvento(evento)}</strong>
+                      {evento.tipo === 'prestamo' && evento.prestamo_id !== null && (
+                        <button
+                          type="button"
+                          className="prestamos-evento-link"
+                          onClick={() => abrirPrestamo(evento.prestamo_id, evento.direccion)}
+                        >
+                          {t('prestamos_calendario_ver_prestamo')}
+                        </button>
+                      )}
                     </div>
                   </li>
                 ))}
