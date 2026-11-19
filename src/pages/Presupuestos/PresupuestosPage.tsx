@@ -488,6 +488,14 @@ export function PresupuestosPage() {
         /* opcional: nunca bloquea la carga */
       }
 
+      // Cerrar el ciclo anterior deja su resultado congelado y manda el saldo al ciclo
+      // siguiente. Es idempotente: si ya estaba cerrado, el servidor no hace nada.
+      try {
+        await supabase.rpc('fn_cerrar_ciclo_presupuesto', { p_mes: null })
+      } catch {
+        /* opcional: el cierre no puede romper la pantalla */
+      }
+
       const [rSaldo, rSobres, rConfig, rCupos, rDisponibles, rTechos] = await Promise.all([
         supabase.rpc('fn_obtener_saldo_a_asignar', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_reporte_sobres_detalle', { p_mes_periodo: mesPeriodoStr }),

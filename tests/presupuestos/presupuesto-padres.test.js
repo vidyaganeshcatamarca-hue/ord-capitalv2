@@ -416,7 +416,17 @@ test('los rechazos son datos, no texto: clave y parámetros numéricos', () => {
   // texto.
   const todos = techoC.match(/RAISE EXCEPTION '[^']*'[^;]*;/g) ?? []
   const dePresupuesto = todos.filter((r) => /error_budget_/.test(r))
-  assert.equal(dePresupuesto.length, 2, `esperaba dos rechazos de presupuesto, encontré ${dePresupuesto.length} de ${todos.length}`)
+  // Bloque D sumo el rechazo del ciclo cerrado: cerrar un mes congela su resultado y el
+  // servidor ya no acepta asignaciones sobre el. Los dos del techo no vuelven.
+  assert.equal(dePresupuesto.length, 3, `esperaba tres rechazos de presupuesto, encontré ${dePresupuesto.length} de ${todos.length}`)
+  assert.ok(
+    dePresupuesto.some((r) => /error_budget_cycle_closed/.test(r)),
+    'el rechazo del ciclo cerrado tiene que estar entre ellos',
+  )
+  assert.ok(
+    !dePresupuesto.some((r) => /child_over_parent|parent_below_children/.test(r)),
+    'ningun rechazo por techos de hijos puede volver',
+  )
   for (const r of dePresupuesto) {
     assert.ok(/"key": "error_budget_/.test(r), 'el rechazo tiene que llevar su clave de error')
     assert.ok(/"params": \{/.test(r), 'el rechazo tiene que llevar sus parámetros')

@@ -20,6 +20,9 @@ DECLARE
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
+    IF public.fn_ciclo_esta_cerrado(p_mes_periodo) THEN
+        RAISE EXCEPTION '{"key": "error_budget_cycle_closed", "params": {}}';
+    END IF;
     SELECT hogar_id INTO v_hogar_id FROM p_hogar_participantes WHERE user_id = v_user_id;
 
     -- Duenio: en libertad NO se transfiere. La transferencia mueve plata que ya estaba

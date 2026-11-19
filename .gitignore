@@ -240,3 +240,6 @@ tests/configuracion/*
 !start_info/esquema-presupuesto.md
 !start_info/esquema-presupuesto.md.sha256
 !tests/sql/bloqueB_conciliacion.sql
+!tests/sql/bloqueD_cierre.sql
+!tests/sql/bloqueB_conciliacion.sql
+!tests/presupuestos/cierre-de-ciclo.test.js

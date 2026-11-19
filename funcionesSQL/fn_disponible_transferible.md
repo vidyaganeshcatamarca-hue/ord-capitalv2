@@ -74,6 +74,20 @@ BEGIN
     -- Arrastre: solo en base cero, y fuera del ciclo de activación. Es el resultado del
     -- ciclo anterior de TODO el grupo, con el signo que tenga.
     IF v_modo = 'base_cero' AND (v_fecha_activacion IS NULL OR v_fecha_activacion <= v_f_fin_ant) THEN
+        -- Bloque D: si el ciclo anterior esta cerrado, su resultado esta congelado y manda
+        -- sobre cualquier recuento. Asi corregir un gasto viejo no mueve el arrastre.
+        SELECT c.saldo_cierre INTO v_arrastre
+          FROM public.p_presupuestos_cierre c
+         WHERE c.tipo = 'cierre'
+           AND c.mes_periodo = v_mes_anterior
+           AND c.estructura_egreso_id = p_estructura_egreso_id
+           AND COALESCE(c.user_id, 0) = v_user_id
+           AND COALESCE(c.hogar_id, 0) = COALESCE(v_hogar_id, 0)
+         LIMIT 1;
+        IF FOUND THEN
+            RETURN COALESCE(v_arrastre, 0) + COALESCE(v_plata, 0) - COALESCE(v_gasto, 0);
+        END IF;
+
         SELECT COALESCE((SELECT p.monto_limite FROM public.p_presupuestos p
                           WHERE p.estructura_egreso_id = p_estructura_egreso_id
                             AND p.mes_periodo = v_mes_anterior

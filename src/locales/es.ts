@@ -2509,6 +2509,7 @@ export const inversiones = {
   budget_history_reason_transfer_in: "Llegó de otro rubro",
   budget_history_reason_to_base_zero: "Se pasó a Base Cero",
   budget_history_reason_to_freedom: "Volvió a Modo Libertad",
+  budget_error_cycle_closed: "Ese ciclo ya está cerrado. No se pueden cambiar sus presupuestos.",
   budget_history_reason_repetition: "Repetición del mes anterior",
   budget_history_reason_other: "Otro cambio",
   budget_stat_assigned: "Asignado",

@@ -8714,6 +8714,10 @@
         "from": "Volvió a Modo Libertad",
         "to": "Back to Freedom Mode"
       },
+      "inversiones.budget_error_cycle_closed": {
+        "from": "Ese ciclo ya está cerrado. No se pueden cambiar sus presupuestos.",
+        "to": "That cycle is already closed. Its budgets cannot be changed."
+      },
       "inversiones.budget_history_reason_repetition": {
         "from": "Repetición del mes anterior",
         "to": "Carried over from last month"
@@ -20107,6 +20111,10 @@
       "inversiones.budget_history_reason_to_freedom": {
         "from": "Volvió a Modo Libertad",
         "to": "Voltou ao Modo Liberdade"
+      },
+      "inversiones.budget_error_cycle_closed": {
+        "from": "Ese ciclo ya está cerrado. No se pueden cambiar sus presupuestos.",
+        "to": "Esse ciclo já está fechado. Os orçamentos dele não podem ser alterados."
       },
       "inversiones.budget_history_reason_repetition": {
         "from": "Repetición del mes anterior",
