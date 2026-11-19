@@ -63,6 +63,9 @@ const sumas = [
 
 // Comparar SQL sin depender de la indentación.
 const compacto = (s) => s.replace(/\s+/g, ' ').trim()
+// `> 0)` y `> 0 )` son el mismo SQL: el espacio antes del paréntesis no cambia nada y no
+// puede decidir si una guarda está o no.
+const sqlCompacto = (s) => compacto(s).replace(/\s+\)/g, ')')
 const reporteC = compacto(reporte)
 const padreC = compacto(filaPadre)
 const techoC = compacto(techo)
@@ -158,7 +161,7 @@ test('con presupuesto en el padre el hijo deja de contar por separado', () => {
     if (!cuerpo.includes('NOT EXISTS (')) continue
     const alias = cuerpo.includes('= p.estructura_egreso_id') ? 'p' : 'p_presupuestos'
     assert.ok(
-      cuerpo.includes(GUARDA(alias)),
+      sqlCompacto(cuerpo).includes(sqlCompacto(GUARDA(alias))),
       `${nombre}: falta la guarda completa, que compara contra el padre del rubro`,
     )
     assert.ok(
