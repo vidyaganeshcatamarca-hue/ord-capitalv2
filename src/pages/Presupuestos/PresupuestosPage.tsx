@@ -819,15 +819,10 @@ export function PresupuestosPage() {
   // el padre la SUMA de lo asignado a sus hijos (S4: es un acumulador, no gasta), y usar
   // ese número como disponible ofrecía 518.155 en un sobre que no tenía presupuesto
   // propio: la base lo rechazaba con «insufficient funds in the source envelope».
-  const fondoLibreDe = (padreId: number) => {
-    const techo = Number(
-      sobres.find(x => Number(x.estructura_id) === Number(padreId))?.monto_asignado ?? 0
-    )
-    const repartido = sobres
-      .filter(x => Number(x.padre_id) === Number(padreId))
-      .reduce((s, x) => s + Number(x.monto_asignado ?? 0), 0)
-    return Math.max(techo - repartido, 0)
-  }
+  // Bloque B (dueño): la fórmula `max(techo - repartido, 0)` es la que el plan retira:
+  // usa el techo, no cuenta el gasto del padre y pone piso en cero. El respaldo usa ahora
+  // la MISMA bolsa que muestra la fila, que viene del servidor, así que no puede dar un
+  // número distinto del que valida la transferencia.
 
   /** Lo que un sobre puede aportar a una transferencia: manda el servidor. */
   const disponibleParaTransferir = (s: SobreDetalle) => {
@@ -835,7 +830,10 @@ export function PresupuestosPage() {
     // llegó o falló; el número bueno es el del servidor.
     const delServidor = disponiblesTransferibles?.[Number(s.estructura_id)]
     if (delServidor !== undefined) return delServidor
-    return s.es_padre ? fondoLibreDe(s.estructura_id) : disponibleDeSobre(s, config?.modo_presupuesto)
+    // Misma bolsa que muestra la fila: sale del reporte del servidor.
+    return s.es_padre
+      ? (margenCompartidoDeSobre(sobres.find(x => Number(x.estructura_id) === Number(s.estructura_id))) ?? 0)
+      : disponibleDeSobre(s, config?.modo_presupuesto)
   }
 
   /** Modelo A: techo del modelo, `null` cuando la fila no tiene tope. */

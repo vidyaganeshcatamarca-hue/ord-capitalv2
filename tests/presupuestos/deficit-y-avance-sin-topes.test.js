@@ -97,9 +97,15 @@ test('las subcategorías sin techo muestran ese mismo margen, con signo', () => 
 })
 
 test('el piso queda sólo donde el cero es una respuesta', () => {
-  // Aportar a una transferencia no puede ser negativo: ahí el recorte es correcto.
-  const fondoLibre = pagina.slice(pagina.indexOf('const fondoLibreDe ='), pagina.indexOf('const fondoLibreDe =') + 600)
-  assert.match(fondoLibre, /Math\.max\(techo - repartido, 0\)/, 'el fondo transferible sigue recortado en cero')
+  // Bloque B (dueño): `fondoLibreDe` calculaba `max(techo - repartido, 0)`, la fórmula que
+  // el plan retira porque usa el techo, ignora el gasto del padre y pone piso en cero. Ya
+  // no existe: el padre aporta su bolsa, que es la misma que valida la transferencia.
+  assert.doesNotMatch(pagina, /fondoLibreDe\(/, 'la fórmula retirada no puede volver a la pantalla')
+  assert.match(
+    pagina,
+    /margenCompartidoDeSobre\(sobres\.find/,
+    'el padre aporta la bolsa del servidor, no un cálculo propio',
+  )
   // Y no se puede asignar un monto negativo para cubrir un hueco.
   const hueco = pagina.slice(pagina.indexOf('const handleLlenarHueco ='), pagina.indexOf('const handleLlenarHueco =') + 900)
   assert.match(hueco, /Math\.max\(0, saldoAsignar\)/, 'cubrir el hueco sigue sin poder usar un disponible negativo')

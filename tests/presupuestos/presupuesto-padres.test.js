@@ -194,7 +194,7 @@ test('el barrido: ninguna suma de monto_limite quedó sin guarda', () => {
   // si alguien agrega una suma nueva sin la regla, esto falla aunque toque otra función.
   const sumasDeDinero = (sumasC.match(/SUM\(\s*(?:p\.)?monto_limite\s*\)/gi) ?? []).length
   const guardas = (sumasC.match(/NOT EXISTS \(/g) ?? []).length
-  assert.equal(sumasDeDinero, 4, 'cambió la cantidad de sumas de monto_limite: revisá si la nueva lleva guarda')
+  assert.equal(sumasDeDinero, 3, 'cambió la cantidad de sumas de monto_limite: revisá si la nueva lleva guarda')
   assert.equal(guardas, sumasDeDinero, 'hay una suma de monto_limite sin la guarda de S15')
 })
 

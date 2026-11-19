@@ -13,6 +13,13 @@ BEGIN
 
     SELECT hogar_id INTO v_hogar_id FROM p_hogar_participantes WHERE user_id = v_user_id;
 
+    -- En libertad no hay a donde transferir: la lista vuelve vacia y la pantalla no
+    -- ofrece la accion. El rechazo duro vive en fn_transferir_entre_sobres.
+    IF NOT EXISTS (SELECT 1 FROM public.p_presupuestos_config
+                    WHERE user_id = v_user_id AND modo_presupuesto = 'base_cero') THEN
+        RETURN;
+    END IF;
+
     -- Solo padres y rubros sueltos, y solo con algo positivo para dar. Las subcategorías
     -- no aparecen: no manejan plata.
     RETURN QUERY

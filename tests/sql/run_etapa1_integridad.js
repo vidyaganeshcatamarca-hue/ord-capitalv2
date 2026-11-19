@@ -62,7 +62,7 @@ const r = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/quer
 })
 const texto = await r.text()
 
-const m = texto.match(/RESULTADO (\[[\s\S]*?\])/)
+const m = texto.match(/RESULTADO (\[[\s\S]*\])/)
 if (!m) {
   console.error('no se pudo leer el resultado')
   console.error(texto.slice(0, 1200))

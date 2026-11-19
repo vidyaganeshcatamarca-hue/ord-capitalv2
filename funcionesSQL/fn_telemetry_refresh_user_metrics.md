@@ -1,8 +1,8 @@
 CREATE OR REPLACE FUNCTION public.fn_telemetry_refresh_user_metrics()
-RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
 AS $function$
 BEGIN
   INSERT INTO public.p_telemetry_user_metrics AS m (
@@ -76,13 +76,23 @@ BEGIN
     WHERE tipo = 'pago_tarjeta' AND fecha >= (now() - interval '30 days')::date
   ) ca ON ca.user_id = u.user_id
   LEFT JOIN (
-    SELECT user_id, COALESCE(sum(monto_limite), 0) AS assigned
-    FROM public.p_presupuestos
-    WHERE mes_periodo = date_trunc('month', CURRENT_DATE)::date
-    GROUP BY user_id
+    -- Bloque B: el grupo cuenta una sola vez. Sin esta guarda la plata asignada al padre y
+    -- la de sus hijos se sumaba dos veces. No se omite ningun gasto: lo gastado se cuenta
+    -- aparte, en la subconsulta de spent.
+    SELECT p.user_id, COALESCE(sum(p.monto_limite), 0) AS assigned
+    FROM public.p_presupuestos p
+    WHERE p.mes_periodo = date_trunc('month', CURRENT_DATE)::date
+      AND NOT EXISTS (
+            SELECT 1 FROM public.p_estructuras_egresos ee
+              JOIN public.p_presupuestos pp ON pp.estructura_egreso_id = ee.padre_id
+             WHERE ee.estructura_id = p.estructura_egreso_id
+               AND pp.mes_periodo = p.mes_periodo
+               AND pp.user_id = p.user_id
+               AND COALESCE(pp.monto_limite, 0) > 0)
+    GROUP BY p.user_id
   ) b ON b.user_id = u.user_id
   LEFT JOIN (
-    SELECT user_id, COALESCE(sum(valor_egreso), 0) AS spent
+    SELECT user_id, COALESCE(sum(COALESCE(valor_local, valor_egreso)), 0) AS spent
     FROM public.p_caja
     WHERE tipo = 'expense' AND fecha >= date_trunc('month', CURRENT_DATE)
     GROUP BY user_id
@@ -121,12 +131,4 @@ BEGIN
 
   RETURN jsonb_build_object('ok', true, 'users_upserted', (SELECT count(*) FROM public.usuarios));
 END;
-$function$;
-
--- ============================================================
--- Tanda 5 telemetria (2026-09-18): upsert set-based de p_telemetry_user_metrics
--- para TODOS los usuarios (16 metricas: dias activos 7/30, dias con movimientos,
--- sesiones/tiempo, billeteras, categorias, conciliaciones, tarjetas, cobertura
--- de presupuesto, uso de modulos desde p_telemetry_events). Sin backfill.
--- Schedulada via pg_cron diario 13:00 UTC (10:00 AR). RLS sin politicas.
--- ============================================================
+$function$

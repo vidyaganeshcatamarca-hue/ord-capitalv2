@@ -239,3 +239,4 @@ tests/configuracion/*
 !tests/sql/etapa4_sin_transferencias.sql
 !start_info/esquema-presupuesto.md
 !start_info/esquema-presupuesto.md.sha256
+!tests/sql/bloqueB_conciliacion.sql

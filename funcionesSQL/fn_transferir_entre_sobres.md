@@ -25,6 +25,14 @@ BEGIN
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
     SELECT hogar_id INTO v_hogar_id FROM p_hogar_participantes WHERE user_id = v_user_id;
 
+    -- Duenio: en libertad NO se transfiere. La transferencia mueve plata que ya estaba
+    -- asignada, y libertad no maneja saldos que viajen entre ciclos. Sin fila de
+    -- configuracion se asume libertad, que es el modo por defecto.
+    IF NOT EXISTS (SELECT 1 FROM public.p_presupuestos_config
+                    WHERE user_id = v_user_id AND modo_presupuesto = 'base_cero') THEN
+        RAISE EXCEPTION '{"key": "error_transfer_only_base_zero", "params": {}}';
+    END IF;
+
     IF p_monto <= 0 THEN
         RAISE EXCEPTION '{"key": "error_amount_must_be_positive", "params": {}}';
     END IF;
