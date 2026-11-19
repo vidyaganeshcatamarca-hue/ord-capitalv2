@@ -294,3 +294,17 @@ divergencia histórica no pertenece a esta feature.
 
 Próximo corte: migraciones DDL no destructivas (etapa 1).
 
+## Cierre del camino inseguro de pago (2026-11-18)
+
+`fn_registrar_pago_extra_deuda` quedo como shim de compatibilidad sobre
+`fn_prestamo_registrar_pago`. Misma firma, mismo retorno, una sola implementacion.
+Los tres defectos quedan cerrados: valida antes de escribir, no recorta el exceso
+en silencio (levanta `error_overpayment_confirmation_required`) y busca la
+categoria por clave exacta.
+
+**Lo que este parche NO resuelve:** la confusion `cuota_id`/`prestamo_id` del
+Calendario. Un `cuota_id` que no sea un `prestamo_id` ya no debita nada, pero uno
+que colisione con algun `prestamo_id` seguiria afectando ese prestamo. Cerrarlo
+exige que el Calendario transporte ids explicitos: tarea T18, pendiente.
+
+Regresion: `tests/prestamos/pago-viejo-regresion-transaccional.sql`, 9/9 PASS.
