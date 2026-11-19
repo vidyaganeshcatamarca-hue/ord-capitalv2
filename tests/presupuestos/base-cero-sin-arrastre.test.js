@@ -4,8 +4,8 @@
 //
 // S2 de odd/tasks/base-cero-logica.md: en base cero no hay arrastre y, en el
 // ciclo en que el usuario se pasó, los gastos se cuentan solo desde la fecha de
-// activación. La función desplegada es
-// temp_sql/132_base_cero_sin_arrastre.sql.
+// activación. La función desplegada se lee de su espejo,
+// funcionesSQL/fn_reporte_sobres_detalle.md.
 //
 // Por qué importa: con los datos del user 1 el arrastre de septiembre seguía
 // vivo (−2.443.777) y 2.287.700 de gastos anteriores al traspaso marcaban todos
@@ -29,14 +29,25 @@ const repo = path.join(__dirname, '..', '..')
 const leer = (...partes) => fs.readFileSync(path.join(repo, ...partes), 'utf8')
 const sinComentarios = (sql) => sql.replace(/--.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
 
-const sql = sinComentarios(leer('temp_sql', '132_base_cero_sin_arrastre.sql'))
+const sql = sinComentarios(leer('funcionesSQL', 'fn_reporte_sobres_detalle.md'))
+// El script de despliegue es un artefacto local: no hay espejo de scripts en
+// funcionesSQL/ (solo de RPC y triggers), asi que sigue leyendose de temp_sql/.
 const deploy = leer('temp_sql', '133_deploy_132.mjs')
 
 test('en base cero el arrastre del mes anterior es cero', () => {
-  assert.match(sql, /v_arrastre_cero := \(v_modo_presupuesto = 'base_cero'\)/)
+  // Plan §1.1: «El arrastre es exclusivo de base cero. En libertad no hay arrastre que
+  // materializar». Criterio 17: «Aparece un arrastre fuera de base cero».
+  //
+  // La regla es la misma; lo que creció fue la condición de al lado: el arrastre se apaga
+  // en base cero Y en el ciclo de activación (v_arrastre_cero exige que el ciclo anterior
+  // haya terminado dentro de la era base cero), y el balance es cero también cuando el
+  // rubro no tenía presupuesto el mes anterior. Se acota el patrón a la parte que la
+  // regla del plan nombra, sin soltar la condición: v_arrastre_cero tiene que seguir
+  // exigiendo modo base cero, y el balance tiene que seguir apagándose con él.
+  assert.match(sql, /v_arrastre_cero := \(v_modo_presupuesto = 'base_cero'/)
   assert.match(
     sql,
-    /CASE WHEN v_arrastre_cero THEN 0\s+ELSE COALESCE\(p\.monto_limite, 0\) - COALESCE\(gm\.total_gastado, 0\) END as balance_mes_anterior/,
+    /CASE WHEN v_arrastre_cero(?: OR COALESCE\(p\.monto_limite, 0\) <= 0)? THEN 0\s+ELSE COALESCE\(p\.monto_limite, 0\) - COALESCE\(gm\.total_gastado, 0\) END as balance_mes_anterior/,
     'el balance anterior tiene que apagarse en base cero',
   )
 })
@@ -46,7 +57,11 @@ test('el ciclo de activación cuenta gastos solo desde la activación', () => {
   assert.match(sql, /v_f_efectiva := v_fecha_activacion/)
   assert.match(
     sql,
-    /FROM p_caja c WHERE c\.tipo = 'expense' AND c\.fecha >= v_f_efectiva/,
+    // Plan §4.7 y criterio 11: «El presupuesto usa el importe convertido que la base ya
+    // guarda, no el importe original». La lectura pasó de p_caja a la vista reportable,
+    // que es la que expone el importe en moneda local. Se aceptan las dos formas: la
+    // regla que se afirma es que gastos_mes arranca en la fecha efectiva.
+    /FROM (?:public\.)?(?:p_caja|v_p_caja_reportable) c WHERE c\.tipo = 'expense' AND c\.fecha >= v_f_efectiva/,
     'gastos_mes tiene que arrancar en la fecha efectiva',
   )
   assert.doesNotMatch(sql, /c\.fecha >= v_f_inicio AND c\.fecha <= v_f_fin/, 'el corte viejo no puede sobrevivir')

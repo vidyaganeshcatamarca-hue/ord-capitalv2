@@ -236,3 +236,6 @@ tests/configuracion/*
 !tests/sql/etapa4_moneda.sql
 !tests/presupuestos/repeticion-mensual.test.js
 !tests/sql/etapa4_repeticion.sql
+!tests/sql/etapa4_sin_transferencias.sql
+!start_info/esquema-presupuesto.md
+!start_info/esquema-presupuesto.md.sha256

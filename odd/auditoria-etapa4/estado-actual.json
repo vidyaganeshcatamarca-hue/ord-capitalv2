@@ -1,0 +1,1249 @@
+{
+  "tomada_en": "2026-11-18T17:03:31.741Z",
+  "nota": "Foto del estado DESPUES de las modificaciones de esta sesion. La linea base previa que pedia la etapa 0.3 del plan NO existe: no se creo antes de escribir. Esta foto no la reemplaza.",
+  "totales": {
+    "config": 83,
+    "presupuestos": 99,
+    "con_techo": 0,
+    "historial": 42,
+    "md5_presupuestos": "cfbfb5d71c15d03969bc60abf32f9d69",
+    "md5_historial": "d736c0bb8e05851f3af4bb49d513582b"
+  },
+  "cuentas": [
+    {
+      "user_id": 1,
+      "modo_presupuesto": "base_cero",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": "2026-10-27",
+      "filas": 39,
+      "con_techo": 0,
+      "con_plata": 23,
+      "md5_presupuestos": "b45b45ba2206d20abf911748aeca0e50",
+      "historial": 25
+    },
+    {
+      "user_id": 3,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 4,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 5,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 6,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 7,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 20,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 4,
+      "con_techo": 0,
+      "con_plata": 4,
+      "md5_presupuestos": "edabf03130f98f887c25758b709d9458",
+      "historial": 0
+    },
+    {
+      "user_id": 30,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 4,
+      "con_techo": 0,
+      "con_plata": 4,
+      "md5_presupuestos": "1535efd59419b1cdae25721e7327caa7",
+      "historial": 0
+    },
+    {
+      "user_id": 31,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 22,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 32,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 4,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 84,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 11,
+      "con_techo": 0,
+      "con_plata": 11,
+      "md5_presupuestos": "d986a304550eb8e5550132bf7936ade3",
+      "historial": 0
+    },
+    {
+      "user_id": 86,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 113,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 114,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 124,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 10,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 125,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 126,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 127,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 128,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 129,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 130,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 131,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 132,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 133,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 134,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 135,
+      "modo_presupuesto": "base_cero",
+      "dia_ancla_ciclo": 11,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 136,
+      "modo_presupuesto": "base_cero",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 2,
+      "con_techo": 0,
+      "con_plata": 1,
+      "md5_presupuestos": "1983d2279fc10c34c0a2f240ab8dd51c",
+      "historial": 2
+    },
+    {
+      "user_id": 137,
+      "modo_presupuesto": "base_cero",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 138,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 139,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 140,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 2,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 144,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 145,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 31,
+      "fecha_activacion_base_cero": null,
+      "filas": 1,
+      "con_techo": 0,
+      "con_plata": 1,
+      "md5_presupuestos": "0ad6cadd65b3915fb68d29e3cd13ffa1",
+      "historial": 0
+    },
+    {
+      "user_id": 146,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 147,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 148,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 10,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 149,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 150,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 151,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 152,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 153,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 10,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 154,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 31,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 155,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 156,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 157,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 158,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 159,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 11,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 160,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 161,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 162,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 163,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 3,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 164,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 5,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 165,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 166,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 167,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 168,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 169,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 170,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 171,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 172,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 173,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 174,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 8,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 179,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 180,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 181,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 184,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 187,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 188,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 189,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 31,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 197,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 198,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 12,
+      "con_techo": 0,
+      "con_plata": 2,
+      "md5_presupuestos": "cc782eba3ace9a0ef477b90675021c5b",
+      "historial": 8
+    },
+    {
+      "user_id": 199,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 201,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 202,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 203,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 204,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 31,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 205,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 206,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 28,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 207,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 10,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 208,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 209,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    },
+    {
+      "user_id": 210,
+      "modo_presupuesto": "base_cero",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": "2026-10-27",
+      "filas": 26,
+      "con_techo": 0,
+      "con_plata": 18,
+      "md5_presupuestos": "0c8cee86faba65803051fc66ee6a46d6",
+      "historial": 7
+    },
+    {
+      "user_id": 211,
+      "modo_presupuesto": "anticipado",
+      "dia_ancla_ciclo": 1,
+      "fecha_activacion_base_cero": null,
+      "filas": 0,
+      "con_techo": 0,
+      "con_plata": 0,
+      "md5_presupuestos": null,
+      "historial": 0
+    }
+  ],
+  "funciones": [
+    {
+      "nombre": "fn_actualizar_flexibilidad_subcuenta",
+      "firma": "p_subcuenta_id bigint, p_flexibilidad_recorte smallint",
+      "md5": "cd81a10b3bee1606329a02aa3461e95a"
+    },
+    {
+      "nombre": "fn_actualizar_saldo_billetera",
+      "firma": "",
+      "md5": "2994ae3fdba40df5f6d40c3e6edc3e7e"
+    },
+    {
+      "nombre": "fn_actualizar_saldo_billetera_integral",
+      "firma": "",
+      "md5": "d24a77c191af18eeca5b433d1d5553bb"
+    },
+    {
+      "nombre": "fn_actualizar_utilidad_subcuenta",
+      "firma": "p_subcuenta_id bigint, p_utilidad_placer smallint",
+      "md5": "b74860f9e5973df702b2768af449c9e2"
+    },
+    {
+      "nombre": "fn_archivar_presupuestos_ciclo",
+      "firma": "p_user_id bigint, p_mes_periodo date, p_motivo text, p_modo_origen text, p_modo_destino text",
+      "md5": "b97ce5ef7f14dbfa5783f7ddee32c404"
+    },
+    {
+      "nombre": "fn_asignar_dinero_a_presupuesto",
+      "firma": "p_billetera_id bigint, p_monto numeric, p_mes_periodo date",
+      "md5": "056bbb6d916f2644600f9bb70aac86ec"
+    },
+    {
+      "nombre": "fn_asignar_presupuesto",
+      "firma": "p_estructura_egreso_id bigint, p_monto_asignado numeric, p_mes_periodo date, p_motivo text, p_mover_plata boolean",
+      "md5": "42e0a7d2fd15daf772a7c4644e63a46c"
+    },
+    {
+      "nombre": "fn_asignar_techo",
+      "firma": "p_estructura_egreso_id bigint, p_techo numeric, p_mes_periodo date",
+      "md5": "d99f99db06e051b6a66e5ee63ec269b3"
+    },
+    {
+      "nombre": "fn_aviso_ahorro_en_riesgo",
+      "firma": "",
+      "md5": "c115a527a9440cf0ba68c9a518bd95da"
+    },
+    {
+      "nombre": "fn_aviso_categoria_en_rojo",
+      "firma": "",
+      "md5": "86f9b2db81bbea82796aa0a5c6b45735"
+    },
+    {
+      "nombre": "fn_aviso_cuarentena",
+      "firma": "",
+      "md5": "76f729402118832ef1c4ec8ff93230d9"
+    },
+    {
+      "nombre": "fn_aviso_deuda_por_vencer",
+      "firma": "",
+      "md5": "5b8b6f723858aa6adf62959e41bba6fd"
+    },
+    {
+      "nombre": "fn_aviso_vencimiento_tarjeta",
+      "firma": "",
+      "md5": "048ad4b7d93f8894795fb6be9ff13ab4"
+    },
+    {
+      "nombre": "fn_avisos_ejecutar",
+      "firma": "",
+      "md5": "9d418ab41c1c5883044912b14a61fec4"
+    },
+    {
+      "nombre": "fn_calcular_arrastre_deuda",
+      "firma": "p_mes_periodo date",
+      "md5": "ad4a67837b6783033c699734c356a942"
+    },
+    {
+      "nombre": "fn_completar_saldo_inicial_billetera",
+      "firma": "p_billetera_id bigint, p_saldo_apertura numeric",
+      "md5": "ba13efa3c97b89dab587d9509408b7a2"
+    },
+    {
+      "nombre": "fn_configurar_modo_presupuesto",
+      "firma": "p_modo text",
+      "md5": "212f1e0daee4b17b848085483e866e57"
+    },
+    {
+      "nombre": "fn_crear_subcuenta_egreso",
+      "firma": "p_padre_id bigint, p_nombre text, p_descripcion text, p_icono text, p_es_deseo boolean, p_es_hormiga boolean, p_utilidad_placer smallint, p_flexibilidad_recorte smallint",
+      "md5": "f41b03efa07ea39d8994bf50b983a3cf"
+    },
+    {
+      "nombre": "fn_crear_subcuenta_predeterminada",
+      "firma": "",
+      "md5": "89977a385120d8e703a8061eff672243"
+    },
+    {
+      "nombre": "fn_disponible_transferible",
+      "firma": "p_estructura_egreso_id bigint, p_mes date",
+      "md5": "d0103fe60bfc1801c45ba9594d64d1da"
+    },
+    {
+      "nombre": "fn_disponibles_transferibles",
+      "firma": "p_mes date",
+      "md5": "5b33a0cdb26be3c810a98e93088e38c4"
+    },
+    {
+      "nombre": "fn_encolar_aviso",
+      "firma": "p_user_id bigint, p_tipo text, p_categoria text, p_familia text, p_titulo text, p_mensaje text, p_canal text, p_referencia_id bigint, p_metadata jsonb, p_prioridad smallint, p_dedupe_key text, p_expira_at timestamp with time zone",
+      "md5": "82c8d49bdcf1b75c0fa432dd81656fb2"
+    },
+    {
+      "nombre": "fn_historial_presupuesto",
+      "firma": "p_estructura_egreso_id bigint, p_mes_periodo date",
+      "md5": "46e624e0489af21f6f91ced63696baf3"
+    },
+    {
+      "nombre": "fn_modificar_subcuenta_egreso",
+      "firma": "p_subcuenta_id bigint, p_nombre text, p_descripcion text, p_icono text, p_es_deseo boolean, p_es_hormiga boolean, p_utilidad_placer smallint, p_flexibilidad_recorte smallint",
+      "md5": "9b91f9ff915c4e12e8e5a9ed29823011"
+    },
+    {
+      "nombre": "fn_obtener_config_presupuesto",
+      "firma": "",
+      "md5": "8876f00223a7e407a83fec2d66c23f79"
+    },
+    {
+      "nombre": "fn_obtener_fechas_ciclo_presupuesto",
+      "firma": "p_fecha_base date",
+      "md5": "bb66a5677a8e2e0b1b691f7eceedc586"
+    },
+    {
+      "nombre": "fn_obtener_saldo_a_asignar",
+      "firma": "p_mes_periodo date",
+      "md5": "fe185f4a14b0f781c5451b2e39917448"
+    },
+    {
+      "nombre": "fn_obtener_saldo_disponible_para_asignar",
+      "firma": "p_mes_periodo date",
+      "md5": "eaf472c8680ee4cc7be7b21ed94b7b85"
+    },
+    {
+      "nombre": "fn_obtener_saldo_pasivo_tarjetas",
+      "firma": "",
+      "md5": "304faf928be2eb2cad222daf590a380f"
+    },
+    {
+      "nombre": "fn_obtener_saldo_pasivo_tarjetas_monedas",
+      "firma": "",
+      "md5": "7bd98b223bde8808b3fdfa3dd044ac4a"
+    },
+    {
+      "nombre": "fn_obtener_subcuentas_por_rubro",
+      "firma": "p_rubro_id bigint",
+      "md5": "8f9cc5c54d857e58f0c64e2b72360935"
+    },
+    {
+      "nombre": "fn_obtener_techo_presupuestario",
+      "firma": "",
+      "md5": "b7289b373721d78930d304f6b34e83b2"
+    },
+    {
+      "nombre": "fn_prestamos_recalcular_saldo",
+      "firma": "",
+      "md5": "b5ad806711e5bb807486d176d1939542"
+    },
+    {
+      "nombre": "fn_recalcular_saldos_billeteras",
+      "firma": "",
+      "md5": "81be1f2bdc0482d815c93775b710c035"
+    },
+    {
+      "nombre": "fn_repetir_presupuestos_ciclo",
+      "firma": "p_mes date",
+      "md5": "51e440431b1ba04d66f626eaa070c77f"
+    },
+    {
+      "nombre": "fn_reporte_evolucion_presupuesto",
+      "firma": "",
+      "md5": "d05c9ac9855b6302d607228c577f9170"
+    },
+    {
+      "nombre": "fn_reporte_presupuestos_mensuales",
+      "firma": "",
+      "md5": "6a5b596b582a49cae6d84fbf76aeabf8"
+    },
+    {
+      "nombre": "fn_reporte_sobres_detalle",
+      "firma": "p_mes_periodo date",
+      "md5": "38de4ea0ed4568e5a26454f472154d16"
+    },
+    {
+      "nombre": "fn_reporte_termometro_presupuestos",
+      "firma": "",
+      "md5": "4247153d4a350bf4ace3fe3c5197f674"
+    },
+    {
+      "nombre": "fn_reporte_termometro_presupuestos",
+      "firma": "p_mes_periodo date",
+      "md5": "7b9bb2bc6fd269b93092eb6f2fe861f4"
+    },
+    {
+      "nombre": "fn_sobre_aportar",
+      "firma": "p_sobre_id bigint, p_billetera_id bigint, p_importe numeric, p_modalidad text, p_genera_rendimiento boolean, p_fecha date",
+      "md5": "7c02a167c2b828c14e3a3600f9a04ffa"
+    },
+    {
+      "nombre": "fn_sobre_archivar",
+      "firma": "p_sobre_id bigint",
+      "md5": "a70b84f52475faf3f08244888283f975"
+    },
+    {
+      "nombre": "fn_sobre_crear",
+      "firma": "p_nombre text, p_moneda text, p_monto_meta numeric, p_fecha_objetivo date, p_aporte_billetera_id bigint, p_aporte_importe numeric, p_aporte_modalidad text, p_aporte_genera_rendimiento boolean, p_icono text",
+      "md5": "2077d84a47e010d907843a9c4baa9c28"
+    },
+    {
+      "nombre": "fn_sobre_desarchivar",
+      "firma": "p_sobre_id bigint",
+      "md5": "8a60e0794ce47020d2a092f22bc6a0f9"
+    },
+    {
+      "nombre": "fn_sobre_detalle",
+      "firma": "p_sobre_id bigint",
+      "md5": "e33b276d26bdc9af214fe001b9285c21"
+    },
+    {
+      "nombre": "fn_sobre_editar",
+      "firma": "p_sobre_id bigint, p_nombre text, p_monto_meta numeric, p_fecha_objetivo date, p_icono text, p_quitar_meta boolean, p_quitar_fecha boolean",
+      "md5": "bec3df9b14e15d320f56cf51d92bb89d"
+    },
+    {
+      "nombre": "fn_sobre_editar_movimiento",
+      "firma": "p_movimiento_id bigint, p_importe numeric, p_billetera_id bigint, p_modalidad text, p_genera_rendimiento boolean",
+      "md5": "0d5a3f85476dac1fa151f7077e298a48"
+    },
+    {
+      "nombre": "fn_sobre_pata_billetera",
+      "firma": "p_user_id bigint, p_billetera_id bigint, p_moneda text, p_importe numeric, p_salida boolean, p_detalle text, p_sobre_id bigint, p_sobre_nombre text, p_fecha date",
+      "md5": "27768e22b6bb39396ecfe875c2c874af"
+    },
+    {
+      "nombre": "fn_sobre_plan",
+      "firma": "p_meta numeric, p_saldo numeric, p_saldo_base numeric, p_fecha date, p_inicio date",
+      "md5": "d1332233d10a0948117bdf6681b9ecd6"
+    },
+    {
+      "nombre": "fn_sobre_porciones",
+      "firma": "p_sobre_id bigint",
+      "md5": "ea07fd57b6450105bf10e2aacbd4df87"
+    },
+    {
+      "nombre": "fn_sobre_producto_rendimiento",
+      "firma": "p_user_id bigint",
+      "md5": "c0fea734921907306518432fa93e14a5"
+    },
+    {
+      "nombre": "fn_sobre_rendimiento_editar",
+      "firma": "p_movimiento_id bigint, p_importe numeric",
+      "md5": "26b25219ecb3187bbd9a9becf85f41a7"
+    },
+    {
+      "nombre": "fn_sobre_rendimiento_registrar",
+      "firma": "p_sobre_id bigint, p_billetera_id bigint, p_importe numeric",
+      "md5": "ea489572d901a79b18347b0af9315bf4"
+    },
+    {
+      "nombre": "fn_sobre_rescatar",
+      "firma": "p_sobre_id bigint, p_asignaciones jsonb, p_fecha date",
+      "md5": "033f8f28f32c3b9b1f6ee9845c3d1690"
+    },
+    {
+      "nombre": "fn_sobre_saldo",
+      "firma": "p_sobre_id bigint",
+      "md5": "8747b3450e8c36543e5e4fbf3cd9dbfc"
+    },
+    {
+      "nombre": "fn_sobre_saldo_base",
+      "firma": "p_sobre_id bigint, p_inicio date",
+      "md5": "0cc134a3a909efe796ea7fe44335ce15"
+    },
+    {
+      "nombre": "fn_sobres_listar",
+      "firma": "p_incluir_archivados boolean",
+      "md5": "28429a2121eaaa138ca89a2fec5be116"
+    },
+    {
+      "nombre": "fn_sobres_orden_automatico",
+      "firma": "",
+      "md5": "5bd0488a919e2cadd5d294df4bd0ec75"
+    },
+    {
+      "nombre": "fn_sobres_reordenar",
+      "firma": "p_sobre_ids bigint[]",
+      "md5": "57aa12d4e3d0f6970ade3bacf9d5f5f4"
+    },
+    {
+      "nombre": "fn_sobres_reservas_virtuales",
+      "firma": "",
+      "md5": "9a05d7272dd37c656c8909375b764149"
+    },
+    {
+      "nombre": "fn_techos_por_estructura",
+      "firma": "p_mes date",
+      "md5": "f0dfdea5f9d9d4d4cdaa31c993329e33"
+    },
+    {
+      "nombre": "fn_tr_asignar_color_subcuenta_nueva",
+      "firma": "",
+      "md5": "b1510494906c3b20a85c4de11ab35d8d"
+    },
+    {
+      "nombre": "fn_tr_validar_saldo_inversion",
+      "firma": "",
+      "md5": "ed4efdf02fc9df5d11886ea8eec2b1a9"
+    },
+    {
+      "nombre": "fn_transferir_entre_sobres",
+      "firma": "p_origen_id bigint, p_destino_id bigint, p_monto numeric, p_mes_periodo date, p_idempotency_key text",
+      "md5": "ff87b34ac51a0b7b3ca00cbe7d9b008f"
+    }
+  ]
+}

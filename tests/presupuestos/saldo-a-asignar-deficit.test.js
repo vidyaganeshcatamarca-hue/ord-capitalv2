@@ -3,9 +3,10 @@
 //   node --test tests/presupuestos/saldo-a-asignar-deficit.test.js
 //
 // S1 de odd/tasks/base-cero-logica.md: los sobres en rojo no pueden sumar al
-// "disponible para asignar". La función desplegada es
-// temp_sql/130_saldo_deficit_no_suma.sql; este test congela la invariante sobre
-// el fuente, para que una re-escritura no reintroduzca el defecto.
+// "disponible para asignar". La función desplegada se lee de su espejo,
+// funcionesSQL/fn_obtener_saldo_a_asignar.md, que se resincroniza desde la base;
+// este test congela la invariante sobre el fuente, para que una re-escritura no
+// reintroduzca el defecto.
 //
 // Por qué importa el número: con los datos del user 1 la fórmula vieja devolvía
 // 7.358.752 contra 2.627.275 de liquidez real, y el guard de
@@ -32,7 +33,9 @@ const leer = (...partes) => fs.readFileSync(path.join(repo, ...partes), 'utf8')
 // propio comentario, que sí lo nombra.
 const sinComentarios = (sql) => sql.replace(/--.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
 
-const sql = sinComentarios(leer('temp_sql', '130_saldo_deficit_no_suma.sql'))
+const sql = sinComentarios(leer('funcionesSQL', 'fn_obtener_saldo_a_asignar.md'))
+// El script de despliegue es un artefacto local: no hay espejo de scripts en
+// funcionesSQL/ (solo de RPC y triggers), asi que sigue leyendose de temp_sql/.
 const deploy = leer('temp_sql', '131_deploy_130.mjs')
 
 test('la fórmula resta solo los saldos positivos de los sobres', () => {

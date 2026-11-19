@@ -21,7 +21,7 @@ BEGIN
     FROM p_presupuestos p
     INNER JOIN p_estructuras_egresos e ON p.estructura_egreso_id = e.estructura_id
     LEFT JOIN (
-        SELECT estructura_egreso_id, SUM(valor_egreso) as total_gastado
+        SELECT estructura_egreso_id, SUM(COALESCE(valor_local, valor_egreso)) as total_gastado
         FROM p_caja
         WHERE tipo = 'expense'
           AND date_trunc('month', fecha) = v_mes_anterior

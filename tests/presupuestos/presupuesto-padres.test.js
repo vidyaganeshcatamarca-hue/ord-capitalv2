@@ -35,17 +35,31 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const repo = path.join(__dirname, '..', '..')
 const leer = (...partes) => fs.readFileSync(path.join(repo, ...partes), 'utf8')
 
-const reporte = leer('temp_sql', '151_reporte_padres.sql')
-const filaPadre = leer('temp_sql', '155_reporte_fila_padre.sql')
-const techo = leer('temp_sql', '158_techo_al_asignar.sql')
-const transferencias = leer('temp_sql', '160_techo_en_transferencias.sql')
-const arrastre = leer('temp_sql', '162_arrastre_base_cero.sql')
-// 168 supersede a 164 (misma función, con el 0 permitido en el padre).
-const asignarBaseCero = leer('temp_sql', '168_padre_a_cero.sql')
-const padreVisible = leer('temp_sql', '167_padre_siempre_visible.sql')
+const leerFuncion = (nombre) => leer('funcionesSQL', `${nombre}.md`)
+
+// 151, 155, 162 y 167 son cuatro pasos sobre la MISMA función: el espejo es su
+// estado final desplegado, así que las cuatro lecturas apuntan ahí.
+const reporte = leerFuncion('fn_reporte_sobres_detalle')
+const filaPadre = reporte
+const arrastre = reporte
+const padreVisible = reporte
+// 158 y 168 también son la misma función: fn_asignar_presupuesto.
+const techo = leerFuncion('fn_asignar_presupuesto')
+const asignarBaseCero = techo
+const transferencias = leerFuncion('fn_transferir_entre_sobres')
 const pagina = leer('src', 'pages', 'Presupuestos', 'PresupuestosPage.tsx')
 const cssPagina = leer('src', 'pages', 'Presupuestos', 'Presupuestos.css')
-const sumas = leer('temp_sql', '153_sumas_sin_padres.sql')
+// 153 toca cinco funciones distintas; el test las recorta una por una con cuerpoDe(),
+// asi que la unión no mezcla cuerpos en una misma aserción.
+const sumas = [
+  'fn_obtener_saldo_disponible_para_asignar',
+  'fn_reporte_proyeccion_presupuestaria',
+  'fn_reporte_termometro_presupuestos',
+  'fn_telemetry_refresh_user_metrics',
+  'fn_obtener_saldo_a_asignar',
+]
+  .map(leerFuncion)
+  .join('\n')
 
 // Comparar SQL sin depender de la indentación.
 const compacto = (s) => s.replace(/\s+/g, ' ').trim()
@@ -75,34 +89,73 @@ const GUARDA = (alias) => compacto(`
       AND COALESCE(pp.monto_limite, 0) > 0
   )`)
 
-// El cuerpo de una función dentro de la migración, para acotar cada aserción a su
-// propia función y no al archivo entero.
+// El cuerpo de una función dentro del espejo, para acotar cada aserción a su propia
+// función y no al archivo entero. Los espejos cierran con $function$ sin ';', así que
+// el recorte no puede buscar '$function$;' o se lleva la función siguiente.
 const cuerpoDe = (nombre) => {
   const i = sumasC.indexOf(`FUNCTION public.${nombre}`)
-  assert.notEqual(i, -1, `no encontré la función ${nombre} en 153`)
-  const fin = sumasC.indexOf('$function$;', i)
-  return sumasC.slice(i, fin === -1 ? undefined : fin)
+  assert.notEqual(i, -1, `no encontré la función ${nombre} en los espejos de funcionesSQL/`)
+  // Cuidado: el cuerpo ABRE con `AS $function$` y CIERRA con otro `$function$`. Buscar el
+  // primero devuelve solo la firma, y todas las aserciones sobre el cuerpo se vuelven
+  // vacuas. Hay que saltar la apertura y cortar en el cierre.
+  const apertura = sumasC.indexOf('$function$', i)
+  if (apertura === -1) return sumasC.slice(i)
+  const cierre = sumasC.indexOf('$function$', apertura + '$function$'.length)
+  return sumasC.slice(apertura + '$function$'.length, cierre === -1 ? undefined : cierre)
 }
 
 test('escenario base: sin presupuesto de padre el predicado es siempre verdadero', () => {
-  // NOT EXISTS sobre una tabla sin la fila del padre es verdadero para toda fila, así
-  // que la suma sigue contando todo: es el estado de producción y por eso el deploy
-  // pudo verificar que las cinco salidas salían idénticas.
+  // Plan §2.4: «Las dos validaciones que existen porque hoy hay plata en dos lugares
+  // —“no entra en el techo repartido” y “no podés bajar del repartido”— dejan de tener
+  // sentido», y el anexo de la misma etapa: «fuera error_budget_child_over_parent y
+  // error_budget_parent_below_children». Con una sola bolsa por grupo el predicado que
+  // decide qué suma no puede depender del techo del padre, así que no puede haber una
+  // guarda afirmativa que esconda a los hijos porque el padre no tenga presupuesto.
+  //
+  // La aserción está invertida respecto de la versión vieja: antes se exigía que la
+  // guarda existiera (NOT EXISTS); ahora se exige que el rechazo por techo repartido
+  // esté ausente. En fn_asignar_presupuesto y en el reporte ya está ausente; las dos
+  // claves siguen vivas en fn_transferir_entre_sobres, y eso se reporta aparte porque
+  // este test no lo cubre.
   for (const nombre of FUNCIONES_CON_GUARDA) {
     const cuerpo = cuerpoDe(nombre)
-    assert.ok(cuerpo.includes('NOT EXISTS ('), `${nombre}: la guarda tiene que ser un NOT EXISTS`)
     assert.ok(
       !/AND\s+EXISTS\s*\(/.test(cuerpo),
       `${nombre}: una guarda afirmativa escondería los hijos cuando el padre NO tiene presupuesto`,
     )
+    assert.ok(
+      !/error_budget_child_over_parent|error_budget_parent_below_children/.test(cuerpo),
+      `${nombre}: el rechazo por techo repartido está retirado (§2.4)`,
+    )
   }
+  // Y la regla que lo reemplaza es estructural: la subcategoría no cuenta nunca, así que
+  // el predicado no puede depender del presupuesto del padre (§2.2).
+  assert.ok(
+    reporteC.includes('(e.padre_id IS NULL) AS cuenta_en_totales'),
+    'cuenta el rubro sin padre: el resto entra por la fila del padre, no por el techo del padre',
+  )
 })
 
 test('con presupuesto en el padre el hijo deja de contar por separado', () => {
-  // Tres condiciones hacen la regla: se mira el padre del rubro (no el rubro), se exige
-  // el mismo ciclo y el mismo usuario.
+  // Plan §2.2: «La subcategoría pierde plata y arrastre propios. Su arrastre sube al
+  // padre», y la columna lo dice de forma estructural: la subcategoría no cuenta nunca y
+  // el padre siempre cuenta. Así cada grupo aporta exactamente una fila, sin depender de
+  // que el padre tenga presupuesto. Eso subsume la guarda vieja, que sólo dejaba de
+  // contar al hijo cuando el padre tenía presupuesto > 0.
+  assert.ok(
+    reporteC.includes('(e.padre_id IS NULL) AS cuenta_en_totales'),
+    'la subcategoría no cuenta en los totales: cuenta el rubro sin padre (§2.2)',
+  )
+  assert.ok(
+    /\)::numeric, true, true FROM p_estructuras_egresos e/.test(padreC),
+    'la fila del padre tiene que salir con es_padre y cuenta_en_totales en true (§2.2)',
+  )
+  // Mientras la guarda siga existiendo en alguna función, tiene que estar completa: se
+  // mira el padre del rubro (no el rubro), con el mismo ciclo y el mismo usuario. Las
+  // funciones que ya no agregan presupuestos por fila no tienen guarda que revisar.
   for (const nombre of FUNCIONES_CON_GUARDA) {
     const cuerpo = cuerpoDe(nombre)
+    if (!cuerpo.includes('NOT EXISTS (')) continue
     const alias = cuerpo.includes('= p.estructura_egreso_id') ? 'p' : 'p_presupuestos'
     assert.ok(
       cuerpo.includes(GUARDA(alias)),
@@ -118,10 +171,20 @@ test('con presupuesto en el padre el hijo deja de contar por separado', () => {
 test('un padre con presupuesto en cero no esconde a sus hijos', () => {
   // Cero significa "este rubro no tiene presupuesto", no "tiene techo cero". Sin el
   // > 0, crear una fila en cero apagaría los presupuestos de todos los hijos.
+  //
+  // Plan §2.2: la garantía fuerte ya no depende de esta guarda, porque el hijo no cuenta
+  // nunca y el padre cuenta siempre; cero y ausencia de fila son lo mismo. Donde la
+  // guarda sobreviva, el operador sigue siendo > 0 y no >= 0.
   for (const nombre of FUNCIONES_CON_GUARDA) {
+    const cuerpo = cuerpoDe(nombre)
+    if (!cuerpo.includes('NOT EXISTS (')) continue
     assert.ok(
-      cuerpoDe(nombre).includes('COALESCE(pp.monto_limite, 0) > 0'),
+      cuerpo.includes('COALESCE(pp.monto_limite, 0) > 0'),
       `${nombre}: la guarda tiene que exigir monto_limite mayor a cero`,
+    )
+    assert.ok(
+      !cuerpo.includes('COALESCE(pp.monto_limite, 0) >= 0'),
+      `${nombre}: cero no puede ser techo: >= 0 apagaría a los hijos`,
     )
   }
 })
@@ -150,9 +213,23 @@ test('el reporte expone es_padre y cuenta_en_totales', () => {
     reporteC.includes('gasto_promedio_6m numeric, es_padre boolean, cuenta_en_totales boolean'),
     'el RETURNS TABLE tiene que terminar en las dos columnas nuevas',
   )
-  // Cambiar los parámetros de salida obliga a DROP, y el DROP se lleva los grants.
-  assert.ok(reporteC.includes('DROP FUNCTION IF EXISTS public.fn_reporte_sobres_detalle(date)'), 'falta el DROP previo')
-  assert.ok(reporteC.includes('NOT EXISTS ( SELECT 1 FROM p_presupuestos pp'), 'el reporte tiene que calcular cuenta_en_totales')
+  // Plan §2.2: «la subcategoría no cuenta nunca en los totales… la bolsa es del padre,
+  // que siempre cuenta». El reporte ya no deduce cuenta_en_totales buscando el
+  // presupuesto del padre: lo resuelve con la forma del árbol, que no puede quedar
+  // desactualizada.
+  assert.ok(
+    reporteC.includes('(e.padre_id IS NULL) AS cuenta_en_totales'),
+    'el reporte tiene que calcular cuenta_en_totales por la forma del árbol y no por el presupuesto del padre (§2.2)',
+  )
+  assert.ok(
+    /\)::numeric, true, true FROM p_estructuras_egresos e/.test(padreC),
+    'la fila del padre tiene que salir con es_padre y cuenta_en_totales en true (§2.2)',
+  )
+  // La aserción del DROP previo se retiró: el DROP es del script de despliegue, no de la
+  // función. Plan, Etapa 0 (§4.1): «Refrescar desde lo instalado las copias del proyecto
+  // del módulo» — el espejo es la definición instalada (pg_proc.prosrc) y por definición
+  // no puede contener el DROP ni los GRANT que se lleva puesto. Queda sin cobertura de
+  // regresión esa parte; se anota en el reporte.
 })
 
 test('las cuatro sumas de presupuesto siguen siendo de lectura', () => {
@@ -160,7 +237,10 @@ test('las cuatro sumas de presupuesto siguen siendo de lectura', () => {
   // diseno. Las otras cuatro solo calculan. Si alguna escribiera, la verificacion
   // "identico antes y despues" del deploy dejaria de probar que el cambio es de lectura.
   for (const nombre of FUNCIONES_CON_GUARDA.filter((n) => n !== 'fn_telemetry_refresh_user_metrics')) {
-    const escrituras = cuerpoDe(nombre).match(/(INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM)/gi) ?? []
+    // El patrón tenía un \b literal de byte 0x08 en lugar de un word boundary, así que
+    // nunca encontraba nada y la aserción pasaba sin mirar. Se corrige: la regla es la
+    // misma (estas funciones no escriben), pero ahora se comprueba de verdad.
+    const escrituras = cuerpoDe(nombre).match(/\b(INSERT\s+INTO|UPDATE\s+|DELETE\s+FROM)\b/gi) ?? []
     assert.deepEqual(escrituras, [], `${nombre} no puede escribir, encontre: ${escrituras.join(', ')}`)
   }
   // Y la de telemetria tiene que seguir escribiendo: si dejo de hacerlo, algo se rompio.
@@ -182,39 +262,79 @@ test('las cuatro sumas de presupuesto siguen siendo de lectura', () => {
 
 test('la fila del padre es la suma de las filas de sus hijos', () => {
   assert.ok(padreC.includes('filas(estructura_id'), 'el CTE tiene que declarar sus columnas, si no hereda nombres de expresión')
-  assert.ok(padreC.includes('SELECT filas.* FROM filas UNION ALL SELECT'), 'la rama del padre se agrega con UNION ALL sobre las filas de los hijos')
+  const sinComentarios = (s) => compacto(s.replace(/--[^\r\n]*/g, ''))
+  const padreUnido = sinComentarios(filaPadre)
+  assert.ok(padreUnido.includes('SELECT filas.* FROM filas UNION ALL SELECT'), 'la rama del padre se agrega con UNION ALL sobre las filas de los hijos')
   assert.ok(padreC.includes('JOIN filas f ON f.padre_id = e.estructura_id'), 'el padre se arma desde las filas de sus hijos')
-  for (const suma of ['SUM(f.monto_gastado)', 'SUM(f.monto_asignado_anterior)', 'SUM(f.monto_gastado_anterior)', 'SUM(f.gasto_promedio_6m)', 'SUM(f.arrastre_mes_anterior)']) {
+  // Plan §2.1: la fila del padre es «lo que arrastra (con su signo) + lo asignado − lo
+  // gastado por el grupo, incluido lo gastado en el padre mismo», y sin piso artificial
+  // por fila. Los totales históricos (asignado y gastado del mes anterior, promedio de
+  // seis meses) siguen siendo la suma de los hijos. El arrastre y el disponible ya no se
+  // suman fila por fila: son la bolsa del grupo, que sale de fn_disponible_transferible,
+  // la misma cuenta que usa el validador de transferencias.
+  for (const suma of ['SUM(f.monto_gastado)', 'SUM(f.monto_asignado_anterior)', 'SUM(f.monto_gastado_anterior)', 'SUM(f.gasto_promedio_6m)']) {
     assert.ok(padreC.includes(suma), `falta ${suma} en la rama del padre`)
   }
+  assert.ok(
+    padreC.includes('public.fn_disponible_transferible(e.estructura_id, v_mes_truncado) AS bolsa'),
+    'el disponible y el arrastre del padre salen de la bolsa del grupo (§2.1), no de sumar los arrastres de los hijos',
+  )
+  assert.ok(
+    !padreC.includes('SUM(f.arrastre_mes_anterior)'),
+    'el arrastre del padre ya no se suma fila por fila: la subcategoría no arrastra por su cuenta (§2.2)',
+  )
 })
 
 test('el disponible del padre es su presupuesto menos la suma de sus hijos', () => {
+  // Plan §2.1: «Una sola definición de la bolsa del padre… Sin piso artificial por fila»,
+  // y §2.3: «para cada padre, el número de la fila, el de la lista de orígenes y el de la
+  // validación son iguales». El disponible del padre ya no es “presupuesto menos gasto
+  // sumado”: es la bolsa del grupo, tal cual, con su signo.
   assert.ok(
-    padreC.includes('(COALESCE(p.monto_limite, 0) - COALESCE(SUM(f.monto_gastado), 0))::numeric'),
-    'el disponible del padre tiene que ser asignado menos el gasto sumado de los hijos',
+    padreC.includes('b.bolsa::numeric'),
+    'el disponible del padre tiene que ser la bolsa del grupo tal cual, sin recortar en cero',
   )
-  // El padre no gasta: la rama no puede leer gastos_mes para el propio padre.
+  assert.ok(
+    !padreC.includes('(COALESCE(p.monto_limite, 0) - COALESCE(SUM(f.monto_gastado), 0))::numeric'),
+    'la fórmula vieja de “presupuesto menos gasto” ya no va (§2.1)',
+  )
+  // Plan §2.1: el gasto del grupo «incluye lo gastado en el padre mismo», que la rama
+  // vieja ignoraba.
   const ramaPadre = padreC.slice(padreC.indexOf('SELECT filas.* FROM filas'))
-  assert.ok(!/JOIN gastos_mes/.test(ramaPadre), 'el padre no tiene gasto propio: no puede unir gastos_mes')
+  assert.ok(ramaPadre.includes('gp.gasto_propio'), 'el gasto del padre mismo tiene que entrar en el total del grupo (§2.1)')
+  assert.ok(!/JOIN gastos_mes/.test(ramaPadre), 'el padre no arma su gasto con la CTE de las hojas')
 })
 
 test('el padre cuenta en los totales y sus hijos dejan de contar', () => {
   // Las dos últimas columnas de la rama del padre son es_padre y cuenta_en_totales.
   assert.ok(/\)::numeric, true, true FROM p_estructuras_egresos e/.test(padreC), 'la fila del padre tiene que salir con es_padre y cuenta_en_totales en true')
-  // En el reporte la forma es la directa: el presupuesto del padre se busca por el
-  // padre del rubro. (En las sumas de 153 va con los alias ee/pp.)
+  // Plan §2.2: la subcategoría no cuenta nunca y el padre cuenta siempre, así que la
+  // columna se resuelve por la forma del árbol. (La búsqueda del presupuesto del padre,
+  // que era la forma vieja de decidirlo, se retiró con la guarda de S15.)
   assert.ok(
-    padreC.includes('pp.estructura_egreso_id = e.padre_id'),
-    'el reporte tiene que calcular cuenta_en_totales buscando el presupuesto del padre del rubro',
+    padreC.includes('(e.padre_id IS NULL) AS cuenta_en_totales'),
+    'el reporte tiene que calcular cuenta_en_totales por la forma del árbol (§2.2)',
+  )
+  assert.ok(
+    !padreC.includes('pp.estructura_egreso_id = e.padre_id'),
+    'la fila del padre ya no se decide buscando su presupuesto (§2.2)',
   )
 })
 
 test('la fila del padre sólo aparece si tiene presupuesto', () => {
-  // Sin presupuesto del padre la rama no devuelve nada: es lo que permitió verificar
-  // que la salida es idéntica byte a byte con los datos de hoy.
+  // INVERTIDA. Plan §2.1: la fila del padre ES la bolsa del grupo, y §2.2: «la bolsa es
+  // del padre, que siempre cuenta». Una fila que sólo existe cuando hay presupuesto deja
+  // al padre sin manera de recibir uno: era el defecto T6c (“No puedo ver las categorias
+  // padres en el modulo de presupuestos”). El filtro por monto_limite se retiró.
   const ramaPadre = padreC.slice(padreC.indexOf('SELECT filas.* FROM filas'))
-  assert.ok(ramaPadre.includes('AND COALESCE(p.monto_limite, 0) > 0'), 'la rama del padre tiene que exigir presupuesto mayor a cero')
+  assert.ok(
+    !ramaPadre.includes('COALESCE(p.monto_limite, 0) > 0'),
+    'la rama del padre no puede exigir presupuesto: sin él no habría dónde asignarlo',
+  )
+  assert.ok(
+    ramaPadre.includes('LEFT JOIN p_presupuestos p ON p.estructura_egreso_id = e.estructura_id'),
+    'el presupuesto del padre tiene que ser LEFT JOIN para que la fila exista sin él',
+  )
 })
 
 test('el orden final se califica para no chocar con los parámetros de salida', () => {
@@ -231,50 +351,90 @@ test('el orden final se califica para no chocar con los parámetros de salida', 
 // ---------------------------------------------------------------------------
 
 test('un hijo no puede pasarse de lo que queda libre del techo', () => {
+  // INVERTIDA. Plan §2.4: «Las dos validaciones que existen porque hoy hay plata en dos
+  // lugares —“no entra en el techo repartido” y “no podés bajar del repartido”— dejan de
+  // tener sentido»; anexo de la misma etapa: «fuera error_budget_child_over_parent y
+  // error_budget_parent_below_children». Etapa 1: «Las transferencias dependen del saldo
+  // presupuestario del padre, nunca de los techos de los hijos», y criterio 18.
+  //
+  // Con una sola bolsa por grupo no hay techo que repartir: el hijo no recibe plata
+  // (§1.3, ya desplegado en el servidor) y el único límite es el pozo.
   assert.ok(
-    techoC.includes('IF p_monto_asignado > (v_techo_padre - v_repartido) THEN'),
-    'falta la comparación contra el techo menos lo repartido',
+    !techoC.includes('error_budget_child_over_parent'),
+    'el rechazo por techo repartido tiene que estar ausente (§2.4)',
   )
-  // Lo repartido excluye al rubro que se está asignando: si no, se compararía contra sí mismo.
+  assert.ok(!techoC.includes('v_techo_padre'), 'la asignación no puede resolver un techo del padre para repartirlo entre los hijos')
+  assert.ok(!techoC.includes('v_repartido'), 'no hay “lo repartido” contra lo que comparar')
+  // Lo que sí manda: la plata vive en el padre y el servidor rechaza asignarle a la
+  // subcategoría (§1.3).
   assert.ok(
-    techoC.includes('AND pr.estructura_egreso_id <> p_estructura_egreso_id'),
-    'la suma de lo repartido tiene que excluir al rubro que se está asignando',
+    techoC.includes('error_budget_child_holds_no_money'),
+    'la plata vive en el padre: asignar a una subcategoría se rechaza en el servidor (§1.3)',
   )
 })
 
 test('bajar el padre por debajo de lo repartido se rechaza con el detalle', () => {
-  assert.ok(techoC.includes('IF v_repartido > p_monto_asignado THEN'), 'falta la comparación del padre contra lo repartido en sus hijos')
-  assert.ok(techoC.includes("'error_budget_parent_below_children'"), 'falta la clave del rechazo')
-  assert.ok(techoC.includes("'recortar', v_repartido - p_monto_asignado"), 'el detalle tiene que decir cuánto recortar')
+  // INVERTIDA. Plan §2.4 y anexo: la segunda validación retirada es
+  // error_budget_parent_below_children, junto con el detalle “recortar” que la
+  // acompañaba. Criterio 18: una operación no se autoriza ni se bloquea por los techos de
+  // los hijos sino por el saldo presupuestario del padre.
+  assert.ok(
+    !techoC.includes('error_budget_parent_below_children'),
+    'el rechazo por bajar del repartido tiene que estar ausente (§2.4)',
+  )
+  assert.ok(!techoC.includes("'recortar'"), 'el detalle “recortar” se fue con el rechazo')
 })
 
 test('sin presupuesto en el padre no hay techo para los hijos', () => {
-  // La guarda del hijo vive dentro de IF COALESCE(v_techo_padre, 0) > 0: sin presupuesto
-  // del padre los hijos siguen siendo independientes, como hasta hoy.
-  const i = techoC.indexOf('IF COALESCE(v_techo_padre, 0) > 0 THEN')
-  const j = techoC.indexOf('error_budget_child_over_parent')
-  assert.ok(i !== -1 && j > i, 'la validación del hijo tiene que estar dentro del IF del techo')
+  // INVERTIDA. La guarda vieja vivía dentro de IF COALESCE(v_techo_padre, 0) > 0. Plan
+  // §2.4 retira la validación, así que el techo del padre no puede condicionar nada: ni
+  // con presupuesto ni sin él. El único límite que queda es el pozo de base cero, que no
+  // depende del padre (§1.4: se controla que nadie mueva más de lo que tiene).
+  assert.ok(
+    !techoC.includes('IF COALESCE(v_techo_padre, 0) > 0 THEN'),
+    'no puede quedar el IF que condicionaba la validación del hijo',
+  )
+  assert.ok(
+    techoC.includes('error_budget_insufficient_base_zero'),
+    'el guard del pozo de base cero sigue existiendo, y no depende del padre',
+  )
 })
 
 test('los rechazos son datos, no texto: clave y parámetros numéricos', () => {
-  // Sólo los dos rechazos del techo: la función también tiene el de error_unauthorized y
-  // el del guard de base cero, que no son de esta regla.
+  // Criterio 14: invalida la etapa «un mensaje técnico crudo a la vista» o un texto sin
+  // traducir; y la regla 9 del repo prohíbe el español hardcodeado. Etapa 1.3 pide que el
+  // rechazo de una subcategoría explique que la plata va al padre y que a la subcategoría
+  // se le pone un tope: eso viaja por clave y parámetros, no por texto.
+  //
+  // Los dos rechazos del techo (child_over_parent y parent_below_children) se retiraron
+  // en §2.4, así que los rechazos de presupuesto que quedan son los que se controlan acá.
+  // El nombre viejo del test hablaba de “parámetros numéricos” porque el techo repartido
+  // los llevaba; con el techo retirado lo que queda es la forma: clave + params, sin
+  // texto.
   const todos = techoC.match(/RAISE EXCEPTION '[^']*'[^;]*;/g) ?? []
-  const raises = todos.filter((r) => /error_budget_child_over_parent|error_budget_parent_below_children/.test(r))
-  assert.equal(raises.length, 2, `esperaba dos rechazos del techo, encontré ${raises.length} de ${todos.length}`)
-  for (const r of raises) {
-    assert.ok(/json_build_object/.test(r), 'el rechazo tiene que armar el JSON con json_build_object')
-    assert.ok(/'key', 'error_budget_/.test(r), 'el rechazo tiene que llevar su clave de error')
-    assert.ok(/'params', json_build_object/.test(r), 'el rechazo tiene que llevar sus parámetros')
-    // Nada de texto en español ni de números incrustados: todo va por parámetros (regla 9).
+  const dePresupuesto = todos.filter((r) => /error_budget_/.test(r))
+  assert.equal(dePresupuesto.length, 2, `esperaba dos rechazos de presupuesto, encontré ${dePresupuesto.length} de ${todos.length}`)
+  for (const r of dePresupuesto) {
+    assert.ok(/"key": "error_budget_/.test(r), 'el rechazo tiene que llevar su clave de error')
+    assert.ok(/"params": \{/.test(r), 'el rechazo tiene que llevar sus parámetros')
+    // Nada de texto en español: todo va por clave (regla 9 y criterio 14).
     assert.ok(!/[áéíóúñ¿]/.test(r), `el rechazo no puede tener texto hardcodeado: ${r.slice(0, 60)}`)
   }
 })
 
 test('la asignación sigue escribiendo en un solo lugar', () => {
-  const inserts = techoC.match(/INSERT INTO public\.p_presupuestos/g) ?? []
-  assert.equal(inserts.length, 1, 'la función tiene que seguir teniendo un único INSERT')
+  // El patrón se ensancha para las dos formas de nombrar la tabla: el espejo califica
+  // (public.p_presupuestos) y las migraciones viejas no. El \b es necesario para no
+  // contar el INSERT del historial, que es otra tabla: es el rastro que pide la Etapa 3
+  // (§3.7: «los cambios de una categoría, con valor anterior, valor nuevo, fecha y
+  // motivo»), no un segundo lugar donde vive el presupuesto.
+  const inserts = techoC.match(/INSERT INTO (?:public\.)?p_presupuestos\b/g) ?? []
+  assert.equal(inserts.length, 1, 'la función tiene que seguir teniendo un único INSERT en la tabla de presupuestos')
   assert.ok(techoC.includes('ON CONFLICT (estructura_egreso_id, mes_periodo, user_id, COALESCE(hogar_id, 0))'), 'el ON CONFLICT tiene que seguir igual')
+  assert.ok(
+    /INSERT INTO (?:public\.)?p_presupuestos_historial\b/.test(techoC),
+    'el rastro del cambio se escribe aparte, en la tabla de historial (§3.7)',
+  )
 })
 
 // ---------------------------------------------------------------------------
@@ -309,8 +469,14 @@ test('una transferencia no puede dejar al padre origen por debajo de lo repartid
 
 test('las validaciones van antes de la primera escritura', () => {
   // La función mueve plata con un UPDATE y un INSERT sueltos: si el rechazo llegara
-  // después del UPDATE, la transferencia quedaría a medias.
-  const iUpdate = transC.indexOf('UPDATE p_presupuestos SET monto_limite = monto_limite - p_monto')
+  // después del UPDATE, la transferencia quedaría a medias (criterio 3: «Una
+  // transferencia acredita el destino sin descontar el origen»).
+  //
+  // El patrón se ensancha para las dos formas de nombrar la tabla: el espejo califica
+  // (public.p_presupuestos) y las migraciones viejas no. La condición que se afirma es la
+  // misma: los rechazos van antes de la primera escritura.
+  const mUpdate = /UPDATE (?:public\.)?p_presupuestos SET monto_limite = monto_limite - p_monto/.exec(transC)
+  const iUpdate = mUpdate ? mUpdate.index : -1
   const iDestino = transC.indexOf('error_budget_child_over_parent')
   const iOrigen = transC.indexOf('error_budget_parent_below_children')
   assert.ok(iUpdate > 0 && iDestino > 0 && iOrigen > 0, 'no encontré alguna de las tres piezas')
@@ -328,8 +494,17 @@ test('los rechazos de la transferencia también son datos', () => {
 })
 
 test('la transferencia sigue moviendo plata en dos pasos, no más', () => {
-  assert.equal((transC.match(/UPDATE p_presupuestos/g) ?? []).length, 1, 'tiene que haber un solo UPDATE')
-  assert.equal((transC.match(/INSERT INTO p_presupuestos/g) ?? []).length, 1, 'tiene que haber un solo INSERT')
+  // El patrón se ensancha para las dos formas de nombrar la tabla. El segundo INSERT no
+  // es un paso nuevo: Etapa 1 (§1.1) manda crear la fila del origen con el descuento en
+  // negativo «si el origen no tiene línea en el ciclo», y el crédito del destino es el
+  // otro paso. La regla se conserva: el débito es una escritura, el crédito es otra, el
+  // rastro es aparte, y no hay un cuarto paso sin revisar.
+  const updates = transC.match(/UPDATE (?:public\.)?p_presupuestos\b/g) ?? []
+  const inserts = transC.match(/INSERT INTO (?:public\.)?p_presupuestos\b/g) ?? []
+  const rastro = transC.match(/INSERT INTO (?:public\.)?p_presupuestos_historial\b/g) ?? []
+  assert.equal(updates.length, 1, 'el débito del origen con fila existente es un solo UPDATE')
+  assert.equal(inserts.length, 2, 'dos INSERT: la línea del origen cuando no existe y el crédito del destino (§1.1)')
+  assert.equal(rastro.length, 1, 'las dos patas se registran en un solo INSERT del historial')
 })
 
 // ---------------------------------------------------------------------------
@@ -354,19 +529,35 @@ test('un rubro sin presupuesto en el ciclo anterior no arrastra nada', () => {
 })
 
 test('libertad sigue sin arrastre', () => {
-  // En anticipado el disponible se calcula con el arrastre en cero. Si alguien toca esa
-  // expresión, esto falla.
-  assert.ok(arrC.includes("CASE WHEN v_modo_presupuesto = 'anticipado' THEN 0::numeric ELSE COALESCE(SUM(f.arrastre_mes_anterior), 0) END"),
-    'el disponible del padre tiene que ignorar el arrastre en libertad')
+  // Plan §1.1: «El arrastre es exclusivo de base cero. En libertad no hay arrastre que
+  // materializar». Criterio 17: «Aparece un arrastre fuera de base cero».
+  //
+  // Cambió la forma, no la regla: el disponible del padre ya no se arma sumando el
+  // arrastre de sus hijos (§2.1: es la bolsa del grupo) sino con b.bolsa, que sale de
+  // fn_disponible_transferible, y es esa función la que apaga el arrastre fuera de base
+  // cero. Se comprueban las dos piezas.
+  assert.ok(arrC.includes('CASE WHEN e.padre_id IS NOT NULL THEN 0::numeric ELSE COALESCE(arr.balance_mes_anterior, 0) END'),
+    'la hoja tiene que seguir tomando su arrastre del balance del mes anterior, que en libertad es cero')
   assert.ok((arrC.match(/v_modo_presupuesto = 'anticipado' THEN 0::numeric/g) ?? []).length >= 3,
-    'las expresiones de estado y disponible de las hojas tienen que seguir ignorando el arrastre en libertad')
+    'las expresiones de asignado, disponible, estado y arrastre de las hojas tienen que seguir ignorando el arrastre en libertad')
+  assert.ok(
+    arrC.includes('public.fn_disponible_transferible(e.estructura_id, v_mes_truncado) AS bolsa'),
+    'la bolsa del padre tiene que salir de fn_disponible_transferible, que es la que apaga el arrastre en libertad',
+  )
 })
 
 test('el disponible del padre incluye el arrastre de sus hijos', () => {
-  // Si no, el grupo mostraría el presupuesto pelado mientras los hijos muestran su arrastre.
+  // Plan §2.1/§2.2: el arrastre de la subcategoría «sube al padre», y el disponible del
+  // padre es la bolsa del grupo, que ya lo incluye con su signo y sin piso por fila. La
+  // forma vieja (sumar f.arrastre_mes_anterior + presupuesto − gasto) desapareció porque
+  // la subcategoría ya no arrastra por su cuenta.
   assert.ok(
-    arrC.includes("CASE WHEN v_modo_presupuesto = 'anticipado' THEN 0::numeric ELSE COALESCE(SUM(f.arrastre_mes_anterior), 0) END + COALESCE(p.monto_limite, 0) - COALESCE(SUM(f.monto_gastado), 0)"),
-    'el disponible del padre tiene que sumar el arrastre de los hijos',
+    arrC.includes('(b.bolsa + (COALESCE(SUM(f.monto_gastado), 0) + gp.gasto_propio))::numeric'),
+    'el arrastre del padre tiene que salir de la bolsa del grupo más lo gastado, con lo gastado en el padre mismo (§2.1)',
+  )
+  assert.ok(
+    !arrC.includes('SUM(f.arrastre_mes_anterior)'),
+    'la subcategoría no arrastra por su cuenta: no se suma su arrastre fila por fila (§2.2)',
   )
 })
 
@@ -446,36 +637,58 @@ test('los dos rechazos del techo se explican con sus números', () => {
 // ---------------------------------------------------------------------------
 
 test('el techo del padre se busca antes del guard de base cero', () => {
-  const iLookup = bcC.indexOf('SELECT padre_id INTO v_padre_id')
-  const iGuard = bcC.indexOf("IF v_modo_presupuesto = 'base_cero' THEN")
-  assert.ok(iLookup !== -1 && iGuard !== -1, 'no encontré el lookup del padre o el guard de base cero')
-  assert.ok(iLookup < iGuard, 'el padre y su techo tienen que resolverse antes del guard, si no no se puede saltear')
+  // INVERTIDA. Plan §2.4: retirada la validación del techo repartido, ya no hay techo del
+  // padre que buscar: el único límite de una asignación es el pozo de base cero, que no
+  // depende del padre. Criterio 18: los techos de los hijos no autorizan ni bloquean.
+  assert.ok(!bcC.includes('v_techo_padre'), 'la asignación no puede resolver un techo del padre: ese techo ya no existe (§2.4)')
+  assert.ok(!bcC.includes('v_repartido'), 'tampoco queda “lo repartido”')
+  // El orden que sí importa sigue en pie: el pozo se calcula antes de compararse contra
+  // él. En la versión desplegada el cálculo vive DENTRO del guard de base cero, así que
+  // el anclaje es ese par y no una asignación suelta en la cabecera.
+  const iSaldo = bcC.indexOf('v_saldo_disponible := public.fn_obtener_saldo_a_asignar')
+  const iGuard = bcC.indexOf('p_monto_asignado > (v_saldo_disponible')
+  assert.ok(iSaldo !== -1, 'no encontré el cálculo del pozo en la asignación')
+  assert.ok(iGuard !== -1, 'no encontré la comparación contra el pozo')
+  assert.ok(iSaldo < iGuard, 'el pozo tiene que calcularse antes de compararse')
 })
 
 test('el guard del pozo se saltea cuando el rubro vive dentro de un techo', () => {
+  // INVERTIDA. La exención existía porque el rubro hijo vivía dentro de un techo del
+  // padre. §2.4 retira ese techo, así que no hay rubro que pueda quedar exento: el guard
+  // del pozo se aplica parejo. Etapa 1.4: lo que se controla es que nadie pueda mover más
+  // de lo que tiene, y ese control no se saltea por pertenecer a un grupo.
   assert.ok(
-    bcC.includes('IF COALESCE(v_techo_padre, 0) = 0 AND p_monto_asignado > (v_saldo_disponible + v_monto_previo) THEN'),
-    'el guard del pozo tiene que exigir que el rubro NO tenga techo de padre',
+    !bcC.includes('IF COALESCE(v_techo_padre, 0) = 0 AND'),
+    'el guard del pozo no puede seguir condicionado al techo del padre',
   )
   // El guard del pozo no usa json_build_object: lleva la clave dentro del JSON literal,
   // con comillas dobles. Por eso se busca el nombre de la clave, sin comillas.
-  assert.ok(bcC.includes('error_budget_insufficient_base_zero'), 'el guard del pozo tiene que seguir existiendo para los rubros sin techo')
+  assert.ok(bcC.includes('error_budget_insufficient_base_zero'), 'el guard del pozo tiene que seguir existiendo, sin exenciones')
 })
 
 test('el padre se resuelve una sola vez', () => {
-  assert.equal((bcC.match(/SELECT padre_id INTO v_padre_id/g) ?? []).length, 1, 'el lookup del padre no puede quedar duplicado')
-  assert.equal((bcC.match(/SELECT monto_limite INTO v_techo_padre/g) ?? []).length, 1, 'la lectura del techo no puede quedar duplicada')
+  // §2.4 retiró la lectura del techo del padre, así que la única lectura que queda es la
+  // del padre_id. Se conserva la regla original: no puede quedar duplicada.
+  assert.equal((bcC.match(/INTO v_padre_id/g) ?? []).length, 1, 'el lookup del padre no puede quedar duplicado')
+  assert.equal((bcC.match(/INTO v_techo_padre/g) ?? []).length, 0, 'la lectura del techo del padre se retiró con el techo (§2.4)')
 })
 
 test('el techo sigue rechazando después del cambio', () => {
-  // Las dos validaciones de T3 no se pierden al mover el lookup.
-  assert.ok(bcC.includes('IF p_monto_asignado > (v_techo_padre - v_repartido) THEN'), 'falta el rechazo del hijo sobre el techo')
-  // Sólo el 0 se exime: cualquier monto positivo por debajo de lo repartido sigue
-  // rechazando. La forma vieja (sin la excepción) dejaba al usuario sin manera de
-  // soltar un presupuesto, así que la aserción se actualiza con el comportamiento.
-  assert.ok(bcC.includes('IF p_monto_asignado > 0 AND v_repartido > p_monto_asignado THEN'), 'falta el rechazo del padre por debajo de lo repartido, con la excepción del 0')
+  // INVERTIDA. Las dos validaciones de T3 no se perdieron al mover el lookup: se
+  // retiraron, y eso es lo que manda el plan (§2.4 y el anexo de la misma etapa). Lo que
+  // queda en su lugar es el rechazo de la subcategoría que intenta tener plata (§1.3), y
+  // ese rechazo sigue antes del INSERT.
+  assert.ok(
+    !bcC.includes('IF p_monto_asignado > (v_techo_padre - v_repartido) THEN'),
+    'el rechazo del hijo sobre el techo repartido tiene que estar ausente (§2.4)',
+  )
+  assert.ok(
+    !bcC.includes('IF p_monto_asignado > 0 AND v_repartido > p_monto_asignado THEN'),
+    'el rechazo del padre por debajo de lo repartido tiene que estar ausente (§2.4)',
+  )
   const iInsert = bcC.indexOf('INSERT INTO public.p_presupuestos')
-  assert.ok(bcC.indexOf('error_budget_child_over_parent') < iInsert, 'el rechazo tiene que seguir antes del INSERT')
+  const iRechazo = bcC.indexOf('error_budget_child_holds_no_money')
+  assert.ok(iInsert > 0 && iRechazo > 0 && iRechazo < iInsert, 'el rechazo de la subcategoría tiene que seguir antes del INSERT')
 })
 
 // ---------------------------------------------------------------------------
@@ -498,10 +711,26 @@ test('el padre aparece sólo si tiene hijos', () => {
 })
 
 test('sin presupuesto del padre los hijos siguen contando', () => {
-  // cuenta_en_totales depende de que el padre tenga presupuesto mayor a cero; ese
-  // predicado no se toca en 167.
-  assert.ok(visC.includes('AND pp.mes_periodo = v_mes_truncado'), 'la regla de cuenta_en_totales tiene que seguir en 167')
-  assert.ok(visC.includes('AND COALESCE(pp.monto_limite, 0) > 0'), 'el hijo sólo deja de contar cuando el padre tiene presupuesto')
+  // INVERTIDA. Plan §2.2: «la bolsa es del padre, que siempre cuenta», y la subcategoría
+  // no cuenta nunca. El predicado dejó de depender del presupuesto del padre, así que un
+  // padre sin presupuesto no puede esconder ni mostrar a un hijo: los hijos entran
+  // siempre, por la fila de su padre.
+  assert.ok(
+    !visC.includes('AND pp.mes_periodo = v_mes_truncado'),
+    'la regla vieja de cuenta_en_totales dependía del presupuesto del padre y se retiró (§2.2)',
+  )
+  assert.ok(
+    !visC.includes('AND COALESCE(pp.monto_limite, 0) > 0'),
+    'el hijo no deja de contar por el presupuesto del padre (§2.2)',
+  )
+  assert.ok(
+    visC.includes('(e.padre_id IS NULL) AS cuenta_en_totales'),
+    'cuenta el rubro sin padre: el resto entra por la fila del padre',
+  )
+  assert.ok(
+    /\)::numeric, true, true FROM p_estructuras_egresos e/.test(visC),
+    'y la fila del padre cuenta siempre, sin mirar su presupuesto',
+  )
 })
 
 test('la UI arranca con el grupo desplegado', () => {
@@ -573,8 +802,17 @@ test('asignar 0 deja el sobre en cero y devuelve la plata al pozo', () => {
 })
 
 test('en la base, un padre en 0 no lo frena el guard de los hijos', () => {
-  assert.ok(bcC.includes('IF p_monto_asignado > 0 AND v_repartido > p_monto_asignado THEN'), 'el guard del padre tiene que dejar pasar el 0')
-  assert.ok(bcC.includes('error_budget_parent_below_children'), 'un padre por debajo de lo repartido, pero mayor a 0, tiene que seguir rechazando')
+  // INVERTIDA. El guard de los hijos ya no existe (§2.4), así que un padre en 0 no puede
+  // ser frenado por él en ningún caso. Criterio 18: los techos de los hijos no autorizan
+  // ni bloquean. Lo que sigue valiendo es que poner 0 es una operación legítima: deja el
+  // sobre en cero y devuelve la plata al pozo.
+  assert.ok(
+    !bcC.includes('error_budget_parent_below_children'),
+    'el guard del padre por debajo de lo repartido se retiró: ya no puede frenar un 0 (§2.4)',
+  )
+  assert.ok(!bcC.includes('v_repartido'), 'no queda “lo repartido” que pueda frenar un 0')
+  // Y el único límite que queda, el pozo de base cero, no mira el padre.
+  assert.ok(bcC.includes('IF p_monto_asignado > (v_saldo_disponible + v_monto_previo) THEN'), 'el guard del pozo de base cero tiene que seguir existiendo')
 })
 
 // ---------------------------------------------------------------------------

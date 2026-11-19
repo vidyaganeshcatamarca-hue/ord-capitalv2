@@ -22,8 +22,12 @@ DECLARE
     v_dia int := EXTRACT(DAY FROM CURRENT_DATE)::int;
 BEGIN
     SELECT user_id, auth_id::text INTO v_uid, v_jwt
-      FROM public.usuarios WHERE auth_id IS NOT NULL ORDER BY user_id LIMIT 1;
+      FROM public.usuarios WHERE user_id = {{USUARIO}} AND auth_id IS NOT NULL;
     IF v_uid IS NULL THEN RAISE EXCEPTION 'no hay usuario para probar'; END IF;
+        -- Cuenta de prueba designada (no se elige sola) y modo forzado dentro de la
+    -- transaccion: las dos cuentas designadas son de libertad y esta prueba necesita
+    -- base cero. Todo esto se revierte al final.
+    UPDATE public.p_presupuestos_config SET modo_presupuesto = 'base_cero' WHERE user_id = v_uid;
     PERFORM set_config('request.jwt.claims',
         json_build_object('sub', v_jwt, 'role', 'authenticated')::text, true);
 

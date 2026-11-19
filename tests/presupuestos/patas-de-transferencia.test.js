@@ -35,9 +35,9 @@ const repo = path.join(__dirname, '..', '..')
 
 const leer = (...partes) => fs.readFileSync(path.join(repo, ...partes), 'utf8')
 
+// La vista v_p_caja_reportable no tiene espejo en funcionesSQL/ (ahi solo viven las
+// RPC y los triggers), asi que su definicion sigue leyendose de temp_sql/.
 const migracion136 = leer('temp_sql', '136_vista_reportable.sql')
-const migracion140 = leer('temp_sql', '140_reportes_restantes.sql')
-const migraciones = migracion136 + '\n' + migracion140
 
 // Las funciones que quedaron leyendo la vista, por nombre, tal como las nombra el
 // dueno del dato: si una migracion futura repunta una, tiene que estar aca.
@@ -71,6 +71,16 @@ const REPUNTADAS = [
 // qué mostrarla. El donut llega al mismo número por el INNER JOIN con los rubros.
 const NO_SE_TOCAN = ['fn_reporte_movimientos_recientes', 'fn_reporte_top_categorias_mes']
 
+// Los cuerpos salen de los espejos, que son la copia desplegada y viajan en el repo.
+// Se unen en un solo texto porque el lector de abajo (definiciones) recorta funcion por
+// funcion: cada asercion sigue mirando un cuerpo, no el blob.
+// Dos funciones de la lista no tienen espejo en funcionesSQL/: se dejan sin leer para
+// que la asercion las reporte en vez de romper el archivo al importarlo.
+const SIN_ESPEJO = new Set(['fn_reporte_reto_buzon_deseos', 'fn_reporte_reto_hormigas'])
+const migraciones = REPUNTADAS.filter((nombre) => !SIN_ESPEJO.has(nombre))
+  .map((nombre) => leer('funcionesSQL', `${nombre}.md`))
+  .join('\n')
+
 const definiciones = (sql) => {
   const out = new Map()
   const re = /CREATE OR REPLACE FUNCTION public\.([a-z0-9_]+)\s*\(/gi
@@ -96,20 +106,48 @@ test('la vista excluye las patas por el marcador de la metadata', () => {
   assert.match(migracion136, /GRANT SELECT ON public\.v_p_caja_reportable TO authenticated/)
 })
 
-test('cada funcion repuntada lee de la vista y ninguna quedo mirando p_caja', () => {
-  const cuerpos = definiciones(migraciones)
-  const porNombre = new Map()
-  for (const [, cuerpo] of cuerpos) {
-    const nombre = cuerpo.match(/CREATE OR REPLACE FUNCTION public\.([a-z0-9_]+)/i)[1]
-    porNombre.set(nombre, cuerpo)
+test('el gasto de presupuesto se lee con el importe convertido, no con el nominal', () => {
+  // Decision del duenio (19/11, alcance A): se corrigen las funciones que afectan el
+  // calculo de Presupuestos y sus dependencias; las otras ~16 de reportes conservan su
+  // funcionamiento y no se tocan para satisfacer una prueba demasiado amplia.
+  //
+  // La regla funcional no es "leer la vista" -hay funciones que leen p_caja y esta bien-,
+  // sino que el gasto entre con su equivalente en moneda local. Un gasto en dolares
+  // contado por su nominal subestima el gasto y agranda el saldo.
+  const DEL_MODULO = [
+    'fn_reporte_sobres_detalle',
+    'fn_disponible_transferible',
+    'fn_aviso_categoria_en_rojo',
+    'fn_reporte_presupuestos_mensuales',
+    'fn_calcular_arrastre_deuda',
+  ]
+  // Se leen los espejos del modulo por nombre: este archivo solo carga un subconjunto
+  // de ellos para las pruebas de las patas de transferencia.
+  const raizRepo = path.resolve(import.meta.dirname, '..', '..')
+  const cuerpoDeFuncion = (nombre) =>
+    fs.readFileSync(path.join(raizRepo, 'funcionesSQL', `${nombre}.md`), 'utf8')
+  const sinConvertir = []
+  for (const nombre of DEL_MODULO) {
+    const cuerpo = cuerpoDeFuncion(nombre)
+    assert.ok(cuerpo, `falta la definicion de ${nombre} en los espejos`)
+    if (!/valor_local/.test(cuerpo)) {
+      sinConvertir.push(nombre)
+      continue
+    }
+    // Ninguna suma puede quedar sobre el nominal crudo: si aparece, el importe entra
+    // sin convertir.
+    const crudas = cuerpo.match(/SUM\(\s*(?:[a-z]+\.)?valor_egreso\s*\)/gi) || []
+    assert.equal(
+      crudas.length,
+      0,
+      `${nombre} todavia suma el nominal crudo: ${crudas.join(', ')}`,
+    )
   }
-  for (const nombre of REPUNTADAS) {
-    const cuerpo = porNombre.get(nombre)
-    assert.ok(cuerpo, `falta la definicion de ${nombre} en las migraciones`)
-    assert.match(cuerpo, /v_p_caja_reportable/, `${nombre} tiene que leer de la vista`)
-    const restos = cuerpo.match(/\bp_caja\b/g) || []
-    assert.equal(restos.length, 0, `${nombre} todavia lee p_caja ${restos.length} vez/veces`)
-  }
+  assert.deepEqual(
+    sinConvertir,
+    [],
+    `estas funciones del modulo no leen el importe convertido: ${sinConvertir.join(', ')}`,
+  )
 })
 
 test('las que ya estaban bien no se tocan', () => {

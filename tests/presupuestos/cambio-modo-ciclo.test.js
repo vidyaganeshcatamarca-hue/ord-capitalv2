@@ -31,7 +31,15 @@ const repo = path.join(__dirname, '..', '..')
 const leer = (...partes) => fs.readFileSync(path.join(repo, ...partes), 'utf8')
 const sinComentarios = (sql) => sql.replace(/--.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')
 
-const sql = sinComentarios(leer('temp_sql', '134_cambio_modo_ciclo_activo.sql'))
+// La copia autoritativa son los dos espejos de funcionesSQL/, leidos en el mismo
+// orden en que la migración crea las funciones: el test recorta entre los dos CREATE.
+const sql = sinComentarios(
+  leer('funcionesSQL', 'fn_archivar_presupuestos_ciclo.md') +
+    '\n' +
+    leer('funcionesSQL', 'fn_configurar_modo_presupuesto.md'),
+)
+// El script de despliegue es un artefacto local: no hay espejo de scripts en
+// funcionesSQL/ (solo de RPC y triggers), asi que sigue leyendose de temp_sql/.
 const deploy = leer('temp_sql', '135_deploy_134.mjs')
 const paginaCiclo = leer('src/pages/Configuracion/PresupuestoCicloPage.tsx')
 const paginaPresupuestos = leer('src/pages/Presupuestos/PresupuestosPage.tsx')
@@ -61,8 +69,18 @@ test('archiva antes de poner en cero, y no borra filas', () => {
 })
 
 test('la tabla de historial es append-only y no queda expuesta', () => {
-  assert.match(sql, /CREATE TABLE IF NOT EXISTS public\.p_presupuestos_historial/)
-  assert.match(sql, /ALTER TABLE public\.p_presupuestos_historial ENABLE ROW LEVEL SECURITY/)
+  // Bloque A (dueño): la estructura se lee del esquema versionado, generado desde el
+  // catalogo real de Supabase. Las migraciones de temp_sql/ estan ignoradas por git y
+  // nunca fueron fuente de verdad: un test que las lee no puede ver lo instalado.
+  const esquema = fs.readFileSync(path.join(repo, 'start_info', 'esquema-presupuesto.md'), 'utf-8')
+  assert.match(esquema, /^## p_presupuestos_historial$/m, 'el esquema tiene que documentar la tabla de historial')
+  const bloque = esquema.slice(esquema.indexOf('## p_presupuestos_historial'))
+  assert.match(bloque, /RLS: encendido/, 'la tabla de historial no puede quedar expuesta')
+  assert.doesNotMatch(
+    bloque,
+    /roles \{(anon|authenticated)\}/,
+    'ninguna politica puede abrir la tabla a anon ni a authenticated',
+  )
   const inicioArchivar = sql.indexOf('CREATE OR REPLACE FUNCTION public.fn_archivar_presupuestos_ciclo')
   const inicioSiguiente = sql.indexOf('CREATE OR REPLACE FUNCTION public.fn_configurar_modo_presupuesto')
   // El recorte tiene que terminar donde empieza la OTRA función: si llega al final

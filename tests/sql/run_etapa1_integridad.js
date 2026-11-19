@@ -1,5 +1,13 @@
-// Corre tests/sql/etapa1_integridad.sql contra el proyecto real.
-//   node tests/sql/run_etapa1_integridad.js [archivo.sql]   (por defecto, etapa1)
+// Corre un .sql de tests/sql/ contra el proyecto real.
+//   node tests/sql/run_etapa1_integridad.js [archivo.sql] [--modo base_cero|libertad] [--usuario N]
+//
+// Cuentas autorizadas: base_cero -> 1 · libertad -> 198. `--usuario` las pisa.
+//
+// La cuenta de prueba NO se elige sola. Antes, cada prueba hacia
+// `ORDER BY user_id LIMIT 1` y terminaba escribiendo sobre la cuenta del duenio. Ahora
+// el id se pasa explicito (o se usa el designado: el 20) y el archivo lo recibe en el
+// marcador {{USUARIO}}. Si la cuenta no existe o no esta en el modo que la prueba
+// necesita, la prueba lo dice en vez de adivinar.
 //
 // La prueba corre en una transaccion que termina en RAISE EXCEPTION: el error es el
 // resultado, no un fallo. La sentencia esperada viene en el mensaje, como JSON.
@@ -21,8 +29,32 @@ if (!url || !token) {
 }
 const ref = url.replace(/^https?:\/\//, '').split('.')[0]
 
-const archivoSql = process.argv[2] || 'etapa1_integridad.sql'
-const sql = fs.readFileSync(path.join(raiz, 'tests', 'sql', archivoSql), 'utf-8')
+// Cuentas autorizadas por el duenio (19/11), por modo. No se elige ninguna sola.
+const CUENTAS_AUTORIZADAS = { base_cero: 1, libertad: 198 }
+const args = process.argv.slice(2)
+const iUsuario = args.indexOf('--usuario')
+const iModo = args.indexOf('--modo')
+let usuario
+if (iUsuario >= 0) {
+  usuario = Number(args[iUsuario + 1])
+} else if (iModo >= 0) {
+  usuario = CUENTAS_AUTORIZADAS[args[iModo + 1]]
+  if (!usuario) {
+    console.error(`--modo acepta: ${Object.keys(CUENTAS_AUTORIZADAS).join(' | ')}`)
+    process.exit(1)
+  }
+} else {
+  usuario = CUENTAS_AUTORIZADAS.base_cero
+}
+if (!Number.isInteger(usuario) || usuario <= 0) {
+  console.error('la cuenta tiene que ser un id numerico')
+  process.exit(1)
+}
+console.log(`cuenta de prueba: ${usuario}`)
+const archivoSql = args.find((a) => a.endsWith('.sql')) || 'etapa1_integridad.sql'
+const sql = fs
+  .readFileSync(path.join(raiz, 'tests', 'sql', archivoSql), 'utf-8')
+  .replaceAll('{{USUARIO}}', String(usuario))
 const r = await fetch(`https://api.supabase.com/v1/projects/${ref}/database/query`, {
   method: 'POST',
   headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },

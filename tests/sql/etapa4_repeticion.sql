@@ -13,15 +13,14 @@ DECLARE
     r jsonb := '[]'::jsonb;
     v_uid_bc bigint; v_jwt_bc text; v_estructura bigint;
 BEGIN
-    -- Un usuario en libertad, cualquiera: el ciclo anterior se arma en la prueba
-    -- porque los datos de hoy no importan (decision del dueno) y ninguno tenia saldo
-    -- en el ciclo pasado para observar la repeticion.
+    -- Cuenta designada (no se elige sola) y modo forzado dentro de la transaccion.
+    -- El ciclo anterior se arma aca dentro: la prueba no depende de lo que la cuenta
+    -- tenga hoy, y una prueba que compara ceros no prueba nada.
     SELECT u.user_id, u.auth_id::text INTO v_uid, v_jwt
       FROM public.usuarios u
-      JOIN public.p_presupuestos_config c ON c.user_id = u.user_id
-     WHERE c.modo_presupuesto = 'anticipado' AND u.auth_id IS NOT NULL
-     ORDER BY u.user_id LIMIT 1;
-    IF v_uid IS NULL THEN RAISE EXCEPTION 'no hay usuario en libertad'; END IF;
+     WHERE u.user_id = {{USUARIO}} AND u.auth_id IS NOT NULL;
+    IF v_uid IS NULL THEN RAISE EXCEPTION 'la cuenta de prueba {{USUARIO}} no existe o no tiene auth_id'; END IF;
+    UPDATE public.p_presupuestos_config SET modo_presupuesto = 'anticipado' WHERE user_id = v_uid;
     PERFORM set_config('request.jwt.claims', json_build_object('sub', v_jwt, 'role', 'authenticated')::text, true);
 
     SELECT e.estructura_id INTO v_estructura
@@ -55,20 +54,21 @@ BEGIN
         (v_otra_vez = 0 AND v_filas = v_creadas),
         'segunda_vez', v_otra_vez, 'filas', v_filas, 'esperadas', v_creadas);
 
-    SELECT count(*), count(*) FILTER (WHERE motivo = 'repeticion_mensual')
+    -- Solo cuentan las filas de la repeticion: el ciclo puede tener historial previo de
+    -- la cuenta y no es asunto de esta prueba. Que cuente el total era un error de la
+    -- prueba, no del producto.
+    SELECT count(*), count(DISTINCT h.estructura_egreso_id)
       INTO v_rastro, v_rastro_doble
       FROM public.p_presupuestos_historial h
-     WHERE h.user_id = v_uid AND h.mes_periodo = v_ciclo;
+     WHERE h.user_id = v_uid AND h.mes_periodo = v_ciclo AND h.motivo = 'repeticion_mensual';
     r := r || jsonb_build_object('caso', 'D deja su rastro una sola vez', 'ok',
-        (v_rastro_doble = v_creadas AND v_rastro = v_creadas),
-        'rastro_total', v_rastro, 'con_motivo', v_rastro_doble, 'esperado', v_creadas);
+        (v_rastro = v_creadas AND v_rastro_doble = v_rastro),
+        'filas_repeticion', v_rastro, 'estructuras_distintas', v_rastro_doble, 'esperado', v_creadas);
 
     -- C · base cero no repite
-    SELECT u.user_id, u.auth_id::text INTO v_uid_bc, v_jwt_bc
-      FROM public.usuarios u
-      JOIN public.p_presupuestos_config c ON c.user_id = u.user_id
-     WHERE c.modo_presupuesto = 'base_cero' AND u.auth_id IS NOT NULL
-     ORDER BY u.user_id LIMIT 1;
+    v_uid_bc := v_uid;
+    v_jwt_bc := v_jwt;
+    UPDATE public.p_presupuestos_config SET modo_presupuesto = 'base_cero' WHERE user_id = v_uid_bc;
     PERFORM set_config('request.jwt.claims', json_build_object('sub', v_jwt_bc, 'role', 'authenticated')::text, true);
     v_base_cero := public.fn_repetir_presupuestos_ciclo();
     r := r || jsonb_build_object('caso', 'C en base cero no repite', 'ok',
