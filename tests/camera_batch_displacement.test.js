@@ -8,9 +8,12 @@
 // the reference frame (the last capture)? The visual aids were rejected on a
 // real phone and removed, so the measurement is all that is left.
 //
-// `src/pages/Dev/CameraBatch/displacement.ts` owns the only new logic, and it
-// is pure: a Uint8ClampedArray of RGBA bytes in, a number out. No DOM, no
-// canvas, no dependency, so it can be tested here with plain node.
+// `src/ocr/camera/displacement.ts` owns the only new logic, and it is pure: a
+// Uint8ClampedArray of RGBA bytes in, a number out. No DOM, no canvas, no
+// dependency, so it can be tested here with plain node. It moved there from
+// `src/pages/Dev/CameraBatch/displacement.ts` when the camera engine was
+// extracted: the product surface consumes it from `src/ocr/camera`, and the
+// development spike page imports it from the same place.
 //
 // SIGN CONVENTION locked by these tests (also documented in the source):
 // `estimateVerticalShift(prev, curr, maxShift)` returns `shift` such that
@@ -37,7 +40,7 @@ import {
   estimateVerticalShiftDetailed,
   accumulateTravel,
   travelPercent,
-} from '../src/pages/Dev/CameraBatch/displacement.ts'
+} from '../src/ocr/camera/displacement.ts'
 
 /**
  * The sampler the page actually runs: 120x480 for a 1920 px tall stream, so one

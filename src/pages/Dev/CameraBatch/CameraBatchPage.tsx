@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getLanguage, t } from '@/locales/i18n'
 import { OcrApiError, createOcrJob, getOcrJob, readOcrAccessToken } from '@/ocr/apiClient'
+import {
+  useFramedCamera,
+  type CameraCapture,
+  type TravelSample,
+  type VideoInfo,
+} from '@/ocr/camera/useFramedCamera'
 import { useOcrContext } from '@/ocr/contextBuilder'
 import { describeOcrJobStatus } from '@/ocr/jobStatusLabel'
 import {
@@ -10,20 +16,24 @@ import {
   type OcrJobAccepted,
   type OcrJobStatus,
 } from '@/ocr/types'
-import {
-  accumulateTravel,
-  classifyTravel,
-  estimateVerticalShiftDetailed,
-  travelPercent,
-  verticalProfile,
-  type TravelVerdict,
-} from './displacement'
 import './CameraBatch.css'
 
 /**
  * Isolated measurement spike: does a persistent web camera produce four
  * consecutive shots with enough resolution and quality for OCR, and what does
  * the REAL OCR backend answer for them?
+ *
+ * This page is a THIN DIAGNOSTIC HOST. The camera engine lives in
+ * `src/ocr/camera` (`useFramedCamera` + `displacement`), shared with the
+ * product surface, and this page only adds what the product must never show:
+ * the platform block, the real track settings, the live <video> state, the
+ * per-sample calibration line and the copied report. If a readout here is
+ * "technical", it belongs to this page and nowhere else.
+ *
+ * Development only: the route is registered under `import.meta.env.DEV` in
+ * `src/App.tsx`, so a production build has no way to reach it. The shared
+ * engine modules DO stay in the production bundle, because the product
+ * consumes them.
  *
  * Deliberately self-contained and NOT wired to any product flow. It does not
  * touch the existing OCR capture sheet, the voice recorder or the file-input
@@ -41,91 +51,6 @@ import './CameraBatch.css'
  * is one throwaway job and the poll lives in this component.
  */
 
-/** Product cap for one ticket: the OCR flow accepts up to 10 pages. */
-const MAX_CAPTURES = 10
-
-const JPEG_QUALITY = 0.92
-
-/**
- * Cadence of the displacement meter: 125 ms is eight samples a second, fast
- * enough to follow a moving hand. It was 200 ms, which made each step larger and
- * pushed real movements out of the narrow search window (a whole sample
- * rejected), so the meter undercounted. Smaller steps also mean less lag: the
- * number catches up with the hand in a quarter of a second.
- */
-const SHIFT_SAMPLE_INTERVAL_MS = 125
-/**
- * Downscaled sampler for the displacement meter. 120 x 480 is the whole point
- * of this rewrite: a 1920 px tall stream squeezed into 480 profile rows means
- * ONE profile row is 4 real pixels, so a ~30 px printed line spans ~7-8 rows
- * and the receipt's periodicity is resolvable. At 240 rows one row was 8 real
- * pixels and a line spanned ~4, which aliased the signal and gave the
- * correlation dozens of near-identical peaks. Never go below 480 rows.
- *
- * The caps are independent (no aspect ratio): the profile only needs ROWS, so
- * the frame is squashed horizontally. Keeping the aspect ratio would cap a
- * 1080x1920 stream at ~213 rows, right back on the alias.
- */
-const SHIFT_SAMPLE_MAX_WIDTH = 120
-const SHIFT_SAMPLE_MAX_HEIGHT = 480
-/**
- * Share of the frame width dropped on EACH side before sampling.
- *
- * The profile averages a whole row, so every column that is not receipt dilutes
- * the signal. On a phone held over a supermarket ticket the outer 12% of each
- * side is the table, the operator's hand or the shop behind the paper: content
- * with its own vertical structure, unrelated to the receipt, that the
- * correlation will happily try to align. Cropping to the central band keeps the
- * measurement inside the paper. There is no ticket detection and no
- * thresholding on purpose: it is a fixed band, and the framing box already asks
- * the operator to fill it.
- */
-const SHIFT_SAMPLE_SIDE_CROP_RATIO = 0.12
-/**
- * Search window per side, as a share of ONE frame's rows: 12% per 125 ms sample
- * is far above normal hand movement and small enough that the frame-to-frame
- * peak cannot reach the neighbouring identical line.
- *
- * KEEP IT. If the phone test still shows UNDERCOUNTING because real steps exceed
- * this window (whole samples rejected as too wide), the next step is 80-100 ms
- * per sample so each step is smaller -- NOT a wider window, which would let the
- * peak reach the next identical receipt line and destroy the reason this design
- * works at all.
- */
-const SHIFT_MAX_STEP_RATIO = 0.12
-/**
- * Smoothing of the DISPLAYED percentage (the offset itself stays exact). The
- * number must not flicker between neighbouring values while the operator is
- * moving: alpha 0.5 follows a real move in a sample or two and still hides a
- * single line-height wobble. It was 0.35, which lagged the operator enough that
- * the number read behind the paper he could see.
- *
- * The displayed value DECREASES when the operator comes back up the receipt.
- * It has to: the real position goes back, and a number that only ever grows
- * reports an overlap that is no longer there.
- */
-const SHIFT_DISPLAY_ALPHA = 0.5
-/**
- * Measured travel -> physical travel. Calibrated on the owner's phone: the meter
- * reached 70% of the bar when the receipt had already moved one full frame, so
- * every reading is scaled by 100/70. The measurement itself is unchanged; only
- * the number the operator reads is corrected. If another device shows a
- * different bias, this single constant is what gets adjusted.
- */
-const TRAVEL_CALIBRATION = 100 / 70
-/**
- * Entering "ready": travel that leaves ~30% overlap with the last capture.
- */
-const TARGET_SHIFT_PERCENT = 70
-/**
- * Leaving "ready". The two thresholds are deliberate (hysteresis): with a single
- * one, a hand resting near the target makes the red pulse stutter on and off at
- * the sampling rate, and the operator -- who is looking at the paper, not the
- * screen -- reads that as a broken meter. Between 65 and 70 the previous state
- * holds, so the target has to be genuinely lost to lose the pulse.
- */
-const READY_EXIT_PERCENT = 65
-
 /** Bounded measurement window: one poll every 2 s for at most 90 s. */
 const OCR_POLL_INTERVAL_MS = 2000
 const OCR_POLL_WINDOW_MS = 90000
@@ -133,68 +58,12 @@ const OCR_POLL_WINDOW_MS = 90000
 /** The copied report must stay readable, so the ticket JSON is trimmed here. */
 const REPORT_JSON_MAX_CHARS = 1600
 
-type CaptureRecord = {
-  index: number
-  streamWidth: number | null
-  streamHeight: number | null
-  facingMode: string | null
-  deviceId: string | null
-  width: number
-  height: number
-  blobSize: number
-  mimeType: string
-  durationMs: number | null
-  error: string | null
-}
-
-type Capture = {
-  record: CaptureRecord
-  blob: Blob | null
-  url: string | null
-  fileName: string
-}
-
-/** A capture that actually produced bytes, so it can travel in a job. */
-type CaptureWithBlob = Capture & { blob: Blob }
-
 type PlatformInfo = {
   userAgent: string
   screenWidth: number
   screenHeight: number
   devicePixelRatio: number
   hasGetUserMedia: boolean
-}
-
-/** What the <video> element is actually doing. The preview can be invisible
- *  while the canvas still captures, so this is the only way to tell them apart. */
-type VideoInfo = {
-  videoWidth: number
-  videoHeight: number
-  paused: boolean
-  readyState: number
-  playError: string | null
-}
-
-type CameraError = 'no_camera' | 'permission_denied' | 'camera_error'
-
-/**
- * TEMPORARY DIAGNOSTICS (delete before integrating the spike into the product):
- * everything one meter sample measured and what the accumulator did with it.
- *
- * `shift` and `score` come from `estimateVerticalShiftDetailed`, `verdict` and
- * `delta` from `classifyTravel`, and `offset`/`percent` are the values the meter
- * displays right after the sample. `null` means the sample had no number at all.
- */
-type ShiftDebug = {
-  shift: number | null
-  score: number | null
-  verdict: TravelVerdict
-  /** Rows this sample moved the offset by; 0 whenever it was not applied. */
-  delta: number
-  offset: number
-  rows: number
-  percent: number
-  ready: boolean
 }
 
 type View = 'capture' | 'report'
@@ -262,11 +131,6 @@ function formatKb(bytes: number): string {
   return (bytes / 1024).toFixed(1)
 }
 
-function describeError(err: unknown): string {
-  if (err instanceof Error) return err.message || err.name
-  return String(err)
-}
-
 function isAbort(error: unknown): boolean {
   return typeof error === 'object' && error !== null && 'name' in error && (error as { name?: string }).name === 'AbortError'
 }
@@ -304,7 +168,7 @@ function formatIssue(issue: OcrIssue): string {
 function buildReport(
   platform: PlatformInfo,
   video: VideoInfo | null,
-  captures: Capture[],
+  captures: CameraCapture[],
   send: OcrSend | null,
 ): string {
   const lines: string[] = [
@@ -312,7 +176,7 @@ function buildReport(
     `${t('dev_camera_batch_label_platform')}: userAgent=${platform.userAgent} screen=${platform.screenWidth}x${platform.screenHeight} devicePixelRatio=${platform.devicePixelRatio} getUserMedia=${String(platform.hasGetUserMedia)}`,
     video === null
       ? 'video=-'
-      : `${t('dev_camera_batch_label_video')}: ${video.videoWidth}x${video.videoHeight} paused=${String(video.paused)} readyState=${video.readyState} playError=${video.playError ?? '-'}`,
+      : `${t('dev_camera_batch_label_video')}: ${video.width}x${video.height} paused=${String(video.paused)} readyState=${video.readyState} playError=${video.playError ?? '-'}`,
     `${t('dev_camera_batch_label_photos', { count: captures.length })}`,
   ]
 
@@ -321,10 +185,10 @@ function buildReport(
     return lines.join('\n')
   }
 
-  for (const { record } of captures) {
+  for (const record of captures) {
     const resolution = `${record.streamWidth ?? '?'}x${record.streamHeight ?? '?'}`
     const dimensions = `${record.width}x${record.height}`
-    const size = record.blobSize > 0 ? `${formatKb(record.blobSize)} KB (${record.blobSize} B)` : '0 B'
+    const size = record.bytes > 0 ? `${formatKb(record.bytes)} KB (${record.bytes} B)` : '0 B'
     const duration = record.durationMs == null ? '-' : `${record.durationMs} ms`
     lines.push(
       `#${record.index} ${t('dev_camera_batch_label_stream_resolution')}=${resolution}` +
@@ -490,125 +354,55 @@ function OcrJobPanel({ send }: { send: OcrSend }) {
 }
 
 export function CameraBatchPage() {
-  const videoRef = useRef<HTMLVideoElement | null>(null)
-  const streamRef = useRef<MediaStream | null>(null)
-  const objectUrlsRef = useRef<Set<string>>(new Set())
-  const nextIndexRef = useRef(1)
   const mountedRef = useRef(true)
   /** The one in-flight upload/poll of the ticket job, so every teardown path
    *  can abort it. There is only ever one: the batch is one job. */
   const ocrControllerRef = useRef<AbortController | null>(null)
-  /** Downscaled offscreen canvas for the displacement meter, reused on every
-   *  tick: one 120x480 buffer, never the full frame. */
-  const samplerCanvasRef = useRef<HTMLCanvasElement | null>(null)
-  /** The PREVIOUS sample's row profile. The meter measures frame to frame, not
-   *  against a fixed reference: the accumulation lives in the offset below, so
-   *  travelling away from the capture frame cannot dilute the signal. Reset on
-   *  capture, on open and on any frame that cannot be read. */
-  const prevProfileRef = useRef<Float32Array | null>(null)
-  /** Exact net travel down the receipt since the last capture, in sampler rows. */
-  const travelOffsetRef = useRef(0)
-  /** Smoothed percentage on screen, 0..100. It can go DOWN: the real position
-   *  goes back when the operator comes back up the receipt. */
-  const shownPercentRef = useRef(0)
-  /** The hysteresis state of the meter, kept outside React so a sample decides
-   *  with the value it just computed instead of a stale render. `true` = the
-   *  red "you can capture now" state. */
-  const shiftReadyRef = useRef(false)
-  /** The meter is INACTIVE until the first capture: with no page captured there
-   *  is no page to travel down, so nothing is estimated. */
-  const meterArmedRef = useRef(false)
 
-  const [stream, setStream] = useState<MediaStream | null>(null)
-  const [settings, setSettings] = useState<MediaTrackSettings | null>(null)
-  const [videoInfo, setVideoInfo] = useState<VideoInfo | null>(null)
-  const [captures, setCaptures] = useState<Capture[]>([])
-  const [cameraError, setCameraError] = useState<CameraError | null>(null)
   const [view, setView] = useState<View>('capture')
   const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle')
   const [platform] = useState<PlatformInfo>(readPlatformInfo)
   /** The job's state. One entry for the whole ticket, not one per photo. */
   const [send, setSend] = useState<OcrSend | null>(null)
-  /** Travel down the receipt since the last capture, 0..100. NEVER null: a
-   *  frame that cannot be measured keeps the last reading, and before the first
-   *  capture the meter shows 0%. A meter that disappears is worse than an
-   *  approximate one. */
-  const [shiftPercent, setShiftPercent] = useState(0)
-  /** False until the first capture of the current page: the meter waits instead
-   *  of pretending to measure. */
-  const [shiftArmed, setShiftArmed] = useState(false)
-  /** Hysteresis state on screen, mirrored from `shiftReadyRef` after every
-   *  sample. The pulse follows THIS, not the number. */
-  const [shiftReady, setShiftReady] = useState(false)
+
   /**
-   * TEMPORARY DIAGNOSTICS (delete before integrating the spike into the
-   * product): the last sample, verbatim, for the physical test on the phone.
-   * Without it a rejected sample and a genuinely short movement look identical
-   * in the number alone, which is exactly the ambiguity the phone test has to
-   * resolve.
+   * The camera, its captures and the travel meter: the SAME engine the product
+   * surface uses. Only the console line is added, because phone remote
+   * debugging reads it during the physical test.
    */
-  const [shiftDebug, setShiftDebug] = useState<ShiftDebug | null>(null)
+  const handleCapture = useCallback((capture: CameraCapture) => {
+    console.info('camera_batch_capture', capture)
+  }, [])
+  const camera = useFramedCamera({ onCapture: handleCapture })
 
   // The ORD snapshot the backend expects with every ticket. Read-only here:
   // the spike sends it and prints the answer, it never mutates anything.
   const { context: ocrContext, loading: ocrContextLoading } = useOcrContext(getLanguage())
 
-  /** Single exit path for the media stream: no track can outlive the page. */
-  const stopStream = useCallback((resetUi = true) => {
-    const current = streamRef.current
-    if (current) {
-      for (const track of current.getTracks()) track.stop()
-      streamRef.current = null
-    }
-    if (resetUi) {
-      setStream(null)
-      setSettings(null)
-    }
-  }, [])
+  // One sample of the meter, verbatim, in the console at the sampling cadence
+  // (125 ms) -- never per frame. This is the line the physical test reads.
+  const travelSample: TravelSample | null = camera.travel.sample
+  useEffect(() => {
+    if (travelSample === null) return
+    console.info(
+      'camera_batch_shift',
+      `shift=${travelSample.shift ?? 'null'}`,
+      `score=${travelSample.score === null ? 'null' : travelSample.score.toFixed(3)}`,
+      `${travelSample.verdict} delta=${travelSample.delta}`,
+      `offset=${travelSample.offset}/${travelSample.rows} shown=${travelSample.percent}% ready=${String(travelSample.ready)}`,
+    )
+  }, [travelSample])
 
-  // Unmount: stop the tracks (silent, the component is gone) and release every
-  // object URL so the blobs become collectable. The in-flight OCR work is
-  // aborted first: no state update may land after this point.
+  // Unmount: the hook stops the tracks and releases the object URLs, so this
+  // only has to abort the in-flight OCR work. No state update may land after
+  // this point.
   useEffect(() => {
     mountedRef.current = true
-    const urls = objectUrlsRef.current
     return () => {
       mountedRef.current = false
       ocrControllerRef.current?.abort()
       ocrControllerRef.current = null
-      // The meter's interval is cleared by its own effect; clearing its state
-      // here guarantees no sampler can resume on a dead component.
-      prevProfileRef.current = null
-      travelOffsetRef.current = 0
-      shownPercentRef.current = 0
-      shiftReadyRef.current = false
-      meterArmedRef.current = false
-      stopStream(false)
-      for (const url of urls) URL.revokeObjectURL(url)
-      urls.clear()
     }
-  }, [stopStream])
-
-  /**
-   * The ONE reset point of the meter: exact offset, displayed value and the
-   * frame-to-frame baseline go back to zero together, because keeping any of
-   * them would make the next page start from the previous page's travel.
-   *
-   * `armed` is the only difference between the two ways in: `false` is "waiting
-   * for the first photo" (open camera, unmount, lost stream) and `true` is "a
-   * photo exists, measure the next page" (capture).
-   */
-  const resetShiftMeter = useCallback((armed: boolean) => {
-    prevProfileRef.current = null
-    travelOffsetRef.current = 0
-    shownPercentRef.current = 0
-    shiftReadyRef.current = false
-    meterArmedRef.current = armed
-    if (!mountedRef.current) return
-    setShiftPercent(0)
-    setShiftArmed(armed)
-    setShiftReady(false)
-    setShiftDebug(null)
   }, [])
 
   /** Aborts the in-flight upload/poll and leaves the panel in a readable
@@ -627,174 +421,10 @@ export function CameraBatchPage() {
     })
   }, [])
 
-  // The stream is attached here (never through JSX props) so React cannot drop
-  // srcObject on a re-render. `sync` is the preview's only source of truth: a
-  // paused or zero-sized <video> means the user sees nothing even though
-  // canvas.drawImage keeps producing frames.
-  useEffect(() => {
-    const video = videoRef.current
-    if (!video) return
-    if (!stream) {
-      video.srcObject = null
-      setVideoInfo(null)
-      return
-    }
-
-    const sync = (playError: string | null) => {
-      setVideoInfo({
-        videoWidth: video.videoWidth,
-        videoHeight: video.videoHeight,
-        paused: video.paused,
-        readyState: video.readyState,
-        playError,
-      })
-    }
-
-    video.muted = true
-    video.srcObject = stream
-    video.onloadedmetadata = () => sync(null)
-    video.onplaying = () => sync(null)
-    void video
-      .play()
-      .then(() => sync(null))
-      .catch(err => sync(describeError(err)))
-
-    return () => {
-      video.onloadedmetadata = null
-      video.onplaying = null
-      if (video.srcObject === stream) video.srcObject = null
-    }
-  }, [stream])
-
   const patchSend = useCallback((patch: Partial<OcrSend>) => {
     if (!mountedRef.current) return
     setSend(previous => ({ ...(previous ?? startSend(0)), ...patch }))
   }, [])
-
-  /**
-   * One sample of the live frame -> row profile -> frame-to-frame displacement
-   * -> NET offset. Nothing here gates the capture button and nothing here hides
-   * the meter: an unmeasurable frame keeps the last reading.
-   */
-  const sampleShift = useCallback(() => {
-    if (!mountedRef.current) return
-    // Before the first capture there is no page to measure: no estimation work
-    // at all, the meter sits on its waiting state.
-    if (!meterArmedRef.current) return
-    const video = videoRef.current
-    if (!video) return
-    const sourceWidth = video.videoWidth
-    const sourceHeight = video.videoHeight
-    if (sourceWidth === 0 || sourceHeight === 0) return
-
-    // Only the central band reaches the sampler: the outer 12% of each side is
-    // table, hand or shop, not receipt. `sx`/`sw` crop the SOURCE, and the
-    // cropped width is what gets downscaled, so the band fills the canvas.
-    const sideCrop = Math.round(sourceWidth * SHIFT_SAMPLE_SIDE_CROP_RATIO)
-    const bandWidth = Math.max(1, sourceWidth - sideCrop * 2)
-    const width = Math.max(1, Math.min(SHIFT_SAMPLE_MAX_WIDTH, bandWidth))
-    const height = Math.max(1, Math.min(SHIFT_SAMPLE_MAX_HEIGHT, sourceHeight))
-
-    let canvas = samplerCanvasRef.current
-    if (canvas === null) {
-      canvas = document.createElement('canvas')
-      samplerCanvasRef.current = canvas
-    }
-    if (canvas.width !== width) canvas.width = width
-    if (canvas.height !== height) canvas.height = height
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })
-    if (!ctx) return
-
-    let profile: Float32Array
-    try {
-      ctx.drawImage(video, sideCrop, 0, bandWidth, sourceHeight, 0, 0, width, height)
-      profile = verticalProfile(ctx.getImageData(0, 0, width, height).data, width, height)
-    } catch {
-      // A tainted, locked or not-yet-painted frame: drop the BASELINE so the
-      // next good tick starts a fresh comparison. The offset and the reading
-      // stay: one bad sample is not a reset.
-      prevProfileRef.current = null
-      return
-    }
-    if (profile.length === 0 || !mountedRef.current) return
-
-    const rows = profile.length
-    const previous = prevProfileRef.current
-    // The new profile becomes the baseline immediately: this is a frame-to-frame
-    // measurement, so there is never a fixed reference to drift away from. The
-    // very first sample after a capture only seeds it.
-    prevProfileRef.current = profile
-    if (previous === null || previous.length !== rows) return
-
-    const maxStep = Math.max(4, Math.round(rows * SHIFT_MAX_STEP_RATIO))
-    // The detailed estimate is the SAME search: it only also hands back the
-    // correlation score, which the temporary diagnostics need and the meter
-    // itself ignores.
-    const estimate = estimateVerticalShiftDetailed(previous, profile, maxStep)
-    const shift = estimate === null ? null : estimate.shift
-    // A null estimate (or a rejected one) leaves the offset exactly where it
-    // was: the operator never sees the meter fall back to 0.
-    const offset = accumulateTravel(travelOffsetRef.current, shift, rows, maxStep)
-    travelOffsetRef.current = offset
-    if (!mountedRef.current) return
-
-    // One full frame of travel is one page, so the percentage is the offset over
-    // the sampler rows, corrected by the device calibration. The offset is exact;
-    // only the number on screen is smoothed. It is allowed to DECREASE: coming
-    // back up the receipt undoes travel, and a number that only grew would
-    // advertise an overlap that is no longer there.
-    const percent = travelPercent(offset, rows, TRAVEL_CALIBRATION)
-    const smoothed =
-      shownPercentRef.current + SHIFT_DISPLAY_ALPHA * (percent - shownPercentRef.current)
-    const shown = Math.min(100, Math.max(0, Math.round(smoothed)))
-    shownPercentRef.current = shown
-
-    // Hysteresis, decided on the SMOOTHED value: enter the red state at the
-    // target, leave it only well below it. Between the two thresholds the
-    // previous state holds, so a hand resting near 70% cannot make the pulse
-    // stutter. The pulse follows this boolean, never the raw number.
-    const wasReady = shiftReadyRef.current
-    const ready = wasReady ? shown >= READY_EXIT_PERCENT : shown >= TARGET_SHIFT_PERCENT
-    shiftReadyRef.current = ready
-
-    setShiftPercent(shown)
-    if (ready !== wasReady) setShiftReady(ready)
-
-    // TEMPORARY DIAGNOSTICS (see ShiftDebug): one line per sample in the console,
-    // which is exactly the 125 ms cadence of the interval -- nothing per frame.
-    const applied = classifyTravel(shift, rows, maxStep)
-    const debug: ShiftDebug = {
-      shift,
-      score: estimate === null ? null : estimate.score,
-      verdict: applied.verdict,
-      delta: applied.delta,
-      offset,
-      rows,
-      percent: shown,
-      ready,
-    }
-    setShiftDebug(debug)
-    console.info(
-      'camera_batch_shift',
-      `shift=${debug.shift ?? 'null'}`,
-      `score=${debug.score === null ? 'null' : debug.score.toFixed(3)}`,
-      `${debug.verdict} delta=${debug.delta}`,
-      `offset=${debug.offset}/${debug.rows} shown=${debug.percent}% ready=${String(debug.ready)}`,
-    )
-  }, [])
-
-  // The meter's lifetime is the stream's lifetime. Opening the camera clears the
-  // offset and the reading and leaves the meter WAITING for the first photo; the
-  // cleanup owns the interval, so no tick survives a lost stream, the report
-  // view or the unmount of the page.
-  useEffect(() => {
-    resetShiftMeter(false)
-    if (!stream) return
-    const timer = window.setInterval(sampleShift, SHIFT_SAMPLE_INTERVAL_MS)
-    return () => {
-      window.clearInterval(timer)
-    }
-  }, [stream, sampleShift, resetShiftMeter])
 
   /** Reads the one job until a terminal status or the 90 s window ends. */
   const pollOcrJob = useCallback(
@@ -843,17 +473,17 @@ export function CameraBatchPage() {
    *  Exactly one `createOcrJob` call per click, with the files in capture
    *  order: the photos are pages of the same ticket, not separate tickets. */
   const sendTicket = async () => {
-    const shots: CaptureWithBlob[] = captures
-      .filter((item): item is CaptureWithBlob => item.blob !== null)
-      .sort((a, b) => a.record.index - b.record.index)
-    if (shots.length === 0) return
+    // The hook's `files` IS the contract surface: the same File[] the OCR flow
+    // consumes from a file input, in capture order.
+    const files = camera.files
+    if (files.length === 0) return
     if (send !== null && (send.phase === 'sending' || send.phase === 'polling')) return
 
     // A previous measurement of the batch is discarded, not merged.
     ocrControllerRef.current?.abort()
     const controller = new AbortController()
     ocrControllerRef.current = controller
-    if (mountedRef.current) setSend(startSend(shots.length))
+    if (mountedRef.current) setSend(startSend(files.length))
 
     const accessToken = await readOcrAccessToken()
     if (controller.signal.aborted || !mountedRef.current) return
@@ -880,9 +510,6 @@ export function CameraBatchPage() {
       if (ocrControllerRef.current === controller) ocrControllerRef.current = null
       return
     }
-
-    // All pages of the ticket, in capture order, in a single multipart body.
-    const files = shots.map(shot => new File([shot.blob], shot.fileName, { type: 'image/jpeg' }))
 
     let accepted: OcrJobAccepted
     try {
@@ -912,185 +539,34 @@ export function CameraBatchPage() {
     await pollOcrJob(accepted.job_id, accessToken, controller)
   }
 
-  const captureCount = captures.length
-  const photoCount = captures.reduce((total, item) => (item.url ? total + 1 : total), 0)
-  /** Only a capture that produced bytes can travel: a failed shot has no blob. */
-  const sendableCount = captures.reduce((total, item) => (item.blob !== null ? total + 1 : total), 0)
-  const capReached = photoCount >= MAX_CAPTURES
-  const isLive = stream !== null
+  const { close: closeCamera, open: openCameraStream } = camera
+  const photoCount = camera.captures.reduce((total, item) => (item.url ? total + 1 : total), 0)
+  const sendableCount = camera.files.length
+  const isLive = camera.status === 'live'
   // Red only once the meter is actually measuring: the waiting state is neutral,
   // never pulsing, so it cannot be mistaken for "move along". The value itself
-  // carries the hysteresis decided in `sampleShift`; it is NOT recomputed from
-  // the number here, or the pulse would flip at 70% again.
-  const shiftIsReady = shiftArmed && shiftReady
+  // carries the hysteresis decided in the hook; it is NOT recomputed from the
+  // number here, or the pulse would flip at 70% again.
+  const shiftIsReady = camera.travel.armed && camera.travel.ready
   const ocrBusy = send !== null && (send.phase === 'sending' || send.phase === 'polling')
 
-  const addCapture = (item: Capture) => {
-    setCaptures(prev => [...prev, item])
-    // Phone remote debugging reads this console line.
-    console.info('camera_batch_capture', item.record)
-  }
-
   const openCamera = async () => {
-    setCameraError(null)
     setCopyState('idle')
     setView('capture')
-    stopStream()
     // Leaving the spike's OCR measurement behind: no poll may keep running.
     resetOcrPoll()
-    // A new camera run starts on a new page: the meter waits for the first photo.
-    resetShiftMeter(false)
-
-    if (!navigator.mediaDevices?.getUserMedia) {
-      setCameraError('no_camera')
-      return
-    }
-
-    try {
-      const next = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: 'environment' },
-          width: { ideal: 1920 },
-          height: { ideal: 1080 },
-        },
-        audio: false,
-      })
-      streamRef.current = next
-      setStream(next)
-      setSettings(next.getVideoTracks()[0]?.getSettings() ?? null)
-    } catch (err) {
-      const name = err instanceof DOMException ? err.name : ''
-      setCameraError(
-        name === 'NotAllowedError' || name === 'SecurityError' ? 'permission_denied' : 'camera_error',
-      )
-    }
+    await openCameraStream()
   }
 
-  const capture = () => {
-    const video = videoRef.current
-    const current = streamRef.current
-    if (!video || !current) return
-    if (photoCount >= MAX_CAPTURES) return
-
-    // The page just captured is the page that was travelled: the next shot
-    // measures ITS OWN travel from its own frame, so the accumulation, the
-    // displayed value and the frame-to-frame baseline all start over. The meter
-    // stays armed: keep going down the same receipt.
-    resetShiftMeter(true)
-
-    const index = nextIndexRef.current
-    nextIndexRef.current += 1
-    const fileName = `batch-${index}.jpg`
-    const startedAt = performance.now()
-    const trackSettings = current.getVideoTracks()[0]?.getSettings()
-    const base = {
-      index,
-      streamWidth: trackSettings?.width ?? null,
-      streamHeight: trackSettings?.height ?? null,
-      facingMode: trackSettings?.facingMode ?? null,
-      deviceId: trackSettings?.deviceId ?? null,
-    }
-
-    const width = video.videoWidth
-    const height = video.videoHeight
-    const failed = (message: string) => {
-      addCapture({
-        record: {
-          ...base,
-          width,
-          height,
-          blobSize: 0,
-          mimeType: 'image/jpeg',
-          durationMs: Math.round(performance.now() - startedAt),
-          error: message,
-        },
-        blob: null,
-        url: null,
-        fileName,
-      })
-    }
-
-    if (width === 0 || height === 0) {
-      failed('video has no dimensions yet')
-      return
-    }
-
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
-    const ctx = canvas.getContext('2d')
-    if (!ctx) {
-      failed('2d context unavailable')
-      return
-    }
-
-    try {
-      ctx.drawImage(video, 0, 0, width, height)
-    } catch (err) {
-      failed(`drawImage failed: ${describeError(err)}`)
-      return
-    }
-
-    canvas.toBlob(
-      (blob) => {
-        const durationMs = Math.round(performance.now() - startedAt)
-        if (!blob) {
-          addCapture({
-            record: {
-              ...base,
-              width,
-              height,
-              blobSize: 0,
-              mimeType: 'image/jpeg',
-              durationMs,
-              error: 'canvas.toBlob returned null',
-            },
-            blob: null,
-            url: null,
-            fileName,
-          })
-          return
-        }
-        const url = URL.createObjectURL(blob)
-        objectUrlsRef.current.add(url)
-        addCapture({
-          record: {
-            ...base,
-            width,
-            height,
-            blobSize: blob.size,
-            mimeType: blob.type,
-            durationMs,
-            error: null,
-          },
-          blob,
-          url,
-          fileName,
-        })
-      },
-      'image/jpeg',
-      JPEG_QUALITY,
-    )
-  }
-
-  /** Deleting a page does NOT touch the running poll: the job already exists on
-   *  the server, so stopping the poll would only hide the answer. */
-  const removeCapture = (index: number) => {
-    const target = captures.find(item => item.record.index === index)
-    if (target?.url) {
-      URL.revokeObjectURL(target.url)
-      objectUrlsRef.current.delete(target.url)
-    }
-    setCaptures(prev => prev.filter(item => item.record.index !== index))
-  }
-
+  /** Done keeps the captures: the report and the pending send still need them.
+   *  Only the stream goes away. */
   const finish = () => {
-    stopStream()
+    closeCamera()
     setView('report')
   }
 
   const copyReport = () => {
-    const text = buildReport(platform, videoInfo, captures, send)
+    const text = buildReport(platform, camera.videoInfo, camera.captures, send)
     if (typeof navigator.clipboard?.writeText !== 'function') {
       setCopyState('failed')
       return
@@ -1102,11 +578,11 @@ export function CameraBatchPage() {
   }
 
   const cameraErrorMessage =
-    cameraError === 'no_camera'
+    camera.error === 'no_camera'
       ? t('dev_camera_batch_msg_no_camera')
-      : cameraError === 'permission_denied'
+      : camera.error === 'permission_denied'
         ? t('dev_camera_batch_msg_permission_denied')
-        : cameraError === 'camera_error'
+        : camera.error === 'camera_error'
           ? t('dev_camera_batch_msg_camera_error')
           : null
 
@@ -1136,7 +612,13 @@ export function CameraBatchPage() {
       {view === 'capture' ? (
         <>
           <div className="camera-batch-stage">
-            <video ref={videoRef} className="camera-batch-video" playsInline muted autoPlay />
+            <video
+              ref={camera.attachVideo}
+              className="camera-batch-video"
+              playsInline
+              muted
+              autoPlay
+            />
             {isLive && (
               <div className="camera-batch-frame" aria-hidden="true">
                 <span className="camera-batch-frame-corner is-tl" />
@@ -1151,13 +633,14 @@ export function CameraBatchPage() {
           </div>
 
           {/* Capture stays glued to the preview: scrolling down to find it used to
-              push the image out of view. */}
+              push the image out of view. `camera.capture` refuses only on the
+              photo cap, never on the meter. */}
           <div className="camera-batch-capture-bar">
             <button
               type="button"
               className="btn btn-primary btn-full btn-lg"
-              onClick={capture}
-              disabled={!isLive || capReached}
+              onClick={camera.capture}
+              disabled={!camera.canCapture}
             >
               {t('dev_camera_batch_btn_capture')}
             </button>
@@ -1170,15 +653,17 @@ export function CameraBatchPage() {
               purpose: it says what to do instead of showing a fake 0%. */}
           <div
             className={`camera-batch-shift${shiftIsReady ? ' is-ready' : ''}${
-              shiftArmed ? '' : ' is-waiting'
+              camera.travel.armed ? '' : ' is-waiting'
             }`}
-            data-state={!shiftArmed ? 'waiting' : shiftIsReady ? 'ready' : 'below-target'}
+            data-state={
+              !camera.travel.armed ? 'waiting' : shiftIsReady ? 'ready' : 'below-target'
+            }
           >
             <div className="camera-batch-shift-head">
               <span className="camera-batch-shift-label">
                 {t('dev_camera_batch_label_shift')}
               </span>
-              <span className="camera-batch-shift-value">{shiftPercent}%</span>
+              <span className="camera-batch-shift-value">{camera.travel.percent}%</span>
             </div>
             <span
               className="camera-batch-shift-track"
@@ -1186,25 +671,28 @@ export function CameraBatchPage() {
               aria-label={t('dev_camera_batch_label_shift')}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-valuenow={shiftPercent}
+              aria-valuenow={camera.travel.percent}
               aria-valuetext={
-                shiftArmed
-                  ? `${shiftPercent}%`
+                camera.travel.armed
+                  ? `${camera.travel.percent}%`
                   : t('dev_camera_batch_msg_shift_waiting')
               }
             >
-              <span className="camera-batch-shift-fill" style={{ width: `${shiftPercent}%` }} />
+              <span
+                className="camera-batch-shift-fill"
+                style={{ width: `${camera.travel.percent}%` }}
+              />
             </span>
             <p className="camera-batch-shift-state">
-              {!shiftArmed
+              {!camera.travel.armed
                 ? t('dev_camera_batch_msg_shift_waiting')
                 : shiftIsReady
                   ? t('dev_camera_batch_msg_shift_ready')
                   : t('dev_camera_batch_msg_shift_keep_going')}
             </p>
-            {/* TEMPORARY DIAGNOSTICS -- DELETE before this spike is integrated
-                into the product. One compact line so the physical test on the
-                phone can tell WHY a sample moved the meter or did not:
+            {/* TEMPORARY DIAGNOSTICS -- this page is where they live, and this
+                page is development-only. One compact line so the physical test
+                on the phone can tell WHY a sample moved the meter or did not:
                   shift: the frame-to-frame estimate in sampler rows
                   score: its normalised correlation, -1..1
                   verdict: applied | jitter | out_of_window | not_measured
@@ -1214,13 +702,15 @@ export function CameraBatchPage() {
                   R: the hysteresis state (pulse) at that moment
                 aria-hidden because it is a developer readout, not a message for
                 the operator. */}
-            {shiftDebug !== null && (
+            {travelSample !== null && (
               <p className="camera-batch-shift-debug" aria-hidden="true">
-                {`shift=${shiftDebug.shift ?? 'null'} score=${
-                  shiftDebug.score === null ? 'null' : shiftDebug.score.toFixed(2)
-                } ${shiftDebug.verdict} d=${shiftDebug.delta > 0 ? '+' : ''}${shiftDebug.delta} off=${
-                  shiftDebug.offset
-                }/${shiftDebug.rows} ${shiftDebug.percent}% R=${shiftDebug.ready ? 1 : 0}`}
+                {`shift=${travelSample.shift ?? 'null'} score=${
+                  travelSample.score === null ? 'null' : travelSample.score.toFixed(2)
+                } ${travelSample.verdict} d=${travelSample.delta > 0 ? '+' : ''}${
+                  travelSample.delta
+                } off=${travelSample.offset}/${travelSample.rows} ${travelSample.percent}% R=${
+                  travelSample.ready ? 1 : 0
+                }`}
               </p>
             )}
           </div>
@@ -1229,41 +719,41 @@ export function CameraBatchPage() {
             {isLive ? t('dev_camera_batch_status_live') : t('dev_camera_batch_status_idle')}
           </p>
 
-          {settings && (
+          {camera.settings && (
             <dl className="camera-batch-meta">
               <dt>{t('dev_camera_batch_label_stream_resolution')}</dt>
               <dd>
-                {settings.width ?? '?'} x {settings.height ?? '?'}
+                {camera.settings.width ?? '?'} x {camera.settings.height ?? '?'}
               </dd>
-              {settings.facingMode && (
+              {camera.settings.facingMode && (
                 <>
                   <dt>facingMode</dt>
-                  <dd>{settings.facingMode}</dd>
+                  <dd>{camera.settings.facingMode}</dd>
                 </>
               )}
-              {settings.deviceId && (
+              {camera.settings.deviceId && (
                 <>
                   <dt>deviceId</dt>
-                  <dd>{settings.deviceId}</dd>
+                  <dd>{camera.settings.deviceId}</dd>
                 </>
               )}
             </dl>
           )}
 
-          {videoInfo && (
+          {camera.videoInfo && (
             <dl className="camera-batch-meta">
               <dt>{t('dev_camera_batch_label_video')}</dt>
               <dd>
-                {videoInfo.videoWidth} x {videoInfo.videoHeight}
+                {camera.videoInfo.width} x {camera.videoInfo.height}
               </dd>
               <dt>paused / readyState</dt>
               <dd>
-                {String(videoInfo.paused)} / {videoInfo.readyState}
+                {String(camera.videoInfo.paused)} / {camera.videoInfo.readyState}
               </dd>
-              {videoInfo.playError && (
+              {camera.videoInfo.playError && (
                 <>
                   <dt>{t('dev_camera_batch_label_errors')}</dt>
-                  <dd className="camera-batch-error">{videoInfo.playError}</dd>
+                  <dd className="camera-batch-error">{camera.videoInfo.playError}</dd>
                 </>
               )}
             </dl>
@@ -1272,29 +762,45 @@ export function CameraBatchPage() {
           {cameraErrorMessage && <p className="camera-batch-error">{cameraErrorMessage}</p>}
 
           <div className="camera-batch-actions">
-            <button type="button" className="btn btn-outline btn-full" onClick={openCamera}>
+            <button
+              type="button"
+              className="btn btn-outline btn-full"
+              onClick={() => {
+                void openCamera()
+              }}
+            >
               {t('dev_camera_batch_btn_open_camera')}
             </button>
             <button
               type="button"
               className="btn btn-outline btn-full"
               onClick={finish}
-              disabled={!isLive && captureCount === 0}
+              disabled={!isLive && camera.count === 0}
             >
               {t('dev_camera_batch_btn_done')}
             </button>
           </div>
 
-          {capReached && <p className="camera-batch-note">{t('dev_camera_batch_msg_cap_reached')}</p>}
+          {camera.capReached && (
+            <p className="camera-batch-note">{t('dev_camera_batch_msg_cap_reached')}</p>
+          )}
         </>
       ) : (
         <section className="camera-batch-report-block">
-          <pre className="camera-batch-report">{buildReport(platform, videoInfo, captures, send)}</pre>
+          <pre className="camera-batch-report">
+            {buildReport(platform, camera.videoInfo, camera.captures, send)}
+          </pre>
           <div className="camera-batch-actions">
             <button type="button" className="btn btn-primary btn-full" onClick={copyReport}>
               {t('dev_camera_batch_btn_copy_report')}
             </button>
-            <button type="button" className="btn btn-outline btn-full" onClick={openCamera}>
+            <button
+              type="button"
+              className="btn btn-outline btn-full"
+              onClick={() => {
+                void openCamera()
+              }}
+            >
               {t('dev_camera_batch_btn_open_camera')}
             </button>
           </div>
@@ -1328,10 +834,10 @@ export function CameraBatchPage() {
 
         {send && <OcrJobPanel send={send} />}
 
-        {captures.length === 0 && <p className="camera-batch-note">-</p>}
+        {camera.captures.length === 0 && <p className="camera-batch-note">-</p>}
         <ul className="camera-batch-thumbs">
-          {captures.map(item => (
-            <li key={item.record.index} className="camera-batch-thumb">
+          {camera.captures.map(item => (
+            <li key={item.index} className="camera-batch-thumb">
               {item.url ? (
                 <img src={item.url} alt={item.fileName} className="camera-batch-thumb-img" />
               ) : (
@@ -1340,30 +846,30 @@ export function CameraBatchPage() {
               <dl className="camera-batch-meta">
                 <dt>{t('dev_camera_batch_label_stream_resolution')}</dt>
                 <dd>
-                  {item.record.streamWidth ?? '?'} x {item.record.streamHeight ?? '?'}
+                  {item.streamWidth ?? '?'} x {item.streamHeight ?? '?'}
                 </dd>
                 <dt>{t('dev_camera_batch_label_capture_dimensions')}</dt>
                 <dd>
-                  {item.record.width} x {item.record.height}
+                  {item.width} x {item.height}
                 </dd>
                 <dt>{t('dev_camera_batch_label_blob_size')}</dt>
                 <dd>
-                  {item.record.blobSize} B / {formatKb(item.record.blobSize)} KB
-                  {item.record.durationMs == null ? '' : ` / ${item.record.durationMs} ms`}
+                  {item.bytes} B / {formatKb(item.bytes)} KB
+                  {item.durationMs == null ? '' : ` / ${item.durationMs} ms`}
                 </dd>
                 <dt>type</dt>
-                <dd>{item.record.mimeType}</dd>
-                {item.record.error && (
+                <dd>{item.mimeType}</dd>
+                {item.error && (
                   <>
                     <dt>{t('dev_camera_batch_label_errors')}</dt>
-                    <dd className="camera-batch-error">{item.record.error}</dd>
+                    <dd className="camera-batch-error">{item.error}</dd>
                   </>
                 )}
               </dl>
               <button
                 type="button"
                 className="btn btn-danger btn-full"
-                onClick={() => removeCapture(item.record.index)}
+                onClick={() => camera.remove(item.index)}
               >
                 {t('dev_camera_batch_btn_delete')}
               </button>
