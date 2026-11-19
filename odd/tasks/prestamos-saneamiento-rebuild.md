@@ -168,7 +168,7 @@ previo, no requisitos.
 | T15 | Progreso sin porcentaje engañoso | S19 | TBD | pendiente (T11) |
 | T16 | Categorías e ingresos: migración y bootstrap | S12, S13, S14 | TBD | pendiente (T1) |
 | T17 | Integración con presupuesto y reportes | S12 | TBD | pendiente (T16) |
-| T18 | Calendario: ids explícitos y cronograma | S20, S24 | TBD | pendiente (T6) |
+| T18 | Calendario: ids explícitos y cronograma | S20, S24 | inline | **hecha** (falta retirar la rama muerta legacy) |
 | T19 | Cuarentena fuera de Saneamiento sin romper accesos | S1 | TBD | pendiente (T3) |
 | T20 | Navegación `/prestamos` y compatibilidad | S1 | TBD | pendiente (T3) |
 | T21 | Pareja: balance y préstamos explícitos | S21 | TBD | pendiente (T3) |
@@ -308,3 +308,18 @@ que colisione con algun `prestamo_id` seguiria afectando ese prestamo. Cerrarlo
 exige que el Calendario transporte ids explicitos: tarea T18, pendiente.
 
 Regresion: `tests/prestamos/pago-viejo-regresion-transaccional.sql`, 9/9 PASS.
+
+## T18 cerrada (2026-11-18)
+
+El prefijo legacy se reescribio a `cuota_prestamo_` desde `pg_get_functiondef`,
+tocando solo ese string. `fn_prestamos_calendario` devuelve `prestamo_id` y
+`cuota_id` como columnas explicitas.
+
+Dato duro de la prueba: en la misma corrida `prestamo_id=14` y `
+cuota_id=7`. Los dos espacios de identificadores se solapan, asi que la colision
+no era teorica.
+
+Regresion: `tests/prestamos/calendario-ids-transaccional.sql`, 8/8 PASS.
+
+Pendiente de T18: retirar la rama muerta de `p_cuotas_detalle` del calendario
+legacy, que hoy no emite filas porque nadie escribe `prestamo_id`.
