@@ -372,3 +372,58 @@ T17 parcial: `fn_clonar_usuario_admin` no clona las tablas nuevas.
 2. `fn_tr_anular_inversion_al_borrar_movimiento` se recursiona infinitamente cuando
    dos movimientos comparten `inversion_id`. **No tocado**, es del modulo de
    inversiones.
+
+## Frontend: contrato disponible y especificacion
+
+El backend esta desplegado. Estas son las unicas RPC que la UI debe llamar.
+
+| RPC | Entrada | Salida |
+|---|---|---|
+| `fn_prestamos_resumen()` | — | filas por direccion y moneda: `direccion, moneda, pendiente, pagado_registrado, prestamos_activos, prestamos_saldados` |
+| `fn_prestamos_listar(p_direccion, p_incluir_saldados)` | `'debo'\|'me_deben'\|null`, bool | `prestamo_id, direccion, contraparte, nombre, moneda, saldo_pendiente, monto_original, pagado_registrado, estado, estado_vencimiento, proximo_vencimiento, tasa, tasa_informada, modalidad, tiene_cronograma` |
+| `fn_prestamo_detalle(p_prestamo_id)` | bigint | jsonb con `cuotas[]`, `pagos[]`, `total_interes_excedente` |
+| `fn_prestamo_crear(...)` | ver firma desplegada | `prestamo_id` |
+| `fn_prestamo_editar(...)` | todos opcionales salvo id | void |
+| `fn_prestamo_registrar_pago(...)` | id, billetera, monto_billetera, moneda_billetera, monto_aplicado, fecha, nota, confirmar_excedente, capital, interes | `pago_id` |
+| `fn_prestamo_corregir_pago(...)` | idem por `pago_id` | void |
+| `fn_prestamo_eliminar_pago(p_pago_id)` | bigint | void |
+| `fn_prestamo_eliminar_historial(p_prestamo_id, p_confirmar)` | bigint, bool | void |
+| `fn_prestamos_calendario(p_dias_adelante)` | int | `tipo_evento, fecha, nombre, monto, moneda, direccion, criticidad, pagado, prestamo_id, cuota_id, numero_cuota` |
+| `fn_saneamiento_plan(p_estrategia)` | `'math'\|'emotional'\|'relationships'` | ... `prioridad, comparte_prioridad` |
+| `fn_saneamiento_vinculos_preguntas()` | — | acreedores personales con `criterio_1..3` |
+| `fn_saneamiento_vinculos_responder(p_respuestas)` | jsonb array `[{prestamo_id, criterios:[1,3]}]` | int |
+| `fn_saneamiento_simular(p_prestamo_id, p_monto)` | bigint, numeric | jsonb; los indicadores no calculables llegan en `null` con `motivo` |
+| `fn_saneamiento_progreso()` | — | por moneda; `fecha fin_estimada` puede ser null |
+
+Reglas de presentacion que la UI **no** puede reinterpretar:
+- `estado_vencimiento` llega calculado (`al_dia`, `proximo_a_vencer`, `vencido`, `saldado`, `sin_fecha`). No recalcularlo.
+- Debo y Me deben nunca se restan; monedas distintas nunca se suman.
+- Un indicador `null` se muestra como «No se puede calcular con la informacion disponible», **nunca como 0**.
+- El Calendario usa `prestamo_id` de la columna. Nunca parsear `evento_id`.
+- Un sobrepago responde `error_overpayment_confirmation_required`: hay que pedir confirmacion y reenviar con `p_confirmar_excedente = true`.
+
+### T19 · Cuarentena fuera de Saneamiento
+
+`src/pages/Saneamiento/SaneamientoPage.tsx` tiene cuatro vistas internas por
+`useState`: `dashboard`, `bandeja`, `ataque`, `calendario`. La vista `bandeja` debe
+desaparecer de esta pantalla. **No tocar** `/cuarentena`, el item de navegacion, el
+FAB del Home ni los deep-links: siguen siendo el acceso.
+
+### T20 · Navegacion
+
+Rutas nuevas: `/prestamos`, `/prestamos/debo`, `/prestamos/me-deben`,
+`/prestamos/saneamiento`, `/prestamos/calendario`, `/prestamos/pareja`.
+`/saneamiento` queda como redirect a `/prestamos/saneamiento` para no romper enlaces.
+
+### T24 · Pantallas
+
+`/prestamos` muestra el resumen con los dos saldos separados y accesos a las cinco
+secciones. `debo` y `me-deben` comparten componente de lista con accion rapida
+(«Registrar pago» / «Registrar cobro») y detalle. `saneamiento` muestra el plan con
+selector de estrategia, el cuestionario de Vinculos bajo demanda y la simulacion.
+`calendario` muestra los eventos de prestamos.
+
+### T21 · Pareja
+
+Solo lectura: balance derivado de gastos compartidos y prestamos explicitos entre
+integrantes, en dos grupos separados. No fusionar ni compensar.
