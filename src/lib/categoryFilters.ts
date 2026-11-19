@@ -49,6 +49,15 @@ export const SYSTEM_CATEGORY_NAMES: readonly string[] = [
   // selectores y del catálogo que se envía al clasificador; el usuario mueve
   // los productos hacia categorías reales, nunca hacia esta.
   'ocr_unrecognized',
+  // Categorias de sistema del modulo de Prestamos. No se pueden renombrar: el
+  // contrato exige los nombres exactos, y la identidad se resuelve por esta clave
+  // y no por coincidencia de texto. Se traducen via catalogDisplayName.
+  'cat_debt_payment',
+  'cat_loans_granted',
+  // Fuentes de ingreso del mismo modulo. Misma convencion que
+  // 'savings_yield_income_name': la clave vive en p_ingresos.nombre.
+  'loan_received_income_name',
+  'loan_collection_income_name',
 ] as const
 
 /**

@@ -1036,6 +1036,34 @@ card_sumary_payment: "Pago de Resumen",
   cat_fresh_foods: "Frescos",
   cat_home_pets: "Hogar y Mascotas",
   no_category: "Sin categoría",
+  // === Préstamos y Saneamiento: claves de catálogo del módulo ===
+  cat_debt_payment: "Deudas",
+  cat_loans_granted: "Préstamos otorgados",
+  loan_received_income_name: "Ingreso x préstamo recibido",
+  loan_collection_income_name: "Cobro de préstamos",
+};
+
+// === PRÉSTAMOS Y SANEAMIENTO: errores del contrato de las RPC ===
+export const prestamos = {
+  error_debt_not_found: "No encontramos ese préstamo.",
+  error_invalid_direction: "La dirección del préstamo no es válida.",
+  error_invalid_modality: "La modalidad de devolución no es válida.",
+  error_invalid_interest_condition: "La condición de interés no es válida.",
+  error_schedule_required: "Necesitás cargar el cronograma de cuotas.",
+  error_schedule_not_allowed:
+    "Esta modalidad no lleva cronograma de cuotas.",
+  error_debt_not_payable: "Este préstamo no admite pagos en su estado actual.",
+  error_overpayment_confirmation_required:
+    "El importe supera el saldo pendiente. Confirmá si el excedente son intereses no registrados.",
+  error_payment_not_found: "No encontramos esa operación.",
+  error_payment_not_active: "Esa operación ya no está activa.",
+  error_confirmation_required: "Necesitás confirmar la operación.",
+  error_debt_not_settled:
+    "Solo podés quitar del historial un préstamo que ya está saldado.",
+  error_invalid_strategy: "La estrategia elegida no es válida.",
+  error_invalid_criterion: "El criterio del cuestionario no es válido.",
+  error_cannot_change_modality_with_payments:
+    "No podés cambiar la modalidad de un préstamo que ya tiene pagos registrados.",
 };
 
 // === FASE 6: ANÁLISIS DE ROI EMOCIONAL (BCG) ===
