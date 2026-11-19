@@ -155,12 +155,12 @@ previo, no requisitos.
 | T2 | Migraciones no destructivas + tablas nuevas | S6, S7, S15 | inline | **hecha** |
 | T3 | Lectura: resumen, listado y detalle | S1, S3, S7 | inline | **hecha** |
 | T4 | Alta de préstamo nuevo e histórico | S4, S5, S6, S12 | inline | **hecha** |
-| T5 | Edición de condiciones | S11 | TBD | pendiente (T4) |
+| T5 | Edición de condiciones | S11 | inline | **hecha** |
 | T6 | Registro de pago y cobro, multimoneda | S9, S10, S15 | inline | **hecha** (RPC) |
 | T7 | Sobrepago con confirmación de intereses | S10 | TBD | pendiente (T6) |
-| T8 | Corrección de operaciones | S11 | TBD | pendiente (T6) |
+| T8 | Corrección de operaciones | S11 | inline | **hecha** |
 | T9 | Estados derivados y saldado automático | S7 | inline | **hecha** |
-| T10 | Eliminación lógica del historial | S8 | TBD | pendiente (T9) |
+| T10 | Eliminación lógica del historial | S8 | inline | **hecha** |
 | T11 | Plan de Ataque sólo préstamos «Debo» | S2, S16 | TBD | pendiente (T3) |
 | T12 | Desempates deterministas Matemática/Emocional | S16 | TBD | pendiente (T11) |
 | T13 | Cuestionario de Vínculos y puntuación | S17 | TBD | pendiente (T11) |
@@ -323,3 +323,24 @@ Regresion: `tests/prestamos/calendario-ids-transaccional.sql`, 8/8 PASS.
 
 Pendiente de T18: retirar la rama muerta de `p_cuotas_detalle` del calendario
 legacy, que hoy no emite filas porque nadie escribe `prestamo_id`.
+
+## T5, T8, T10 cerradas (2026-11-18)
+
+La aritmetica del saldo salio del trigger a `fn_prestamos_aplicar_saldo`, para que
+el trigger y la RPC de edicion compartan una sola implementacion.
+
+Cuatro reportes desplegados contaban un prestamo con `estado != '"cancelado"'` y
+habrian seguido contando uno eliminado, inflando patrimonio, escudo, BCG y el plan
+de ataque. Sus filtros pasaron a `NOT IN ('"cancelado"', '"eliminado"')`.
+
+Regresion: `tests/prestamos/edicion-correccion-borrado-transaccional.sql`, 9/9 PASS.
+
+### Brechas de integracion detectadas y NO cerradas todavia (T17)
+
+1. `fn_exportar_backup_maestro`, `fn_exportar_datos_usuario_rango` y
+   `fn_exportar_pasaporte_financiero` exportan `p_prestamos` pero **no** las tablas
+   nuevas: un respaldo perderia pagos y cronogramas en silencio.
+2. `fn_clonar_usuario_admin` enumera tablas y no incluye las nuevas: un usuario
+   clonado quedaria con prestamos sin sus pagos.
+3. `fn_borrar_datos_usuario` enumera tablas para borrar; las nuevas dependen de
+   `usuarios` con CASCADE, pero conviene agregarlas explicitas al arreglo.
