@@ -1,0 +1,558 @@
+/* Product capture surface for the framed camera (src/ocr/camera).
+   Mobile first, single column. It reuses the app's design tokens and the global
+   `.btn` classes; nothing here is a new primitive. Only the framing box, the
+   guidance bar and the thumbnail strip need layout of their own. */
+
+.camera-surface {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  /* The surface IS the camera sub-step: it takes the height the sheet gives it
+     and passes whatever is left to the preview. */
+  flex: 1 1 auto;
+  /* Lets the preview give space back instead of overflowing the sheet. */
+  min-height: 0;
+  width: 100%;
+}
+
+/* Everything is fixed EXCEPT the preview. On a definite sheet height the column
+   has one flexible child, so the controls below it (`Capturar`, `Enviar`, the
+   thumbnail strip) keep their size instead of being squashed to fit. */
+.camera-surface > * {
+  flex: 0 0 auto;
+}
+
+
+/* ─── Live preview ─── */
+/* The stage takes the SHAPE of the stream (inline `aspect-ratio`) and its own
+   rounded border is the framing box -- there is no second box drawn inside it.
+
+   WIDTH vs HEIGHT: this is the only element that can be sized either way, and
+   the two layouts below pick one. On a floating card the width drives the box
+   (`width: 90%`, height derived from the ratio). Inside the full-height phone
+   sheet it is the other way round: the column hands the stage all the remaining
+   height and the width falls out of the ratio (`max-width` keeps it from ever
+   overflowing sideways). */
+.camera-surface-stage {
+  align-items: center;
+  /* Fallback for the first paint, before the track reports its settings. 9:16 is
+     the shape this camera delivers, so the box does not jump when the real shape
+     arrives; the inline aspect-ratio from the track always wins. */
+  aspect-ratio: 9 / 16;
+  align-self: center;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: center;
+  max-height: calc(100dvh - 330px);
+  overflow: hidden;
+  position: relative;
+  width: 90%;
+}
+
+/* See the phone block at the end of this file: there the stage grows and the
+   width is derived from the stream's shape. */
+
+/* Tap-to-focus target: the whole stage answers a tap, so the browser must not
+   treat it as a double-tap zoom or a text selection. */
+.camera-surface-stage:active {
+  cursor: crosshair;
+}
+
+/* Out of flow on purpose: the video's intrinsic size (the stream is 1440x1920)
+   must never become the flex base size of the preview box. Absolute + `contain`
+   paints exactly the same thing and leaves the stage's height to the layout. */
+.camera-surface-video {
+  display: block;
+  height: 100%;
+  inset: 0;
+  object-fit: contain;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+}
+
+.camera-surface-stage-hint {
+  color: var(--text-3);
+  font-size: calc(13px * var(--font-scale));
+  left: 0;
+  padding: 0 var(--space-4);
+  position: absolute;
+  right: 0;
+  text-align: center;
+}
+
+/* ─── Guidance ─── */
+/* Normal flow, below the preview, never over the video: on a homogeneous
+   receipt any overlay became unreadable. It advises; it never disables the
+   shutter. */
+/* Sits INSIDE the preview: absolute, bottom, on its own dark strip. Taking no
+   height from the column is the whole point. */
+.camera-surface-progress {
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0));
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  left: 0;
+  padding: 18px 12px 10px;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  z-index: 2;
+}
+
+/* On the dark strip the guidance needs its own light colour: the tokens are for
+   the sheet, not for a photo background. */
+.camera-surface-progress-state {
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.75);
+}
+
+/* One sentence, no number. The percentage that used to sit next to it was a
+   measurement on a product screen, and the operator reads the paper, not the
+   readout: the bar is enough to answer "keep going" or "capture now". */
+.camera-surface-progress-state {
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 600;
+  line-height: 1.3;
+  margin: 0;
+}
+
+.camera-surface-progress-track {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  display: block;
+  height: 12px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.camera-surface-progress-fill {
+  background: var(--text-3);
+  display: block;
+  height: 100%;
+  transition: width 120ms linear;
+}
+
+/* Waiting for the first photo: neutral and completely still. It must not look
+   like a measurement in progress. */
+.camera-surface-progress.is-waiting .camera-surface-progress-fill {
+  background: var(--text-4);
+}
+
+/* At the target the whole indicator turns danger-red and blinks: the operator
+   is looking at the paper, not at the screen, so colour alone is not enough. */
+.camera-surface-progress.is-ready .camera-surface-progress-fill {
+  background: var(--coral);
+}
+
+.camera-surface-progress.is-ready .camera-surface-progress-state {
+  color: var(--coral);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .camera-surface-progress-fill {
+    transition: none;
+  }
+}
+
+/* ─── Actions ─── */
+.camera-surface-shutter {
+  min-height: 56px;
+}
+
+.camera-surface-note {
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+  margin: 0;
+}
+
+.camera-surface-error {
+  color: var(--coral);
+  font-size: calc(13px * var(--font-scale));
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ─── Thumbnails ─── */
+/* A single horizontal strip instead of a wrapping grid: it must occupy the SAME
+   height with one photo or with ten, otherwise the viewfinder above resizes
+   while the owner is framing the next page. Thumbnails are a receipt of what is
+   already done; they never take space from the shot in progress. */
+.camera-surface-thumbs {
+  display: flex;
+  gap: var(--space-2);
+  height: 64px;
+  list-style: none;
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 0;
+  flex: 0 0 auto;
+  scrollbar-width: none;
+}
+
+.camera-surface-thumbs::-webkit-scrollbar {
+  display: none;
+}
+
+.camera-surface-thumb {
+  flex: 0 0 auto;
+  height: 100%;
+  position: relative;
+  width: 48px;
+}
+
+.camera-surface-thumb-img {
+  aspect-ratio: 3 / 4;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: block;
+  object-fit: contain;
+  width: 100%;
+}
+
+.camera-surface-thumb-img.is-empty {
+  align-items: center;
+  color: var(--text-4);
+  display: flex;
+  font-family: var(--font-mono);
+  font-size: calc(10px * var(--font-scale));
+  justify-content: center;
+  text-align: center;
+}
+
+/* Always visible, never hover-only: on a phone there is no hover. 32px is the
+   smallest target that is reliably tappable. */
+.camera-surface-thumb-remove {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  font-size: calc(16px * var(--font-scale));
+  height: 32px;
+  justify-content: center;
+  line-height: 1;
+  position: absolute;
+  right: -4px;
+  top: -4px;
+  width: 32px;
+}
+
+/* ─── Phone: the sheet gives the height, the preview derives its width ───
+   Pairs with `.ocr-modal.ocr-modal--camera { height: 100% }` in Ocr.css: the
+   breakpoint must stay the same in both files, because a growing preview with
+   an auto-height sheet would have nothing to grow into.
+
+   The chain is  sheet -> body -> .ocr-capture-camera -> .camera-surface -> here.
+   Every fixed piece (state line + bar, `Capturar`, `Enviar`, the 64px strip)
+   keeps its own height, so on 385x854 this box is about 440px tall and, with a
+   3:4 stream, about 330px wide -- 85% of the screen -- while nothing overflows
+   and nothing needs to scroll. */
+@media (max-width: 560px) {
+  .camera-surface > .camera-surface-stage {
+    /* Grows into the leftover height, and only into that. */
+    flex: 1 1 auto;
+    /* `min-height: 0` is what allows it to shrink below the stage's content;
+       `max-height` belongs to the column now, not to a viewport formula. */
+    max-height: none;
+    min-height: 0;
+    /* An explicit height, not a chain of flex children.
+       Relying on `flex: 1` from the sheet down meant that ONE parent without a
+       definite height collapsed the whole chain and the viewfinder fell back to
+       its content size, twice in a row. `100dvh` minus the controls that actually
+       sit below the preview (state line + bar ~58, Capturar 56, Enviar 53,
+       thumbnail strip 56, gaps ~36, safe padding ~24 = ~283) does not depend on
+       any ancestor. The ratio then decides the width. */
+    /* 116px is what the controls below really take once the guidance moved onto
+       the preview and the history trigger left the sub-step: the 73px band that
+       was still sitting empty under `Enviar` now belongs to the shot. */
+    height: calc(100dvh - 116px);
+    max-height: none;
+    max-width: 100%;
+    width: auto;
+  }
+}
+
+
+/* The send button is alive even when it cannot be pressed yet: with nothing
+   captured it is disabled, and a flat grey rectangle reads as "there is nothing
+   here" instead of "capture something and this lights up". A slow breathing
+   border says the second thing without shouting. Colour is the app's own error
+   red, used here as attention, not as failure. */
+/* Alive in BOTH states. Only styling `:disabled` meant that as soon as the owner
+   captured a photo the border vanished, which is exactly when the button becomes
+   the thing to press. Disabled: breathing. Enabled: solid, no animation, because
+   a ready action should not flicker. */
+/* Two classes on purpose: `.btn-outline` (1 class) defines its own 1px border and
+   its own `:hover` colour, and both landed on this button. Matching the shared
+   button selector's weight is what makes the coral border real in every state. */
+.btn.camera-surface-send,
+.btn.camera-surface-send:hover,
+.btn.camera-surface-send:active,
+.btn.camera-surface-send:focus-visible {
+  border: 2px solid var(--coral);
+}
+
+.btn.camera-surface-send:disabled {
+  animation: camera-send-breathe 1.8s ease-in-out infinite;
+}
+
+@keyframes camera-send-breathe {
+  0%,
+  100% {
+    border-color: color-mix(in srgb, var(--coral) 30%, transparent);
+  }
+
+  50% {
+    border-color: var(--coral);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn.camera-surface-send:disabled {
+    animation: none;
+    border-color: var(--coral);
+  }
+}
+
+
+
+/* ─── Screen mode ───
+   The surface stops being a row of the sheet and becomes the whole viewport.
+   Reason, measured on the owner's phone: with a fixed height and `9/16` +
+   `width: auto`, the width is DERIVED from the ratio, so growing the height
+   bought 17px of width. Widening it requires the stage to stop deriving its
+   width from anything -- it fills the screen and the VIDEO crops with `cover`.
+   The captured frame stays the full sensor frame; no crop is faked in the
+   preview-to-file path.
+
+   `position: fixed` escapes the sheet's clipped body, so no ancestor's
+   `overflow: hidden` can eat the layer. It only breaks if an ancestor has a
+   `transform`/`filter` (that would create a containing block) -- the sheet has
+   neither. */
+.camera-surface--screen {
+  background: #000;
+  border-radius: 0;
+  display: block;
+  height: 100dvh;
+  inset: 0;
+  max-height: none;
+  overflow: hidden;
+  position: fixed;
+  width: 100vw;
+  /* The sheet's own overlay sits at 1100; this layer is its child in spirit but
+     its sibling in the stacking tree. */
+  z-index: 1200;
+}
+
+/* Same specificity as the phone block above but declared later, so it wins on
+   equal footing. Every property the ratio needed is reset, not overridden. */
+.camera-surface--screen .camera-surface-stage {
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  flex: none;
+  height: 100%;
+  inset: 0;
+  max-height: none;
+  max-width: none;
+  position: absolute;
+  width: 100%;
+}
+
+.camera-surface--screen .camera-surface-video {
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  width: 100%;
+}
+
+.camera-surface-topbar {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  left: 0;
+  padding: calc(env(safe-area-inset-top, 0px) + 12px) 16px 12px;
+  position: absolute;
+  right: 0;
+  top: 0;
+  /* Legibility over a bright receipt, without a bar that steals the shot. */
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent);
+  z-index: 2;
+}
+
+.camera-surface-close {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+  color: #fff;
+  display: flex;
+  font-size: 22px;
+  height: 40px;
+  justify-content: center;
+  line-height: 1;
+  width: 40px;
+}
+/* Floating controls, narrower than the video on purpose: on a 385px phone the
+   shot is what the eye needs, so the chrome stays a little over a third of the
+   width and the paper stays readable under it. */
+.camera-surface-actions {
+  align-items: center;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 18px);
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  left: 50%;
+  max-width: 320px;
+  position: absolute;
+  transform: translateX(-50%);
+  width: calc(100% - 64px);
+  z-index: 2;
+}
+
+/* `Capturar` keeps the room: it is the action repeated a hundred times a day.
+   `Enviar` is a fixed narrow pill next to it, not a full-width twin. */
+.camera-surface-actions .camera-surface-shutter {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.camera-surface-actions .camera-surface-send {
+  flex: 0 0 100px;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* In the sheet the same two buttons stay stacked in the column, exactly as
+   before: nothing about the card layout changes. */
+.camera-surface-actions.is-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-width: none;
+  position: static;
+  transform: none;
+  width: auto;
+}
+
+/* The guidance strip floats over the paper instead of owning a row: edge to
+   edge minus a margin, sitting just above the buttons. */
+.camera-surface--screen .camera-surface-progress {
+  background: rgba(0, 0, 0, 0.45);
+  border-radius: 14px;
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 92px);
+  left: 50%;
+  margin: 0;
+  max-width: 300px;
+  padding: 8px 12px;
+  right: auto;
+  transform: translateX(-50%);
+  width: calc(100% - 128px);
+  z-index: 2;
+}
+
+.camera-surface--screen .camera-surface-progress-track {
+  height: 8px;
+}
+
+/* Counter chip: one glance says how many pages are already in the batch. */
+.camera-surface-count-wrap {
+  align-items: center;
+  display: flex;
+  gap: 6px;
+}
+
+.camera-surface-count {
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 7px 10px;
+}
+
+/* Without the thumbnail strip this is the only way back from a bad shot:
+   one tap removes the LAST photo, never one the operator cannot see. */
+.camera-surface-count-remove {
+  align-items: center;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: 999px;
+  color: #fff;
+  display: flex;
+  font-size: 16px;
+  height: 30px;
+  justify-content: center;
+  line-height: 1;
+  width: 30px;
+}
+
+.camera-surface--screen .camera-surface-overlay-note {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 150px);
+  left: 50%;
+  margin: 0;
+  max-width: 300px;
+  position: absolute;
+  transform: translateX(-50%);
+  width: calc(100% - 128px);
+  z-index: 2;
+}
+
+
+.camera-surface--screen .camera-surface-overlay-action {
+  bottom: calc(env(safe-area-inset-bottom, 0px) + 150px);
+  left: 50%;
+  margin: 0;
+  max-width: 300px;
+  position: absolute;
+  transform: translateX(-50%);
+  width: calc(100% - 128px);
+  z-index: 3;
+}
+
+/* Over the live image the outline button's own transparent background left grey
+   text on white paper. The border stays coral; the fill goes dark so the label
+   is readable on any receipt. */
+.camera-surface--screen .camera-surface-send {
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+}
+
+/* ─── Shot acknowledgement ───
+   Painted the instant the finger lifts, before any encoding starts. It does not
+   show the photo (that would lie about what was captured); it shows that the tap
+   was received. */
+.camera-surface-flash {
+  background: #fff;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: opacity 120ms ease-out;
+}
+/* The sweep takes about a second and a half: it says so, and the shutter waits,
+   because a photo taken mid-sweep would catch the lens in motion. */
+.camera-surface-focusing {
+  background: rgba(0, 0, 0, 0.6);
+  border-radius: 999px;
+  color: #fff;
+  font-size: calc(14px * var(--font-scale));
+  left: 50%;
+  padding: 8px 16px;
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 3;
+}

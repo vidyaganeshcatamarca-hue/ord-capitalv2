@@ -25,6 +25,96 @@
   gap: 8px;
 }
 
+/* The camera block lives on the SUB-STEP now: the source list never renders
+   it, and the sub-step renders nothing but it. */
+.ocr-capture-camera {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  /* The camera sub-step hands its spare height to the preview instead of growing
+     past the sheet: without this the flex child cannot shrink below its content. */
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* The camera sub-step is the one body that never scrolls: the preview yields the
+   height, so there is nothing to scroll to and the controls are always on
+   screen. Scoped to the sub-step -- the source list keeps its own scrolling --
+   and two classes deep so it cannot be re-opened by `.ocr-modal-body`'s
+   `overflow-y` further down this file. */
+.ocr-modal-body.ocr-capture-body--camera {
+  /* Still flex, so the controls after the preview stay in order, but the preview
+     no longer depends on this chain for its size: it carries an explicit
+     `100dvh` height. Belt and braces, because the chain alone failed twice. */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* The history trigger is not part of taking a photo. In the camera sub-step it
+   stole a fixed band from a screen that is already tight, so it steps aside for
+   the duration of the capture and comes back on the source list. */
+.ocr-capture-body--camera .ocr-history-trigger {
+  display: none;
+}
+
+/* The upload that is on its way.
+   It owns the body for at least five seconds, so it must look like a state and
+   not like a disabled form: one line, one indeterminate bar, nothing to tap.
+   The bar carries no percentage on purpose -- a real one would be invented, and
+   an invented one is the lie this whole change exists to remove. */
+.ocr-sending {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md, 12px);
+  background: var(--surface-2);
+}
+
+.ocr-sending-title {
+  margin: 0;
+  color: var(--text);
+  font-size: calc(0.95rem * var(--font-scale));
+  font-weight: 600;
+}
+
+.ocr-sending-bar {
+  display: block;
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.ocr-sending-bar::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 40%;
+  border-radius: inherit;
+  background: var(--accent-mint, var(--accent, #00B127));
+  animation: ocr-sending-slide 1.2s ease-in-out infinite;
+}
+
+@keyframes ocr-sending-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ocr-sending-bar::after {
+    animation: none;
+    width: 100%;
+  }
+}
+
 .ocr-capture-actions {
   display: flex;
   gap: 10px;
@@ -60,6 +150,21 @@
 
 .ocr-file-btn input {
   display: none;
+}
+
+/* The camera source is a <button> (it opens the framed surface instead of a
+   native picker) and the other two stay <label>s wrapping a hidden input. Both
+   must look and measure the same, so the element defaults are reset here and
+   the shared class keeps doing the visual work. */
+button.ocr-file-btn {
+  width: 100%;
+  font-family: inherit;
+  line-height: normal;
+}
+
+button.ocr-file-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .ocr-file-list {
@@ -550,6 +655,9 @@
   justify-content: space-between;
   gap: 10px;
   width: 100%;
+  /* A fixed band of the camera column: it must never be squeezed by the
+     preview growing above it. */
+  flex: 0 0 auto;
   padding: 10px 14px;
   border-radius: var(--radius-md, 12px);
   border: 1px solid var(--border);
@@ -883,12 +991,25 @@
 @media (max-width: 560px) {
   .ocr-overlay {
     padding: 8px;
+    padding-top: calc(8px + env(safe-area-inset-top));
     padding-bottom: calc(8px + env(safe-area-inset-bottom));
   }
 
   .ocr-modal {
     max-height: 92vh;
     max-height: calc(100dvh - 16px);
+  }
+
+  /* The camera sub-step is not a floating card: it takes the overlay's whole
+     content box, so the page behind it never shows and the viewfinder gets the
+     screen instead of the leftover of a centred card.
+
+     `height: 100%` (not a viewport formula) is measured against the overlay's
+     content box, which is where the safe-area paddings already live -- one place
+     decides the insets, and the sheet simply fills what is left. */
+  .ocr-modal.ocr-modal--camera {
+    height: 100%;
+    max-height: 100%;
   }
 }
 
@@ -963,13 +1084,17 @@
 }
 
 /* An upload that has not reached the server yet. "Sending" is neutral on purpose:
-   it is not a problem, it is work in progress that the owner can walk away from. */
+   it is not a problem, it is work in progress that the owner can walk away from.
+
+   Only the TEXT colour changes here, exactly like every other status badge in this
+   list: the shared surface from `.ocr-history-status` stays untouched. An earlier
+   version painted its own background and used `--text-muted`, a token this project
+   never defined, so the fallback grey of the dark theme shipped in both themes; the
+   failed row hardcoded its text colour and went unreadable on a light background. */
 .ocr-history-status--upload_pending {
-  background: var(--surface-2, #21262d);
-  color: var(--text-muted, #8b949e);
+  color: var(--text-3, #8b949e);
 }
 
 .ocr-history-status--upload_failed {
-  background: color-mix(in srgb, #d9534f 14%, var(--surface));
-  color: #f0a9a6;
+  color: var(--coral, #e63946);
 }
