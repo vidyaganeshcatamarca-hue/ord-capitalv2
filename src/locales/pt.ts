@@ -16,6 +16,8 @@
 export const errors = {
   error_unauthorized: "Você não tem permissão para realizar esta ação.",
   error_session_expired: "Sua sessão expirou. Entre novamente.",
+  error_pin_incorrecto: "O PIN não está correto.",
+  error_pin_espera_24h: "Você precisa esperar 24 horas depois de configurar o PIN para poder apagar seus dados.",
   error_field_required: "O campo {field} é obrigatório.",
   error_invalid_day_range: "{field} deve ser um número inteiro entre 1 e 31.",
   card_load_legacy_cuotas_btn: "Carregar parcelas anteriores",

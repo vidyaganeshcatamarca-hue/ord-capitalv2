@@ -8,6 +8,8 @@ export const errors = {
   // Autenticación y permisos
   error_unauthorized: "No tienes permisos para realizar esta acción.",
   error_session_expired: "Tu sesión ha expirado. Inicia sesión nuevamente.",
+  error_pin_incorrecto: "El PIN no es correcto.",
+  error_pin_espera_24h: "Debes esperar 24 horas desde que configuraste el PIN para poder borrar tus datos.",
 
   // Validaciones de campos
   error_field_required: "El campo {field} es obligatorio.",

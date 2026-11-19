@@ -56,6 +56,10 @@ BEGIN
 
     SELECT count(*) INTO v_caja FROM public.p_caja WHERE user_id = v_uid;
 
+    -- No PIN exists anywhere today (p_pin_seguridad is empty), so this account starts in
+    -- the "sent to configure one" state the owner described.
+    DELETE FROM public.p_pin_seguridad WHERE user_id = v_uid;
+
     -- Synthesized chain #1: the RESTRICT that made the deployed body die at p_billeteras.
     INSERT INTO public.p_billeteras (user_id, nombre)
     VALUES (v_uid, 'fixture wallet') RETURNING billetera_id INTO v_bill;
@@ -90,7 +94,40 @@ BEGIN
         IF position('error_confirmation_invalid' in SQLERRM) = 0 THEN RAISE; END IF;
     END;
 
-    v_res := public.fn_borrar_datos_usuario('ERASE');
+    -- Past the window the PIN is mandatory: without one the wipe must not happen.
+    BEGIN
+        PERFORM public.fn_borrar_datos_usuario('ERASE');
+        RAISE EXCEPTION 'FALLO: borro sin PIN una cuenta de mas de 15 dias';
+    EXCEPTION WHEN OTHERS THEN
+        IF position('error_pin_no_configurado' in SQLERRM) = 0 THEN RAISE; END IF;
+    END;
+
+    -- A PIN configured moments ago cannot authorise a wipe. Without this wait, whoever
+    -- picks up the phone sets a PIN and deletes in the same minute.
+    INSERT INTO public.p_pin_seguridad (user_id, pin_hash, estado, intentos_fallidos,
+                                       pin_ultimo_cambio)
+    VALUES (v_uid, extensions.crypt('1234', extensions.gen_salt('bf')), 'activa', 0, now());
+
+    BEGIN
+        PERFORM public.fn_borrar_datos_usuario('ERASE', '1234');
+        RAISE EXCEPTION 'FALLO: borro con un PIN configurado hace menos de 24 horas';
+    EXCEPTION WHEN OTHERS THEN
+        IF position('error_pin_espera_24h' in SQLERRM) = 0 THEN RAISE; END IF;
+    END;
+
+    -- Once the wait is over, a wrong PIN still must not pass.
+    UPDATE public.p_pin_seguridad
+       SET pin_ultimo_cambio = now() - interval '25 hours'
+     WHERE user_id = v_uid;
+
+    BEGIN
+        PERFORM public.fn_borrar_datos_usuario('ERASE', '9999');
+        RAISE EXCEPTION 'FALLO: borro con un PIN incorrecto';
+    EXCEPTION WHEN OTHERS THEN
+        IF position('error_pin' in SQLERRM) = 0 THEN RAISE; END IF;
+    END;
+
+    v_res := public.fn_borrar_datos_usuario('ERASE', '1234');
     INSERT INTO _reset_resultado VALUES ('resultado', v_res::text);
 
     IF v_res->>'resultado' IS DISTINCT FROM 'borrado_datos_ok' THEN
