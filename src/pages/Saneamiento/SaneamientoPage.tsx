@@ -1,20 +1,27 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { rpc } from '@/lib/supabase'
 import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
-import { BandejaWidget } from '@/components/saneamiento/BandejaWidget'
 import { AtaqueWidget } from '@/components/saneamiento/AtaqueWidget'
 import { CalendarioWidget } from '@/components/saneamiento/CalendarioWidget'
-import { BandejaCuarentena } from '@/components/saneamiento/BandejaCuarentena'
 import { PlanAtaque } from '@/components/saneamiento/PlanAtaque'
 import { CalendarioFinanciero } from '@/components/saneamiento/CalendarioFinanciero'
 import { PageBackButton } from '@/components/PageBackButton/PageBackButton'
 import './SaneamientoPage.css'
 
-export type VistaSaneamiento = 'dashboard' | 'bandeja' | 'ataque' | 'calendario'
+/** Internal views of the dashboard. T19 removed `bandeja` from this screen. */
+export type VistaSaneamiento = 'dashboard' | 'ataque' | 'calendario'
 
+/**
+ * T19: la Bandeja de Cuarentena ya no vive acá. Sus accesos son `/cuarentena`, el
+ * item de navegación, el FAB del Home y los deep-links de avisos, y ninguno de
+ * ellos pasa por esta pantalla.
+ *
+ * El tipo se queda: es la forma que comparten todas las superficies de cuarentena
+ * (`/cuarentena`, la tarjeta de ticket OCR y los modales de revisión lo importan
+ * desde acá).
+ */
 export interface CuarentenaItem {
   pendiente_id: number
   origen: string
@@ -43,17 +50,6 @@ export interface CuarentenaItem {
   cuotas: number | null
   destination_amount: number | null
   recurrente_id: number | null
-}
-
-/**
- * The dashboard widgets group by `origen`; voice rows carry
- * `origen = 'voz'` (and `metadata.job_id`). Normalizing here keeps the
- * widgets dumb and their counts correct.
- */
-function normalizeForWidgets(rows: CuarentenaItem[]): CuarentenaItem[] {
-  return rows.map((row) =>
-    row.metadata && row.metadata.job_id != null ? { ...row, origen: 'voz' } : row
-  )
 }
 
 export interface BolaNieveEstado {
@@ -89,11 +85,9 @@ export interface CalendarioEvento {
 
 export function SaneamientoPage() {
   const { showToast } = useToast()
-  const navigate = useNavigate()
 
   const [vista, setVista] = useState<VistaSaneamiento>('dashboard')
 
-  const [cuarentena, setCuarentena] = useState<CuarentenaItem[]>([])
   const [bolaNieve, setBolaNieve] = useState<BolaNieveEstado | null>(null)
   const [calendario, setCalendario] = useState<CalendarioEvento[]>([])
 
@@ -104,12 +98,10 @@ export function SaneamientoPage() {
     setLoading(true)
     setError(null)
     try {
-      const [rCuarentena, rBola, rCalendario] = await Promise.all([
-        rpc<CuarentenaItem[]>('fn_reporte_cuarentena_pendientes'),
+      const [rBola, rCalendario] = await Promise.all([
         rpc<BolaNieveEstado>('fn_reporte_bola_nieve_estado'),
         rpc<CalendarioEvento[]>('fn_reporte_calendario_financiero', { p_dias_adelante: 30 }),
       ])
-      setCuarentena(normalizeForWidgets(rCuarentena || []))
       setBolaNieve(rBola)
       setCalendario(rCalendario || [])
     } catch (err: any) {
@@ -142,7 +134,7 @@ export function SaneamientoPage() {
     cargarDashboard()
   }, [cargarDashboard])
 
-  if (loading && !bolaNieve && cuarentena.length === 0 && calendario.length === 0) {
+  if (loading && !bolaNieve && calendario.length === 0) {
     return (
       <div className="page saneamiento-page saneamiento-loading">
         <div className="spinner" />
@@ -187,17 +179,9 @@ export function SaneamientoPage() {
 
       {vista === 'dashboard' && (
         <section className="saneamiento-dashboard">
-          <BandejaWidget items={cuarentena} onDetalle={() => irA('bandeja')} />
           <AtaqueWidget estado={bolaNieve} onDetalle={() => irA('ataque')} />
           <CalendarioWidget eventos={calendario} onDetalle={() => irA('calendario')} />
         </section>
-      )}
-
-      {vista === 'bandeja' && (
-        <BandejaCuarentena
-          onVolver={volver}
-          onChange={() => handleMovementAdded()}
-        />
       )}
 
       {vista === 'ataque' && (

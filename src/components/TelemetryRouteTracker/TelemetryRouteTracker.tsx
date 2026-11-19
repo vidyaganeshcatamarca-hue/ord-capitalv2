@@ -23,6 +23,10 @@ const ROUTE_MODULE_MAP: Array<[RegExp, string]> = [
   [/^\/analisis-emocional(\/|$)/, 'bcg'],
   [/^\/supervivencia(\/|$)/, 'supervivencia'],
   [/^\/saneamiento(\/|$)/, 'saneamiento'],
+  // El modulo de prestamos reemplaza a saneamiento como pantalla principal; la
+  // telemetria sigue atribuyendo el uso al mismo modulo para no perder la serie
+  // historica ni duplicar el concepto.
+  [/^\/prestamos(\/|$)/, 'saneamiento'],
   [/^\/inversiones(\/|$)/, 'inversiones'],
   [/^\/salud(\/|$)/, 'salud'],
   [/^\/sobres(\/|$)/, 'sobres'],

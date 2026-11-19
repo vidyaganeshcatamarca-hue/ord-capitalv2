@@ -13,6 +13,7 @@ import {
   HeartPulse,
   Mail,
   Settings,
+  HandCoins,
 } from 'lucide-react'
 
 export interface NavItem {
@@ -77,6 +78,15 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'menu_supervivencia',
     desktopLabel: 'menu_supervivencia',
     icon: (active: boolean) => <ShieldCheck {...navIconProps(active)} />,
+  },
+  {
+    // T20: la pantalla principal del módulo. El label es también la clave de
+    // feature que consulta el menú (`hasFeature(item.label)`), así que la
+    // entrada aparece cuando el backend anuncia `menu_prestamos`.
+    path: '/prestamos',
+    label: 'menu_prestamos',
+    desktopLabel: 'menu_prestamos',
+    icon: (active: boolean) => <HandCoins {...navIconProps(active)} />,
   },
   {
     path: '/saneamiento',

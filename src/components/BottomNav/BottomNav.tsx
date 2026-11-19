@@ -164,8 +164,8 @@ export function BottomNav({ onAddPress, onVoiceLongPress }: BottomNavProps) {
 
   // Rutas que se agrupan dentro del menú desplegable "Menú"
   const dropdownPaths = isBaseCero
-    ? ['/tarjetas', '/cuarentena', '/familia', '/saneamiento', '/inversiones', '/salud', '/sobres', '/configuracion', '/ayuda']
-    : ['/presupuesto', '/cuarentena', '/familia', '/saneamiento', '/inversiones', '/salud', '/sobres', '/configuracion', '/ayuda']
+    ? ['/tarjetas', '/cuarentena', '/familia', '/prestamos', '/saneamiento', '/inversiones', '/salud', '/sobres', '/configuracion', '/ayuda']
+    : ['/presupuesto', '/cuarentena', '/familia', '/prestamos', '/saneamiento', '/inversiones', '/salud', '/sobres', '/configuracion', '/ayuda']
   const dropdownSet = useMemo(() => new Set(dropdownPaths), [isBaseCero])
   const dropdownNavItems = NAV_ITEMS.filter(item => dropdownSet.has(item.path) && hasFeature(item.label))
 

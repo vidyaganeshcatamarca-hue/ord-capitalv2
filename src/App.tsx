@@ -52,7 +52,14 @@ const FamiliaPage = lazy(() => import('@/pages/Familia/FamiliaPage').then(module
 const AnalisisEmocionalPage = lazy(() => import('@/pages/AnalisisEmocional/AnalisisEmocionalPage').then(module => ({ default: module.AnalisisEmocionalPage })))
 const BCGDetalleCategoria = lazy(() => import('@/components/bcg/BCGDetalleCategoria').then(module => ({ default: module.BCGDetalleCategoria })))
 const SupervivenciaPage = lazy(() => import('@/pages/Supervivencia/SupervivenciaPage').then(module => ({ default: module.SupervivenciaPage })))
-const SaneamientoPage = lazy(() => import('@/pages/Saneamiento/SaneamientoPage').then(module => ({ default: module.SaneamientoPage })))
+// Préstamos: pantalla principal con cinco secciones (S1, T20). «Saneamiento» ya
+// no es una pantalla principal independiente: es una sección de este módulo.
+const PrestamosPage = lazy(() => import('@/pages/Prestamos/PrestamosPage').then(module => ({ default: module.PrestamosPage })))
+const PrestamosDeboPage = lazy(() => import('@/pages/Prestamos/PrestamosListaPage').then(module => ({ default: module.PrestamosDeboPage })))
+const PrestamosMeDebenPage = lazy(() => import('@/pages/Prestamos/PrestamosListaPage').then(module => ({ default: module.PrestamosMeDebenPage })))
+const PrestamosSaneamientoPage = lazy(() => import('@/pages/Prestamos/PrestamosSaneamientoPage').then(module => ({ default: module.PrestamosSaneamientoPage })))
+const PrestamosCalendarioPage = lazy(() => import('@/pages/Prestamos/PrestamosCalendarioPage').then(module => ({ default: module.PrestamosCalendarioPage })))
+const PrestamosParejaPage = lazy(() => import('@/pages/Prestamos/PrestamosParejaPage').then(module => ({ default: module.PrestamosParejaPage })))
 
 /** /cuarentena lands on the unified Bandeja de Entrada. The page wrapper
  * class is what gives the route its scroll space under the bottom nav
@@ -228,7 +235,14 @@ function AppLayout() {
           <Route path="/analisis-emocional" element={<AnalisisEmocionalPage />} />
           <Route path="/analisis-emocional/categoria/:id" element={<BCGDetalleCategoria />} />
           <Route path="/supervivencia" element={<SupervivenciaPage />} />
-          <Route path="/saneamiento" element={<SaneamientoPage />} />
+          <Route path="/saneamiento" element={<Navigate to="/prestamos/saneamiento" replace />} />
+          {/* Préstamos: cinco secciones hermanas. El Calendario NO cuelga de Saneamiento (S1). */}
+          <Route path="/prestamos" element={<PrestamosPage />} />
+          <Route path="/prestamos/debo" element={<PrestamosDeboPage />} />
+          <Route path="/prestamos/me-deben" element={<PrestamosMeDebenPage />} />
+          <Route path="/prestamos/saneamiento" element={<PrestamosSaneamientoPage />} />
+          <Route path="/prestamos/calendario" element={<PrestamosCalendarioPage />} />
+          <Route path="/prestamos/pareja" element={<PrestamosParejaPage />} />
           <Route path="/inversiones" element={<InversionesPage />} />
           <Route path="/salud" element={<SaludPage />} />
           <Route path="/sobres" element={<SobresPage />} />
