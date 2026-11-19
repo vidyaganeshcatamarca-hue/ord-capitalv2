@@ -224,7 +224,7 @@ export function ConfiguracionBorradoCard() {
             </button>
             {accountOpen && (
               <div className="config-delete-option-body">
-                <DeleteAccountCard embedded />
+                <DeleteAccountCard embedded pin={verifiedPin} />
               </div>
             )}
           </div>
