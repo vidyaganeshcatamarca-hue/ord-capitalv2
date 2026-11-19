@@ -40,7 +40,16 @@ export type FocusCapabilities = {
 }
 
 export type FocusSweepResult =
-  | { supported: true; applied: boolean; distance: number; score: number; tried: number }
+  | {
+      supported: true
+      /** The lens was actually moved and the move was confirmed. */
+      applied: boolean
+      /** The current position already won: nothing was moved. */
+      kept: boolean
+      distance: number
+      score: number
+      tried: number
+    }
   | { supported: false; reason: 'no-manual-mode' | 'no-distance-range' | 'no-track' }
 
 export type FocusSweepOptions = {
@@ -56,9 +65,24 @@ export type FocusSweepOptions = {
   steps?: number
   /** Injectable for tests; defaults to a real timer. */
   wait?: (ms: number) => Promise<void>
+  /**
+   * Sharpness measured at the CURRENT lens position, before anything moves.
+   *
+   * A receipt is normally held 10-40cm away, where the phone's own autofocus is
+   * usually already right. Sweeping regardless of that means moving a lens that
+   * did not need moving. With this baseline the sweep still measures, but it only
+   * touches the lens when a candidate beats where it already sits -- and by
+   * `improvementRatio`, so a measurement wobble cannot justify a hunt.
+   */
+  baseline?: number
+  /** How much better a candidate must be to move the lens. Defaults to 1.2. */
+  improvementRatio?: number
 }
 
-const DEFAULT_SETTLE_MS = 220
+const DEFAULT_SETTLE_MS = 150
+
+/** A candidate must be 20% sharper than the current position to move the lens. */
+const DEFAULT_IMPROVEMENT_RATIO = 1.2
 
 const sleep = (ms: number): Promise<void> =>
   new Promise(resolve => {
@@ -112,6 +136,9 @@ export async function sweepFocus(options: FocusSweepOptions): Promise<FocusSweep
 
   const settleMs = options.settleMs ?? DEFAULT_SETTLE_MS
   const wait = options.wait ?? sleep
+  const baseline = options.baseline
+  const improvementRatio = options.improvementRatio ?? DEFAULT_IMPROVEMENT_RATIO
+  const currentDistance = readFocusDistance(track)
 
   let bestDistance = candidates[0]
   // A real sharpness score can be 0 (a blank frame) or, for a normalised
@@ -133,6 +160,23 @@ export async function sweepFocus(options: FocusSweepOptions): Promise<FocusSweep
     }
   }
 
+  /* Already sharper than every stop the sweep tried: leave the lens alone. Nobody
+     benefits from a hunt that ends where it started. */
+  if (
+    baseline !== undefined &&
+    currentDistance !== null &&
+    baseline * improvementRatio > bestScore
+  ) {
+    return {
+      supported: true,
+      applied: false,
+      kept: true,
+      distance: currentDistance,
+      score: baseline,
+      tried: candidates.length,
+    }
+  }
+
   try {
     await track.applyConstraints({
       advanced: [
@@ -147,5 +191,12 @@ export async function sweepFocus(options: FocusSweepOptions): Promise<FocusSweep
   const applied =
     reached !== null && Math.abs(reached - bestDistance) <= Math.max(0.001, Math.abs(bestDistance) * 0.02)
 
-  return { supported: true, applied, distance: bestDistance, score: bestScore, tried: candidates.length }
+  return {
+    supported: true,
+    applied,
+    kept: false,
+    distance: bestDistance,
+    score: bestScore,
+    tried: candidates.length,
+  }
 }

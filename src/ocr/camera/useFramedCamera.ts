@@ -942,11 +942,9 @@ export function useFramedCamera(options: UseFramedCameraOptions = {}): UseFramed
     const video = videoRef.current
     if (!video || video.videoWidth === 0) return false
 
-    focusingRef.current = true
-    setFocusing(true)
-    /* The sweep is a long, deliberate pause: the travel meter must not steal the
-       thread while the lens is being measured. */
-    meterPausedUntilRef.current = performance.now() + 5000
+    /* The sweep is a pause: the travel meter must not steal the thread while the
+       lens is being measured. 3 stops × 150ms is the whole budget. */
+    meterPausedUntilRef.current = performance.now() + 2000
 
     try {
       let canvas = focusCanvasRef.current

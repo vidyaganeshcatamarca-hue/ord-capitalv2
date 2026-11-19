@@ -108,3 +108,38 @@ test('the sweep never leaves the declared interval', async () => {
   assert.ok(result.distance >= 0.15 && result.distance <= 0.45, `out of range: ${result.distance}`)
   assert.equal(result.tried, 7)
 })
+
+test('a lens already sharper than every stop is left untouched', async () => {
+  const { sweepFocus } = await loadFocus()
+  // The sweep will try 0.1..0.5 and the sharpest stop there is 0.34; the current
+  // position is better than that, so nothing may move.
+  const track = fakeTrack({ sharpAt: 0.34 })
+  const positioned = {
+    ...track,
+    getSettings: () => ({ focusDistance: 0.2, focusMode: 'manual' }),
+  }
+  const result = await sweepFocus({
+    track: positioned,
+    // The frame where the lens already sits beats every candidate the sweep tries.
+    measure: () => 1000,
+    wait: noWait,
+    baseline: 1000,
+  })
+  assert.equal(result.supported, true)
+  assert.equal(result.applied, false)
+  assert.equal(result.kept, true)
+})
+
+test('a clearly sharper candidate still moves the lens', async () => {
+  const { sweepFocus } = await loadFocus()
+  const track = fakeTrack({ sharpAt: 0.34 })
+  const result = await sweepFocus({
+    track,
+    measure: track.sharpness,
+    wait: noWait,
+    baseline: 1,
+    improvementRatio: 1.2,
+  })
+  assert.equal(result.kept, false)
+  assert.equal(result.applied, true)
+})
