@@ -161,19 +161,19 @@ previo, no requisitos.
 | T8 | Corrección de operaciones | S11 | inline | **hecha** |
 | T9 | Estados derivados y saldado automático | S7 | inline | **hecha** |
 | T10 | Eliminación lógica del historial | S8 | inline | **hecha** |
-| T11 | Plan de Ataque sólo préstamos «Debo» | S2, S16 | TBD | pendiente (T3) |
-| T12 | Desempates deterministas Matemática/Emocional | S16 | TBD | pendiente (T11) |
-| T13 | Cuestionario de Vínculos y puntuación | S17 | TBD | pendiente (T11) |
-| T14 | Simulación honesta | S18 | TBD | pendiente (T2) |
-| T15 | Progreso sin porcentaje engañoso | S19 | TBD | pendiente (T11) |
-| T16 | Categorías e ingresos: migración y bootstrap | S12, S13, S14 | TBD | pendiente (T1) |
-| T17 | Integración con presupuesto y reportes | S12 | TBD | pendiente (T16) |
+| T11 | Plan de Ataque sólo préstamos «Debo» | S2, S16 | inline | **hecha** |
+| T12 | Desempates deterministas Matemática/Emocional | S16 | inline | **hecha** |
+| T13 | Cuestionario de Vínculos y puntuación | S17 | inline | **hecha** |
+| T14 | Simulación honesta | S18 | inline | **hecha** |
+| T15 | Progreso sin porcentaje engañoso | S19 | inline | **hecha** |
+| T16 | Categorías e ingresos: migración y bootstrap | S12, S13, S14 | inline | **hecha** |
+| T17 | Integración con presupuesto y reportes | S12 | inline | **parcial** (falta clon de usuario) |
 | T18 | Calendario: ids explícitos y cronograma | S20, S24 | inline | **hecha** (falta retirar la rama muerta legacy) |
 | T19 | Cuarentena fuera de Saneamiento sin romper accesos | S1 | TBD | pendiente (T3) |
 | T20 | Navegación `/prestamos` y compatibilidad | S1 | TBD | pendiente (T3) |
 | T21 | Pareja: balance y préstamos explícitos | S21 | TBD | pendiente (T3) |
-| T22 | Avisos existentes: compatibilidad | S22 | TBD | pendiente (T9) |
-| T23 | i18n es/en/pt | S23 | TBD | pendiente (todas) |
+| T22 | Avisos existentes: compatibilidad | S22 | inline | **hecha** (sin cambios: ya filtra estados activos) |
+| T23 | i18n es/en/pt | S23 | inline | **hecha** |
 | T24 | Pruebas: RED/GREEN por S# y AC-01..AC-20 | todas | TBD | pendiente (todas) |
 
 ## Log
@@ -344,3 +344,31 @@ Regresion: `tests/prestamos/edicion-correccion-borrado-transaccional.sql`, 9/9 P
    clonado quedaria con prestamos sin sus pagos.
 3. `fn_borrar_datos_usuario` enumera tablas para borrar; las nuevas dependen de
    `usuarios` con CASCADE, pero conviene agregarlas explicitas al arreglo.
+
+## Backend cerrado (2026-11-18)
+
+RPC desplegadas y probadas transaccionalmente (6 suites, todas con ROLLBACK):
+`fn_prestamos_resumen`, `fn_prestamos_listar`, `fn_prestamo_detalle`,
+`fn_prestamos_estado_vencimiento`, `fn_prestamo_crear`, `fn_prestamo_editar`,
+`fn_prestamo_registrar_pago`, `fn_prestamo_corregir_pago`,
+`fn_prestamo_eliminar_pago`, `fn_prestamo_eliminar_historial`,
+`fn_prestamos_calendario`, `fn_saneamiento_plan`,
+`fn_saneamiento_vinculos_preguntas`, `fn_saneamiento_vinculos_responder`,
+`fn_saneamiento_simular`, `fn_saneamiento_progreso`.
+`fn_registrar_pago_extra_deuda` quedo como shim validado.
+
+### Lo que falta
+
+Frontend: T19 (sacar Cuarentena de Saneamiento), T20 (`/prestamos`), T21 (Pareja),
+T24 (pantalla y tests de UI). El backend de Debo, Me deben, Saneamiento y Calendario
+esta completo; ninguna de esas RPC tiene todavia consumidor en `src/`.
+
+T17 parcial: `fn_clonar_usuario_admin` no clona las tablas nuevas.
+
+### Defectos ajenos encontrados y reportados
+
+1. `fn_borrar_datos_usuario` acumulaba json con el operador `||` de jsonb: fallaba
+   siempre. **Corregido** (migracion 20261118h).
+2. `fn_tr_anular_inversion_al_borrar_movimiento` se recursiona infinitamente cuando
+   dos movimientos comparten `inversion_id`. **No tocado**, es del modulo de
+   inversiones.
