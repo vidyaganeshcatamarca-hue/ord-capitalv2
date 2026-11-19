@@ -71,68 +71,14 @@ BEGIN
       FROM public.p_estructuras_egresos
      WHERE estructura_id = p_destino_id;
 
-    IF v_padre_destino IS NOT NULL THEN
-        SELECT monto_limite INTO v_techo_destino
-          FROM public.p_presupuestos
-         WHERE estructura_egreso_id = v_padre_destino
-           AND mes_periodo = v_mes_truncado
-           AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id));
-
-        IF COALESCE(v_techo_destino, 0) > 0 THEN
-            SELECT COALESCE(monto_limite, 0) INTO v_actual_destino
-              FROM public.p_presupuestos
-             WHERE estructura_egreso_id = p_destino_id
-               AND mes_periodo = v_mes_truncado
-               AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id));
-
-            SELECT COALESCE(SUM(pr.monto_limite), 0) INTO v_repartido_destino
-              FROM public.p_presupuestos pr
-              JOIN public.p_estructuras_egresos e ON e.estructura_id = pr.estructura_egreso_id
-             WHERE e.padre_id = v_padre_destino
-               AND pr.mes_periodo = v_mes_truncado
-               AND (pr.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND pr.hogar_id = v_hogar_id))
-               AND pr.estructura_egreso_id <> p_destino_id;
-
-            IF (COALESCE(v_actual_destino, 0) + p_monto) > (v_techo_destino - v_repartido_destino) THEN
-                RAISE EXCEPTION '%', json_build_object(
-                    'key', 'error_budget_child_over_parent',
-                    'params', json_build_object(
-                        'disponible', GREATEST(v_techo_destino - v_repartido_destino, 0),
-                        'intento', COALESCE(v_actual_destino, 0) + p_monto,
-                        'techo', v_techo_destino,
-                        'repartido', v_repartido_destino
-                    )
-                )::text;
-            END IF;
-        END IF;
-    END IF;
+    -- Bloque C: se retiro el bloqueo por los techos de los hijos. El dinero del grupo
+    -- pertenece al padre; un techo de hijo no reserva plata y no puede habilitar ni
+    -- impedir una transferencia. Queda solo la validacion del saldo real del origen.
 
     -- Origen: si es padre con hijos, sacarle plata no puede dejarlo por debajo de lo repartido.
-    IF EXISTS (SELECT 1 FROM public.p_estructuras_egresos h WHERE h.padre_id = p_origen_id) THEN
-        SELECT COALESCE(monto_limite, 0) INTO v_actual_origen
-          FROM public.p_presupuestos
-         WHERE estructura_egreso_id = p_origen_id
-           AND mes_periodo = v_mes_truncado
-           AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id));
-
-        SELECT COALESCE(SUM(pr.monto_limite), 0) INTO v_repartido_origen
-          FROM public.p_presupuestos pr
-          JOIN public.p_estructuras_egresos e ON e.estructura_id = pr.estructura_egreso_id
-         WHERE e.padre_id = p_origen_id
-           AND pr.mes_periodo = v_mes_truncado
-           AND (pr.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND pr.hogar_id = v_hogar_id));
-
-        IF (COALESCE(v_actual_origen, 0) - p_monto) < v_repartido_origen THEN
-            RAISE EXCEPTION '%', json_build_object(
-                'key', 'error_budget_parent_below_children',
-                'params', json_build_object(
-                    'repartido', v_repartido_origen,
-                    'intento', COALESCE(v_actual_origen, 0) - p_monto,
-                    'recortar', v_repartido_origen - (COALESCE(v_actual_origen, 0) - p_monto)
-                )
-            )::text;
-        END IF;
-    END IF;
+    -- Bloque C: se retiro el bloqueo por los techos de los hijos. El dinero del grupo
+    -- pertenece al padre; un techo de hijo no reserva plata y no puede habilitar ni
+    -- impedir una transferencia. Queda solo la validacion del saldo real del origen.
 
     -- ─── DÉBITO: tiene que ocurrir. Si el origen no tiene fila, se crea en negativo. ───
     UPDATE public.p_presupuestos
