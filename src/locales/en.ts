@@ -1000,20 +1000,16 @@ export const prestamos = {
   error_invalid_modality: "The repayment modality is not valid.",
   error_invalid_interest_condition: "The interest condition is not valid.",
   error_schedule_required: "You need to enter the installment schedule.",
-  error_schedule_not_allowed:
-    "This modality does not take an installment schedule.",
+  error_schedule_not_allowed: "This modality does not take an installment schedule.",
   error_debt_not_payable: "This loan does not accept payments in its current state.",
-  error_overpayment_confirmation_required:
-    "The amount exceeds the pending balance. Confirm whether the excess is unrecorded interest.",
+  error_overpayment_confirmation_required: "The amount exceeds the pending balance. Confirm whether the excess is unrecorded interest.",
   error_payment_not_found: "We could not find that operation.",
   error_payment_not_active: "That operation is no longer active.",
   error_confirmation_required: "You need to confirm the operation.",
-  error_debt_not_settled:
-    "You can only remove a settled loan from the history.",
+  error_debt_not_settled: "You can only remove a settled loan from the history.",
   error_invalid_strategy: "The selected strategy is not valid.",
   error_invalid_criterion: "The questionnaire criterion is not valid.",
-  error_cannot_change_modality_with_payments:
-    "You cannot change the modality of a loan that already has recorded payments.",
+  error_cannot_change_modality_with_payments: "You cannot change the modality of a loan that already has recorded payments.",
 };
 
 export const bcg = {

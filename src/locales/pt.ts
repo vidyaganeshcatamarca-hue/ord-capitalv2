@@ -1000,20 +1000,16 @@ export const prestamos = {
   error_invalid_modality: "A modalidade de devolução não é válida.",
   error_invalid_interest_condition: "A condição de juros não é válida.",
   error_schedule_required: "Você precisa informar o cronograma de parcelas.",
-  error_schedule_not_allowed:
-    "Esta modalidade não tem cronograma de parcelas.",
+  error_schedule_not_allowed: "Esta modalidade não tem cronograma de parcelas.",
   error_debt_not_payable: "Este empréstimo não aceita pagamentos no estado atual.",
-  error_overpayment_confirmation_required:
-    "O valor supera o saldo pendente. Confirme se o excedente são juros não registrados.",
+  error_overpayment_confirmation_required: "O valor supera o saldo pendente. Confirme se o excedente são juros não registrados.",
   error_payment_not_found: "Não encontramos essa operação.",
   error_payment_not_active: "Essa operação não está mais ativa.",
   error_confirmation_required: "Você precisa confirmar a operação.",
-  error_debt_not_settled:
-    "Você só pode remover do histórico um empréstimo já quitado.",
+  error_debt_not_settled: "Você só pode remover do histórico um empréstimo já quitado.",
   error_invalid_strategy: "A estratégia escolhida não é válida.",
   error_invalid_criterion: "O critério do questionário não é válido.",
-  error_cannot_change_modality_with_payments:
-    "Você não pode mudar a modalidade de um empréstimo que já tem pagamentos registrados.",
+  error_cannot_change_modality_with_payments: "Você não pode mudar a modalidade de um empréstimo que já tem pagamentos registrados.",
 };
 
 export const bcg = {

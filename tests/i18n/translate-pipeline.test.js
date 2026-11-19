@@ -69,7 +69,9 @@ test('the pipeline turns the master into a translated dictionary', () => {
     // it: it exists so a truncated or half-merged master fails loudly instead of
     // producing a dictionary that silently lost a whole section.
     // 14 since round 10: the `sobres` section was added after `tour`.
-    assert.equal(Object.keys(manifest).length, 14, 'the master has fourteen sections')
+    // 15 since the loans rebuild: the `prestamos` section carries the module's
+    // RPC contract errors.
+    assert.equal(Object.keys(manifest).length, 15, 'the master has fifteen sections')
     const totalKeys = Object.values(manifest).flatMap((s) => Object.values(s)).length
     assert.ok(totalKeys > 2000, `the master has ${totalKeys} keys`)
 
