@@ -445,29 +445,42 @@ test('la asignación sigue escribiendo en un solo lugar', () => {
 // monto_limite, asi que sin esta guarda el techo se salteaba con una transferencia.
 // ---------------------------------------------------------------------------
 
-test('una transferencia no puede dejar al destino hijo por encima del techo', () => {
+// Bloque C, autorización del dueño: «En Base Cero, el dinero presupuestario pertenece
+// exclusivamente a la categoría padre. Los techos de sus hijos no representan dinero
+// reservado, por lo que no pueden habilitar ni impedir transferencias.» Por eso la
+// transferencia no lee el techo en ningún lado: si lo leyera, volvería a depender de él.
+
+test('una transferencia entre padres vale aunque los techos de los hijos superen el saldo del origen', () => {
   assert.ok(
-    transC.includes('IF (COALESCE(v_actual_destino, 0) + p_monto) > (v_techo_destino - v_repartido_destino) THEN'),
-    'falta la comparación del valor resultante del destino contra lo libre del techo',
+    !/monto_techo/.test(transC),
+    'la transferencia no puede leer el techo: el techo de un hijo no reserva dinero',
   )
   assert.ok(
-    transC.includes('AND pr.estructura_egreso_id <> p_destino_id'),
-    'la suma de lo repartido tiene que excluir al destino',
+    !/error_budget_child_over_parent/.test(transC),
+    'el bloqueo del destino contra el techo se retiró en el Bloque C y no puede volver',
   )
-  assert.ok(transC.includes("'error_budget_child_over_parent'"), 'el rechazo tiene que usar la misma clave que la asignación')
 })
 
-test('una transferencia no puede dejar al padre origen por debajo de lo repartido', () => {
+// La única regla monetaria que queda sobre el origen es su saldo realmente transferible,
+// el mismo número que la pantalla ofrece para elegir el sobre.
+
+test('la transferencia depende del saldo real del origen, no de lo repartido', () => {
   assert.ok(
-    transC.includes('IF EXISTS (SELECT 1 FROM public.p_estructuras_egresos h WHERE h.padre_id = p_origen_id) THEN'),
-    'la guarda del origen tiene que aplicar sólo si el origen es padre con hijos',
+    !/error_budget_parent_below_children/.test(transC),
+    'el bloqueo del padre contra lo repartido se retiró en el Bloque C y no puede volver',
   )
   assert.ok(
-    transC.includes('IF (COALESCE(v_actual_origen, 0) - p_monto) < v_repartido_origen THEN'),
-    'falta la comparación del padre resultante contra lo repartido',
+    !/v_repartido_origen|v_repartido_destino|v_techo_destino/.test(transC),
+    'no puede quedar ninguna pieza del cálculo de techos dentro de la transferencia',
   )
-  assert.ok(transC.includes("'error_budget_parent_below_children'"), 'el rechazo tiene que usar la misma clave que la asignación')
-  assert.ok(transC.includes("'recortar', v_repartido_origen - (COALESCE(v_actual_origen, 0) - p_monto)"), 'el detalle tiene que decir cuánto recortar')
+  assert.ok(
+    /fn_disponible_transferible\s*\(/.test(transC),
+    'el saldo se pregunta a la misma función que alimenta la pantalla',
+  )
+  assert.ok(
+    /error_insufficient_funds_in_envelope/.test(transC),
+    'sin saldo suficiente en el origen la transferencia se rechaza',
+  )
 })
 
 test('las validaciones van antes de la primera escritura', () => {
@@ -480,20 +493,25 @@ test('las validaciones van antes de la primera escritura', () => {
   // misma: los rechazos van antes de la primera escritura.
   const mUpdate = /UPDATE (?:public\.)?p_presupuestos SET monto_limite = monto_limite - p_monto/.exec(transC)
   const iUpdate = mUpdate ? mUpdate.index : -1
-  const iDestino = transC.indexOf('error_budget_child_over_parent')
-  const iOrigen = transC.indexOf('error_budget_parent_below_children')
-  assert.ok(iUpdate > 0 && iDestino > 0 && iOrigen > 0, 'no encontré alguna de las tres piezas')
-  assert.ok(iDestino < iUpdate && iOrigen < iUpdate, 'las dos validaciones tienen que estar antes del UPDATE del origen')
+  const iModo = transC.indexOf('error_transfer_only_base_zero')
+  const iFondos = transC.indexOf('error_insufficient_funds_in_envelope')
+  assert.ok(iUpdate > 0 && iModo > 0 && iFondos > 0, 'no encontré alguna de las tres piezas')
+  assert.ok(iModo < iUpdate && iFondos < iUpdate, 'las validaciones de modo y de saldo tienen que estar antes del UPDATE del origen')
 })
 
 test('los rechazos de la transferencia también son datos', () => {
   const todos = transC.match(/RAISE EXCEPTION '[^']*'[^;]*;/g) ?? []
-  const nuevos = todos.filter((r) => /error_budget_child_over_parent|error_budget_parent_below_children/.test(r))
-  assert.equal(nuevos.length, 2, `esperaba dos rechazos del techo, encontré ${nuevos.length} de ${todos.length}`)
-  for (const r of nuevos) {
-    assert.ok(/'params', json_build_object/.test(r), 'el rechazo tiene que llevar sus parámetros')
-    assert.ok(!/[áéíóúñ¿]/.test(r), 'el rechazo no puede tener texto hardcodeado')
+  assert.ok(todos.length >= 4, `esperaba al menos cuatro rechazos, encontré ${todos.length}`)
+  for (const r of todos) {
+    assert.ok(/"key": "error_/.test(r), 'el rechazo tiene que llevar su clave de error')
+    assert.ok(/"params": \{/.test(r), 'el rechazo tiene que llevar sus parámetros')
+    assert.ok(!/[áéíóúñ¿]/.test(r), `el rechazo no puede tener texto hardcodeado: ${r.slice(0, 60)}`)
   }
+  assert.equal(
+    todos.filter((r) => /error_budget_child_over_parent|error_budget_parent_below_children/.test(r)).length,
+    0,
+    'no puede quedar ningún rechazo por techos de hijos (Bloque C)',
+  )
 })
 
 test('la transferencia sigue moviendo plata en dos pasos, no más', () => {

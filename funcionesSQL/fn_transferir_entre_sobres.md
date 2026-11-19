@@ -11,11 +11,8 @@ DECLARE
     v_mes_truncado date := date_trunc('month', p_mes_periodo);
     v_dia_ancla int2;
     v_padre_destino bigint;
-    v_techo_destino numeric;
-    v_repartido_destino numeric;
     v_actual_destino numeric;
     v_actual_origen numeric;
-    v_repartido_origen numeric;
     v_filas int;
     v_origen_existe boolean;
     v_presupuesto_origen bigint;
