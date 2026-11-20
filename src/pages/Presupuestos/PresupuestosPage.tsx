@@ -61,6 +61,18 @@ function mensajeRechazoPresupuesto(
   return null
 }
 
+/**
+ * Bloque D (T7): lo que el cierre guardó de UNA subcategoría: su gasto del ciclo y el
+ * techo que tenía en ese momento. `tiene_techo: false` no es un techo de cero: es un
+ * hijo sin tope, y la fila lo dice con palabras.
+ */
+interface HijoCierreCiclo {
+  estructura_egreso_id: number
+  gasto: number
+  techo: number | null
+  tiene_techo: boolean
+}
+
 interface SobreDetalle {
   estructura_id: number
   nombre_categoria: string
@@ -82,6 +94,13 @@ interface SobreDetalle {
   /** T6/S15: false cuando su padre tiene presupuesto y entonces no se cuenta aparte. */
   cuenta_en_totales?: boolean
   isVirtualDisponible?: boolean
+  /**
+   * Bloque D (T7): en un ciclo cerrado, lo que el cierre guardó de esta fila. Ausente =
+   * el cierre no tiene el desglose de este grupo (cierres anteriores al 20/11/2026) y
+   * entonces la fila lo dice, no pinta un cero. Lo arma la pantalla, no viene del
+   * servidor.
+   */
+  congelado?: HijoCierreCiclo
 }
 
 /**
@@ -97,6 +116,12 @@ interface GrupoCierreCiclo {
   saldo_cierre: number
   /** El servidor ya guardó el arrastre del grupo en el cierre: no hay que deducirlo. */
   detalle?: { arrastre?: number }
+  /**
+   * Bloque D (T7): cada subcategoría del grupo con su gasto y su techo del cierre.
+   * `desglose: false` marca los cierres anteriores al 20/11/2026, que no lo guardaron.
+   */
+  desglose?: boolean
+  hijos?: HijoCierreCiclo[]
 }
 
 /**
@@ -613,6 +638,8 @@ export function PresupuestosPage() {
             monto_gastado: Number(g.monto_gastado ?? 0),
             saldo_cierre: Number(g.saldo_cierre ?? 0),
             detalle: g.detalle,
+            desglose: g.desglose !== false,
+            hijos: Array.isArray(g.hijos) ? g.hijos : [],
           }
         }
         setCierreCiclo({ cerrado: crudo.cerrado === true, grupos })
@@ -706,27 +733,61 @@ export function PresupuestosPage() {
   // ─── AGRUPACIÓN DE SOBRES ─────────────────────────────────────────────────
 
   /**
+   * Bloque D (T7): el desglose del cierre, indexado por subcategoría. El servidor guarda
+   * una fila por hijo con su gasto del ciclo y su techo; acá se junta de todos los grupos
+   * en un solo mapa para que cada fila lo lea sin recorrer el reporte entero.
+   *
+   * Un grupo con `desglose: false` (cierres anteriores al 20/11/2026) no aporta hijos, así
+   * que sus subcategorías quedan fuera del mapa: la fila lo dice, no inventa un cero.
+   */
+  const hijosCongelados = useMemo(() => {
+    const mapa: Record<number, HijoCierreCiclo> = {}
+    if (!cierreCiclo || !cierreCiclo.cerrado) return mapa
+    for (const g of Object.values(cierreCiclo.grupos)) {
+      if (g.desglose === false) continue
+      for (const h of Array.isArray(g.hijos) ? g.hijos : []) {
+        const techo = h.techo === null || h.techo === undefined ? null : Number(h.techo)
+        mapa[Number(h.estructura_egreso_id)] = {
+          estructura_egreso_id: Number(h.estructura_egreso_id),
+          gasto: Number(h.gasto ?? 0),
+          techo,
+          // El servidor manda la bandera; si algún día no viniera, un techo positivo la
+          // dice sola. Un techo de cero no existe: el servidor rechaza los no positivos.
+          tiene_techo: typeof h.tiene_techo === 'boolean' ? h.tiene_techo : techo !== null && techo > 0,
+        }
+      }
+    }
+    return mapa
+  }, [cierreCiclo])
+
+  /**
    * Bloque D (T2/S1): con el ciclo cerrado, cada fila se pinta con lo guardado al
    * cerrarlo —la plata que tenía (`monto_limite`), lo que se gastó (`monto_gastado`) y el
    * saldo con el que cerró (`saldo_cierre`, que viaja en `monto_disponible`)— en lugar de
    * los del reporte vivo. No es una corrección de la vista: es el reporte vivo
    * reemplazado por el histórico. Un rubro que el cierre no tenga se muestra en cero,
    * nunca con un número inventado (S6).
+   *
+   * T7: la subcategoría no está en `grupos` (el cierre guarda un grupo por rubro padre),
+   * pero sí en `hijos`, con su gasto del ciclo. Ese gasto es el que se pinta.
    */
   const sobresParaMostrar = useMemo(() => {
     if (!cierreCiclo || !cierreCiclo.cerrado) return sobres
     return sobres.map(s => {
       const g = cierreCiclo.grupos[Number(s.estructura_id)]
+      const h = hijosCongelados[Number(s.estructura_id)]
       return {
         ...s,
         monto_asignado: g ? g.monto_limite : 0,
-        monto_gastado: g ? g.monto_gastado : 0,
+        monto_gastado: g ? g.monto_gastado : h ? h.gasto : 0,
         monto_disponible: g ? g.saldo_cierre : 0,
         // El arrastre tampoco se recalcula: el cierre lo guardó en su `detalle`.
         arrastre_mes_anterior: g ? Number(g.detalle?.arrastre ?? 0) : 0,
+        // T7: el gasto y el techo de la subcategoría, para que la fila los lea.
+        congelado: h,
       }
     })
-  }, [sobres, cierreCiclo])
+  }, [sobres, cierreCiclo, hijosCongelados])
 
   const gruposOrdenados = (() => {
     const mapa: Record<string, SobreDetalle[]> = {}
@@ -934,8 +995,16 @@ export function PresupuestosPage() {
   }
 
   /** Modelo A: techo del modelo, `null` cuando la fila no tiene tope. */
-  const techoDe = (estructuraId: number) =>
-    techosPorEstructura ? techosPorEstructura[Number(estructuraId)] : undefined
+  const techoDe = (estructuraId: number) => {
+    // Bloque D (T7): en un ciclo cerrado el techo es el que quedó guardado al cerrar. Si
+    // el cierre no tiene el desglose de ese hijo devuelve `null` (sin tope conocido): la
+    // fila lo dice con palabras y no muestra un cero, que sería un techo inventado.
+    if (cicloCerrado) {
+      const h = hijosCongelados[Number(estructuraId)]
+      return h && h.tiene_techo ? h.techo : null
+    }
+    return techosPorEstructura ? techosPorEstructura[Number(estructuraId)] : undefined
+  }
 
   const sobresConDisponible = sobres
     .filter(
@@ -2499,11 +2568,26 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
   // que lo ofrece (el padre no tiene techo) y un ciclo cerrado no edita nada.
   const puedeEditarTecho = esSubcategoria && !soloLectura && !!onEditarTecho
   const tieneTecho = techo !== null && techo !== undefined && Number(techo) > 0
+  // Bloque D (T7): lo que el cierre guardó de esta subcategoría: su gasto del ciclo y su
+  // techo de aquel momento. Que falte no significa que no gastó: significa que ese cierre
+  // no guardó el desglose del grupo (los anteriores al 20/11/2026), y entonces se dice.
+  const congelado = sobre.congelado
+  const congeladoSinDato = cicloCerrado && !sobre.es_padre && !congelado
+  // El techo que tenía el hijo al cerrar, o la frase que dice que no hay dato. Es un
+  // valor del cierre: ni el techo de hoy ni el margen de hoy del padre.
+  const techoCongelado = congelado
+    ? (congelado.tiene_techo ? fmt(Number(congelado.techo)) : t('budget_stat_no_ceiling'))
+    : congeladoSinDato ? t('budget_cycle_history_unavailable') : null
   // Sin techo propio, la celda muestra el margen que comparte con sus hermanas: el mismo
   // número para todas, y CON SIGNO (fix 3), porque un margen negativo no es un cero.
-  const valorTecho = tieneTecho
-    ? fmt(Number(techo))
+  const valorTecho = techoCongelado !== null
+    ? techoCongelado
     : libreGrupo !== undefined ? montoConSigno(libreGrupo) : '—'
+  // Toda fila congelada habla de su techo, aunque el hijo no tuviera ninguno: «grupo
+  // libre» describe otra cosa (el margen compartido de hoy) y acá no aplica.
+  const etiquetaTecho = congeladoSinDato
+    ? t('budget_cycle_history_label')
+    : congelado || tieneTecho ? t('budget_stat_ceiling') : t('budget_stat_group_free')
 
   const colorDisponible = () => {
     if (disponibleEfectivo < 0) return 'rojo'
@@ -2512,7 +2596,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
     return 'verde'
   }
 
-  const montoVisible = montoConSigno(disponibleEfectivo)
+  const montoVisible = congeladoSinDato ? '—' : montoConSigno(disponibleEfectivo)
 
   return (
     <div
@@ -2618,7 +2702,11 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
       <div className={`sobre-stats sobre-stats--columnas${sobre.es_padre ? ' sobre-stats--padre' : ''}`}>
         {/* Etapa 3: «Asignado» es del padre, porque la plata es del padre. En la
             subcategoría esa celda dice «Tope», y si no tiene tope muestra el margen que
-            comparte con sus hermanas: la bolsa del padre. */}
+            comparte con sus hermanas: la bolsa del padre.
+            Bloque D (T7): en un ciclo cerrado la celda dice «Histórico» y avisa que el
+            cierre no guardó el desglose de ese grupo. La etiqueta y el valor salen de
+            `etiquetaTecho` / `valorTecho`; el gasto y el avance no se dibujan, porque un
+            cero ahí se lee «no gastó nada». */}
         {sobre.es_padre ? (
           <span className="sobre-stat">
             <span className="sobre-stat-label">{t('budget_stat_assigned')}</span>
@@ -2626,9 +2714,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
           </span>
         ) : (
           <span className="sobre-stat">
-            <span className="sobre-stat-label">
-              {tieneTecho ? t('budget_stat_ceiling') : t('budget_stat_group_free')}
-            </span>
+            <span className="sobre-stat-label">{etiquetaTecho}</span>
             {puedeEditarTecho ? (
               <button
                 type="button"
@@ -2645,10 +2731,12 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
             )}
           </span>
         )}
-        <span className="sobre-stat">
-          <span className="sobre-stat-label">{t('budget_stat_spent')}</span>
-          <span className="sobre-stat-val">{fmt(Number(sobre.monto_gastado))}</span>
-        </span>
+        {!congeladoSinDato && (
+          <span className="sobre-stat">
+            <span className="sobre-stat-label">{t('budget_stat_spent')}</span>
+            <span className="sobre-stat-val">{fmt(Number(sobre.monto_gastado))}</span>
+          </span>
+        )}
         {/* Lo que queda del techo del grupo para los hijos sin presupuesto propio.
             Antes iba pegado al nombre; ahora vive acá, con su etiqueta. Con signo: un
             pozo negativo es déficit del grupo, no «no queda nada». */}
@@ -2658,7 +2746,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
             <span className="sobre-stat-val">{montoConSigno(libreGrupo)}</span>
           </span>
         )}
-        {!sinDatos && (
+        {!sinDatos && !congeladoSinDato && (
           <span className="sobre-stat">
             <span className="sobre-stat-label">{t('budget_stat_progress')}</span>
             <span className="sobre-stat-val">{avanceEtiqueta}</span>

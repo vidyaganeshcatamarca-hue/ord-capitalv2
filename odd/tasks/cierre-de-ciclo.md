@@ -66,3 +66,9 @@ como prueba) y dejar captura. Si la ventana está minimizada, restaurarla con
 
 L1 — El dueño aprobó 1 A, 2 A y 3 A el 20/11/2026: cerrar pendientes automáticamente, mostrar la
 lectura histórica ahora, y después el Bloque E.
+
+T7 — (20/11/2026) El cierre guarda ahora una fila por subcategoría con su gasto del ciclo y su
+techo (`monto_techo` NULL = sin techo). `fn_reporte_cierre_ciclo` devuelve `hijos` por grupo y
+`desglose` por fila. En la pantalla: dentro de un ciclo cerrado, cada subcategoría muestra su
+gasto congelado y su techo congelado (o «sin techo»); si `desglose` es false (cierres anteriores
+al 20/11/2026) se dice «información no disponible», nunca cero.

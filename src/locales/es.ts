@@ -2545,6 +2545,12 @@ export const inversiones = {
   // se leen los importes que siguen (los guardados al cerrar, no los de hoy).
   budget_cycle_closed_notice_title: "Este ciclo está cerrado",
   budget_cycle_closed_notice_desc: "Los importes de abajo son los que quedaron guardados al cerrarlo: no se recalculan con los gastos posteriores. Se puede leer todo, pero no asignar, transferir ni cambiar topes.",
+  // Bloque D (T7): la fila de una subcategoría dentro de un ciclo cerrado. El techo se
+  // dice con palabras cuando el hijo no tenía ninguno, y si el cierre no guardó el
+  // desglose se dice que el histórico no está, en vez de mostrar un cero.
+  budget_stat_no_ceiling: "Sin techo",
+  budget_cycle_history_label: "Histórico",
+  budget_cycle_history_unavailable: "No disponible para este ciclo",
   budget_exceeded_envelopes_desc_readonly: "Gastaste más de lo asignado en estos sobres. Un ciclo cerrado no se puede modificar.",
   error_base_cero_locked: "No podés cambiar el modo de presupuesto hasta el ciclo siguiente.",
   // Ronda 7 (B3): volver a Modo Libertad reinicia las asignaciones del ciclo, así

@@ -158,7 +158,7 @@ test('el cierre visible se guarda como {cerrado, grupos} y manda sobre el report
 
   // Los tres importes del grupo, tal como los guardó el cierre.
   assert.match(pagina, /monto_asignado: g \? g\.monto_limite : 0/, 'la plata es la del cierre')
-  assert.match(pagina, /monto_gastado: g \? g\.monto_gastado : 0/, 'el gasto es el del cierre')
+  assert.match(pagina, /monto_gastado: g \? g\.monto_gastado : h \? h\.gasto : 0/, 'el gasto del grupo es el del cierre' )
   assert.match(pagina, /monto_disponible: g \? g\.saldo_cierre : 0/, 'el saldo es el de cierre')
 
   // Un grupo que el cierre no tenga cae en cero: es un dato que no existe, no un
@@ -227,6 +227,99 @@ test('las claves del aviso de cierre están en los tres idiomas', () => {
   for (const lang of ['es', 'en', 'pt']) {
     const dict = readFileSync(new URL(`../../src/locales/${lang}.ts`, import.meta.url), 'utf8')
     for (const clave of ['budget_cycle_closed_notice_title', 'budget_cycle_closed_notice_desc']) {
+      assert.ok(dict.includes(`${clave}:`), `${lang}.ts no publica ${clave}`)
+    }
+  }
+})
+
+// ─── Bloque D · T7: el desglose congelado de las subcategorías ──────────────
+//
+// El cierre guarda ahora una fila por subcategoría con su gasto del ciclo y su techo
+// (`monto_techo` NULL = sin techo). `fn_reporte_cierre_ciclo` los devuelve en `hijos`,
+// con `desglose` por grupo. Lo que se congela acá:
+//   1. La subcategoría se pinta con el gasto del cierre, no con el vivo.
+//   2. Su techo es el de aquel momento; sin techo se dice, no se pinta un cero.
+//   3. Un cierre sin desglose (anterior al 20/11/2026) dice «no disponible», nunca cero.
+
+test('cada subcategoría de un ciclo cerrado muestra su gasto y su techo guardados', () => {
+  // Tipos: el cierre trae `desglose` e `hijos` por grupo.
+  assert.match(
+    pagina,
+    /interface HijoCierreCiclo \{[\s\S]{0,200}?gasto: number[\s\S]{0,120}?techo: number \| null[\s\S]{0,120}?tiene_techo: boolean/,
+    'el hijo del cierre guarda gasto, techo y si tenía techo',
+  )
+  assert.match(
+    pagina,
+    /desglose\?: boolean[\s\S]{0,120}?hijos\?: HijoCierreCiclo\[\]/,
+    'el grupo del cierre tiene que declarar el desglose y sus hijos',
+  )
+
+  // Un mapa por subcategoría, armado con los hijos de TODOS los grupos.
+  assert.match(pagina, /const hijosCongelados = useMemo/, 'falta el mapa de hijos congelados')
+  assert.match(pagina, /if \(g\.desglose === false\) continue/, 'un grupo senza desglose no aporta hijos')
+  assert.match(pagina, /mapa\[Number\(h\.estructura_egreso_id\)\]/, 'el mapa se indexa por rubro')
+
+  // El gasto de la fila sale del cierre, no del reporte vivo.
+  assert.match(
+    pagina,
+    /monto_gastado: g \? g\.monto_gastado : h \? h\.gasto : 0/,
+    'la subcategoría se pinta con su gasto del cierre',
+  )
+
+  // El techo también: en un ciclo cerrado el que manda es el guardado.
+  assert.match(
+    pagina,
+    /if \(cicloCerrado\) \{[\s\S]{0,200}?h && h\.tiene_techo \? h\.techo : null/,
+    'el techo de la fila en un ciclo cerrado sale del cierre',
+  )
+
+  // Y si ese hijo no tenía techo se dice con palabras: un cero sería un techo inventado.
+  assert.match(
+    pagina,
+    /congelado\.tiene_techo\s*\?\s*fmt\(Number\(congelado\.techo\)\)\s*:\s*t\('budget_stat_no_ceiling'\)/,
+    'sin techo se dice «sin techo», no se pinta 0',
+  )
+})
+
+test('un cierre sin desglose dice que el histórico no está disponible, nunca cero', () => {
+  assert.match(
+    pagina,
+    /const congeladoSinDato = cicloCerrado && !sobre\.es_padre && !congelado/,
+    'la fila sabe cuándo el cierre no le dio el dato',
+  )
+  // La celda dice la frase traducida, con su propia etiqueta («Histórico»).
+  assert.match(
+    pagina,
+    /const techoCongelado = congelado[\s\S]{0,200}?: congeladoSinDato \? t\('budget_cycle_history_unavailable'\) : null/,
+    'sin desglose la fila lo dice',
+  )
+  assert.match(
+    pagina,
+    /const etiquetaTecho = congeladoSinDato\s*\?\s*t\('budget_cycle_history_label'\)/,
+    'la celda del histórico se rotula como tal',
+  )
+  // El gasto y el avance no se dibujan: un 0 se lee «no gastó nada», y no es eso.
+  assert.match(pagina, /\{!congeladoSinDato && \(\s*<span className="sobre-stat">/,
+    'sin dato no hay celda de gasto')
+  assert.match(pagina, /\{!sinDatos && !congeladoSinDato && \(/,
+    'sin dato no hay avance calculado')
+  // Tampoco el número de arriba a la derecha puede ser un cero inventado.
+  assert.match(
+    pagina,
+    /const montoVisible = congeladoSinDato \? '—' : montoConSigno\(disponibleEfectivo\)/,
+    'sin dato el disponible no es 0',
+  )
+})
+
+test('las claves del desglose congelado están en los tres idiomas', () => {
+  const claves = [
+    'budget_stat_no_ceiling',
+    'budget_cycle_history_label',
+    'budget_cycle_history_unavailable',
+  ]
+  for (const lang of ['es', 'en', 'pt']) {
+    const dict = readFileSync(new URL(`../../src/locales/${lang}.ts`, import.meta.url), 'utf8')
+    for (const clave of claves) {
       assert.ok(dict.includes(`${clave}:`), `${lang}.ts no publica ${clave}`)
     }
   }

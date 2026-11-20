@@ -8838,6 +8838,18 @@
         "from": "Los importes de abajo son los que quedaron guardados al cerrarlo: no se recalculan con los gastos posteriores. Se puede leer todo, pero no asignar, transferir ni cambiar topes.",
         "to": "The amounts below are the ones saved when it was closed: they are not recalculated with later expenses. Everything stays readable, but you cannot assign, transfer or change ceilings."
       },
+      "inversiones.budget_stat_no_ceiling": {
+        "from": "Sin techo",
+        "to": "No ceiling"
+      },
+      "inversiones.budget_cycle_history_label": {
+        "from": "Histórico",
+        "to": "History"
+      },
+      "inversiones.budget_cycle_history_unavailable": {
+        "from": "No disponible para este ciclo",
+        "to": "Not available for this cycle"
+      },
       "inversiones.budget_exceeded_envelopes_desc_readonly": {
         "from": "Gastaste más de lo asignado en estos sobres. Un ciclo cerrado no se puede modificar.",
         "to": "You spent more than you assigned in these envelopes. A closed cycle cannot be changed."
@@ -20243,6 +20255,18 @@
       "inversiones.budget_cycle_closed_notice_desc": {
         "from": "Los importes de abajo son los que quedaron guardados al cerrarlo: no se recalculan con los gastos posteriores. Se puede leer todo, pero no asignar, transferir ni cambiar topes.",
         "to": "Os valores abaixo são os que ficaram guardados ao fechá-lo: não são recalculados com os gastos posteriores. Tudo pode ser lido, mas não se pode atribuir, transferir nem mudar tetos."
+      },
+      "inversiones.budget_stat_no_ceiling": {
+        "from": "Sin techo",
+        "to": "Sem teto"
+      },
+      "inversiones.budget_cycle_history_label": {
+        "from": "Histórico",
+        "to": "Histórico"
+      },
+      "inversiones.budget_cycle_history_unavailable": {
+        "from": "No disponible para este ciclo",
+        "to": "Não disponível para este ciclo"
       },
       "inversiones.budget_exceeded_envelopes_desc_readonly": {
         "from": "Gastaste más de lo asignado en estos sobres. Un ciclo cerrado no se puede modificar.",
