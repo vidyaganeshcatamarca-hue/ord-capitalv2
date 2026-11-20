@@ -3624,6 +3624,15 @@
                 "column_default": "CURRENT_DATE",
                 "character_maximum_length": null,
                 "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "hogar_id",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
             }
         ],
         "table_name": "p_inversiones"
@@ -4961,6 +4970,24 @@
                 "column_default": null,
                 "character_maximum_length": null,
                 "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "hogar_id",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "contraparte_user_id",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
             }
         ],
         "table_name": "p_prestamos"
@@ -5231,6 +5258,56 @@
         "columns": [
             {
                 "data_type": "bigint",
+                "column_name": "prestamo_id",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "user_id",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "smallint",
+                "column_name": "criterio",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "boolean",
+                "column_name": "seleccionado",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "false",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "timestamp with time zone",
+                "column_name": "actualizado_at",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "now()",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            }
+        ],
+        "table_name": "p_prestamos_vinculos"
+    },
+    {
+        "columns": [
+            {
+                "data_type": "bigint",
                 "column_name": "presupuesto_id",
                 "is_identity": "YES",
                 "is_nullable": "NO",
@@ -5312,6 +5389,146 @@
             }
         ],
         "table_name": "p_presupuestos"
+    },
+    {
+        "columns": [
+            {
+                "data_type": "bigint",
+                "column_name": "cierre_id",
+                "is_identity": "YES",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "user_id",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "hogar_id",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "date",
+                "column_name": "mes_periodo",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "estructura_egreso_id",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "0",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "text",
+                "column_name": "tipo",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "'cierre'::text",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "monto_limite",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "0",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "monto_gastado",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "0",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "saldo_cierre",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "0",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "jsonb",
+                "column_name": "detalle",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "text",
+                "column_name": "motivo",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "date",
+                "column_name": "ciclo_corregido",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "timestamp with time zone",
+                "column_name": "creado_at",
+                "is_identity": "NO",
+                "is_nullable": "NO",
+                "column_default": "now()",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "padre_id",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "numeric",
+                "column_name": "monto_techo",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            }
+        ],
+        "table_name": "p_presupuestos_cierre"
     },
     {
         "columns": [
@@ -5399,6 +5616,15 @@
             {
                 "data_type": "date",
                 "column_name": "fecha_activacion_base_cero",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "date",
+                "column_name": "cierre_desde",
                 "is_identity": "NO",
                 "is_nullable": "YES",
                 "column_default": null,
@@ -6112,6 +6338,15 @@
                 "is_identity": "NO",
                 "is_nullable": "NO",
                 "column_default": "now()",
+                "character_maximum_length": null,
+                "is_generated": "NEVER"
+            },
+            {
+                "data_type": "bigint",
+                "column_name": "hogar_id",
+                "is_identity": "NO",
+                "is_nullable": "YES",
+                "column_default": null,
                 "character_maximum_length": null,
                 "is_generated": "NEVER"
             }

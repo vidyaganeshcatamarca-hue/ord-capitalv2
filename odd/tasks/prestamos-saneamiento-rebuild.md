@@ -526,3 +526,26 @@ Para prestamos, dos cosas distintas e independientes:
   `p_contraparte_user_id`, con la misma convencion de nulo = no tocar en edicion.
 - El clon debe dejar `hogar_id` en NULL y remapear `contraparte_user_id`.
 - Test transaccional de aislamiento: lo privado de A no lo ve B; lo compartido si.
+
+### S31 - Copropiedad: los dos son duenos (dueno, 2026-11-20, verbatim)
+
+"Si la deuda es compartida entre los dos, los dos son duenos y se comportan como duenos,
+pudiendo hacer todas las funcionalidades que un dueno tiene sobre esa deuda."
+
+Consecuencias, sin excepciones ni permisos asimetricos:
+- Cualquiera de los dos puede editar condiciones, registrar un pago, corregirlo, borrarlo,
+  quitarla del historial y responder los vinculos del saneamiento. No hay accion reservada
+  al creador.
+- El que registra un pago es el que paga: `p_prestamos_pagos.user_id` debe ser el llamante
+  y la billetera usada tiene que ser suya. La plata sale de quien la pone, no del dueno
+  original.
+- La contracara aceptada: si uno borra la deuda compartida, desaparece para los dos. Es lo
+  que significa ser dueno, no un defecto.
+- El predicado de escritura es el mismo de lectura: `row.user_id = v_user_id OR
+  (v_hogar_id IS NOT NULL AND row.hogar_id = v_hogar_id)`.
+
+### T30 - S31 - backend
+Auditar la escritura de prestamos con ese predicado: fn_prestamo_editar,
+fn_prestamo_registrar_pago, fn_prestamo_corregir_pago, fn_prestamo_eliminar_pago,
+fn_prestamo_eliminar_historial, fn_gestionar_deuda, fn_saneamiento_vinculos_responder.
+La billetera del pago se sigue validando contra el llamante, no contra el dueno de la deuda.

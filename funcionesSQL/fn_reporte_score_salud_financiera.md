@@ -6,6 +6,7 @@ CREATE OR REPLACE FUNCTION public.fn_reporte_score_salud_financiera()
 AS $function$
 DECLARE
     v_user_id bigint;
+    v_hogar_id bigint;
     v_escudo_dias int;
     v_score_proteccion int := 0;
     v_score_presupuesto int := 75;
@@ -19,6 +20,8 @@ DECLARE
     v_config_inflacion RECORD;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+
+    SELECT hogar_id INTO v_hogar_id FROM public.p_hogar_participantes WHERE user_id = v_user_id;
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
 
     SELECT COALESCE(dias_supervivencia_deuda_total, 0) INTO v_escudo_dias FROM public.fn_reporte_escudo_tiempo() LIMIT 1;
@@ -30,7 +33,7 @@ BEGIN
         ELSE 25
     END;
 
-    SELECT COALESCE(SUM(saldo_actual), 0) INTO v_deuda_total FROM p_prestamos WHERE user_id = v_user_id AND estado = 'activo';
+    SELECT COALESCE(SUM(saldo_actual), 0) INTO v_deuda_total FROM p_prestamos WHERE (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id)) AND estado = 'activo';
     
     IF v_deuda_total = 0 THEN
         v_score_deuda := 100;

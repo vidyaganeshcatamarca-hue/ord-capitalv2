@@ -5,8 +5,11 @@ CREATE OR REPLACE FUNCTION public.fn_reporte_mapa_acreedores()
  SET search_path TO 'public'
 AS $function$
 DECLARE v_user_id bigint;
+    v_hogar_id bigint;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+
+    SELECT hogar_id INTO v_hogar_id FROM public.p_hogar_participantes WHERE user_id = v_user_id;
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
 
     RETURN QUERY
@@ -19,7 +22,7 @@ BEGIN
             UNION ALL
             SELECT SUM(monto_prestamo) AS monto_total
             FROM p_prestamos
-            WHERE user_id = v_user_id
+            WHERE (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id))
         ) AS total_deuda
     )
     SELECT 
@@ -45,7 +48,7 @@ BEGIN
     LEFT JOIN (
         SELECT p.prestamo_id, p.nombre_prestamo, p.tipo_deuda, SUM(p.monto_prestamo) AS monto_total, p.color
         FROM p_prestamos p
-        WHERE p.user_id = v_user_id
+        WHERE (p.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND p.hogar_id = v_hogar_id))
         GROUP BY p.prestamo_id, p.nombre_prestamo, p.tipo_deuda, p.color
     ) p ON true
     WHERE dt.total > 0

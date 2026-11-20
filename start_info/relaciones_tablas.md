@@ -3,7 +3,7 @@
 <!-- GENERADO AUTOMATICAMENTE. No editar a mano.
      Origen: catalogo desplegado, proyecto bjszdmheddcxjdhcvibi.
      Generador: scripts/prestamos/dump-schema.mjs
-     Tablas: 72
+     Tablas: 74
      Solo estructura. Sin datos, sin credenciales. -->
 
 Regenerar con: `node scripts/prestamos/dump-schema.mjs`
@@ -866,10 +866,12 @@ Regenerar con: `node scripts/prestamos/dump-schema.mjs`
 | 12 | `fecha_liquidacion` | date |  | YES |  |
 | 13 | `moneda` | text |  | YES | 'ARS'::text |
 | 14 | `ultima_conciliacion` | date |  | YES | CURRENT_DATE |
+| 15 | `hogar_id` | bigint |  | YES |  |
 
 **Restricciones**
 
 - `FK` p_inversiones_billetera_origen_id_fkey: FOREIGN KEY (billetera_origen_id) REFERENCES p_billeteras(billetera_id) ON DELETE CASCADE
+- `FK` p_inversiones_hogar_id_fkey: FOREIGN KEY (hogar_id) REFERENCES p_hogares(hogar_id) ON DELETE CASCADE
 - `FK` p_inversiones_user_id_fkey: FOREIGN KEY (user_id) REFERENCES usuarios(user_id) ON DELETE CASCADE
 - `PK` p_inversiones_pkey: PRIMARY KEY (inversion_id)
 
@@ -1121,6 +1123,8 @@ Regenerar con: `node scripts/prestamos/dump-schema.mjs`
 | 23 | `tasa_informada` | boolean |  | NO | false |
 | 24 | `puntos_vinculo` | smallint |  | YES |  |
 | 25 | `eliminado_at` | timestamp with time zone |  | YES |  |
+| 26 | `hogar_id` | bigint |  | YES |  |
+| 27 | `contraparte_user_id` | bigint |  | YES |  |
 
 **Restricciones**
 
@@ -1130,6 +1134,8 @@ Regenerar con: `node scripts/prestamos/dump-schema.mjs`
 - `CHECK` p_prestamos_puntos_vinculo_check: CHECK (((puntos_vinculo IS NULL) OR (puntos_vinculo = ANY (ARRAY[0, 3, 5, 6, 8, 11]))))
 - `CHECK` p_prestamos_tipo_entidad_check: CHECK ((tipo_entidad = ANY (ARRAY['banco'::text, 'tarjeta'::text, 'familiar'::text, 'otro'::text, 'bancario'::text, 'tercero'::text, 'entidad_financiera'::text])))
 - `CHECK` p_prestamos_tipo_flujo_check: CHECK ((tipo_flujo = ANY (ARRAY['debo'::text, 'me_deben'::text])))
+- `FK` p_prestamos_contraparte_user_id_fkey: FOREIGN KEY (contraparte_user_id) REFERENCES usuarios(user_id) ON DELETE SET NULL
+- `FK` p_prestamos_hogar_id_fkey: FOREIGN KEY (hogar_id) REFERENCES p_hogares(hogar_id) ON DELETE CASCADE
 - `FK` p_prestamos_p_caja_id_fkey: FOREIGN KEY (p_caja_id) REFERENCES p_caja(p_caja_id) ON DELETE CASCADE
 - `FK` p_prestamos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES usuarios(user_id) ON DELETE CASCADE
 - `PK` p_prestamos_pkey: PRIMARY KEY (prestamo_id)
@@ -1193,6 +1199,23 @@ Regenerar con: `node scripts/prestamos/dump-schema.mjs`
 - `FK` p_prestamos_pagos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES usuarios(user_id) ON DELETE CASCADE
 - `PK` p_prestamos_pagos_pkey: PRIMARY KEY (pago_id)
 
+## `p_prestamos_vinculos`
+
+| # | Columna | Tipo | Largo | Nulo | Default |
+|---|---|---|---|---|---|
+| 1 | `prestamo_id` | bigint |  | NO |  |
+| 2 | `user_id` | bigint |  | NO |  |
+| 3 | `criterio` | smallint |  | NO |  |
+| 4 | `seleccionado` | boolean |  | NO | false |
+| 5 | `actualizado_at` | timestamp with time zone |  | NO | now() |
+
+**Restricciones**
+
+- `CHECK` p_prestamos_vinculos_criterio_check: CHECK ((criterio = ANY (ARRAY[1, 2, 3])))
+- `FK` p_prestamos_vinculos_prestamo_id_fkey: FOREIGN KEY (prestamo_id) REFERENCES p_prestamos(prestamo_id) ON DELETE CASCADE
+- `FK` p_prestamos_vinculos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES usuarios(user_id) ON DELETE CASCADE
+- `PK` p_prestamos_vinculos_pkey: PRIMARY KEY (prestamo_id, criterio)
+
 ## `p_presupuestos`
 
 | # | Columna | Tipo | Largo | Nulo | Default |
@@ -1214,6 +1237,30 @@ Regenerar con: `node scripts/prestamos/dump-schema.mjs`
 - `FK` p_presupuestos_user_id_fkey: FOREIGN KEY (user_id) REFERENCES usuarios(user_id) ON DELETE CASCADE
 - `PK` p_presupuestos_pkey: PRIMARY KEY (presupuesto_id)
 
+## `p_presupuestos_cierre`
+
+| # | Columna | Tipo | Largo | Nulo | Default |
+|---|---|---|---|---|---|
+| 1 | `cierre_id` | bigint |  | NO |  |
+| 2 | `user_id` | bigint |  | YES |  |
+| 3 | `hogar_id` | bigint |  | YES |  |
+| 4 | `mes_periodo` | date |  | NO |  |
+| 5 | `estructura_egreso_id` | bigint |  | NO | 0 |
+| 6 | `tipo` | text |  | NO | 'cierre'::text |
+| 7 | `monto_limite` | numeric |  | NO | 0 |
+| 8 | `monto_gastado` | numeric |  | NO | 0 |
+| 9 | `saldo_cierre` | numeric |  | NO | 0 |
+| 10 | `detalle` | jsonb |  | YES |  |
+| 11 | `motivo` | text |  | YES |  |
+| 12 | `ciclo_corregido` | date |  | YES |  |
+| 13 | `creado_at` | timestamp with time zone |  | NO | now() |
+| 14 | `padre_id` | bigint |  | YES |  |
+| 15 | `monto_techo` | numeric |  | YES |  |
+
+**Restricciones**
+
+- `PK` p_presupuestos_cierre_pkey: PRIMARY KEY (cierre_id)
+
 ## `p_presupuestos_config`
 
 | # | Columna | Tipo | Largo | Nulo | Default |
@@ -1228,6 +1275,7 @@ Regenerar con: `node scripts/prestamos/dump-schema.mjs`
 | 8 | `creado_at` | timestamp with time zone |  | YES | now() |
 | 9 | `modo_presupuesto` | text |  | YES | 'anticipado'::text |
 | 10 | `fecha_activacion_base_cero` | date |  | YES |  |
+| 11 | `cierre_desde` | date |  | YES |  |
 
 **Restricciones**
 
@@ -1394,6 +1442,7 @@ Regenerar con: `node scripts/prestamos/dump-schema.mjs`
 | 11 | `icono` | text |  | NO | '💰'::text |
 | 13 | `creado_at` | timestamp with time zone |  | NO | now() |
 | 14 | `actualizado_at` | timestamp with time zone |  | NO | now() |
+| 15 | `hogar_id` | bigint |  | YES |  |
 
 **Restricciones**
 
@@ -1401,6 +1450,7 @@ Regenerar con: `node scripts/prestamos/dump-schema.mjs`
 - `CHECK` p_sobres_meta_positiva: CHECK (((monto_meta IS NULL) OR (monto_meta > (0)::numeric)))
 - `CHECK` p_sobres_moneda_no_vacia: CHECK ((length(btrim(moneda)) > 0))
 - `CHECK` p_sobres_nombre_no_vacio: CHECK ((length(btrim(nombre)) > 0))
+- `FK` p_sobres_hogar_id_fkey: FOREIGN KEY (hogar_id) REFERENCES p_hogares(hogar_id) ON DELETE CASCADE
 - `FK` p_sobres_user_id_fkey: FOREIGN KEY (user_id) REFERENCES usuarios(user_id) ON DELETE CASCADE
 - `PK` p_sobres_pkey: PRIMARY KEY (sobre_id)
 - `UNIQUE` p_sobres_sobre_moneda_uq: UNIQUE (sobre_id, moneda)
