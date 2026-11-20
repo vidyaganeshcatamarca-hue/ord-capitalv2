@@ -121,6 +121,40 @@
 .disponible-header.estado-cerrado .disponible-label { color: var(--text-3); }
 .disponible-header.estado-cerrado .disponible-monto { color: var(--text-3); }
 
+/* Bloque D (T2/S2): el aviso de ciclo cerrado. Va arriba de la lista y no es una
+   decoración: cambia cómo se leen TODOS los números de abajo (son los guardados al
+   cerrar, no el reporte de hoy), así que se pinta antes que el primer importe. */
+.ciclo-cerrado-aviso {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin: 16px 20px 20px;
+  padding: 14px 16px;
+  background: rgba(78, 205, 196, 0.08);
+  border: 1px solid rgba(78, 205, 196, 0.35);
+  border-radius: 12px;
+}
+
+.ciclo-cerrado-aviso-icono {
+  font-size: calc(18px * var(--font-scale));
+  line-height: 1.2;
+}
+
+.ciclo-cerrado-aviso-texto h4 {
+  font-family: 'Outfit', sans-serif;
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 700;
+  color: var(--mint, #4ECDC4);
+  margin: 0 0 4px 0;
+}
+
+.ciclo-cerrado-aviso-texto p {
+  font-size: calc(12px * var(--font-scale));
+  color: var(--text-3);
+  margin: 0;
+  line-height: 1.45;
+}
+
 .disponible-subtexto {
   font-size: calc(12px * var(--font-scale));
   color: var(--text-3);
@@ -592,6 +626,17 @@
   color: #ffffff;
   transform: scale(1.05);
 }
+/* Bloque D (T3): con el ciclo cerrado el botón sigue ahí —la información se ve— pero no
+   hace nada. El hover no puede prometer una acción que el servidor va a rechazar. */
+.sobre-btn-asignar:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.sobre-btn-asignar:disabled:hover {
+  background: var(--mint-dim);
+  color: var(--mint);
+  transform: none;
+}
 
 /* ---------- EMPTY STATE ---------- */
 .presupuestos-empty {
@@ -829,6 +874,11 @@
 .asignar-monto-input:focus {
   border-color: var(--mint, #00B127);
   box-shadow: 0 0 0 3px rgba(78,205,196,0.15);
+}
+/* Bloque D (T3): el campo de monto de un ciclo cerrado se ve, no se escribe. */
+.asignar-monto-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-confirmar-monto {
@@ -1719,6 +1769,14 @@ button.sobre-stat-val--editable:active {
 button.sobre-stat-val--editable:focus-visible {
   outline: 2px solid var(--mint);
   outline-offset: 2px;
+}
+
+/* Bloque D (T3): el valor del techo de un ciclo cerrado deja de invitar al toque.
+   Sin esto el subrayado punteado sigue prometiendo un editor que no abre. */
+button.sobre-stat-val--editable:disabled {
+  cursor: not-allowed;
+  text-decoration: none;
+  opacity: 0.7;
 }
 
 /* La acción destructiva de la hoja del techo («quitar techo») vive separada del

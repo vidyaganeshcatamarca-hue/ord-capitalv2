@@ -2541,6 +2541,10 @@ export const inversiones = {
   budget_readonly_cycle_toast: "Un ciclo cerrado es solo lectura: no se puede asignar ni cubrir déficits acá.",
   budget_cycle_closed_label: "CICLO CERRADO",
   budget_cycle_closed_desc: "Solo lectura: este ciclo ya terminó.",
+  // Bloque D (T2/S2): el aviso va arriba de la lista de un ciclo cerrado y explica cómo
+  // se leen los importes que siguen (los guardados al cerrar, no los de hoy).
+  budget_cycle_closed_notice_title: "Este ciclo está cerrado",
+  budget_cycle_closed_notice_desc: "Los importes de abajo son los que quedaron guardados al cerrarlo: no se recalculan con los gastos posteriores. Se puede leer todo, pero no asignar, transferir ni cambiar topes.",
   budget_exceeded_envelopes_desc_readonly: "Gastaste más de lo asignado en estos sobres. Un ciclo cerrado no se puede modificar.",
   error_base_cero_locked: "No podés cambiar el modo de presupuesto hasta el ciclo siguiente.",
   // Ronda 7 (B3): volver a Modo Libertad reinicia las asignaciones del ciclo, así

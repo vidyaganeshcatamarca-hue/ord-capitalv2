@@ -2277,6 +2277,8 @@ export const inversiones = {
   budget_readonly_cycle_toast: "Um ciclo fechado é somente leitura: não se pode atribuir nem cobrir déficits aqui.",
   budget_cycle_closed_label: "CICLO FECHADO",
   budget_cycle_closed_desc: "Somente leitura: este ciclo já terminou.",
+  budget_cycle_closed_notice_title: "Este ciclo está fechado",
+  budget_cycle_closed_notice_desc: "Os valores abaixo são os que ficaram guardados ao fechá-lo: não são recalculados com os gastos posteriores. Tudo pode ser lido, mas não se pode atribuir, transferir nem mudar tetos.",
   budget_exceeded_envelopes_desc_readonly: "Você gastou mais do que o atribuído nestes envelopes. Um ciclo fechado não pode ser alterado.",
   error_base_cero_locked: "Você não pode mudar o modo de orçamento até o próximo ciclo.",
   budget_confirm_back_to_anticipado_title: "Sair do Base Zero?",

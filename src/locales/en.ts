@@ -2277,6 +2277,8 @@ export const inversiones = {
   budget_readonly_cycle_toast: "A closed cycle is read-only: you cannot assign or cover deficits here.",
   budget_cycle_closed_label: "CYCLE CLOSED",
   budget_cycle_closed_desc: "Read-only: this cycle is over.",
+  budget_cycle_closed_notice_title: "This cycle is closed",
+  budget_cycle_closed_notice_desc: "The amounts below are the ones saved when it was closed: they are not recalculated with later expenses. Everything stays readable, but you cannot assign, transfer or change ceilings.",
   budget_exceeded_envelopes_desc_readonly: "You spent more than you assigned in these envelopes. A closed cycle cannot be changed.",
   error_base_cero_locked: "You cannot change the budget mode until the next cycle.",
   budget_confirm_back_to_anticipado_title: "Leave Zero Base?",

@@ -85,6 +85,30 @@ interface SobreDetalle {
 }
 
 /**
+ * Bloque D (T2/S1): lo que `fn_reporte_cierre_ciclo` guardó para el mes visible. Un
+ * grupo es un rubro padre: las subcategorías no dejan saldo propio, su gasto ya está
+ * dentro del padre. Los tres importes vienen del cierre, no se recalculan acá.
+ */
+interface GrupoCierreCiclo {
+  estructura_egreso_id: number
+  nombre?: string
+  monto_limite: number
+  monto_gastado: number
+  saldo_cierre: number
+  /** El servidor ya guardó el arrastre del grupo en el cierre: no hay que deducirlo. */
+  detalle?: { arrastre?: number }
+}
+
+/**
+ * Bloque D (T2): `cerrado` lo dice el servidor, no el reloj. `grupos` viene indexado por
+ * rubro para que la lista lo consulte sin un `find` por fila.
+ */
+interface ReporteCierreCiclo {
+  cerrado: boolean
+  grupos: Record<number, GrupoCierreCiclo>
+}
+
+/**
  * Ronda 14 (dueño): «la plata se asigna al rubro padre». Una fila es subcategoría
  * cuando su categoría tiene padre (`padre_id` viene de `fn_reporte_sobres_detalle`).
  * `es_padre` manda primero: un rubro padre conserva su asignación como hasta hoy, y un
@@ -295,6 +319,9 @@ export function PresupuestosPage() {
   const [config, setConfig] = useState<ConfigPresupuesto | null>(null)
   const [cuposResumen, setCuposResumen] = useState<CupoResumen[] | null>(null)
   const [loading, setLoading] = useState(true)
+  // Bloque D (T2/S1): el estado del ciclo visible y lo que el cierre dejó guardado.
+  // `null` mientras no llegó, o si el reporte del cierre no se pudo leer.
+  const [cierreCiclo, setCierreCiclo] = useState<ReporteCierreCiclo | null>(null)
 
   // Mes seleccionado (offset respecto a hoy, 0 = mes actual)
   const [mesOffset, setMesOffset] = useState(0)
@@ -395,6 +422,13 @@ export function PresupuestosPage() {
   const soloLectura = !esCicloActivo
 
   /**
+   * Bloque D (T2/S3): el ciclo visible está cerrado cuando lo dice el SERVIDOR
+   * (`fn_reporte_cierre_ciclo.cerrado`), no cuando el reloj lo supone. Esa marca decide
+   * dos cosas a la vez: los importes se leen del cierre y la pantalla no deja editar.
+   */
+  const cicloCerrado = cierreCiclo?.cerrado === true
+
+  /**
    * Etapa 3 · el rastro de la categoría que abrió la hoja de detalle. Se pide al
    * servidor acotado a esa categoría y a ESTE ciclo: el pasado se lee igual, en solo
    * lectura, y no hay nada que apagar en la consulta.
@@ -488,15 +522,17 @@ export function PresupuestosPage() {
         /* opcional: nunca bloquea la carga */
       }
 
-      // Cerrar el ciclo anterior deja su resultado congelado y manda el saldo al ciclo
-      // siguiente. Es idempotente: si ya estaba cerrado, el servidor no hace nada.
+      // Bloque D (T1/S1): cerrar los ciclos terminados deja su resultado congelado y
+      // manda el saldo al ciclo siguiente. `fn_cerrar_ciclos_pendientes` cierra en orden
+      // todo lo que haya quedado abierto, no sólo el anterior; es idempotente, así que
+      // los que ya estaban cerrados no se vuelven a cerrar.
       try {
-        await supabase.rpc('fn_cerrar_ciclo_presupuesto', { p_mes: null })
+        await supabase.rpc('fn_cerrar_ciclos_pendientes')
       } catch {
         /* opcional: el cierre no puede romper la pantalla */
       }
 
-      const [rSaldo, rSobres, rConfig, rCupos, rDisponibles, rTechos] = await Promise.all([
+      const [rSaldo, rSobres, rConfig, rCupos, rDisponibles, rTechos, rCierre] = await Promise.all([
         supabase.rpc('fn_obtener_saldo_a_asignar', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_reporte_sobres_detalle', { p_mes_periodo: mesPeriodoStr }),
         supabase.rpc('fn_obtener_config_presupuesto'),
@@ -525,6 +561,15 @@ export function PresupuestosPage() {
             return { data: null, error: 'techos-unavailable' }
           }
         })(),
+        // Bloque D (T2/S1): el cierre del mes que la pantalla muestra. Es de lectura y
+        // opcional: si falla, la pantalla abre con el reporte vivo en vez de romperse.
+        (async () => {
+          try {
+            return await supabase.rpc('fn_reporte_cierre_ciclo', { p_mes: mesPeriodoStr })
+          } catch {
+            return { data: null, error: 'cierre-unavailable' }
+          }
+        })(),
       ])
 
       if (rSaldo.error) throw rSaldo.error
@@ -550,6 +595,27 @@ export function PresupuestosPage() {
             ]),
           ),
         )
+      }
+
+      // Bloque D (T2/S1): lo guardado al cerrar manda sobre el reporte vivo. Un grupo
+      // que el cierre no tenga queda fuera del mapa y la fila se pinta en cero (S6):
+      // es un dato que no existe, no un cero calculado.
+      if (rCierre?.error || !rCierre?.data) {
+        setCierreCiclo(null)
+      } else {
+        const crudo = rCierre.data as { cerrado?: boolean; grupos?: GrupoCierreCiclo[] }
+        const grupos: Record<number, GrupoCierreCiclo> = {}
+        for (const g of Array.isArray(crudo.grupos) ? crudo.grupos : []) {
+          grupos[Number(g.estructura_egreso_id)] = {
+            estructura_egreso_id: Number(g.estructura_egreso_id),
+            nombre: g.nombre,
+            monto_limite: Number(g.monto_limite ?? 0),
+            monto_gastado: Number(g.monto_gastado ?? 0),
+            saldo_cierre: Number(g.saldo_cierre ?? 0),
+            detalle: g.detalle,
+          }
+        }
+        setCierreCiclo({ cerrado: crudo.cerrado === true, grupos })
       }
 
       if (rDisponibles?.error || !Array.isArray(rDisponibles?.data)) {
@@ -639,6 +705,29 @@ export function PresupuestosPage() {
 
   // ─── AGRUPACIÓN DE SOBRES ─────────────────────────────────────────────────
 
+  /**
+   * Bloque D (T2/S1): con el ciclo cerrado, cada fila se pinta con lo guardado al
+   * cerrarlo —la plata que tenía (`monto_limite`), lo que se gastó (`monto_gastado`) y el
+   * saldo con el que cerró (`saldo_cierre`, que viaja en `monto_disponible`)— en lugar de
+   * los del reporte vivo. No es una corrección de la vista: es el reporte vivo
+   * reemplazado por el histórico. Un rubro que el cierre no tenga se muestra en cero,
+   * nunca con un número inventado (S6).
+   */
+  const sobresParaMostrar = useMemo(() => {
+    if (!cierreCiclo || !cierreCiclo.cerrado) return sobres
+    return sobres.map(s => {
+      const g = cierreCiclo.grupos[Number(s.estructura_id)]
+      return {
+        ...s,
+        monto_asignado: g ? g.monto_limite : 0,
+        monto_gastado: g ? g.monto_gastado : 0,
+        monto_disponible: g ? g.saldo_cierre : 0,
+        // El arrastre tampoco se recalcula: el cierre lo guardó en su `detalle`.
+        arrastre_mes_anterior: g ? Number(g.detalle?.arrastre ?? 0) : 0,
+      }
+    })
+  }, [sobres, cierreCiclo])
+
   const gruposOrdenados = (() => {
     const mapa: Record<string, SobreDetalle[]> = {}
     // S5 (ronda 10, dueño): «me parece mejor idea para todos, categorías padres y sub
@@ -651,7 +740,7 @@ export function PresupuestosPage() {
     // escondidas dentro de la alerta. Ahora la alerta y la lista son dos vistas del mismo
     // dato: arriba se ve el déficit y abajo el árbol completo, que es lo que se pide
     // cuando se quiere asignarle plata a un hijo para cubrirlo.
-    for (const s of sobres) {
+    for (const s of sobresParaMostrar) {
       const tipo = s.tipo_cupo || 'other'
       // Unificar investment y saving bajo la misma clave
       const key = (tipo === 'saving' || tipo === 'investment') ? 'investment' : tipo
@@ -1083,15 +1172,15 @@ export function PresupuestosPage() {
     // Transporte, que no lo tiene, mostraba «Transporte −780.500» y «Combustible
     // −780.500» a la vez. Lo que manda es si el padre está en la alerta, no su techo.
     const padresEnAlerta = new Set(
-      sobres
+      sobresParaMostrar
         .filter(s => s.es_padre && Number(s.monto_disponible) < 0)
         .map(s => Number(s.estructura_id)),
     )
-    return sobres.filter(s => {
+    return sobresParaMostrar.filter(s => {
       if (Number(s.monto_disponible) >= 0) return false
       return !(s.padre_id != null && padresEnAlerta.has(Number(s.padre_id)))
     })
-  }, [sobres, config])
+  }, [sobresParaMostrar, config])
 
   useEffect(() => {
     if (showTransferirModal && fuentesDisponibles.length === 1 && !origenSeleccionado && sobreSeleccionado) {
@@ -1338,6 +1427,20 @@ export function PresupuestosPage() {
 
       {/* ── CONTENIDO ── */}
       <div className="presupuestos-scroll">
+        {/* Bloque D (T2/S2): un ciclo cerrado se avisa ARRIBA de la lista, antes de
+            cualquier número: lo que sigue no es el reporte de hoy, es lo guardado al
+            cerrarlo. Sin el aviso, el usuario cree que todavía puede mover esas filas.
+            Va fuera del ternario para que también se lea si el ciclo quedó sin sobres. */}
+        {!loading && cicloCerrado && (
+          <div className="ciclo-cerrado-aviso" role="status">
+            <span className="ciclo-cerrado-aviso-icono" aria-hidden="true">🔒</span>
+            <div className="ciclo-cerrado-aviso-texto">
+              <h4>{t('budget_cycle_closed_notice_title')}</h4>
+              <p>{t('budget_cycle_closed_notice_desc')}</p>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="presupuestos-loading"><div className="spinner" /></div>
         ) : sobres.length === 0 ? (
@@ -1400,6 +1503,7 @@ export function PresupuestosPage() {
                 onEditarTecho={handleAbrirTecho}
                 modoPresupuesto={config?.modo_presupuesto}
                 soloLectura={soloLectura}
+                cicloCerrado={cicloCerrado}
                 fmt={formatMonto}
                 techoDe={techoDe}
               />
@@ -1660,7 +1764,7 @@ export function PresupuestosPage() {
                     setOrigenSeleccionado(null)
                     setMontoTransferir('')
                     setShowTransferirModal(true)
-                  }}>
+                  }} disabled={cicloCerrado}>
                     <span className="asignar-opcion-icono">↔️</span>
                     <div className="asignar-opcion-texto">
                       <h4>{t('budget_opcion_cubrir_sobre_title')}</h4>
@@ -1688,6 +1792,7 @@ export function PresupuestosPage() {
                   type="number"
                   inputMode="numeric"
                   placeholder="0"
+                  disabled={cicloCerrado}
                   value={montoManual}
                   onChange={e => setMontoManual(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleMontoManualConfirmar()}
@@ -1702,7 +1807,7 @@ export function PresupuestosPage() {
                 <button
                   className="btn-confirmar-monto"
                   onClick={handleMontoManualConfirmar}
-                  disabled={guardandoAsignacion || !montoManual || !(parseMontoInput(montoManual) >= 0)}
+                  disabled={guardandoAsignacion || cicloCerrado || !montoManual || !(parseMontoInput(montoManual) >= 0)}
                 >
                   {t('budget_btn_assign')}
                 </button>
@@ -1771,6 +1876,7 @@ export function PresupuestosPage() {
                 inputMode="numeric"
                 placeholder="0"
                 autoFocus
+                disabled={cicloCerrado}
                 value={techoManual}
                 onChange={e => setTechoManual(e.target.value)}
                 onFocus={e => e.target.select()}
@@ -1784,7 +1890,7 @@ export function PresupuestosPage() {
                 type="button"
                 className="btn-confirmar-monto"
                 onClick={guardarTechoDelInput}
-                disabled={guardandoTecho}
+                disabled={guardandoTecho || cicloCerrado}
               >
                 {t('budget_ceiling_save')}
               </button>
@@ -1795,7 +1901,7 @@ export function PresupuestosPage() {
               type="button"
               className="btn-cancelar presupuesto-quitar-techo"
               onClick={() => void handleGuardarTecho(null)}
-              disabled={guardandoTecho}
+              disabled={guardandoTecho || cicloCerrado}
             >
               {t('budget_ceiling_remove')}
             </button>
@@ -2146,13 +2252,18 @@ interface GrupoProps {
   modoPresupuesto?: 'base_cero' | 'anticipado'
   /** Ronda 8: un ciclo cerrado es solo lectura (sin botón Asignar). */
   soloLectura?: boolean
+  /**
+   * Bloque D (T2/S3): el servidor dice que este ciclo está cerrado. Apaga la edición de
+   * la fila y manda los importes al cierre: se ve todo, no se edita nada.
+   */
+  cicloCerrado?: boolean
   /** Montos en la moneda local del contexto, 0 decimales (viene de PresupuestosPage). */
   fmt: (n: number) => string
   /** Modelo A: techo por estructura. `null` cuando la fila no tiene tope. */
   techoDe: (estructuraId: number) => number | null | undefined
 }
 
-function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, onEditarTecho, modoPresupuesto, soloLectura, fmt, techoDe }: GrupoProps) {
+function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, onEditarTecho, modoPresupuesto, soloLectura, cicloCerrado, fmt, techoDe }: GrupoProps) {
   const meta = TIPO_CUPO_META[tipo] ?? { labelKey: tipo.toUpperCase(), icono: '📦' }
   // T6/S15: el total del grupo cuenta una sola vez. Cuando un rubro padre tiene
   // presupuesto, sus hijos llegan con cuenta_en_totales = false y no se suman aparte.
@@ -2247,6 +2358,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
               onEditarTecho={() => onEditarTecho?.(cabecera)}
               modoPresupuesto={modoPresupuesto}
               soloLectura={soloLectura}
+              cicloCerrado={cicloCerrado}
               fmt={fmt}
             />
           )
@@ -2271,6 +2383,7 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
                     pozoPadre={Number(cabecera.monto_asignado ?? 0)}
                     modoPresupuesto={modoPresupuesto}
                     soloLectura={soloLectura}
+                    cicloCerrado={cicloCerrado}
                     fmt={fmt}
                   />
                 </div>
@@ -2313,11 +2426,16 @@ interface FilaSobreProps {
   modoPresupuesto?: 'base_cero' | 'anticipado'
   /** Ronda 8: sin botón Asignar en un ciclo cerrado. */
   soloLectura?: boolean
+  /**
+   * Bloque D (T2/S3): el ciclo está cerrado. Deshabilita lo que escribe (asignar y el
+   * editor del tope) y hace que el disponible sea el saldo guardado al cerrar.
+   */
+  cicloCerrado?: boolean
   /** Montos en la moneda local del contexto, 0 decimales (viene de GrupoAcordeon). */
   fmt: (n: number) => string
 }
 
-function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, techo, pozoPadre, plataGrupo, onAsignar, onVerDetalle, onEditarTecho, modoPresupuesto, soloLectura, fmt }: FilaSobreProps) {
+function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, techo, pozoPadre, plataGrupo, onAsignar, onVerDetalle, onEditarTecho, modoPresupuesto, soloLectura, cicloCerrado, fmt }: FilaSobreProps) {
   // Ronda 10 (dueño): el hijo sin asignación se mide contra el libre del grupo, y sin
   // techo no se dibuja barra. El padre queda como estaba: su barra compara el gasto de
   // los hijos contra su propio techo.
@@ -2354,6 +2472,10 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
   // anterior: cada mes arranca en 0 y se computa como asignado - gastado.
   // En base_cero, el arrastre si forma parte del disponible.
   const disponibleEfectivo = (() => {
+    // Bloque D (T2/S1): en un ciclo cerrado manda el saldo guardado al cerrar. Se lee
+    // antes que cualquier fórmula para que no haya dos números del mismo grupo: el
+    // cierre ya decidió cuánto quedaba, y la pantalla no lo vuelve a calcular.
+    if (cicloCerrado) return Number(sobre.monto_disponible ?? 0)
     // S11: en libertad el total del grupo del padre no es su propia plata menos el gasto
     // del grupo. Con el padre en cero y los hijos con 105.500 asignados mostraba −4.000
     // (0 − gastado) y los 105.500 desaparecían. La base es la plata del grupo cuando la
@@ -2404,7 +2526,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
     >
       {/* Botón asignar: no existe en un ciclo cerrado ni en una subcategoría. */}
       {puedeAsignar && (
-        <button className="sobre-btn-asignar" onClick={e => { e.stopPropagation(); onAsignar() }}>
+        <button className="sobre-btn-asignar" onClick={e => { e.stopPropagation(); onAsignar() }} disabled={cicloCerrado}>
           {t('budget_assign_btn')}
         </button>
       )}
@@ -2512,7 +2634,8 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
                 type="button"
                 className="sobre-stat-val sobre-stat-val--editable"
                 onClick={e => { e.stopPropagation(); onEditarTecho?.() }}
-                title={t('budget_ceiling_edit_hint')}
+                disabled={cicloCerrado}
+                title={cicloCerrado ? t('budget_cycle_closed_desc') : t('budget_ceiling_edit_hint')}
                 aria-label={t('budget_ceiling_edit_hint')}
               >
                 {valorTecho}

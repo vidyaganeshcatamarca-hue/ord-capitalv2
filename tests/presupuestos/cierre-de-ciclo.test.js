@@ -8,6 +8,14 @@ import { readFileSync, existsSync } from 'node:fs'
 
 const leer = (f) => readFileSync(new URL(`../../funcionesSQL/${f}.md`, import.meta.url), 'utf8')
 const compacto = (s) => s.replace(/\s+/g, ' ')
+const pagina = readFileSync(
+  new URL('../../src/pages/Presupuestos/PresupuestosPage.tsx', import.meta.url),
+  'utf8',
+)
+const css = readFileSync(
+  new URL('../../src/pages/Presupuestos/Presupuestos.css', import.meta.url),
+  'utf8',
+)
 
 const MUTANTES = ['fn_asignar_presupuesto', 'fn_asignar_techo', 'fn_transferir_entre_sobres']
 
@@ -99,13 +107,19 @@ test('las claves del cierre estan en los tres idiomas', () => {
 })
 
 test('la pantalla pide el cierre sin bloquear la carga', () => {
-  const page = readFileSync(
-    new URL('../../src/pages/Presupuestos/PresupuestosPage.tsx', import.meta.url),
-    'utf8',
+  // Bloque D (T1): la pantalla cierra TODO lo que quedó abierto, no sólo el ciclo
+  // anterior. Cerrar de a uno dejaba los ciclos viejos sin congelar, y el primero que
+  // se abriera mostraba un reporte recalculado.
+  assert.ok(pagina.includes("fn_cerrar_ciclos_pendientes"), 'la pantalla tiene que disparar el cierre de los pendientes')
+  assert.ok(
+    !pagina.includes('fn_cerrar_ciclo_presupuesto'),
+    'la pantalla no puede volver a cerrar un solo ciclo: es el camino que dejaba huecos',
   )
-  assert.ok(page.includes("fn_cerrar_ciclo_presupuesto"), 'la pantalla tiene que disparar el cierre')
-  const bloque = page.slice(page.indexOf('fn_cerrar_ciclo_presupuesto') - 200, page.indexOf('fn_cerrar_ciclo_presupuesto') + 300)
+  const iCierre = pagina.indexOf('fn_cerrar_ciclos_pendientes')
+  const bloque = pagina.slice(iCierre - 300, iCierre + 300)
   assert.ok(/try\s*\{/.test(bloque) && /catch/.test(bloque), 'el cierre no puede romper la carga')
+  // Sin parámetros: el servidor decide cuáles cierran y en qué orden.
+  assert.match(pagina, /supabase\.rpc\('fn_cerrar_ciclos_pendientes'\)/)
 })
 
 test('las pruebas del bloque existen y no dependen de una cuenta elegida sola', () => {
@@ -113,4 +127,107 @@ test('las pruebas del bloque existen y no dependen de una cuenta elegida sola', 
   assert.ok(/u\.user_id = 1/.test(sql) && /u\.user_id = 198/.test(sql), 'usa las dos cuentas de prueba')
   assert.ok(!/LIMIT 1\s*\)/.test(sql.split('u198')[0]) || true, 'sin eleccion automatica de usuario')
   assert.ok(existsSync(new URL('../sql/run_etapa1_integridad.js', import.meta.url)), 'el runner sigue siendo el mismo')
+})
+
+// ─── Bloque D · T2/T3: la pantalla de un ciclo cerrado ──────────────────────
+//
+// Lo que se congela en la pantalla, y por qué:
+//   1. El estado del ciclo lo dice el SERVIDOR (`fn_reporte_cierre_ciclo`), no el reloj.
+//   2. Los importes de cada rubro salen del cierre: plata, gasto y saldo guardados.
+//   3. Un rubro que el cierre no tenga se muestra en cero, nunca con el vivo.
+//   4. Con el ciclo cerrado, asignar y el editor del tope se ven pero no se editan.
+
+test('la pantalla lee el cierre del mes que está mostrando', () => {
+  // El mes visible es el mismo que ya usan el reporte de sobres y la repetición.
+  assert.match(
+    pagina,
+    /supabase\.rpc\('fn_reporte_cierre_ciclo', \{ p_mes: mesPeriodoStr \}\)/,
+    'el cierre se pide con p_mes y el mes visible',
+  )
+  // Es de lectura y opcional: si falla, la pantalla abre en vivo en vez de romperse.
+  const iReporte = pagina.indexOf("supabase.rpc('fn_reporte_cierre_ciclo'")
+  const bloque = pagina.slice(iReporte - 400, iReporte + 400)
+  assert.ok(/try\s*\{/.test(bloque) && /catch/.test(bloque), 'el reporte del cierre no puede romper la carga')
+})
+
+test('el cierre visible se guarda como {cerrado, grupos} y manda sobre el reporte vivo', () => {
+  assert.match(pagina, /const cicloCerrado = cierreCiclo\?\.cerrado === true/,
+    'la marca de cerrado sale del reporte del servidor')
+  assert.match(pagina, /setCierreCiclo\(\{ cerrado: crudo\.cerrado === true, grupos \}\)/,
+    'se guardan las dos cosas: el estado y los grupos')
+
+  // Los tres importes del grupo, tal como los guardó el cierre.
+  assert.match(pagina, /monto_asignado: g \? g\.monto_limite : 0/, 'la plata es la del cierre')
+  assert.match(pagina, /monto_gastado: g \? g\.monto_gastado : 0/, 'el gasto es el del cierre')
+  assert.match(pagina, /monto_disponible: g \? g\.saldo_cierre : 0/, 'el saldo es el de cierre')
+
+  // Un grupo que el cierre no tenga cae en cero: es un dato que no existe, no un
+  // número recalculado con los gastos de después (S6).
+  const iMostrar = pagina.indexOf('const sobresParaMostrar')
+  assert.ok(iMostrar > -1, 'falta la lista que reemplaza el reporte vivo por el cierre')
+  const bloqueMostrar = pagina.slice(iMostrar, iMostrar + 900)
+  assert.ok(bloqueMostrar.includes(': 0'), 'sin grupo, los tres importes caen en cero')
+
+  // La lista y la alerta se arman sobre lo que se muestra, no sobre `sobres` crudo.
+  const iGrupos = pagina.indexOf('const gruposOrdenados')
+  assert.ok(pagina.slice(iGrupos, iGrupos + 1600).includes('for (const s of sobresParaMostrar)'),
+    'el agrupado tiene que leer los importes del cierre')
+
+  // Y el disponible de la fila, en un ciclo cerrado, es el saldo guardado: no se
+  // recalcula con asignado − gastado.
+  const iFila = pagina.indexOf('function FilaSobre(')
+  const fila = pagina.slice(iFila, pagina.indexOf('function InfoBubble'))
+  assert.match(fila, /if \(cicloCerrado\) return Number\(sobre\.monto_disponible \?\? 0\)/,
+    'en un ciclo cerrado el disponible es el saldo de cierre')
+})
+
+test('el aviso de ciclo cerrado va arriba de la lista, antes del primer importe', () => {
+  const iAviso = pagina.indexOf('ciclo-cerrado-aviso')
+  const iCupos = pagina.indexOf('{cuposResumen && cuposResumen.length > 0 && (')
+  const iScroll = pagina.indexOf('presupuestos-scroll')
+  assert.ok(iAviso > -1, 'un ciclo cerrado tiene que avisarse en pantalla')
+  assert.ok(iAviso > iScroll, 'el aviso vive dentro de la lista')
+  assert.ok(iAviso < iCupos, 'y antes de cualquier importe: cambia cómo se lee todo lo de abajo')
+  assert.match(pagina, /\{!loading && cicloCerrado && \(\s*<div className="ciclo-cerrado-aviso" role="status">/)
+  assert.match(pagina, /t\('budget_cycle_closed_notice_title'\)/)
+  assert.match(pagina, /t\('budget_cycle_closed_notice_desc'\)/)
+  // El aviso dice que los importes son los guardados, no los de hoy.
+  assert.match(css, /\.ciclo-cerrado-aviso \{/, 'falta el estilo del aviso')
+})
+
+test('con el ciclo cerrado, asignar y el editor del tope quedan deshabilitados', () => {
+  const iFila = pagina.indexOf('function FilaSobre(')
+  const fila = pagina.slice(iFila, pagina.indexOf('function InfoBubble'))
+
+  // Asignar: el botón se sigue viendo, pero apagado.
+  assert.match(fila, /<button className="sobre-btn-asignar"[\s\S]{0,200}?disabled=\{cicloCerrado\}/,
+    'el botón de asignar tiene que apagarse en un ciclo cerrado')
+  // Editor del tope: el valor editable pierde el toque.
+  assert.match(
+    fila,
+    /className="sobre-stat-val sobre-stat-val--editable"[\s\S]{0,300}?disabled=\{cicloCerrado\}/,
+    'el editor del tope tiene que apagarse en un ciclo cerrado',
+  )
+  // La fila recibe la marca del ciclo cerrado desde la página.
+  assert.match(pagina, /cicloCerrado=\{cicloCerrado\}/, 'la página le pasa la marca a la lista')
+
+  // Editor del monto, en la hoja de asignar.
+  assert.match(pagina, /className="asignar-monto-input"[\s\S]{0,200}?disabled=\{cicloCerrado\}/,
+    'el campo del monto no se escribe en un ciclo cerrado')
+  // Entrada a transferir: la opción de la hoja no abre nada.
+  assert.match(pagina, /setShowTransferirModal\(true\)\s*\}\} disabled=\{cicloCerrado\}>/,
+    'la entrada a transferir tiene que apagarse en un ciclo cerrado')
+
+  // Y los dos controles apagados tienen estilo: sin él siguen invitando al toque.
+  assert.ok(css.includes('.sobre-btn-asignar:disabled'), 'falta el estilo apagado del botón Asignar')
+  assert.ok(css.includes('button.sobre-stat-val--editable:disabled'), 'falta el estilo apagado del techo')
+})
+
+test('las claves del aviso de cierre están en los tres idiomas', () => {
+  for (const lang of ['es', 'en', 'pt']) {
+    const dict = readFileSync(new URL(`../../src/locales/${lang}.ts`, import.meta.url), 'utf8')
+    for (const clave of ['budget_cycle_closed_notice_title', 'budget_cycle_closed_notice_desc']) {
+      assert.ok(dict.includes(`${clave}:`), `${lang}.ts no publica ${clave}`)
+    }
+  }
 })
