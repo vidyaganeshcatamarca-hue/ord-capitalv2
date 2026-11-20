@@ -3104,6 +3104,11 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
       // mostraras la información [...]. No quería que me muestres las opciones para
       // ingresar asignaciones". La fila abre el detalle; el botón, la asignación.
       onClick={onVerDetalle}
+      // La fila se comporta como un control (S1, ronda 4) y tiene que anunciarse como tal y
+      // poder abrirse con el teclado, no sólo con el dedo.
+      role="button"
+      tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onVerDetalle() } }}
     >
       {/* Botón asignar: no existe en un ciclo cerrado ni en una subcategoría. */}
       {puedeAsignar && (

@@ -73,10 +73,18 @@ test('la tarjeta entera abre el DETALLE, y el botón abre la asignación (S1)', 
   // llamaba onAsignar) porque el pedido previo del dueño era otro. Se cambia el
   // assertion, no el comportamiento: la fila ahora abre el panel informativo y el
   // botón "+ Asignar" sigue abriendo el sheet con las opciones.
-  const fila = page.slice(page.indexOf('className="sobre-fila"'), page.indexOf('className="sobre-fila"') + 900)
+  // La ventana se calcula, no se clava en 900 caracteres: la fila creció y el manejador
+  // quedaba afuera, con lo que la prueba fallaba por longitud del archivo y no por
+  // comportamiento. Se toma la fila y se corta en su primer `onClick`.
+  // La clase se arma en un template literal (`sobre-fila${...}`), así que buscarla entre
+  // comillas dobles no la encuentra nunca y la prueba fallaba por el anclaje.
+  const iFila = page.lastIndexOf('className=', page.indexOf('sobre-fila${'))
+  const iPrimerClick = page.indexOf('onClick=', iFila)
+  const fila = page.slice(iFila, iPrimerClick + 300)
   assert.match(fila, /onClick=\{onVerDetalle\}/, 'la fila abre el detalle')
   assert.ok(!/onClick=\{onAsignar\}/.test(fila), 'la fila NO abre las opciones de asignar')
-  assert.match(fila, /onClick=\{e => \{ e\.stopPropagation\(\); onAsignar\(\) \}\}/, 'el botón sí abre la asignación')
+  const resto = page.slice(iPrimerClick, iPrimerClick + 4000)
+  assert.match(resto, /onClick=\{e => \{ e\.stopPropagation\(\); onAsignar\(\) \}\}/, 'el botón sí abre la asignación')
   assert.match(fila, /role="button"/, 'y la fila se anuncia como control')
   assert.match(fila, /tabIndex=\{0\}/, 'y es alcanzable con el teclado')
   assert.match(fila, /'Enter'/, 'Enter y Espacio lo abren')
