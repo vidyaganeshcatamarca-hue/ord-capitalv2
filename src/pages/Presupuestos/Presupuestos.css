@@ -351,6 +351,111 @@
   margin-bottom: 10px;
 }
 
+/* Bloque E · los ajustes por corrección histórica.
+   El bloque vive debajo de la fila del rubro padre al que pertenecen, así que su margen
+   es el mismo que el de un hijo: se lee como parte del mismo grupo y no como un cartel
+   suelto entre dos rubros. El borde punteado dice que es una nota explicativa, no otra
+   fila con plata propia. */
+.ajustes-rubro {
+  margin: 8px 10px 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: var(--bg-2, rgba(127, 127, 127, 0.08));
+  text-align: left;
+}
+
+/* Dentro del recuadro verde del padre, el gris del fondo ya lo pone el recuadro: el
+   bloque se despega sólo con el borde. */
+.sobre-grupo-bloque.abierto > .ajustes-rubro {
+  margin: 6px 10px 10px;
+}
+
+.ajustes-rubro-titulo {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-2);
+}
+
+.ajustes-rubro-desc {
+  margin: 4px 0 8px;
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-3);
+  line-height: 1.4;
+}
+
+.ajustes-rubro-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.ajuste-item {
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.ajustes-rubro-lista > .ajuste-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+/* Dos datos en la misma línea: el importe y el mes que se corrigió. En 390 px entran
+   los dos; si no, el mes baja solo y no empuja nada fuera de la tarjeta. */
+.ajuste-item-linea {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+}
+
+.ajuste-item-importe {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* El color sigue al signo: verde lo que el rubro recuperó, rojo lo que perdió. */
+.ajuste-item-importe.positivo {
+  color: var(--mint, #00B127);
+}
+
+.ajuste-item-importe.negativo {
+  color: var(--coral, #FF6B6B);
+}
+
+.ajuste-item-mes {
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-2);
+  text-transform: capitalize;
+}
+
+.ajuste-item-linea--secundaria {
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-3);
+}
+
+.ajuste-item-fecha {
+  white-space: nowrap;
+}
+
+.ajuste-item-movimiento {
+  margin-top: 2px;
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-3);
+  line-height: 1.35;
+}
+
 /* Dueño: el ▶ chiquito parecía un play de audio y se confundía con abrir el
    detalle de la categoría. Ahora es un más grande (menos cuando está abierto),
    arriba a la izquierda del ícono, y no gira. */

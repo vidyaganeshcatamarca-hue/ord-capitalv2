@@ -8850,6 +8850,38 @@
         "from": "No disponible para este ciclo",
         "to": "Not available for this cycle"
       },
+      "inversiones.budget_adjust_title": {
+        "from": "Ajustes por corrección histórica",
+        "to": "Adjustments from historical corrections"
+      },
+      "inversiones.budget_adjust_desc": {
+        "from": "Corregiste un gasto de un ciclo ya cerrado y esa diferencia movió la plata de este rubro en el ciclo activo. No es un movimiento nuevo: es el mismo gasto, corregido.",
+        "to": "You corrected an expense from an already closed cycle and that difference moved money for this category in the active cycle. It is not a new transaction: it is the same expense, corrected."
+      },
+      "inversiones.budget_adjust_month": {
+        "from": "Corrigió {mes}",
+        "to": "Corrected {mes}"
+      },
+      "inversiones.budget_adjust_made_on": {
+        "from": "Registrado el {fecha}",
+        "to": "Recorded on {fecha}"
+      },
+      "inversiones.budget_adjust_movement": {
+        "from": "Movimiento: {fecha} · {monto}",
+        "to": "Transaction: {fecha} · {monto}"
+      },
+      "inversiones.budget_adjust_movement_gone": {
+        "from": "El movimiento ya no existe: se borró después de la corrección.",
+        "to": "The transaction no longer exists: it was deleted after the correction."
+      },
+      "inversiones.budget_adjust_reason_correction": {
+        "from": "Corrección de un movimiento",
+        "to": "Correction of a transaction"
+      },
+      "inversiones.budget_adjust_reason_other": {
+        "from": "Otro ajuste",
+        "to": "Other adjustment"
+      },
       "inversiones.budget_exceeded_envelopes_desc_readonly": {
         "from": "Gastaste más de lo asignado en estos sobres. Un ciclo cerrado no se puede modificar.",
         "to": "You spent more than you assigned in these envelopes. A closed cycle cannot be changed."
@@ -20267,6 +20299,38 @@
       "inversiones.budget_cycle_history_unavailable": {
         "from": "No disponible para este ciclo",
         "to": "Não disponível para este ciclo"
+      },
+      "inversiones.budget_adjust_title": {
+        "from": "Ajustes por corrección histórica",
+        "to": "Ajustes por correção histórica"
+      },
+      "inversiones.budget_adjust_desc": {
+        "from": "Corregiste un gasto de un ciclo ya cerrado y esa diferencia movió la plata de este rubro en el ciclo activo. No es un movimiento nuevo: es el mismo gasto, corregido.",
+        "to": "Você corrigiu uma despesa de um ciclo já encerrado e essa diferença moveu o dinheiro desta categoria no ciclo ativo. Não é um movimento novo: é a mesma despesa, corrigida."
+      },
+      "inversiones.budget_adjust_month": {
+        "from": "Corrigió {mes}",
+        "to": "Corrigiu {mes}"
+      },
+      "inversiones.budget_adjust_made_on": {
+        "from": "Registrado el {fecha}",
+        "to": "Registrado em {fecha}"
+      },
+      "inversiones.budget_adjust_movement": {
+        "from": "Movimiento: {fecha} · {monto}",
+        "to": "Movimento: {fecha} · {monto}"
+      },
+      "inversiones.budget_adjust_movement_gone": {
+        "from": "El movimiento ya no existe: se borró después de la corrección.",
+        "to": "O movimento já não existe: foi excluído depois da correção."
+      },
+      "inversiones.budget_adjust_reason_correction": {
+        "from": "Corrección de un movimiento",
+        "to": "Correção de um movimento"
+      },
+      "inversiones.budget_adjust_reason_other": {
+        "from": "Otro ajuste",
+        "to": "Outro ajuste"
       },
       "inversiones.budget_exceeded_envelopes_desc_readonly": {
         "from": "Gastaste más de lo asignado en estos sobres. Un ciclo cerrado no se puede modificar.",

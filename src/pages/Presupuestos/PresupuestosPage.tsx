@@ -9,6 +9,7 @@ import { SYSTEM_CATEGORY_NAMES } from '@/lib/categoryFilters'
 import { CategoryIcon } from '@/components/CategoryIcon/CategoryIcon'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { BASE_CERO_CONFIRM_TOKEN, isBaseCeroConfirmToken } from '@/lib/baseCeroConfirm'
+import { formatDateShort } from '@/lib/format'
 import { parseMontoInput } from '@/lib/parseMonto'
 import { CuposResumenCard, type CupoResumen } from './CuposResumenCard'
 import './Presupuestos.css'
@@ -142,6 +143,31 @@ interface ReporteCierreCiclo {
 }
 
 /**
+ * Bloque E: un ajuste por corrección histórica, tal como lo devuelve
+ * `fn_reporte_ajustes_ciclo`. NO es una asignación ni un movimiento financiero: es la
+ * diferencia presupuestaria que dejó corregir un gasto de un ciclo ya cerrado, imputada
+ * al rubro padre que manda plata.
+ *
+ * `importe` viene con signo: positivo = el grupo recuperó plata; negativo = la perdió.
+ * `ciclo_corregido` es el mes histórico que se corrigió y `creado_at` es cuándo se hizo
+ * la corrección. El movimiento puede ya no existir (se borró después): en ese caso
+ * `movimiento_fecha` y `movimiento_importe` llegan en null y NO se inventa nada.
+ */
+interface AjusteCorreccion {
+  grupo: number
+  grupo_nombre: string | null
+  importe: number
+  motivo: string | null
+  ciclo_corregido: string | null
+  creado_at: string
+  caja_id: number | null
+  movimiento_fecha: string | null
+  movimiento_tipo: string | null
+  movimiento_importe: number | null
+  movimiento_descripcion: string | null
+}
+
+/**
  * Bloque D (T7): lo que la cabecera de una hoja puede mostrar de una fila.
  *
  * - `fila`: los importes que la fila ya trae (el reporte vivo en un ciclo abierto, o el
@@ -253,6 +279,40 @@ const formatFechaHistorial = (iso: string, locale: string) => {
 function montoHistorial(valor: number | null | undefined, fmt: (n: number) => string): string {
   if (valor === null || valor === undefined) return '—'
   return fmt(Number(valor))
+}
+
+/**
+ * Bloque E: el importe de un ajuste CON su signo, que es el dato. Un ajuste que suma se
+ * lee «+12.000» y uno que resta «-12.000»: sin el signo, los dos se leen igual y el
+ * usuario no sabe si su presupuesto subió o bajó.
+ */
+function importeConSigno(n: number, fmt: (n: number) => string): string {
+  return n >= 0 ? `+${fmt(n)}` : `-${fmt(Math.abs(n))}`
+}
+
+/**
+ * Bloque E: el mes histórico de un ajuste, legible («septiembre 2025»).
+ *
+ * `ciclo_corregido` es una fecha calendario (`YYYY-MM-DD`): se arma con sus partes y no
+ * con `new Date(iso)`, que la mandaría a UTC medianoche y en UTC-3 mostraría el mes
+ * anterior. Con el mes equivocado, el ajuste explicaría el cambio de otro ciclo.
+ */
+function formatMesHistorico(iso: string | null | undefined, locale: string): string {
+  if (!iso) return '—'
+  const partes = /^(\d{4})-(\d{2})/.exec(iso.trim())
+  if (!partes) return '—'
+  const d = new Date(Number(partes[1]), Number(partes[2]) - 1, 1)
+  if (Number.isNaN(d.getTime())) return '—'
+  return d.toLocaleDateString(locale, { month: 'long', year: 'numeric' })
+}
+
+/**
+ * Bloque E: el motivo del ajuste es un dato del servidor (`correccion_movimiento`), no
+ * copy de la pantalla: se traduce con una clave y el valor crudo nunca se imprime
+ * (regla 9). Hoy sólo existe un motivo; uno desconocido cae en «otro ajuste».
+ */
+const MOTIVO_AJUSTE_A_CLAVE: Record<string, string> = {
+  correccion_movimiento: 'budget_adjust_reason_correction',
 }
 
 // Solo se guarda la CLAVE de traduccion: si el texto traducido viviera aqui,
@@ -371,6 +431,10 @@ export function PresupuestosPage() {
   // Bloque D (T2/S1): el estado del ciclo visible y lo que el cierre dejó guardado.
   // `null` mientras no llegó, o si el reporte del cierre no se pudo leer.
   const [cierreCiclo, setCierreCiclo] = useState<ReporteCierreCiclo | null>(null)
+  // Bloque E: los ajustes por corrección histórica del ciclo visible. `[]` es la
+  // respuesta honesta cuando no hay ninguno (o cuando el ciclo está cerrado): la
+  // pantalla no dibuja un bloque vacío ni un cero.
+  const [ajustesCiclo, setAjustesCiclo] = useState<AjusteCorreccion[]>([])
 
   // Mes seleccionado (offset respecto a hoy, 0 = mes actual)
   const [mesOffset, setMesOffset] = useState(0)
@@ -647,6 +711,24 @@ export function PresupuestosPage() {
         })(),
       ])
 
+      // Bloque E: los ajustes por corrección histórica son del ciclo ACTIVO, así que
+      // en un ciclo cerrado no se piden ni se muestran. El cierre acaba de decir si el
+      // ciclo está cerrado, y hasta acá no había forma de saberlo sin pedirlo primero.
+      // Es de lectura y opcional, igual criterio que el cierre: si falla, la pantalla
+      // abre sin la explicación en vez de romperse.
+      const cerradoSegunServidor =
+        !rCierre?.error &&
+        rCierre?.data != null &&
+        (rCierre.data as { cerrado?: boolean }).cerrado === true
+      let rAjustes: { data?: unknown; error?: unknown } = { data: null, error: 'ciclo-cerrado' }
+      if (!cerradoSegunServidor) {
+        try {
+          rAjustes = await supabase.rpc('fn_reporte_ajustes_ciclo', { p_mes: mesPeriodoStr })
+        } catch {
+          rAjustes = { data: null, error: 'ajustes-unavailable' }
+        }
+      }
+
       if (rSaldo.error) throw rSaldo.error
       if (rSobres.error) throw rSobres.error
 
@@ -693,6 +775,32 @@ export function PresupuestosPage() {
           }
         }
         setCierreCiclo({ cerrado: crudo.cerrado === true, grupos })
+      }
+
+      // Bloque E: sin ajustes no hay nada que explicar y la pantalla no dibuja nada.
+      const crudoAjustes = (rAjustes?.data ?? null) as { ajustes?: unknown } | null
+      if (rAjustes?.error || !crudoAjustes || !Array.isArray(crudoAjustes.ajustes)) {
+        setAjustesCiclo([])
+      } else {
+        setAjustesCiclo(
+          (crudoAjustes.ajustes as AjusteCorreccion[]).map(a => ({
+            grupo: Number(a.grupo),
+            grupo_nombre: a.grupo_nombre ?? null,
+            importe: Number(a.importe ?? 0),
+            motivo: a.motivo ?? null,
+            ciclo_corregido: a.ciclo_corregido ?? null,
+            creado_at: String(a.creado_at ?? ''),
+            caja_id: a.caja_id === null || a.caja_id === undefined ? null : Number(a.caja_id),
+            // Un movimiento borrado llega en null: se dice que ya no está, no se rellena.
+            movimiento_fecha: a.movimiento_fecha ?? null,
+            movimiento_tipo: a.movimiento_tipo ?? null,
+            movimiento_importe:
+              a.movimiento_importe === null || a.movimiento_importe === undefined
+                ? null
+                : Number(a.movimiento_importe),
+            movimiento_descripcion: a.movimiento_descripcion ?? null,
+          })),
+        )
       }
 
       if (rDisponibles?.error || !Array.isArray(rDisponibles?.data)) {
@@ -809,6 +917,27 @@ export function PresupuestosPage() {
     }
     return mapa
   }, [cierreCiclo])
+
+  /**
+   * Bloque E: los ajustes por corrección histórica agrupados por el rubro padre al que
+   * pertenecen. El servidor los devuelve aplanados con su `grupo`, así que acá se
+   * indexan por él y cada bloque del padre lee sólo los suyos.
+   *
+   * En un ciclo cerrado el mapa queda vacío aunque haya datos en memoria: los ajustes
+   * son del ciclo activo, y un ciclo cerrado no se mueve, así que no hay nada que
+   * explicar ahí.
+   */
+  const ajustesPorGrupo = useMemo(() => {
+    const mapa: Record<number, AjusteCorreccion[]> = {}
+    if (cicloCerrado) return mapa
+    for (const a of ajustesCiclo) {
+      const grupo = Number(a.grupo)
+      if (!Number.isFinite(grupo)) continue
+      if (!mapa[grupo]) mapa[grupo] = []
+      mapa[grupo].push(a)
+    }
+    return mapa
+  }, [ajustesCiclo, cicloCerrado])
 
   /**
    * Bloque D (T2/S1): con el ciclo cerrado, cada fila se pinta con lo guardado al
@@ -1638,6 +1767,8 @@ export function PresupuestosPage() {
                 cicloCerrado={cicloCerrado}
                 fmt={formatMonto}
                 techoDe={techoDe}
+                ajustesPorGrupo={ajustesPorGrupo}
+                locale={locale}
               />
             ))}
 
@@ -2414,9 +2545,16 @@ interface GrupoProps {
   fmt: (n: number) => string
   /** Modelo A: techo por estructura. `null` cuando la fila no tiene tope. */
   techoDe: (estructuraId: number) => number | null | undefined
+  /**
+   * Bloque E: los ajustes por corrección histórica indexados por el rubro padre al que
+   * pertenecen. Un rubro sin ajustes no está en el mapa y no dibuja nada.
+   */
+  ajustesPorGrupo?: Record<number, AjusteCorreccion[]>
+  /** Idioma vigente: el mes histórico del ajuste se escribe con palabras. */
+  locale: string
 }
 
-function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, onEditarTecho, modoPresupuesto, soloLectura, cicloCerrado, fmt, techoDe }: GrupoProps) {
+function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle, onEditarTecho, modoPresupuesto, soloLectura, cicloCerrado, fmt, techoDe, ajustesPorGrupo, locale }: GrupoProps) {
   const meta = TIPO_CUPO_META[tipo] ?? { labelKey: tipo.toUpperCase(), icono: '📦' }
   // T6/S15: el total del grupo cuenta una sola vez. Cuando un rubro padre tiene
   // presupuesto, sus hijos llegan con cuenta_en_totales = false y no se suman aparte.
@@ -2515,13 +2653,27 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
               fmt={fmt}
             />
           )
+          // Bloque E: el ajuste pertenece al rubro padre, así que se lee pegado a su
+          // fila y no en otra pantalla. Un rubro sin ajustes no dibuja nada: nada de
+          // bloque vacío ni de ceros.
+          const ajustes = ajustesPorGrupo?.[Number(cabecera.estructura_id)]
+          const notaAjustes =
+            ajustes && ajustes.length > 0 ? (
+              <AjustesCorreccionRubro ajustes={ajustes} fmt={fmt} locale={locale} />
+            ) : null
           // Sin hijos el bloque es una fila más: sin recuadro, como cualquier otra.
           if (hijas.length === 0) {
-            return <Fragment key={cabecera.estructura_id}>{filaCabecera}</Fragment>
+            return (
+              <Fragment key={cabecera.estructura_id}>
+                {filaCabecera}
+                {notaAjustes}
+              </Fragment>
+            )
           }
           return (
             <div key={cabecera.estructura_id} className="sobre-grupo-bloque abierto">
               {filaCabecera}
+              {notaAjustes}
               {hijas.map(hija => (
                 <div key={hija.estructura_id} className="sobre-grupo-hija">
                   <FilaSobre
@@ -2545,6 +2697,85 @@ function GrupoAcordeon({ tipo, items, abierto, onToggle, onAsignar, onVerDetalle
           )
         })}
       </div>
+    </div>
+  )
+}
+
+// ─── SUB-COMPONENTE: AJUSTES POR CORRECCIÓN HISTÓRICA ─────────────────────────
+
+/**
+ * Bloque E: el bloque que explica por qué la plata de un rubro padre subió o bajó.
+ *
+ * No es una asignación ni un movimiento financiero: es el ajuste que dejó corregir un
+ * gasto de un ciclo ya cerrado. Por eso cada línea dice las cuatro cosas que hacen
+ * falta para creerle al número: cuánto movió y en qué dirección (con signo y color), qué
+ * mes histórico se corrigió, por qué y cuándo se hizo, y a qué movimiento corresponde.
+ *
+ * Si el movimiento se borró después, el servidor manda sus campos en null: se dice que
+ * ya no está. No se inventa una descripción ni una categoría anterior, porque ese dato
+ * no existe.
+ */
+function AjustesCorreccionRubro({
+  ajustes,
+  fmt,
+  locale,
+}: {
+  ajustes: AjusteCorreccion[]
+  fmt: (n: number) => string
+  locale: string
+}) {
+  return (
+    <div className="ajustes-rubro" role="note">
+      <div className="ajustes-rubro-titulo">
+        <span aria-hidden="true">📝</span>
+        <span>{t('budget_adjust_title')}</span>
+      </div>
+      <p className="ajustes-rubro-desc">{t('budget_adjust_desc')}</p>
+      <ul className="ajustes-rubro-lista">
+        {ajustes.map((ajuste, i) => {
+          const importe = Number(ajuste.importe ?? 0)
+          const suma = importe >= 0
+          // El movimiento pudo borrarse después de la corrección: los dos campos vienen
+          // en null y no hay referencia que mostrar.
+          const tieneMovimiento =
+            ajuste.movimiento_fecha !== null && ajuste.movimiento_fecha !== undefined
+          return (
+            <li key={`${ajuste.creado_at}-${ajuste.caja_id ?? 'x'}-${i}`} className="ajuste-item">
+              <div className="ajuste-item-linea">
+                {/* El signo manda el color: verde si el rubro recuperó plata, rojo si
+                    la perdió. El número, el signo y el color dicen lo mismo. */}
+                <span className={`ajuste-item-importe ${suma ? 'positivo' : 'negativo'}`}>
+                  {importeConSigno(importe, fmt)}
+                </span>
+                <span className="ajuste-item-mes">
+                  {t('budget_adjust_month', {
+                    mes: formatMesHistorico(ajuste.ciclo_corregido, locale),
+                  })}
+                </span>
+              </div>
+              <div className="ajuste-item-linea ajuste-item-linea--secundaria">
+                <span className="ajuste-item-motivo">
+                  {t(MOTIVO_AJUSTE_A_CLAVE[ajuste.motivo ?? ''] ?? 'budget_adjust_reason_other')}
+                </span>
+                <span className="ajuste-item-fecha">
+                  {t('budget_adjust_made_on', { fecha: formatFechaHistorial(ajuste.creado_at, locale) })}
+                </span>
+              </div>
+              <div className="ajuste-item-movimiento">
+                {tieneMovimiento
+                  ? t('budget_adjust_movement', {
+                      fecha: formatDateShort(ajuste.movimiento_fecha),
+                      monto:
+                        ajuste.movimiento_importe === null || ajuste.movimiento_importe === undefined
+                          ? '—'
+                          : fmt(Number(ajuste.movimiento_importe)),
+                    })
+                  : t('budget_adjust_movement_gone')}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }

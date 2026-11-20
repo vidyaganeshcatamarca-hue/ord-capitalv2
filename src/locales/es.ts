@@ -2551,6 +2551,17 @@ export const inversiones = {
   budget_stat_no_ceiling: "Sin techo",
   budget_cycle_history_label: "Histórico",
   budget_cycle_history_unavailable: "No disponible para este ciclo",
+  // Bloque E: los ajustes por corrección histórica del ciclo activo. El bloque explica
+  // por qué la plata de un rubro padre subió o bajó, y cada línea es un ajuste con su
+  // signo, el mes histórico que corrigió, el motivo, la fecha y el movimiento.
+  budget_adjust_title: "Ajustes por corrección histórica",
+  budget_adjust_desc: "Corregiste un gasto de un ciclo ya cerrado y esa diferencia movió la plata de este rubro en el ciclo activo. No es un movimiento nuevo: es el mismo gasto, corregido.",
+  budget_adjust_month: "Corrigió {mes}",
+  budget_adjust_made_on: "Registrado el {fecha}",
+  budget_adjust_movement: "Movimiento: {fecha} · {monto}",
+  budget_adjust_movement_gone: "El movimiento ya no existe: se borró después de la corrección.",
+  budget_adjust_reason_correction: "Corrección de un movimiento",
+  budget_adjust_reason_other: "Otro ajuste",
   budget_exceeded_envelopes_desc_readonly: "Gastaste más de lo asignado en estos sobres. Un ciclo cerrado no se puede modificar.",
   error_base_cero_locked: "No podés cambiar el modo de presupuesto hasta el ciclo siguiente.",
   // Ronda 7 (B3): volver a Modo Libertad reinicia las asignaciones del ciclo, así
