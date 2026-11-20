@@ -284,7 +284,7 @@ test('cada subcategoría de un ciclo cerrado muestra su gasto y su techo guardad
 test('un cierre sin desglose dice que el histórico no está disponible, nunca cero', () => {
   assert.match(
     pagina,
-    /const congeladoSinDato = cicloCerrado && !sobre\.es_padre && !congelado/,
+    /const congeladoSinDato = cicloCerrado && esSubcategoria && !congelado/,
     'la fila sabe cuándo el cierre no le dio el dato',
   )
   // La celda dice la frase traducida, con su propia etiqueta («Histórico»).
@@ -323,4 +323,86 @@ test('las claves del desglose congelado están en los tres idiomas', () => {
       assert.ok(dict.includes(`${clave}:`), `${lang}.ts no publica ${clave}`)
     }
   }
+})
+
+// ─── Bloque D · las dos hojas y la transferencia (defectos de la verificación) ──
+//
+// 1. La hoja de detalle pintaba «Gastado: 0» en una subcategoría cuyo grupo no guardó el
+//    desglose: el cero no era un dato, era la ausencia de dato.
+// 2. «Cubrir déficit» y el confirmar del modal de transferencia sólo miraban `soloLectura`,
+//    así que el invariante «ciclo cerrado ⇒ no editable» quedaba sostenido por el reloj.
+
+const HOJA_DETALLE = pagina.slice(
+  pagina.indexOf('showDetalleSheet && sobreSeleccionado'),
+  pagina.indexOf('MODAL: BOTTOM SHEET ASIGNAR'),
+)
+
+test('la hoja de detalle no pinta el gastado sin pasar por la rama de dato no disponible', () => {
+  // La línea de importes de la cabecera sale de un solo lugar, y ese lugar distingue los
+  // tres casos: fila, congelado y sin dato.
+  assert.ok(HOJA_DETALLE.includes('<LineaImportesHoja'), 'la hoja delega los importes en la línea común')
+  assert.match(
+    HOJA_DETALLE,
+    /detalle=\{importesHojaDetalle\(sobreSeleccionado\)\}/,
+    'los importes se resuelven con el estado del cierre',
+  )
+  assert.match(
+    pagina,
+    /const importesHojaDetalle = \(s: SobreDetalle\): ImportesHojaDetalle => \{\s*if \(!cicloCerrado \|\| !esSubcategoriaDeRubro\(s\)\) return \{ estado: 'fila' \}\s*if \(!s\.congelado\) return \{ estado: 'sin_dato' \}/,
+    'sin dato congelado el estado es «sin_dato», no un cero',
+  )
+  assert.match(
+    pagina,
+    /if \(detalle\.estado === 'sin_dato'\) \{\s*return <>\{t\('budget_cycle_history_unavailable'\)\}<\/>/,
+    'sin dato la hoja dice que el histórico no está',
+  )
+  // Y con dato, los números son los del cierre: gasto congelado y techo congelado.
+  assert.match(
+    pagina,
+    /if \(detalle\.estado === 'congelado'\)[\s\S]{0,400}?detalle\.tiene_techo \? fmt\(Number\(detalle\.techo \?\? 0\)\) : t\('budget_stat_no_ceiling'\)/,
+    'con dato, el techo es el del cierre y sin techo se dice',
+  )
+  assert.match(
+    pagina,
+    /if \(detalle\.estado === 'congelado'\)[\s\S]{0,600}?t\('budget_stat_spent'\)\}: \{fmt\(detalle\.gasto\)\}/,
+    'con dato, el gastado es el del cierre',
+  )
+  // El avance tampoco se calcula sobre 0/0 cuando no hay dato.
+  assert.match(
+    HOJA_DETALLE,
+    /importesHojaDetalle\(sobreSeleccionado\)\.estado !== 'sin_dato' && \(\s*<div className="sobre-stats">/,
+    'sin dato no hay avance',
+  )
+})
+
+test('las tres entradas de transferencia respetan el ciclo cerrado', () => {
+  // 1. El botón «Cubrir déficit» de la alerta.
+  const cubrir = pagina.slice(
+    pagina.indexOf('className="btn-cubrir-deficit"'),
+    pagina.indexOf('className="btn-cubrir-deficit"') + 300,
+  )
+  assert.match(cubrir, /disabled=\{cicloCerrado\}/, 'cubrir déficit se apaga con el ciclo cerrado')
+
+  // 2. La apertura de la transferencia, con la bandera del servidor y no sólo el offset.
+  const abrir = pagina.slice(
+    pagina.indexOf('const handleAbrirTransferenciaDirecta ='),
+    pagina.indexOf('const handleAbrirTransferenciaDirecta =') + 400,
+  )
+  assert.match(abrir, /if \(soloLectura \|\| cicloCerrado\) \{/, 'abrir la transferencia mira cicloCerrado')
+  assert.ok(
+    !/if \(soloLectura\) \{/.test(abrir),
+    'la guarda no puede volver a mirar sólo el offset del ciclo',
+  )
+
+  // 3. El confirmar del modal y la escritura de fondo.
+  const confirmar = pagina.slice(
+    pagina.indexOf('onClick={handleTransferir}'),
+    pagina.indexOf('onClick={handleTransferir}') + 300,
+  )
+  assert.match(confirmar, /disabled=\{[^}]*cicloCerrado\}/, 'el confirmar de la transferencia mira cicloCerrado')
+  const transferir = pagina.slice(
+    pagina.indexOf('const handleTransferir = async'),
+    pagina.indexOf('const handleTransferir = async') + 400,
+  )
+  assert.match(transferir, /if \(soloLectura \|\| cicloCerrado\) \{/, 'la transferencia no escribe en un ciclo cerrado')
 })

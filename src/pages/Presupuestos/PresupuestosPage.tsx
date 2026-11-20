@@ -134,6 +134,20 @@ interface ReporteCierreCiclo {
 }
 
 /**
+ * Bloque D (T7): lo que la cabecera de una hoja puede mostrar de una fila.
+ *
+ * - `fila`: los importes que la fila ya trae (el reporte vivo en un ciclo abierto, o el
+ *   grupo del cierre cuando la fila es un rubro padre).
+ * - `sin_dato`: subcategoría de un ciclo cerrado cuyo grupo no guardó el desglose. No hay
+ *   número que mostrar: un cero se lee «no gastó nada» y eso es un dato falso.
+ * - `congelado`: el gasto y el techo que el cierre guardó de esa subcategoría.
+ */
+type ImportesHojaDetalle =
+  | { estado: 'fila' }
+  | { estado: 'sin_dato' }
+  | { estado: 'congelado'; gasto: number; techo: number | null; tiene_techo: boolean }
+
+/**
  * Ronda 14 (dueño): «la plata se asigna al rubro padre». Una fila es subcategoría
  * cuando su categoría tiene padre (`padre_id` viene de `fn_reporte_sobres_detalle`).
  * `es_padre` manda primero: un rubro padre conserva su asignación como hasta hoy, y un
@@ -452,6 +466,24 @@ export function PresupuestosPage() {
    * dos cosas a la vez: los importes se leen del cierre y la pantalla no deja editar.
    */
   const cicloCerrado = cierreCiclo?.cerrado === true
+
+  /**
+   * Bloque D (T7): el estado de los importes de una fila para las hojas. Una subcategoría
+   * de un ciclo cerrado tiene números sólo si el cierre guardó su desglose; si no, la hoja
+   * lo dice en vez de mostrar el cero con el que la fila llega por falta de dato.
+   */
+  const importesHojaDetalle = (s: SobreDetalle): ImportesHojaDetalle => {
+    if (!cicloCerrado || !esSubcategoriaDeRubro(s)) return { estado: 'fila' }
+    if (!s.congelado) return { estado: 'sin_dato' }
+    return {
+      estado: 'congelado',
+      gasto: Number(s.congelado.gasto ?? 0),
+      techo: s.congelado.techo === null || s.congelado.techo === undefined
+        ? null
+        : Number(s.congelado.techo),
+      tiene_techo: s.congelado.tiene_techo === true,
+    }
+  }
 
   /**
    * Etapa 3 · el rastro de la categoría que abrió la hoja de detalle. Se pide al
@@ -1126,7 +1158,9 @@ export function PresupuestosPage() {
 
   const handleTransferir = async () => {
     if (!origenSeleccionado || !sobreSeleccionado) return
-    if (soloLectura) {
+    // Bloque D (T3/S3): la guarda de fondo de la transferencia mira el ciclo cerrado del
+    // servidor además del offset, y el servidor ya la rechaza por su lado.
+    if (soloLectura || cicloCerrado) {
       showToast(t('budget_readonly_cycle_toast'), 'error')
       return
     }
@@ -1216,8 +1250,10 @@ export function PresupuestosPage() {
   }
 
   const handleAbrirTransferenciaDirecta = (sobre: SobreDetalle) => {
-    // Cubrir un déficit es una asignación: en un ciclo cerrado no se ofrece.
-    if (soloLectura) {
+    // Cubrir un déficit es una asignación: en un ciclo cerrado no se ofrece. La bandera
+    // del servidor manda junto con el reloj: el invariante «cerrado ⇒ no editable» no
+    // puede quedar sostenido sólo por el offset del ciclo.
+    if (soloLectura || cicloCerrado) {
       showToast(t('budget_readonly_cycle_toast'), 'error')
       return
     }
@@ -1549,6 +1585,7 @@ export function PresupuestosPage() {
                             type="button"
                             className="btn-cubrir-deficit"
                             onClick={() => handleAbrirTransferenciaDirecta(sobre)}
+                            disabled={cicloCerrado}
                           >
                             {t('btn_cubrir_deficit')}
                           </button>
@@ -1617,8 +1654,17 @@ export function PresupuestosPage() {
               <div>
                 <div className="asignar-sheet-sobre-nombre">{t(sobreSeleccionado.nombre_categoria)}</div>
                 <div className="asignar-sheet-sobre-saldo">
-                  {t('assigned')}: {formatMonto(sobreSeleccionado.monto_asignado)} ·{' '}
-                  {t('spent')}: {formatMonto(sobreSeleccionado.monto_gastado)}
+                  {/* Bloque D (T7): en un ciclo cerrado la hoja muestra lo que el cierre
+                      guardó de esta fila (gasto y techo), y si el cierre no tiene el
+                      desglose lo dice: nunca el cero con el que llega la fila. */}
+                  <LineaImportesHoja
+                    detalle={importesHojaDetalle(sobreSeleccionado)}
+                    fmt={formatMonto}
+                    fila={{
+                      asignado: sobreSeleccionado.monto_asignado,
+                      gastado: sobreSeleccionado.monto_gastado,
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -1650,17 +1696,21 @@ export function PresupuestosPage() {
                   </span>
                 </span>
               </div>
-              <div className="sobre-stats">
-                <span className="sobre-stat">
-                  <span className="sobre-stat-label">{t('budget_stat_progress')} </span>
-                  <span className="sobre-stat-val">
-                    {etiquetaAvance(
-                      Number(sobreSeleccionado.monto_gastado),
-                      Number(sobreSeleccionado.monto_asignado)
-                    )}
+              {/* Bloque D (T7): sin dato del cierre no hay avance que calcular, y un
+                  porcentaje sobre 0/0 no dice nada. */}
+              {importesHojaDetalle(sobreSeleccionado).estado !== 'sin_dato' && (
+                <div className="sobre-stats">
+                  <span className="sobre-stat">
+                    <span className="sobre-stat-label">{t('budget_stat_progress')} </span>
+                    <span className="sobre-stat-val">
+                      {etiquetaAvance(
+                        Number(sobreSeleccionado.monto_gastado),
+                        Number(sobreSeleccionado.monto_asignado)
+                      )}
+                    </span>
                   </span>
-                </span>
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Etapa 3 · el rastro: qué pasó con esta categoría y por qué. Es de
@@ -1738,8 +1788,14 @@ export function PresupuestosPage() {
               <div>
                 <div className="asignar-sheet-sobre-nombre">{t(sobreSeleccionado.nombre_categoria)}</div>
                 <div className="asignar-sheet-sobre-saldo">
-                  {t('assigned')}: {formatMonto(sobreSeleccionado.monto_asignado)} ·{' '}
-                  {t('spent')}: {formatMonto(sobreSeleccionado.monto_gastado)}
+                  <LineaImportesHoja
+                    detalle={importesHojaDetalle(sobreSeleccionado)}
+                    fmt={formatMonto}
+                    fila={{
+                      asignado: sobreSeleccionado.monto_asignado,
+                      gastado: sobreSeleccionado.monto_gastado,
+                    }}
+                  />
                 </div>
               </div>
             </div>
@@ -1782,8 +1838,10 @@ export function PresupuestosPage() {
             {mostrando === 'opciones' ? (
               <div className="asignar-opciones">
                 <div className="asignar-opciones-label">{t('budget_assign_options')}</div>
+                {/* Bloque D (T3): todas las entradas que escriben (llenar hueco, monto,
+                    referencias y transferir) se apagan con el ciclo cerrado del servidor. */}
                 {config?.modo_presupuesto !== 'anticipado' && (
-                  <button type="button" className="asignar-opcion" onClick={handleLlenarHueco}>
+                  <button type="button" className="asignar-opcion" onClick={handleLlenarHueco} disabled={cicloCerrado}>
                     <span className="asignar-opcion-icono">💰</span>
                     <div className="asignar-opcion-texto">
                       <h4>{t('budget_opcion_llenar_hueco_title')}</h4>
@@ -1795,7 +1853,7 @@ export function PresupuestosPage() {
                 <button type="button" className="asignar-opcion" onClick={() => {
                   setMostrando('monto')
                   setTimeout(() => montoRef.current?.focus(), 100)
-                }}>
+                }} disabled={cicloCerrado}>
                   <span className="asignar-opcion-icono">⌨️</span>
                   <div className="asignar-opcion-texto">
                     <h4>{t('budget_opcion_ingresar_monto_title')}</h4>
@@ -1803,7 +1861,7 @@ export function PresupuestosPage() {
                   </div>
                 </button>
 
-                <button type="button" className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.monto_asignado_anterior ?? 0))}>
+                <button type="button" className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.monto_asignado_anterior ?? 0))} disabled={cicloCerrado}>
                   <span className="asignar-opcion-icono">🔁</span>
                   <div className="asignar-opcion-texto">
                     <h4>{t('budget_option_same_prev_month_title')}</h4>
@@ -1811,7 +1869,7 @@ export function PresupuestosPage() {
                   </div>
                 </button>
 
-                <button type="button" className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.monto_gastado_anterior ?? 0))}>
+                <button type="button" className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.monto_gastado_anterior ?? 0))} disabled={cicloCerrado}>
                   <span className="asignar-opcion-icono">🧾</span>
                   <div className="asignar-opcion-texto">
                     <h4>{t('budget_option_spent_prev_month_title')}</h4>
@@ -1819,7 +1877,7 @@ export function PresupuestosPage() {
                   </div>
                 </button>
 
-                <button type="button" className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.gasto_promedio_6m ?? 0))}>
+                <button type="button" className="asignar-opcion" onClick={() => asignarMontoReferencia(Number(sobreSeleccionado.gasto_promedio_6m ?? 0))} disabled={cicloCerrado}>
                   <span className="asignar-opcion-icono">📊</span>
                   <div className="asignar-opcion-texto">
                     <h4>{t('budget_option_avg_six_months_title')}</h4>
@@ -2065,7 +2123,7 @@ export function PresupuestosPage() {
               <button
                 className="btn-primario"
                 onClick={handleTransferir}
-                disabled={!origenSeleccionado || !montoTransferir || loadingTransferir}
+                disabled={!origenSeleccionado || !montoTransferir || loadingTransferir || cicloCerrado}
               >
                 {loadingTransferir ? t('budget_btn_transferring') : t('budget_btn_confirm')}
               </button>
@@ -2572,7 +2630,10 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
   // techo de aquel momento. Que falte no significa que no gastó: significa que ese cierre
   // no guardó el desglose del grupo (los anteriores al 20/11/2026), y entonces se dice.
   const congelado = sobre.congelado
-  const congeladoSinDato = cicloCerrado && !sobre.es_padre && !congelado
+  // Bloque D (T7): la fila no tiene los números del cierre. Se mide con
+  // `esSubcategoria` y no con `!es_padre`: un rubro suelto (sin padre y sin hijos) sí
+  // tiene su grupo en el cierre, y taparlo con «no disponible» sería otro error.
+  const congeladoSinDato = cicloCerrado && esSubcategoria && !congelado
   // El techo que tenía el hijo al cerrar, o la frase que dice que no hay dato. Es un
   // valor del cierre: ni el techo de hoy ni el margen de hoy del padre.
   const techoCongelado = congelado
@@ -2798,6 +2859,38 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
         </>
       )}
     </div>
+  )
+}
+
+/**
+ * La línea de importes de la cabecera de una hoja (detalle y asignar). Vive aparte para que
+ * las dos hojas digan exactamente lo mismo: si el cierre no tiene el desglose, lo dicen, y
+ * no pintan el `monto_gastado` de una fila que llega en cero por falta de dato.
+ */
+function LineaImportesHoja({ detalle, fmt, fila }: {
+  detalle: ImportesHojaDetalle
+  fmt: (n: number) => string
+  /** Asignado y gastado tal como vienen en la fila que abrió la hoja. */
+  fila: { asignado: number; gastado: number }
+}) {
+  if (detalle.estado === 'sin_dato') {
+    return <>{t('budget_cycle_history_unavailable')}</>
+  }
+  if (detalle.estado === 'congelado') {
+    return (
+      <>
+        {t('budget_stat_ceiling')}:{' '}
+        {detalle.tiene_techo ? fmt(Number(detalle.techo ?? 0)) : t('budget_stat_no_ceiling')}
+        {' · '}
+        {t('budget_stat_spent')}: {fmt(detalle.gasto)}
+      </>
+    )
+  }
+  return (
+    <>
+      {t('assigned')}: {fmt(fila.asignado)} ·{' '}
+      {t('spent')}: {fmt(fila.gastado)}
+    </>
   )
 }
 
