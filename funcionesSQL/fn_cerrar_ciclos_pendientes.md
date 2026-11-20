@@ -26,11 +26,13 @@ BEGIN
 
     -- Punto de inicio documentado. Si el usuario todavia no lo tiene, arranca en el ciclo
     -- vigente: no se reconstruye nada hacia atras por sorpresa.
-    SELECT COALESCE(c.cierre_desde, date_trunc('month', v_inicio_actual)::date)
+    -- Sin punto de inicio declarado, el mecanismo arranca por el ciclo que acaba de
+    -- terminar: ese ya se puede cerrar. Lo anterior no se toca solo.
+    SELECT COALESCE(c.cierre_desde, date_trunc('month', (v_inicio_actual - INTERVAL '1 day')::date)::date)
       INTO v_desde
       FROM public.p_presupuestos_config c WHERE c.user_id = v_user_id;
     IF v_desde IS NULL THEN
-        v_desde := date_trunc('month', v_inicio_actual)::date;
+        v_desde := date_trunc('month', (v_inicio_actual - INTERVAL '1 day')::date)::date;
     END IF;
 
     -- Tope: el ciclo anterior al vigente (o el que pida quien llama, si es anterior).
