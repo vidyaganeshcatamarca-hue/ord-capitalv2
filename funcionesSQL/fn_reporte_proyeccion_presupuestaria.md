@@ -17,7 +17,11 @@ BEGIN
     IF v_ingreso_promedio IS NULL THEN v_ingreso_promedio := 0; END IF;
 
     FOR v_i IN 0..5 LOOP
-        v_mes := date_trunc('month', CURRENT_DATE + (v_i || ' months')::interval);
+        -- El ciclo presupuestario respeta el dia ancla del usuario: el mes que se proyecta es
+        -- el del ciclo que empieza ese mes, no el calendario.
+        v_mes := date_trunc('month',
+                    public.fn_inicio_ciclo(v_user_id, CURRENT_DATE)
+                    + (v_i || ' months')::interval)::date;
         SELECT COALESCE(SUM(monto_cuota), 0) INTO v_compromisos FROM p_compromisos_tarjeta
         WHERE mes_periodo = v_mes AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND user_id IN (SELECT user_id FROM p_hogar_participantes WHERE hogar_id = v_hogar_id)));
         SELECT COALESCE(SUM(monto_limite), 0) INTO v_presupuestos FROM p_presupuestos

@@ -81,7 +81,7 @@ BEGIN
     -- aparte, en la subconsulta de spent.
     SELECT p.user_id, COALESCE(sum(p.monto_limite), 0) AS assigned
     FROM public.p_presupuestos p
-    WHERE p.mes_periodo = date_trunc('month', CURRENT_DATE)::date
+    WHERE p.mes_periodo = public.fn_mes_ciclo(p.user_id, CURRENT_DATE)
       AND NOT EXISTS (
             SELECT 1 FROM public.p_estructuras_egresos ee
               JOIN public.p_presupuestos pp ON pp.estructura_egreso_id = ee.padre_id
@@ -94,13 +94,15 @@ BEGIN
   LEFT JOIN (
     SELECT user_id, COALESCE(sum(COALESCE(valor_local, valor_egreso)), 0) AS spent
     FROM public.p_caja
-    WHERE tipo = 'expense' AND fecha >= date_trunc('month', CURRENT_DATE)
+    WHERE tipo = 'expense'
+      AND fecha BETWEEN public.fn_inicio_ciclo(public.p_caja.user_id, CURRENT_DATE)
+                   AND public.fn_fin_ciclo(public.p_caja.user_id, CURRENT_DATE)
     GROUP BY user_id
   ) ex ON ex.user_id = u.user_id
   LEFT JOIN (
     SELECT DISTINCT user_id, true AS has_next
     FROM public.p_presupuestos
-    WHERE mes_periodo = date_trunc('month', CURRENT_DATE)::date + 1
+    WHERE mes_periodo = (public.fn_mes_ciclo(public.p_presupuestos.user_id, CURRENT_DATE) + INTERVAL '1 month')::date
   ) nc ON nc.user_id = u.user_id
   LEFT JOIN (
     SELECT user_id, jsonb_object_agg(event_name, cnt) AS usage
