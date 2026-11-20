@@ -592,3 +592,29 @@ los botones del historial quedan tapados por la barra inferior y hay que clickea
 
 Pendiente de recorrer: eliminacion del historial, anulacion de un movimiento, calendario con
 las tres fuentes, efectos en presupuestos, pantalla de Pareja y la pasada en escritorio.
+
+## Recorridos funcionales - segunda tanda (2026-11-20, sesion reabierta)
+
+| Escenario | Resultado | Evidencia en la base |
+| --- | --- | --- |
+| Correccion completa de un cobro (billetera y aplicado de 40 a 30) | APROBADO | pago 153 aplicado 30, caja 20180 ingreso 30, saldo 10, estado `activo`: corregir un pago reabre el prestamo |
+| Anulacion de un movimiento de 100 USD | APROBADO | aviso explicito («the wallet gets that amount back and the loan balance is recomputed»); pago 154 borrado, caja 20181 borrada, billetera 203 -> 103, saldo 10 -> 70, pagado 30 |
+| Saldado automatico | APROBADO | pago de 70: saldo 0, pagado 100, insignia «Settled», sale de activos |
+| Eliminacion del historial de un prestamo saldado | APROBADO | dialogo explicito sobre los movimientos de caja; `eliminado_at` escrito; **cajas 20178 (100) y 20180 (30) intactas**; billetera 400 vuelve a 173 porque el neto del prestamo es cero |
+| Calendario con las tres fuentes | APROBADO | 90 dias: LOAN W1 cuota 1 «Covered» ARS 30.000 y W2 cuota 1 ARS 18.667 junto a CARD Galicia y los RECURRING; boton «Open loan» por fila |
+| Pantalla de Pareja sin hogar | APROBADO (estado vacio) | dos grupos separados con la regla escrita: nunca se netean; sin hogar no hay nada que mostrar |
+| Pasada en escritorio (1440x900) | APROBADO | barra lateral, tarjetas, importes y fechas con el formato correcto |
+
+Efectos en presupuestos: las filas de prestamo no quedan sueltas. Ingreso por prestamo recibido ->
+`cuenta_ingreso_id` 244; prestamo otorgado -> `estructura_egreso_id` 12087; pago de prestamo ->
+12088. Cada uno es una cuenta/categoria real, así que el movimiento entra en los informes.
+
+Dos observaciones para decision del dueno, no corregidas:
+1. Editar el saldo de un prestamo ya saldado responde «Conditions updated.» pero el saldo sigue en
+   cero, porque el saldo se deriva de los pagos. La reapertura real es corregir o anular el pago.
+   Conviene que la interfaz lo diga en vez de confirmar un cambio sin efecto.
+2. El modal de correccion deja cambiar el monto de billetera sin mover el aplicado (y al reves).
+   El sistema lo acepta y queda declarado, pero permite que lo cobrado no coincida con lo cancelado.
+
+Datos de prueba dejados en la cuenta 1: prestamos 445 (W1), 446 (W2) y 447 (W3). Se borran cuando el
+dueno lo pida; no se tocan por cuenta propia.
