@@ -467,6 +467,17 @@ El calendario formatea sus fechas con el locale de la app, no en espanol fijo.
 permite vaciar `p_nombre` e `p_interes_total_acordado` cuando el usuario los borra.
 
 ## Tasks - ronda funcional
+- T31 · pedido del dueño 2026-11-22 · documentación · **Elaborar el PRD de traspaso
+técnico-funcional de Pareja para el agente planificador.** Reúne los catorce puntos
+pedidos: arquitectura de hogares y participantes; tablas, RPC y permisos; copropiedad ya
+implementada y probada; lo que todavía no es alcanzable desde la interfaz; la distinción
+entre préstamo entre integrantes, préstamo compartido y préstamo privado; reglas de
+privacidad, titularidad, movimientos e historial; propuesta funcional de pantalla central
+de Pareja; decisiones sobre desvinculación; «Borrar mis datos» y transferencia íntegra;
+integración con Billeteras, Sobres, Inversiones y Categorías; defectos y riesgos;
+referencias a código y pruebas; y separación explícita entre reglas aprobadas,
+comportamiento actual y propuestas. **No redactar todavía ni tocar el módulo Pareja**: la
+tarea queda registrada para cuando se planifique ese módulo.
 - T25 · S25 · backend · `fn_prestamos_calendario` emite tambien `vencimiento_unico` con
   fecha pactada; `libre` sigue sin emitir. Test transaccional.
 - T26 · S26-S28 · frontend · moneda en recurrentes, etiqueta de categoria traducida y
@@ -549,3 +560,35 @@ Auditar la escritura de prestamos con ese predicado: fn_prestamo_editar,
 fn_prestamo_registrar_pago, fn_prestamo_corregir_pago, fn_prestamo_eliminar_pago,
 fn_prestamo_eliminar_historial, fn_gestionar_deuda, fn_saneamiento_vinculos_responder.
 La billetera del pago se sigue validando contra el llamante, no contra el dueno de la deuda.
+
+## Recorridos funcionales reales - 2026-11-20 (parcial, sesion del navegador caida)
+
+Usuario de la sesion del navegador: **1** (cuenta del dueno). Cada escenario se ejecuto con
+clics y envio real del formulario, y se verifico contra la base en la misma sesion.
+
+| Escenario | Resultado | Evidencia en la base |
+| --- | --- | --- |
+| Alta nueva, debo, cuotas, sin interes, ARS 90.000 | APROBADO | prestamo 445, saldo 90.000, 3 cuotas de 30.000; caja 20170 income 90.000 en billetera 1; saldo 402.067,26 -> 492.067,26 (una sola vez) |
+| Alta nueva, me deben, cuotas, importe final, ARS 50.000 + 6.000 | APROBADO | prestamo 446, condicion `importe_final`, interes 6.000, saldo 55.999,82; caja 20171 expense 50.000 desde billetera 2; 351.000 -> 301.000 |
+| Alta historica, debo, devolucion libre, interes desconocido, ARS 200.000 | APROBADO | prestamo 447, sin caja (`p_caja_id` null), sin cuotas, saldo 200.000, proximo vencimiento null |
+| Alta nueva, me deben, institucional, vencimiento unico, tasa 24%, USD 100 | APROBADO | prestamo 457, moneda USD, tasa_informada true, vence 2027-01-15; caja 20178 expense 100 USD desde billetera 400; 173 -> 73 |
+| Edicion de condiciones (saldo historico a 200.000) | APROBADO | prestamo 447 saldo 200.000 exacto; aviso «Conditions updated.» |
+| Pago de 30.000 sobre el prestamo 445 desde Mercado Pago | APROBADO | pago 152 aplicado 30.000, user 1; caja 20179 expense 30.000; saldo 60.000; billetera 492.067,26 -> 462.067,26 |
+| Cobro de 40 USD sobre el prestamo 457 en la billetera USD | APROBADO | pago 153 aplicado 40; caja 20180 income 40; saldo 60; billetera 73 -> 113 |
+| Sobrepago de 100 USD contra un saldo de 60 | APROBADO | dialogo explicito («The excess of US$40,0 will be recorded as previously unregistered interest»); al confirmar: pago 154 aplicado 60 + excedente 40, caja 20181 income 100, saldo 0, estado `pagado`, billetera 113 -> 213. Sin confirmar no se escribio nada |
+| Correccion de un pago (billetera 40 -> 30) | PARCIAL | caja 20180 y billetera ajustadas a 30 (213 -> 203), `corregido_at` escrito. La fila del pago conservo `monto_aplicado` 40 porque el modal tiene dos campos independientes y solo se cambio el de billetera: el resultado (cobrado 30, aplicado 40) queda declarado pero conviene revisar si la interfaz debe atarlos |
+| Reapertura de un prestamo saldado | BLOQUEADO | la sesion del navegador expiro (redireccion a /auth) durante el intento |
+
+Defecto descartado por medicion: los importes 49.999,82 y 199.999,96 que aparecieron en las
+altas 446 y 447 **no** son del producto. Se reprodujo la misma llamada a `fn_prestamo_crear`
+por SQL con los valores exactos y el backend guarda 50.000/56.000 y 200.000 sin tocar nada;
+la perdida venia de la automatizacion (`page.fill` desincroniza los inputs controlados de
+React: dejo la fecha de vencimiento vacia y escribio «024» en la tasa). Con el setter nativo
+los valores entran exactos. No hay defecto que corregir ahi.
+
+Lecciones de herramienta (no del producto): `page.fill` no sirve para estos formularios;
+los botones del historial quedan tapados por la barra inferior y hay que clickearlos desde
+`evaluate`; la sesion de Supabase dura una hora y hay que renovarla antes de un recorrido largo.
+
+Pendiente de recorrer: eliminacion del historial, anulacion de un movimiento, calendario con
+las tres fuentes, efectos en presupuestos, pantalla de Pareja y la pasada en escritorio.
