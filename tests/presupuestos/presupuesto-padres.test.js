@@ -843,7 +843,14 @@ test('en la base, un padre en 0 no lo frena el guard de los hijos', () => {
   )
   assert.ok(!bcC.includes('v_repartido'), 'no queda “lo repartido” que pueda frenar un 0')
   // Y el único límite que queda, el pozo de base cero, no mira el padre.
-  assert.ok(bcC.includes('IF p_monto_asignado > (v_saldo_disponible + v_monto_previo) THEN'), 'el guard del pozo de base cero tiene que seguir existiendo')
+  // Bloque G (decisión B del dueño): el pozo ahora admite además el déficit del propio grupo,
+  // porque cubrirlo es la única forma de que la reserva suba lo libre. La intención del guard
+  // se conserva: mira el pozo del ciclo y nunca los techos de los hijos.
+  assert.ok(
+    bcC.includes('IF p_monto_asignado > (v_saldo_disponible + v_monto_previo + v_deficit_grupo) THEN'),
+    'el guard del pozo de base cero tiene que seguir existiendo',
+  )
+  assert.ok(!bcC.includes('monto_techo'), 'el guard no puede mirar techos: no son dinero reservado')
 })
 
 // ---------------------------------------------------------------------------

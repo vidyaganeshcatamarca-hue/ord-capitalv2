@@ -72,3 +72,16 @@ techo (`monto_techo` NULL = sin techo). `fn_reporte_cierre_ciclo` devuelve `hijo
 `desglose` por fila. En la pantalla: dentro de un ciclo cerrado, cada subcategoría muestra su
 gasto congelado y su techo congelado (o «sin techo»); si `desglose` es false (cierres anteriores
 al 20/11/2026) se dice «información no disponible», nunca cero.
+
+## G · escenario visual permanente (cuenta 198, Modo Libertad)
+
+Creado el 20/11/2026 para ver los ajustes históricos en pantalla. Es dato de prueba, visible a
+propósito y no se borra:
+
+- Rubro `cat_food_home` (estructura 4265), ciclo cerrado de **noviembre 2025**.
+- Movimiento de prueba identificado con `nombre_cuenta_historico = 'PRUEBA BLOQUE G'` en `p_caja`
+  (gasto original 30.000 ARS, corregido después a 20.000).
+- Efecto: un ajuste por corrección histórica de **+4,87** en el ciclo activo, motivo
+  `correccion_movimiento`, con referencia al movimiento del 10/11/2025.
+- El importe es chico porque esa cuenta convierte moneda al guardar; el ajuste es real y
+  coincide con lo almacenado.
