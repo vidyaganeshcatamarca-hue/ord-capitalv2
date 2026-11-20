@@ -9,6 +9,7 @@ DECLARE
     v_hogar_id bigint;
     v_modo_presupuesto text;
     v_saldo_disponible numeric;
+    v_deficit_grupo numeric := 0;
     v_monto_previo numeric := 0;
     v_mes_truncado date := date_trunc('month', p_mes_periodo);
     v_dia_ancla int2;
@@ -54,7 +55,16 @@ BEGIN
     IF v_modo_presupuesto = 'base_cero' THEN
         v_saldo_disponible := public.fn_obtener_saldo_a_asignar(p_mes_periodo);
 
-        IF p_monto_asignado > (v_saldo_disponible + v_monto_previo) THEN
+        -- Bloque G (decision B del duenio): cubrir el deficit de un grupo consume plata libre
+        -- sin dejar reserva, asi que asignar solo lo libre no reserva nada. Se permite asignar
+        -- lo libre MAS el deficit del grupo: asi la reserva sube exactamente lo libre y el saldo
+        -- libre queda en cero. Sin deficit, el techo sigue siendo lo libre.
+        IF COALESCE(p_monto_asignado, 0) > 0 THEN
+            v_deficit_grupo := GREATEST(-COALESCE(public.fn_disponible_transferible(
+                                    p_estructura_egreso_id, v_mes_truncado), 0), 0);
+        END IF;
+
+        IF p_monto_asignado > (v_saldo_disponible + v_monto_previo + v_deficit_grupo) THEN
             RAISE EXCEPTION '{"key": "error_budget_insufficient_base_zero", "params": {}}';
         END IF;
     END IF;
