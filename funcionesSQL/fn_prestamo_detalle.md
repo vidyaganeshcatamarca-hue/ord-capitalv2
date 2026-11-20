@@ -29,6 +29,10 @@ BEGIN
         'direccion',          v_p.tipo_flujo,
         'contraparte',        v_p.entidad_nombre,
         'nombre',             COALESCE(v_p.nombre_prestamo, v_p.entidad_nombre),
+        -- The named counterparty, identical for a private and for a co-owned loan.
+        'contraparte_user_id', v_p.contraparte_user_id,
+        'contraparte_nombre', (SELECT ct.nombre::text FROM public.usuarios ct
+                                WHERE ct.user_id = v_p.contraparte_user_id),
         'tipo_deuda',         v_p.tipo_deuda,
         'moneda',             trim(v_p.moneda_iso),
         'monto_original',     v_p.monto_original,

@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION public.fn_prestamos_listar(p_direccion text, p_incluir_saldados boolean DEFAULT false)
- RETURNS TABLE(prestamo_id bigint, direccion text, contraparte text, nombre text, moneda text, saldo_pendiente numeric, monto_original numeric, pagado_registrado numeric, estado text, estado_vencimiento text, proximo_vencimiento date, tasa numeric, tasa_informada boolean, modalidad text, tiene_cronograma boolean)
+ RETURNS TABLE(prestamo_id bigint, direccion text, contraparte text, nombre text, moneda text, saldo_pendiente numeric, monto_original numeric, pagado_registrado numeric, estado text, estado_vencimiento text, proximo_vencimiento date, tasa numeric, tasa_informada boolean, modalidad text, tiene_cronograma boolean, contraparte_user_id bigint, contraparte_nombre text)
  LANGUAGE plpgsql
  STABLE SECURITY DEFINER
  SET search_path TO 'public', 'pg_temp'
@@ -34,8 +34,13 @@ BEGIN
            p.tasa_anual_tna,
            p.tasa_informada,
            p.modalidad,
-           EXISTS (SELECT 1 FROM public.p_prestamos_cuotas c WHERE c.prestamo_id = p.prestamo_id) AS tiene_cronograma
+           EXISTS (SELECT 1 FROM public.p_prestamos_cuotas c WHERE c.prestamo_id = p.prestamo_id) AS tiene_cronograma,
+           -- The named counterparty, if the loan declares one. LEFT JOIN on the primary
+           -- key, so a loan without counterparty keeps NULL and no row is multiplied.
+           p.contraparte_user_id,
+           ct.nombre::text AS contraparte_nombre
     FROM public.p_prestamos p
+    LEFT JOIN public.usuarios ct ON ct.user_id = p.contraparte_user_id
     WHERE (p.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND p.hogar_id = v_hogar_id))
       AND (p_direccion IS NULL OR p.tipo_flujo = p_direccion)
       AND p.estado <> 'eliminado'
