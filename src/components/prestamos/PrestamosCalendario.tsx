@@ -44,19 +44,20 @@ const PESO_TIPO: Record<EventoCalendarioUnificado['tipo'], number> = {
  * Formatting comes from `lib/format.ts`, the one place that knows the active
  * locale and the local currency. Those helpers read a module-level context that
  * `useNumberFormat` publishes; this screen only SUBSCRIBES to it, the same way
- * `PrestamoLista` and `PrestamoDetalle` do. It must never mount the publisher:
- * a second instance publishes its own partially hydrated state (its own locale
- * for the currency symbol, its own decimals until its RPCs land) and the money on
- * this one screen stops matching the rest of the module — a USD loan read
- * «$1.000,0», as if it were local currency, while «Me deben» read «US$ 3.000,0».
+ * `PrestamoLista` and `PrestamoDetalle` do. The publisher belongs to the module
+ * entry point (`ContextoFormatoPrestamos`, mounted once per `/prestamos/*` route),
+ * not to this screen: mounting a second one here used to be the only thing that
+ * hydrated the context, so the other four sections kept formatting with the
+ * `es-AR` default while this one changed — and that asymmetry looked like the
+ * money had changed currency. One publisher per module, mounted at its root.
  *
- * Mounting it is NOT how dates become locale-correct either: dates here go
- * through `formatDate`, which already formats with `context.locale`, and
  * `useFormatRevision` re-renders the screen whenever that context changes. One
- * date path, no second one (S28).
+ * date path (`formatDate`) and one money path (`montoMoneda`), no second ones
+ * (S28).
  */
 export function PrestamosCalendario() {
-  // Re-renders on every format context change; publishing belongs to the app.
+  // Re-renders on every format context change; publishing belongs to
+  // `ContextoFormatoPrestamos`, mounted by the route that renders this screen.
   const revisionFormato = useFormatRevision()
   const { showToast } = useToast()
   const navigate = useNavigate()

@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
-import { fechaLocalISO, formatCurrency } from '@/lib/format'
+import { fechaLocalISO } from '@/lib/format'
 import { t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
+import { montoMoneda } from './formato'
 import type { CuotaInput } from './types'
 import './prestamos.css'
 
@@ -90,7 +91,7 @@ export function CuotasEditor({ filas, moneda, onChange }: CuotasEditorProps) {
       <div className="prestamos-cuotas-editor-head">
         <span>{t('prestamos_detalle_cuotas')}</span>
         <span className="prestamos-field-hint">
-          {t('prestamos_alta_cuotas_suma', { total: formatCurrency(total, moneda) })}
+          {t('prestamos_alta_cuotas_suma', { total: montoMoneda(total, moneda) })}
         </span>
       </div>
 

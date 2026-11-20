@@ -2,12 +2,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { rpc } from '@/lib/supabase'
 import { haptics } from '@/lib/haptics'
 import { useToast } from '@/contexts/ToastContext'
-import { fechaLocalISO, formatCurrency } from '@/lib/format'
+import { fechaLocalISO } from '@/lib/format'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { parseError, t } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { numero, type PrestamoPago, type PrestamoPagoTarget } from './types'
-import { montoONoCalculable } from './formato'
+import { montoMoneda, montoONoCalculable } from './formato'
 import './prestamos.css'
 
 interface BilleteraOption {
@@ -345,7 +345,7 @@ export function RegistrarPagoModal({
         isOpen={excedente !== null}
         title={t('prestamos_pago_sobrepago_titulo')}
         message={t('prestamos_pago_sobrepago_msg', {
-          excedente: formatCurrency(excedente ?? 0, moneda),
+          excedente: montoMoneda(excedente ?? 0, moneda),
         })}
         confirmText={t('prestamos_pago_sobrepago_confirmar')}
         cancelText={t('prestamos_pago_sobrepago_cancelar')}

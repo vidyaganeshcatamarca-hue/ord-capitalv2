@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 import { t } from '@/locales/i18n'
+import { ContextoFormatoPrestamos } from '@/components/prestamos/ContextoFormatoPrestamos'
 import { PlanAtaquePrestamos } from '@/components/prestamos/PlanAtaquePrestamos'
 import '@/components/prestamos/prestamos.css'
 
@@ -13,6 +14,7 @@ export function PrestamosSaneamientoPage() {
 
   return (
     <div className="page prestamos-page fade-in">
+      <ContextoFormatoPrestamos />
       <header className="prestamos-header">
         <div>
           <span className="prestamos-kicker">{t('prestamos_kicker')}</span>

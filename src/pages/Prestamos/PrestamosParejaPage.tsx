@@ -7,6 +7,7 @@ import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
 import { formatCurrencyNumber } from '@/lib/format'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
+import { ContextoFormatoPrestamos } from '@/components/prestamos/ContextoFormatoPrestamos'
 import { montoONoCalculable } from '@/components/prestamos/formato'
 import { numero, rutaPorDireccion, type PrestamoListaItem } from '@/components/prestamos/types'
 import '@/components/prestamos/prestamos.css'
@@ -108,6 +109,7 @@ export function PrestamosParejaPage() {
 
   return (
     <div className="page prestamos-page fade-in">
+      <ContextoFormatoPrestamos />
       <header className="prestamos-header">
         <div>
           <span className="prestamos-kicker">{t('prestamos_kicker')}</span>

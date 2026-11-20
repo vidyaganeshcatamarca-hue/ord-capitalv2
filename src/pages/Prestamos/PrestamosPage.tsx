@@ -6,6 +6,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
+import { ContextoFormatoPrestamos } from '@/components/prestamos/ContextoFormatoPrestamos'
 import { type PrestamoResumenFila } from '@/components/prestamos/types'
 import { montoONoCalculable } from '@/components/prestamos/formato'
 import { PrestamoFormModal } from '@/components/prestamos/PrestamoFormModal'
@@ -83,6 +84,7 @@ export function PrestamosPage() {
 
   return (
     <div className="page prestamos-page fade-in">
+      <ContextoFormatoPrestamos />
       <header className="prestamos-header">
         <div>
           <span className="prestamos-kicker">{t('prestamos_kicker')}</span>

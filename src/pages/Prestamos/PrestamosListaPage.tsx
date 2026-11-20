@@ -1,3 +1,4 @@
+import { ContextoFormatoPrestamos } from '@/components/prestamos/ContextoFormatoPrestamos'
 import { PrestamoLista } from '@/components/prestamos/PrestamoLista'
 
 /**
@@ -5,9 +6,19 @@ import { PrestamoLista } from '@/components/prestamos/PrestamoLista'
  * the difference is the copy of the quick action, not the behaviour (T24).
  */
 export function PrestamosDeboPage() {
-  return <PrestamoLista direccion="debo" />
+  return (
+    <>
+      <ContextoFormatoPrestamos />
+      <PrestamoLista direccion="debo" />
+    </>
+  )
 }
 
 export function PrestamosMeDebenPage() {
-  return <PrestamoLista direccion="me_deben" />
+  return (
+    <>
+      <ContextoFormatoPrestamos />
+      <PrestamoLista direccion="me_deben" />
+    </>
+  )
 }
