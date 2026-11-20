@@ -1264,10 +1264,19 @@ export const prestamos = {
   prestamos_vinculos_guardado: "Questionnaire saved. The plan already uses this priority.",
   prestamos_vinculos_ayuda: "It never changes the loan and never moves money.",
 
-  // Partner (T21 has no read contract yet)
+  // Partner (T21): two separate groups, never netted against each other
   prestamos_pareja_titulo: "Partner",
-  prestamos_pareja_pendiente: "This section is not available yet. Shared spending and loans between members are still missing.",
-  prestamos_pareja_pendiente_cta: "Back to Loans",
+  prestamos_pareja_subtitulo: "Two different things: shared expenses and loans between the two of you. They are never netted against each other.",
+  prestamos_pareja_gastos_titulo: "Shared expenses",
+  prestamos_pareja_gastos_debe: "{deudor} owes {acreedor}",
+  prestamos_pareja_integrante: "Member",
+  prestamos_pareja_gastos_sin_hogar: "There is no shared household yet, so there are no shared expenses to show. You can link your partner from Family.",
+  prestamos_pareja_gastos_sin_deuda: "Nothing is pending from shared expenses.",
+  prestamos_pareja_gastos_sin_moneda: "The household balance arrives with no currency reported, so the amount is shown without a symbol instead of assuming one.",
+  prestamos_pareja_prestamos_titulo: "Loans between the two of you",
+  prestamos_pareja_prestamos_pendiente: "This group cannot be shown yet.",
+  prestamos_pareja_prestamos_motivo: "A read path is still missing: a loan can already name a member as its counterparty, but the read side does not expose that field, and matching by name would be a guess.",
+  prestamos_pareja_regla: "«Shared expenses» and «Loans between the two of you» are two separate groups: they are never subtracted from each other nor added together.",
 };
 
 export const bcg = {

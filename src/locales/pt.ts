@@ -1264,10 +1264,19 @@ export const prestamos = {
   prestamos_vinculos_guardado: "Questionário salvo. O plano já usa esta prioridade.",
   prestamos_vinculos_ayuda: "Nunca altera o empréstimo e nunca movimenta dinheiro.",
 
-  // Casal (T21 ainda sem contrato de leitura)
+  // Casal (T21): dois grupos separados, nunca compensados entre si
   prestamos_pareja_titulo: "Casal",
-  prestamos_pareja_pendiente: "Esta seção ainda não está disponível. Falta a leitura de despesas compartilhadas e empréstimos entre membros.",
-  prestamos_pareja_pendiente_cta: "Voltar para Empréstimos",
+  prestamos_pareja_subtitulo: "Duas coisas diferentes: despesas compartilhadas e empréstimos entre vocês. Nunca são compensados entre si.",
+  prestamos_pareja_gastos_titulo: "Despesas compartilhadas",
+  prestamos_pareja_gastos_debe: "{deudor} deve a {acreedor}",
+  prestamos_pareja_integrante: "Membro",
+  prestamos_pareja_gastos_sin_hogar: "Ainda não existe uma casa compartilhada, então não há despesas compartilhadas para mostrar. Você pode vincular seu par em Família.",
+  prestamos_pareja_gastos_sin_deuda: "Não há nada pendente de despesas compartilhadas.",
+  prestamos_pareja_gastos_sin_moneda: "O saldo da casa chega sem moeda informada, então o valor é mostrado sem símbolo em vez de supor uma.",
+  prestamos_pareja_prestamos_titulo: "Empréstimos entre vocês",
+  prestamos_pareja_prestamos_pendiente: "Este grupo ainda não pode ser mostrado.",
+  prestamos_pareja_prestamos_motivo: "Falta uma leitura que devolva a contraparte do empréstimo: o empréstimo já pode indicar um membro como contraparte, mas a leitura não expõe esse dado e casar por nome seria um chute.",
+  prestamos_pareja_regla: "«Despesas compartilhadas» e «Empréstimos entre vocês» são dois grupos separados: nunca são subtraídos um do outro nem somados.",
 };
 
 export const bcg = {

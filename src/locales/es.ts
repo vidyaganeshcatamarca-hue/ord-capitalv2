@@ -1314,10 +1314,19 @@ export const prestamos = {
   prestamos_vinculos_guardado: "Cuestionario guardado. El plan ya usa esta prioridad.",
   prestamos_vinculos_ayuda: "Nunca modifica el préstamo ni mueve dinero.",
 
-  // Pareja (T21 todavia sin lectura disponible)
+  // Pareja (T21): dos grupos separados, nunca compensados entre si
   prestamos_pareja_titulo: "Pareja",
-  prestamos_pareja_pendiente: "Esta sección todavía no está disponible. Falta la lectura de gastos compartidos y préstamos entre integrantes.",
-  prestamos_pareja_pendiente_cta: "Volver a Préstamos",
+  prestamos_pareja_subtitulo: "Dos cosas diferentes: los gastos compartidos y los préstamos entre ustedes. Nunca se restan entre sí.",
+  prestamos_pareja_gastos_titulo: "Gastos compartidos",
+  prestamos_pareja_gastos_debe: "{deudor} le debe a {acreedor}",
+  prestamos_pareja_integrante: "Integrante",
+  prestamos_pareja_gastos_sin_hogar: "Todavía no hay un hogar compartido, así que no hay gastos compartidos que mostrar. Podés vincular a tu pareja desde Familia.",
+  prestamos_pareja_gastos_sin_deuda: "No hay deuda pendiente por gastos compartidos.",
+  prestamos_pareja_gastos_sin_moneda: "El balance del hogar llega sin moneda informada: se muestra el importe sin símbolo en vez de suponer una.",
+  prestamos_pareja_prestamos_titulo: "Préstamos entre ustedes",
+  prestamos_pareja_prestamos_pendiente: "Este grupo todavía no se puede mostrar.",
+  prestamos_pareja_prestamos_motivo: "Falta una lectura que devuelva la contraparte del préstamo: el préstamo ya puede declararse contra un integrante, pero la lectura no expone ese dato y emparejar por nombre sería adivinar.",
+  prestamos_pareja_regla: "«Gastos compartidos» y «Préstamos entre ustedes» son dos grupos separados: nunca se restan ni se suman entre sí.",
 };
 
 // === FASE 6: ANÁLISIS DE ROI EMOCIONAL (BCG) ===
