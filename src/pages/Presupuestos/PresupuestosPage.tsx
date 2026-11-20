@@ -168,6 +168,29 @@ interface AjusteCorreccion {
 }
 
 /**
+ * Dueño: «Asignar $947.920,17 en términos presupuestarios: compensar el déficit y dejar
+ * $621.692,77 efectivamente reservados. El dinero libre queda en cero.»
+ *
+ * Lo que devuelve `fn_monto_asignable` para un rubro y un mes. El único número que la
+ * pantalla escribe es `asignable`: lo libre y el déficit ya vienen sumados por el servidor
+ * justamente para que el frontend no repita esa cuenta y no pueda desincronizarse.
+ *
+ *   `asignable` = lo libre MÁS el déficit del grupo (lo que hay que sumar al presupuesto)
+ *   `reserva_resultante` = la bolsa del grupo más `asignable` (= lo libre: queda en cero)
+ *
+ * La cuenta vive en `funcionesSQL/fn_monto_asignable.md`, no acá.
+ */
+interface MontoAsignable {
+  mes: string | null
+  libre: number
+  bolsa: number
+  deficit: number
+  asignable: number
+  motivo: string | null
+  reserva_resultante: number
+}
+
+/**
  * Bloque D (T7): lo que la cabecera de una hoja puede mostrar de una fila.
  *
  * - `fila`: los importes que la fila ya trae (el reporte vivo en un ciclo abierto, o el
@@ -475,7 +498,11 @@ export function PresupuestosPage() {
 
   // Estado Asignar Sheet
   const [montoManual, setMontoManual] = useState('')
-  const [mostrando, setMostrando] = useState<'opciones' | 'monto'>('opciones')
+  const [mostrando, setMostrando] = useState<'opciones' | 'monto' | 'todo'>('opciones')
+  // «Asignar todo lo disponible»: el desglose del servidor, tal como llegó. `null`
+  // mientras se está pidiendo (o si falló), y en ese caso no hay nada que confirmar.
+  const [montoAsignable, setMontoAsignable] = useState<MontoAsignable | null>(null)
+  const [cargandoAsignable, setCargandoAsignable] = useState(false)
   const montoRef = useRef<HTMLInputElement>(null)
 
   // Estado Transferir
@@ -1043,6 +1070,9 @@ export function PresupuestosPage() {
     setSobreSeleccionado(sobre)
     setMostrando('opciones')
     setMontoManual('')
+    // El desglose de «Asignar todo» es de la categoría que se acaba de abrir: el de la
+    // anterior no sirve, y confirmar con un número viejo es justo lo que hay que evitar.
+    setMontoAsignable(null)
     setShowAsignarSheet(true)
   }
 
@@ -1086,6 +1116,8 @@ export function PresupuestosPage() {
       )
       setShowAsignarSheet(false)
       setSobreSeleccionado(null)
+      setMontoAsignable(null)
+      setMostrando('opciones')
       await cargarDatos(true)
     } catch (err: any) {
       const rechazo = mensajeRechazoPresupuesto(err, t, formatMonto)
@@ -1100,6 +1132,66 @@ export function PresupuestosPage() {
       // poder reintentar.
       setGuardandoAsignacion(false)
     }
+  }
+
+  /**
+   * «Asignar todo lo disponible»: pide el importe al servidor y muestra el desglose
+   * ANTES de escribir nada. El monto no se calcula acá: `fn_monto_asignable` es la única
+   * fuente, porque combina el dinero libre real con el déficit del grupo y la pantalla no
+   * puede repetir esa cuenta sin poder desincronizarse.
+   *
+   * Se pide al tocar la acción (y no al abrir la hoja) para que el número sea el del
+   * momento: si entre mostrar y confirmar cambió, el servidor rechaza la escritura.
+   */
+  const handleAbrirTodoDisponible = async () => {
+    if (!sobreSeleccionado) return
+    if (soloLectura) {
+      showToast(t('budget_readonly_cycle_toast'), 'error')
+      return
+    }
+    if (cargandoAsignable) return
+    setMostrando('todo')
+    setMontoAsignable(null)
+    setCargandoAsignable(true)
+    try {
+      const { data, error } = await supabase.rpc('fn_monto_asignable', {
+        p_estructura_egreso_id: sobreSeleccionado.estructura_id,
+        p_mes: mesPeriodoStr,
+      })
+      if (error) throw error
+      const crudo = (data ?? null) as Partial<MontoAsignable> | null
+      if (!crudo || crudo.asignable === null || crudo.asignable === undefined) {
+        throw new Error('monto-asignable-unavailable')
+      }
+      setMontoAsignable({
+        mes: crudo.mes ?? null,
+        libre: Number(crudo.libre ?? 0),
+        bolsa: Number(crudo.bolsa ?? 0),
+        deficit: Number(crudo.deficit ?? 0),
+        asignable: Number(crudo.asignable),
+        motivo: crudo.motivo ?? null,
+        reserva_resultante: Number(crudo.reserva_resultante ?? 0),
+      })
+    } catch {
+      // Sin número no hay acción: la hoja vuelve a las opciones con el error de siempre.
+      setMostrando('opciones')
+      showToast(t('budget_error_assign'), 'error')
+    } finally {
+      setCargandoAsignable(false)
+    }
+  }
+
+  /**
+   * Confirmar el desglose. El importe que viaja es el que el servidor dijo (`asignable`)
+   * sumado al límite que la categoría ya tiene, porque `fn_asignar_presupuesto` REEMPLAZA
+   * el límite en vez de sumarlo. Si el monto cambió entre mostrar y confirmar, el
+   * servidor lo rechaza y el mensaje que se muestra es el suyo, sin inventar otro número.
+   */
+  const handleConfirmarTodoDisponible = async () => {
+    if (!montoAsignable) return
+    const nuevoLimite =
+      Number(sobreSeleccionado?.monto_asignado ?? 0) + Number(montoAsignable.asignable)
+    await ejecutarAsignacion(nuevoLimite)
   }
 
   const handleLlenarHueco = async () => {
@@ -1992,11 +2084,95 @@ export function PresupuestosPage() {
               </div>
             )}
 
-            {mostrando === 'opciones' ? (
+            {mostrando === 'todo' ? (
+              /* Dueño: «Mostrar el desglose antes de confirmar.» Tres líneas, las tres
+                 del servidor: lo que se asigna en total, cuánto de eso compensa el
+                 déficit (sólo si hay) y cuánto queda efectivamente reservado. */
+              <div className="asignar-desglose">
+                {cargandoAsignable || !montoAsignable ? (
+                  <p className="asignar-desglose-espera">{t('budget_assign_all_loading')}</p>
+                ) : montoAsignable.asignable <= 0 ? (
+                  /* Sin nada asignable no hay acción ni alarma: se dice y se vuelve. */
+                  <>
+                    <p className="asignar-desglose-espera">{t('budget_assign_all_nothing')}</p>
+                    <div className="asignar-desglose-acciones">
+                      <button
+                        type="button"
+                        className="btn-cancelar"
+                        onClick={() => { setMostrando('opciones'); setMontoAsignable(null) }}
+                      >
+                        {t('btn_back')}
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="asignar-desglose-linea asignar-desglose-linea--total">
+                      <span className="asignar-desglose-label">{t('budget_assign_all_total')}</span>
+                      <span className="asignar-desglose-valor">
+                        {formatMonto(montoAsignable.asignable)}
+                      </span>
+                    </div>
+                    {/* El déficit se nombra sólo cuando existe: un cero ahí se lee
+                        «compensa 0», que no explica nada. */}
+                    {montoAsignable.deficit > 0 && (
+                      <div className="asignar-desglose-linea">
+                        <span className="asignar-desglose-label">{t('budget_assign_all_deficit')}</span>
+                        <span className="asignar-desglose-valor">
+                          {formatMonto(montoAsignable.deficit)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="asignar-desglose-linea">
+                      <span className="asignar-desglose-label">{t('budget_assign_all_reserve')}</span>
+                      <span className="asignar-desglose-valor">
+                        {formatMonto(montoAsignable.reserva_resultante)}
+                      </span>
+                    </div>
+                    <p className="asignar-desglose-hint">{t('budget_assign_all_hint')}</p>
+                    <div className="asignar-desglose-acciones">
+                      <button
+                        type="button"
+                        className="btn-cancelar"
+                        onClick={() => { setMostrando('opciones'); setMontoAsignable(null) }}
+                        disabled={guardandoAsignacion}
+                      >
+                        {t('btn_back')}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn-confirmar-monto"
+                        onClick={handleConfirmarTodoDisponible}
+                        disabled={guardandoAsignacion || cicloCerrado}
+                      >
+                        {guardandoAsignacion ? t('btn_saving') : t('btn_confirm')}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            ) : mostrando === 'opciones' ? (
               <div className="asignar-opciones">
                 <div className="asignar-opciones-label">{t('budget_assign_options')}</div>
                 {/* Bloque D (T3): todas las entradas que escriben (llenar hueco, monto,
                     referencias y transferir) se apagan con el ciclo cerrado del servidor. */}
+                {/* «Asignar todo lo disponible»: la acción de un toque. Sólo se ofrece
+                    con el ciclo abierto (el servidor ya rechaza un ciclo cerrado) y el
+                    importe lo trae `fn_monto_asignable` al tocarla. */}
+                {!cicloCerrado && (
+                  <button
+                    type="button"
+                    className="asignar-opcion asignar-opcion--todo"
+                    onClick={handleAbrirTodoDisponible}
+                    disabled={cargandoAsignable}
+                  >
+                    <span className="asignar-opcion-icono">🎯</span>
+                    <div className="asignar-opcion-texto">
+                      <h4>{t('budget_option_assign_all_title')}</h4>
+                      <p>{t('budget_option_assign_all_desc')}</p>
+                    </div>
+                  </button>
+                )}
                 {config?.modo_presupuesto !== 'anticipado' && (
                   <button type="button" className="asignar-opcion" onClick={handleLlenarHueco} disabled={cicloCerrado}>
                     <span className="asignar-opcion-icono">💰</span>

@@ -1001,6 +1001,82 @@
 .btn-confirmar-monto:hover { background: #3db8b0; }
 .btn-confirmar-monto:disabled { opacity: 0.4; cursor: not-allowed; }
 
+/* «Asignar todo lo disponible»: la acción de un toque va primera y se distingue del
+   resto sin dejar de ser un botón de opción (misma tipografía, mismo alto). */
+.asignar-opcion--todo {
+  border-color: var(--mint);
+  background: var(--mint-dim, rgba(78, 205, 196, 0.12));
+}
+
+/* El desglose previo: tres renglones con etiqueta y número, y la línea que explica cómo
+   se leen. En 390 px la etiqueta se queda con el espacio que sobra y el número no se
+   parte, porque es el dato que el usuario está leyendo. */
+.asignar-desglose {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 4px 0 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+
+.asignar-desglose-espera {
+  margin: 0;
+  font-size: calc(13px * var(--font-scale));
+  color: var(--text-2);
+  line-height: 1.4;
+}
+
+.asignar-desglose-linea {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: calc(13px * var(--font-scale));
+  color: var(--text-2);
+}
+
+.asignar-desglose-linea--total {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.asignar-desglose-label {
+  min-width: 0;
+}
+
+.asignar-desglose-valor {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: calc(14px * var(--font-scale));
+  white-space: nowrap;
+}
+
+.asignar-desglose-linea--total .asignar-desglose-valor {
+  font-size: calc(16px * var(--font-scale));
+  color: var(--mint, #00B127);
+}
+
+.asignar-desglose-hint {
+  margin: 2px 0 0;
+  font-size: calc(11px * var(--font-scale));
+  color: var(--text-3);
+  line-height: 1.4;
+}
+
+.asignar-desglose-acciones {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.asignar-desglose-acciones .btn-confirmar-monto {
+  flex: 1;
+}
+
 /* ========== MODAL TRANSFERIR ENTRE SOBRES ========== */
 .transferir-lista-sobres {
   display: flex;

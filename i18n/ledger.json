@@ -1423,8 +1423,32 @@
         "to": "Assign All Available"
       },
       "errors.budget_option_assign_all_desc": {
-        "from": "Mueve los {monto} libres aquí",
-        "to": "Move the available {monto} here"
+        "from": "Cubre primero el déficit y reserva todo el dinero libre",
+        "to": "Covers the deficit first and reserves all the free money"
+      },
+      "errors.budget_assign_all_loading": {
+        "from": "Calculando lo disponible...",
+        "to": "Working out what is available..."
+      },
+      "errors.budget_assign_all_total": {
+        "from": "Se asigna en total",
+        "to": "Assigned in total"
+      },
+      "errors.budget_assign_all_deficit": {
+        "from": "Compensa el déficit",
+        "to": "Covers the deficit"
+      },
+      "errors.budget_assign_all_reserve": {
+        "from": "Queda reservado",
+        "to": "Left reserved"
+      },
+      "errors.budget_assign_all_hint": {
+        "from": "El total se reparte entre el déficit que se compensa y lo que queda reservado. El dinero libre del ciclo queda en cero.",
+        "to": "The total is split between the deficit it covers and what stays reserved. The cycle's free money ends at zero."
+      },
+      "errors.budget_assign_all_nothing": {
+        "from": "No hay dinero libre para asignar en este ciclo.",
+        "to": "There is no free money to assign in this cycle."
       },
       "errors.budget_option_cover_other_title": {
         "from": "Cubrir desde Otro Sobre",
@@ -12873,8 +12897,32 @@
         "to": "Atribuir tudo o que estiver disponível"
       },
       "errors.budget_option_assign_all_desc": {
-        "from": "Mueve los {monto} libres aquí",
-        "to": "Move os {monto} livres para cá"
+        "from": "Cubre primero el déficit y reserva todo el dinero libre",
+        "to": "Cobre primeiro o déficit e reserva todo o dinheiro livre"
+      },
+      "errors.budget_assign_all_loading": {
+        "from": "Calculando lo disponible...",
+        "to": "Calculando o que está disponível..."
+      },
+      "errors.budget_assign_all_total": {
+        "from": "Se asigna en total",
+        "to": "Atribuído no total"
+      },
+      "errors.budget_assign_all_deficit": {
+        "from": "Compensa el déficit",
+        "to": "Compensa o déficit"
+      },
+      "errors.budget_assign_all_reserve": {
+        "from": "Queda reservado",
+        "to": "Fica reservado"
+      },
+      "errors.budget_assign_all_hint": {
+        "from": "El total se reparte entre el déficit que se compensa y lo que queda reservado. El dinero libre del ciclo queda en cero.",
+        "to": "O total se divide entre o déficit que é compensado e o que fica reservado. O dinheiro livre do ciclo fica em zero."
+      },
+      "errors.budget_assign_all_nothing": {
+        "from": "No hay dinero libre para asignar en este ciclo.",
+        "to": "Não há dinheiro livre para atribuir neste ciclo."
       },
       "errors.budget_option_cover_other_title": {
         "from": "Cubrir desde Otro Sobre",

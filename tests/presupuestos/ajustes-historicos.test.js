@@ -198,3 +198,135 @@ test('las claves de los ajustes están en los tres idiomas', () => {
     'el título tiene que salir por i18n, no del código',
   )
 })
+
+// ─── 3. Asignar todo lo disponible ──────────────────────────────────────────
+//
+// Encargo del dueño: «Asignar $947.920,17 en términos presupuestarios: compensar el
+// déficit y dejar $621.692,77 efectivamente reservados. El dinero libre queda en cero.
+// Mostrar el desglose antes de confirmar.»
+//
+// El importe NO se calcula en la pantalla: `fn_monto_asignable` ya combina el dinero
+// libre real con el déficit del grupo. Si la pantalla repitiera esa cuenta, podría
+// mostrar un número que el servidor después rechaza.
+
+test('el importe de «asignar todo» lo dice el servidor, no el frontend', () => {
+  assert.match(
+    pagina,
+    /supabase\.rpc\('fn_monto_asignable', \{\s*p_estructura_egreso_id: sobreSeleccionado\.estructura_id,\s*p_mes: mesPeriodoStr,\s*\}\)/,
+    'el importe se pide con el rubro y el mes visible',
+  )
+
+  // Nada de aritmética de déficit ni de dinero libre en la pantalla: los dos números
+  // llegan hechos y `asignable` es el único que se escribe.
+  assert.ok(
+    !/montoAsignable\.(?:libre|deficit)\s*[+*/-]/.test(pagina) &&
+      !/[+*/-]\s*montoAsignable\.(?:libre|deficit)/.test(pagina),
+    'el frontend no opera con lo libre ni con el déficit: eso ya viene sumado en `asignable`',
+  )
+  assert.ok(
+    !/montoAsignable\.asignable\s*\+/.test(pagina),
+    '`asignable` se escribe tal cual, no se le agrega nada',
+  )
+  assert.match(
+    pagina,
+    /\{formatMonto\(montoAsignable\.asignable\)\}/,
+    'el total que se muestra es el `asignable` de la RPC',
+  )
+  assert.match(
+    pagina,
+    /Number\(sobreSeleccionado\?\.monto_asignado \?\? 0\) \+ Number\(montoAsignable\.asignable\)/,
+    'se confirma el asignable sumado al límite actual, porque el backend REEMPLAZA el límite',
+  )
+})
+
+test('el desglose muestra las tres líneas antes de confirmar', () => {
+  assert.match(pagina, /budget_assign_all_total/, 'dice cuánto se asigna en total')
+  assert.match(pagina, /budget_assign_all_deficit/, 'dice cuánto compensa el déficit')
+  assert.match(pagina, /budget_assign_all_reserve/, 'dice cuánto queda reservado')
+  assert.match(
+    pagina,
+    /\{formatMonto\(montoAsignable\.reserva_resultante\)\}/,
+    'lo reservado es el `reserva_resultante` del servidor, no el total',
+  )
+
+  // El déficit se nombra sólo cuando existe: con déficit 0 la línea sobra.
+  const desde = pagina.indexOf('montoAsignable.deficit > 0 &&')
+  assert.ok(desde > -1, 'la línea del déficit tiene que estar condicionada al déficit')
+  const linea = pagina.slice(desde, desde + 400)
+  assert.match(linea, /budget_assign_all_deficit/, 'y dentro de esa condición va su texto')
+
+  // Antes de confirmar: no hay ninguna escritura en el desglose.
+  const bloqueDesglose = pagina.slice(
+    pagina.indexOf("mostrando === 'todo' ?"),
+    pagina.indexOf("mostrando === 'opciones' ?"),
+  )
+  assert.ok(bloqueDesglose.length > 0, 'no encontré el panel del desglose')
+  assert.ok(
+    !/fn_asignar_presupuesto/.test(bloqueDesglose),
+    'el desglose muestra; la escritura va por el botón de confirmar',
+  )
+  assert.match(bloqueDesglose, /onClick=\{handleConfirmarTodoDisponible\}/, 'confirma desde acá')
+})
+
+test('con déficit el total es mayor que lo reservado', () => {
+  // Caso Alimentos del encargo: total 947.920,17 · compensa 326.227,40 · reserva
+  // 621.692,77. Los tres números son los que el desglose pinta uno debajo del otro, así
+  // que tienen que cerrar: si no cierran, la pantalla está mostrando otra cosa.
+  assert.match(
+    pagina,
+    /budget_assign_all_deficit/,
+    'sin la línea del déficit el usuario no puede ver de dónde sale la diferencia',
+  )
+  const total = 947920.17
+  const deficit = 326227.40
+  const reserva = 621692.77
+  assert.ok(total > reserva, 'con déficit, el total asignado supera lo que queda reservado')
+  assert.ok(Math.abs(total - deficit - reserva) < 0.01, 'el total se reparte entre déficit y reserva')
+})
+
+test('sin nada asignable la acción no escribe y no alarma', () => {
+  assert.match(
+    pagina,
+    /montoAsignable\.asignable <= 0 \?/,
+    'con asignable en cero el panel no ofrece confirmar',
+  )
+  assert.match(pagina, /budget_assign_all_nothing/, 'y lo dice con una línea tranquila')
+})
+
+test('en un ciclo cerrado «asignar todo» no aparece', () => {
+  const i = pagina.indexOf('asignar-opcion asignar-opcion--todo')
+  assert.ok(i > -1, 'no encontré la acción')
+  const antes = pagina.slice(i - 400, i)
+  assert.match(antes, /\{!cicloCerrado && \(/, 'la acción se dibuja fuera de un ciclo cerrado')
+  // Y el guardado no escribe: el servidor ya lo rechaza.
+  assert.match(
+    pagina,
+    /disabled=\{guardandoAsignacion \|\| cicloCerrado\}/,
+    'el botón de confirmar también se apaga con el ciclo cerrado',
+  )
+})
+
+test('las claves del desglose están en los tres idiomas y sin placeholders sueltos', () => {
+  const claves = [
+    'budget_option_assign_all_title',
+    'budget_option_assign_all_desc',
+    'budget_assign_all_loading',
+    'budget_assign_all_total',
+    'budget_assign_all_deficit',
+    'budget_assign_all_reserve',
+    'budget_assign_all_hint',
+    'budget_assign_all_nothing',
+  ]
+  for (const lang of ['es', 'en', 'pt']) {
+    const dict = diccionario(lang)
+    for (const clave of claves) {
+      assert.ok(dict.includes(`${clave}:`), `${lang} no tiene ${clave}`)
+    }
+    // La descripción de la acción ya no puede pedir un monto que no se conoce antes de
+    // tocar: el importe se pide recién ahí.
+    assert.ok(
+      !/budget_option_assign_all_desc: "[^"]*\{monto\}/.test(dict),
+      `${lang} todavía promete un {monto} en la descripción`,
+    )
+  }
+})
