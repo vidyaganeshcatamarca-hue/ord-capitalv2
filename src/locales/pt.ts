@@ -1134,6 +1134,7 @@ export const prestamos = {
   prestamos_editar_error_contraparte: "A contraparte não pode ficar vazia.",
   prestamos_editar_error_nombre: "O nome não pode ficar vazio.",
   prestamos_editar_error_saldo_ingreso: "O saldo inicial não pode ser negativo.",
+  prestamos_editar_interes_ayuda: "Apague o valor para remover o juro acordado.",
 
   // Detalhe
   prestamos_detalle_cargando: "Carregando o detalhe…",
@@ -1204,6 +1205,7 @@ export const prestamos = {
   prestamos_calendario_cuota: "Parcela {n}",
   prestamos_calendario_ver_prestamo: "Abrir empréstimo",
   prestamos_calendario_aviso: "O calendário não guarda o saldo: o saldo pertence ao empréstimo.",
+  prestamos_calendario_moneda_sin_informar: "moeda não informada",
 
   // Saneamento
   prestamos_saneamiento_titulo: "Plano de ataque",

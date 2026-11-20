@@ -83,6 +83,8 @@ export interface PrestamoDetalle {
   direccion: Direccion
   contraparte: string
   nombre: string
+  /** `personal` | `institucional`; null when the backend has no record of it. */
+  tipo_deuda: string | null
   moneda: string
   monto_original: number | null
   saldo_al_ingreso: number | null
@@ -152,6 +154,12 @@ export interface EventoCalendarioUnificado {
   prestamo_id: number | null
   direccion: Direccion | null
   numero_cuota: number | null
+  /**
+   * True when the source row carries an amount but no currency (recurring
+   * expenses). The amount is then shown with an explicit «no currency» note
+   * instead of borrowing a symbol it cannot prove (S26).
+   */
+  moneda_sin_informar: boolean
 }
 
 export interface PlanFila {

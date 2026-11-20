@@ -13,7 +13,7 @@ import {
   type EventoCalendarioPrestamo,
   type EventoCalendarioUnificado,
 } from './types'
-import { montoEvento } from './formato'
+import { etiquetaEvento, montoEvento } from './formato'
 import './prestamos.css'
 
 const RANGOS = [30, 60, 90] as const
@@ -40,8 +40,23 @@ const PESO_TIPO: Record<EventoCalendarioUnificado['tipo'], number> = {
  *
  * The calendar is not the authority of any balance: it opens the loan, and the
  * payment happens there, through the single path that already exists.
+ *
+ * Formatting comes from `lib/format.ts`, the one place that knows the active
+ * locale and the local currency. Those helpers read a module-level context that
+ * `useNumberFormat` publishes; this screen only SUBSCRIBES to it, the same way
+ * `PrestamoLista` and `PrestamoDetalle` do. It must never mount the publisher:
+ * a second instance publishes its own partially hydrated state (its own locale
+ * for the currency symbol, its own decimals until its RPCs land) and the money on
+ * this one screen stops matching the rest of the module — a USD loan read
+ * «$1.000,0», as if it were local currency, while «Me deben» read «US$ 3.000,0».
+ *
+ * Mounting it is NOT how dates become locale-correct either: dates here go
+ * through `formatDate`, which already formats with `context.locale`, and
+ * `useFormatRevision` re-renders the screen whenever that context changes. One
+ * date path, no second one (S28).
  */
 export function PrestamosCalendario() {
+  // Re-renders on every format context change; publishing belongs to the app.
   const revisionFormato = useFormatRevision()
   const { showToast } = useToast()
   const navigate = useNavigate()
@@ -78,6 +93,8 @@ export function PrestamosCalendario() {
   }, [cargar])
 
   const eventos = useMemo<EventoCalendarioUnificado[]>(() => {
+    // Read from the shared context, exactly like the rest of the module: a card
+    // due date arrives expressed in the user's local currency.
     const monedaLocal = getFormatContext().localCurrency
 
     const dePrestamos: EventoCalendarioUnificado[] = prestamos.map((evento) => ({
@@ -94,6 +111,7 @@ export function PrestamosCalendario() {
       prestamo_id: evento.prestamo_id,
       direccion: evento.direccion,
       numero_cuota: evento.numero_cuota,
+      moneda_sin_informar: false,
     }))
 
     const deFinancieros: EventoCalendarioUnificado[] = financieros
@@ -104,9 +122,9 @@ export function PrestamosCalendario() {
           clave: `${evento.tipo_evento}-${evento.evento_id}`,
           fecha: evento.fecha,
           tipo: esTarjeta ? 'tarjeta' : 'recurrente',
-          // A recurring expense with no custom name arrives null on purpose: the
-          // backend refuses to send a Spanish literal and lets the UI name it.
-          nombre: evento.nombre ?? t('prestamos_calendario_sin_nombre'),
+          // A recurring expense arrives either with the user's own name or with the
+          // category key, which is resolved through the app dictionary (S27).
+          nombre: etiquetaEvento(evento.nombre),
           monto: numero(evento.monto),
           moneda: esTarjeta ? monedaLocal : null,
           formato: esTarjeta ? 'moneda' : 'numero',
@@ -115,6 +133,11 @@ export function PrestamosCalendario() {
           prestamo_id: null,
           direccion: null,
           numero_cuota: null,
+          // The financial report returns no currency for a recurring expense and its
+          // amount lives in the wallet that pays it, which is not necessarily the
+          // user's local currency. Borrowing a symbol here would state something the
+          // row cannot prove, so the amount is shown with an explicit note (S26).
+          moneda_sin_informar: !esTarjeta,
         }
       })
 
@@ -234,6 +257,11 @@ export function PrestamosCalendario() {
                     </div>
                     <div className="prestamos-evento-monto">
                       <strong>{montoEvento(evento)}</strong>
+                      {evento.moneda_sin_informar && evento.monto !== null && (
+                        <span className="prestamos-evento-monto-nota">
+                          {t('prestamos_calendario_moneda_sin_informar')}
+                        </span>
+                      )}
                       {evento.tipo === 'prestamo' && evento.prestamo_id !== null && (
                         <button
                           type="button"

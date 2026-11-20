@@ -1134,6 +1134,7 @@ export const prestamos = {
   prestamos_editar_error_contraparte: "The counterparty cannot be empty.",
   prestamos_editar_error_nombre: "The name cannot be empty.",
   prestamos_editar_error_saldo_ingreso: "The starting balance cannot be negative.",
+  prestamos_editar_interes_ayuda: "Clear the amount to remove the agreed interest.",
 
   // Detail
   prestamos_detalle_cargando: "Loading the detail…",
@@ -1204,6 +1205,7 @@ export const prestamos = {
   prestamos_calendario_cuota: "Installment {n}",
   prestamos_calendario_ver_prestamo: "Open loan",
   prestamos_calendario_aviso: "The calendar does not hold the balance: the balance belongs to the loan.",
+  prestamos_calendario_moneda_sin_informar: "currency not informed",
 
   // Cleanup
   prestamos_saneamiento_titulo: "Attack plan",

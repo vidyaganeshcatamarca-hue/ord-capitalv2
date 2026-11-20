@@ -737,6 +737,15 @@
   font-size: calc(14px * var(--font-scale));
 }
 
+/* «No currency» note: an amount whose row carries no currency never looks like money
+   of some other currency (S26). */
+.prestamos-evento-monto-nota {
+  font-size: calc(10px * var(--font-scale));
+  line-height: 1.2;
+  color: var(--text-3);
+  max-width: 12ch;
+}
+
 .prestamos-evento-link {
   background: transparent;
   border: none;

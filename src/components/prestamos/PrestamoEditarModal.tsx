@@ -46,6 +46,7 @@ const CONDICIONES: { valor: CondicionInteres; clave: string }[] = [
 type Campo =
   | 'contraparte'
   | 'nombre'
+  | 'tipo_deuda'
   | 'monto_original'
   | 'saldo_al_ingreso'
   | 'condicion'
@@ -55,6 +56,13 @@ type Campo =
   | 'modalidad'
   | 'cuotas'
 
+type TipoDeuda = 'personal' | 'institucional'
+
+/** `tipo_deuda` as the detail returns it; anything else is «not informed». */
+function tipoDeudaDesdeDetalle(valor: string | null | undefined): TipoDeuda | null {
+  return valor === 'personal' || valor === 'institucional' ? valor : null
+}
+
 /**
  * Edit the CONDITIONS of a loan (S11, T5).
  *
@@ -63,7 +71,8 @@ type Campo =
  *      payments and collections already recorded. The text says so.
  *   2. A null parameter means «leave as is», so the payload carries only what the
  *      user touched. Clearing the due date cannot travel as null — that is what
- *      `p_limpiar_vencimiento` exists for.
+ *      `p_limpiar_vencimiento` exists for. The same holds for the optional agreed
+ *      interest, which is cleared through `p_limpiar_interes`.
  */
 export function PrestamoEditarModal({
   isOpen,
@@ -81,6 +90,10 @@ export function PrestamoEditarModal({
 
   const [contraparte, setContraparte] = useState(() => detalle.contraparte ?? '')
   const [nombre, setNombre] = useState(() => detalle.nombre ?? '')
+  // Prefilled from the detail so the chips show the stored type. When the backend
+  // reports nothing, no chip is active and nothing is sent unless the user picks one.
+  const tipoDeudaInicial = tipoDeudaDesdeDetalle(detalle.tipo_deuda)
+  const [tipoDeuda, setTipoDeuda] = useState<TipoDeuda | null>(tipoDeudaInicial)
   const [montoOriginal, setMontoOriginal] = useState(() =>
     detalle.monto_original === null || detalle.monto_original === undefined
       ? ''
@@ -125,8 +138,10 @@ export function PrestamoEditarModal({
   }
 
   const tienePagos = (detalle.pagos ?? []).length > 0
+  const condicionInicial = detalle.condicion_interes ?? 'desconocido'
   const modalidadCambiada = modalidad !== (detalle.modalidad ?? 'libre')
   const modalidadBloqueada = tienePagos && modalidadCambiada
+  const tipoDeudaCambiado = tipoDeuda !== null && tipoDeuda !== tipoDeudaInicial
 
   const tasaInformada = condicion === 'ninguno' || condicion === 'tasa'
   const tasaAEnviar =
@@ -171,7 +186,7 @@ export function PrestamoEditarModal({
       setError(t('prestamos_alta_error_tasa'))
       return
     }
-    if (tocado.has('interes') && condicion === 'importe_final') {
+    if (tocado.has('interes') && condicion === 'importe_final' && interesTotal.trim() !== '') {
       const interes = numero(interesTotal)
       if (interes === null || interes < 0) {
         setError(t('prestamos_alta_error_interes'))
@@ -200,6 +215,7 @@ export function PrestamoEditarModal({
     const params: Record<string, unknown> = { p_prestamo_id: detalle.prestamo_id }
     if (tocado.has('contraparte')) params.p_contraparte = contraparte.trim()
     if (tocado.has('nombre')) params.p_nombre = nombre.trim()
+    if (tipoDeudaCambiado) params.p_tipo_deuda = tipoDeuda
     if (tocado.has('monto_original')) params.p_monto_original = numero(montoOriginal)
     if (tocado.has('saldo_al_ingreso')) params.p_saldo_al_ingreso = numero(saldoAlIngreso)
     if (tocado.has('condicion')) {
@@ -210,8 +226,14 @@ export function PrestamoEditarModal({
       params.p_tasa_anual = tasaAEnviar
       params.p_tasa_informada = tasaInformada
     }
-    if (tocado.has('interes') && condicion === 'importe_final') {
-      params.p_interes_total_acordado = numero(interesTotal)
+    // An emptied interest field, or picking «no interest», REMOVES the optional
+    // condition: null would travel as «leave as is», so it goes through the flag.
+    const interesNum = numero(interesTotal)
+    if (condicion === 'ninguno' && condicion !== condicionInicial) {
+      params.p_limpiar_interes = true
+    } else if (condicion === 'importe_final' && tocado.has('interes')) {
+      if (interesNum === null) params.p_limpiar_interes = true
+      else params.p_interes_total_acordado = interesNum
     }
     if (tocado.has('vencimiento') || limpiarVencimiento) {
       // An emptied date field means the same as the checkbox: null cannot travel
@@ -300,6 +322,32 @@ export function PrestamoEditarModal({
             />
           </div>
 
+          <fieldset className="prestamos-fieldset">
+            <legend>{t('prestamos_alta_tipo')}</legend>
+            <div className="prestamos-chips">
+              <button
+                type="button"
+                className={`prestamos-chip ${tipoDeuda === 'personal' ? 'is-activo' : ''}`}
+                onClick={() => {
+                  if (tipoDeuda !== 'personal') marcar('tipo_deuda')
+                  setTipoDeuda('personal')
+                }}
+              >
+                {t('prestamos_saneamiento_personal')}
+              </button>
+              <button
+                type="button"
+                className={`prestamos-chip ${tipoDeuda === 'institucional' ? 'is-activo' : ''}`}
+                onClick={() => {
+                  if (tipoDeuda !== 'institucional') marcar('tipo_deuda')
+                  setTipoDeuda('institucional')
+                }}
+              >
+                {t('prestamos_saneamiento_institucional')}
+              </button>
+            </div>
+          </fieldset>
+
           <div className="prestamos-field-row">
             <div className="prestamos-field">
               <label htmlFor="prestamo-editar-original">{t('prestamos_lista_original')}</label>
@@ -386,6 +434,7 @@ export function PrestamoEditarModal({
                   setInteresTotal(e.target.value)
                 }}
               />
+              <span className="prestamos-field-hint">{t('prestamos_editar_interes_ayuda')}</span>
             </div>
           )}
 
