@@ -33,9 +33,15 @@ BEGIN
 
     -- Hoja del ciclo donde el importe local y el nominal NO coinciden: es el único
     -- lugar donde el cambio se puede observar. Si no hay ninguna, el caso lo dice.
+    -- La hoja tiene que ser una subcategoria: el caso B mide que la bolsa del PADRE baje
+    -- cuando gasta un hijo. Antes se elegia cualquier hoja con diferencia, y si caia en un
+    -- rubro padre el caso B fallaba con «no tiene padre» por como se armaba el escenario,
+    -- no por el producto.
     SELECT c.estructura_egreso_id INTO v_hoja
       FROM public.v_p_caja_reportable c
+      JOIN public.p_estructuras_egresos e ON e.estructura_id = c.estructura_egreso_id
      WHERE c.user_id = v_uid
+       AND e.padre_id IS NOT NULL
        AND c.tipo = 'expense'
        AND c.estructura_egreso_id IS NOT NULL
        AND c.fecha >= v_ciclo

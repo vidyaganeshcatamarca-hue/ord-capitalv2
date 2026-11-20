@@ -7,6 +7,8 @@ DECLARE
     caja bigint;
     antes numeric;
     despues numeric;
+    antes_mov numeric;
+    despues_mov numeric;
     act date := date_trunc('month', CURRENT_DATE)::date;
     n int;
     aj numeric;
@@ -88,17 +90,26 @@ BEGIN
     PERFORM public.fn_cerrar_ciclo_presupuesto('2025-07-01');
     -- El importe almacenado no es necesariamente el que escribimos: hay disparadores de moneda.
     -- Se toma el valor real antes y despues, y el ajuste tiene que ser exactamente esa diferencia.
-    SELECT COALESCE(valor_local, valor_egreso) INTO antes FROM public.p_caja WHERE p_caja_id = caja;
+    -- El escenario arranca limpio: si quedara un ajuste previo de este mismo movimiento (de una
+    -- corrida anterior o de otro escenario), la suma incluiria algo que no produjo esta correccion.
+    DELETE FROM public.p_presupuestos_cierre
+     WHERE tipo = 'ajuste' AND detalle->>'caja_id' = caja::text;
+    SELECT COALESCE(valor_local, valor_egreso) INTO antes_mov FROM public.p_caja WHERE p_caja_id = caja;
+    SELECT public.fn_disponible_transferible(4265, date_trunc('month',CURRENT_DATE)::date) INTO antes;
     UPDATE public.p_caja SET valor_egreso = 12000, valor_local = 12000 WHERE p_caja_id = caja;
-    SELECT COALESCE(valor_local, valor_egreso) INTO despues FROM public.p_caja WHERE p_caja_id = caja;
+    SELECT COALESCE(valor_local, valor_egreso) INTO despues_mov FROM public.p_caja WHERE p_caja_id = caja;
 
+    -- Se mide el efecto que importa: la bolsa del grupo en el ciclo activo sube exactamente la
+    -- diferencia corregida, y queda una fila de ajuste con rastro a este movimiento. Sumar las
+    -- filas del ciclo mezclaria ajustes de otros escenarios de la misma cuenta de prueba.
+    SELECT public.fn_disponible_transferible(4265, date_trunc('month',CURRENT_DATE)::date) INTO despues;
     v := v || jsonb_build_array(jsonb_build_object('caso','E9_libertad_registra_el_ajuste',
-        'ok', (SELECT COALESCE(SUM(saldo_cierre),0) FROM public.p_presupuestos_cierre
-                WHERE tipo='ajuste' AND user_id=198 AND estructura_egreso_id=4265
-                  AND mes_periodo = date_trunc('month',CURRENT_DATE)::date) = (antes - despues),
-        'detalle', (SELECT COALESCE(SUM(saldo_cierre),0) FROM public.p_presupuestos_cierre
-                WHERE tipo='ajuste' AND user_id=198 AND estructura_egreso_id=4265
-                  AND mes_periodo = date_trunc('month',CURRENT_DATE)::date)));
+        'ok', despues - antes = (antes_mov - despues_mov)
+              AND EXISTS (SELECT 1 FROM public.p_presupuestos_cierre
+                           WHERE tipo='ajuste' AND user_id=198 AND estructura_egreso_id=4265
+                             AND mes_periodo = date_trunc('month',CURRENT_DATE)::date
+                             AND detalle->>'caja_id' = caja::text),
+        'detalle', jsonb_build_array(antes_mov, despues_mov, despues - antes)));
 
     v := v || jsonb_build_array(jsonb_build_object('caso','E10_libertad_no_arrastra',
         'ok', public.fn_disponible_transferible(4265, '2025-08-01') = 0
