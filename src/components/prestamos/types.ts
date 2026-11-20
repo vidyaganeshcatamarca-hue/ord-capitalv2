@@ -50,6 +50,16 @@ export interface PrestamoListaItem {
   tasa_informada: boolean
   modalidad: Modalidad
   tiene_cronograma: boolean
+  /** `p_prestamos.contraparte_user_id`: the member named as counterparty, if any. */
+  contraparte_user_id: number | null
+  /** Name of that counterparty, or null when the loan names none. */
+  contraparte_nombre: string | null
+  /**
+   * Server-side classification: true exactly when the counterparty is a member of the
+   * caller's household and is not the caller. A caller with no household always gets
+   * false. The client cannot compute this: it never learns the other member's user id.
+   */
+  contraparte_integrante: boolean
 }
 
 export interface PrestamoCuota {

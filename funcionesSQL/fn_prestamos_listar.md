@@ -1,5 +1,5 @@
 CREATE OR REPLACE FUNCTION public.fn_prestamos_listar(p_direccion text, p_incluir_saldados boolean DEFAULT false)
- RETURNS TABLE(prestamo_id bigint, direccion text, contraparte text, nombre text, moneda text, saldo_pendiente numeric, monto_original numeric, pagado_registrado numeric, estado text, estado_vencimiento text, proximo_vencimiento date, tasa numeric, tasa_informada boolean, modalidad text, tiene_cronograma boolean, contraparte_user_id bigint, contraparte_nombre text)
+ RETURNS TABLE(prestamo_id bigint, direccion text, contraparte text, nombre text, moneda text, saldo_pendiente numeric, monto_original numeric, pagado_registrado numeric, estado text, estado_vencimiento text, proximo_vencimiento date, tasa numeric, tasa_informada boolean, modalidad text, tiene_cronograma boolean, contraparte_user_id bigint, contraparte_nombre text, contraparte_integrante boolean)
  LANGUAGE plpgsql
  STABLE SECURITY DEFINER
  SET search_path TO 'public', 'pg_temp'
@@ -38,7 +38,19 @@ BEGIN
            -- The named counterparty, if the loan declares one. LEFT JOIN on the primary
            -- key, so a loan without counterparty keeps NULL and no row is multiplied.
            p.contraparte_user_id,
-           ct.nombre::text AS contraparte_nombre
+           ct.nombre::text AS contraparte_nombre,
+           -- The classification the Partner screen needs, decided here because only the
+           -- server knows who belongs to the caller's household. True when the counterparty
+           -- is a member of that household and is not the caller itself; false when the
+           -- loan names nobody, when the counterparty is outside the household, and when
+           -- the counterparty is the caller (a caller with no household always gets false).
+           (p.contraparte_user_id IS NOT NULL
+            AND v_hogar_id IS NOT NULL
+            AND p.contraparte_user_id <> v_user_id
+            AND EXISTS (SELECT 1
+                        FROM public.p_hogar_participantes hp
+                        WHERE hp.user_id = p.contraparte_user_id
+                          AND hp.hogar_id = v_hogar_id)) AS contraparte_integrante
     FROM public.p_prestamos p
     LEFT JOIN public.usuarios ct ON ct.user_id = p.contraparte_user_id
     WHERE (p.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND p.hogar_id = v_hogar_id))

@@ -1274,8 +1274,8 @@ export const prestamos = {
   prestamos_pareja_gastos_sin_deuda: "Nothing is pending from shared expenses.",
   prestamos_pareja_gastos_sin_moneda: "The household balance arrives with no currency reported, so the amount is shown without a symbol instead of assuming one.",
   prestamos_pareja_prestamos_titulo: "Loans between the two of you",
-  prestamos_pareja_prestamos_pendiente: "This group cannot be shown yet.",
-  prestamos_pareja_prestamos_motivo: "A read path is still missing: a loan can already name a member as its counterparty, but the read side does not expose that field, and matching by name would be a guess.",
+  prestamos_pareja_prestamos_sin_hogar: "There is no shared household yet, so there are no loans between the two of you to show.",
+  prestamos_pareja_prestamos_sin_datos: "Nothing is pending between the two of you.",
   prestamos_pareja_regla: "«Shared expenses» and «Loans between the two of you» are two separate groups: they are never subtracted from each other nor added together.",
 };
 

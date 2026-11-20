@@ -1324,8 +1324,8 @@ export const prestamos = {
   prestamos_pareja_gastos_sin_deuda: "No hay deuda pendiente por gastos compartidos.",
   prestamos_pareja_gastos_sin_moneda: "El balance del hogar llega sin moneda informada: se muestra el importe sin símbolo en vez de suponer una.",
   prestamos_pareja_prestamos_titulo: "Préstamos entre ustedes",
-  prestamos_pareja_prestamos_pendiente: "Este grupo todavía no se puede mostrar.",
-  prestamos_pareja_prestamos_motivo: "Falta una lectura que devuelva la contraparte del préstamo: el préstamo ya puede declararse contra un integrante, pero la lectura no expone ese dato y emparejar por nombre sería adivinar.",
+  prestamos_pareja_prestamos_sin_hogar: "Todavía no hay un hogar compartido, así que no hay préstamos entre ustedes que mostrar.",
+  prestamos_pareja_prestamos_sin_datos: "No hay préstamos pendientes entre ustedes.",
   prestamos_pareja_regla: "«Gastos compartidos» y «Préstamos entre ustedes» son dos grupos separados: nunca se restan ni se suman entre sí.",
 };
 

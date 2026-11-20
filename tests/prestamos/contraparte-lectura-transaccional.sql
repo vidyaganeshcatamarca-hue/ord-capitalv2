@@ -20,6 +20,9 @@
 --   C6  C, member of another household, reads neither of A's loans
 --   C7  E, member of no household, gets exactly its own rows: the new columns are NULL
 --       and every pre-existing column keeps the value it had before this change
+--   C8  the classification the client cannot make itself: contraparte_integrante is true
+--       only when the counterparty is a member of the caller's household and is not the
+--       caller, and false in the four other cases
 --
 -- The rows of the second group are never netted against anything: this suite asserts
 -- membership and values per row, never a balance.
@@ -50,6 +53,10 @@ DECLARE
     v_coposeido bigint;
     v_privado   bigint;
     v_propio_e  bigint;
+    v_privado_ext   bigint;
+    v_propio_c_2    bigint;
+    v_propio_e_2    bigint;
+    v_sin_contrap   bigint;
     v_n         integer;
     v_id        bigint;
     v_nombre    text;
@@ -359,8 +366,112 @@ BEGIN
                    IN pg_get_functiondef(p.oid)) > 0
       AND position('(p.user_id = v_user_id OR (v_hogar_id IS NOT NULL AND p.hogar_id = v_hogar_id))'
                    IN pg_get_functiondef(p.oid)) > 0
-      AND pg_get_function_result(p.oid) LIKE '%contraparte_user_id bigint, contraparte_nombre text)';
-    INSERT INTO t_resultado VALUES (22, 'C7 definicion: una sola version, hogar derivado, predicado privado-o-coposeido y las dos columnas al final',
+      AND pg_get_function_result(p.oid) LIKE '%contraparte_user_id bigint, contraparte_nombre text%';
+    INSERT INTO t_resultado VALUES (22, 'C7 definicion: una sola version, hogar derivado, predicado privado-o-coposeido y las columnas de contraparte al final',
+        (v_n = 1), format('definiciones conformes=%s', v_n));
+
+    -- =======================================================================
+    -- C8 — contraparte_integrante: the classification only the server can make
+    -- =======================================================================
+    PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_auth_a)::text, true);
+
+    -- A private loan of A naming C, who lives in another household, and a loan with no
+    -- counterparty declared at all.
+    v_privado_ext := public.fn_prestamo_crear(
+        p_direccion           => 'debo',
+        p_contraparte         => 'TEST_CONTRAP_Externo',
+        p_moneda              => 'ARS',
+        p_monto_original      => 400,
+        p_modalidad           => 'libre',
+        p_es_historico        => true,
+        p_contraparte_user_id => v_c);
+
+    v_sin_contrap := public.fn_prestamo_crear(
+        p_direccion      => 'debo',
+        p_contraparte    => 'TEST_CONTRAP_SinContraparte',
+        p_moneda         => 'ARS',
+        p_monto_original => 150,
+        p_modalidad      => 'libre',
+        p_es_historico   => true);
+
+    INSERT INTO t_resultado VALUES (23, 'setup A: una privada con contraparte de otro hogar y otra sin contraparte declarada',
+        (v_privado_ext IS NOT NULL AND v_sin_contrap IS NOT NULL),
+        format('externa=%s sin_contraparte=%s', v_privado_ext, v_sin_contrap));
+
+    -- C8a — co-owned loan of A naming B, a member of A's household: TRUE for A.
+    SELECT l.contraparte_integrante INTO v_bool
+    FROM public.fn_prestamos_listar(NULL, true) l WHERE l.prestamo_id = v_coposeido;
+    INSERT INTO t_resultado VALUES (24, 'C8 listar: verdadero cuando la contraparte es integrante del hogar del llamante (A sobre la coposeida con B)',
+        (v_bool IS TRUE), format('contraparte_integrante=%s', v_bool));
+
+    -- C8b — same row, read by B: the counterparty is the caller itself, so FALSE.
+    PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_auth_b)::text, true);
+
+    SELECT l.contraparte_integrante INTO v_bool
+    FROM public.fn_prestamos_listar(NULL, true) l WHERE l.prestamo_id = v_coposeido;
+    INSERT INTO t_resultado VALUES (25, 'C8 listar: falso cuando la contraparte es el propio llamante (B sobre la coposeida que lo nombra)',
+        (v_bool IS FALSE), format('contraparte_integrante=%s', v_bool));
+
+    -- C8c — A's private loan naming C, who lives in another household: FALSE.
+    PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_auth_a)::text, true);
+
+    SELECT l.contraparte_integrante INTO v_bool
+    FROM public.fn_prestamos_listar(NULL, true) l WHERE l.prestamo_id = v_privado_ext;
+    INSERT INTO t_resultado VALUES (26, 'C8 listar: falso para una contraparte de otro hogar (A sobre su privada que nombra a C)',
+        (v_bool IS FALSE), format('contraparte_integrante=%s', v_bool));
+
+    -- C8d — a loan that declares no counterparty at all: FALSE, and both columns NULL.
+    SELECT l.contraparte_integrante, l.contraparte_user_id, l.contraparte_nombre
+      INTO v_bool, v_id, v_nombre
+    FROM public.fn_prestamos_listar(NULL, true) l WHERE l.prestamo_id = v_sin_contrap;
+    INSERT INTO t_resultado VALUES (27, 'C8 listar: falso cuando la deuda no declara contraparte',
+        (v_bool IS FALSE AND v_id IS NULL AND v_nombre IS NULL),
+        format('contraparte_integrante=%s contraparte_user_id=%s contraparte_nombre=%s',
+               v_bool, v_id, v_nombre));
+
+    -- C8e — a member of another household classifying A as counterparty: FALSE.
+    PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_auth_c)::text, true);
+
+    v_propio_c_2 := public.fn_prestamo_crear(
+        p_direccion           => 'debo',
+        p_contraparte         => 'TEST_CONTRAP_C_a_A',
+        p_moneda              => 'ARS',
+        p_monto_original      => 200,
+        p_modalidad           => 'libre',
+        p_es_historico        => true,
+        p_contraparte_user_id => v_a);
+
+    SELECT l.contraparte_integrante INTO v_bool
+    FROM public.fn_prestamos_listar(NULL, true) l WHERE l.prestamo_id = v_propio_c_2;
+    INSERT INTO t_resultado VALUES (28, 'C8 listar: falso para un integrante de otro hogar (C nombrando a A)',
+        (v_bool IS FALSE), format('contraparte_integrante=%s (prestamo=%s)', v_bool, v_propio_c_2));
+
+    -- C8f — a caller with no household naming a member of somebody else's household: FALSE.
+    PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_auth_e)::text, true);
+
+    v_propio_e_2 := public.fn_prestamo_crear(
+        p_direccion           => 'debo',
+        p_contraparte         => 'TEST_CONTRAP_E_a_B',
+        p_moneda              => 'ARS',
+        p_monto_original      => 300,
+        p_modalidad           => 'libre',
+        p_es_historico        => true,
+        p_contraparte_user_id => v_b);
+
+    SELECT l.contraparte_integrante INTO v_bool
+    FROM public.fn_prestamos_listar(NULL, true) l WHERE l.prestamo_id = v_propio_e_2;
+    INSERT INTO t_resultado VALUES (29, 'C8 listar: falso para el llamante sin hogar, aunque nombre a un integrante de un hogar ajeno',
+        (v_bool IS FALSE), format('contraparte_integrante=%s (prestamo=%s)', v_bool, v_propio_e_2));
+
+    -- C8g — the definition: the column closes the RETURNS TABLE, and the classification
+    -- lives in the server (a client cannot read p_hogar_participantes).
+    SELECT count(*) INTO v_n
+    FROM pg_proc p
+    WHERE p.pronamespace = 'public'::regnamespace
+      AND p.proname = 'fn_prestamos_listar'
+      AND pg_get_function_result(p.oid) LIKE '%contraparte_user_id bigint, contraparte_nombre text, contraparte_integrante boolean)'
+      AND position('FROM public.p_hogar_participantes hp' IN pg_get_functiondef(p.oid)) > 0;
+    INSERT INTO t_resultado VALUES (30, 'C8 definicion: contraparte_integrante cierra el RETURNS TABLE y se calcula con p_hogar_participantes en el servidor',
         (v_n = 1), format('definiciones conformes=%s', v_n));
 END $$;
 

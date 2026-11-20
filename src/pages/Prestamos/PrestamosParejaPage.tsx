@@ -7,7 +7,8 @@ import { parseError, t } from '@/locales/i18n'
 import { haptics } from '@/lib/haptics'
 import { formatCurrencyNumber } from '@/lib/format'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
-import { numero } from '@/components/prestamos/types'
+import { montoONoCalculable } from '@/components/prestamos/formato'
+import { numero, rutaPorDireccion, type PrestamoListaItem } from '@/components/prestamos/types'
 import '@/components/prestamos/prestamos.css'
 
 /**
@@ -29,16 +30,18 @@ interface BalanceHogarRow {
  *
  * Two groups, always, never merged and never netted:
  *   1. the shared-expense balance, read from `fn_reporte_hogar_balances()`;
- *   2. the explicit loans between the two members.
+ *   2. the explicit loans between the two members, read from `fn_prestamos_listar`.
  *
- * Group 2 is NOT rendered with data. `p_prestamos.contraparte_user_id` exists and the
- * write functions persist it (`fn_prestamo_crear`, `fn_prestamo_editar`), but no read
- * function projects it: `fn_prestamos_listar` has no such column and
- * `fn_prestamo_detalle` does not include it in its jsonb. Deriving the group by
- * matching `entidad_nombre` against the partner's name would be inventing a link the
- * database does not claim, so the group says what is missing instead.
+ * Group 2 is filled from one column the server computes: `contraparte_integrante` is
+ * true exactly when the loan names a counterparty that belongs to the caller's
+ * household and is not the caller. The classification has to live in the backend: the
+ * client knows its household id but never the other member's `usuarios.user_id`, and
+ * reading `p_hogar_participantes` from here is forbidden. Nothing is matched by name
+ * and no balance is computed between the groups: each row shows its own amount with its
+ * own currency.
  *
- * Nothing here filters by owner: the read functions already enforce privacy.
+ * Nothing here filters by owner either: the read functions already enforce privacy, and
+ * being named as the counterparty of a private loan does not open it.
  */
 export function PrestamosParejaPage() {
   useFormatRevision()
@@ -47,16 +50,19 @@ export function PrestamosParejaPage() {
   const { estado: estadoHogar, loading: cargandoHogar } = useHogar()
 
   const [balances, setBalances] = useState<BalanceHogarRow[]>([])
+  const [prestamos, setPrestamos] = useState<PrestamoListaItem[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const tieneHogar = Boolean(estadoHogar?.tiene_hogar)
 
   const cargar = useCallback(async () => {
-    // No household means no shared expenses to read, and the RPC would only return
-    // an empty set. The empty state is decided by the household, not by the row count.
+    // No household means no shared expenses and no loans between members, so both
+    // groups show their empty state. The empty state is decided by the household, not
+    // by the row count.
     if (!tieneHogar) {
       setBalances([])
+      setPrestamos([])
       setError(null)
       setCargando(false)
       return
@@ -65,8 +71,23 @@ export function PrestamosParejaPage() {
     setCargando(true)
     setError(null)
     try {
-      const data = await rpc<BalanceHogarRow[]>('fn_reporte_hogar_balances')
-      setBalances(Array.isArray(data) ? data : [])
+      const [filasBalance, filasPrestamos] = await Promise.all([
+        rpc<BalanceHogarRow[]>('fn_reporte_hogar_balances'),
+        // One call, no direction filter: a debt can run either way between the two.
+        // Settled loans are left out like in the rest of the module.
+        rpc<PrestamoListaItem[]>('fn_prestamos_listar', {
+          p_direccion: null,
+          p_incluir_saldados: false,
+        }),
+      ])
+      setBalances(Array.isArray(filasBalance) ? filasBalance : [])
+      // Only the rows the server classified as "the counterparty is the other member".
+      // No owner filter and no arithmetic: the two groups are never netted.
+      setPrestamos(
+        (Array.isArray(filasPrestamos) ? filasPrestamos : []).filter(
+          (fila) => fila.contraparte_integrante === true
+        )
+      )
     } catch (err) {
       const mensaje = parseError(err) || t('error_generic')
       setError(mensaje)
@@ -162,8 +183,50 @@ export function PrestamosParejaPage() {
           <div className="prestamos-bloque-head">
             <h2 className="font-display">{t('prestamos_pareja_prestamos_titulo')}</h2>
           </div>
-          <p className="prestamos-hint">{t('prestamos_pareja_prestamos_pendiente')}</p>
-          <p className="prestamos-nota">{t('prestamos_pareja_prestamos_motivo')}</p>
+
+          {cargandoTodo ? (
+            <div className="prestamos-loading-mini">
+              <div className="spinner" />
+              <p className="prestamos-hint">{t('prestamos_loading')}</p>
+            </div>
+          ) : error ? (
+            <p className="prestamos-hint">{error}</p>
+          ) : !tieneHogar ? (
+            <p className="prestamos-hint">{t('prestamos_pareja_prestamos_sin_hogar')}</p>
+          ) : prestamos.length === 0 ? (
+            <p className="prestamos-hint">{t('prestamos_pareja_prestamos_sin_datos')}</p>
+          ) : (
+            <ul className="prestamos-moneda-lista">
+              {prestamos.map((fila) => (
+                <li key={fila.prestamo_id} className="prestamos-moneda-row">
+                  <div className="prestamos-moneda-datos">
+                    <span className="prestamos-saldo-label">
+                      {t(
+                        fila.direccion === 'me_deben'
+                          ? 'prestamos_resumen_me_deben'
+                          : 'prestamos_resumen_debo'
+                      )}
+                      {' · '}
+                      {fila.nombre}
+                    </span>
+                    <strong className="prestamos-moneda-monto">
+                      {montoONoCalculable(fila.saldo_pendiente, fila.moneda)}
+                    </strong>
+                  </div>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    onClick={() => {
+                      haptics.light()
+                      navigate(`${rutaPorDireccion(fila.direccion)}?prestamo=${fila.prestamo_id}`)
+                    }}
+                  >
+                    {t('prestamos_lista_ver_detalle')}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
 
         <p className="prestamos-nota">{t('prestamos_pareja_regla')}</p>
