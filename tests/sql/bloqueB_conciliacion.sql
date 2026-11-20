@@ -34,6 +34,13 @@ BEGIN
     v_f_inicio := date_trunc('month', v_ciclo)::date;
     v_f_fin := (v_f_inicio + INTERVAL '1 month' - INTERVAL '1 day')::date;
 
+    -- Bloque D/E: la prueba arma sus propios meses borrando movimientos de todo el historial.
+    -- Si un mes viejo esta cerrado, el cierre congela su arrastre y cada borrado deja un ajuste
+    -- en el ciclo activo, y entonces la identidad que se mide aca deja de ser la que se prueba.
+    -- Se quitan los cierres DENTRO de la transaccion (revierte al terminar): lo que se verifica
+    -- es el saldo libre contra los movimientos, no el cierre.
+    DELETE FROM public.p_presupuestos_cierre WHERE user_id = v_uid;
+
     -- sin cuotas pendientes que descuenten
     UPDATE public.p_cuotas_detalle SET pagado = true
      WHERE user_id = v_uid AND pagado = false AND fecha_estimada_pago <= v_f_fin;
