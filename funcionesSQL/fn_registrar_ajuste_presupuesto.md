@@ -25,5 +25,18 @@ BEGIN
                  COALESCE(detalle->>'caja_id', ''))
     WHERE tipo = 'ajuste'
     DO UPDATE SET saldo_cierre = public.p_presupuestos_cierre.saldo_cierre + EXCLUDED.saldo_cierre;
+
+    -- Una recategorizacion entre dos subcategorias del mismo padre da +monto y -monto sobre la
+    -- misma fila. Que quede en cero es correcto, pero una fila en cero es basura que confunde:
+    -- se borra. Tambien limpia el rastro de una recategorizacion que se revirtio.
+    DELETE FROM public.p_presupuestos_cierre
+     WHERE tipo = 'ajuste'
+       AND mes_periodo = v_mes_activo
+       AND estructura_egreso_id = p_grupo
+       AND COALESCE(user_id, 0) = COALESCE(p_user_id, 0)
+       AND COALESCE(hogar_id, 0) = COALESCE(p_hogar_id, 0)
+       AND COALESCE(ciclo_corregido, '1900-01-01'::date) = COALESCE(p_ciclo_corregido, '1900-01-01'::date)
+       AND detalle->>'caja_id' = p_caja_id::text
+       AND saldo_cierre = 0;
 END;
 $function$

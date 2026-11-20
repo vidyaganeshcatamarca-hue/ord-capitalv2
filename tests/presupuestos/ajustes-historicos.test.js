@@ -47,3 +47,25 @@ test('la bolsa del ciclo suma los ajustes y el cierre historico no los absorbe',
   const reporte = compacto(leer('fn_reporte_cierre_ciclo'))
   assert.ok(/tipo = 'cierre'/.test(reporte), 'la lectura historica sigue mirando solo los cierres')
 })
+
+test('una recategorizacion entre hijos del mismo padre no deja filas en cero', () => {
+  const cuerpo = compacto(leer('fn_registrar_ajuste_presupuesto'))
+  assert.ok(
+    /DELETE FROM public\.p_presupuestos_cierre WHERE tipo = 'ajuste'/.test(cuerpo),
+    'el ajuste que se cancela tiene que limpiarse, no quedar como fila en cero',
+  )
+  assert.ok(/saldo_cierre = 0/.test(cuerpo), 'solo se borra cuando de verdad quedo en cero')
+})
+
+test('una recategorizacion mueve el gasto entre padres, no entre movimientos', () => {
+  const cuerpo = compacto(leer('fn_ajuste_por_correccion_caja'))
+  assert.ok(
+    !/INSERT INTO (?:public\.)?p_caja|p_billeteras/.test(cuerpo),
+    'recategorizar no puede crear ni mover dinero: cambia la atribucion, no el gasto',
+  )
+  assert.ok(
+    /v_old_grupo := public\.fn_grupo_de_estructura\(OLD\.estructura_egreso_id\)/.test(cuerpo) &&
+      /v_new_grupo := public\.fn_grupo_de_estructura\(NEW\.estructura_egreso_id\)/.test(cuerpo),
+    'el padre anterior y el nuevo se resuelven por separado',
+  )
+})

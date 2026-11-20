@@ -247,3 +247,4 @@ tests/configuracion/*
 !tests/sql/bloqueD_hijas.sql
 !tests/sql/bloqueE_ajustes.sql
 !tests/presupuestos/ajustes-historicos.test.js
+!tests/sql/bloqueF_recategorizacion.sql
