@@ -8,6 +8,7 @@
 -- Updated 2026-11-22 for the owner decisions of chapter 5: the consent records, the reports,
 -- the feedback and the referrals are no longer destroyed. The list below no longer names
 -- them, and the block at the end proves they come out of the reset unchanged.
+-- C7 was inverted later the same day: the feedback is conserved whole, never anonymised.
 -- p_presupuestos_cierre joins the list: it carries no foreign key, which is why it used to
 -- survive a reset that reported success.
 --
@@ -16,7 +17,11 @@
 
 BEGIN;
 
-CREATE TEMP TABLE _reset_resultado (clave text, valor text) ON COMMIT DROP;
+CREATE TEMP TABLE _reset_resultado (
+    orden int GENERATED ALWAYS AS IDENTITY,
+    clave text,
+    valor text
+) ON COMMIT DROP;
 
 DO $test$
 DECLARE
@@ -98,7 +103,7 @@ BEGIN
     VALUES (v_hogar, v_uid), (v_hogar, v_otro);
     INSERT INTO public.p_hogar_pagos (hogar_id, monto) VALUES (v_hogar, 50);
 
-    INSERT INTO _reset_resultado VALUES ('user', v_uid::text),
+    INSERT INTO _reset_resultado (clave, valor) VALUES ('user', v_uid::text),
                                         ('p_caja_antes', v_caja::text),
                                         ('hogar', v_hogar::text);
 
@@ -144,7 +149,7 @@ BEGIN
     END;
 
     v_res := public.fn_borrar_datos_usuario('ERASE', '1234');
-    INSERT INTO _reset_resultado VALUES ('resultado', v_res::text);
+    INSERT INTO _reset_resultado (clave, valor) VALUES ('resultado', v_res::text);
 
     IF v_res->>'resultado' IS DISTINCT FROM 'borrado_datos_ok' THEN
         RAISE EXCEPTION 'FALLO: resultado inesperado %', v_res;
@@ -198,7 +203,9 @@ BEGIN
     END IF;
 
     -- The rows that survive on purpose (chapter 5, decisions C3, C4, C7 and C8): still
-    -- there, and still the same number of them.
+    -- there, and still the same number of them. C7 is inverted since 2026-11-22: the
+    -- feedback is conserved whole and is no longer anonymised, so the check is the same
+    -- count AND the same author, not "left without user_id".
     SELECT count(*) INTO v_left FROM public.p_legal_consentimientos WHERE user_id = v_uid;
     IF v_left <> v_legal THEN
         RAISE EXCEPTION 'FALLO: los consentimientos pasaron de % a % filas', v_legal, v_left;
@@ -208,9 +215,12 @@ BEGIN
         RAISE EXCEPTION 'FALLO: los reportes pasaron de % a % filas', v_reportes, v_left;
     END IF;
     SELECT count(*) INTO v_left FROM public.p_feedback_usuario WHERE user_id = v_uid;
-    IF v_left > 0 THEN
-        RAISE EXCEPTION 'FALLO: quedaron % feedback sin anonimizar', v_left;
+    IF v_left <> v_feedback THEN
+        RAISE EXCEPTION 'FALLO C7 invertido: el feedback paso de % a % filas con el usuario todavia como autor',
+            v_feedback, v_left;
     END IF;
+    -- C8 suspended: the invited side is cleared by the deployed routine and that behaviour
+    -- is documented, not decided.
     SELECT count(*) INTO v_left FROM public.p_referidos WHERE user_id_invitado = v_uid;
     IF v_left > 0 THEN
         RAISE EXCEPTION 'FALLO: quedaron % referidos con el invitado identificado', v_left;
@@ -220,7 +230,7 @@ BEGIN
     IF v_left <> v_referidos THEN
         RAISE EXCEPTION 'FALLO: los referidos pasaron de % a % filas', v_referidos, v_left;
     END IF;
-    INSERT INTO _reset_resultado VALUES
+    INSERT INTO _reset_resultado (clave, valor) VALUES
         ('conservadas', format('legales %s, reportes %s, feedback %s, referidos %s',
                                v_legal, v_reportes, v_feedback, v_referidos));
 
@@ -230,9 +240,17 @@ BEGIN
         RAISE EXCEPTION 'FALLO: se borraron movimientos de otros usuarios';
     END IF;
 
-    INSERT INTO _reset_resultado VALUES ('veredicto', 'PASS');
+    INSERT INTO _reset_resultado (clave, valor) VALUES ('veredicto', 'PASS');
 END;
 $test$;
 
-SELECT clave, valor FROM _reset_resultado;
+SELECT
+    orden,
+    CASE WHEN valor LIKE 'PASS%' THEN 'PASS'
+         WHEN valor LIKE 'FAIL%' THEN 'FAIL'
+         ELSE 'INFO' END AS resultado,
+    clave AS assertion,
+    valor AS detalle
+FROM _reset_resultado
+ORDER BY orden;
 ROLLBACK;
