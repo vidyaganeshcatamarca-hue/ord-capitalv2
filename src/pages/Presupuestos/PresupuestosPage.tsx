@@ -101,6 +101,14 @@ interface SobreDetalle {
    * servidor.
    */
   congelado?: HijoCierreCiclo
+  /**
+   * Bloque D (T7/S6): el ciclo está cerrado y el cierre NO guardó ni el grupo ni el hijo
+   * de esta fila. Entonces los tres importes de la fila no son cero: no existen. El
+   * cierre sólo guarda los grupos que tenían fila de presupuesto ese ciclo, así que un
+   * cero ahí afirmaría que no se le asignó nada y que no gastó nada, dos cosas que el
+   * cierre no dice. Lo arma la pantalla, no viene del servidor.
+   */
+  sin_dato_cierre?: boolean
 }
 
 /**
@@ -138,8 +146,10 @@ interface ReporteCierreCiclo {
  *
  * - `fila`: los importes que la fila ya trae (el reporte vivo en un ciclo abierto, o el
  *   grupo del cierre cuando la fila es un rubro padre).
- * - `sin_dato`: subcategoría de un ciclo cerrado cuyo grupo no guardó el desglose. No hay
- *   número que mostrar: un cero se lee «no gastó nada» y eso es un dato falso.
+ * - `sin_dato`: una fila de un ciclo cerrado cuyo cierre no guardó sus números: la
+ *   subcategoría de un grupo sin desglose, o un grupo (rubro padre o suelto) que el cierre
+ *   no guardó. No hay número que mostrar: un cero se lee «no gastó nada» y eso es un dato
+ *   falso.
  * - `congelado`: el gasto y el techo que el cierre guardó de esa subcategoría.
  */
 type ImportesHojaDetalle =
@@ -470,10 +480,18 @@ export function PresupuestosPage() {
   /**
    * Bloque D (T7): el estado de los importes de una fila para las hojas. Una subcategoría
    * de un ciclo cerrado tiene números sólo si el cierre guardó su desglose; si no, la hoja
-   * lo dice en vez de mostrar el cero con el que la fila llega por falta de dato.
+   * lo dice en vez de mostrar el cero con el que la fila llega por falta de dato. Un grupo
+   * (rubro padre o suelto) tiene números sólo si el cierre lo guardó.
    */
   const importesHojaDetalle = (s: SobreDetalle): ImportesHojaDetalle => {
-    if (!cicloCerrado || !esSubcategoriaDeRubro(s)) return { estado: 'fila' }
+    if (!cicloCerrado) return { estado: 'fila' }
+    // T7/S6: un grupo (rubro padre o suelto) que el cierre no guardó no tiene importes que
+    // mostrar. La hoja llegaba con los tres ceros del fallback y los pintaba como dato.
+    if (!esSubcategoriaDeRubro(s)) {
+      return cierreCiclo?.grupos[Number(s.estructura_id)]
+        ? { estado: 'fila' }
+        : { estado: 'sin_dato' }
+    }
     if (!s.congelado) return { estado: 'sin_dato' }
     return {
       estado: 'congelado',
@@ -802,6 +820,12 @@ export function PresupuestosPage() {
    *
    * T7: la subcategoría no está en `grupos` (el cierre guarda un grupo por rubro padre),
    * pero sí en `hijos`, con su gasto del ciclo. Ese gasto es el que se pinta.
+   *
+   * T7/S6: un grupo (rubro padre o suelto) que el cierre no guardó deja los tres importes
+   * en cero, que es el único fallback honesto del mapa, pero la fila NO puede pintarlos:
+   * `sin_dato_cierre` es la marca que le dice que ese cero no es un dato del cierre. Con
+   * el grupo guardado —aunque su gasto sea 0 de verdad— la marca se apaga y el cero se
+   * muestra: ese cero sí está registrado.
    */
   const sobresParaMostrar = useMemo(() => {
     if (!cierreCiclo || !cierreCiclo.cerrado) return sobres
@@ -817,6 +841,8 @@ export function PresupuestosPage() {
         arrastre_mes_anterior: g ? Number(g.detalle?.arrastre ?? 0) : 0,
         // T7: el gasto y el techo de la subcategoría, para que la fila los lea.
         congelado: h,
+        // T7/S6: ni grupo ni hijo en el cierre ⇒ la fila no tiene importes que mostrar.
+        sin_dato_cierre: !g && !h,
       }
     })
   }, [sobres, cierreCiclo, hijosCongelados])
@@ -2630,10 +2656,13 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
   // techo de aquel momento. Que falte no significa que no gastó: significa que ese cierre
   // no guardó el desglose del grupo (los anteriores al 20/11/2026), y entonces se dice.
   const congelado = sobre.congelado
-  // Bloque D (T7): la fila no tiene los números del cierre. Se mide con
-  // `esSubcategoria` y no con `!es_padre`: un rubro suelto (sin padre y sin hijos) sí
-  // tiene su grupo en el cierre, y taparlo con «no disponible» sería otro error.
+  // Bloque D (T7/S6): la fila no tiene los números del cierre. Dos casos, la misma frase:
+  // la subcategoría cuyo grupo no guardó el desglose, y el grupo (rubro padre o suelto)
+  // que el cierre no guardó. El primer término se conserva tal cual porque es el caso de
+  // la subcategoría; el segundo es el que faltaba: el padre se pintaba con tres ceros.
+  const sinDatoDelGrupo = cicloCerrado === true && !esSubcategoria && sobre.sin_dato_cierre === true
   const congeladoSinDato = cicloCerrado && esSubcategoria && !congelado
+    || sinDatoDelGrupo
   // El techo que tenía el hijo al cerrar, o la frase que dice que no hay dato. Es un
   // valor del cierre: ni el techo de hoy ni el margen de hoy del padre.
   const techoCongelado = congelado
@@ -2733,7 +2762,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
       {/* Barra. Dueño (2026-11-02): «la línea roja del sobre que se ha excedido la hagas
           titilar, prender y apagar». Sólo el excedido: el que cubrió justo el total se
           queda quieto, porque en un celular el color solo no alcanza. */}
-      {!sinDatos && !sinTecho && (
+      {!sinDatos && !sinTecho && !congeladoSinDato && (
         <div
           className="sobre-barra-wrap"
           // M2c: la misma barra codifica DOS escalas, así que cada una lleva su leyenda.
@@ -2770,8 +2799,14 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
             cero ahí se lee «no gastó nada». */}
         {sobre.es_padre ? (
           <span className="sobre-stat">
-            <span className="sobre-stat-label">{t('budget_stat_assigned')}</span>
-            <span className="sobre-stat-val">{fmt(Number(sobre.monto_asignado))}</span>
+            <span className="sobre-stat-label">
+              {congeladoSinDato ? t('budget_cycle_history_label') : t('budget_stat_assigned')}
+            </span>
+            <span className="sobre-stat-val">
+              {congeladoSinDato
+                ? t('budget_cycle_history_unavailable')
+                : fmt(Number(sobre.monto_asignado))}
+            </span>
           </span>
         ) : (
           <span className="sobre-stat">
@@ -2801,7 +2836,7 @@ function FilaSobre({ sobre, isLast, hija, expandido, onToggleGrupo, libreGrupo, 
         {/* Lo que queda del techo del grupo para los hijos sin presupuesto propio.
             Antes iba pegado al nombre; ahora vive acá, con su etiqueta. Con signo: un
             pozo negativo es déficit del grupo, no «no queda nada». */}
-        {sobre.es_padre && libreGrupo !== undefined && (
+        {sobre.es_padre && !congeladoSinDato && libreGrupo !== undefined && (
           <span className="sobre-stat">
             <span className="sobre-stat-label">{t('budget_stat_group_free')}</span>
             <span className="sobre-stat-val">{montoConSigno(libreGrupo)}</span>

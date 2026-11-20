@@ -161,11 +161,12 @@ test('el cierre visible se guarda como {cerrado, grupos} y manda sobre el report
   assert.match(pagina, /monto_gastado: g \? g\.monto_gastado : h \? h\.gasto : 0/, 'el gasto del grupo es el del cierre' )
   assert.match(pagina, /monto_disponible: g \? g\.saldo_cierre : 0/, 'el saldo es el de cierre')
 
-  // Un grupo que el cierre no tenga cae en cero: es un dato que no existe, no un
-  // número recalculado con los gastos de después (S6).
+  // Un grupo que el cierre no tenga cae en cero en el mapa: es el fallback, porque el
+  // número que no existe no se puede inventar (S6). Ese cero nunca llega a la pantalla:
+  // la fila lo detecta con `sin_dato_cierre` y dice que el histórico no está (T7/S6).
   const iMostrar = pagina.indexOf('const sobresParaMostrar')
   assert.ok(iMostrar > -1, 'falta la lista que reemplaza el reporte vivo por el cierre')
-  const bloqueMostrar = pagina.slice(iMostrar, iMostrar + 900)
+  const bloqueMostrar = pagina.slice(iMostrar, iMostrar + 1100)
   assert.ok(bloqueMostrar.includes(': 0'), 'sin grupo, los tres importes caen en cero')
 
   // La lista y la alerta se arman sobre lo que se muestra, no sobre `sobres` crudo.
@@ -311,6 +312,65 @@ test('un cierre sin desglose dice que el histórico no está disponible, nunca c
   )
 })
 
+test('un grupo que el cierre no guardó no se pinta con importes', () => {
+  // El cierre guarda un grupo por rubro que tenía fila de presupuesto ese ciclo. Un grupo
+  // sin fila en el cierre no se queda en cero: ese cero afirmaría que no se le asignó
+  // nada y que no gastó nada, y el cierre no dice ninguna de las dos cosas (S6).
+
+  // 1. La fila queda marcada. La regla es «ni grupo ni hijo»: un grupo que el cierre SÍ
+  //    guardó con gasto 0 sigue mostrando su cero, porque ese cero está registrado.
+  assert.match(
+    pagina,
+    /sin_dato_cierre: !g && !h/,
+    'la fila sin grupo en el cierre tiene que quedar marcada',
+  )
+
+  // 2. La fila lee la marca y la trata igual que la subcategoría sin desglose.
+  assert.match(
+    pagina,
+    /const sinDatoDelGrupo = cicloCerrado === true && !esSubcategoria && sobre\.sin_dato_cierre === true/,
+    'el rubro padre o suelto sin fila en el cierre se reconoce como dato no disponible',
+  )
+  assert.match(
+    pagina,
+    /const congeladoSinDato = cicloCerrado && esSubcategoria && !congelado\s*\|\| sinDatoDelGrupo/,
+    'la subcategoría sin desglose y el grupo sin fila en el cierre caen en la misma rama',
+  )
+
+  // 3. Los importes del padre no son ceros: la celda dice el histórico no disponible, y
+  //    cuando el grupo sí está en el cierre se sigue pintando el monto guardado.
+  assert.match(
+    pagina,
+    /\{congeladoSinDato \? t\('budget_cycle_history_label'\) : t\('budget_stat_assigned'\)\}/,
+    'la celda del padre se rotula «Histórico» cuando el cierre no guardó el grupo',
+  )
+  assert.match(
+    pagina,
+    /\{congeladoSinDato\s*\?\s*t\('budget_cycle_history_unavailable'\)\s*:\s*fmt\(Number\(sobre\.monto_asignado\)\)\}/,
+    'sin dato del cierre no se pinta el monto asignado; con dato se pinta el del cierre',
+  )
+
+  // 4. Ni barra de avance ni margen del grupo: los dos se calculan con los números de hoy.
+  assert.match(
+    pagina,
+    /\{!sinDatos && !sinTecho && !congeladoSinDato && \(/,
+    'sin dato del cierre no se dibuja la barra de avance',
+  )
+  assert.match(
+    pagina,
+    /\{sobre\.es_padre && !congeladoSinDato && libreGrupo !== undefined && \(/,
+    'sin dato del cierre no se pinta el margen del grupo',
+  )
+
+  // 5. La hoja de detalle, que es el mismo dato un toque más adentro, tampoco puede
+  //    pintar los ceros del fallback.
+  assert.match(
+    pagina,
+    /if \(!esSubcategoriaDeRubro\(s\)\) \{\s*return cierreCiclo\?\.grupos\[Number\(s\.estructura_id\)\]\s*\? \{ estado: 'fila' \}\s*: \{ estado: 'sin_dato' \}/,
+    'la hoja de un grupo sin fila en el cierre dice que el histórico no está',
+  )
+})
+
 test('las claves del desglose congelado están en los tres idiomas', () => {
   const claves = [
     'budget_stat_no_ceiling',
@@ -348,7 +408,23 @@ test('la hoja de detalle no pinta el gastado sin pasar por la rama de dato no di
   )
   assert.match(
     pagina,
-    /const importesHojaDetalle = \(s: SobreDetalle\): ImportesHojaDetalle => \{\s*if \(!cicloCerrado \|\| !esSubcategoriaDeRubro\(s\)\) return \{ estado: 'fila' \}\s*if \(!s\.congelado\) return \{ estado: 'sin_dato' \}/,
+    /const importesHojaDetalle = \(s: SobreDetalle\):/,
+    'los importes de la hoja se resuelven en un solo lugar',
+  )
+  const resolver = pagina.slice(
+    pagina.indexOf('const importesHojaDetalle'),
+    pagina.indexOf('const importesHojaDetalle') + 900,
+  )
+  assert.match(resolver, /if \(!cicloCerrado\) return \{ estado: 'fila' \}/,
+    'un ciclo abierto sigue mostrando lo que trae la fila')
+  assert.match(
+    resolver,
+    /if \(!esSubcategoriaDeRubro\(s\)\) \{\s*return cierreCiclo\?\.grupos\[Number\(s\.estructura_id\)\]\s*\? \{ estado: 'fila' \}\s*: \{ estado: 'sin_dato' \}/,
+    'un grupo que el cierre no guardó tampoco tiene números que mostrar',
+  )
+  assert.match(
+    resolver,
+    /if \(!s\.congelado\) return \{ estado: 'sin_dato' \}/,
     'sin dato congelado el estado es «sin_dato», no un cero',
   )
   assert.match(
