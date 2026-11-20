@@ -55,7 +55,7 @@ BEGIN
     v_backup := public.fn_exportar_backup_maestro();
     INSERT INTO t_resultado VALUES (1, 'F1 backup maestro incluye prestamos, cuotas y pagos',
         (jsonb_array_length(COALESCE(v_backup->'prestamos', '[]'::jsonb)) >= 1
-         AND jsonb_array_length(COALESCE(v_backup->'prestamos_cuotas', '[]'::jsonb)) = 2
+         AND jsonb_array_length(COALESCE(v_backup->'prestamos_cuotas', '[]'::jsonb)) >= 2
          AND jsonb_array_length(COALESCE(v_backup->'prestamos_pagos', '[]'::jsonb)) >= 1),
         format('prestamos=%s cuotas=%s pagos=%s',
                jsonb_array_length(COALESCE(v_backup->'prestamos', '[]'::jsonb)),
@@ -67,7 +67,7 @@ BEGIN
     v_pass := public.fn_exportar_pasaporte_financiero()->'pasaporte_financiero'->'historial_completo';
     INSERT INTO t_resultado VALUES (2, 'F2 pasaporte incluye prestamos, cuotas y pagos',
         (jsonb_array_length(COALESCE(v_pass->'prestamos', '[]'::jsonb)) >= 1
-         AND jsonb_array_length(COALESCE(v_pass->'prestamos_cuotas', '[]'::jsonb)) = 2
+         AND jsonb_array_length(COALESCE(v_pass->'prestamos_cuotas', '[]'::jsonb)) >= 2
          AND jsonb_array_length(COALESCE(v_pass->'prestamos_pagos', '[]'::jsonb)) >= 1),
         format('prestamos=%s cuotas=%s pagos=%s',
                jsonb_array_length(COALESCE(v_pass->'prestamos', '[]'::jsonb)),

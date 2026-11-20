@@ -618,3 +618,78 @@ Dos observaciones para decision del dueno, no corregidas:
 
 Datos de prueba dejados en la cuenta 1: prestamos 445 (W1), 446 (W2) y 447 (W3). Se borran cuando el
 dueno lo pida; no se tocan por cuenta propia.
+
+## Decisiones 32A y 33A - cierre tecnico (2026-11-20)
+
+### Specs
+
+- **S32.1** El saldo actual se deriva siempre de las condiciones iniciales y de las operaciones.
+  `fn_prestamo_editar` acepta `p_saldo_al_ingreso` **solo** cuando el prestamo no tiene pagos
+  vivos: es la correccion del saldo declarado de un prestamo historico. En cualquier otro caso
+  levanta `error_saldo_derivado` y no escribe nada.
+- **S32.2** Si el prestamo esta saldado (`saldo_actual = 0`) y la llamada trae
+  `p_saldo_al_ingreso`, se rechaza con el mismo codigo: se reabre corrigiendo o anulando la
+  operacion que lo cancelo, nunca editando el saldo.
+- **S32.3** Si despues del UPDATE ninguna columna cambio y no se reemplazo el cronograma,
+  la funcion levanta `error_no_changes`. Nunca responde exito a un cambio que no se aplico.
+- **S32.4** Las demas condiciones autorizadas (contraparte, nombre, tipo, moneda del importe
+  original, condicion de interes, tasa, vencimiento, modalidad, cronograma) se siguen pudiendo
+  editar en un prestamo saldado.
+- **S32.5** Corregir o anular un pago que deja saldo pendiente devuelve el prestamo a `activo`
+  y actualiza las vistas. Lo hace el trigger de saldo; se prueba explicitamente.
+- **S33.1** Misma moneda entre billetea y prestamo: la identidad contable es
+  `monto_billetera = monto_aplicado + excedente_confirmado`. Si no se cumple, la RPC levanta
+  `error_monto_incoherente` y no modifica ni la caja ni el prestamo.
+- **S33.2** Sobrepago: se conserva tal cual esta aprobado. El excedente se calcula, se pide
+  confirmacion y queda como interes no registrado antes; un unico egreso; el prestamo queda
+  saldado. La diferencia es valida porque hay un componente financiero identificado.
+- **S33.3** Monedas distintas: dos importes independientes (dinero en la billetera e importe
+  reconocido contra el saldo). No se valida igualdad ni se inventa tipo de cambio.
+- **S33.4** La misma regla vale para registrar y para corregir un pago o cobro.
+- **S33.5** El frontend valida antes de enviar, explica el motivo y **nunca** reescribe en
+  silencio un importe tipeado por el usuario.
+
+### Tasks
+
+- **T32 - S32.1 a S32.5 - backend**: `fn_prestamo_editar` con las guardas de saldo derivado y de
+  cambio nulo; espejos en `funcionesSQL/`; suite transaccional nueva.
+- **T33 - S32.4, S32.5 - frontend**: el modal de edicion distingue condiciones de saldo
+  derivado, muestra los codigos nuevos y deja de confirmar cambios sin efecto.
+- **T34 - S33.1 a S33.5 - backend**: identidad contable en `fn_prestamo_registrar_pago` y
+  `fn_prestamo_corregir_pago`; espejos; aserciones de misma moneda, multimoneda y sobrepago.
+- **T35 - S33.5 - frontend**: validacion y mensaje en el modal de pago y en el de correccion;
+  claves nuevas en es/en/pt.
+- **T36 - recorridos**: repetir por navegador edicion de saldado, misma moneda incoherente,
+  sobrepago confirmado y correccion; verificar caja y saldo una sola vez.
+
+## Cierre tecnico de 32A y 33A (2026-11-20)
+
+Implementado y verificado en la base desplegada:
+
+- **32A.** `fn_prestamo_editar` rechaza `error_saldo_derivado` cuando el prestamo tiene pagos
+  vivos, y `error_no_changes` cuando la edicion no cambia ninguna columna y no reemplaza el
+  cronograma. El saldo declarado de un prestamo historico sin pagos se sigue corrigiendo. El
+  formulario deja de ofrecer el saldo derivado y lo explica con `prestamos_editar_saldo_derivado`.
+- **33A.** Con la misma moneda, `fn_prestamo_registrar_pago` y `fn_prestamo_corregir_pago` exigen
+  `monto_billetera = monto_aplicado + excedente`; si no, `error_monto_incoherente` antes de
+  escribir nada. Con monedas distintas no se compara. El sobrepago confirmado sigue igual.
+  El frontend bloquea la incoherencia y nunca reescribe el importe tipeado.
+- Migracion `20261122c_saldo_derivado_y_coherencia_montos.sql` aplicada.
+
+Suites (todas transaccionales, con ROLLBACK): `coherencia-saldo-montos` 14/14 PASS;
+`edicion-correccion-borrado` 9/9 (E2 reescrita al contrato nuevo); `integracion-exports` 4/4
+(las cuotas exportadas ya no se comparan contra un total exacto, porque la cuenta tiene
+prestamos reales); `vinculos-puntaje-copropiedad` 8/8; las demas suites de prestamos en verde.
+
+Recorrido por navegador sobre el prestamo 534: el importe incoherente se bloquea con el mensaje
+correcto y sin tocar la base; un pago coherente salda; el modal de edicion de un prestamo saldado
+no muestra el saldo y si permite renombrar; corregir el pago a la baja lo reabre en 50.000.
+
+`tsc --noEmit` sin errores. Las cuatro claves nuevas estan en es, en y pt, una linea por valor.
+
+Pendiente:
+- Comparar la suite general contra `origin/produccion`: el proyecto no tiene script `test` y
+  `vitest` no recolecta los archivos `node:test`; no se reprodujo la corrida de referencia.
+- Faltan los espejos de `fn_prestamo_registrar_pago` y `fn_prestamo_corregir_pago` en
+  `funcionesSQL/` y sus entradas en el indice (hoy no existen).
+- Prestamos de prueba conservados: 445, 446, 447 y el nuevo 534 (activo, 50.000 pendientes).

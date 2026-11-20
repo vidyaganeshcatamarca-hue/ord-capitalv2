@@ -364,21 +364,25 @@ export function PrestamoEditarModal({
                 }}
               />
             </div>
-            <div className="prestamos-field">
-              <label htmlFor="prestamo-editar-saldo">{t('prestamos_alta_saldo_actual')}</label>
-              <input
-                id="prestamo-editar-saldo"
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="0.01"
-                value={saldoAlIngreso}
-                onChange={(e) => {
-                  marcar('saldo_al_ingreso')
-                  setSaldoAlIngreso(e.target.value)
-                }}
-              />
-            </div>
+            {(detalle.pagos?.length ?? 0) === 0 && detalle.estado !== 'pagado' ? (
+              <div className="prestamos-field">
+                <label htmlFor="prestamo-editar-saldo">{t('prestamos_alta_saldo_actual')}</label>
+                <input
+                  id="prestamo-editar-saldo"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="0.01"
+                  value={saldoAlIngreso}
+                  onChange={(e) => {
+                    marcar('saldo_al_ingreso')
+                    setSaldoAlIngreso(e.target.value)
+                  }}
+                />
+              </div>
+            ) : (
+              <span className="prestamos-field-hint">{t('prestamos_editar_saldo_derivado')}</span>
+            )}
           </div>
           <span className="prestamos-field-hint">{t('prestamos_editar_saldo_ayuda')}</span>
 

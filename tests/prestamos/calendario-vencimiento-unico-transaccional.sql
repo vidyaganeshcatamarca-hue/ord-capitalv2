@@ -152,9 +152,11 @@ BEGIN
         (v_n = 0), format('eventos_con_ventana_1_dia=%s', v_n));
 END $$;
 
-SELECT CASE WHEN bool_and(ok) THEN 'PASS' ELSE 'FAIL' END AS result,
-       jsonb_agg(jsonb_build_object('assertion', assertion, 'ok', ok, 'detalle', detalle)
-                 ORDER BY orden) AS detail
-FROM t_resultado;
+SELECT orden,
+       CASE WHEN ok THEN 'PASS' ELSE 'FAIL' END AS resultado,
+       assertion,
+       detalle
+  FROM t_resultado
+ ORDER BY orden;
 
 ROLLBACK;

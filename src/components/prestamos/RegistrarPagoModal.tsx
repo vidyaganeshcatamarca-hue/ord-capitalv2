@@ -144,6 +144,15 @@ export function RegistrarPagoModal({
     return saldo + yaAplicado
   }, [saldoPendiente, correccion, pago])
 
+  /**
+   * Decisión 33A: con la misma moneda, la billetera y el préstamo tienen que decir lo
+   * mismo. El sobrepago confirmado sigue siendo válido: ahí el aplicado iguala al de la
+   * billetera y el excedente lo calcula el backend. Con monedas distintas no se compara:
+   * son dos importes independientes y ORD no inventa un tipo de cambio.
+   */
+  const montosIncoherentes =
+    mismaMoneda && montosValidos && Math.abs(montoBilleteraNum - aplicadoNum) > 0.005
+
   const registrar = async (confirmarExcedente: boolean) => {
     // Un doble toque en «Sí, son intereses» no puede registrar el pago dos veces.
     if (guardando) return
@@ -154,6 +163,10 @@ export function RegistrarPagoModal({
     }
     if (!montosValidos) {
       setError(t('prestamos_pago_error_monto'))
+      return
+    }
+    if (montosIncoherentes) {
+      setError(t('error_monto_incoherente'))
       return
     }
     setGuardando(true)

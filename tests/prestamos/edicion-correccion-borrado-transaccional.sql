@@ -85,19 +85,20 @@ BEGIN
                (SELECT count(*) FROM public.p_caja), v_cajas0,
                (SELECT count(*) FROM public.p_prestamos_pagos), v_pagos0));
 
-    -- ---- E2: correcting the registered balance recomputes it ---------
-    PERFORM public.fn_prestamo_editar(p_prestamo_id => v_loan, p_saldo_al_ingreso => 250000);
-
-    INSERT INTO t_resultado VALUES (2, 'E2 corregir saldo de ingreso recalcula sin caja',
-        ((SELECT saldo_actual FROM public.p_prestamos WHERE prestamo_id = v_loan) = 210000
-         AND (SELECT monto_pagado_acumulado FROM public.p_prestamos WHERE prestamo_id = v_loan) = 40000
-         AND (SELECT count(*) FROM public.p_caja) = v_cajas0),
-        format('saldo=%s pagado=%s', 
-               (SELECT saldo_actual FROM public.p_prestamos WHERE prestamo_id = v_loan),
-               (SELECT monto_pagado_acumulado FROM public.p_prestamos WHERE prestamo_id = v_loan)));
-
-    -- Back to 200.000 so the rest of the suite keeps round numbers.
-    PERFORM public.fn_prestamo_editar(p_prestamo_id => v_loan, p_saldo_al_ingreso => 200000);
+    -- ---- E2: the derived balance is not editable once a payment exists --
+    BEGIN
+        PERFORM public.fn_prestamo_editar(p_prestamo_id => v_loan, p_saldo_al_ingreso => 250000);
+        INSERT INTO t_resultado VALUES (2, 'E2 el saldo derivado no se edita cuando hay pagos',
+            false, 'no levanto');
+    EXCEPTION WHEN OTHERS THEN
+        INSERT INTO t_resultado VALUES (2, 'E2 el saldo derivado no se edita cuando hay pagos',
+            (SQLERRM = 'error_saldo_derivado'
+             AND (SELECT saldo_actual FROM public.p_prestamos WHERE prestamo_id = v_loan) = v_saldo0
+             AND (SELECT count(*) FROM public.p_caja) = v_cajas0),
+            format('err=%s saldo=%s cajas=%s/%s', SQLERRM,
+                   (SELECT saldo_actual FROM public.p_prestamos WHERE prestamo_id = v_loan),
+                   (SELECT count(*) FROM public.p_caja), v_cajas0));
+    END;
 
     -- ---- E3: correct the payment upward -------------------------------
     PERFORM public.fn_prestamo_corregir_pago(

@@ -99,6 +99,13 @@ BEGIN
         RAISE EXCEPTION 'error_schedule_required';
     END IF;
 
+    -- Decision 32A: the outstanding balance is derived. Only the DECLARED balance of a
+    -- historical loan that still has no payments can be corrected here; a loan settled by
+    -- a payment is reopened by correcting or annulling that payment.
+    IF p_saldo_al_ingreso IS NOT NULL AND v_pagos > 0 THEN
+        RAISE EXCEPTION 'error_saldo_derivado';
+    END IF;
+
     -- When the interest is being cleared the agreed amount no longer exists, so it
     -- must not be added to the total debt either.
     v_total := COALESCE(p_monto_original, v_prestamo.monto_original)
@@ -132,6 +139,29 @@ BEGIN
            contraparte_user_id   = CASE WHEN COALESCE(p_limpiar_contraparte, false) THEN NULL
                                         ELSE COALESCE(p_contraparte_user_id, contraparte_user_id) END
      WHERE prestamo_id = p_prestamo_id;
+
+    -- Decision 32A: never answer success for an edit that changed nothing. The schedule
+    -- replacement above is a real change even when the row itself is untouched.
+    IF p_cuotas IS NULL THEN
+        PERFORM 1
+          FROM public.p_prestamos p
+         WHERE p.prestamo_id = p_prestamo_id
+           AND ROW(p.entidad_nombre, p.nombre_prestamo, p.tipo_deuda, p.monto_original,
+                   p.monto_total_deuda, p.condicion_interes, p.tasa_anual_tna,
+                   p.tasa_informada, p.interes_total_acordado, p.proximo_vencimiento,
+                   p.saldo_al_ingreso, p.modalidad, p.hogar_id, p.contraparte_user_id)
+               IS NOT DISTINCT FROM
+               ROW(v_prestamo.entidad_nombre, v_prestamo.nombre_prestamo,
+                   v_prestamo.tipo_deuda, v_prestamo.monto_original,
+                   v_prestamo.monto_total_deuda, v_prestamo.condicion_interes,
+                   v_prestamo.tasa_anual_tna, v_prestamo.tasa_informada,
+                   v_prestamo.interes_total_acordado, v_prestamo.proximo_vencimiento,
+                   v_prestamo.saldo_al_ingreso, v_prestamo.modalidad, v_prestamo.hogar_id,
+                   v_prestamo.contraparte_user_id);
+        IF FOUND THEN
+            RAISE EXCEPTION 'error_no_changes';
+        END IF;
+    END IF;
 
     -- Recompute because saldo_al_ingreso may have changed. No cash, no new
     -- operation: editing conditions is not a payment (§2.4).
