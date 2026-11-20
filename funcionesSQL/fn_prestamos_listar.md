@@ -40,13 +40,14 @@ BEGIN
            p.contraparte_user_id,
            ct.nombre::text AS contraparte_nombre,
            -- The classification the Partner screen needs, decided here because only the
-           -- server knows who belongs to the caller's household. True when the counterparty
-           -- is a member of that household and is not the caller itself; false when the
-           -- loan names nobody, when the counterparty is outside the household, and when
-           -- the counterparty is the caller (a caller with no household always gets false).
+           -- server knows who belongs to the caller's household: the counterparty of this
+           -- loan is a member of MY household. v_user_id is deliberately NOT compared: a
+           -- co-owned loan naming B belongs to A's group and to B's group, and for B the
+           -- counterparty is B itself. False when the loan names nobody, when the
+           -- counterparty lives outside the household, and always false when the caller
+           -- belongs to no household.
            (p.contraparte_user_id IS NOT NULL
             AND v_hogar_id IS NOT NULL
-            AND p.contraparte_user_id <> v_user_id
             AND EXISTS (SELECT 1
                         FROM public.p_hogar_participantes hp
                         WHERE hp.user_id = p.contraparte_user_id

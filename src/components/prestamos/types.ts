@@ -55,9 +55,11 @@ export interface PrestamoListaItem {
   /** Name of that counterparty, or null when the loan names none. */
   contraparte_nombre: string | null
   /**
-   * Server-side classification: true exactly when the counterparty is a member of the
-   * caller's household and is not the caller. A caller with no household always gets
-   * false. The client cannot compute this: it never learns the other member's user id.
+   * Server-side classification: true when the counterparty of this loan is a member of the
+   * caller's household. It is deliberately NOT compared against the caller, so a co-owned
+   * loan naming B lands in A's group and in B's group — for B the counterparty is B itself.
+   * A caller with no household always gets false. The client cannot compute this: it never
+   * learns the other member's user id.
    */
   contraparte_integrante: boolean
 }

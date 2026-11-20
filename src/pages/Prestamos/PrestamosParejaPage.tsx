@@ -33,12 +33,14 @@ interface BalanceHogarRow {
  *   2. the explicit loans between the two members, read from `fn_prestamos_listar`.
  *
  * Group 2 is filled from one column the server computes: `contraparte_integrante` is
- * true exactly when the loan names a counterparty that belongs to the caller's
- * household and is not the caller. The classification has to live in the backend: the
- * client knows its household id but never the other member's `usuarios.user_id`, and
- * reading `p_hogar_participantes` from here is forbidden. Nothing is matched by name
- * and no balance is computed between the groups: each row shows its own amount with its
- * own currency.
+ * true when the counterparty of the loan belongs to the caller's household. The caller is
+ * deliberately not excluded, so a co-owned loan naming B appears in A's group and in B's
+ * group — for B the counterparty is B itself, which is the correct reading of a debt that
+ * belongs to both. The classification has to live in the backend: the client knows its
+ * household id but never the other member's `usuarios.user_id`, and reading
+ * `p_hogar_participantes` from here is forbidden. Nothing is matched by name and no
+ * balance is computed between the groups: each row shows its own amount with its own
+ * currency.
  *
  * Nothing here filters by owner either: the read functions already enforce privacy, and
  * being named as the counterparty of a private loan does not open it.

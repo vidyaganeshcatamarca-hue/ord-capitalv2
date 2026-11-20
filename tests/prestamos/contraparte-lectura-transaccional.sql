@@ -21,8 +21,10 @@
 --   C7  E, member of no household, gets exactly its own rows: the new columns are NULL
 --       and every pre-existing column keeps the value it had before this change
 --   C8  the classification the client cannot make itself: contraparte_integrante is true
---       only when the counterparty is a member of the caller's household and is not the
---       caller, and false in the four other cases
+--       when the counterparty is a member of the caller's household, and false in the
+--       other cases (no counterparty, counterparty outside the household, caller with
+--       no household). The comparison against the caller itself is deliberately absent,
+--       so the same co-owned loan lands in BOTH members' group.
 --
 -- The rows of the second group are never netted against anything: this suite asserts
 -- membership and values per row, never a balance.
@@ -57,6 +59,7 @@ DECLARE
     v_propio_c_2    bigint;
     v_propio_e_2    bigint;
     v_sin_contrap   bigint;
+    v_n_b           integer;
     v_n         integer;
     v_id        bigint;
     v_nombre    text;
@@ -404,13 +407,14 @@ BEGIN
     INSERT INTO t_resultado VALUES (24, 'C8 listar: verdadero cuando la contraparte es integrante del hogar del llamante (A sobre la coposeida con B)',
         (v_bool IS TRUE), format('contraparte_integrante=%s', v_bool));
 
-    -- C8b — same row, read by B: the counterparty is the caller itself, so FALSE.
+    -- C8b — same row, read by B: the counterparty is B itself, and B's household contains
+    -- the counterparty, so the loan belongs to B's group too. Bilateral by construction.
     PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_auth_b)::text, true);
 
     SELECT l.contraparte_integrante INTO v_bool
     FROM public.fn_prestamos_listar(NULL, true) l WHERE l.prestamo_id = v_coposeido;
-    INSERT INTO t_resultado VALUES (25, 'C8 listar: falso cuando la contraparte es el propio llamante (B sobre la coposeida que lo nombra)',
-        (v_bool IS FALSE), format('contraparte_integrante=%s', v_bool));
+    INSERT INTO t_resultado VALUES (25, 'C8 listar: verdadero tambien para el integrante nombrado (B sobre la coposeida que lo nombra)',
+        (v_bool IS TRUE), format('contraparte_integrante=%s', v_bool));
 
     -- C8c — A's private loan naming C, who lives in another household: FALSE.
     PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_auth_a)::text, true);
@@ -473,6 +477,23 @@ BEGIN
       AND position('FROM public.p_hogar_participantes hp' IN pg_get_functiondef(p.oid)) > 0;
     INSERT INTO t_resultado VALUES (30, 'C8 definicion: contraparte_integrante cierra el RETURNS TABLE y se calcula con p_hogar_participantes en el servidor',
         (v_n = 1), format('definiciones conformes=%s', v_n));
+
+    -- C9 — what the screen actually does: the second group is the set of rows where
+    -- contraparte_integrante is true. The same co-owned loan, directed at one member and
+    -- registered by the other, must appear in BOTH groups: that is what co-ownership means.
+    PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_auth_a)::text, true);
+    SELECT count(*) INTO v_n
+    FROM public.fn_prestamos_listar(NULL, false) l
+    WHERE l.contraparte_integrante IS TRUE AND l.prestamo_id = v_coposeido;
+
+    PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_auth_b)::text, true);
+    SELECT count(*) INTO v_n_b
+    FROM public.fn_prestamos_listar(NULL, false) l
+    WHERE l.contraparte_integrante IS TRUE AND l.prestamo_id = v_coposeido;
+
+    INSERT INTO t_resultado VALUES (31, 'C9 grupo 2: el mismo prestamo codirigido aparece en el grupo de A y en el de B',
+        (v_n = 1 AND v_n_b = 1),
+        format('en el grupo de A=%s en el grupo de B=%s (prestamo=%s)', v_n, v_n_b, v_coposeido));
 END $$;
 
 SELECT orden, assertion, CASE WHEN ok THEN 'PASS' ELSE 'FAIL' END AS resultado, detalle
