@@ -166,10 +166,30 @@ BEGIN
             SET LOCAL session_replication_role = replica;
         END IF;
 
-        EXECUTE format('DELETE FROM public.%I WHERE user_id = $1', v_tabla)
-        USING v_user_id_destino;
+        -- p_caja va una fila por sentencia: sus triggers BEFORE DELETE actualizan
+        -- p_inversiones, y dos filas de la misma inversion dentro de un mismo comando
+        -- producen 27000. Mismo criterio que fn_borrar_datos_usuario.
+        IF v_tabla = 'p_caja' THEN
+            DECLARE
+                v_pcaja bigint;
+                v_cnt   bigint := 0;
+            BEGIN
+                FOR v_pcaja IN
+                    SELECT pc.p_caja_id FROM public.p_caja pc
+                    WHERE pc.user_id = v_user_id_destino
+                    ORDER BY pc.p_caja_id
+                LOOP
+                    DELETE FROM public.p_caja WHERE p_caja_id = v_pcaja;
+                    v_cnt := v_cnt + 1;
+                END LOOP;
+                v_filas_eliminadas := v_cnt;
+            END;
+        ELSE
+            EXECUTE format('DELETE FROM public.%I WHERE user_id = $1', v_tabla)
+            USING v_user_id_destino;
+            GET DIAGNOSTICS v_filas_eliminadas = ROW_COUNT;
+        END IF;
 
-        GET DIAGNOSTICS v_filas_eliminadas = ROW_COUNT;
         v_total_deletes := v_total_deletes + v_filas_eliminadas;
         v_borradas_jsonb := v_borradas_jsonb || jsonb_build_object(v_tabla, v_filas_eliminadas);
 
@@ -224,6 +244,7 @@ BEGIN
     CREATE TEMP TABLE _map_tarjetas    (old_id bigint PRIMARY KEY, new_id bigint NOT NULL) ON COMMIT DROP;
     CREATE TEMP TABLE _map_caja        (old_id bigint PRIMARY KEY, new_id bigint NOT NULL) ON COMMIT DROP;
     CREATE TEMP TABLE _map_inversiones (old_id bigint PRIMARY KEY, new_id bigint NOT NULL) ON COMMIT DROP;
+    CREATE TEMP TABLE _map_prestamo   (old_id bigint PRIMARY KEY, new_id bigint NOT NULL) ON COMMIT DROP;
 
     -- ------------------------------------------------------------
     -- 3.1 p_presupuestos_config (1 fila esperada)
@@ -413,8 +434,8 @@ BEGIN
     -- ============================================================
     -- 3.7 p_inversiones (con remapeo billetera_origen_id)
     -- ============================================================
-    INSERT INTO public.p_inversiones (user_id, nombre_activo, monto_invertido_original, billetera_origen_id, fecha_inicio, estado, monto_liquidado, fecha_liquidacion, moneda, tasa_anual_tna, valor_mercado_actual, ultima_conciliacion)
-    SELECT v_user_id_destino, i.nombre_activo, i.monto_invertido_original, mb.new_id, i.fecha_inicio, i.estado, i.monto_liquidado, i.fecha_liquidacion, i.moneda, i.tasa_anual_tna, i.valor_mercado_actual, i.ultima_conciliacion
+    INSERT INTO public.p_inversiones (user_id, nombre_activo, monto_invertido_original, billetera_origen_id, fecha_inicio, estado, monto_liquidado, fecha_liquidacion, moneda, tasa_anual_tna, valor_mercado_actual, ultima_conciliacion, hogar_id)
+    SELECT v_user_id_destino, i.nombre_activo, i.monto_invertido_original, mb.new_id, i.fecha_inicio, i.estado, i.monto_liquidado, i.fecha_liquidacion, i.moneda, i.tasa_anual_tna, i.valor_mercado_actual, i.ultima_conciliacion, NULL
       FROM public.p_inversiones i
       LEFT JOIN _map_billeteras mb ON mb.old_id = i.billetera_origen_id
      WHERE i.user_id = p_user_id_origen
@@ -522,14 +543,73 @@ BEGIN
     -- ============================================================
     -- 3.11 p_prestamos (con remapeo p_caja_id)
     -- ============================================================
-    INSERT INTO public.p_prestamos (user_id, entidad_nombre, tipo_entidad, tipo_flujo, monto_total_deuda, monto_pagado_acumulado, moneda_iso, estado, p_caja_id, nombre_prestamo, tipo_deuda, saldo_actual, tasa_anual_tna, cuota_mensual, proximo_vencimiento, monto_original)
-    SELECT v_user_id_destino, p.entidad_nombre, p.tipo_entidad, p.tipo_flujo, p.monto_total_deuda, p.monto_pagado_acumulado, p.moneda_iso, p.estado, mc.new_id, p.nombre_prestamo, p.tipo_deuda, p.saldo_actual, p.tasa_anual_tna, p.cuota_mensual, p.proximo_vencimiento, p.monto_original
+    INSERT INTO public.p_prestamos (user_id, entidad_nombre, tipo_entidad, tipo_flujo, monto_total_deuda, monto_pagado_acumulado, moneda_iso, estado, p_caja_id, nombre_prestamo, tipo_deuda, saldo_actual, tasa_anual_tna, cuota_mensual, proximo_vencimiento, monto_original,
+        saldo_al_ingreso, modalidad, condicion_interes, interes_total_acordado,
+        tasa_informada, puntos_vinculo, eliminado_at, hogar_id, contraparte_user_id)
+    SELECT v_user_id_destino, p.entidad_nombre, p.tipo_entidad, p.tipo_flujo, p.monto_total_deuda, p.monto_pagado_acumulado, p.moneda_iso, p.estado, mc.new_id, p.nombre_prestamo, p.tipo_deuda, p.saldo_actual, p.tasa_anual_tna, p.cuota_mensual, p.proximo_vencimiento, p.monto_original,
+        p.saldo_al_ingreso, p.modalidad, p.condicion_interes, p.interes_total_acordado,
+        p.tasa_informada, p.puntos_vinculo, p.eliminado_at, NULL, NULL
       FROM public.p_prestamos p
       LEFT JOIN _map_caja mc ON mc.old_id = p.p_caja_id
-     WHERE p.user_id = p_user_id_origen;
+     WHERE p.user_id = p_user_id_origen
+     ORDER BY p.prestamo_id;
     GET DIAGNOSTICS v_filas_insertadas = ROW_COUNT;
     v_total_inserts := v_total_inserts + v_filas_insertadas;
     v_copiadas_jsonb := v_copiadas_jsonb || jsonb_build_object('p_prestamos', v_filas_insertadas);
+
+    -- Mapa OLD -> NEW de p_prestamos. El destino se vacio en la fase 1 y se copio en
+    -- orden de id, asi que el row_number de cada lado coincide exacto.
+    INSERT INTO _map_prestamo (old_id, new_id)
+    SELECT src.prestamo_id, dst.prestamo_id
+      FROM (SELECT prestamo_id, row_number() OVER (ORDER BY prestamo_id) AS rn
+              FROM public.p_prestamos WHERE user_id = p_user_id_origen) src
+      JOIN (SELECT prestamo_id, row_number() OVER (ORDER BY prestamo_id) AS rn
+              FROM public.p_prestamos WHERE user_id = v_user_id_destino) dst
+        ON src.rn = dst.rn;
+
+    -- 3.11b p_prestamos_cuotas
+    INSERT INTO public.p_prestamos_cuotas
+        (prestamo_id, user_id, numero_cuota, fecha_vencimiento, monto_cuota,
+         capital_componente, interes_componente, moneda)
+    SELECT mp.new_id, v_user_id_destino, c.numero_cuota, c.fecha_vencimiento,
+           c.monto_cuota, c.capital_componente, c.interes_componente, c.moneda
+      FROM public.p_prestamos_cuotas c
+      JOIN _map_prestamo mp ON mp.old_id = c.prestamo_id
+     WHERE c.user_id = p_user_id_origen
+     ORDER BY c.prestamo_id, c.numero_cuota;
+    GET DIAGNOSTICS v_filas_insertadas = ROW_COUNT;
+    v_total_inserts := v_total_inserts + v_filas_insertadas;
+    v_copiadas_jsonb := v_copiadas_jsonb || jsonb_build_object('p_prestamos_cuotas', v_filas_insertadas);
+
+    -- 3.11c p_prestamos_pagos (depende de p_prestamos, p_caja y p_billeteras)
+    INSERT INTO public.p_prestamos_pagos
+        (prestamo_id, user_id, p_caja_id, direccion, fecha, billetera_id,
+         moneda_billetera, monto_billetera, moneda_prestamo, monto_aplicado,
+         capital_aplicado, interes_aplicado, interes_excedente, nota, estado, corregido_at)
+    SELECT mp.new_id, v_user_id_destino, mc.new_id, g.direccion, g.fecha, mb.new_id,
+           g.moneda_billetera, g.monto_billetera, g.moneda_prestamo, g.monto_aplicado,
+           g.capital_aplicado, g.interes_aplicado, g.interes_excedente, g.nota,
+           g.estado, g.corregido_at
+      FROM public.p_prestamos_pagos g
+      JOIN _map_prestamo mp ON mp.old_id = g.prestamo_id
+      LEFT JOIN _map_caja mc ON mc.old_id = g.p_caja_id
+      LEFT JOIN _map_billeteras mb ON mb.old_id = g.billetera_id
+     WHERE g.user_id = p_user_id_origen
+     ORDER BY g.pago_id;
+    GET DIAGNOSTICS v_filas_insertadas = ROW_COUNT;
+    v_total_inserts := v_total_inserts + v_filas_insertadas;
+    v_copiadas_jsonb := v_copiadas_jsonb || jsonb_build_object('p_prestamos_pagos', v_filas_insertadas);
+
+    -- 3.11d p_prestamos_vinculos
+    INSERT INTO public.p_prestamos_vinculos
+        (prestamo_id, user_id, criterio, seleccionado, actualizado_at)
+    SELECT mp.new_id, v_user_id_destino, v.criterio, v.seleccionado, v.actualizado_at
+      FROM public.p_prestamos_vinculos v
+      JOIN _map_prestamo mp ON mp.old_id = v.prestamo_id
+     WHERE v.user_id = p_user_id_origen;
+    GET DIAGNOSTICS v_filas_insertadas = ROW_COUNT;
+    v_total_inserts := v_total_inserts + v_filas_insertadas;
+    v_copiadas_jsonb := v_copiadas_jsonb || jsonb_build_object('p_prestamos_vinculos', v_filas_insertadas);
 
     -- ============================================================
     -- 3.12 p_compromisos_tarjeta (con remapeo tarjeta_id)
@@ -701,3 +781,4 @@ EXCEPTION WHEN OTHERS THEN
     RAISE;
 END;
 $function$
+
