@@ -5,7 +5,14 @@
 -- synthesized here: user 20 has no savings movements and no household, and those are the
 -- two cases the deployed body got wrong.
 --
--- Run with: node scripts/prestamos/query.mjs "$(cat tests/prestamos/borrado-usuario-transaccional.sql)"
+-- Updated 2026-11-22 for the owner decisions of chapter 5: the consent records, the reports,
+-- the feedback and the referrals are no longer destroyed. The list below no longer names
+-- them, and the block at the end proves they come out of the reset unchanged.
+-- p_presupuestos_cierre joins the list: it carries no foreign key, which is why it used to
+-- survive a reset that reported success.
+--
+-- Run with: node scripts/prestamos/run-transaccional.mjs tests/prestamos/borrado-usuario-transaccional.sql
+-- (or, while 20261122a is not applied, through run-migracion-sin-aplicar.mjs)
 
 BEGIN;
 
@@ -23,6 +30,10 @@ DECLARE
     v_res     jsonb;
     v_left    bigint;
     v_caja    bigint;
+    v_legal   bigint;
+    v_reportes bigint;
+    v_feedback bigint;
+    v_referidos bigint;
     v_par     text;
     v_tabla   text;
     v_col     text;
@@ -31,12 +42,10 @@ DECLARE
         'p_sobres|user_id', 'p_sobre_movimientos|user_id',
         'p_sobre_movimientos_auditoria|user_id', 'p_pin_seguridad|user_id',
         'p_recordatorios|user_id', 'p_grupo_familiar|user_id',
-        'p_presupuestos_historial|user_id', 'p_notificaciones_enviadas|user_id',
-        'p_legal_consentimientos|user_id', 'p_feedback_usuario|user_id',
-        'p_app_sessions|user_id', 'p_telemetry_events|user_id',
-        'p_telemetry_cps_snapshots|user_id', 'p_telemetry_user_metrics|user_id',
-        'p_webhook_queue|user_id', 'p_referidos|user_id_invitador',
-        'p_referidos|user_id_invitado', 'app_reportes|usuario_id',
+        'p_presupuestos_historial|user_id', 'p_presupuestos_cierre|user_id',
+        'p_notificaciones_enviadas|user_id', 'p_app_sessions|user_id',
+        'p_telemetry_events|user_id', 'p_telemetry_cps_snapshots|user_id',
+        'p_telemetry_user_metrics|user_id', 'p_webhook_queue|user_id',
         'app_usuario_bloqueos|usuario_id', 'p_prestamos|user_id',
         'p_prestamos_cuotas|user_id', 'p_prestamos_pagos|user_id',
         'p_prestamos_vinculos|user_id', 'p_gastos_fijos_config|user_id',
@@ -55,6 +64,13 @@ BEGIN
         jsonb_build_object('sub', v_auth, 'role', 'service_role')::text, true);
 
     SELECT count(*) INTO v_caja FROM public.p_caja WHERE user_id = v_uid;
+
+    -- Rows the owner decided to conserve: they must come out of the reset untouched.
+    SELECT count(*) INTO v_legal FROM public.p_legal_consentimientos WHERE user_id = v_uid;
+    SELECT count(*) INTO v_reportes FROM public.app_reportes WHERE usuario_id = v_uid;
+    SELECT count(*) INTO v_feedback FROM public.p_feedback_usuario WHERE user_id = v_uid;
+    SELECT count(*) INTO v_referidos FROM public.p_referidos
+     WHERE user_id_invitador = v_uid OR user_id_invitado = v_uid;
 
     -- No PIN exists anywhere today (p_pin_seguridad is empty), so this account starts in
     -- the "sent to configure one" state the owner described.
@@ -180,6 +196,33 @@ BEGIN
     IF v_left <> 1 THEN
         RAISE EXCEPTION 'FALLO: se borraron los pagos del hogar compartido';
     END IF;
+
+    -- The rows that survive on purpose (chapter 5, decisions C3, C4, C7 and C8): still
+    -- there, and still the same number of them.
+    SELECT count(*) INTO v_left FROM public.p_legal_consentimientos WHERE user_id = v_uid;
+    IF v_left <> v_legal THEN
+        RAISE EXCEPTION 'FALLO: los consentimientos pasaron de % a % filas', v_legal, v_left;
+    END IF;
+    SELECT count(*) INTO v_left FROM public.app_reportes WHERE usuario_id = v_uid;
+    IF v_left <> v_reportes THEN
+        RAISE EXCEPTION 'FALLO: los reportes pasaron de % a % filas', v_reportes, v_left;
+    END IF;
+    SELECT count(*) INTO v_left FROM public.p_feedback_usuario WHERE user_id = v_uid;
+    IF v_left > 0 THEN
+        RAISE EXCEPTION 'FALLO: quedaron % feedback sin anonimizar', v_left;
+    END IF;
+    SELECT count(*) INTO v_left FROM public.p_referidos WHERE user_id_invitado = v_uid;
+    IF v_left > 0 THEN
+        RAISE EXCEPTION 'FALLO: quedaron % referidos con el invitado identificado', v_left;
+    END IF;
+    SELECT count(*) INTO v_left FROM public.p_referidos
+     WHERE user_id_invitador = v_uid OR user_id_invitado = v_uid;
+    IF v_left <> v_referidos THEN
+        RAISE EXCEPTION 'FALLO: los referidos pasaron de % a % filas', v_referidos, v_left;
+    END IF;
+    INSERT INTO _reset_resultado VALUES
+        ('conservadas', format('legales %s, reportes %s, feedback %s, referidos %s',
+                               v_legal, v_reportes, v_feedback, v_referidos));
 
     -- Nobody else loses rows.
     SELECT count(*) INTO v_left FROM public.p_caja WHERE user_id <> v_uid;
