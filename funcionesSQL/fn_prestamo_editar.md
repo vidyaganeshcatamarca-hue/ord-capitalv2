@@ -6,6 +6,7 @@ CREATE OR REPLACE FUNCTION public.fn_prestamo_editar(p_prestamo_id bigint, p_con
 AS $function$
 DECLARE
     v_user_id   bigint;
+    v_hogar_id  bigint;
     v_prestamo  public.p_prestamos%ROWTYPE;
     v_pagos     integer;
     v_total     numeric;
@@ -15,13 +16,16 @@ DECLARE
     v_hogar     bigint;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+
+    SELECT hogar_id INTO v_hogar_id FROM public.p_hogar_participantes WHERE user_id = v_user_id;
     IF v_user_id IS NULL THEN
         RAISE EXCEPTION 'error_unauthorized';
     END IF;
 
     SELECT * INTO v_prestamo
     FROM public.p_prestamos
-    WHERE prestamo_id = p_prestamo_id AND user_id = v_user_id
+    WHERE prestamo_id = p_prestamo_id
+      AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id))
     FOR UPDATE;
 
     IF NOT FOUND THEN
