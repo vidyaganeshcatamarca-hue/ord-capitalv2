@@ -244,3 +244,4 @@ tests/configuracion/*
 !tests/sql/bloqueB_conciliacion.sql
 !tests/presupuestos/cierre-de-ciclo.test.js
 !tests/sql/bloqueD_pendientes.sql
+!tests/sql/bloqueD_hijas.sql
