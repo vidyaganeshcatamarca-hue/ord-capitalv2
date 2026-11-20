@@ -427,3 +427,102 @@ selector de estrategia, el cuestionario de Vinculos bajo demanda y la simulacion
 
 Solo lectura: balance derivado de gastos compartidos y prestamos explicitos entre
 integrantes, en dos grupos separados. No fusionar ni compensar.
+
+
+---
+
+## Ronda funcional 2026-11-20
+
+L6 (dueno, verbatim): "Realiza los recorridos funcionales de las pantallas implementadas
+en movil de 390 px y escritorio. Usa datos de prueba controlados, sin alterar datos
+reales de usuarios." y "Corregi los puntos 8, 9, 10 y 11 que identificaste. Son defectos
+u omisiones del alcance funcional ya aprobado".
+
+Hallazgos del recorrido (evidencia en capturas, no en snapshots):
+- Un prestamo con `modalidad='vencimiento_unico'` y `proximo_vencimiento` NO aparece en
+  el calendario. Es el unico tipo que falta.
+- Un prestamo `libre` no aparece, y eso es correcto: no se inventa un vencimiento.
+- Los gastos recurrentes muestran `50.000` sin moneda, mientras el prestamo muestra
+  `US$ 1.000,0` y la tarjeta `$ 20.000`.
+- La etiqueta del recurrente sale como `cat_dry_goods`, la clave cruda sin traducir.
+- Con la UI en ingles, las fechas se rotulan `20 DE NOV DE 2026`.
+
+### S25 - Calendario: vencimiento unico
+Un prestamo con `modalidad='vencimiento_unico'` y `proximo_vencimiento` no nulo DEBE
+emitir un evento en esa fecha. Un prestamo `libre` NO DEBE emitir ninguno.
+
+### S26 - Moneda en el calendario
+Todo importe del calendario muestra su moneda. Un recurrente sin moneda propia no puede
+inventarla: se muestra en la moneda del usuario o sin simbolo, pero nunca como un numero
+pelado indistinguible.
+
+### S27 - Etiqueta de categoria traducida
+El calendario no muestra claves crudas tipo `cat_dry_goods`; muestra el nombre traducido.
+
+### S28 - Fechas en el idioma activo
+El calendario formatea sus fechas con el locale de la app, no en espanol fijo.
+
+### S29 - Edicion: tipo de deuda y condiciones opcionales
+`fn_prestamo_detalle` devuelve `tipo_deuda` para poder precargarlo. `fn_prestamo_editar`
+permite vaciar `p_nombre` e `p_interes_total_acordado` cuando el usuario los borra.
+
+## Tasks - ronda funcional
+- T25 · S25 · backend · `fn_prestamos_calendario` emite tambien `vencimiento_unico` con
+  fecha pactada; `libre` sigue sin emitir. Test transaccional.
+- T26 · S26-S28 · frontend · moneda en recurrentes, etiqueta de categoria traducida y
+  fechas segun locale.
+- T27 · S29 · backend · `fn_prestamo_detalle` expone `tipo_deuda`; `fn_prestamo_editar`
+  permite limpiar nombre e interes acordado.
+- T28 · S29 · frontend · precargar `tipo_deuda` y permitir quitar condiciones opcionales.
+
+### T21 - correccion de alcance (2026-11-20)
+
+Lo que se habia anotado como "falta una RPC de lectura" es **falso**. El contrato existe y
+esta desplegado:
+
+- `fn_reporte_hogar_balances()` RETURNS TABLE(user_id_deudor, nombre_deudor,
+  user_id_acreedor, nombre_acreedor, monto_deuda). Calcula los gastos compartidos
+  posteriores al ultimo corte de conciliacion, aplicando los porcentajes del hogar. No
+  toca `p_prestamos`.
+- `fn_registrar_pago_pareja` y `fn_saldar_balance_hogar` completan el ciclo.
+
+Lo que falta, y es un bloqueo real:
+
+- **No existe vinculo entre un prestamo y un integrante del hogar.** `p_prestamos` guarda
+  la contraparte como texto libre (`entidad_nombre`) y no tiene ninguna columna que
+  apunte a `usuarios`. Por eso "prestamos explicitos entre integrantes" no se puede
+  derivar sin inventar una coincidencia por nombre.
+- Las cuatro tablas del hogar estan vacias hoy (0 hogares, 0 participantes, 0 pagos,
+  0 conciliaciones), asi que tampoco hay datos para inferir la semantica.
+
+Decision pendiente del dueno: agregar `p_prestamos.contraparte_user_id bigint NULL`
+con FK a `usuarios`, para que un prestamo pueda declararse contra un integrante. Sin eso,
+la seccion Pareja puede mostrar el balance compartido y debe decir explicitamente que los
+prestamos entre integrantes no estan disponibles.
+
+### S30 - Compartir por item (dueno, 2026-11-20, verbatim)
+
+"Categorias, inversiones, ahorros y deudas, se pueden compartir con una pareja solo las
+que se deciden compartir, es decir, el usuario puede tener de todas ellas lo privado y lo
+compartido, y su pareja igual, lo privado y lo compartido."
+
+Modelo: `hogar_id` nulo = privado; con valor = compartido con ese hogar. Cada fila tiene
+dueno (`user_id`) y opcionalmente hogar. Ningun integrante ve lo privado del otro.
+
+Estado medido: `p_estructuras_egresos`, `p_caja` y `p_presupuestos` ya tienen `hogar_id`.
+`p_billeteras` usa `es_compartida` (otra convencion; no se unifica en esta tarea).
+Faltan `p_inversiones`, `p_sobres` y `p_prestamos`.
+
+Para prestamos, dos cosas distintas e independientes:
+- `hogar_id`: la deuda es parte de la foto del hogar.
+- `contraparte_user_id`: la contraparte ES un integrante concreto.
+
+### T29 - S30 - backend
+- Agregar `hogar_id bigint NULL` con FK a `p_hogares` (ON DELETE CASCADE) e indice en
+  `p_inversiones`, `p_sobres` y `p_prestamos`.
+- Agregar `p_prestamos.contraparte_user_id bigint NULL` con FK a `usuarios`
+  (ON DELETE SET NULL) e indice.
+- `fn_prestamo_crear` y `fn_prestamo_editar` aceptan y persisten `p_hogar_id` y
+  `p_contraparte_user_id`, con la misma convencion de nulo = no tocar en edicion.
+- El clon debe dejar `hogar_id` en NULL y remapear `contraparte_user_id`.
+- Test transaccional de aislamiento: lo privado de A no lo ve B; lo compartido si.
