@@ -245,3 +245,5 @@ tests/configuracion/*
 !tests/presupuestos/cierre-de-ciclo.test.js
 !tests/sql/bloqueD_pendientes.sql
 !tests/sql/bloqueD_hijas.sql
+!tests/sql/bloqueE_ajustes.sql
+!tests/presupuestos/ajustes-historicos.test.js

@@ -21,6 +21,7 @@ DECLARE
     v_gasto numeric := 0;
     v_gasto_ant numeric := 0;
     v_arrastre numeric := 0;
+    v_ajuste numeric := 0;
     v_es_hija boolean := false;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
@@ -71,6 +72,16 @@ BEGIN
        AND ((c.user_id = v_user_id AND c.es_compartido = false)
             OR (v_hogar_id IS NOT NULL AND c.hogar_id = v_hogar_id AND c.es_compartido = true));
 
+    -- Bloque E: los ajustes por correcciones historicas suman (o restan) a la bolsa del
+    -- ciclo. No son dinero nuevo: compensan lo que el cierre congelado no movio.
+    SELECT COALESCE(SUM(a.saldo_cierre), 0) INTO v_ajuste
+      FROM public.p_presupuestos_cierre a
+     WHERE a.tipo = 'ajuste'
+       AND a.mes_periodo = v_mes_truncado
+       AND a.estructura_egreso_id = p_estructura_egreso_id
+       AND COALESCE(a.user_id, 0) = v_user_id
+       AND COALESCE(a.hogar_id, 0) = COALESCE(v_hogar_id, 0);
+
     -- Arrastre: solo en base cero, y fuera del ciclo de activación. Es el resultado del
     -- ciclo anterior de TODO el grupo, con el signo que tenga.
     IF v_modo = 'base_cero' AND (v_fecha_activacion IS NULL OR v_fecha_activacion <= v_f_fin_ant) THEN
@@ -85,7 +96,7 @@ BEGIN
            AND COALESCE(c.hogar_id, 0) = COALESCE(v_hogar_id, 0)
          LIMIT 1;
         IF FOUND THEN
-            RETURN COALESCE(v_arrastre, 0) + COALESCE(v_plata, 0) - COALESCE(v_gasto, 0);
+            RETURN COALESCE(v_arrastre, 0) + COALESCE(v_plata, 0) - COALESCE(v_gasto, 0) + COALESCE(v_ajuste, 0);
         END IF;
 
         SELECT COALESCE((SELECT p.monto_limite FROM public.p_presupuestos p
@@ -118,6 +129,6 @@ BEGIN
     END IF;
 
     -- La bolsa, con su signo. Un déficit vuelve negativo y el que llama decide.
-    RETURN COALESCE(v_arrastre, 0) + COALESCE(v_plata, 0) - COALESCE(v_gasto, 0);
+    RETURN COALESCE(v_arrastre, 0) + COALESCE(v_plata, 0) - COALESCE(v_gasto, 0) + COALESCE(v_ajuste, 0);
 END;
 $function$
