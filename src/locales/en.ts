@@ -18,6 +18,7 @@ export const errors = {
   error_session_expired: "Your session has expired. Sign in again.",
   error_pin_incorrecto: "The PIN is not correct.",
   error_pin_espera_24h: "You must wait 24 hours after setting your PIN before you can delete your data.",
+  error_hogar_no_pertenece: "You do not belong to that household.",
   error_field_required: "The {field} field is required.",
   error_invalid_day_range: "{field} must be a whole number between 1 and 31.",
   card_load_legacy_cuotas_btn: "Load previous installments",

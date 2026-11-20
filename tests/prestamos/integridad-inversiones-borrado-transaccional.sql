@@ -141,7 +141,9 @@ BEGIN
         v_pos_v := position('p_prestamos_vinculos' IN v_src);
         v_pos_g := position('p_prestamos_pagos' IN v_src);
         v_pos_c := position('p_prestamos_cuotas' IN v_src);
-        v_pos_p := position('''p_prestamos''' IN v_src);
+        -- The array stores 'tabla|columna' pairs. The pipe alone is enough and is
+        -- unique: 'p_prestamos_pagos|' and 'p_prestamos_cuotas|' can never match it.
+        v_pos_p := position('p_prestamos|' IN v_src);
 
         INSERT INTO t_resultado VALUES (4, 'H3 las cuatro tablas de prestamos estan en el borrado, hijos primero',
             (v_pos_v > 0 AND v_pos_g > 0 AND v_pos_c > 0 AND v_pos_p > 0

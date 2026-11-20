@@ -10,9 +10,9 @@
 --
 -- Proves:
 --   A1  a private row stays private: the other member neither lists it nor opens it
---   A2  a co-owned row resolves to the household the other member belongs to; what the
---       read layer does with that today is recorded, because the read audit is a
---       separate step and no read function filters on hogar_id yet (A2b)
+--   A2  a co-owned row resolves to the household the other member belongs to, and the
+--       read layer now honours that: fn_prestamos_listar hands it to the other member
+--       (A2b)
 --   A3  fn_prestamo_crear persists p_hogar_id and p_contraparte_user_id
 --   A4  fn_prestamo_editar follows the file's convention: null keeps the value, the
 --       explicit p_limpiar_* flags clear it
@@ -119,15 +119,16 @@ BEGIN
     INSERT INTO t_resultado VALUES (4, 'A2 copropiedad: la deuda queda en el hogar del que B es integrante',
         (v_n = 1), format('coincidencias=%s', v_n));
 
-    -- A2b: today no read function filters on hogar_id, so the read layer still hides
-    -- the co-owned row from the other member. This line documents that gap on purpose:
-    -- it fails the day the read audit lands, which is exactly when it must be rewritten.
+    -- A2b: the read layer honours co-ownership. fn_prestamos_listar resolves the caller's
+    -- household and asks for `user_id = v_user_id OR hogar_id = v_hogar_id`, so the other
+    -- member of the household does get the co-owned row. Private rows are still private:
+    -- A1 above and the copropiedad-lectura suite cover that side.
     PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_auth_b)::text, true);
 
     SELECT count(*) INTO v_n
     FROM public.fn_prestamos_listar('debo', true) l WHERE l.prestamo_id = v_compart;
-    INSERT INTO t_resultado VALUES (5, 'A2b la lectura todavia no honra la copropiedad (pendiente del paso de lectura)',
-        (v_n = 0), format('B ve la fila coposeida: %s (esperado 0 mientras la lectura siga filtrando por user_id)', v_n));
+    INSERT INTO t_resultado VALUES (5, 'A2b la lectura honra la copropiedad: B ve la fila coposeida',
+        (v_n = 1), format('B ve la fila coposeida: %s (esperado 1: privado o coposeido por su hogar)', v_n));
 
     -- ---- A3: crear persists the two new columns --------------------------
     PERFORM set_config('request.jwt.claims', jsonb_build_object('sub', v_auth_a)::text, true);

@@ -10,6 +10,7 @@ export const errors = {
   error_session_expired: "Tu sesión ha expirado. Inicia sesión nuevamente.",
   error_pin_incorrecto: "El PIN no es correcto.",
   error_pin_espera_24h: "Debes esperar 24 horas desde que configuraste el PIN para poder borrar tus datos.",
+  error_hogar_no_pertenece: "No perteneces a ese hogar.",
 
   // Validaciones de campos
   error_field_required: "El campo {field} es obligatorio.",
