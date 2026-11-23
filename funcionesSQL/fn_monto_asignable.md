@@ -11,6 +11,7 @@ DECLARE
     v_bolsa numeric := 0;
     v_deficit numeric := 0;
     v_asignable numeric := 0;
+    v_previo numeric := 0;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
@@ -21,8 +22,19 @@ BEGIN
     v_deficit := GREATEST(-v_bolsa, 0);
     v_asignable := v_libre + v_deficit;
 
+    -- El monto que el rubro ya tiene en el ciclo. La asignacion REEMPLAZA ese valor, asi que
+    -- la pantalla tiene que enviar previo + asignable. Este numero es el monto_limite real,
+    -- no el «asignado» del reporte (que suma el arrastre y no es lo que se reemplaza).
+    SELECT COALESCE(p.monto_limite, 0) INTO v_previo
+      FROM public.p_presupuestos p
+     WHERE p.estructura_egreso_id = p_estructura_egreso_id
+       AND p.mes_periodo = v_mes
+       AND p.user_id = v_user_id
+     LIMIT 1;
+
     RETURN jsonb_build_object(
         'mes', v_mes,
+        'monto_previo', v_previo,
         'libre', v_libre,
         'bolsa', v_bolsa,
         'deficit', v_deficit,

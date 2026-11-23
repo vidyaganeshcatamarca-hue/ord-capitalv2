@@ -186,6 +186,7 @@ interface MontoAsignable {
   bolsa: number
   deficit: number
   asignable: number
+  monto_previo: number
   motivo: string | null
   reserva_resultante: number
 }
@@ -1169,6 +1170,7 @@ export function PresupuestosPage() {
         bolsa: Number(crudo.bolsa ?? 0),
         deficit: Number(crudo.deficit ?? 0),
         asignable: Number(crudo.asignable),
+        monto_previo: Number(crudo.monto_previo ?? 0),
         motivo: crudo.motivo ?? null,
         reserva_resultante: Number(crudo.reserva_resultante ?? 0),
       })
@@ -1190,7 +1192,11 @@ export function PresupuestosPage() {
   const handleConfirmarTodoDisponible = async () => {
     if (!montoAsignable) return
     const nuevoLimite =
-      Number(sobreSeleccionado?.monto_asignado ?? 0) + Number(montoAsignable.asignable)
+      // La asignación REEMPLAZA el importe del rubro. Se parte del monto real que la fila ya
+      // tiene (`monto_previo`, que viene del servidor) y no del «asignado» del reporte, que suma
+      // el arrastre: con el arrastre adentro la suma superaba el techo del servidor y la
+      // operación se rechazaba por diferencia exactamente igual al arrastre.
+      Number(montoAsignable.monto_previo ?? 0) + Number(montoAsignable.asignable)
     await ejecutarAsignacion(nuevoLimite)
   }
 

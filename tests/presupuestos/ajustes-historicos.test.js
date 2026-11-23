@@ -232,10 +232,18 @@ test('el importe de «asignar todo» lo dice el servidor, no el frontend', () =>
     /\{formatMonto\(montoAsignable\.asignable\)\}/,
     'el total que se muestra es el `asignable` de la RPC',
   )
+  // El punto de partida es el `monto_limite` REAL del ciclo, que ahora devuelve la RPC como
+  // `monto_previo`. No es el `monto_asignado` del reporte: ese suma el arrastre, y sumarlo acá
+  // hacía que el total superara el techo del servidor por exactamente el arrastre, con lo que
+  // la operación se rechazaba (defecto encontrado en la regresión del bloque H).
   assert.match(
     pagina,
-    /Number\(sobreSeleccionado\?\.monto_asignado \?\? 0\) \+ Number\(montoAsignable\.asignable\)/,
-    'se confirma el asignable sumado al límite actual, porque el backend REEMPLAZA el límite',
+    /Number\(montoAsignable\.monto_previo \?\? 0\) \+ Number\(montoAsignable\.asignable\)/,
+    'se confirma el asignable sumado al monto real del rubro, porque el backend REEMPLAZA el límite',
+  )
+  assert.ok(
+    !/sobreSeleccionado\?\.monto_asignado \?\? 0\) \+ Number\(montoAsignable/.test(pagina),
+    'el arrastre no puede entrar en la cuenta: el reporte lo suma y el techo del servidor no',
   )
 })
 
