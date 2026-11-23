@@ -693,3 +693,42 @@ Pendiente:
 - Faltan los espejos de `fn_prestamo_registrar_pago` y `fn_prestamo_corregir_pago` en
   `funcionesSQL/` y sus entradas en el indice (hoy no existen).
 - Prestamos de prueba conservados: 445, 446, 447 y el nuevo 534 (activo, 50.000 pendientes).
+
+## Verificacion final de Saneamiento (2026-11-20)
+
+No se habia ejecutado un `verify` formal sobre esta implementacion. Se hizo **una** verificacion
+final, acotada a la cobertura pendiente, con navegador real a 390 px sobre la cuenta 1.
+
+| Funcionalidad | Resultado | Evidencia observada |
+| --- | --- | --- |
+| Diagnostico y progreso | APROBADO | Saldo 310.000 (200.000 + 60.000 + 50.000), pagos registrados 80.000, 3 prestamos activos, 20,51 %; «Estimated end: It cannot be calculated with the available information» |
+| Tres estrategias | APROBADO | Mathematical: 200.000 / 60.000 / 50.000. Emotional: 50.000 / 60.000 / 200.000. Relationships reordena por puntaje |
+| Empates | APROBADO | Con dos acreedores de igual puntaje muestra «Equal priority · These people are tied. You may break the tie by hand; if you do not, they keep the same priority» y los controles de subir/bajar; no inventa prioridad |
+| Simulador | APROBADO | W3 saldo 200.000, importe propuesto 10.000, saldo proyectado 190.000; meses e intereses «cannot be calculated» porque el prestamo no tiene cronograma |
+| Cuestionario de Vinculos | APROBADO | Tres preguntas por acreedor; elegir el mismo acreedor en las tres lo lleva a Priority 1 y deja a los otros dos empatados en Priority 2; aviso «Questionnaire saved» |
+| Plan de Ataque | APROBADO | Solo prestamos activos de «debo». Queda fuera el prestamo de «me deben» (446). El plan no trae boton de registrar pago: tiene «Simulate payment», que no escribe nada |
+
+Comprobaciones pedidas:
+
+- **Persistencia de la estrategia: YA ESTABA IMPLEMENTADA.** El informe anterior decia lo contrario
+  y era un error mio. Se guarda en `localStorage` con la clave `prestamos_saneamiento_estrategia`,
+  se lee al montar y se escribe al elegir. Verificado: elegir Emotional y recargar deja Emotional y
+  el orden invertido. Es solo una preferencia informativa: no toca prestamos ni movimientos.
+- **Universo de deudas: CORRECTO.** `fn_saneamiento_plan` filtra `tipo_flujo = 'debo'`,
+  estados activos, `eliminado_at IS NULL` y saldo > 0, y particiona por moneda, asi que no suma
+  ARS con USD. No lee tarjetas ni gastos recurrentes. `fn_prestamos_resumen` tambien agrupa por
+  moneda y por direccion.
+
+Observaciones menores, no bloqueantes:
+
+- El plan no ofrece «Registrar pago»: simular es de solo lectura y el pago se registra desde la
+  pantalla del prestamo. La distincion es clara; si se quiere un acceso directo, es una suma chica.
+- Los campos del simulador y del cuestionario usan solo placeholder, sin id ni label asociado.
+
+### PRD original
+
+`docs/deudas/Prestamos-Saneamiento.md` vive en el worktree `Personal`, no en este. No se modifico
+para no tocar otro worktree. Las diferencias detectadas quedaron registradas aca: 32A y 33A, la
+naturaleza educativa de Saneamiento, la persistencia de la estrategia (que el PRD ya exige y esta
+implementada), la exclusion de saldos de Tarjetas y gastos recurrentes, y los criterios de
+aceptacion de Saneamiento.
