@@ -358,6 +358,8 @@ export function PlanAtaquePrestamos() {
                           min="0"
                           step="0.01"
                           className="prestamos-input"
+                          id={`prestamo-sim-monto-${fila.prestamo_id}`}
+                          aria-label={t('prestamos_saneamiento_simular_monto')}
                           placeholder={t('prestamos_saneamiento_simular_monto')}
                           value={montos[fila.prestamo_id] ?? ''}
                           onChange={(e) =>

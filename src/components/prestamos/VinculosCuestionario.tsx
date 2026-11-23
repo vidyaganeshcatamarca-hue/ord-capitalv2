@@ -117,11 +117,17 @@ export function VinculosCuestionario({ onAplicado, onCerrar }: VinculosCuestiona
 
           {PREGUNTAS.map((pregunta) => (
             <div key={pregunta.criterio} className="prestamos-pregunta">
-              <p className="prestamos-pregunta-texto">{t(pregunta.clave)}</p>
+              <p className="prestamos-pregunta-texto" id={`pregunta-${pregunta.criterio}`}>
+                {t(pregunta.clave)}
+              </p>
               <span className="prestamos-pregunta-peso">
                 {t('prestamos_vinculos_peso', { peso: pregunta.peso })}
               </span>
-              <div className="prestamos-chips">
+              <div
+                className="prestamos-chips"
+                role="group"
+                aria-labelledby={`pregunta-${pregunta.criterio}`}
+              >
                 {filas.map((fila) => {
                   const activo = (seleccion[fila.prestamo_id] ?? []).includes(pregunta.criterio)
                   return (
@@ -130,6 +136,7 @@ export function VinculosCuestionario({ onAplicado, onCerrar }: VinculosCuestiona
                       type="button"
                       className={`prestamos-chip ${activo ? 'is-activo' : ''}`}
                       aria-pressed={activo}
+                      aria-label={`${t(pregunta.clave)} — ${fila.contraparte}`}
                       onClick={() => alternar(fila.prestamo_id, pregunta.criterio)}
                     >
                       {fila.contraparte}
