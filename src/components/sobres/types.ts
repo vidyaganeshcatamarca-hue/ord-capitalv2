@@ -34,6 +34,8 @@ export interface Sobre {
   orden_manual: boolean
   archivado_at: string | null
   tiene_rendimiento: boolean
+  /** Emoji del sobre; la RPC siempre devuelve uno, con 💰 por defecto. */
+  icono?: string | null
 }
 
 /** Una porción viva: de qué billetera salió el dinero y con qué modalidad. */
@@ -54,6 +56,8 @@ export interface SobreMovimiento {
   billetera_id: number
   billetera_nombre: string
   modalidad: ModalidadReserva
+  /** Solo tiene sentido en aportes con modalidad real. */
+  genera_rendimiento: boolean
 }
 
 export interface SobrePlan {
@@ -151,6 +155,7 @@ export function normalizarSobre(row: any): Sobre {
     orden_manual: Boolean(row.orden_manual),
     archivado_at: row.archivado_at ? String(row.archivado_at) : null,
     tiene_rendimiento: Boolean(row.tiene_rendimiento),
+    icono: row.icono ?? null,
   }
 }
 
@@ -212,6 +217,7 @@ export function normalizarDetalle(data: any): SobreDetalle {
           billetera_id: numero(h.billetera_id),
           billetera_nombre: String(h.billetera_nombre ?? ''),
           modalidad: (h.modalidad === 'real' ? 'real' : 'virtual') as ModalidadReserva,
+          genera_rendimiento: Boolean(h.genera_rendimiento),
         }))
       : [],
   }

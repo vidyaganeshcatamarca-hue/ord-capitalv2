@@ -118,6 +118,14 @@ export interface OcrTicket {
 export interface OcrJob {
   job_id: string;
   status: OcrJobStatus;
+  /**
+   * Finer backend phase inside `processing` (for example `extracting`).
+   *
+   * Read defensively on purpose: the integration contract lists only the eight
+   * statuses, so a backend that does not send it must keep working. When it is
+   * absent the UI falls back to the status alone; nothing is inferred from it.
+   */
+  stage: string | null;
   /** Backend-declared issues for the whole ticket. */
   issues: OcrIssue[];
   /** Normalized ticket, present only for `completed`/`needs_review`. */

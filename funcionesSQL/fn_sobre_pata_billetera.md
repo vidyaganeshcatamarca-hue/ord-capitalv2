@@ -1,11 +1,4 @@
--- Helper interno. Escribe la pata de billetera en p_caja de un movimiento de
--- ahorro: tipo adjustment, porque es el unico que mueve el saldo sin contarse
--- como gasto ni ingreso. Se usa para el aporte real, el rescate real y el
--- rendimiento. No expuesto al cliente (EXECUTE revocado).
--- p_caja no es opcional: p_billeteras.saldo_actual es una suma cacheada de
--- p_caja y fn_recalcular_saldos_billeteras la reconstruye desde ahi.
-
-CREATE OR REPLACE FUNCTION public.fn_sobre_pata_billetera(p_user_id bigint, p_billetera_id bigint, p_moneda text, p_importe numeric, p_salida boolean, p_detalle text, p_sobre_id bigint, p_sobre_nombre text)
+CREATE OR REPLACE FUNCTION public.fn_sobre_pata_billetera(p_user_id bigint, p_billetera_id bigint, p_moneda text, p_importe numeric, p_salida boolean, p_detalle text, p_sobre_id bigint, p_sobre_nombre text, p_fecha date DEFAULT CURRENT_DATE)
  RETURNS bigint
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -33,7 +26,7 @@ BEGIN
         p_billetera_id,
         CASE WHEN p_salida THEN 0 ELSE p_importe END,
         CASE WHEN p_salida THEN p_importe ELSE 0 END,
-        CURRENT_DATE,
+        COALESCE(p_fecha, CURRENT_DATE),
         p_moneda,
         p_detalle,
         jsonb_build_object('sobre_id', p_sobre_id, 'sobre_nombre', p_sobre_nombre, 'savings', true)

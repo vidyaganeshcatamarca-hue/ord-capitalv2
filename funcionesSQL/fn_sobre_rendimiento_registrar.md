@@ -1,10 +1,3 @@
--- Registra un rendimiento manual sobre una reserva REAL que genera rendimientos.
--- Tres pasos en una transaccion: (1) el ingreso entra a la billetera, (2) el
--- mismo asiento de aporte real lo saca hacia el sobre, (3) la porcion real crece.
--- Neto en la billetera: 0. Ingresos: +importe. Disponible libre: sin cambios.
--- La fecha es la de registro en ORD, sin selector. Permitido en Free.
--- PRD: DF-21, DF-22, DF-23, DF-24.
-
 CREATE OR REPLACE FUNCTION public.fn_sobre_rendimiento_registrar(p_sobre_id bigint, p_billetera_id bigint, p_importe numeric)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -67,7 +60,7 @@ BEGIN
     -- Paso 2: el mismo asiento que un aporte real lo saca hacia el sobre.
     v_caja_id := public.fn_sobre_pata_billetera(
         v_user_id, p_billetera_id, v_sobre.moneda, p_importe, true,
-        'savings_envelope_aporte_real', p_sobre_id, v_sobre.nombre
+        'savings_envelope_rendimiento', p_sobre_id, v_sobre.nombre, CURRENT_DATE
     );
 
     -- Paso 3: la porción real del sobre crece.

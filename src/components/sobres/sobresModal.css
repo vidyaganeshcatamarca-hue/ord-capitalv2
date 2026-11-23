@@ -174,3 +174,36 @@
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
+
+/* Prender y apagar el rendimiento de la reserva: etiqueta a la izquierda y el
+   switch de la app a la derecha. Antes era un checkbox nativo que se estiraba a
+   todo el ancho y dejaba la etiqueta fuera del area tactil. */
+.sobre-switch {
+  align-items: center;
+  color: var(--text-2);
+  display: flex;
+  font-size: 13px;
+  gap: 12px;
+  justify-content: space-between;
+  line-height: 1.4;
+}
+
+/* La cuota del plan se ofrece, no se impone: el campo arranca vacio y solo se
+   llena cuando el usuario toca una de las dos sugerencias. */
+.sobre-sugerencias {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.sobre-sugerencia {
+  background: transparent;
+  border: 1px solid var(--mint);
+  border-radius: 999px;
+  color: var(--text);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  padding: 6px 12px;
+}

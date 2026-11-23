@@ -1,12 +1,4 @@
--- Alta de sobre. El nombre y la moneda son obligatorios. Hay dos formas:
--- ahorro libre (sin meta) y proyecto (con meta, y fecha opcional). La fecha
--- sola no existe: pedirla sin meta se rechaza con error_sobre_date_requires_meta.
--- El aporte inicial es todo o nada y descuenta la billetera en las dos
--- modalidades. No hay restriccion por plan: cualquier usuario puede crear.
--- PRD: DF-06, DF-07, DF-25; replanteo DF-29; el dueno levanto DF-31.
--- La pata de caja se crea siempre: el virtual tambien descuenta de la billetera.
-
-CREATE OR REPLACE FUNCTION public.fn_sobre_crear(p_nombre text, p_moneda text, p_monto_meta numeric DEFAULT NULL::numeric, p_fecha_objetivo date DEFAULT NULL::date, p_aporte_billetera_id bigint DEFAULT NULL::bigint, p_aporte_importe numeric DEFAULT NULL::numeric, p_aporte_modalidad text DEFAULT NULL::text, p_aporte_genera_rendimiento boolean DEFAULT false, p_icono text DEFAULT 'ðŸ’°'::text)
+CREATE OR REPLACE FUNCTION public.fn_sobre_crear(p_nombre text, p_moneda text, p_monto_meta numeric DEFAULT NULL::numeric, p_fecha_objetivo date DEFAULT NULL::date, p_aporte_billetera_id bigint DEFAULT NULL::bigint, p_aporte_importe numeric DEFAULT NULL::numeric, p_aporte_modalidad text DEFAULT NULL::text, p_aporte_genera_rendimiento boolean DEFAULT false, p_icono text DEFAULT '💰'::text)
  RETURNS bigint
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -78,7 +70,7 @@ BEGIN
     IF p_aporte_billetera_id IS NOT NULL THEN
         v_caja_id := public.fn_sobre_pata_billetera(
             v_user_id, p_aporte_billetera_id, p_moneda, p_aporte_importe, true,
-            'savings_envelope_aporte_real', v_sobre_id, btrim(p_nombre)
+            'savings_envelope_aporte_real', v_sobre_id, btrim(p_nombre), CURRENT_DATE
         );
 
         INSERT INTO public.p_sobre_movimientos (

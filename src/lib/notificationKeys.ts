@@ -21,13 +21,14 @@ export type NotifMessageKey =
   | 'notif_deuda_por_vencer_mensaje'
   | 'notif_categoria_en_rojo_titulo'
   | 'notif_categoria_en_rojo_mensaje'
+  | 'notif_categoria_en_rojo_mensaje_nombres'
   | 'notif_ahorro_en_riesgo_titulo'
   | 'notif_ahorro_en_riesgo_mensaje'
 
 export interface NotifContent {
   tituloKey: NotifMessageKey
   mensajeKey: NotifMessageKey
-  params?: Record<string, string | number>
+  params?: Record<string, unknown>
 }
 
 const DEFAULT_PERSONAL: NotifContent = {
@@ -96,6 +97,18 @@ export function resolveNotifKeys(
     }
   }
   if (tipoNotificacion === 'categoria_en_rojo') {
+    // El productor manda los nombres como CLAVES i18n del rubro, no como texto.
+    // Si vienen, el mensaje los nombra: el usuario puede tener varias en rojo.
+    const nombres = Array.isArray(metadata?.categorias_nombres)
+      ? (metadata!.categorias_nombres as unknown[]).filter((n): n is string => typeof n === 'string' && n.length > 0)
+      : []
+    if (nombres.length > 0) {
+      return {
+        tituloKey: 'notif_categoria_en_rojo_titulo',
+        mensajeKey: 'notif_categoria_en_rojo_mensaje_nombres',
+        params: { categorias: nombres },
+      }
+    }
     return {
       tituloKey: 'notif_categoria_en_rojo_titulo',
       mensajeKey: 'notif_categoria_en_rojo_mensaje',

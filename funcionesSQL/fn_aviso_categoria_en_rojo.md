@@ -84,4 +84,4 @@ BEGIN
 
     RETURN v_encolados;
 END;
-$function$
+$function$;

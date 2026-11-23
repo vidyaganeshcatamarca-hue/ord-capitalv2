@@ -1,10 +1,3 @@
--- Aporte a un sobre. La plata sale de la billetera en LAS DOS modalidades:
--- la diferencia entre real y virtual la resuelve Conciliacion, no el saldo.
--- La billetera ya viene neta de lo apartado en otros sobres, asi que el
--- chequeo de saldo compara directo contra saldo_actual. No hay restriccion
--- por plan: cualquier usuario puede aportar.
--- PRD: DF-01, DF-03, DF-07, DF-08; el dueno levanto DF-31.
-
 CREATE OR REPLACE FUNCTION public.fn_sobre_aportar(p_sobre_id bigint, p_billetera_id bigint, p_importe numeric, p_modalidad text, p_genera_rendimiento boolean DEFAULT false, p_fecha date DEFAULT CURRENT_DATE)
  RETURNS bigint
  LANGUAGE plpgsql
@@ -61,7 +54,7 @@ BEGIN
     -- real y virtual la resuelve la conciliaciÃ³n, no el saldo.
     v_caja_id := public.fn_sobre_pata_billetera(
         v_user_id, p_billetera_id, v_sobre.moneda, p_importe, true,
-        'savings_envelope_aporte_real', p_sobre_id, v_sobre.nombre
+        'savings_envelope_aporte_real', p_sobre_id, v_sobre.nombre, COALESCE(p_fecha, CURRENT_DATE)
     );
 
     INSERT INTO public.p_sobre_movimientos (

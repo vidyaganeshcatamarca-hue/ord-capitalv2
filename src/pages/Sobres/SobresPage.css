@@ -7,6 +7,12 @@
   gap: 16px;
 }
 
+/* Mas especificidad que .page, que fija padding-top con var(--safe-top) y
+   dejaba el kicker ENVELOPES pegado al borde superior. */
+.page.sobres-page {
+  padding-top: calc(var(--safe-top) + 16px);
+}
+
 .sobres-page--centro {
   align-items: center;
   justify-content: center;
@@ -277,6 +283,7 @@
 .sobres-archivados-saldo {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
 }
 

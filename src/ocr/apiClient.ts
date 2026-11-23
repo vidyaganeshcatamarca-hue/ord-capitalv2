@@ -299,6 +299,7 @@ export async function getOcrJob(input: GetOcrJobInput): Promise<OcrJob> {
   return {
     job_id: asStringOrNull(body?.job_id) ?? jobId,
     status,
+    stage: asStringOrNull(body?.stage),
     issues: normalizeIssues(body?.issues),
     ticket,
     raw_result: rawResult,

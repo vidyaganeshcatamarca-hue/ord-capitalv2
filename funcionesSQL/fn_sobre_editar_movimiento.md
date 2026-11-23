@@ -1,13 +1,4 @@
--- Corrige un aporte o un rescate YA registrado. Edita el movimiento original y
--- la MISMA pata de caja: nunca inserta uno nuevo, para no inventar un rescate
--- ficticio (DF-17, §8.2). Reglas ratificadas en L11: el aporte no puede quedar
--- por debajo de lo ya rescatado de su porcion, el rescate no puede superar lo
--- aportado, y cambiar de billetera o modalidad exige que la porcion vieja no
--- tenga movimientos del otro tipo. La fecha original se conserva y queda rastro
--- en p_sobre_movimientos_auditoria. El saldo de la billetera lo mantiene el
--- trigger tr_actualizar_saldo_p_caja_integral, que revierte el OLD y aplica el NEW.
-
-CREATE OR REPLACE FUNCTION public.fn_sobre_editar_movimiento(p_movimiento_id bigint, p_importe numeric DEFAULT NULL::numeric, p_billetera_id bigint DEFAULT NULL::bigint, p_modalidad text DEFAULT NULL::text)
+CREATE OR REPLACE FUNCTION public.fn_sobre_editar_movimiento(p_movimiento_id bigint, p_importe numeric DEFAULT NULL::numeric, p_billetera_id bigint DEFAULT NULL::bigint, p_modalidad text DEFAULT NULL::text, p_genera_rendimiento boolean DEFAULT NULL::boolean)
  RETURNS void
  LANGUAGE plpgsql
  SECURITY DEFINER
@@ -22,6 +13,7 @@ DECLARE
     v_modalidad text;
     v_cruzado numeric;
     v_contrario text;
+    v_genera boolean;
     v_antes jsonb;
     v_despues jsonb;
 BEGIN
@@ -45,12 +37,22 @@ BEGIN
     v_importe := COALESCE(p_importe, v_mov.importe);
     v_billetera := COALESCE(p_billetera_id, v_mov.billetera_id);
     v_modalidad := COALESCE(p_modalidad, v_mov.modalidad);
+    v_genera := COALESCE(p_genera_rendimiento, v_mov.genera_rendimiento);
 
     IF v_importe IS NULL OR v_importe <= 0 THEN
         RAISE EXCEPTION '{"key": "error_sobre_amount_invalid", "params": {}}';
     END IF;
     IF v_modalidad NOT IN ('real', 'virtual') THEN
         RAISE EXCEPTION '{"key": "error_sobre_modality_invalid", "params": {}}';
+    END IF;
+
+    -- Solo un aporte puede generar rendimiento, y solo si la reserva es real:
+    -- es la misma regla que aplica fn_sobre_aportar al crear el movimiento.
+    IF p_genera_rendimiento IS NOT NULL AND v_mov.tipo <> 'aporte' THEN
+        RAISE EXCEPTION '{"key": "error_sobre_yield_only_on_contribution", "params": {}}';
+    END IF;
+    IF v_genera IS TRUE AND v_modalidad <> 'real' THEN
+        RAISE EXCEPTION '{"key": "error_sobre_yield_requires_real", "params": {}}';
     END IF;
 
     SELECT * INTO v_sobre FROM public.p_sobres b WHERE b.sobre_id = v_mov.sobre_id;
@@ -104,13 +106,15 @@ BEGIN
     v_antes := jsonb_build_object(
         'importe', v_mov.importe,
         'billetera_id', v_mov.billetera_id,
-        'modalidad', v_mov.modalidad
+        'modalidad', v_mov.modalidad,
+        'genera_rendimiento', v_mov.genera_rendimiento
     );
 
     UPDATE public.p_sobre_movimientos
     SET importe = v_importe,
         billetera_id = v_billetera,
         modalidad = v_modalidad,
+        genera_rendimiento = v_genera,
         actualizado_at = now()
     WHERE movimiento_id = v_mov.movimiento_id;
 
@@ -126,7 +130,8 @@ BEGIN
     v_despues := jsonb_build_object(
         'importe', v_importe,
         'billetera_id', v_billetera,
-        'modalidad', v_modalidad
+        'modalidad', v_modalidad,
+        'genera_rendimiento', v_genera
     );
 
     INSERT INTO public.p_sobre_movimientos_auditoria (

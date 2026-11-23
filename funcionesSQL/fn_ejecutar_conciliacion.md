@@ -1,10 +1,3 @@
--- Conciliacion de una billetera. La billetera de ORD es el dinero DISPONIBLE,
--- no el saldo del banco: en una reserva VIRTUAL el dinero sigue fisicamente en
--- la cuenta, asi que se descuenta del saldo que tipea el usuario antes de
--- comparar. En una reserva REAL no se descuenta nada. La fila de
--- p_conciliaciones guarda el saldo ya ajustado para seguir explicando la
--- diferencia que se crea (o su ausencia).
-
 CREATE OR REPLACE FUNCTION public.fn_ejecutar_conciliacion(p_billetera_id bigint, p_saldo_real numeric, p_fecha date DEFAULT CURRENT_DATE)
  RETURNS void
  LANGUAGE plpgsql
@@ -40,7 +33,12 @@ BEGIN
 
     -- Se guarda y se compara el saldo YA ajustado: la fila de p_conciliaciones
     -- tiene que seguir explicando la diferencia que se crea (o su ausencia).
-    v_saldo_real := p_saldo_real - v_reservas_virtuales;
+    -- La conciliacion trabaja con enteros: los centavos se truncan siempre, sin
+    -- importar los decimales que el usuario elija en la configuracion regional.
+    -- Un centavo de redondeo no es un hecho contable y no puede generar un
+    -- movimiento de ajuste (era el ajuste de 0,01 que aparecia como +$ 0).
+    v_saldo_real := trunc(p_saldo_real - v_reservas_virtuales);
+    v_saldo_teorico := trunc(v_saldo_teorico);
     v_diferencia := v_saldo_real - v_saldo_teorico;
 
     -- Telemetria Tanda 3: registro SIEMPRE en p_conciliaciones (incluida
@@ -48,7 +46,7 @@ BEGIN
     INSERT INTO public.p_conciliaciones (user_id, billetera_id, fecha, saldo_teorico, saldo_real)
     VALUES (v_user_id, p_billetera_id, now(), v_saldo_teorico, v_saldo_real);
 
-    -- Actualizar semÃ¡foro (fecha de conciliaciÃ³n) incluso si no hay diferencias
+    -- Actualizar semáforo (fecha de conciliación) incluso si no hay diferencias
     IF v_diferencia = 0 THEN
         UPDATE public.p_billeteras SET ultima_conciliacion_at = now() WHERE billetera_id = p_billetera_id;
         RETURN;

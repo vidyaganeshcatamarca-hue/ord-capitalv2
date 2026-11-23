@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { haptics } from '@/lib/haptics'
 import { useToast } from '@/contexts/ToastContext'
-import { formatCurrency } from '@/lib/format'
+import { formatCurrency, fechaLocalISO } from '@/lib/format'
 import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { parseError, t } from '@/locales/i18n'
 import { normalizarPorcion, type AsignacionRescate, type ModalidadReserva, type Sobre, type SobrePorcion } from './types'
 import './sobresModal.css'
 import './SobreRescateModal.css'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 
 interface SobreRescateModalProps {
   isOpen: boolean
@@ -111,6 +112,9 @@ export function SobreRescateModal({ isOpen, sobre, onClose, onSuccess }: SobreRe
       const { error: rpcError } = await supabase.rpc('fn_sobre_rescatar', {
         p_sobre_id: sobre.sobre_id,
         p_asignaciones: asignaciones,
+        // La fecha la pone el dispositivo: el servidor esta en UTC y a la noche
+        // guardaria el dia siguiente.
+        p_fecha: fechaLocalISO(),
       })
       if (rpcError) throw rpcError
       showToast(t('sobres_rescue_success'), 'success')
@@ -146,7 +150,7 @@ export function SobreRescateModal({ isOpen, sobre, onClose, onSuccess }: SobreRe
           {lineas.map((linea, indice) => (
             <div className="sobre-porcion" key={`${linea.porcion.billetera_id}_${linea.porcion.modalidad}`}>
               <div className="sobre-porcion-info">
-                <strong>{linea.porcion.billetera_nombre}</strong>
+                <strong>{catalogDisplayName(linea.porcion.billetera_nombre)}</strong>
                 <span className={`sobre-porcion-modalidad sobre-porcion-modalidad--${linea.porcion.modalidad}`}>
                   {t(
                     linea.porcion.modalidad === 'real'
@@ -169,13 +173,15 @@ export function SobreRescateModal({ isOpen, sobre, onClose, onSuccess }: SobreRe
                   placeholder="0"
                   value={linea.importe}
                   onChange={(e) => cambiarImporte(indice, e.target.value)}
+                  enterKeyHint="done"
                 />
                 <button
                   type="button"
                   className="sobre-porcion-todo"
+                  aria-label={t('sobres_rescue_all')}
                   onClick={() => cambiarImporte(indice, String(linea.porcion.saldo))}
                 >
-                  {t('sobres_rescue')}
+                  {t('sobres_rescue_all')}
                 </button>
               </div>
             </div>

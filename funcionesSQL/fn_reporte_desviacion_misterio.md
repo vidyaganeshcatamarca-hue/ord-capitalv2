@@ -22,5 +22,8 @@ BEGIN
         COALESCE(SUM(CASE WHEN b.moneda = 'USD' THEN c.valor_egreso ELSE 0 END), 0) AS olvidos_dolares
     FROM p_caja c
     INNER JOIN p_billeteras b ON c.billetera_origen_id = b.billetera_id
-    WHERE c.user_id = v_user_id AND c.tipo = 'adjustment' AND c.valor_egreso > 0 AND c.fecha >= v_f_inicio AND c.fecha <= v_f_fin;
-END; $function$
+    WHERE c.user_id = v_user_id AND c.tipo = 'adjustment' AND c.valor_egreso > 0 AND c.fecha >= v_f_inicio AND c.fecha <= v_f_fin
+      -- Las patas de sobre son adjustment con egreso, pero no son plata perdida:
+      -- la plata esta apartada, no olvidada.
+      AND NOT COALESCE(c.metadata ? 'savings', false);
+END; $function$;

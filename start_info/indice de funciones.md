@@ -73,13 +73,13 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 59. [fn_editar_ingreso_personalizado](../funcionesSQL/fn_editar_ingreso_personalizado.md)
 60. [fn_editar_movimiento_caja](../funcionesSQL/fn_editar_movimiento_caja.md)
 61. [fn_editar_tarjeta_credito](../funcionesSQL/fn_editar_tarjeta_credito.md)
-62. [fn_ejecutar_conciliacion](../funcionesSQL/fn_ejecutar_conciliacion.md) — nuevo parámetro opcional `p_fecha date DEFAULT CURRENT_DATE`: los ajustes (superávit/fuga) en p_caja usan la fecha LOCAL del dispositivo en vez de UTC (2026-10-16, bug batch conciliaciones); overload viejo de 2 args eliminado
+62. [fn_ejecutar_conciliacion](../funcionesSQL/fn_ejecutar_conciliacion.md) — nuevo parámetro opcional `p_fecha date DEFAULT CURRENT_DATE`: los ajustes (superávit/fuga) en p_caja usan la fecha LOCAL del dispositivo en vez de UTC (2026-10-16, bug batch conciliaciones); overload viejo de 2 args eliminado. 2026-11-17: trunca saldo real y teórico a enteros antes de comparar, así los centavos nunca generan un ajuste
 63. [fn_eliminar_compromiso_tarjeta](../funcionesSQL/fn_eliminar_compromiso_tarjeta.md)
 64. [fn_eliminar_cuenta_usuario](../funcionesSQL/fn_eliminar_cuenta_usuario.md)
 65. [fn_eliminar_estructura_egreso](../funcionesSQL/fn_eliminar_estructura_egreso.md)
 66. [fn_migrar_y_eliminar_estructura_egreso](../funcionesSQL/fn_migrar_y_eliminar_estructura_egreso.md)
 67. [fn_eliminar_gasto_recurrente](../funcionesSQL/fn_eliminar_gasto_recurrente.md)
-67. [fn_eliminar_movimiento_caja](../funcionesSQL/fn_eliminar_movimiento_caja.md)
+67. [fn_eliminar_movimiento_caja](../funcionesSQL/fn_eliminar_movimiento_caja.md) *(Rechaza con `error_sobre_movement_not_deletable` cualquier movimiento que tenga `metadata.savings`: borrarlo desde el historial dejaba la pata huerfana, el trigger devolvia la plata y el sobre seguia reservando, y la conciliacion siguiente creaba un ajuste por diferencia negativa. 2026-11-17)*
 68. [fn_eliminar_notificacion](../funcionesSQL/fn_eliminar_notificacion.md)
 69. [fn_exportar_backup_maestro](../funcionesSQL/fn_exportar_backup_maestro.md)
 70. [fn_exportar_datos_usuario_rango](../funcionesSQL/fn_exportar_datos_usuario_rango.md)
@@ -112,7 +112,7 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 95. [fn_obtener_config_presupuesto](../funcionesSQL/fn_obtener_config_presupuesto.md)
 96. [fn_obtener_estadisticas_referidos](../funcionesSQL/fn_obtener_estadisticas_referidos.md)
 97. [fn_obtener_fechas_ciclo_presupuesto](../funcionesSQL/fn_obtener_fechas_ciclo_presupuesto.md)
-98. [fn_obtener_notificaciones_no_leidas](../funcionesSQL/fn_obtener_notificaciones_no_leidas.md)
+98. [fn_obtener_notificaciones_no_leidas](../funcionesSQL/fn_obtener_notificaciones_no_leidas.md) *(bandeja del cliente. Desde 2026-11-13 filtra expira_at igual que fn_notificaciones_contar: antes listaba avisos vencidos que el contador ya no contaba, y por eso el badge y el panel mostraban numeros distintos)*
 98b. [fn_obtener_nombre_usuario](../funcionesSQL/fn_obtener_nombre_usuario.md)
 99. [fn_obtener_preferencias_notificaciones](../funcionesSQL/fn_obtener_preferencias_notificaciones.md)
 100. [fn_obtener_preferencias_usuario](../funcionesSQL/fn_obtener_preferencias_usuario.md)
@@ -148,7 +148,7 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 ](../funcionesSQL/fn_reporte_compromisos_tarjeta.md)
 123. [fn_reporte_cuarentena_pendientes](../funcionesSQL/fn_reporte_cuarentena_pendientes.md)
 124. [fn_reporte_desglose_balance](../funcionesSQL/fn_reporte_desglose_balance.md)
-125. [fn_reporte_desviacion_misterio](../funcionesSQL/fn_reporte_desviacion_misterio.md)
+125. [fn_reporte_desviacion_misterio](../funcionesSQL/fn_reporte_desviacion_misterio.md) *(Suma solo ajustes sin `metadata.savings`: las patas de sobre son adjustment con egreso, pero la plata esta apartada, no olvidada. 2026-11-17)*
 126. [fn_reporte_detalle_inversion](../funcionesSQL/fn_reporte_detalle_inversion.md)
 127. [fn_reporte_detector_licuadora](../funcionesSQL/fn_reporte_detector_licuadora.md)
 128. [fn_reporte_distribucion_billeteras](../funcionesSQL/fn_reporte_distribucion_billeteras.md)
@@ -174,7 +174,7 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 147. [fn_reporte_mapa_acreedores](../funcionesSQL/fn_reporte_mapa_acreedores.md)
 148. [fn_reporte_mapa_tarjetas](../funcionesSQL/fn_reporte_mapa_tarjetas.md)
 149. [fn_reporte_movimientos_por_billetera](../funcionesSQL/fn_reporte_movimientos_por_billetera.md)
-150. [fn_reporte_movimientos_recientes](../funcionesSQL/fn_reporte_movimientos_recientes.md)
+150. [fn_reporte_movimientos_recientes](../funcionesSQL/fn_reporte_movimientos_recientes.md) *(Los movimientos de sobre se titulan `type_savings_aporte`, `type_savings_rescate` o `type_savings_rendimiento` y el subtexto es el nombre del sobre, no la clave cruda del detalle. 2026-11-17)*
 151. [fn_reporte_patrimonio_inversiones](../funcionesSQL/fn_reporte_patrimonio_inversiones.md)
 152. [fn_reporte_patrimonio_neto](../funcionesSQL/fn_reporte_patrimonio_neto.md)
 153. [fn_reporte_patrimonio_neto_consolidado](../funcionesSQL/fn_reporte_patrimonio_neto_consolidado.md)
@@ -344,14 +344,14 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 
 189c. [fn_disponible_transferible](../funcionesSQL/fn_disponible_transferible.md) *(NUEVA 2026-11, ronda 10: helper con la UNICA formula del disponible transferible de un sobre. Base cero arrastra salvo el ciclo de activacion, libertad no arrastra, y nunca descuenta a los hijos. El COALESCE dentro del CASE es obligatorio: sin fila en el ciclo anterior el SELECT INTO deja NULL y `GREATEST(NULL, 0)` devuelve 0, con lo que un sobre con techo quedaba en cero)*
 189d. [fn_disponibles_transferibles](../funcionesSQL/fn_disponibles_transferibles.md) *(NUEVA 2026-11, ronda 10: devuelve estructura_id y disponible de todas las filas en UNA sola llamada, para que la pantalla deje de calcular el disponible por su cuenta)*
-280. [fn_encolar_aviso](../funcionesSQL/fn_encolar_aviso.md) *(NUEVA 2026-11: unico punto de encolado de avisos. Respeta la preferencia del usuario por categoria leyendo cat_<categoria> de p_notificaciones_config, es idempotente por dedupe_key y NO se le concede a authenticated: solo service_role y postgres)*
+280. [fn_encolar_aviso](../funcionesSQL/fn_encolar_aviso.md) *(NUEVA 2026-11: unico punto de encolado de avisos. Respeta la preferencia del usuario por categoria leyendo cat_<categoria> de p_notificaciones_config y NO se le concede a authenticated: solo service_role y postgres. Desde 2026-11-13, cuando encuentra una fila con la misma dedupe_key NO solo la devuelve: la REACTIVA (enviado_at a now, expira_at nueva, leida en false, leida_at y pausada_hasta en NULL, prioridad y metadata actualizadas), porque antes el mismo hecho encolaba una fila por corrida y las viejas quedaban en la bandeja para siempre)*
 281. [fn_notificaciones_contar](../funcionesSQL/fn_notificaciones_contar.md) *(NUEVA 2026-11: cantidad real de avisos operativos sin leer y sin vencer, para que el badge no traiga 50 filas al cliente. Excluye la familia engage: Engage no suma al badge)*
 284. [fn_aviso_vencimiento_tarjeta](../funcionesSQL/fn_aviso_vencimiento_tarjeta.md) *(NUEVA 2026-11: tercer productor. Avisa 3 dias antes, solo si la tarjeta tiene cuotas impagas: avisar que vence una tarjeta sin nada que pagar es ruido)*
 285. [fn_aviso_deuda_por_vencer](../funcionesSQL/fn_aviso_deuda_por_vencer.md) *(NUEVA 2026-11: cuarto productor. Avisa 7 dias antes una deuda viva (activo, pendiente o parcial); pagado, cancelado, archivado y refinanciado no avisan)*
-286. [fn_aviso_categoria_en_rojo](../funcionesSQL/fn_aviso_categoria_en_rojo.md) *(NUEVA 2026-11: quinto productor. Categoria de egreso que gasto mas de lo asignado en el ciclo, SOLO en modo base cero. Replica la logica de fn_reporte_presupuestos_mensuales porque esa depende de auth.uid y el cron corre como service_role)*
+286. [fn_aviso_categoria_en_rojo](../funcionesSQL/fn_aviso_categoria_en_rojo.md) *(NUEVA 2026-11: quinto productor. Categoria de egreso que gasto mas de lo asignado en el ciclo, SOLO en modo base cero. Replica la logica de fn_reporte_presupuestos_mensuales porque esa depende de auth.uid y el cron corre como service_role. Desde 2026-11-13 manda metadata.categorias_nombres con jsonb_agg(DISTINCT nombre_cuenta), que son claves i18n del rubro y no texto, para que el cliente pueda decir CUAL esta en rojo; y su dedupe_key es 'categoria_en_rojo:'||ciclo_inicio, sin la fecha, para no duplicar el aviso cada dia)*
 287. [fn_aviso_ahorro_en_riesgo](../funcionesSQL/fn_aviso_ahorro_en_riesgo.md) *(NUEVA 2026-11: sexto productor. Sobre en semaforo rojo a 7 dias (plazo menor a 6 meses) o 14 dias (desde 6 meses) de la fecha objetivo, Definicion 32. Replica el calculo de fn_sobre_plan sin auth.uid)*
 288. [fn_avisos_ejecutar](../funcionesSQL/fn_avisos_ejecutar.md) *(NUEVA 2026-11: unica entrada del cron. Corre los cinco productores y devuelve cuantos encolo cada uno. Cuarentena NO esta: la informa el FAB del Home)*
-282. [fn_aviso_cuarentena](../funcionesSQL/fn_aviso_cuarentena.md) *(NUEVA 2026-11, vuelve con la regla de 24 h: el FAB del Home informa al instante; este aviso solo nace si el pendiente sigue sin resolver 24 horas despues, y su dedupe_key incluye el conteo para que un lote nuevo genere un aviso nuevo)*
+282. [fn_aviso_cuarentena](../funcionesSQL/fn_aviso_cuarentena.md) *(NUEVA 2026-11, vuelve con la regla de 24 h: el FAB del Home informa al instante y este aviso solo nace si el pendiente sigue sin resolver 24 horas despues. Desde 2026-11-13 la dedupe_key es 'cuarentena:'||pendientes SIN la fecha: antes incluia YYYYMMDD y, como el cron corre a las 00 y 12 UTC, cada dia encolaba una fila nueva por el mismo hecho)*
 289. [fn_zona_horaria_pais](../funcionesSQL/fn_zona_horaria_pais.md) *(nueva 2026-11-11: código ISO del país → zona horaria IANA, para que los reportes usen la fecha local del usuario. IMMUTABLE; país desconocido o NULL cae a UTC. Para los países con varias zonas (US, CA, BR, AU, RU, MX, ID, CN) devuelve la principal: el país no dice dónde está el dispositivo)*
 
 290. [fn_archivar_presupuestos_ciclo](../funcionesSQL/fn_archivar_presupuestos_ciclo.md) *(nueva 2026-11, bloque A: archiva las filas del ciclo activo antes de ponerlas en cero al cambiar de modo. No existía espejo; se generó desde la base)*
@@ -373,3 +373,23 @@ Este archivo contiene la lista de todas las funciones RPC espejo del proyecto. L
 306. [fn_conciliar_presupuesto](../funcionesSQL/fn_conciliar_presupuesto.md) *(NUEVA 2026-11, bloque B: verificación cruzada del saldo libre (liquidez − reservas − cuotas pendientes) contra el presupuesto. Devuelve las piezas cuando no cierra, no un booleano)*
 307. [fn_grupo_de_estructura](../funcionesSQL/fn_grupo_de_estructura.md) *(NUEVA 2026-11, bloque E: resuelve a qué rubro padre pertenece una estructura. Lo usan los ajustes por corrección histórica)*
 308. [fn_techos_por_estructura](../funcionesSQL/fn_techos_por_estructura.md) *(NUEVA 2026-11, etapa 2-3: techos de las subcategorías en una sola llamada, para no recrear fn_reporte_sobres_detalle cada vez que hace falta un dato nuevo)*
+309. [fn_sobre_desarchivar](../funcionesSQL/fn_sobre_desarchivar.md) *(NUEVA 2026-11-13: devuelve un sobre archivado a la lista activa con archivado_at = NULL. Le asigna orden = MAX+1 de los activos, que lo lleva al final DE SU GRUPO: con orden automatico fn_sobres_listar ordena por grupo (proyecto con fecha, proyecto sin fecha, libre) e ignora ese valor, y solo con orden manual lo pone al final de la lista. No toca orden_manual. Rechaza con error_sobre_not_archived si ya estaba activo y con error_sobre_not_found si el id no es suyo)*
+310. [fn_sobre_aportar](../funcionesSQL/fn_sobre_aportar.md) *(Aporte a un sobre: la plata sale de la billetera en las DOS modalidades, virtual y real; la diferencia entre ellas es la conciliacion, no el saldo. Valida moneda contra la del sobre y escribe la pata de p_caja)*
+311. [fn_sobre_archivar](../funcionesSQL/fn_sobre_archivar.md) *(Archivado definitivo por ahora reversible con fn_sobre_desarchivar. Exige saldo exactamente cero, sin tolerancia. No borra movimientos ni historia)*
+312. [fn_sobre_crear](../funcionesSQL/fn_sobre_crear.md) *(Alta de sobre: nombre y moneda obligatorios. Admite meta con fecha opcional (proyecto) o sin meta (ahorro libre); la fecha sola se rechaza con error_sobre_date_requires_meta. El icono entra por p_icono, por defecto el emoji de moneda)*
+313. [fn_sobre_detalle](../funcionesSQL/fn_sobre_detalle.md) *(Detalle completo en un solo viaje: sobre, plan calculado, porciones e historial basico. Expone billetera_id en el historial porque hay billeteras homonimas)*
+314. [fn_sobre_editar](../funcionesSQL/fn_sobre_editar.md) *(Edicion de sobre. Quitar la meta dejando una fecha viva se rechaza: sin meta no hay fecha. Acepta p_icono y rechaza los sobres archivados con error_sobre_archived)*
+315. [fn_sobre_editar_movimiento](../funcionesSQL/fn_sobre_editar_movimiento.md) *(Corrige un aporte o un rescate ya registrado. Edita el movimiento original y la MISMA pata de caja, nunca una nueva. Acepta importe, billetera, modalidad y, desde 2026-11-13, p_genera_rendimiento boolean con DEFAULT NULL donde NULL significa no cambiar: solo un aporte puede generarlo, y solo con modalidad real, con error_sobre_yield_only_on_contribution y error_sobre_yield_requires_real. El cambio va a la auditoria)*
+316. [fn_sobre_pata_billetera](../funcionesSQL/fn_sobre_pata_billetera.md) *(Helper interno: escribe la pata de billetera en p_caja de un movimiento de sobre, en tipo adjustment, que es el unico que mueve saldo sin contarse como gasto ni ingreso. 2026-11-17: recibe `p_fecha date DEFAULT CURRENT_DATE` para que la pata y el movimiento del sobre compartan el dia local)*
+317. [fn_sobre_plan](../funcionesSQL/fn_sobre_plan.md) *(Estado y cuotas del sobre: cumplido, vencido o en curso, mas el semaforo de avance (verde desde 0,85, amarillo desde 0,60, rojo por debajo). Depende de auth.uid, por eso los productores de avisos replican su formula)*
+318. [fn_sobre_porciones](../funcionesSQL/fn_sobre_porciones.md) *(Porciones vivas de un sobre: de que billetera salio cada peso y con que modalidad)*
+319. [fn_sobre_producto_rendimiento](../funcionesSQL/fn_sobre_producto_rendimiento.md) *(Helper interno: devuelve el producto de ingreso del usuario para los rendimientos)*
+320. [fn_sobre_rendimiento_editar](../funcionesSQL/fn_sobre_rendimiento_editar.md) *(Corrige un rendimiento ya registrado: edita el movimiento original y la MISMA pata de caja, nunca inserta un segundo ingreso)*
+321. [fn_sobre_rendimiento_registrar](../funcionesSQL/fn_sobre_rendimiento_registrar.md) *(Registra un rendimiento manual sobre una reserva REAL que genera rendimientos)*
+322. [fn_sobre_rescatar](../funcionesSQL/fn_sobre_rescatar.md) *(Rescate con reparto explicito entre porciones: cada importe vuelve a SU billetera de origen. 2026-11-17: recibe `p_fecha date DEFAULT CURRENT_DATE` para que la fecha la mande el dispositivo y no el servidor en UTC)*
+323. [fn_sobre_saldo](../funcionesSQL/fn_sobre_saldo.md) *(Helper interno: saldo vivo del sobre, aportes mas rendimientos menos rescates)*
+324. [fn_sobre_saldo_base](../funcionesSQL/fn_sobre_saldo_base.md) *(Helper interno: saldo con el que arranco el plan vigente, contando solo los movimientos anteriores)*
+325. [fn_sobres_listar](../funcionesSQL/fn_sobres_listar.md) *(Lista los sobres y devuelve 19 columnas, la ultima icono. El parametro decide si incluye archivados. OJO con el orden: con orden_manual en false ordena por GRUPO (proyecto con fecha 0, proyecto sin fecha 1, libre 2) e ignora la columna orden; solo con orden_manual en true manda orden)*
+326. [fn_sobres_orden_automatico](../funcionesSQL/fn_sobres_orden_automatico.md) *(Vuelve al orden automatico: apaga orden_manual Y renumera por fecha de alta, porque solo apagar la bandera dejaria cada grupo en el orden del ultimo arrastre)*
+327. [fn_sobres_reordenar](../funcionesSQL/fn_sobres_reordenar.md) *(Guarda el orden manual elegido por arrastre. Exige que la lista recibida sea exactamente la actual, para no pisar cambios de otra pestana)*
+328. [fn_sobres_reservas_virtuales](../funcionesSQL/fn_sobres_reservas_virtuales.md) *(Total apartado solo en modalidad virtual, por billetera y moneda)*

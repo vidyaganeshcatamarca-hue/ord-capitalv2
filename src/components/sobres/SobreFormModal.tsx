@@ -8,6 +8,8 @@ import { parseError, t } from '@/locales/i18n'
 import { useNumberFormat } from '@/hooks/useNumberFormat'
 import { WalletDropdownSelect, type WalletOptionItem } from '@/components/WalletDropdownSelect'
 import type { BilleteraOperativa, ModalidadReserva, Sobre } from './types'
+import { ICONOS_SOBRE } from './iconosSobre'
+import { ToggleSwitch } from '@/components/configuracion/ToggleSwitch'
 import './sobresModal.css'
 import './SobreFormModal.css'
 
@@ -31,6 +33,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
   const [moneda, setMoneda] = useState('')
   const [meta, setMeta] = useState('')
   const [fecha, setFecha] = useState('')
+  const [icono, setIcono] = useState('💰')
   const [aporteImporte, setAporteImporte] = useState('')
   const [aporteBilleteraId, setAporteBilleteraId] = useState<number | null>(null)
   const [aporteModalidad, setAporteModalidad] = useState<ModalidadReserva>('virtual')
@@ -55,6 +58,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
     setMoneda(sobre?.moneda ?? localCurrency ?? 'ARS')
     setMeta(sobre?.monto_meta ? String(sobre.monto_meta) : '')
     setFecha(sobre?.fecha_objetivo ?? '')
+    setIcono(sobre?.icono ?? '💰')
     setAporteImporte('')
     setAporteBilleteraId(null)
     setAporteModalidad('virtual')
@@ -125,6 +129,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
           p_nombre: nombre.trim(),
           p_monto_meta: metaNum,
           p_fecha_objetivo: fecha || null,
+          p_icono: icono,
           p_quitar_meta: metaNum === null,
           p_quitar_fecha: !fecha,
         })
@@ -136,6 +141,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
           p_moneda: moneda,
           p_monto_meta: metaNum,
           p_fecha_objetivo: fecha || null,
+          p_icono: icono,
           p_aporte_billetera_id: quiereAporte ? aporteBilleteraId : null,
           p_aporte_importe: quiereAporte ? aporteNum : null,
           p_aporte_modalidad: quiereAporte ? aporteModalidad : null,
@@ -177,7 +183,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               placeholder={t('sobres_name_placeholder')}
-              autoFocus
+              enterKeyHint="done"
             />
           </div>
 
@@ -195,6 +201,27 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
           </div>
 
           <div className="sobre-grupo">
+            <label id="sobre-icono-label">{t('sobres_icon')}</label>
+            <div className="sobre-iconos" role="group" aria-labelledby="sobre-icono-label">
+              {ICONOS_SOBRE.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  className={`sobre-icono${icono === emoji ? ' sobre-icono--activo' : ''}`}
+                  aria-label={emoji}
+                  aria-pressed={icono === emoji}
+                  onClick={() => {
+                    setIcono(emoji)
+                    haptics.light()
+                  }}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="sobre-grupo">
             <label htmlFor="sobre-meta">{t('sobres_target_amount')}</label>
             <input
               id="sobre-meta"
@@ -209,6 +236,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
                 if (e.target.value.trim() === '') setFecha('')
               }}
               placeholder="0"
+              enterKeyHint="done"
             />
           </div>
 
@@ -221,6 +249,11 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
               disabled={meta.trim() === ''}
               onChange={(e) => setFecha(e.target.value)}
             />
+            {fecha !== '' && (
+              <button type="button" className="sobre-quitar-fecha" onClick={() => setFecha('')}>
+                {t('sobres_remove_date')}
+              </button>
+            )}
             {meta.trim() === '' && (
               <p className="sobre-grupo-hint">{t('sobres_target_date_needs_goal')}</p>
             )}
@@ -241,6 +274,7 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
                   value={aporteImporte}
                   onChange={(e) => setAporteImporte(e.target.value)}
                   placeholder="0"
+                  enterKeyHint="done"
                 />
               </div>
 
@@ -285,14 +319,10 @@ export function SobreFormModal({ isOpen, sobre, billeteras, onClose, onSuccess }
                   </div>
 
                   {aporteModalidad === 'real' && (
-                    <label className="sobre-check">
-                      <input
-                        type="checkbox"
-                        checked={aporteGenera}
-                        onChange={(e) => setAporteGenera(e.target.checked)}
-                      />
+                    <div className="sobre-switch">
                       <span>{t('sobres_generates_yield')}</span>
-                    </label>
+                      <ToggleSwitch checked={aporteGenera} onChange={setAporteGenera} size="sm" />
+                    </div>
                   )}
                 </>
               )}

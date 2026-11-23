@@ -298,9 +298,26 @@ export function confirmableGroups(result: OcrGroupingResult): OcrCategoryGroup[]
   return result.groups.filter((group) => group.total_cents > 0);
 }
 
+/**
+ * Rounds a cents amount to the currency unit the owner actually sees.
+ *
+ * The UI never renders the cents of a derived total, so an owner cannot type
+ * them back: groups summing 27835.50 display as 27836, and an exact comparison
+ * made the closure impossible to satisfy no matter what was typed. Both sides
+ * are judged in whole units, which is also how the amount is rendered.
+ * Rounding rather than truncating is deliberate: truncating the sum would give
+ * 27835 and still fail against the 27836 the owner reads on screen.
+ */
+function toCurrencyUnits(cents: number): number {
+  return Math.round(cents / 100);
+}
+
 /** True when the closure is exact: sum of movements equals the ticket total. */
 export function isClosureExact(result: OcrGroupingResult): boolean {
-  return !result.material_mismatch && result.sum_cents === result.ticket_total_cents;
+  return (
+    !result.material_mismatch &&
+    toCurrencyUnits(result.sum_cents) === toCurrencyUnits(result.ticket_total_cents)
+  );
 }
 
 /**

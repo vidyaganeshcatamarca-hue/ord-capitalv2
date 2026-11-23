@@ -7,7 +7,9 @@ import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { parseError, t } from '@/locales/i18n'
 import { WalletDropdownSelect, type WalletOptionItem } from '@/components/WalletDropdownSelect'
 import type { BilleteraOperativa, ModalidadReserva, SobreMovimiento } from './types'
+import { ToggleSwitch } from '@/components/configuracion/ToggleSwitch'
 import './sobresModal.css'
+import { catalogDisplayName } from '@/lib/catalogRegistry'
 
 interface SobreMovimientoModalProps {
   isOpen: boolean
@@ -36,6 +38,7 @@ export function SobreMovimientoModal({
   const [importe, setImporte] = useState('')
   const [billeteraId, setBilleteraId] = useState<number | null>(null)
   const [modalidad, setModalidad] = useState<ModalidadReserva>('virtual')
+  const [genera, setGenera] = useState(false)
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -63,11 +66,16 @@ export function SobreMovimientoModal({
     setImporte(String(movimiento.importe))
     setBilleteraId(movimiento.billetera_id)
     setModalidad(movimiento.modalidad)
+    setGenera(Boolean(movimiento.genera_rendimiento))
     setError(null)
     setGuardando(false)
   }, [isOpen, movimiento])
 
   if (!isOpen || !movimiento) return null
+
+  // El rendimiento tiene su propia corrección: solo importe, sin billetera ni
+  // modalidad, porque el ingreso ya está creado y la RPC lo ajusta en el lugar.
+  const esRendimiento = movimiento.tipo === 'rendimiento'
 
   const importeNum = Number(importe)
   const importeValido = Number.isFinite(importeNum) && importeNum > 0
@@ -79,18 +87,25 @@ export function SobreMovimientoModal({
       setError(t('error_sobre_amount_invalid'))
       return
     }
-    if (!billeteraId) {
+    if (!esRendimiento && !billeteraId) {
       setError(t('error_sobre_wallet_not_found'))
       return
     }
     setGuardando(true)
     try {
-      const { error: rpcError } = await supabase.rpc('fn_sobre_editar_movimiento', {
-        p_movimiento_id: movimiento.movimiento_id,
-        p_importe: importeNum,
-        p_billetera_id: billeteraId,
-        p_modalidad: modalidad,
-      })
+      const { error: rpcError } = esRendimiento
+        ? await supabase.rpc('fn_sobre_rendimiento_editar', {
+            p_movimiento_id: movimiento.movimiento_id,
+            p_importe: importeNum,
+          })
+        : await supabase.rpc('fn_sobre_editar_movimiento', {
+            p_movimiento_id: movimiento.movimiento_id,
+            p_importe: importeNum,
+            p_billetera_id: billeteraId,
+            p_modalidad: modalidad,
+            // Solo viaja para aportes: en un rescate la RPC lo rechaza.
+            ...(movimiento.tipo === 'aporte' ? { p_genera_rendimiento: genera } : {}),
+          })
       if (rpcError) throw rpcError
       showToast(t('sobres_correct_success'), 'success')
       haptics.success()
@@ -111,7 +126,7 @@ export function SobreMovimientoModal({
           <div>
             <h2 className="font-display">{t('sobres_correct_title')}</h2>
             <p className="sobre-modal-sub">
-              {formatDate(movimiento.fecha)} · {movimiento.billetera_nombre}
+              {formatDate(movimiento.fecha)} · {catalogDisplayName(movimiento.billetera_nombre)}
             </p>
           </div>
           <button type="button" className="sobre-modal-close" onClick={onClose} aria-label={t('btn_close')}>
@@ -131,10 +146,12 @@ export function SobreMovimientoModal({
               value={importe}
               onChange={(e) => setImporte(e.target.value)}
               placeholder="0"
-              autoFocus
+              enterKeyHint="done"
             />
           </div>
 
+          {!esRendimiento && (
+          <>
           <div className="sobre-grupo">
             <label>{movimiento.tipo === 'rescate' ? t('sobres_wallet_destination') : t('sobres_wallet_origin')}</label>
             {disponibles.length === 0 ? (
@@ -156,7 +173,11 @@ export function SobreMovimientoModal({
               <button
                 type="button"
                 className={`sobre-modalidad ${modalidad === 'virtual' ? 'sobre-modalidad--activa' : ''}`}
-                onClick={() => setModalidad('virtual')}
+                onClick={() => {
+                  setModalidad('virtual')
+                  // Virtual no puede generar rendimiento: se apaga con el cambio.
+                  setGenera(false)
+                }}
               >
                 {t('sobres_modality_virtual')}
               </button>
@@ -170,7 +191,14 @@ export function SobreMovimientoModal({
             </div>
           </div>
 
-          <p className="sobre-aviso">{t('sobres_correct_hint')}</p>
+          {movimiento.tipo === 'aporte' && modalidad === 'real' && (
+            <div className="sobre-switch">
+              <span>{t('sobres_generates_yield')}</span>
+              <ToggleSwitch checked={genera} onChange={setGenera} size="sm" />
+            </div>
+          )}
+          </>
+          )}
 
           {error && <div className="sobre-error">{error}</div>}
         </div>
@@ -179,7 +207,11 @@ export function SobreMovimientoModal({
           <button type="button" className="btn btn-secondary" onClick={onClose} disabled={guardando}>
             {t('btn_cancel')}
           </button>
-          <button type="submit" className="btn btn-primary" disabled={guardando || disponibles.length === 0}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={guardando || (!esRendimiento && disponibles.length === 0)}
+          >
             {guardando ? <span className="sobre-spinner" /> : t('btn_save_changes')}
           </button>
         </footer>

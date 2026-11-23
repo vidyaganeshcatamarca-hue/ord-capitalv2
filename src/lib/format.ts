@@ -357,3 +357,17 @@ export function formatPercent(
   if (signed && n > 0) return `+${withSeparator}%`
   return `${withSeparator}%`
 }
+
+/**
+ * Fecha de hoy en la zona del dispositivo, como `YYYY-MM-DD`.
+ *
+ * No usar `toISOString()`: devuelve UTC, asi que un movimiento de las 22:00 en
+ * Argentina se guardaria con el dia siguiente. El servidor no conoce la zona
+ * del usuario, por eso la fecha la manda el cliente.
+ */
+export function fechaLocalISO(d: Date = new Date()): string {
+  const anio = d.getFullYear()
+  const mes = String(d.getMonth() + 1).padStart(2, '0')
+  const dia = String(d.getDate()).padStart(2, '0')
+  return `${anio}-${mes}-${dia}`
+}

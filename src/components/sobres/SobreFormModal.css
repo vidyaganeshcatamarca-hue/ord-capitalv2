@@ -32,7 +32,7 @@
 
 .sobre-modalidad {
   background: var(--surface-2);
-  border: 1.5px solid var(--border);
+  border: 1.5px solid var(--text-2);
   border-radius: 10px;
   color: var(--text-2);
   cursor: pointer;
@@ -44,8 +44,9 @@
 }
 
 .sobre-modalidad--activa {
-  background: rgba(52, 211, 153, 0.1);
+  background: var(--mint-dim);
   border-color: var(--mint);
+  border-width: 2.5px;
   color: var(--text);
   font-weight: 600;
 }
@@ -61,4 +62,60 @@
 
 .sobre-check input {
   margin-top: 2px;
+}
+
+/* Quitar la fecha limite: el selector nativo de fecha de Android no tiene boton
+   para vaciar el campo, asi que el borrado necesita un boton propio. */
+.sobre-quitar-fecha {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-2);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  margin-top: 6px;
+  padding: 6px 10px;
+}
+
+/* Grilla de iconos: cuatro filas visibles y el resto se recorre con scroll.
+   Se elige con un toque y el emoji se ve antes de confirmar. */
+.sobre-iconos {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  /* Alto fijo de exactamente cuatro filas: 4×36 + 3 gaps de 6 = 162 de contenido,
+     más 8 de padding y 2 de borde. Con max-height el navegador dejaba entrar una
+     quinta fila. */
+  box-sizing: border-box;
+  display: grid;
+  gap: 6px;
+  grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+  height: calc(4 * 36px + 3 * 6px + 10px);
+  overflow-y: auto;
+  padding: 4px;
+  scrollbar-width: thin;
+}
+
+.sobre-icono {
+  align-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  font-size: calc(19px * var(--font-scale));
+  height: 36px;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+}
+
+.sobre-icono:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sobre-icono--activo {
+  background: color-mix(in srgb, var(--mint) 20%, transparent);
+  border-color: var(--mint);
 }

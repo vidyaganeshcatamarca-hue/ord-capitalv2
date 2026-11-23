@@ -30,6 +30,11 @@ interface Opciones {
 export function useNotificationCount({ conAlertas = true }: Opciones = {}) {
   const [avisos, setAvisos] = useState(0)
   const [alertas, setAlertas] = useState(0)
+  // Sube en cada reconsulta. Las pantallas que ademas listan los avisos (el
+  // panel del Home) se cuelgan de este contador para refrescar su lista con la
+  // misma cadencia que el numero: si el badge y la lista se refrescaran por
+  // separado, el mismo icono volveria a mostrar dos verdades distintas.
+  const [refresco, setRefresco] = useState(0)
   const location = useLocation()
 
   const refresh = useCallback(async () => {
@@ -40,7 +45,10 @@ export function useNotificationCount({ conAlertas = true }: Opciones = {}) {
       // Silencioso: el badge se queda en su ultimo valor conocido.
     }
 
-    if (!conAlertas) return
+    if (!conAlertas) {
+      setRefresco((n) => n + 1)
+      return
+    }
 
     try {
       const { data, error } = await supabase.rpc('fn_reporte_alertas_home')
@@ -51,6 +59,8 @@ export function useNotificationCount({ conAlertas = true }: Opciones = {}) {
     } catch {
       // Idem: un fallo de alertas no debe romper el conteo de avisos.
     }
+
+    setRefresco((n) => n + 1)
   }, [conAlertas])
 
   useEffect(() => {
@@ -66,5 +76,5 @@ export function useNotificationCount({ conAlertas = true }: Opciones = {}) {
     }
   }, [refresh, location.pathname])
 
-  return { count: avisos + alertas, avisos, alertas, refresh }
+  return { count: avisos + alertas, avisos, alertas, refresh, refresco }
 }

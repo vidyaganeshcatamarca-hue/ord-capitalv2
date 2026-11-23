@@ -182,3 +182,10 @@
 .sobre-card-menu-peligro {
   color: var(--coral) !important;
 }
+
+/* Emoji del sobre: decorativo, no entra en el texto accesible. */
+.sobre-card-icono {
+  margin-right: 6px;
+  /* Decorativo: no debe interceptar el click de la tarjeta. */
+  pointer-events: none;
+}

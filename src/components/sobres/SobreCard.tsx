@@ -17,7 +17,7 @@ interface SobreCardProps {
   onYield?: (sobre: Sobre) => void
 }
 
-const claseEstado: Record<string, string> = {
+export const claseEstado: Record<string, string> = {
   state_green: 'sobre-estado--verde',
   state_yellow: 'sobre-estado--amarillo',
   state_red: 'sobre-estado--rojo',
@@ -83,7 +83,14 @@ export function SobreCard({
         aria-label={sobre.nombre}
       >
         <header className="sobre-card-header">
-          <h3>{sobre.nombre}</h3>
+          <h3>
+            {sobre.icono && (
+              <span aria-hidden="true" className="sobre-card-icono">
+                {sobre.icono}
+              </span>
+            )}
+            {sobre.nombre}
+          </h3>
           <span className={`sobre-estado ${claseEstado[sobre.estado_key] ?? 'sobre-estado--neutral'}`}>
             {t(sobre.estado_key)}
           </span>

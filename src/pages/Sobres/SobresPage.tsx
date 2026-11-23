@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { Archive, ArrowDownUp } from 'lucide-react'
+import { Archive, ArchiveRestore, ArrowDownUp } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { haptics } from '@/lib/haptics'
 import { useToast } from '@/contexts/ToastContext'
 import { formatCurrency, formatDate } from '@/lib/format'
+import { useFormatRevision } from '@/hooks/useFormatRevision'
 import { parseError, t } from '@/locales/i18n'
 import { ConfirmModal } from '@/components/ConfirmModal/ConfirmModal'
 import { SobreCard } from '@/components/sobres/SobreCard'
@@ -42,6 +43,7 @@ export function SobresPage() {
   const [aporteTarget, setAporteTarget] = useState<Sobre | null>(null)
   const [rescateTarget, setRescateTarget] = useState<Sobre | null>(null)
   const [archivoTarget, setArchivoTarget] = useState<Sobre | null>(null)
+  const [desarchivando, setDesarchivando] = useState<number | null>(null)
   const [rendimientoTarget, setRendimientoTarget] = useState<Sobre | null>(null)
   const [movimientoTarget, setMovimientoTarget] = useState<SobreMovimiento | null>(null)
 
@@ -137,6 +139,26 @@ export function SobresPage() {
     }
   }, [archivoTarget, cargarTodo, showToast])
 
+  const desarchivar = useCallback(
+    async (sobre: Sobre) => {
+      haptics.light()
+      setDesarchivando(sobre.sobre_id)
+      try {
+        const { error: rpcError } = await supabase.rpc('fn_sobre_desarchivar', { p_sobre_id: sobre.sobre_id })
+        if (rpcError) throw rpcError
+        showToast(t('sobres_unarchived_toast'), 'success')
+        haptics.success()
+        await cargarTodo()
+      } catch (err) {
+        showToast(parseError(err), 'error')
+        haptics.error()
+      } finally {
+        setDesarchivando(null)
+      }
+    },
+    [cargarTodo, showToast],
+  )
+
   const persistirOrden = useCallback(
     async (sobreIds: number[]) => {
       const { error: rpcError } = await supabase.rpc('fn_sobres_reordenar', { p_sobre_ids: sobreIds })
@@ -169,21 +191,21 @@ export function SobresPage() {
     onPersistir: persistirOrden,
   })
 
+  // El formato de moneda sale de la configuración regional: sin esto el resumen
+  // SAVED queda con el formato del primer render y no coincide con la tarjeta.
+  useFormatRevision()
+
   const hayOrdenManual = useMemo(() => activos.some((sobre) => sobre.orden_manual), [activos])
 
   /** Totales por moneda: nunca sumar ARS y USD como si fueran una unidad (CA-29). */
   const resumenPorMoneda = useMemo(() => {
-    const mapa = new Map<string, number>()
+    const mapa = new Map<string, { total: number; cantidad: number }>()
     for (const sobre of activos) {
-      mapa.set(sobre.moneda, (mapa.get(sobre.moneda) ?? 0) + sobre.saldo)
+      const actual = mapa.get(sobre.moneda) ?? { total: 0, cantidad: 0 }
+      mapa.set(sobre.moneda, { total: actual.total + sobre.saldo, cantidad: actual.cantidad + 1 })
     }
-    return Array.from(mapa.entries()).sort((a, b) => b[1] - a[1])
+    return Array.from(mapa.entries()).sort((a, b) => b[1].total - a[1].total)
   }, [activos])
-
-  const cantidadTexto =
-    activos.length === 1
-      ? t('sobres_active_count_one')
-      : t('sobres_active_count', { cantidad: activos.length })
 
   if (cargando && activos.length === 0 && archivados.length === 0) {
     return (
@@ -215,10 +237,6 @@ export function SobresPage() {
         </div>
         {vista === 'activos' && activos.length > 0 && (
           <div className="sobres-header-acciones">
-            <button type="button" className="btn btn-secondary" onClick={() => setVista('archivados')}>
-              <Archive size={16} />
-              {t('sobres_archived_link')}
-            </button>
             <button type="button" className="btn btn-primary" onClick={() => setFormTarget('nuevo')}>
               {t('sobres_new')}
             </button>
@@ -264,6 +282,14 @@ export function SobresPage() {
                   </div>
                   <div className="sobres-archivados-saldo">
                     <span>{formatCurrency(sobre.saldo, sobre.moneda)}</span>
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      onClick={() => desarchivar(sobre)}
+                      disabled={desarchivando === sobre.sobre_id}
+                    >
+                      <ArchiveRestore size={14} aria-hidden /> {t('sobres_unarchive')}
+                    </button>
                     <button type="button" className="btn btn-secondary" onClick={() => abrirDetalle(sobre)}>
                       {t('sobres_detail')}
                     </button>
@@ -289,21 +315,18 @@ export function SobresPage() {
       ) : (
         <>
           <section className="sobres-resumen" aria-label={t('sobres_title')}>
-            {resumenPorMoneda.map(([moneda, total]) => (
+            {resumenPorMoneda.map(([moneda, { total, cantidad }]) => (
               <article key={moneda}>
                 <span>{t('sobres_saved')}</span>
                 <strong>{formatCurrency(total, moneda)}</strong>
-                <small>{cantidadTexto}</small>
+                <small>
+                  {cantidad === 1
+                    ? t('sobres_active_count_one')
+                    : t('sobres_active_count', { cantidad })}
+                </small>
               </article>
             ))}
           </section>
-
-          {archivados.length > 0 && (
-            <button type="button" className="sobres-enlace-archivados" onClick={() => setVista('archivados')}>
-              <Archive size={14} />
-              {t('sobres_archived_link')}
-            </button>
-          )}
 
           <div className="sobres-orden">
             {hayOrdenManual ? (
@@ -331,6 +354,13 @@ export function SobresPage() {
               </div>
             ))}
           </section>
+
+          {archivados.length > 0 && (
+            <button type="button" className="sobres-enlace-archivados" onClick={() => setVista('archivados')}>
+              <Archive size={14} />
+              {t('sobres_archived_link')}
+            </button>
+          )}
         </>
       )}
 

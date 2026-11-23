@@ -34,8 +34,18 @@ function pickTitulo(item: NotificationItemProps['item']): string {
 
 function pickMensaje(item: NotificationItemProps['item']): string {
   const keys = resolveNotifKeys(item.tipo_notificacion ?? '', item.metadata)
-  if (keys) return t(keys.mensajeKey)
-  return item.mensaje
+  if (!keys) return item.mensaje
+  // Los nombres de categoria viajan como CLAVES i18n del rubro, no como texto:
+  // se traducen uno por uno antes de interpolar.
+  const categorias = keys.params?.categorias
+  if (Array.isArray(categorias)) {
+    const nombres = categorias
+      .filter((n): n is string => typeof n === 'string' && n.length > 0)
+      .map((n) => t(n))
+      .join(', ')
+    return t(keys.mensajeKey, { categorias: nombres })
+  }
+  return t(keys.mensajeKey)
 }
 
 export function NotificationItem({ item, onClick }: NotificationItemProps) {
