@@ -1740,18 +1740,33 @@
   gap: 8px;
   font-size: calc(13.5px * var(--font-scale));
   font-weight: 500;
+  /* A 390 px el nombre del rubro y el importe se peleaban por el ancho: el nombre se partía
+     en dos renglones y el importe se cortaba entre «ARS» y el número. */
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sobres-excedidos-alerta .sobre-info > :not(svg) {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .sobres-excedidos-alerta .sobre-detalles-derecha {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 .sobres-excedidos-alerta .sobre-monto.negativo {
   font-size: calc(13.5px * var(--font-scale));
   font-weight: 700;
   color: #FF6B6B;
+  white-space: nowrap;
+  flex: 0 0 auto;
 }
 
 .sobres-excedidos-alerta .btn-cubrir-deficit {
