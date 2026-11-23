@@ -10,6 +10,18 @@
         "from": "Tu sesión ha expirado. Inicia sesión nuevamente.",
         "to": "Your session has expired. Sign in again."
       },
+      "errors.error_pin_incorrecto": {
+        "from": "El PIN no es correcto.",
+        "to": "The PIN is not correct."
+      },
+      "errors.error_pin_espera_24h": {
+        "from": "Debes esperar 24 horas desde que configuraste el PIN para poder borrar tus datos.",
+        "to": "You must wait 24 hours after setting your PIN before you can delete your data."
+      },
+      "errors.error_hogar_no_pertenece": {
+        "from": "No perteneces a ese hogar.",
+        "to": "You do not belong to that household."
+      },
       "errors.error_field_required": {
         "from": "El campo {field} es obligatorio.",
         "to": "The {field} field is required."
@@ -250,6 +262,10 @@
         "from": "Saneamiento",
         "to": "Cleanup"
       },
+      "errors.menu_prestamos": {
+        "from": "Préstamos",
+        "to": "Loans"
+      },
       "errors.menu_inversiones": {
         "from": "Inversiones",
         "to": "Investments"
@@ -309,6 +325,10 @@
       "errors.alert_all_ok_no_alerts": {
         "from": "Todo en orden. Sin alertas financieras.",
         "to": "All good. No financial alerts."
+      },
+      "errors.alert_active_count": {
+        "from": "Alertas activas ({count})",
+        "to": "Active alerts ({count})"
       },
       "errors.hero_title_to_assign": {
         "from": "A Asignar",
@@ -3102,6 +3122,82 @@
         "from": "Adjuntá una foto o un PDF del ticket. Podés sumar hasta 10 imágenes.",
         "to": "Attach a photo or a PDF of the receipt. You can add up to 10 images."
       },
+      "ocr.camera_resume": {
+        "from": "Reanudar cámara",
+        "to": "Resume camera"
+      },
+      "ocr.camera_pick_photos": {
+        "from": "Elegir fotos del teléfono",
+        "to": "Choose photos from your phone"
+      },
+      "ocr.camera_hint": {
+        "from": "La cámara es la forma más rápida de cargar el ticket. Si preferís, elegí fotos del teléfono abajo.",
+        "to": "The camera is the fastest way to load the receipt. If you prefer, choose photos from your phone below."
+      },
+      "ocr.camera_unavailable": {
+        "from": "La cámara no está disponible en este dispositivo. Elegí las fotos abajo.",
+        "to": "The camera is not available on this device. Choose your photos below."
+      },
+      "ocr.camera_starting": {
+        "from": "Abriendo cámara…",
+        "to": "Starting camera…"
+      },
+      "ocr.camera_back": {
+        "from": "Volver",
+        "to": "Back"
+      },
+      "ocr.camera_capture": {
+        "from": "Capturar",
+        "to": "Capture"
+      },
+      "ocr.camera_send": {
+        "from": "Enviar",
+        "to": "Send"
+      },
+      "ocr.camera_done": {
+        "from": "Listo",
+        "to": "Done"
+      },
+      "ocr.camera_shift_waiting": {
+        "from": "Acercá el teléfono hasta que el ticket ocupe el marco",
+        "to": "Bring the phone closer until the receipt fills the frame"
+      },
+      "ocr.camera_shift_keep_going": {
+        "from": "Seguí bajando",
+        "to": "Keep moving down"
+      },
+      "ocr.camera_shift_ready": {
+        "from": "Ya podés capturar la siguiente",
+        "to": "You can capture the next one"
+      },
+      "ocr.camera_cap_reached": {
+        "from": "Llegaste al máximo de fotos. Quitá una para sacar otra.",
+        "to": "You reached the photo limit. Remove one to capture another."
+      },
+      "ocr.camera_count_label": {
+        "from": "Fotos capturadas: {count} de {max}",
+        "to": "Photos captured: {count} of {max}"
+      },
+      "ocr.camera_count_remove": {
+        "from": "Quitar la última foto ({count} de {max})",
+        "to": "Remove the last photo ({count} of {max})"
+      },
+      "ocr.camera_focusing": {
+        "from": "Enfocando…",
+        "to": "Focusing…"
+      },
+      "ocr.camera_error_no_camera": {
+        "from": "Este dispositivo no tiene cámara disponible.",
+        "to": "This device has no camera available."
+      },
+      "ocr.camera_error_permission_denied": {
+        "from": "Permiso de cámara denegado. Habilitalo en el navegador y volvé a intentar.",
+        "to": "Camera permission denied. Enable it in the browser and try again."
+      },
+      "ocr.camera_error_generic": {
+        "from": "No se pudo abrir la cámara.",
+        "to": "The camera could not be opened."
+      },
       "ocr.capture_add_images": {
         "from": "Agregar imágenes",
         "to": "Add images"
@@ -3151,8 +3247,8 @@
         "to": "Receipt received"
       },
       "ocr.capture_received_desc": {
-        "from": "Podés continuar usando ORD. No es necesario volver a cargarlo.",
-        "to": "You can keep using ORD. There is no need to upload it again."
+        "from": "El ticket fue aceptado y se sigue procesando en segundo plano. Podés continuar usando ORD sin volver a cargarlo.",
+        "to": "The receipt was accepted and keeps processing in the background. You can keep using ORD without uploading it again."
       },
       "ocr.capture_duplicate_note": {
         "from": "Ya teníamos este ticket: seguimos con el mismo procesamiento.",
@@ -3165,6 +3261,26 @@
       "ocr.capture_retry": {
         "from": "Reintentar envío",
         "to": "Retry upload"
+      },
+      "ocr.job_status_received": {
+        "from": "Recibido · En espera",
+        "to": "Received · Waiting"
+      },
+      "ocr.job_status_reading": {
+        "from": "Leyendo ticket",
+        "to": "Reading receipt"
+      },
+      "ocr.job_status_waiting": {
+        "from": "En espera de procesamiento",
+        "to": "Waiting to be processed"
+      },
+      "ocr.job_status_classifying": {
+        "from": "Clasificando productos",
+        "to": "Classifying products"
+      },
+      "ocr.job_status_ready": {
+        "from": "Listo para revisar",
+        "to": "Ready to review"
       },
       "ocr.status_queued": {
         "from": "Ticket recibido. Pendiente de procesamiento.",
@@ -3410,6 +3526,14 @@
         "from": "{count} imagen(es)",
         "to": "{count} image(s)"
       },
+      "ocr.history_status_upload_pending": {
+        "from": "Enviando…",
+        "to": "Sending…"
+      },
+      "ocr.history_status_upload_failed": {
+        "from": "No se pudo enviar",
+        "to": "Could not send"
+      },
       "ocr.history_status_processing": {
         "from": "Procesando",
         "to": "Processing"
@@ -3433,6 +3557,22 @@
       "ocr.history_open": {
         "from": "Ver en cuarentena",
         "to": "Open in quarantine"
+      },
+      "ocr.history_lost": {
+        "from": "El servidor ya no lo tiene",
+        "to": "The server no longer has it"
+      },
+      "ocr.history_resend": {
+        "from": "Reenviar",
+        "to": "Resend"
+      },
+      "ocr.history_discard": {
+        "from": "Borrar",
+        "to": "Delete"
+      },
+      "ocr.history_action_failed": {
+        "from": "No se pudo completar la acción",
+        "to": "The action could not be completed"
       },
       "ocr.save_draft": {
         "from": "Guardar",
@@ -3602,6 +3742,18 @@
         "from": "Fuga de Capital (Misterio)",
         "to": "Capital Leak (Mystery)"
       },
+      "category_keys.type_savings_aporte": {
+        "from": "Aporte a un sobre de ahorro",
+        "to": "Contribution to a savings envelope"
+      },
+      "category_keys.type_savings_rescate": {
+        "from": "Retiro de un sobre de ahorro",
+        "to": "Withdrawal from a savings envelope"
+      },
+      "category_keys.type_savings_rendimiento": {
+        "from": "Rendimiento de un sobre de ahorro",
+        "to": "Return on a savings envelope"
+      },
       "category_keys.type_adjustment_surplus": {
         "from": "Superávit de ajuste",
         "to": "Adjustment surplus"
@@ -3769,6 +3921,1054 @@
       "category_keys.no_category": {
         "from": "Sin categoría",
         "to": "Uncategorized"
+      },
+      "category_keys.cat_debt_payment": {
+        "from": "Deudas",
+        "to": "Debts"
+      },
+      "category_keys.cat_loans_granted": {
+        "from": "Préstamos otorgados",
+        "to": "Loans granted"
+      },
+      "category_keys.loan_received_income_name": {
+        "from": "Ingreso x préstamo recibido",
+        "to": "Income from loan received"
+      },
+      "category_keys.loan_collection_income_name": {
+        "from": "Cobro de préstamos",
+        "to": "Loan collection"
+      },
+      "prestamos.error_debt_not_found": {
+        "from": "No encontramos ese préstamo.",
+        "to": "We could not find that loan."
+      },
+      "prestamos.error_invalid_direction": {
+        "from": "La dirección del préstamo no es válida.",
+        "to": "The loan direction is not valid."
+      },
+      "prestamos.error_invalid_modality": {
+        "from": "La modalidad de devolución no es válida.",
+        "to": "The repayment modality is not valid."
+      },
+      "prestamos.error_invalid_interest_condition": {
+        "from": "La condición de interés no es válida.",
+        "to": "The interest condition is not valid."
+      },
+      "prestamos.error_schedule_required": {
+        "from": "Necesitás cargar el cronograma de cuotas.",
+        "to": "You need to enter the installment schedule."
+      },
+      "prestamos.error_schedule_not_allowed": {
+        "from": "Esta modalidad no lleva cronograma de cuotas.",
+        "to": "This modality does not take an installment schedule."
+      },
+      "prestamos.error_debt_not_payable": {
+        "from": "Este préstamo no admite pagos en su estado actual.",
+        "to": "This loan does not accept payments in its current state."
+      },
+      "prestamos.error_overpayment_confirmation_required": {
+        "from": "El importe supera el saldo pendiente. Confirmá si el excedente son intereses no registrados.",
+        "to": "The amount exceeds the pending balance. Confirm whether the excess is unrecorded interest."
+      },
+      "prestamos.error_saldo_derivado": {
+        "from": "El saldo pendiente se calcula con las condiciones y las operaciones registradas. Para reabrir este préstamo, corregí o anulá la operación que lo canceló.",
+        "to": "The outstanding balance comes from the conditions and the recorded operations. To reopen this loan, correct or void the operation that settled it."
+      },
+      "prestamos.error_no_changes": {
+        "from": "No se modificó ninguna condición: revisá los datos antes de guardar.",
+        "to": "No condition changed: check the values before saving."
+      },
+      "prestamos.error_monto_incoherente": {
+        "from": "Con la misma moneda, el importe que sale de la billetera y el que se aplica al préstamo tienen que coincidir.",
+        "to": "With the same currency, the amount leaving the wallet and the amount applied to the loan must match."
+      },
+      "prestamos.error_payment_not_found": {
+        "from": "No encontramos esa operación.",
+        "to": "We could not find that operation."
+      },
+      "prestamos.error_payment_not_active": {
+        "from": "Esa operación ya no está activa.",
+        "to": "That operation is no longer active."
+      },
+      "prestamos.error_confirmation_required": {
+        "from": "Necesitás confirmar la operación.",
+        "to": "You need to confirm the operation."
+      },
+      "prestamos.error_debt_not_settled": {
+        "from": "Solo podés quitar del historial un préstamo que ya está saldado.",
+        "to": "You can only remove a settled loan from the history."
+      },
+      "prestamos.error_invalid_strategy": {
+        "from": "La estrategia elegida no es válida.",
+        "to": "The selected strategy is not valid."
+      },
+      "prestamos.error_invalid_criterion": {
+        "from": "El criterio del cuestionario no es válido.",
+        "to": "The questionnaire criterion is not valid."
+      },
+      "prestamos.error_cannot_change_modality_with_payments": {
+        "from": "No podés cambiar la modalidad de un préstamo que ya tiene pagos registrados.",
+        "to": "You cannot change the modality of a loan that already has recorded payments."
+      },
+      "prestamos.prestamos_kicker": {
+        "from": "Deudas",
+        "to": "Debt"
+      },
+      "prestamos.prestamos_title": {
+        "from": "Préstamos",
+        "to": "Loans"
+      },
+      "prestamos.prestamos_subtitle": {
+        "from": "Tus deudas y tus préstamos otorgados, siempre por separado.",
+        "to": "What you owe and what you lent, always kept apart."
+      },
+      "prestamos.prestamos_loading": {
+        "from": "Cargando préstamos…",
+        "to": "Loading loans…"
+      },
+      "prestamos.prestamos_retry": {
+        "from": "Reintentar",
+        "to": "Retry"
+      },
+      "prestamos.prestamos_volver": {
+        "from": "← Volver",
+        "to": "← Back"
+      },
+      "prestamos.prestamos_volver_prestamos": {
+        "from": "← Préstamos",
+        "to": "← Loans"
+      },
+      "prestamos.prestamos_resumen_titulo": {
+        "from": "Resumen por moneda",
+        "to": "Summary by currency"
+      },
+      "prestamos.prestamos_resumen_debo": {
+        "from": "Debo",
+        "to": "I owe"
+      },
+      "prestamos.prestamos_resumen_me_deben": {
+        "from": "Me deben",
+        "to": "Owed to me"
+      },
+      "prestamos.prestamos_resumen_pendiente": {
+        "from": "Pendiente",
+        "to": "Outstanding"
+      },
+      "prestamos.prestamos_resumen_pagado": {
+        "from": "Pagado registrado",
+        "to": "Recorded payments"
+      },
+      "prestamos.prestamos_resumen_activos": {
+        "from": "{count} activos",
+        "to": "{count} active"
+      },
+      "prestamos.prestamos_resumen_saldados": {
+        "from": "{count} saldados",
+        "to": "{count} settled"
+      },
+      "prestamos.prestamos_resumen_vacio": {
+        "from": "Todavía no registraste préstamos.",
+        "to": "You have not recorded any loans yet."
+      },
+      "prestamos.prestamos_resumen_regla": {
+        "from": "«Debo» y «Me deben» no se restan entre sí. Los importes de monedas distintas no se suman.",
+        "to": "«Owed to me» is never subtracted from «I owe», and amounts in different currencies are never added."
+      },
+      "prestamos.prestamos_menu_debo": {
+        "from": "Debo",
+        "to": "I owe"
+      },
+      "prestamos.prestamos_menu_debo_desc": {
+        "from": "Lo que tenés que devolver.",
+        "to": "What you have to give back."
+      },
+      "prestamos.prestamos_menu_me_deben": {
+        "from": "Me deben",
+        "to": "Owed to me"
+      },
+      "prestamos.prestamos_menu_me_deben_desc": {
+        "from": "Lo que te tienen que devolver.",
+        "to": "What others have to give back to you."
+      },
+      "prestamos.prestamos_menu_saneamiento": {
+        "from": "Saneamiento",
+        "to": "Cleanup"
+      },
+      "prestamos.prestamos_menu_saneamiento_desc": {
+        "from": "Plan de ataque de tus deudas.",
+        "to": "Attack plan for your debts."
+      },
+      "prestamos.prestamos_menu_calendario": {
+        "from": "Calendario",
+        "to": "Calendar"
+      },
+      "prestamos.prestamos_menu_calendario_desc": {
+        "from": "Préstamos, tarjetas y gastos recurrentes.",
+        "to": "Loans, cards and recurring expenses."
+      },
+      "prestamos.prestamos_menu_pareja": {
+        "from": "Pareja",
+        "to": "Partner"
+      },
+      "prestamos.prestamos_menu_pareja_desc": {
+        "from": "Gastos compartidos y préstamos entre ustedes.",
+        "to": "Shared spending and loans between the two of you."
+      },
+      "prestamos.prestamos_menu_ver_todas": {
+        "from": "Ver todas",
+        "to": "View all"
+      },
+      "prestamos.prestamos_estado_al_dia": {
+        "from": "Al día",
+        "to": "Up to date"
+      },
+      "prestamos.prestamos_estado_proximo_a_vencer": {
+        "from": "Próximo a vencer",
+        "to": "Due soon"
+      },
+      "prestamos.prestamos_estado_vencido": {
+        "from": "Vencido",
+        "to": "Overdue"
+      },
+      "prestamos.prestamos_estado_saldado": {
+        "from": "Saldado",
+        "to": "Settled"
+      },
+      "prestamos.prestamos_estado_sin_fecha": {
+        "from": "Sin fecha acordada",
+        "to": "No agreed date"
+      },
+      "prestamos.prestamos_lista_debo_titulo": {
+        "from": "Debo",
+        "to": "I owe"
+      },
+      "prestamos.prestamos_lista_me_deben_titulo": {
+        "from": "Me deben",
+        "to": "Owed to me"
+      },
+      "prestamos.prestamos_lista_vacio_debo": {
+        "from": "No tenés préstamos pendientes de devolver.",
+        "to": "You have no loans pending repayment."
+      },
+      "prestamos.prestamos_lista_vacio_me_deben": {
+        "from": "No hay préstamos otorgados pendientes de cobro.",
+        "to": "No outstanding loans you lent are pending."
+      },
+      "prestamos.prestamos_lista_incluir_saldados": {
+        "from": "Incluir saldados",
+        "to": "Include settled"
+      },
+      "prestamos.prestamos_lista_saldo": {
+        "from": "Saldo pendiente",
+        "to": "Outstanding balance"
+      },
+      "prestamos.prestamos_lista_original": {
+        "from": "Importe original",
+        "to": "Original amount"
+      },
+      "prestamos.prestamos_lista_pagado": {
+        "from": "Pagado registrado",
+        "to": "Recorded payments"
+      },
+      "prestamos.prestamos_lista_tasa": {
+        "from": "Tasa anual informada",
+        "to": "Reported annual rate"
+      },
+      "prestamos.prestamos_lista_tasa_no_informada": {
+        "from": "Tasa no informada",
+        "to": "Rate not reported"
+      },
+      "prestamos.prestamos_lista_vencimiento": {
+        "from": "Próximo vencimiento",
+        "to": "Next due date"
+      },
+      "prestamos.prestamos_lista_sin_vencimiento": {
+        "from": "Sin fecha acordada",
+        "to": "No agreed date"
+      },
+      "prestamos.prestamos_lista_modalidad_cuotas": {
+        "from": "Cuotas con fechas",
+        "to": "Installments with dates"
+      },
+      "prestamos.prestamos_lista_modalidad_vencimiento_unico": {
+        "from": "Pago único con fecha",
+        "to": "Single payment with date"
+      },
+      "prestamos.prestamos_lista_modalidad_libre": {
+        "from": "Devolución libre",
+        "to": "Free repayment"
+      },
+      "prestamos.prestamos_lista_registrar_pago": {
+        "from": "Registrar pago",
+        "to": "Record payment"
+      },
+      "prestamos.prestamos_lista_registrar_cobro": {
+        "from": "Registrar cobro",
+        "to": "Record collection"
+      },
+      "prestamos.prestamos_lista_ver_detalle": {
+        "from": "Ver detalle",
+        "to": "View detail"
+      },
+      "prestamos.prestamos_alta_abrir": {
+        "from": "Nuevo préstamo",
+        "to": "New loan"
+      },
+      "prestamos.prestamos_alta_titulo": {
+        "from": "Nuevo préstamo",
+        "to": "New loan"
+      },
+      "prestamos.prestamos_alta_subtitulo": {
+        "from": "Un préstamo nuevo mueve dinero una sola vez. Un préstamo histórico no mueve nada.",
+        "to": "A new loan moves money once. A historical loan moves nothing."
+      },
+      "prestamos.prestamos_alta_direccion": {
+        "from": "Dirección",
+        "to": "Direction"
+      },
+      "prestamos.prestamos_alta_origen": {
+        "from": "Cómo lo registrás",
+        "to": "How you record it"
+      },
+      "prestamos.prestamos_alta_nuevo": {
+        "from": "Préstamo nuevo",
+        "to": "New loan"
+      },
+      "prestamos.prestamos_alta_historico": {
+        "from": "Préstamo histórico",
+        "to": "Historical loan"
+      },
+      "prestamos.prestamos_alta_nuevo_ayuda": {
+        "from": "Registra el importe original y el movimiento de fondos real: un solo ingreso o egreso.",
+        "to": "Records the original amount and the real cash flow: a single income or expense entry."
+      },
+      "prestamos.prestamos_alta_historico_ayuda": {
+        "from": "No registra ningún movimiento de fondos: se carga el importe original y el saldo pendiente actual, por separado.",
+        "to": "Records no cash flow at all: the original amount and the current outstanding balance are entered separately."
+      },
+      "prestamos.prestamos_alta_contraparte": {
+        "from": "Contraparte",
+        "to": "Counterparty"
+      },
+      "prestamos.prestamos_alta_nombre": {
+        "from": "Nombre (opcional)",
+        "to": "Name (optional)"
+      },
+      "prestamos.prestamos_alta_nombre_ayuda": {
+        "from": "Si lo dejás vacío, se usa la contraparte.",
+        "to": "Leave it empty to use the counterparty."
+      },
+      "prestamos.prestamos_alta_tipo": {
+        "from": "Tipo de acreedor o deudor",
+        "to": "Creditor or borrower type"
+      },
+      "prestamos.prestamos_alta_moneda": {
+        "from": "Moneda",
+        "to": "Currency"
+      },
+      "prestamos.prestamos_alta_saldo_actual": {
+        "from": "Saldo pendiente actual",
+        "to": "Current outstanding balance"
+      },
+      "prestamos.prestamos_alta_saldo_actual_ayuda": {
+        "from": "Lo que queda por pagar hoy, no el importe original. No se deduce de nada.",
+        "to": "What is still unpaid today, not the original amount. Nothing is derived from it."
+      },
+      "prestamos.prestamos_alta_saldo_inicial": {
+        "from": "Saldo pendiente al registrar",
+        "to": "Outstanding balance at registration"
+      },
+      "prestamos.prestamos_alta_modalidad": {
+        "from": "Modalidad de devolución",
+        "to": "Repayment modality"
+      },
+      "prestamos.prestamos_alta_condicion": {
+        "from": "Condición de interés",
+        "to": "Interest condition"
+      },
+      "prestamos.prestamos_alta_interes_total": {
+        "from": "Interés total acordado",
+        "to": "Total agreed interest"
+      },
+      "prestamos.prestamos_alta_interes_total_ayuda": {
+        "from": "El importe final conocido se suma al original para formar la deuda total.",
+        "to": "A known final amount is added to the principal to form the total debt."
+      },
+      "prestamos.prestamos_alta_movimiento_ayuda": {
+        "from": "Se registra un único movimiento de fondos por el importe real. El saldo de la billetera lo mueve ORD, no este formulario.",
+        "to": "One single cash entry is written for the real amount. The wallet balance is updated by the system, not by this form."
+      },
+      "prestamos.prestamos_alta_monto_billetera_ayuda": {
+        "from": "Con otra moneda, indicá cuánto entró o salió realmente. No calculamos el tipo de cambio.",
+        "to": "With another currency, type how much really came in or went out. We never compute an exchange rate."
+      },
+      "prestamos.prestamos_alta_cuotas_suma": {
+        "from": "Suma del cronograma: {total}",
+        "to": "Schedule total: {total}"
+      },
+      "prestamos.prestamos_alta_cuota_fecha": {
+        "from": "Vencimiento",
+        "to": "Due date"
+      },
+      "prestamos.prestamos_alta_cuota_monto": {
+        "from": "Importe",
+        "to": "Amount"
+      },
+      "prestamos.prestamos_alta_cuota_interes": {
+        "from": "Interés de la cuota (opcional)",
+        "to": "Installment interest (optional)"
+      },
+      "prestamos.prestamos_alta_cuota_agregar": {
+        "from": "+ Agregar cuota",
+        "to": "+ Add installment"
+      },
+      "prestamos.prestamos_alta_cuota_quitar": {
+        "from": "Quitar",
+        "to": "Remove"
+      },
+      "prestamos.prestamos_alta_guardar": {
+        "from": "Registrar préstamo",
+        "to": "Record loan"
+      },
+      "prestamos.prestamos_alta_guardando": {
+        "from": "Registrando…",
+        "to": "Recording…"
+      },
+      "prestamos.prestamos_alta_exito": {
+        "from": "Préstamo registrado.",
+        "to": "Loan recorded."
+      },
+      "prestamos.prestamos_alta_error_contraparte": {
+        "from": "Indicá con quién es el préstamo.",
+        "to": "Enter who the loan is with."
+      },
+      "prestamos.prestamos_alta_error_monto_original": {
+        "from": "El importe original tiene que ser mayor a cero.",
+        "to": "The original amount must be greater than zero."
+      },
+      "prestamos.prestamos_alta_error_moneda": {
+        "from": "La moneda tiene que ser un código de tres letras.",
+        "to": "The currency must be a three-letter code."
+      },
+      "prestamos.prestamos_alta_error_saldo_actual": {
+        "from": "Indicá el saldo pendiente actual.",
+        "to": "Enter the current outstanding balance."
+      },
+      "prestamos.prestamos_alta_error_cronograma": {
+        "from": "Cargá al menos una cuota con fecha e importe.",
+        "to": "Add at least one installment with a date and an amount."
+      },
+      "prestamos.prestamos_alta_error_vencimiento": {
+        "from": "Indicá la fecha de vencimiento.",
+        "to": "Enter the due date."
+      },
+      "prestamos.prestamos_alta_error_tasa": {
+        "from": "Indicá la tasa anual informada.",
+        "to": "Enter the reported annual rate."
+      },
+      "prestamos.prestamos_alta_error_interes": {
+        "from": "Indicá el interés total acordado.",
+        "to": "Enter the total agreed interest."
+      },
+      "prestamos.prestamos_alta_error_billetera": {
+        "from": "Elegí la billetera del movimiento.",
+        "to": "Pick the wallet for the cash entry."
+      },
+      "prestamos.prestamos_alta_error_monto_billetera": {
+        "from": "Indicá el importe real del movimiento.",
+        "to": "Enter the real amount of the cash entry."
+      },
+      "prestamos.prestamos_condicion_ninguno": {
+        "from": "Sin interés",
+        "to": "No interest"
+      },
+      "prestamos.prestamos_condicion_importe_final": {
+        "from": "Importe final conocido",
+        "to": "Known final amount"
+      },
+      "prestamos.prestamos_condicion_tasa": {
+        "from": "Tasa conocida",
+        "to": "Known rate"
+      },
+      "prestamos.prestamos_condicion_desconocido": {
+        "from": "Desconocida",
+        "to": "Unknown"
+      },
+      "prestamos.prestamos_editar_abrir": {
+        "from": "Editar condiciones",
+        "to": "Edit conditions"
+      },
+      "prestamos.prestamos_editar_titulo": {
+        "from": "Editar condiciones",
+        "to": "Edit conditions"
+      },
+      "prestamos.prestamos_editar_aviso": {
+        "from": "Editar condiciones no crea ningún movimiento de fondos y no toca los pagos ni los cobros ya registrados.",
+        "to": "Editing conditions creates no cash flow and does not touch the payments or collections already recorded."
+      },
+      "prestamos.prestamos_editar_saldo_ayuda": {
+        "from": "El saldo pendiente se recalcula desde este saldo inicial menos lo pagado. Los pagos registrados no se modifican.",
+        "to": "The outstanding balance is recomputed from this starting balance minus what was paid. Recorded payments are never modified."
+      },
+      "prestamos.prestamos_editar_saldo_derivado": {
+        "from": "El saldo pendiente se calcula con las operaciones registradas y no se edita acá. Para reabrirlo, corregí o anulá el pago o cobro que lo canceló.",
+        "to": "The outstanding balance is computed from the recorded operations and is not edited here. To reopen the loan, correct or void the payment or collection that settled it."
+      },
+      "prestamos.prestamos_editar_limpiar_vencimiento": {
+        "from": "Quitar la fecha de vencimiento",
+        "to": "Clear the due date"
+      },
+      "prestamos.prestamos_editar_vencimiento_cuotas": {
+        "from": "Con cuotas, el próximo vencimiento es la primera cuota del cronograma.",
+        "to": "With installments, the next due date is the first one of the schedule."
+      },
+      "prestamos.prestamos_editar_guardar": {
+        "from": "Guardar condiciones",
+        "to": "Save conditions"
+      },
+      "prestamos.prestamos_editar_guardando": {
+        "from": "Guardando…",
+        "to": "Saving…"
+      },
+      "prestamos.prestamos_editar_sin_cambios": {
+        "from": "No cambiaste ninguna condición.",
+        "to": "You did not change any condition."
+      },
+      "prestamos.prestamos_editar_exito": {
+        "from": "Condiciones actualizadas.",
+        "to": "Conditions updated."
+      },
+      "prestamos.prestamos_editar_error_contraparte": {
+        "from": "La contraparte no puede quedar vacía.",
+        "to": "The counterparty cannot be empty."
+      },
+      "prestamos.prestamos_editar_error_nombre": {
+        "from": "El nombre no puede quedar vacío.",
+        "to": "The name cannot be empty."
+      },
+      "prestamos.prestamos_editar_error_saldo_ingreso": {
+        "from": "El saldo inicial no puede ser negativo.",
+        "to": "The starting balance cannot be negative."
+      },
+      "prestamos.prestamos_editar_interes_ayuda": {
+        "from": "Si borrás el importe, se quita el interés acordado.",
+        "to": "Clear the amount to remove the agreed interest."
+      },
+      "prestamos.prestamos_detalle_cargando": {
+        "from": "Cargando el detalle…",
+        "to": "Loading the detail…"
+      },
+      "prestamos.prestamos_detalle_cuotas": {
+        "from": "Cuotas",
+        "to": "Installments"
+      },
+      "prestamos.prestamos_detalle_pagos": {
+        "from": "Pagos registrados",
+        "to": "Recorded payments"
+      },
+      "prestamos.prestamos_detalle_sin_cuotas": {
+        "from": "Este préstamo no tiene cronograma de cuotas.",
+        "to": "This loan has no installment schedule."
+      },
+      "prestamos.prestamos_detalle_sin_pagos": {
+        "from": "Todavía no hay pagos ni cobros registrados.",
+        "to": "No payments or collections recorded yet."
+      },
+      "prestamos.prestamos_detalle_cuota": {
+        "from": "Cuota {n}",
+        "to": "Installment {n}"
+      },
+      "prestamos.prestamos_detalle_vencida": {
+        "from": "Vencida",
+        "to": "Overdue"
+      },
+      "prestamos.prestamos_detalle_interes_excedente": {
+        "from": "Intereses no registrados reconocidos",
+        "to": "Previously unrecorded interest recognized"
+      },
+      "prestamos.prestamos_detalle_entrega": {
+        "from": "Importe en la billetera",
+        "to": "Amount in the wallet"
+      },
+      "prestamos.prestamos_detalle_aplicado": {
+        "from": "Aplicado al préstamo",
+        "to": "Applied to the loan"
+      },
+      "prestamos.prestamos_detalle_nota": {
+        "from": "Nota",
+        "to": "Note"
+      },
+      "prestamos.prestamos_detalle_historial": {
+        "from": "Historial de operaciones",
+        "to": "Operation history"
+      },
+      "prestamos.prestamos_detalle_saldo_al_ingreso": {
+        "from": "Saldo al registrarlo",
+        "to": "Balance when recorded"
+      },
+      "prestamos.prestamos_operacion_corregir": {
+        "from": "Corregir",
+        "to": "Correct"
+      },
+      "prestamos.prestamos_operacion_eliminar": {
+        "from": "Eliminar operación",
+        "to": "Delete operation"
+      },
+      "prestamos.prestamos_operacion_eliminar_titulo": {
+        "from": "Eliminar la operación",
+        "to": "Delete the operation"
+      },
+      "prestamos.prestamos_operacion_eliminar_msg": {
+        "from": "Se va a eliminar la operación de {monto}: la billetera recupera ese importe y el saldo del préstamo se recalcula. No queda registro de la operación.",
+        "to": "The {monto} operation will be deleted: the wallet gets that amount back and the loan balance is recomputed. No record of the operation remains."
+      },
+      "prestamos.prestamos_operacion_eliminar_confirmar": {
+        "from": "Eliminar operación",
+        "to": "Delete operation"
+      },
+      "prestamos.prestamos_operacion_eliminada": {
+        "from": "Operación eliminada.",
+        "to": "Operation deleted."
+      },
+      "prestamos.prestamos_historial_aviso": {
+        "from": "Quitar del historial esconde el préstamo y lo saca de los cálculos. Los movimientos de fondos ya contabilizados en las billeteras no se borran ni se revierten.",
+        "to": "Removing it from the history hides the loan and takes it out of the numbers. Cash entries already booked in the wallets are neither deleted nor reversed."
+      },
+      "prestamos.prestamos_historial_quitar": {
+        "from": "Quitar del historial",
+        "to": "Remove from history"
+      },
+      "prestamos.prestamos_historial_confirmar_titulo": {
+        "from": "Quitar el préstamo del historial",
+        "to": "Remove the loan from the history"
+      },
+      "prestamos.prestamos_historial_confirmar_msg": {
+        "from": "El préstamo saldado deja de aparecer y de contarse. Los movimientos de fondos ya registrados en las billeteras se conservan intactos.",
+        "to": "The settled loan stops appearing and counting. Cash entries already recorded in the wallets stay intact."
+      },
+      "prestamos.prestamos_historial_confirmar": {
+        "from": "Sí, quitarlo",
+        "to": "Yes, remove it"
+      },
+      "prestamos.prestamos_historial_eliminado": {
+        "from": "Préstamo quitado del historial.",
+        "to": "Loan removed from the history."
+      },
+      "prestamos.prestamos_correccion_titulo_pago": {
+        "from": "Corregir pago",
+        "to": "Correct payment"
+      },
+      "prestamos.prestamos_correccion_titulo_cobro": {
+        "from": "Corregir cobro",
+        "to": "Correct collection"
+      },
+      "prestamos.prestamos_correccion_aviso": {
+        "from": "Se edita la operación original: la billetera se ajusta solo por la diferencia y no se registra un segundo movimiento.",
+        "to": "The original operation is edited: the wallet is adjusted by the difference only, and no second entry is recorded."
+      },
+      "prestamos.prestamos_correccion_guardar": {
+        "from": "Guardar corrección",
+        "to": "Save correction"
+      },
+      "prestamos.prestamos_correccion_guardando": {
+        "from": "Guardando…",
+        "to": "Saving…"
+      },
+      "prestamos.prestamos_correccion_exito": {
+        "from": "Operación corregida.",
+        "to": "Operation corrected."
+      },
+      "prestamos.prestamos_pago_titulo_pago": {
+        "from": "Registrar pago",
+        "to": "Record payment"
+      },
+      "prestamos.prestamos_pago_titulo_cobro": {
+        "from": "Registrar cobro",
+        "to": "Record collection"
+      },
+      "prestamos.prestamos_pago_billetera": {
+        "from": "Billetera",
+        "to": "Wallet"
+      },
+      "prestamos.prestamos_pago_monto_billetera": {
+        "from": "Importe en la billetera",
+        "to": "Amount in the wallet"
+      },
+      "prestamos.prestamos_pago_monto_aplicado": {
+        "from": "Importe aplicado al préstamo",
+        "to": "Amount applied to the loan"
+      },
+      "prestamos.prestamos_pago_monto_aplicado_ayuda": {
+        "from": "Con billeteras de otra moneda, indicá acá cuánto se reconoce sobre el saldo del préstamo. No calculamos el tipo de cambio.",
+        "to": "With wallets in another currency, type here how much of the loan balance is settled. We never invent an exchange rate."
+      },
+      "prestamos.prestamos_pago_fecha": {
+        "from": "Fecha",
+        "to": "Date"
+      },
+      "prestamos.prestamos_pago_nota": {
+        "from": "Nota (opcional)",
+        "to": "Note (optional)"
+      },
+      "prestamos.prestamos_pago_guardar": {
+        "from": "Registrar",
+        "to": "Record"
+      },
+      "prestamos.prestamos_pago_guardando": {
+        "from": "Registrando…",
+        "to": "Recording…"
+      },
+      "prestamos.prestamos_pago_exito": {
+        "from": "Operación registrada.",
+        "to": "Operation recorded."
+      },
+      "prestamos.prestamos_pago_error_billetera": {
+        "from": "Elegí una billetera.",
+        "to": "Pick a wallet."
+      },
+      "prestamos.prestamos_pago_error_monto": {
+        "from": "El importe tiene que ser mayor a cero.",
+        "to": "The amount must be greater than zero."
+      },
+      "prestamos.prestamos_pago_sin_billeteras": {
+        "from": "No tenés billeteras disponibles.",
+        "to": "You have no wallets available."
+      },
+      "prestamos.prestamos_pago_sobrepago_titulo": {
+        "from": "El importe supera el saldo pendiente",
+        "to": "The amount exceeds the outstanding balance"
+      },
+      "prestamos.prestamos_pago_sobrepago_msg": {
+        "from": "El excedente de {excedente} se va a registrar como intereses del préstamo no registrados anteriormente.",
+        "to": "The excess of {excedente} will be recorded as previously unregistered interest on this loan."
+      },
+      "prestamos.prestamos_pago_sobrepago_confirmar": {
+        "from": "Sí, son intereses",
+        "to": "Yes, that is interest"
+      },
+      "prestamos.prestamos_pago_sobrepago_cancelar": {
+        "from": "No registrar",
+        "to": "Do not record"
+      },
+      "prestamos.prestamos_calendario_titulo": {
+        "from": "Calendario financiero",
+        "to": "Financial calendar"
+      },
+      "prestamos.prestamos_calendario_subtitulo": {
+        "from": "Préstamos, vencimientos de tarjetas y gastos recurrentes en una sola línea de tiempo.",
+        "to": "Loans, card due dates and recurring expenses on one timeline."
+      },
+      "prestamos.prestamos_calendario_tipo_prestamo": {
+        "from": "Préstamo",
+        "to": "Loan"
+      },
+      "prestamos.prestamos_calendario_tipo_tarjeta": {
+        "from": "Tarjeta",
+        "to": "Card"
+      },
+      "prestamos.prestamos_calendario_tipo_recurrente": {
+        "from": "Recurrente",
+        "to": "Recurring"
+      },
+      "prestamos.prestamos_calendario_sin_nombre": {
+        "from": "Gasto recurrente",
+        "to": "Recurring expense"
+      },
+      "prestamos.prestamos_calendario_dias": {
+        "from": "Próximos {dias} días",
+        "to": "Next {dias} days"
+      },
+      "prestamos.prestamos_calendario_vacio": {
+        "from": "No hay vencimientos de préstamos, tarjetas ni gastos recurrentes en este período.",
+        "to": "No loan, card or recurring due dates in this period."
+      },
+      "prestamos.prestamos_calendario_pagado": {
+        "from": "Cubierta",
+        "to": "Covered"
+      },
+      "prestamos.prestamos_calendario_pendiente": {
+        "from": "Pendiente",
+        "to": "Pending"
+      },
+      "prestamos.prestamos_calendario_critico": {
+        "from": "Vence pronto",
+        "to": "Due soon"
+      },
+      "prestamos.prestamos_calendario_vencido": {
+        "from": "Vencida",
+        "to": "Overdue"
+      },
+      "prestamos.prestamos_calendario_cuota": {
+        "from": "Cuota {n}",
+        "to": "Installment {n}"
+      },
+      "prestamos.prestamos_calendario_ver_prestamo": {
+        "from": "Abrir préstamo",
+        "to": "Open loan"
+      },
+      "prestamos.prestamos_calendario_aviso": {
+        "from": "El calendario no guarda el saldo: el saldo pertenece al préstamo.",
+        "to": "The calendar does not hold the balance: the balance belongs to the loan."
+      },
+      "prestamos.prestamos_calendario_moneda_sin_informar": {
+        "from": "sin moneda informada",
+        "to": "currency not informed"
+      },
+      "prestamos.prestamos_saneamiento_titulo": {
+        "from": "Plan de ataque",
+        "to": "Attack plan"
+      },
+      "prestamos.prestamos_saneamiento_subtitulo": {
+        "from": "Solo las deudas de «Debo»: ni lo que te deben, ni tarjetas, ni gastos recurrentes.",
+        "to": "Only the loans you owe: not what you are owed, not cards, not recurring expenses."
+      },
+      "prestamos.prestamos_saneamiento_estrategia": {
+        "from": "Estrategia",
+        "to": "Strategy"
+      },
+      "prestamos.prestamos_saneamiento_estrategia_math": {
+        "from": "Matemática",
+        "to": "Math"
+      },
+      "prestamos.prestamos_saneamiento_estrategia_math_desc": {
+        "from": "Mayor tasa de interés primero.",
+        "to": "Highest interest rate first."
+      },
+      "prestamos.prestamos_saneamiento_estrategia_emotional": {
+        "from": "Emocional",
+        "to": "Emotional"
+      },
+      "prestamos.prestamos_saneamiento_estrategia_emotional_desc": {
+        "from": "Saldo pendiente más chico primero.",
+        "to": "Smallest outstanding balance first."
+      },
+      "prestamos.prestamos_saneamiento_estrategia_relationships": {
+        "from": "Vínculos",
+        "to": "Relationships"
+      },
+      "prestamos.prestamos_saneamiento_estrategia_relationships_desc": {
+        "from": "Prioriza a quién le debés según el cuestionario.",
+        "to": "Prioritizes who you owe based on the questionnaire."
+      },
+      "prestamos.prestamos_saneamiento_prioridad": {
+        "from": "Prioridad {n}",
+        "to": "Priority {n}"
+      },
+      "prestamos.prestamos_saneamiento_sin_deudas": {
+        "from": "No hay deudas activas para atacar.",
+        "to": "No active debts to attack."
+      },
+      "prestamos.prestamos_saneamiento_sin_deudas_desc": {
+        "from": "Registrá lo que debés en la sección «Debo».",
+        "to": "Record what you owe in the «I owe» section."
+      },
+      "prestamos.prestamos_saneamiento_personal": {
+        "from": "Personal",
+        "to": "Personal"
+      },
+      "prestamos.prestamos_saneamiento_institucional": {
+        "from": "Institución",
+        "to": "Institution"
+      },
+      "prestamos.prestamos_saneamiento_puntos": {
+        "from": "{puntos} puntos",
+        "to": "{puntos} points"
+      },
+      "prestamos.prestamos_saneamiento_empate": {
+        "from": "Igual prioridad",
+        "to": "Equal priority"
+      },
+      "prestamos.prestamos_saneamiento_empate_ayuda": {
+        "from": "Estas personas empatan. Podés desempatar a mano; si no lo hacés, conservan la misma prioridad.",
+        "to": "These people are tied. You may break the tie by hand; if you do not, they keep the same priority."
+      },
+      "prestamos.prestamos_saneamiento_desempatar_sube": {
+        "from": "Subir",
+        "to": "Move up"
+      },
+      "prestamos.prestamos_saneamiento_desempatar_baja": {
+        "from": "Bajar",
+        "to": "Move down"
+      },
+      "prestamos.prestamos_saneamiento_simular": {
+        "from": "Simular pago",
+        "to": "Simulate payment"
+      },
+      "prestamos.prestamos_saneamiento_simular_titulo": {
+        "from": "Simulación",
+        "to": "Simulation"
+      },
+      "prestamos.prestamos_saneamiento_simular_monto": {
+        "from": "Importe propuesto",
+        "to": "Proposed amount"
+      },
+      "prestamos.prestamos_saneamiento_simular_saldo": {
+        "from": "Saldo pendiente actual",
+        "to": "Current outstanding balance"
+      },
+      "prestamos.prestamos_saneamiento_simular_proyectado": {
+        "from": "Saldo proyectado",
+        "to": "Projected balance"
+      },
+      "prestamos.prestamos_saneamiento_simular_meses": {
+        "from": "Meses restantes",
+        "to": "Remaining months"
+      },
+      "prestamos.prestamos_saneamiento_simular_meses_ahorrados": {
+        "from": "Meses ahorrados",
+        "to": "Months saved"
+      },
+      "prestamos.prestamos_saneamiento_simular_intereses": {
+        "from": "Intereses ahorrados",
+        "to": "Interest saved"
+      },
+      "prestamos.prestamos_saneamiento_no_calculable": {
+        "from": "No se puede calcular con la información disponible.",
+        "to": "It cannot be calculated with the available information."
+      },
+      "prestamos.prestamos_saneamiento_no_calculable_sin_cronograma": {
+        "from": "Este préstamo no tiene cronograma de cuotas.",
+        "to": "This loan has no installment schedule."
+      },
+      "prestamos.prestamos_saneamiento_no_calculable_cuotas_parciales": {
+        "from": "El importe no cancela cuotas completas.",
+        "to": "The amount does not cancel whole installments."
+      },
+      "prestamos.prestamos_saneamiento_no_calculable_interes": {
+        "from": "El interés por cuota no está informado.",
+        "to": "The interest per installment is not reported."
+      },
+      "prestamos.prestamos_saneamiento_simular_aviso": {
+        "from": "Simular no registra ningún movimiento.",
+        "to": "Simulating records no transaction."
+      },
+      "prestamos.prestamos_saneamiento_progreso_titulo": {
+        "from": "Progreso",
+        "to": "Progress"
+      },
+      "prestamos.prestamos_saneamiento_progreso_pagado": {
+        "from": "Pagado registrado",
+        "to": "Recorded payments"
+      },
+      "prestamos.prestamos_saneamiento_progreso_pendiente": {
+        "from": "Saldo pendiente",
+        "to": "Outstanding balance"
+      },
+      "prestamos.prestamos_saneamiento_progreso_fin": {
+        "from": "Fin estimado",
+        "to": "Estimated end"
+      },
+      "prestamos.prestamos_saneamiento_progreso_activos": {
+        "from": "{count} préstamos activos",
+        "to": "{count} active loans"
+      },
+      "prestamos.prestamos_saneamiento_progreso_sin_datos": {
+        "from": "Todavía no hay deudas activas con progreso.",
+        "to": "No active debts with progress yet."
+      },
+      "prestamos.prestamos_saneamiento_progreso_sin_fecha_motivo": {
+        "from": "No todos los préstamos activos tienen cronograma, así que no hay una fecha de fin realista.",
+        "to": "Not every active loan has a schedule, so there is no realistic end date."
+      },
+      "prestamos.prestamos_vinculos_abrir": {
+        "from": "Sugerencia por Vínculos",
+        "to": "Suggestion by Relationships"
+      },
+      "prestamos.prestamos_vinculos_cerrar": {
+        "from": "Cerrar cuestionario",
+        "to": "Close questionnaire"
+      },
+      "prestamos.prestamos_vinculos_titulo": {
+        "from": "Cuestionario de Vínculos",
+        "to": "Relationships questionnaire"
+      },
+      "prestamos.prestamos_vinculos_intro": {
+        "from": "Tres preguntas sobre las personas a las que les debés. Podés elegir varias o ninguna.",
+        "to": "Three questions about the people you owe. You may pick several or none."
+      },
+      "prestamos.prestamos_vinculos_p1": {
+        "from": "¿A cuáles de estas personas les está generando una dificultad concreta que todavía no les hayas devuelto el dinero?",
+        "to": "Which of these people are dealing with a concrete difficulty because you have not paid them back yet?"
+      },
+      "prestamos.prestamos_vinculos_p2": {
+        "from": "¿Cuáles de estas personas ya te pidieron expresamente que les devuelvas el dinero?",
+        "to": "Which of these people have already explicitly asked you to pay them back?"
+      },
+      "prestamos.prestamos_vinculos_p3": {
+        "from": "¿Con cuáles de estas personas sentís que seguir demorando la devolución podría perjudicar significativamente la relación o su confianza en vos?",
+        "to": "With which of these people do you feel that delaying the repayment could significantly harm the relationship or their trust in you?"
+      },
+      "prestamos.prestamos_vinculos_peso": {
+        "from": "Suma {peso} puntos",
+        "to": "Worth {peso} points"
+      },
+      "prestamos.prestamos_vinculos_sin_personas": {
+        "from": "No hay acreedores personales para responder el cuestionario.",
+        "to": "There are no personal creditors to answer about."
+      },
+      "prestamos.prestamos_vinculos_aplicar": {
+        "from": "Calcular sugerencia",
+        "to": "Compute suggestion"
+      },
+      "prestamos.prestamos_vinculos_aplicando": {
+        "from": "Calculando…",
+        "to": "Computing…"
+      },
+      "prestamos.prestamos_vinculos_guardado": {
+        "from": "Cuestionario guardado. El plan ya usa esta prioridad.",
+        "to": "Questionnaire saved. The plan already uses this priority."
+      },
+      "prestamos.prestamos_vinculos_ayuda": {
+        "from": "Nunca modifica el préstamo ni mueve dinero.",
+        "to": "It never changes the loan and never moves money."
+      },
+      "prestamos.prestamos_pareja_titulo": {
+        "from": "Pareja",
+        "to": "Partner"
+      },
+      "prestamos.prestamos_pareja_subtitulo": {
+        "from": "Dos cosas diferentes: los gastos compartidos y los préstamos entre ustedes. Nunca se restan entre sí.",
+        "to": "Two different things: shared expenses and loans between the two of you. They are never netted against each other."
+      },
+      "prestamos.prestamos_pareja_gastos_titulo": {
+        "from": "Gastos compartidos",
+        "to": "Shared expenses"
+      },
+      "prestamos.prestamos_pareja_gastos_debe": {
+        "from": "{deudor} le debe a {acreedor}",
+        "to": "{deudor} owes {acreedor}"
+      },
+      "prestamos.prestamos_pareja_integrante": {
+        "from": "Integrante",
+        "to": "Member"
+      },
+      "prestamos.prestamos_pareja_gastos_sin_hogar": {
+        "from": "Todavía no hay un hogar compartido, así que no hay gastos compartidos que mostrar. Podés vincular a tu pareja desde Familia.",
+        "to": "There is no shared household yet, so there are no shared expenses to show. You can link your partner from Family."
+      },
+      "prestamos.prestamos_pareja_gastos_sin_deuda": {
+        "from": "No hay deuda pendiente por gastos compartidos.",
+        "to": "Nothing is pending from shared expenses."
+      },
+      "prestamos.prestamos_pareja_gastos_sin_moneda": {
+        "from": "El balance del hogar llega sin moneda informada: se muestra el importe sin símbolo en vez de suponer una.",
+        "to": "The household balance arrives with no currency reported, so the amount is shown without a symbol instead of assuming one."
+      },
+      "prestamos.prestamos_pareja_prestamos_titulo": {
+        "from": "Préstamos entre ustedes",
+        "to": "Loans between the two of you"
+      },
+      "prestamos.prestamos_pareja_prestamos_sin_hogar": {
+        "from": "Todavía no hay un hogar compartido, así que no hay préstamos entre ustedes que mostrar.",
+        "to": "There is no shared household yet, so there are no loans between the two of you to show."
+      },
+      "prestamos.prestamos_pareja_prestamos_sin_datos": {
+        "from": "No hay préstamos pendientes entre ustedes.",
+        "to": "Nothing is pending between the two of you."
+      },
+      "prestamos.prestamos_pareja_regla": {
+        "from": "«Gastos compartidos» y «Préstamos entre ustedes» son dos grupos separados: nunca se restan ni se suman entre sí.",
+        "to": "«Shared expenses» and «Loans between the two of you» are two separate groups: they are never subtracted from each other nor added together."
       },
       "bcg.menu_analisis": {
         "from": "Análisis",
@@ -7190,6 +8390,10 @@
         "from": "Una categoría gastó más de lo que tenía asignado este ciclo.",
         "to": "A category spent more than it was assigned this cycle."
       },
+      "inversiones.notif_categoria_en_rojo_mensaje_nombres": {
+        "from": "En rojo: {categorias}. Gastó más de lo asignado este ciclo.",
+        "to": "Over budget: {categorias}. Spent more than assigned this cycle."
+      },
       "inversiones.notif_ahorro_en_riesgo_titulo": {
         "from": "Ahorro en riesgo",
         "to": "Savings at risk"
@@ -7252,7 +8456,7 @@
       },
       "inversiones.apariencia_idioma": {
         "from": "Idioma",
-        "to": "Language (coming soon)"
+        "to": "Language"
       },
       "inversiones.apariencia_font_size": {
         "from": "Tamaño de fuente",
@@ -10994,6 +12198,10 @@
         "from": "Ese sobre ya no existe.",
         "to": "That envelope no longer exists."
       },
+      "sobres.error_sobre_movement_not_deletable": {
+        "from": "Este movimiento es de un sobre: se corrige o se quita desde Ahorro, no desde acá.",
+        "to": "This movement belongs to an envelope: correct or remove it from Savings, not from here."
+      },
       "sobres.error_sobre_name_required": {
         "from": "Poné un nombre al sobre.",
         "to": "Give the envelope a name."
@@ -11018,6 +12226,10 @@
         "from": "Sólo una reserva separada en la entidad puede generar rendimientos.",
         "to": "Only a reserve set aside at the institution can earn returns."
       },
+      "sobres.error_sobre_yield_only_on_contribution": {
+        "from": "Solo un aporte puede generar rendimiento.",
+        "to": "Only a contribution can generate a return."
+      },
       "sobres.error_sobre_wallet_not_found": {
         "from": "Esa billetera no existe o está inactiva.",
         "to": "That wallet does not exist or is inactive."
@@ -11041,6 +12253,10 @@
       "sobres.error_sobre_archived": {
         "from": "Ese sobre está archivado y no se puede modificar.",
         "to": "That envelope is archived and cannot be changed."
+      },
+      "sobres.error_sobre_not_archived": {
+        "from": "Ese sobre no está archivado.",
+        "to": "That envelope is not archived."
       },
       "sobres.error_sobre_rescue_empty": {
         "from": "Elegí al menos un origen para rescatar.",
@@ -11083,8 +12299,8 @@
         "to": "My savings"
       },
       "sobres.sobres_subtitle": {
-        "from": "Tus sobres y proyectos, con el dinero separado o reservado sólo en ORD.",
-        "to": "Your envelopes and projects, with the money set aside or reserved in ORD only."
+        "from": "Tus sobres de ahorro y proyectos, con el dinero separado en cuentas especiales o virtualmente",
+        "to": "Your savings envelopes and projects, with the money set aside in special accounts or virtually"
       },
       "sobres.sobres_new": {
         "from": "Nuevo sobre",
@@ -11111,16 +12327,16 @@
         "to": "You have not archived any envelope yet."
       },
       "sobres.sobres_archived_note": {
-        "from": "Los sobres archivados se consultan pero no se reactivan. Para volver a ahorrar con ese objetivo, creá un sobre nuevo.",
-        "to": "Archived envelopes are read only and cannot be reactivated. To save for that goal again, create a new envelope."
+        "from": "Los sobres archivados no se suman al total. Podés desarchivar cualquiera para volver a ahorrar en él.",
+        "to": "Archived envelopes don't count towards the total. You can unarchive any of them to keep saving in it."
       },
       "sobres.sobres_empty_title": {
         "from": "Todavía no tenés sobres",
         "to": "No envelopes yet"
       },
       "sobres.sobres_empty_text": {
-        "from": "Un sobre es una reserva con nombre. Podés ponerle meta y fecha, o dejar que crezca sola.",
-        "to": "An envelope is a named reserve. You can give it a goal and a date, or just let it grow."
+        "from": "Un sobre de ahorro es una reserva con nombre. Podés ponerle una meta de dinero y fecha límite, o dejar que crezca solo.",
+        "to": "A savings envelope is a named reserve. You can give it a money goal and a deadline, or just let it grow."
       },
       "sobres.sobres_saved": {
         "from": "Ahorrado",
@@ -11226,21 +12442,37 @@
         "from": "Moneda",
         "to": "Currency"
       },
+      "sobres.sobres_icon": {
+        "from": "Icono",
+        "to": "Icon"
+      },
       "sobres.sobres_target_amount": {
         "from": "Meta (opcional)",
         "to": "Goal (optional)"
       },
       "sobres.sobres_target_date": {
-        "from": "Fecha objetivo",
-        "to": "Target date"
+        "from": "Fecha límite (opcional)",
+        "to": "Deadline (optional)"
+      },
+      "sobres.sobres_remove_date": {
+        "from": "Quitar fecha límite",
+        "to": "Remove deadline"
+      },
+      "sobres.sobres_suggest_monthly": {
+        "from": "Sugerido mensual: {monto}",
+        "to": "Suggested monthly: {monto}"
+      },
+      "sobres.sobres_suggest_weekly": {
+        "from": "Sugerido semanal: {monto}",
+        "to": "Suggested weekly: {monto}"
       },
       "sobres.sobres_target_date_needs_goal": {
         "from": "Primero definí cuánto querés juntar.",
         "to": "Set the amount you want to reach first."
       },
       "sobres.sobres_target_hint": {
-        "from": "La meta y la fecha son opcionales e independientes.",
-        "to": "The goal and the date are optional and independent."
+        "from": "La meta es opcional. La fecha necesita una meta.",
+        "to": "The goal is optional. The date needs a goal."
       },
       "sobres.sobres_clear": {
         "from": "Quitar",
@@ -11255,12 +12487,12 @@
         "to": "Where is this money?"
       },
       "sobres.sobres_modality_real": {
-        "from": "Lo separé en la entidad",
-        "to": "I set it aside at the institution"
+        "from": "Separado fuera: sale de la billetera",
+        "to": "Set aside outside: it leaves the wallet"
       },
       "sobres.sobres_modality_virtual": {
-        "from": "Sigue en mi cuenta; lo reservo en ORD",
-        "to": "It is still in my account; I reserve it in ORD"
+        "from": "Reservado en ORD: sigue en la billetera, pero deja de estar disponible",
+        "to": "Reserved in ORD: it stays in the wallet but stops counting as available"
       },
       "sobres.sobres_modality_real_short": {
         "from": "Separado",
@@ -11321,6 +12553,10 @@
       "sobres.sobres_rescue": {
         "from": "Rescatar",
         "to": "Withdraw"
+      },
+      "sobres.sobres_rescue_all": {
+        "from": "Rescatar todo",
+        "to": "Withdraw all"
       },
       "sobres.sobres_rescue_title": {
         "from": "Rescatar de {nombre}",
@@ -11390,10 +12626,6 @@
         "from": "Corregir movimiento",
         "to": "Correct movement"
       },
-      "sobres.sobres_correct_hint": {
-        "from": "Se corrige el movimiento original: no se agrega uno nuevo.",
-        "to": "The original movement is corrected: no new one is added."
-      },
       "sobres.sobres_correct_success": {
         "from": "Movimiento corregido",
         "to": "Movement corrected"
@@ -11439,12 +12671,20 @@
         "to": "Archive the envelope"
       },
       "sobres.sobres_archive_confirm_message": {
-        "from": "El sobre pasa al histórico y no se puede reactivar. Sus movimientos se conservan.",
-        "to": "The envelope moves to the history and cannot be reactivated. Its movements are kept."
+        "from": "El sobre pasa al histórico y deja de sumarse al total. Sus movimientos se conservan, y podés desarchivarlo cuando quieras.",
+        "to": "The envelope moves to the history and stops counting towards the total. Its movements are kept, and you can unarchive it whenever you want."
       },
       "sobres.sobres_archived_toast": {
         "from": "Sobre archivado.",
         "to": "Envelope archived."
+      },
+      "sobres.sobres_unarchive": {
+        "from": "Desarchivar",
+        "to": "Unarchive"
+      },
+      "sobres.sobres_unarchived_toast": {
+        "from": "Sobre desarchivado.",
+        "to": "Envelope unarchived."
       },
       "sobres.sobres_yield_register": {
         "from": "Registrar rendimiento",
@@ -11463,8 +12703,8 @@
         "to": "This envelope has no set-aside reserve that earns returns."
       },
       "sobres.sobres_yield_amount": {
-        "from": "Rendimiento acreditado",
-        "to": "Return credited"
+        "from": "Importe del rendimiento",
+        "to": "Return amount"
       },
       "sobres.sobres_yield_hint": {
         "from": "Se registra como ingreso «Rendimientos de ahorros» con la fecha de hoy.",
@@ -11481,6 +12721,190 @@
       "sobres.sobres_free_note": {
         "from": "Podés ver, rescatar, corregir y archivar, pero no crear sobres ni aportar.",
         "to": "You can view, withdraw, correct and archive, but not create envelopes or contribute."
+      },
+      "dev_camera_batch.dev_camera_batch_title": {
+        "from": "Cámara en lote (prueba aislada)",
+        "to": "Batch camera (isolated spike)"
+      },
+      "dev_camera_batch.dev_camera_batch_intro": {
+        "from": "Prueba aislada y sin conexión con el flujo de producto: mide si una cámara web persistente puede sacar 4 fotos consecutivas con resolución y calidad suficientes para OCR, y además manda las fotos juntas al OCR real como un solo ticket (un solo job) para leer la respuesta tal cual llega. No guarda nada, no escribe en el historial de OCR ni toca tus movimientos.",
+        "to": "Isolated spike with no connection to the product flow: it measures whether a persistent web camera can take 4 consecutive photos with enough resolution and quality for OCR, and it also sends the photos together to the real OCR backend as a single ticket (one job) so its answer can be read as it arrives. It stores nothing, writes nothing into the OCR history and touches none of your transactions."
+      },
+      "dev_camera_batch.dev_camera_batch_btn_open_camera": {
+        "from": "Abrir cámara",
+        "to": "Open camera"
+      },
+      "dev_camera_batch.dev_camera_batch_btn_capture": {
+        "from": "Capturar",
+        "to": "Capture"
+      },
+      "dev_camera_batch.dev_camera_batch_btn_done": {
+        "from": "Listo",
+        "to": "Done"
+      },
+      "dev_camera_batch.dev_camera_batch_btn_delete": {
+        "from": "Borrar",
+        "to": "Delete"
+      },
+      "dev_camera_batch.dev_camera_batch_btn_copy_report": {
+        "from": "Copiar reporte",
+        "to": "Copy report"
+      },
+      "dev_camera_batch.dev_camera_batch_btn_send_ticket": {
+        "from": "Enviar {count} fotos a OCR",
+        "to": "Send {count} photos to OCR"
+      },
+      "dev_camera_batch.dev_camera_batch_label_stream_resolution": {
+        "from": "Resolución del stream",
+        "to": "Stream resolution"
+      },
+      "dev_camera_batch.dev_camera_batch_label_capture_dimensions": {
+        "from": "Dimensiones de la captura",
+        "to": "Capture dimensions"
+      },
+      "dev_camera_batch.dev_camera_batch_label_blob_size": {
+        "from": "Tamaño del blob",
+        "to": "Blob size"
+      },
+      "dev_camera_batch.dev_camera_batch_label_errors": {
+        "from": "Errores",
+        "to": "Errors"
+      },
+      "dev_camera_batch.dev_camera_batch_label_platform": {
+        "from": "Plataforma",
+        "to": "Platform"
+      },
+      "dev_camera_batch.dev_camera_batch_label_video": {
+        "from": "Video en pantalla",
+        "to": "On-screen video"
+      },
+      "dev_camera_batch.dev_camera_batch_label_photos": {
+        "from": "Fotos: {count}",
+        "to": "Photos: {count}"
+      },
+      "dev_camera_batch.dev_camera_batch_label_job_id": {
+        "from": "Job ID",
+        "to": "Job ID"
+      },
+      "dev_camera_batch.dev_camera_batch_label_ocr_job": {
+        "from": "Job del ticket",
+        "to": "Ticket job"
+      },
+      "dev_camera_batch.dev_camera_batch_label_ocr_status": {
+        "from": "Estado OCR",
+        "to": "OCR status"
+      },
+      "dev_camera_batch.dev_camera_batch_label_ocr_issues": {
+        "from": "Issues del OCR",
+        "to": "OCR issues"
+      },
+      "dev_camera_batch.dev_camera_batch_label_ocr_result": {
+        "from": "Resultado OCR",
+        "to": "OCR result"
+      },
+      "dev_camera_batch.dev_camera_batch_label_ocr_files": {
+        "from": "Fotos en este envío",
+        "to": "Photos in this job"
+      },
+      "dev_camera_batch.dev_camera_batch_label_error_code": {
+        "from": "Código de error",
+        "to": "Error code"
+      },
+      "dev_camera_batch.dev_camera_batch_label_message_code": {
+        "from": "Message code",
+        "to": "Message code"
+      },
+      "dev_camera_batch.dev_camera_batch_label_http_status": {
+        "from": "HTTP",
+        "to": "HTTP"
+      },
+      "dev_camera_batch.dev_camera_batch_label_duplicate": {
+        "from": "Duplicado",
+        "to": "Duplicate"
+      },
+      "dev_camera_batch.dev_camera_batch_msg_cap_reached": {
+        "from": "Llegaste al tope de fotos. Borrá una para sacar otra.",
+        "to": "You reached the photo cap. Delete one to take another."
+      },
+      "dev_camera_batch.dev_camera_batch_label_shift": {
+        "from": "Desplazamiento vertical",
+        "to": "Vertical displacement"
+      },
+      "dev_camera_batch.dev_camera_batch_msg_shift_waiting": {
+        "from": "Capturá la primera foto",
+        "to": "Take the first photo"
+      },
+      "dev_camera_batch.dev_camera_batch_msg_shift_keep_going": {
+        "from": "Seguí bajando el recibo hasta el 70%",
+        "to": "Keep moving down the receipt until you reach 70%"
+      },
+      "dev_camera_batch.dev_camera_batch_msg_shift_ready": {
+        "from": "Posición correcta: ya podés capturar",
+        "to": "Correct position: you can capture now"
+      },
+      "dev_camera_batch.dev_camera_batch_msg_no_camera": {
+        "from": "Este navegador no expone getUserMedia: no hay cámara disponible.",
+        "to": "This browser does not expose getUserMedia: no camera is available."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_permission_denied": {
+        "from": "Permiso de cámara denegado. Habilitalo en el navegador y volvé a intentar.",
+        "to": "Camera permission denied. Enable it in the browser and try again."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_camera_error": {
+        "from": "No se pudo abrir la cámara.",
+        "to": "The camera could not be opened."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_copied": {
+        "from": "Reporte copiado.",
+        "to": "Report copied."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_copy_failed": {
+        "from": "No se pudo copiar al portapapeles. Seleccioná el texto del reporte y copialo a mano.",
+        "to": "Could not copy to the clipboard. Select the report text and copy it by hand."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_ocr_no_session": {
+        "from": "No hay sesión activa. Iniciá sesión y volvé a intentar.",
+        "to": "There is no active session. Sign in and try again."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_ocr_no_context": {
+        "from": "Todavía no se pudo armar el contexto de tu ORD. Esperá un instante y volvé a intentar.",
+        "to": "The ORD context could not be built yet. Wait a moment and try again."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_ocr_done": {
+        "from": "Dejamos de consultar. El trabajo sigue en el servidor: el estado de arriba es el último que recibimos.",
+        "to": "We stopped polling. The job keeps running on the server: the status above is the last one we received."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_ocr_single_job": {
+        "from": "Todas las fotos viajan juntas como un solo ticket: un solo job para el lote completo.",
+        "to": "Every photo travels together as a single ticket: one job for the whole batch."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_ocr_result_trimmed": {
+        "from": "JSON recortado a {count} de {total} caracteres para que el reporte se pueda leer.",
+        "to": "JSON trimmed to {count} of {total} characters so the report stays readable."
+      },
+      "dev_camera_batch.dev_camera_batch_status_idle": {
+        "from": "Cámara cerrada",
+        "to": "Camera closed"
+      },
+      "dev_camera_batch.dev_camera_batch_status_live": {
+        "from": "Cámara en vivo",
+        "to": "Camera live"
+      },
+      "dev_camera_batch.dev_camera_batch_status_sending": {
+        "from": "Enviando al OCR",
+        "to": "Sending to OCR"
+      },
+      "dev_camera_batch.dev_camera_batch_status_polling": {
+        "from": "Consultando estado",
+        "to": "Polling status"
+      },
+      "dev_camera_batch.dev_camera_batch_status_sent": {
+        "from": "Enviado",
+        "to": "Sent"
+      },
+      "dev_camera_batch.dev_camera_batch_status_failed": {
+        "from": "Falló el envío",
+        "to": "Send failed"
       }
     },
     "pt": {
@@ -11491,6 +12915,18 @@
       "errors.error_session_expired": {
         "from": "Tu sesión ha expirado. Inicia sesión nuevamente.",
         "to": "Sua sessão expirou. Entre novamente."
+      },
+      "errors.error_pin_incorrecto": {
+        "from": "El PIN no es correcto.",
+        "to": "O PIN não está correto."
+      },
+      "errors.error_pin_espera_24h": {
+        "from": "Debes esperar 24 horas desde que configuraste el PIN para poder borrar tus datos.",
+        "to": "Você precisa esperar 24 horas depois de configurar o PIN para poder apagar seus dados."
+      },
+      "errors.error_hogar_no_pertenece": {
+        "from": "No perteneces a ese hogar.",
+        "to": "Você não pertence a esse lar."
       },
       "errors.error_field_required": {
         "from": "El campo {field} es obligatorio.",
@@ -11732,6 +13168,10 @@
         "from": "Saneamiento",
         "to": "Saneamento"
       },
+      "errors.menu_prestamos": {
+        "from": "Préstamos",
+        "to": "Empréstimos"
+      },
       "errors.menu_inversiones": {
         "from": "Inversiones",
         "to": "Investimentos"
@@ -11791,6 +13231,10 @@
       "errors.alert_all_ok_no_alerts": {
         "from": "Todo en orden. Sin alertas financieras.",
         "to": "Tudo em ordem. Sem alertas financeiros."
+      },
+      "errors.alert_active_count": {
+        "from": "Alertas activas ({count})",
+        "to": "Alertas ativos ({count})"
       },
       "errors.hero_title_to_assign": {
         "from": "A Asignar",
@@ -14584,6 +16028,82 @@
         "from": "Adjuntá una foto o un PDF del ticket. Podés sumar hasta 10 imágenes.",
         "to": "Anexe uma foto ou um PDF do comprovante. Você pode adicionar até 10 imagens."
       },
+      "ocr.camera_resume": {
+        "from": "Reanudar cámara",
+        "to": "Retomar câmera"
+      },
+      "ocr.camera_pick_photos": {
+        "from": "Elegir fotos del teléfono",
+        "to": "Escolher fotos do telefone"
+      },
+      "ocr.camera_hint": {
+        "from": "La cámara es la forma más rápida de cargar el ticket. Si preferís, elegí fotos del teléfono abajo.",
+        "to": "A câmera é a forma mais rápida de carregar o comprovante. Se preferir, escolha fotos do telefone abaixo."
+      },
+      "ocr.camera_unavailable": {
+        "from": "La cámara no está disponible en este dispositivo. Elegí las fotos abajo.",
+        "to": "A câmera não está disponível neste dispositivo. Escolha as fotos abaixo."
+      },
+      "ocr.camera_starting": {
+        "from": "Abriendo cámara…",
+        "to": "Abrindo câmera…"
+      },
+      "ocr.camera_back": {
+        "from": "Volver",
+        "to": "Voltar"
+      },
+      "ocr.camera_capture": {
+        "from": "Capturar",
+        "to": "Capturar"
+      },
+      "ocr.camera_send": {
+        "from": "Enviar",
+        "to": "Enviar"
+      },
+      "ocr.camera_done": {
+        "from": "Listo",
+        "to": "Concluir"
+      },
+      "ocr.camera_shift_waiting": {
+        "from": "Acercá el teléfono hasta que el ticket ocupe el marco",
+        "to": "Aproxime o telefone até o ticket ocupar o quadro"
+      },
+      "ocr.camera_shift_keep_going": {
+        "from": "Seguí bajando",
+        "to": "Continue descendo"
+      },
+      "ocr.camera_shift_ready": {
+        "from": "Ya podés capturar la siguiente",
+        "to": "Já pode capturar a próxima"
+      },
+      "ocr.camera_cap_reached": {
+        "from": "Llegaste al máximo de fotos. Quitá una para sacar otra.",
+        "to": "Você chegou ao máximo de fotos. Remova uma para capturar outra."
+      },
+      "ocr.camera_count_label": {
+        "from": "Fotos capturadas: {count} de {max}",
+        "to": "Fotos capturadas: {count} de {max}"
+      },
+      "ocr.camera_count_remove": {
+        "from": "Quitar la última foto ({count} de {max})",
+        "to": "Remover a última foto ({count} de {max})"
+      },
+      "ocr.camera_focusing": {
+        "from": "Enfocando…",
+        "to": "Focando…"
+      },
+      "ocr.camera_error_no_camera": {
+        "from": "Este dispositivo no tiene cámara disponible.",
+        "to": "Este dispositivo não tem câmera disponível."
+      },
+      "ocr.camera_error_permission_denied": {
+        "from": "Permiso de cámara denegado. Habilitalo en el navegador y volvé a intentar.",
+        "to": "Permissão de câmera negada. Habilite no navegador e tente novamente."
+      },
+      "ocr.camera_error_generic": {
+        "from": "No se pudo abrir la cámara.",
+        "to": "Não foi possível abrir a câmera."
+      },
       "ocr.capture_add_images": {
         "from": "Agregar imágenes",
         "to": "Adicionar imagens"
@@ -14633,8 +16153,8 @@
         "to": "Comprovante recebido"
       },
       "ocr.capture_received_desc": {
-        "from": "Podés continuar usando ORD. No es necesario volver a cargarlo.",
-        "to": "Você pode continuar usando o ORD. Não é preciso carregá-lo de novo."
+        "from": "El ticket fue aceptado y se sigue procesando en segundo plano. Podés continuar usando ORD sin volver a cargarlo.",
+        "to": "O comprovante foi aceito e continua sendo processado em segundo plano. Você pode continuar usando o ORD sem carregá-lo de novo."
       },
       "ocr.capture_duplicate_note": {
         "from": "Ya teníamos este ticket: seguimos con el mismo procesamiento.",
@@ -14647,6 +16167,26 @@
       "ocr.capture_retry": {
         "from": "Reintentar envío",
         "to": "Tentar enviar de novo"
+      },
+      "ocr.job_status_received": {
+        "from": "Recibido · En espera",
+        "to": "Recebido · Em espera"
+      },
+      "ocr.job_status_reading": {
+        "from": "Leyendo ticket",
+        "to": "Lendo comprovante"
+      },
+      "ocr.job_status_waiting": {
+        "from": "En espera de procesamiento",
+        "to": "Aguardando processamento"
+      },
+      "ocr.job_status_classifying": {
+        "from": "Clasificando productos",
+        "to": "Classificando produtos"
+      },
+      "ocr.job_status_ready": {
+        "from": "Listo para revisar",
+        "to": "Pronto para revisar"
       },
       "ocr.status_queued": {
         "from": "Ticket recibido. Pendiente de procesamiento.",
@@ -14892,6 +16432,14 @@
         "from": "{count} imagen(es)",
         "to": "{count} imagem(ns)"
       },
+      "ocr.history_status_upload_pending": {
+        "from": "Enviando…",
+        "to": "Enviando…"
+      },
+      "ocr.history_status_upload_failed": {
+        "from": "No se pudo enviar",
+        "to": "Não foi possível enviar"
+      },
       "ocr.history_status_processing": {
         "from": "Procesando",
         "to": "Processando"
@@ -14915,6 +16463,22 @@
       "ocr.history_open": {
         "from": "Ver en cuarentena",
         "to": "Ver na quarentena"
+      },
+      "ocr.history_lost": {
+        "from": "El servidor ya no lo tiene",
+        "to": "O servidor não o tem mais"
+      },
+      "ocr.history_resend": {
+        "from": "Reenviar",
+        "to": "Reenviar"
+      },
+      "ocr.history_discard": {
+        "from": "Borrar",
+        "to": "Excluir"
+      },
+      "ocr.history_action_failed": {
+        "from": "No se pudo completar la acción",
+        "to": "Não foi possível concluir a ação"
       },
       "ocr.save_draft": {
         "from": "Guardar",
@@ -15084,6 +16648,18 @@
         "from": "Fuga de Capital (Misterio)",
         "to": "Fuga de Capital (Mistério)"
       },
+      "category_keys.type_savings_aporte": {
+        "from": "Aporte a un sobre de ahorro",
+        "to": "Aporte a um envelope de poupança"
+      },
+      "category_keys.type_savings_rescate": {
+        "from": "Retiro de un sobre de ahorro",
+        "to": "Retirada de um envelope de poupança"
+      },
+      "category_keys.type_savings_rendimiento": {
+        "from": "Rendimiento de un sobre de ahorro",
+        "to": "Rendimento de um envelope de poupança"
+      },
       "category_keys.type_adjustment_surplus": {
         "from": "Superávit de ajuste",
         "to": "Superávit de ajuste"
@@ -15251,6 +16827,1054 @@
       "category_keys.no_category": {
         "from": "Sin categoría",
         "to": "Sem categoria"
+      },
+      "category_keys.cat_debt_payment": {
+        "from": "Deudas",
+        "to": "Dívidas"
+      },
+      "category_keys.cat_loans_granted": {
+        "from": "Préstamos otorgados",
+        "to": "Empréstimos concedidos"
+      },
+      "category_keys.loan_received_income_name": {
+        "from": "Ingreso x préstamo recibido",
+        "to": "Receita por empréstimo recebido"
+      },
+      "category_keys.loan_collection_income_name": {
+        "from": "Cobro de préstamos",
+        "to": "Cobrança de empréstimos"
+      },
+      "prestamos.error_debt_not_found": {
+        "from": "No encontramos ese préstamo.",
+        "to": "Não encontramos esse empréstimo."
+      },
+      "prestamos.error_invalid_direction": {
+        "from": "La dirección del préstamo no es válida.",
+        "to": "A direção do empréstimo não é válida."
+      },
+      "prestamos.error_invalid_modality": {
+        "from": "La modalidad de devolución no es válida.",
+        "to": "A modalidade de devolução não é válida."
+      },
+      "prestamos.error_invalid_interest_condition": {
+        "from": "La condición de interés no es válida.",
+        "to": "A condição de juros não é válida."
+      },
+      "prestamos.error_schedule_required": {
+        "from": "Necesitás cargar el cronograma de cuotas.",
+        "to": "Você precisa informar o cronograma de parcelas."
+      },
+      "prestamos.error_schedule_not_allowed": {
+        "from": "Esta modalidad no lleva cronograma de cuotas.",
+        "to": "Esta modalidade não tem cronograma de parcelas."
+      },
+      "prestamos.error_debt_not_payable": {
+        "from": "Este préstamo no admite pagos en su estado actual.",
+        "to": "Este empréstimo não aceita pagamentos no estado atual."
+      },
+      "prestamos.error_overpayment_confirmation_required": {
+        "from": "El importe supera el saldo pendiente. Confirmá si el excedente son intereses no registrados.",
+        "to": "O valor supera o saldo pendente. Confirme se o excedente são juros não registrados."
+      },
+      "prestamos.error_saldo_derivado": {
+        "from": "El saldo pendiente se calcula con las condiciones y las operaciones registradas. Para reabrir este préstamo, corregí o anulá la operación que lo canceló.",
+        "to": "O saldo devedor vem das condições e das operações registradas. Para reabrir este empréstimo, corrija ou anule a operação que o liquidou."
+      },
+      "prestamos.error_no_changes": {
+        "from": "No se modificó ninguna condición: revisá los datos antes de guardar.",
+        "to": "Nenhuma condição foi alterada: revise os dados antes de salvar."
+      },
+      "prestamos.error_monto_incoherente": {
+        "from": "Con la misma moneda, el importe que sale de la billetera y el que se aplica al préstamo tienen que coincidir.",
+        "to": "Com a mesma moeda, o valor que sai da carteira e o valor aplicado ao empréstimo devem coincidir."
+      },
+      "prestamos.error_payment_not_found": {
+        "from": "No encontramos esa operación.",
+        "to": "Não encontramos essa operação."
+      },
+      "prestamos.error_payment_not_active": {
+        "from": "Esa operación ya no está activa.",
+        "to": "Essa operação não está mais ativa."
+      },
+      "prestamos.error_confirmation_required": {
+        "from": "Necesitás confirmar la operación.",
+        "to": "Você precisa confirmar a operação."
+      },
+      "prestamos.error_debt_not_settled": {
+        "from": "Solo podés quitar del historial un préstamo que ya está saldado.",
+        "to": "Você só pode remover do histórico um empréstimo já quitado."
+      },
+      "prestamos.error_invalid_strategy": {
+        "from": "La estrategia elegida no es válida.",
+        "to": "A estratégia escolhida não é válida."
+      },
+      "prestamos.error_invalid_criterion": {
+        "from": "El criterio del cuestionario no es válido.",
+        "to": "O critério do questionário não é válido."
+      },
+      "prestamos.error_cannot_change_modality_with_payments": {
+        "from": "No podés cambiar la modalidad de un préstamo que ya tiene pagos registrados.",
+        "to": "Você não pode mudar a modalidade de um empréstimo que já tem pagamentos registrados."
+      },
+      "prestamos.prestamos_kicker": {
+        "from": "Deudas",
+        "to": "Dívidas"
+      },
+      "prestamos.prestamos_title": {
+        "from": "Préstamos",
+        "to": "Empréstimos"
+      },
+      "prestamos.prestamos_subtitle": {
+        "from": "Tus deudas y tus préstamos otorgados, siempre por separado.",
+        "to": "O que você deve e o que emprestou, sempre separados."
+      },
+      "prestamos.prestamos_loading": {
+        "from": "Cargando préstamos…",
+        "to": "Carregando empréstimos…"
+      },
+      "prestamos.prestamos_retry": {
+        "from": "Reintentar",
+        "to": "Tentar de novo"
+      },
+      "prestamos.prestamos_volver": {
+        "from": "← Volver",
+        "to": "← Voltar"
+      },
+      "prestamos.prestamos_volver_prestamos": {
+        "from": "← Préstamos",
+        "to": "← Empréstimos"
+      },
+      "prestamos.prestamos_resumen_titulo": {
+        "from": "Resumen por moneda",
+        "to": "Resumo por moeda"
+      },
+      "prestamos.prestamos_resumen_debo": {
+        "from": "Debo",
+        "to": "Eu devo"
+      },
+      "prestamos.prestamos_resumen_me_deben": {
+        "from": "Me deben",
+        "to": "Devem a mim"
+      },
+      "prestamos.prestamos_resumen_pendiente": {
+        "from": "Pendiente",
+        "to": "Pendente"
+      },
+      "prestamos.prestamos_resumen_pagado": {
+        "from": "Pagado registrado",
+        "to": "Pagamentos registrados"
+      },
+      "prestamos.prestamos_resumen_activos": {
+        "from": "{count} activos",
+        "to": "{count} ativos"
+      },
+      "prestamos.prestamos_resumen_saldados": {
+        "from": "{count} saldados",
+        "to": "{count} quitados"
+      },
+      "prestamos.prestamos_resumen_vacio": {
+        "from": "Todavía no registraste préstamos.",
+        "to": "Você ainda não registrou empréstimos."
+      },
+      "prestamos.prestamos_resumen_regla": {
+        "from": "«Debo» y «Me deben» no se restan entre sí. Los importes de monedas distintas no se suman.",
+        "to": "«Devem a mim» nunca é subtraído de «Eu devo», e valores em moedas diferentes nunca são somados."
+      },
+      "prestamos.prestamos_menu_debo": {
+        "from": "Debo",
+        "to": "Eu devo"
+      },
+      "prestamos.prestamos_menu_debo_desc": {
+        "from": "Lo que tenés que devolver.",
+        "to": "O que você precisa devolver."
+      },
+      "prestamos.prestamos_menu_me_deben": {
+        "from": "Me deben",
+        "to": "Devem a mim"
+      },
+      "prestamos.prestamos_menu_me_deben_desc": {
+        "from": "Lo que te tienen que devolver.",
+        "to": "O que precisam devolver para você."
+      },
+      "prestamos.prestamos_menu_saneamiento": {
+        "from": "Saneamiento",
+        "to": "Saneamento"
+      },
+      "prestamos.prestamos_menu_saneamiento_desc": {
+        "from": "Plan de ataque de tus deudas.",
+        "to": "Plano de ataque das suas dívidas."
+      },
+      "prestamos.prestamos_menu_calendario": {
+        "from": "Calendario",
+        "to": "Calendário"
+      },
+      "prestamos.prestamos_menu_calendario_desc": {
+        "from": "Préstamos, tarjetas y gastos recurrentes.",
+        "to": "Empréstimos, cartões e gastos recorrentes."
+      },
+      "prestamos.prestamos_menu_pareja": {
+        "from": "Pareja",
+        "to": "Casal"
+      },
+      "prestamos.prestamos_menu_pareja_desc": {
+        "from": "Gastos compartidos y préstamos entre ustedes.",
+        "to": "Despesas compartilhadas e empréstimos entre vocês."
+      },
+      "prestamos.prestamos_menu_ver_todas": {
+        "from": "Ver todas",
+        "to": "Ver todas"
+      },
+      "prestamos.prestamos_estado_al_dia": {
+        "from": "Al día",
+        "to": "Em dia"
+      },
+      "prestamos.prestamos_estado_proximo_a_vencer": {
+        "from": "Próximo a vencer",
+        "to": "Perto do vencimento"
+      },
+      "prestamos.prestamos_estado_vencido": {
+        "from": "Vencido",
+        "to": "Vencido"
+      },
+      "prestamos.prestamos_estado_saldado": {
+        "from": "Saldado",
+        "to": "Quitado"
+      },
+      "prestamos.prestamos_estado_sin_fecha": {
+        "from": "Sin fecha acordada",
+        "to": "Sem data combinada"
+      },
+      "prestamos.prestamos_lista_debo_titulo": {
+        "from": "Debo",
+        "to": "Eu devo"
+      },
+      "prestamos.prestamos_lista_me_deben_titulo": {
+        "from": "Me deben",
+        "to": "Devem a mim"
+      },
+      "prestamos.prestamos_lista_vacio_debo": {
+        "from": "No tenés préstamos pendientes de devolver.",
+        "to": "Você não tem empréstimos pendentes de devolver."
+      },
+      "prestamos.prestamos_lista_vacio_me_deben": {
+        "from": "No hay préstamos otorgados pendientes de cobro.",
+        "to": "Ninguém tem empréstimo em aberto com você."
+      },
+      "prestamos.prestamos_lista_incluir_saldados": {
+        "from": "Incluir saldados",
+        "to": "Incluir quitados"
+      },
+      "prestamos.prestamos_lista_saldo": {
+        "from": "Saldo pendiente",
+        "to": "Saldo pendente"
+      },
+      "prestamos.prestamos_lista_original": {
+        "from": "Importe original",
+        "to": "Valor original"
+      },
+      "prestamos.prestamos_lista_pagado": {
+        "from": "Pagado registrado",
+        "to": "Pagamentos registrados"
+      },
+      "prestamos.prestamos_lista_tasa": {
+        "from": "Tasa anual informada",
+        "to": "Taxa anual informada"
+      },
+      "prestamos.prestamos_lista_tasa_no_informada": {
+        "from": "Tasa no informada",
+        "to": "Taxa não informada"
+      },
+      "prestamos.prestamos_lista_vencimiento": {
+        "from": "Próximo vencimiento",
+        "to": "Próximo vencimento"
+      },
+      "prestamos.prestamos_lista_sin_vencimiento": {
+        "from": "Sin fecha acordada",
+        "to": "Sem data combinada"
+      },
+      "prestamos.prestamos_lista_modalidad_cuotas": {
+        "from": "Cuotas con fechas",
+        "to": "Parcelas com datas"
+      },
+      "prestamos.prestamos_lista_modalidad_vencimiento_unico": {
+        "from": "Pago único con fecha",
+        "to": "Pagamento único com data"
+      },
+      "prestamos.prestamos_lista_modalidad_libre": {
+        "from": "Devolución libre",
+        "to": "Devolução livre"
+      },
+      "prestamos.prestamos_lista_registrar_pago": {
+        "from": "Registrar pago",
+        "to": "Registrar pagamento"
+      },
+      "prestamos.prestamos_lista_registrar_cobro": {
+        "from": "Registrar cobro",
+        "to": "Registrar recebimento"
+      },
+      "prestamos.prestamos_lista_ver_detalle": {
+        "from": "Ver detalle",
+        "to": "Ver detalhe"
+      },
+      "prestamos.prestamos_alta_abrir": {
+        "from": "Nuevo préstamo",
+        "to": "Novo empréstimo"
+      },
+      "prestamos.prestamos_alta_titulo": {
+        "from": "Nuevo préstamo",
+        "to": "Novo empréstimo"
+      },
+      "prestamos.prestamos_alta_subtitulo": {
+        "from": "Un préstamo nuevo mueve dinero una sola vez. Un préstamo histórico no mueve nada.",
+        "to": "Um empréstimo novo movimenta dinheiro uma única vez. Um empréstimo histórico não movimenta nada."
+      },
+      "prestamos.prestamos_alta_direccion": {
+        "from": "Dirección",
+        "to": "Direção"
+      },
+      "prestamos.prestamos_alta_origen": {
+        "from": "Cómo lo registrás",
+        "to": "Como você registra"
+      },
+      "prestamos.prestamos_alta_nuevo": {
+        "from": "Préstamo nuevo",
+        "to": "Empréstimo novo"
+      },
+      "prestamos.prestamos_alta_historico": {
+        "from": "Préstamo histórico",
+        "to": "Empréstimo histórico"
+      },
+      "prestamos.prestamos_alta_nuevo_ayuda": {
+        "from": "Registra el importe original y el movimiento de fondos real: un solo ingreso o egreso.",
+        "to": "Registra o valor original e o movimento real de dinheiro: uma única entrada ou saída."
+      },
+      "prestamos.prestamos_alta_historico_ayuda": {
+        "from": "No registra ningún movimiento de fondos: se carga el importe original y el saldo pendiente actual, por separado.",
+        "to": "Não registra nenhum movimento de dinheiro: o valor original e o saldo devedor atual são informados separadamente."
+      },
+      "prestamos.prestamos_alta_contraparte": {
+        "from": "Contraparte",
+        "to": "Contraparte"
+      },
+      "prestamos.prestamos_alta_nombre": {
+        "from": "Nombre (opcional)",
+        "to": "Nome (opcional)"
+      },
+      "prestamos.prestamos_alta_nombre_ayuda": {
+        "from": "Si lo dejás vacío, se usa la contraparte.",
+        "to": "Se ficar vazio, usamos a contraparte."
+      },
+      "prestamos.prestamos_alta_tipo": {
+        "from": "Tipo de acreedor o deudor",
+        "to": "Tipo de credor ou devedor"
+      },
+      "prestamos.prestamos_alta_moneda": {
+        "from": "Moneda",
+        "to": "Moeda"
+      },
+      "prestamos.prestamos_alta_saldo_actual": {
+        "from": "Saldo pendiente actual",
+        "to": "Saldo devedor atual"
+      },
+      "prestamos.prestamos_alta_saldo_actual_ayuda": {
+        "from": "Lo que queda por pagar hoy, no el importe original. No se deduce de nada.",
+        "to": "O que ainda falta pagar hoje, não o valor original. Não é deduzido de nada."
+      },
+      "prestamos.prestamos_alta_saldo_inicial": {
+        "from": "Saldo pendiente al registrar",
+        "to": "Saldo devedor no registro"
+      },
+      "prestamos.prestamos_alta_modalidad": {
+        "from": "Modalidad de devolución",
+        "to": "Forma de devolução"
+      },
+      "prestamos.prestamos_alta_condicion": {
+        "from": "Condición de interés",
+        "to": "Condição de juros"
+      },
+      "prestamos.prestamos_alta_interes_total": {
+        "from": "Interés total acordado",
+        "to": "Juros totais acordados"
+      },
+      "prestamos.prestamos_alta_interes_total_ayuda": {
+        "from": "El importe final conocido se suma al original para formar la deuda total.",
+        "to": "O valor final conhecido é somado ao original para formar a dívida total."
+      },
+      "prestamos.prestamos_alta_movimiento_ayuda": {
+        "from": "Se registra un único movimiento de fondos por el importe real. El saldo de la billetera lo mueve ORD, no este formulario.",
+        "to": "É registrado um único movimento financeiro pelo valor real. O saldo da carteira é atualizado pelo sistema, não por este formulário."
+      },
+      "prestamos.prestamos_alta_monto_billetera_ayuda": {
+        "from": "Con otra moneda, indicá cuánto entró o salió realmente. No calculamos el tipo de cambio.",
+        "to": "Com outra moeda, informe quanto entrou ou saiu de verdade. Não calculamos a taxa de câmbio."
+      },
+      "prestamos.prestamos_alta_cuotas_suma": {
+        "from": "Suma del cronograma: {total}",
+        "to": "Total do cronograma: {total}"
+      },
+      "prestamos.prestamos_alta_cuota_fecha": {
+        "from": "Vencimiento",
+        "to": "Vencimento"
+      },
+      "prestamos.prestamos_alta_cuota_monto": {
+        "from": "Importe",
+        "to": "Valor"
+      },
+      "prestamos.prestamos_alta_cuota_interes": {
+        "from": "Interés de la cuota (opcional)",
+        "to": "Juros da parcela (opcional)"
+      },
+      "prestamos.prestamos_alta_cuota_agregar": {
+        "from": "+ Agregar cuota",
+        "to": "+ Adicionar parcela"
+      },
+      "prestamos.prestamos_alta_cuota_quitar": {
+        "from": "Quitar",
+        "to": "Remover"
+      },
+      "prestamos.prestamos_alta_guardar": {
+        "from": "Registrar préstamo",
+        "to": "Registrar empréstimo"
+      },
+      "prestamos.prestamos_alta_guardando": {
+        "from": "Registrando…",
+        "to": "Registrando…"
+      },
+      "prestamos.prestamos_alta_exito": {
+        "from": "Préstamo registrado.",
+        "to": "Empréstimo registrado."
+      },
+      "prestamos.prestamos_alta_error_contraparte": {
+        "from": "Indicá con quién es el préstamo.",
+        "to": "Informe com quem é o empréstimo."
+      },
+      "prestamos.prestamos_alta_error_monto_original": {
+        "from": "El importe original tiene que ser mayor a cero.",
+        "to": "O valor original precisa ser maior que zero."
+      },
+      "prestamos.prestamos_alta_error_moneda": {
+        "from": "La moneda tiene que ser un código de tres letras.",
+        "to": "A moeda precisa ser um código de três letras."
+      },
+      "prestamos.prestamos_alta_error_saldo_actual": {
+        "from": "Indicá el saldo pendiente actual.",
+        "to": "Informe o saldo devedor atual."
+      },
+      "prestamos.prestamos_alta_error_cronograma": {
+        "from": "Cargá al menos una cuota con fecha e importe.",
+        "to": "Informe pelo menos uma parcela com data e valor."
+      },
+      "prestamos.prestamos_alta_error_vencimiento": {
+        "from": "Indicá la fecha de vencimiento.",
+        "to": "Informe a data de vencimento."
+      },
+      "prestamos.prestamos_alta_error_tasa": {
+        "from": "Indicá la tasa anual informada.",
+        "to": "Informe a taxa anual informada."
+      },
+      "prestamos.prestamos_alta_error_interes": {
+        "from": "Indicá el interés total acordado.",
+        "to": "Informe os juros totais acordados."
+      },
+      "prestamos.prestamos_alta_error_billetera": {
+        "from": "Elegí la billetera del movimiento.",
+        "to": "Escolha a carteira do movimento."
+      },
+      "prestamos.prestamos_alta_error_monto_billetera": {
+        "from": "Indicá el importe real del movimiento.",
+        "to": "Informe o valor real do movimento."
+      },
+      "prestamos.prestamos_condicion_ninguno": {
+        "from": "Sin interés",
+        "to": "Sem juros"
+      },
+      "prestamos.prestamos_condicion_importe_final": {
+        "from": "Importe final conocido",
+        "to": "Valor final conhecido"
+      },
+      "prestamos.prestamos_condicion_tasa": {
+        "from": "Tasa conocida",
+        "to": "Taxa conhecida"
+      },
+      "prestamos.prestamos_condicion_desconocido": {
+        "from": "Desconocida",
+        "to": "Desconhecida"
+      },
+      "prestamos.prestamos_editar_abrir": {
+        "from": "Editar condiciones",
+        "to": "Editar condições"
+      },
+      "prestamos.prestamos_editar_titulo": {
+        "from": "Editar condiciones",
+        "to": "Editar condições"
+      },
+      "prestamos.prestamos_editar_aviso": {
+        "from": "Editar condiciones no crea ningún movimiento de fondos y no toca los pagos ni los cobros ya registrados.",
+        "to": "Editar condições não cria nenhum movimento financeiro e não altera os pagamentos nem os recebimentos já registrados."
+      },
+      "prestamos.prestamos_editar_saldo_ayuda": {
+        "from": "El saldo pendiente se recalcula desde este saldo inicial menos lo pagado. Los pagos registrados no se modifican.",
+        "to": "O saldo devedor é recalculado a partir deste saldo inicial menos o que foi pago. Os pagamentos registrados não são alterados."
+      },
+      "prestamos.prestamos_editar_saldo_derivado": {
+        "from": "El saldo pendiente se calcula con las operaciones registradas y no se edita acá. Para reabrirlo, corregí o anulá el pago o cobro que lo canceló.",
+        "to": "O saldo devedor é calculado a partir das operações registradas e não é editado aqui. Para reabrir, corrija ou anule o pagamento ou a cobrança que o liquidou."
+      },
+      "prestamos.prestamos_editar_limpiar_vencimiento": {
+        "from": "Quitar la fecha de vencimiento",
+        "to": "Remover a data de vencimento"
+      },
+      "prestamos.prestamos_editar_vencimiento_cuotas": {
+        "from": "Con cuotas, el próximo vencimiento es la primera cuota del cronograma.",
+        "to": "Com parcelas, o próximo vencimento é a primeira do cronograma."
+      },
+      "prestamos.prestamos_editar_guardar": {
+        "from": "Guardar condiciones",
+        "to": "Salvar condições"
+      },
+      "prestamos.prestamos_editar_guardando": {
+        "from": "Guardando…",
+        "to": "Salvando…"
+      },
+      "prestamos.prestamos_editar_sin_cambios": {
+        "from": "No cambiaste ninguna condición.",
+        "to": "Você não alterou nenhuma condição."
+      },
+      "prestamos.prestamos_editar_exito": {
+        "from": "Condiciones actualizadas.",
+        "to": "Condições atualizadas."
+      },
+      "prestamos.prestamos_editar_error_contraparte": {
+        "from": "La contraparte no puede quedar vacía.",
+        "to": "A contraparte não pode ficar vazia."
+      },
+      "prestamos.prestamos_editar_error_nombre": {
+        "from": "El nombre no puede quedar vacío.",
+        "to": "O nome não pode ficar vazio."
+      },
+      "prestamos.prestamos_editar_error_saldo_ingreso": {
+        "from": "El saldo inicial no puede ser negativo.",
+        "to": "O saldo inicial não pode ser negativo."
+      },
+      "prestamos.prestamos_editar_interes_ayuda": {
+        "from": "Si borrás el importe, se quita el interés acordado.",
+        "to": "Apague o valor para remover o juro acordado."
+      },
+      "prestamos.prestamos_detalle_cargando": {
+        "from": "Cargando el detalle…",
+        "to": "Carregando o detalhe…"
+      },
+      "prestamos.prestamos_detalle_cuotas": {
+        "from": "Cuotas",
+        "to": "Parcelas"
+      },
+      "prestamos.prestamos_detalle_pagos": {
+        "from": "Pagos registrados",
+        "to": "Pagamentos registrados"
+      },
+      "prestamos.prestamos_detalle_sin_cuotas": {
+        "from": "Este préstamo no tiene cronograma de cuotas.",
+        "to": "Este empréstimo não tem cronograma de parcelas."
+      },
+      "prestamos.prestamos_detalle_sin_pagos": {
+        "from": "Todavía no hay pagos ni cobros registrados.",
+        "to": "Ainda não há pagamentos nem recebimentos registrados."
+      },
+      "prestamos.prestamos_detalle_cuota": {
+        "from": "Cuota {n}",
+        "to": "Parcela {n}"
+      },
+      "prestamos.prestamos_detalle_vencida": {
+        "from": "Vencida",
+        "to": "Vencida"
+      },
+      "prestamos.prestamos_detalle_interes_excedente": {
+        "from": "Intereses no registrados reconocidos",
+        "to": "Juros não registrados reconhecidos"
+      },
+      "prestamos.prestamos_detalle_entrega": {
+        "from": "Importe en la billetera",
+        "to": "Valor na carteira"
+      },
+      "prestamos.prestamos_detalle_aplicado": {
+        "from": "Aplicado al préstamo",
+        "to": "Aplicado ao empréstimo"
+      },
+      "prestamos.prestamos_detalle_nota": {
+        "from": "Nota",
+        "to": "Nota"
+      },
+      "prestamos.prestamos_detalle_historial": {
+        "from": "Historial de operaciones",
+        "to": "Histórico de operações"
+      },
+      "prestamos.prestamos_detalle_saldo_al_ingreso": {
+        "from": "Saldo al registrarlo",
+        "to": "Saldo no registro"
+      },
+      "prestamos.prestamos_operacion_corregir": {
+        "from": "Corregir",
+        "to": "Corrigir"
+      },
+      "prestamos.prestamos_operacion_eliminar": {
+        "from": "Eliminar operación",
+        "to": "Excluir operação"
+      },
+      "prestamos.prestamos_operacion_eliminar_titulo": {
+        "from": "Eliminar la operación",
+        "to": "Excluir a operação"
+      },
+      "prestamos.prestamos_operacion_eliminar_msg": {
+        "from": "Se va a eliminar la operación de {monto}: la billetera recupera ese importe y el saldo del préstamo se recalcula. No queda registro de la operación.",
+        "to": "A operação de {monto} será excluída: a carteira recebe esse valor de volta e o saldo do empréstimo é recalculado. Não fica registro da operação."
+      },
+      "prestamos.prestamos_operacion_eliminar_confirmar": {
+        "from": "Eliminar operación",
+        "to": "Excluir operação"
+      },
+      "prestamos.prestamos_operacion_eliminada": {
+        "from": "Operación eliminada.",
+        "to": "Operação excluída."
+      },
+      "prestamos.prestamos_historial_aviso": {
+        "from": "Quitar del historial esconde el préstamo y lo saca de los cálculos. Los movimientos de fondos ya contabilizados en las billeteras no se borran ni se revierten.",
+        "to": "Remover do histórico esconde o empréstimo e o tira dos cálculos. Os movimentos financeiros já lançados nas carteiras não são apagados nem revertidos."
+      },
+      "prestamos.prestamos_historial_quitar": {
+        "from": "Quitar del historial",
+        "to": "Remover do histórico"
+      },
+      "prestamos.prestamos_historial_confirmar_titulo": {
+        "from": "Quitar el préstamo del historial",
+        "to": "Remover o empréstimo do histórico"
+      },
+      "prestamos.prestamos_historial_confirmar_msg": {
+        "from": "El préstamo saldado deja de aparecer y de contarse. Los movimientos de fondos ya registrados en las billeteras se conservan intactos.",
+        "to": "O empréstimo quitado deixa de aparecer e de contar. Os movimentos financeiros já registrados nas carteiras ficam intactos."
+      },
+      "prestamos.prestamos_historial_confirmar": {
+        "from": "Sí, quitarlo",
+        "to": "Sim, remover"
+      },
+      "prestamos.prestamos_historial_eliminado": {
+        "from": "Préstamo quitado del historial.",
+        "to": "Empréstimo removido do histórico."
+      },
+      "prestamos.prestamos_correccion_titulo_pago": {
+        "from": "Corregir pago",
+        "to": "Corrigir pagamento"
+      },
+      "prestamos.prestamos_correccion_titulo_cobro": {
+        "from": "Corregir cobro",
+        "to": "Corrigir recebimento"
+      },
+      "prestamos.prestamos_correccion_aviso": {
+        "from": "Se edita la operación original: la billetera se ajusta solo por la diferencia y no se registra un segundo movimiento.",
+        "to": "A operação original é editada: a carteira é ajustada apenas pela diferença e nenhum segundo movimento é registrado."
+      },
+      "prestamos.prestamos_correccion_guardar": {
+        "from": "Guardar corrección",
+        "to": "Salvar correção"
+      },
+      "prestamos.prestamos_correccion_guardando": {
+        "from": "Guardando…",
+        "to": "Salvando…"
+      },
+      "prestamos.prestamos_correccion_exito": {
+        "from": "Operación corregida.",
+        "to": "Operação corrigida."
+      },
+      "prestamos.prestamos_pago_titulo_pago": {
+        "from": "Registrar pago",
+        "to": "Registrar pagamento"
+      },
+      "prestamos.prestamos_pago_titulo_cobro": {
+        "from": "Registrar cobro",
+        "to": "Registrar recebimento"
+      },
+      "prestamos.prestamos_pago_billetera": {
+        "from": "Billetera",
+        "to": "Carteira"
+      },
+      "prestamos.prestamos_pago_monto_billetera": {
+        "from": "Importe en la billetera",
+        "to": "Valor na carteira"
+      },
+      "prestamos.prestamos_pago_monto_aplicado": {
+        "from": "Importe aplicado al préstamo",
+        "to": "Valor aplicado ao empréstimo"
+      },
+      "prestamos.prestamos_pago_monto_aplicado_ayuda": {
+        "from": "Con billeteras de otra moneda, indicá acá cuánto se reconoce sobre el saldo del préstamo. No calculamos el tipo de cambio.",
+        "to": "Com carteiras de outra moeda, informe aqui quanto é reconhecido no saldo do empréstimo. Não calculamos a taxa de câmbio."
+      },
+      "prestamos.prestamos_pago_fecha": {
+        "from": "Fecha",
+        "to": "Data"
+      },
+      "prestamos.prestamos_pago_nota": {
+        "from": "Nota (opcional)",
+        "to": "Nota (opcional)"
+      },
+      "prestamos.prestamos_pago_guardar": {
+        "from": "Registrar",
+        "to": "Registrar"
+      },
+      "prestamos.prestamos_pago_guardando": {
+        "from": "Registrando…",
+        "to": "Registrando…"
+      },
+      "prestamos.prestamos_pago_exito": {
+        "from": "Operación registrada.",
+        "to": "Operação registrada."
+      },
+      "prestamos.prestamos_pago_error_billetera": {
+        "from": "Elegí una billetera.",
+        "to": "Escolha uma carteira."
+      },
+      "prestamos.prestamos_pago_error_monto": {
+        "from": "El importe tiene que ser mayor a cero.",
+        "to": "O valor precisa ser maior que zero."
+      },
+      "prestamos.prestamos_pago_sin_billeteras": {
+        "from": "No tenés billeteras disponibles.",
+        "to": "Você não tem carteiras disponíveis."
+      },
+      "prestamos.prestamos_pago_sobrepago_titulo": {
+        "from": "El importe supera el saldo pendiente",
+        "to": "O valor supera o saldo pendente"
+      },
+      "prestamos.prestamos_pago_sobrepago_msg": {
+        "from": "El excedente de {excedente} se va a registrar como intereses del préstamo no registrados anteriormente.",
+        "to": "O excedente de {excedente} será registrado como juros do empréstimo não registrados anteriormente."
+      },
+      "prestamos.prestamos_pago_sobrepago_confirmar": {
+        "from": "Sí, son intereses",
+        "to": "Sim, são juros"
+      },
+      "prestamos.prestamos_pago_sobrepago_cancelar": {
+        "from": "No registrar",
+        "to": "Não registrar"
+      },
+      "prestamos.prestamos_calendario_titulo": {
+        "from": "Calendario financiero",
+        "to": "Calendário financeiro"
+      },
+      "prestamos.prestamos_calendario_subtitulo": {
+        "from": "Préstamos, vencimientos de tarjetas y gastos recurrentes en una sola línea de tiempo.",
+        "to": "Empréstimos, vencimentos de cartão e gastos recorrentes numa única linha do tempo."
+      },
+      "prestamos.prestamos_calendario_tipo_prestamo": {
+        "from": "Préstamo",
+        "to": "Empréstimo"
+      },
+      "prestamos.prestamos_calendario_tipo_tarjeta": {
+        "from": "Tarjeta",
+        "to": "Cartão"
+      },
+      "prestamos.prestamos_calendario_tipo_recurrente": {
+        "from": "Recurrente",
+        "to": "Recorrente"
+      },
+      "prestamos.prestamos_calendario_sin_nombre": {
+        "from": "Gasto recurrente",
+        "to": "Gasto recorrente"
+      },
+      "prestamos.prestamos_calendario_dias": {
+        "from": "Próximos {dias} días",
+        "to": "Próximos {dias} dias"
+      },
+      "prestamos.prestamos_calendario_vacio": {
+        "from": "No hay vencimientos de préstamos, tarjetas ni gastos recurrentes en este período.",
+        "to": "Não há vencimentos de empréstimos, cartões nem gastos recorrentes neste período."
+      },
+      "prestamos.prestamos_calendario_pagado": {
+        "from": "Cubierta",
+        "to": "Coberta"
+      },
+      "prestamos.prestamos_calendario_pendiente": {
+        "from": "Pendiente",
+        "to": "Pendente"
+      },
+      "prestamos.prestamos_calendario_critico": {
+        "from": "Vence pronto",
+        "to": "Vence em breve"
+      },
+      "prestamos.prestamos_calendario_vencido": {
+        "from": "Vencida",
+        "to": "Vencida"
+      },
+      "prestamos.prestamos_calendario_cuota": {
+        "from": "Cuota {n}",
+        "to": "Parcela {n}"
+      },
+      "prestamos.prestamos_calendario_ver_prestamo": {
+        "from": "Abrir préstamo",
+        "to": "Abrir empréstimo"
+      },
+      "prestamos.prestamos_calendario_aviso": {
+        "from": "El calendario no guarda el saldo: el saldo pertenece al préstamo.",
+        "to": "O calendário não guarda o saldo: o saldo pertence ao empréstimo."
+      },
+      "prestamos.prestamos_calendario_moneda_sin_informar": {
+        "from": "sin moneda informada",
+        "to": "moeda não informada"
+      },
+      "prestamos.prestamos_saneamiento_titulo": {
+        "from": "Plan de ataque",
+        "to": "Plano de ataque"
+      },
+      "prestamos.prestamos_saneamiento_subtitulo": {
+        "from": "Solo las deudas de «Debo»: ni lo que te deben, ni tarjetas, ni gastos recurrentes.",
+        "to": "Apenas as dívidas de «Eu devo»: nem o que devem a você, nem cartões, nem despesas recorrentes."
+      },
+      "prestamos.prestamos_saneamiento_estrategia": {
+        "from": "Estrategia",
+        "to": "Estratégia"
+      },
+      "prestamos.prestamos_saneamiento_estrategia_math": {
+        "from": "Matemática",
+        "to": "Matemática"
+      },
+      "prestamos.prestamos_saneamiento_estrategia_math_desc": {
+        "from": "Mayor tasa de interés primero.",
+        "to": "Maior taxa de juros primeiro."
+      },
+      "prestamos.prestamos_saneamiento_estrategia_emotional": {
+        "from": "Emocional",
+        "to": "Emocional"
+      },
+      "prestamos.prestamos_saneamiento_estrategia_emotional_desc": {
+        "from": "Saldo pendiente más chico primero.",
+        "to": "Menor saldo pendente primeiro."
+      },
+      "prestamos.prestamos_saneamiento_estrategia_relationships": {
+        "from": "Vínculos",
+        "to": "Vínculos"
+      },
+      "prestamos.prestamos_saneamiento_estrategia_relationships_desc": {
+        "from": "Prioriza a quién le debés según el cuestionario.",
+        "to": "Prioriza a quem você deve com base no questionário."
+      },
+      "prestamos.prestamos_saneamiento_prioridad": {
+        "from": "Prioridad {n}",
+        "to": "Prioridade {n}"
+      },
+      "prestamos.prestamos_saneamiento_sin_deudas": {
+        "from": "No hay deudas activas para atacar.",
+        "to": "Não há dívidas ativas para atacar."
+      },
+      "prestamos.prestamos_saneamiento_sin_deudas_desc": {
+        "from": "Registrá lo que debés en la sección «Debo».",
+        "to": "Registre o que você deve na seção «Eu devo»."
+      },
+      "prestamos.prestamos_saneamiento_personal": {
+        "from": "Personal",
+        "to": "Pessoal"
+      },
+      "prestamos.prestamos_saneamiento_institucional": {
+        "from": "Institución",
+        "to": "Instituição"
+      },
+      "prestamos.prestamos_saneamiento_puntos": {
+        "from": "{puntos} puntos",
+        "to": "{puntos} pontos"
+      },
+      "prestamos.prestamos_saneamiento_empate": {
+        "from": "Igual prioridad",
+        "to": "Mesma prioridade"
+      },
+      "prestamos.prestamos_saneamiento_empate_ayuda": {
+        "from": "Estas personas empatan. Podés desempatar a mano; si no lo hacés, conservan la misma prioridad.",
+        "to": "Essas pessoas estão empatadas. Você pode desempatar manualmente; se não o fizer, mantêm a mesma prioridade."
+      },
+      "prestamos.prestamos_saneamiento_desempatar_sube": {
+        "from": "Subir",
+        "to": "Subir"
+      },
+      "prestamos.prestamos_saneamiento_desempatar_baja": {
+        "from": "Bajar",
+        "to": "Descer"
+      },
+      "prestamos.prestamos_saneamiento_simular": {
+        "from": "Simular pago",
+        "to": "Simular pagamento"
+      },
+      "prestamos.prestamos_saneamiento_simular_titulo": {
+        "from": "Simulación",
+        "to": "Simulação"
+      },
+      "prestamos.prestamos_saneamiento_simular_monto": {
+        "from": "Importe propuesto",
+        "to": "Valor proposto"
+      },
+      "prestamos.prestamos_saneamiento_simular_saldo": {
+        "from": "Saldo pendiente actual",
+        "to": "Saldo pendente atual"
+      },
+      "prestamos.prestamos_saneamiento_simular_proyectado": {
+        "from": "Saldo proyectado",
+        "to": "Saldo projetado"
+      },
+      "prestamos.prestamos_saneamiento_simular_meses": {
+        "from": "Meses restantes",
+        "to": "Meses restantes"
+      },
+      "prestamos.prestamos_saneamiento_simular_meses_ahorrados": {
+        "from": "Meses ahorrados",
+        "to": "Meses economizados"
+      },
+      "prestamos.prestamos_saneamiento_simular_intereses": {
+        "from": "Intereses ahorrados",
+        "to": "Juros economizados"
+      },
+      "prestamos.prestamos_saneamiento_no_calculable": {
+        "from": "No se puede calcular con la información disponible.",
+        "to": "Não é possível calcular com as informações disponíveis."
+      },
+      "prestamos.prestamos_saneamiento_no_calculable_sin_cronograma": {
+        "from": "Este préstamo no tiene cronograma de cuotas.",
+        "to": "Este empréstimo não tem cronograma de parcelas."
+      },
+      "prestamos.prestamos_saneamiento_no_calculable_cuotas_parciales": {
+        "from": "El importe no cancela cuotas completas.",
+        "to": "O valor não cobre parcelas completas."
+      },
+      "prestamos.prestamos_saneamiento_no_calculable_interes": {
+        "from": "El interés por cuota no está informado.",
+        "to": "Os juros por parcela não estão informados."
+      },
+      "prestamos.prestamos_saneamiento_simular_aviso": {
+        "from": "Simular no registra ningún movimiento.",
+        "to": "Simular não registra nada."
+      },
+      "prestamos.prestamos_saneamiento_progreso_titulo": {
+        "from": "Progreso",
+        "to": "Progresso"
+      },
+      "prestamos.prestamos_saneamiento_progreso_pagado": {
+        "from": "Pagado registrado",
+        "to": "Pagamentos registrados"
+      },
+      "prestamos.prestamos_saneamiento_progreso_pendiente": {
+        "from": "Saldo pendiente",
+        "to": "Saldo pendente"
+      },
+      "prestamos.prestamos_saneamiento_progreso_fin": {
+        "from": "Fin estimado",
+        "to": "Fim estimado"
+      },
+      "prestamos.prestamos_saneamiento_progreso_activos": {
+        "from": "{count} préstamos activos",
+        "to": "{count} empréstimos ativos"
+      },
+      "prestamos.prestamos_saneamiento_progreso_sin_datos": {
+        "from": "Todavía no hay deudas activas con progreso.",
+        "to": "Ainda não há dívidas ativas com progresso."
+      },
+      "prestamos.prestamos_saneamiento_progreso_sin_fecha_motivo": {
+        "from": "No todos los préstamos activos tienen cronograma, así que no hay una fecha de fin realista.",
+        "to": "Nem todos os empréstimos ativos têm cronograma, então não há uma data final realista."
+      },
+      "prestamos.prestamos_vinculos_abrir": {
+        "from": "Sugerencia por Vínculos",
+        "to": "Sugestão por Vínculos"
+      },
+      "prestamos.prestamos_vinculos_cerrar": {
+        "from": "Cerrar cuestionario",
+        "to": "Fechar questionário"
+      },
+      "prestamos.prestamos_vinculos_titulo": {
+        "from": "Cuestionario de Vínculos",
+        "to": "Questionário de Vínculos"
+      },
+      "prestamos.prestamos_vinculos_intro": {
+        "from": "Tres preguntas sobre las personas a las que les debés. Podés elegir varias o ninguna.",
+        "to": "Três perguntas sobre as pessoas a quem você deve. Você pode escolher várias ou nenhuma."
+      },
+      "prestamos.prestamos_vinculos_p1": {
+        "from": "¿A cuáles de estas personas les está generando una dificultad concreta que todavía no les hayas devuelto el dinero?",
+        "to": "Para quais destas pessoas não ter devolvido o dinheiro ainda está gerando uma dificuldade concreta?"
+      },
+      "prestamos.prestamos_vinculos_p2": {
+        "from": "¿Cuáles de estas personas ya te pidieron expresamente que les devuelvas el dinero?",
+        "to": "Quais destas pessoas já pediram explicitamente que você devolva o dinheiro?"
+      },
+      "prestamos.prestamos_vinculos_p3": {
+        "from": "¿Con cuáles de estas personas sentís que seguir demorando la devolución podría perjudicar significativamente la relación o su confianza en vos?",
+        "to": "Com quais destas pessoas você sente que continuar adiando a devolução poderia prejudicar significativamente a relação ou a confiança delas em você?"
+      },
+      "prestamos.prestamos_vinculos_peso": {
+        "from": "Suma {peso} puntos",
+        "to": "Vale {peso} pontos"
+      },
+      "prestamos.prestamos_vinculos_sin_personas": {
+        "from": "No hay acreedores personales para responder el cuestionario.",
+        "to": "Não há credores pessoais para responder."
+      },
+      "prestamos.prestamos_vinculos_aplicar": {
+        "from": "Calcular sugerencia",
+        "to": "Calcular sugestão"
+      },
+      "prestamos.prestamos_vinculos_aplicando": {
+        "from": "Calculando…",
+        "to": "Calculando…"
+      },
+      "prestamos.prestamos_vinculos_guardado": {
+        "from": "Cuestionario guardado. El plan ya usa esta prioridad.",
+        "to": "Questionário salvo. O plano já usa esta prioridade."
+      },
+      "prestamos.prestamos_vinculos_ayuda": {
+        "from": "Nunca modifica el préstamo ni mueve dinero.",
+        "to": "Nunca altera o empréstimo e nunca movimenta dinheiro."
+      },
+      "prestamos.prestamos_pareja_titulo": {
+        "from": "Pareja",
+        "to": "Casal"
+      },
+      "prestamos.prestamos_pareja_subtitulo": {
+        "from": "Dos cosas diferentes: los gastos compartidos y los préstamos entre ustedes. Nunca se restan entre sí.",
+        "to": "Duas coisas diferentes: despesas compartilhadas e empréstimos entre vocês. Nunca são compensados entre si."
+      },
+      "prestamos.prestamos_pareja_gastos_titulo": {
+        "from": "Gastos compartidos",
+        "to": "Despesas compartilhadas"
+      },
+      "prestamos.prestamos_pareja_gastos_debe": {
+        "from": "{deudor} le debe a {acreedor}",
+        "to": "{deudor} deve a {acreedor}"
+      },
+      "prestamos.prestamos_pareja_integrante": {
+        "from": "Integrante",
+        "to": "Membro"
+      },
+      "prestamos.prestamos_pareja_gastos_sin_hogar": {
+        "from": "Todavía no hay un hogar compartido, así que no hay gastos compartidos que mostrar. Podés vincular a tu pareja desde Familia.",
+        "to": "Ainda não existe uma casa compartilhada, então não há despesas compartilhadas para mostrar. Você pode vincular seu par em Família."
+      },
+      "prestamos.prestamos_pareja_gastos_sin_deuda": {
+        "from": "No hay deuda pendiente por gastos compartidos.",
+        "to": "Não há nada pendente de despesas compartilhadas."
+      },
+      "prestamos.prestamos_pareja_gastos_sin_moneda": {
+        "from": "El balance del hogar llega sin moneda informada: se muestra el importe sin símbolo en vez de suponer una.",
+        "to": "O saldo da casa chega sem moeda informada, então o valor é mostrado sem símbolo em vez de supor uma."
+      },
+      "prestamos.prestamos_pareja_prestamos_titulo": {
+        "from": "Préstamos entre ustedes",
+        "to": "Empréstimos entre vocês"
+      },
+      "prestamos.prestamos_pareja_prestamos_sin_hogar": {
+        "from": "Todavía no hay un hogar compartido, así que no hay préstamos entre ustedes que mostrar.",
+        "to": "Ainda não existe uma casa compartilhada, então não há empréstimos entre vocês para mostrar."
+      },
+      "prestamos.prestamos_pareja_prestamos_sin_datos": {
+        "from": "No hay préstamos pendientes entre ustedes.",
+        "to": "Não há empréstimos pendentes entre vocês."
+      },
+      "prestamos.prestamos_pareja_regla": {
+        "from": "«Gastos compartidos» y «Préstamos entre ustedes» son dos grupos separados: nunca se restan ni se suman entre sí.",
+        "to": "«Despesas compartilhadas» e «Empréstimos entre vocês» são dois grupos separados: nunca são subtraídos um do outro nem somados."
       },
       "bcg.menu_analisis": {
         "from": "Análisis",
@@ -18671,6 +21295,10 @@
       "inversiones.notif_categoria_en_rojo_mensaje": {
         "from": "Una categoría gastó más de lo que tenía asignado este ciclo.",
         "to": "Uma categoria gastou mais do que o atribuído neste ciclo."
+      },
+      "inversiones.notif_categoria_en_rojo_mensaje_nombres": {
+        "from": "En rojo: {categorias}. Gastó más de lo asignado este ciclo.",
+        "to": "No vermelho: {categorias}. Gastou mais do que o atribuído neste ciclo."
       },
       "inversiones.notif_ahorro_en_riesgo_titulo": {
         "from": "Ahorro en riesgo",
@@ -22476,6 +25104,10 @@
         "from": "Ese sobre ya no existe.",
         "to": "Esse envelope não existe mais."
       },
+      "sobres.error_sobre_movement_not_deletable": {
+        "from": "Este movimiento es de un sobre: se corrige o se quita desde Ahorro, no desde acá.",
+        "to": "Este movimento é de um envelope: corrija ou remova em Poupança, não aqui."
+      },
       "sobres.error_sobre_name_required": {
         "from": "Poné un nombre al sobre.",
         "to": "Dê um nome ao envelope."
@@ -22500,6 +25132,10 @@
         "from": "Sólo una reserva separada en la entidad puede generar rendimientos.",
         "to": "Somente uma reserva separada na instituição pode gerar rendimentos."
       },
+      "sobres.error_sobre_yield_only_on_contribution": {
+        "from": "Solo un aporte puede generar rendimiento.",
+        "to": "Só um aporte pode gerar rendimento."
+      },
       "sobres.error_sobre_wallet_not_found": {
         "from": "Esa billetera no existe o está inactiva.",
         "to": "Essa carteira não existe ou está inativa."
@@ -22523,6 +25159,10 @@
       "sobres.error_sobre_archived": {
         "from": "Ese sobre está archivado y no se puede modificar.",
         "to": "Esse envelope está arquivado e não pode ser alterado."
+      },
+      "sobres.error_sobre_not_archived": {
+        "from": "Ese sobre no está archivado.",
+        "to": "Esse envelope não está arquivado."
       },
       "sobres.error_sobre_rescue_empty": {
         "from": "Elegí al menos un origen para rescatar.",
@@ -22565,8 +25205,8 @@
         "to": "Minhas economias"
       },
       "sobres.sobres_subtitle": {
-        "from": "Tus sobres y proyectos, con el dinero separado o reservado sólo en ORD.",
-        "to": "Seus envelopes e projetos, com o dinheiro separado ou reservado apenas no ORD."
+        "from": "Tus sobres de ahorro y proyectos, con el dinero separado en cuentas especiales o virtualmente",
+        "to": "Seus envelopes de poupança e projetos, com o dinheiro separado em contas especiais ou virtualmente"
       },
       "sobres.sobres_new": {
         "from": "Nuevo sobre",
@@ -22593,16 +25233,16 @@
         "to": "Você ainda não arquivou nenhum envelope."
       },
       "sobres.sobres_archived_note": {
-        "from": "Los sobres archivados se consultan pero no se reactivan. Para volver a ahorrar con ese objetivo, creá un sobre nuevo.",
-        "to": "Os envelopes arquivados são somente leitura e não podem ser reativados. Para voltar a economizar com esse objetivo, crie um envelope novo."
+        "from": "Los sobres archivados no se suman al total. Podés desarchivar cualquiera para volver a ahorrar en él.",
+        "to": "Os envelopes arquivados não entram no total. Você pode desarquivar qualquer um para voltar a economizar nele."
       },
       "sobres.sobres_empty_title": {
         "from": "Todavía no tenés sobres",
         "to": "Ainda não há envelopes"
       },
       "sobres.sobres_empty_text": {
-        "from": "Un sobre es una reserva con nombre. Podés ponerle meta y fecha, o dejar que crezca sola.",
-        "to": "Um envelope é uma reserva com nome. Você pode dar uma meta e uma data, ou deixar crescer sozinho."
+        "from": "Un sobre de ahorro es una reserva con nombre. Podés ponerle una meta de dinero y fecha límite, o dejar que crezca solo.",
+        "to": "Um envelope de poupança é uma reserva com nome. Você pode dar uma meta de dinheiro e um prazo, ou deixar crescer sozinho."
       },
       "sobres.sobres_saved": {
         "from": "Ahorrado",
@@ -22708,21 +25348,37 @@
         "from": "Moneda",
         "to": "Moeda"
       },
+      "sobres.sobres_icon": {
+        "from": "Icono",
+        "to": "Ícone"
+      },
       "sobres.sobres_target_amount": {
         "from": "Meta (opcional)",
         "to": "Meta (opcional)"
       },
       "sobres.sobres_target_date": {
-        "from": "Fecha objetivo",
-        "to": "Data alvo"
+        "from": "Fecha límite (opcional)",
+        "to": "Prazo (opcional)"
+      },
+      "sobres.sobres_remove_date": {
+        "from": "Quitar fecha límite",
+        "to": "Remover prazo"
+      },
+      "sobres.sobres_suggest_monthly": {
+        "from": "Sugerido mensual: {monto}",
+        "to": "Sugerido mensal: {monto}"
+      },
+      "sobres.sobres_suggest_weekly": {
+        "from": "Sugerido semanal: {monto}",
+        "to": "Sugerido semanal: {monto}"
       },
       "sobres.sobres_target_date_needs_goal": {
         "from": "Primero definí cuánto querés juntar.",
         "to": "Primeiro defina quanto quer juntar."
       },
       "sobres.sobres_target_hint": {
-        "from": "La meta y la fecha son opcionales e independientes.",
-        "to": "A meta e a data são opcionais e independentes."
+        "from": "La meta es opcional. La fecha necesita una meta.",
+        "to": "A meta é opcional. A data precisa de uma meta."
       },
       "sobres.sobres_clear": {
         "from": "Quitar",
@@ -22737,12 +25393,12 @@
         "to": "Onde está esse dinheiro?"
       },
       "sobres.sobres_modality_real": {
-        "from": "Lo separé en la entidad",
-        "to": "Separei na instituição"
+        "from": "Separado fuera: sale de la billetera",
+        "to": "Separado fora: sai da carteira"
       },
       "sobres.sobres_modality_virtual": {
-        "from": "Sigue en mi cuenta; lo reservo en ORD",
-        "to": "Continua na minha conta; reservo no ORD"
+        "from": "Reservado en ORD: sigue en la billetera, pero deja de estar disponible",
+        "to": "Reservado no ORD: fica na carteira, mas deixa de estar disponível"
       },
       "sobres.sobres_modality_real_short": {
         "from": "Separado",
@@ -22803,6 +25459,10 @@
       "sobres.sobres_rescue": {
         "from": "Rescatar",
         "to": "Resgatar"
+      },
+      "sobres.sobres_rescue_all": {
+        "from": "Rescatar todo",
+        "to": "Resgatar tudo"
       },
       "sobres.sobres_rescue_title": {
         "from": "Rescatar de {nombre}",
@@ -22872,10 +25532,6 @@
         "from": "Corregir movimiento",
         "to": "Corrigir movimento"
       },
-      "sobres.sobres_correct_hint": {
-        "from": "Se corrige el movimiento original: no se agrega uno nuevo.",
-        "to": "O movimento original é corrigido: nenhum novo é adicionado."
-      },
       "sobres.sobres_correct_success": {
         "from": "Movimiento corregido",
         "to": "Movimento corrigido"
@@ -22921,12 +25577,20 @@
         "to": "Arquivar o envelope"
       },
       "sobres.sobres_archive_confirm_message": {
-        "from": "El sobre pasa al histórico y no se puede reactivar. Sus movimientos se conservan.",
-        "to": "O envelope vai para o histórico e não pode ser reativado. Seus movimentos são mantidos."
+        "from": "El sobre pasa al histórico y deja de sumarse al total. Sus movimientos se conservan, y podés desarchivarlo cuando quieras.",
+        "to": "O envelope vai para o histórico e deixa de entrar no total. Seus movimentos são mantidos, e você pode desarquivá-lo quando quiser."
       },
       "sobres.sobres_archived_toast": {
         "from": "Sobre archivado.",
         "to": "Envelope arquivado."
+      },
+      "sobres.sobres_unarchive": {
+        "from": "Desarchivar",
+        "to": "Desarquivar"
+      },
+      "sobres.sobres_unarchived_toast": {
+        "from": "Sobre desarchivado.",
+        "to": "Envelope desarquivado."
       },
       "sobres.sobres_yield_register": {
         "from": "Registrar rendimiento",
@@ -22945,8 +25609,8 @@
         "to": "Este envelope não tem uma reserva separada que gere rendimentos."
       },
       "sobres.sobres_yield_amount": {
-        "from": "Rendimiento acreditado",
-        "to": "Rendimento creditado"
+        "from": "Importe del rendimiento",
+        "to": "Valor do rendimento"
       },
       "sobres.sobres_yield_hint": {
         "from": "Se registra como ingreso «Rendimientos de ahorros» con la fecha de hoy.",
@@ -22963,6 +25627,190 @@
       "sobres.sobres_free_note": {
         "from": "Podés ver, rescatar, corregir y archivar, pero no crear sobres ni aportar.",
         "to": "Você pode ver, resgatar, corrigir e arquivar, mas não criar envelopes nem aportar."
+      },
+      "dev_camera_batch.dev_camera_batch_title": {
+        "from": "Cámara en lote (prueba aislada)",
+        "to": "Câmera em lote (teste isolado)"
+      },
+      "dev_camera_batch.dev_camera_batch_intro": {
+        "from": "Prueba aislada y sin conexión con el flujo de producto: mide si una cámara web persistente puede sacar 4 fotos consecutivas con resolución y calidad suficientes para OCR, y además manda las fotos juntas al OCR real como un solo ticket (un solo job) para leer la respuesta tal cual llega. No guarda nada, no escribe en el historial de OCR ni toca tus movimientos.",
+        "to": "Teste isolado e sem ligação com o fluxo do produto: mede se uma câmera web persistente consegue tirar 4 fotos consecutivas com resolução e qualidade suficientes para OCR, e além disso envia as fotos juntas ao OCR real como um único ticket (um único job) para ler a resposta como ela chega. Não armazena nada, não escreve no histórico do OCR e não toca nos seus movimentos."
+      },
+      "dev_camera_batch.dev_camera_batch_btn_open_camera": {
+        "from": "Abrir cámara",
+        "to": "Abrir câmera"
+      },
+      "dev_camera_batch.dev_camera_batch_btn_capture": {
+        "from": "Capturar",
+        "to": "Capturar"
+      },
+      "dev_camera_batch.dev_camera_batch_btn_done": {
+        "from": "Listo",
+        "to": "Concluir"
+      },
+      "dev_camera_batch.dev_camera_batch_btn_delete": {
+        "from": "Borrar",
+        "to": "Excluir"
+      },
+      "dev_camera_batch.dev_camera_batch_btn_copy_report": {
+        "from": "Copiar reporte",
+        "to": "Copiar relatório"
+      },
+      "dev_camera_batch.dev_camera_batch_btn_send_ticket": {
+        "from": "Enviar {count} fotos a OCR",
+        "to": "Enviar {count} fotos para OCR"
+      },
+      "dev_camera_batch.dev_camera_batch_label_stream_resolution": {
+        "from": "Resolución del stream",
+        "to": "Resolução do stream"
+      },
+      "dev_camera_batch.dev_camera_batch_label_capture_dimensions": {
+        "from": "Dimensiones de la captura",
+        "to": "Dimensões da captura"
+      },
+      "dev_camera_batch.dev_camera_batch_label_blob_size": {
+        "from": "Tamaño del blob",
+        "to": "Tamanho do blob"
+      },
+      "dev_camera_batch.dev_camera_batch_label_errors": {
+        "from": "Errores",
+        "to": "Erros"
+      },
+      "dev_camera_batch.dev_camera_batch_label_platform": {
+        "from": "Plataforma",
+        "to": "Plataforma"
+      },
+      "dev_camera_batch.dev_camera_batch_label_video": {
+        "from": "Video en pantalla",
+        "to": "Vídeo na tela"
+      },
+      "dev_camera_batch.dev_camera_batch_label_photos": {
+        "from": "Fotos: {count}",
+        "to": "Fotos: {count}"
+      },
+      "dev_camera_batch.dev_camera_batch_label_job_id": {
+        "from": "Job ID",
+        "to": "Job ID"
+      },
+      "dev_camera_batch.dev_camera_batch_label_ocr_job": {
+        "from": "Job del ticket",
+        "to": "Job do ticket"
+      },
+      "dev_camera_batch.dev_camera_batch_label_ocr_status": {
+        "from": "Estado OCR",
+        "to": "Status do OCR"
+      },
+      "dev_camera_batch.dev_camera_batch_label_ocr_issues": {
+        "from": "Issues del OCR",
+        "to": "Issues do OCR"
+      },
+      "dev_camera_batch.dev_camera_batch_label_ocr_result": {
+        "from": "Resultado OCR",
+        "to": "Resultado do OCR"
+      },
+      "dev_camera_batch.dev_camera_batch_label_ocr_files": {
+        "from": "Fotos en este envío",
+        "to": "Fotos neste envio"
+      },
+      "dev_camera_batch.dev_camera_batch_label_error_code": {
+        "from": "Código de error",
+        "to": "Código de erro"
+      },
+      "dev_camera_batch.dev_camera_batch_label_message_code": {
+        "from": "Message code",
+        "to": "Message code"
+      },
+      "dev_camera_batch.dev_camera_batch_label_http_status": {
+        "from": "HTTP",
+        "to": "HTTP"
+      },
+      "dev_camera_batch.dev_camera_batch_label_duplicate": {
+        "from": "Duplicado",
+        "to": "Duplicado"
+      },
+      "dev_camera_batch.dev_camera_batch_msg_cap_reached": {
+        "from": "Llegaste al tope de fotos. Borrá una para sacar otra.",
+        "to": "Você chegou ao limite de fotos. Exclua uma para tirar outra."
+      },
+      "dev_camera_batch.dev_camera_batch_label_shift": {
+        "from": "Desplazamiento vertical",
+        "to": "Deslocamento vertical"
+      },
+      "dev_camera_batch.dev_camera_batch_msg_shift_waiting": {
+        "from": "Capturá la primera foto",
+        "to": "Tire a primeira foto"
+      },
+      "dev_camera_batch.dev_camera_batch_msg_shift_keep_going": {
+        "from": "Seguí bajando el recibo hasta el 70%",
+        "to": "Continue descendo o recibo até chegar a 70%"
+      },
+      "dev_camera_batch.dev_camera_batch_msg_shift_ready": {
+        "from": "Posición correcta: ya podés capturar",
+        "to": "Posição correta: já pode capturar"
+      },
+      "dev_camera_batch.dev_camera_batch_msg_no_camera": {
+        "from": "Este navegador no expone getUserMedia: no hay cámara disponible.",
+        "to": "Este navegador não expõe getUserMedia: nenhuma câmera disponível."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_permission_denied": {
+        "from": "Permiso de cámara denegado. Habilitalo en el navegador y volvé a intentar.",
+        "to": "Permissão de câmera negada. Habilite no navegador e tente novamente."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_camera_error": {
+        "from": "No se pudo abrir la cámara.",
+        "to": "Não foi possível abrir a câmera."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_copied": {
+        "from": "Reporte copiado.",
+        "to": "Relatório copiado."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_copy_failed": {
+        "from": "No se pudo copiar al portapapeles. Seleccioná el texto del reporte y copialo a mano.",
+        "to": "Não foi possível copiar para a área de transferência. Selecione o texto do relatório e copie manualmente."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_ocr_no_session": {
+        "from": "No hay sesión activa. Iniciá sesión y volvé a intentar.",
+        "to": "Não há sessão ativa. Entre na conta e tente novamente."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_ocr_no_context": {
+        "from": "Todavía no se pudo armar el contexto de tu ORD. Esperá un instante y volvé a intentar.",
+        "to": "Ainda não foi possível montar o contexto do seu ORD. Aguarde um instante e tente novamente."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_ocr_done": {
+        "from": "Dejamos de consultar. El trabajo sigue en el servidor: el estado de arriba es el último que recibimos.",
+        "to": "Paramos de consultar. O trabalho continua no servidor: o status acima é o último que recebemos."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_ocr_single_job": {
+        "from": "Todas las fotos viajan juntas como un solo ticket: un solo job para el lote completo.",
+        "to": "Todas as fotos viajam juntas como um único ticket: um único job para o lote completo."
+      },
+      "dev_camera_batch.dev_camera_batch_msg_ocr_result_trimmed": {
+        "from": "JSON recortado a {count} de {total} caracteres para que el reporte se pueda leer.",
+        "to": "JSON reduzido para {count} de {total} caracteres para manter o relatório legível."
+      },
+      "dev_camera_batch.dev_camera_batch_status_idle": {
+        "from": "Cámara cerrada",
+        "to": "Câmera fechada"
+      },
+      "dev_camera_batch.dev_camera_batch_status_live": {
+        "from": "Cámara en vivo",
+        "to": "Câmera ao vivo"
+      },
+      "dev_camera_batch.dev_camera_batch_status_sending": {
+        "from": "Enviando al OCR",
+        "to": "Enviando para o OCR"
+      },
+      "dev_camera_batch.dev_camera_batch_status_polling": {
+        "from": "Consultando estado",
+        "to": "Consultando status"
+      },
+      "dev_camera_batch.dev_camera_batch_status_sent": {
+        "from": "Enviado",
+        "to": "Enviado"
+      },
+      "dev_camera_batch.dev_camera_batch_status_failed": {
+        "from": "Falló el envío",
+        "to": "Falha no envio"
       }
     }
   }

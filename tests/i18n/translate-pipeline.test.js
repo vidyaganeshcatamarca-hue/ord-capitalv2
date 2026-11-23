@@ -71,7 +71,9 @@ test('the pipeline turns the master into a translated dictionary', () => {
     // 14 since round 10: the `sobres` section was added after `tour`.
     // 15 since the loans rebuild: the `prestamos` section carries the module's
     // RPC contract errors.
-    assert.equal(Object.keys(manifest).length, 15, 'the master has fifteen sections')
+    // 16 since the three-branch integration: `dev_camera_batch` carries the
+    // measurement spike of the camera work.
+    assert.equal(Object.keys(manifest).length, 16, 'the master has sixteen sections')
     const totalKeys = Object.values(manifest).flatMap((s) => Object.values(s)).length
     assert.ok(totalKeys > 2000, `the master has ${totalKeys} keys`)
 
