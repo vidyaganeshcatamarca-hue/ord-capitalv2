@@ -1086,7 +1086,13 @@ export function PresupuestosPage() {
     setShowDetalleSheet(true)
   }
 
-  const ejecutarAsignacion = async (monto: number) => {
+  /**
+   * `monto` es el límite RESULTANTE que se envía al servidor (la función reemplaza el
+   * importe del rubro, no lo suma). `agregado` es lo que esta operación suma de verdad, y
+   * sólo se usa para el mensaje de éxito: decir «1.114.166 asignados» cuando 106.246 ya
+   * estaban asignados le hace creer al usuario que asignó más de lo que asignó.
+   */
+  const ejecutarAsignacion = async (monto: number, agregado?: number) => {
     if (!sobreSeleccionado) return
     if (guardandoAsignacion) return
     // Guarda de fondo: aunque un botón se escape, un ciclo cerrado no escribe.
@@ -1111,8 +1117,18 @@ export function PresupuestosPage() {
       // Tanda 4 telemetry: only explicit user saves count (plan §3 Fase 8 —
       // avoids false positives from system UPDATEs)
       telemetry.track('budget_adjusted', {}, TELEMETRY_PRIORITY.MEDIUM)
+      const nombre = t(sobreSeleccionado.nombre_categoria)
+      const sumaReal = typeof agregado === 'number' && Number.isFinite(agregado) ? agregado : null
+      // Sin diferencia real entre lo sumado y el total, el mensaje corto ya es inequívoco.
+      const hayDelta = sumaReal !== null && Math.abs(sumaReal - monto) >= 0.5
       showToast(
-        `${formatMonto(monto)} ${t('toast_assigned_to')} ${t(sobreSeleccionado.nombre_categoria)}`,
+        hayDelta
+          ? t('toast_assigned_to_total', {
+              agregado: formatMonto(sumaReal as number),
+              sobre: nombre,
+              total: formatMonto(monto),
+            })
+          : `${formatMonto(monto)} ${t('toast_assigned_to')} ${nombre}`,
         'success',
       )
       setShowAsignarSheet(false)
@@ -1197,7 +1213,8 @@ export function PresupuestosPage() {
       // el arrastre: con el arrastre adentro la suma superaba el techo del servidor y la
       // operación se rechazaba por diferencia exactamente igual al arrastre.
       Number(montoAsignable.monto_previo ?? 0) + Number(montoAsignable.asignable)
-    await ejecutarAsignacion(nuevoLimite)
+    // El desglose mostró `asignable` como «se asigna en total»: ése es lo que se suma.
+    await ejecutarAsignacion(nuevoLimite, Number(montoAsignable.asignable))
   }
 
   const handleLlenarHueco = async () => {
@@ -1219,7 +1236,7 @@ export function PresupuestosPage() {
     
     // El backend REEMPLAZA el límite, por lo que debemos sumar el monto al límite actual.
     const nuevoLimite = Number(sobreSeleccionado.monto_asignado ?? 0) + monto;
-    await ejecutarAsignacion(nuevoLimite)
+    await ejecutarAsignacion(nuevoLimite, monto)
   }
 
   // Smart assignment options: set the budget to a reference amount (previous
@@ -1251,7 +1268,7 @@ export function PresupuestosPage() {
       return
     }
     const nuevoLimite = Number(sobreSeleccionado?.monto_asignado ?? 0) + montoAAgregar;
-    await ejecutarAsignacion(nuevoLimite)
+    await ejecutarAsignacion(nuevoLimite, montoAAgregar)
   }
 
   // ─── TRANSFERIR ENTRE SOBRES ──────────────────────────────────────────────

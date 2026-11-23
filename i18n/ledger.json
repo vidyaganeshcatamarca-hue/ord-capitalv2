@@ -1686,6 +1686,10 @@
         "from": "asignado a",
         "to": "assigned to"
       },
+      "errors.toast_assigned_to_total": {
+        "from": "{agregado} sumados a {sobre} · total ahora {total}",
+        "to": "{agregado} added to {sobre} · total now {total}"
+      },
       "errors.toast_transfer_envelope_success": {
         "from": "✅ Transferencia realizada entre sobres",
         "to": "✅ Transfer between envelopes completed"
@@ -13159,6 +13163,10 @@
       "errors.toast_assigned_to": {
         "from": "asignado a",
         "to": "atribuído a"
+      },
+      "errors.toast_assigned_to_total": {
+        "from": "{agregado} sumados a {sobre} · total ahora {total}",
+        "to": "{agregado} somados a {sobre} · total agora {total}"
       },
       "errors.toast_transfer_envelope_success": {
         "from": "✅ Transferencia realizada entre sobres",

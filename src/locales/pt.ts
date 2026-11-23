@@ -437,6 +437,7 @@ export const errors = {
   toast_insufficient_base_zero: "Você não pode atribuir mais. Disponível: {monto}",
   toast_assign_budget_error: "Erro ao atribuir o orçamento",
   toast_assigned_to: "atribuído a",
+  toast_assigned_to_total: "{agregado} somados a {sobre} · total agora {total}",
   toast_transfer_envelope_success: "✅ Transferência realizada entre envelopes",
   toast_insufficient_funds_source_envelope: "Fundos insuficientes no envelope de origem",
   toast_transfer_envelope_error: "Erro ao transferir entre envelopes",
