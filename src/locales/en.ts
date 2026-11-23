@@ -2231,6 +2231,7 @@ export const inversiones = {
   error_budget_child_over_parent: "Does not fit: the group has {techo} and {repartido} is already allocated. This category has {disponible} left.",
   error_budget_parent_below_children: "You cannot lower the group below what is allocated. It has {repartido}: cut {recortar} first.",
   error_budget_child_holds_no_money: "Money is assigned to the parent category. A subcategory gets a spending ceiling, not assigned money.",
+  error_transfer_only_base_zero: "Transfers only exist in Base Cero. In freedom mode amounts are edited by hand.",
   // Stage 3: the ceiling is optional and is edited from the subcategory row. The
   // parent category has no ceiling; its reference is the money assigned to it.
   budget_ceiling_sheet_title: "Spending ceiling",

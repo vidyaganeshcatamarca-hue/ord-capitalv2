@@ -2493,6 +2493,7 @@ export const inversiones = {
   error_budget_child_over_parent: "No entra: el grupo tiene {techo} y ya hay {repartido} repartido. A este rubro le quedan {disponible}.",
   error_budget_parent_below_children: "No podés bajar el grupo por debajo de lo repartido. Tiene {repartido}: recortá {recortar} antes.",
   error_budget_child_holds_no_money: "La plata se asigna al rubro padre. A la subcategoría se le pone un techo de gasto, no plata asignada.",
+  error_transfer_only_base_zero: "Las transferencias solo existen en Base Cero. En libertad los importes se editan a mano.",
   // Etapa 3: el techo es opcional y se edita desde la fila de la subcategoría. El
   // rubro padre no lleva techo, su referencia es la plata que tiene asignada.
   budget_ceiling_sheet_title: "Techo de gasto",

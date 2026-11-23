@@ -2231,6 +2231,7 @@ export const inversiones = {
   error_budget_child_over_parent: "Não entra: o grupo tem {techo} e já há {repartido} distribuído. A esta categoria restam {disponible}.",
   error_budget_parent_below_children: "Não pode baixar o grupo abaixo do que está distribuído. Tem {repartido}: reduza {recortar} antes.",
   error_budget_child_holds_no_money: "O dinheiro é atribuído à categoria pai. A subcategoria recebe um teto de gasto, não dinheiro atribuído.",
+  error_transfer_only_base_zero: "As transferências só existem no Base Cero. No modo liberdade os valores são editados à mão.",
   // Etapa 3: o teto é opcional e é editado a partir da linha da subcategoria. A
   // categoria pai não tem teto; sua referência é o dinheiro atribuído a ela.
   budget_ceiling_sheet_title: "Teto de gasto",

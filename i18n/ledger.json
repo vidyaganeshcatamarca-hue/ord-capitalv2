@@ -8654,6 +8654,10 @@
         "from": "La plata se asigna al rubro padre. A la subcategoría se le pone un techo de gasto, no plata asignada.",
         "to": "Money is assigned to the parent category. A subcategory gets a spending ceiling, not assigned money."
       },
+      "inversiones.error_transfer_only_base_zero": {
+        "from": "Las transferencias solo existen en Base Cero. En libertad los importes se editan a mano.",
+        "to": "Transfers only exist in Base Cero. In freedom mode amounts are edited by hand."
+      },
       "inversiones.budget_ceiling_sheet_title": {
         "from": "Techo de gasto",
         "to": "Spending ceiling"
@@ -20131,6 +20135,10 @@
       "inversiones.error_budget_child_holds_no_money": {
         "from": "La plata se asigna al rubro padre. A la subcategoría se le pone un techo de gasto, no plata asignada.",
         "to": "O dinheiro é atribuído à categoria pai. A subcategoria recebe um teto de gasto, não dinheiro atribuído."
+      },
+      "inversiones.error_transfer_only_base_zero": {
+        "from": "Las transferencias solo existen en Base Cero. En libertad los importes se editan a mano.",
+        "to": "As transferências só existem no Base Cero. No modo liberdade os valores são editados à mão."
       },
       "inversiones.budget_ceiling_sheet_title": {
         "from": "Techo de gasto",
