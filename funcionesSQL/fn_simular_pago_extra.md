@@ -6,6 +6,7 @@ CREATE OR REPLACE FUNCTION public.fn_simular_pago_extra(p_deuda_id bigint, p_mon
 AS $function$
 DECLARE
     v_user_id bigint;
+    v_hogar_id bigint;
     v_saldo_actual numeric;
     v_tna numeric;
     v_cuota numeric;
@@ -14,10 +15,12 @@ DECLARE
     v_ahorro_intereses numeric;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+
+    SELECT hogar_id INTO v_hogar_id FROM public.p_hogar_participantes WHERE user_id = v_user_id;
     IF v_user_id IS NULL THEN RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}'; END IF;
 
     SELECT saldo_actual, tasa_anual_tna, cuota_mensual INTO v_saldo_actual, v_tna, v_cuota
-    FROM p_prestamos WHERE prestamo_id = p_deuda_id AND user_id = v_user_id;
+    FROM p_prestamos WHERE prestamo_id = p_deuda_id AND (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id));
 
     IF v_saldo_actual IS NULL THEN RAISE EXCEPTION '{"key": "error_debt_not_found", "params": {}}'; END IF;
     IF p_monto_extra <= 0 THEN RAISE EXCEPTION '{"key": "error_extra_payment_zero", "params": {}}'; END IF;

@@ -31,6 +31,14 @@ start_info/
 !start_info/
 start_info/*
 !start_info/indice de funciones.md
+# Esquema desplegado: documentacion que debe viajar con el repo y estar
+# disponible en los tres worktrees. Contiene solo estructura (tablas, columnas,
+# tipos, defaults). Nunca credenciales ni datos.
+!start_info/tablas todas.md
+!start_info/relaciones_tablas.md
+# Respaldos de reversion: deben viajar con el repo o no son respaldos.
+!start_info/rollback_*.sql
+
 supabase/.temp/
 testeo/
 tests/
@@ -249,3 +257,12 @@ tests/configuracion/*
 !tests/presupuestos/ajustes-historicos.test.js
 !tests/sql/bloqueF_recategorizacion.sql
 !tests/sql/bloqueG_ciclo.sql
+
+# Tests del modulo de prestamos y saneamiento.
+# Va al final a proposito: en .gitignore gana la ultima regla que coincide, y la
+# seccion tests/* de arriba volveria a ignorar todo lo que se agregue antes.
+!tests/prestamos/
+tests/prestamos/*
+!tests/prestamos/*.test.js
+!tests/prestamos/*.mjs
+!tests/prestamos/*.sql

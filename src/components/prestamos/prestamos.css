@@ -1,0 +1,1098 @@
+/* ============================================
+   Módulo Préstamos (T20 / T24)
+   Mobile first: 390px es el ancho de referencia. Todo se apila en una columna
+   y las filas de metadatos usan flex-wrap para no desbordar.
+   ============================================ */
+
+.prestamos-page {
+  max-width: 760px;
+  margin: 0 auto;
+  /* Respeta el notch arriba y la barra inferior abajo: no pisa los tokens de
+     `.page`, sólo los usa (la pantalla es mobile-first, 390px de referencia). */
+  padding: var(--safe-top) 16px calc(var(--nav-clearance) + 8px);
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+@media (min-width: 768px) {
+  .prestamos-page {
+    margin-left: var(--sidebar-width);
+    margin-right: auto;
+  }
+}
+
+.prestamos-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* El botón de alta no empuja al título fuera de la pantalla en 390px. */
+.prestamos-header > div {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.prestamos-header .btn {
+  flex: 0 0 auto;
+}
+
+.prestamos-header h1 {
+  font-size: calc(24px * var(--font-scale));
+  margin: 4px 0 0;
+}
+
+.prestamos-kicker {
+  display: block;
+  font-size: calc(12px * var(--font-scale));
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--mint);
+  font-weight: 700;
+}
+
+.prestamos-hint {
+  margin: 6px 0 0;
+  color: var(--text-3);
+  font-size: calc(13px * var(--font-scale));
+  line-height: 1.4;
+}
+
+.prestamos-nota {
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+  line-height: 1.45;
+  margin: 12px 0 0;
+}
+
+.prestamos-loading-mini {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 0;
+}
+
+.prestamos-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  padding: 32px 12px;
+  color: var(--text-3);
+}
+
+.prestamos-empty-icon {
+  font-size: calc(40px * var(--font-scale));
+}
+
+/* ─── Toolbar y volver ─── */
+
+.prestamos-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.prestamos-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--mint);
+  font-size: calc(14px * var(--font-scale));
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.prestamos-back:hover {
+  opacity: 0.8;
+}
+
+.prestamos-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-3);
+  font-size: calc(13px * var(--font-scale));
+  cursor: pointer;
+}
+
+/* ─── Resumen de saldos ─── */
+
+.prestamos-resumen {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.prestamos-bloque {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.prestamos-bloque-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.prestamos-bloque-head h2 {
+  font-size: calc(16px * var(--font-scale));
+  margin: 0;
+}
+
+.prestamos-bloque-link {
+  background: transparent;
+  border: none;
+  color: var(--mint);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.prestamos-moneda-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prestamos-moneda-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.prestamos-moneda-row:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.prestamos-moneda-chip {
+  flex: 0 0 auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px 8px;
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+}
+
+.prestamos-moneda-datos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.prestamos-moneda-monto {
+  font-size: calc(18px * var(--font-scale));
+  font-family: var(--font-display);
+  color: var(--text);
+  word-break: break-word;
+}
+
+.prestamos-moneda-conteo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: right;
+  color: var(--text-3);
+  font-size: calc(11px * var(--font-scale));
+}
+
+/* ─── Acceso a las cinco secciones ─── */
+
+.prestamos-secciones {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.prestamos-seccion {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.prestamos-seccion:hover {
+  border-color: var(--border-light);
+  background: var(--surface-2);
+}
+
+.prestamos-seccion-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  border-radius: 10px;
+  background: var(--mint-dim);
+  color: var(--mint);
+}
+
+.prestamos-seccion-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.prestamos-seccion-texto strong {
+  font-size: calc(15px * var(--font-scale));
+}
+
+.prestamos-seccion-texto span {
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+}
+
+/* ─── Lista de préstamos ─── */
+
+.prestamos-lista,
+.prestamos-plan-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prestamos-item {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.prestamos-item-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.prestamos-item-info {
+  min-width: 0;
+}
+
+.prestamos-item-titulo {
+  font-size: calc(15px * var(--font-scale));
+  margin: 0;
+  color: var(--text);
+  word-break: break-word;
+}
+
+.prestamos-item-saldo {
+  display: block;
+  font-family: var(--font-display);
+  font-size: calc(22px * var(--font-scale));
+  word-break: break-word;
+}
+
+.prestamos-saldo-label {
+  display: block;
+  color: var(--text-3);
+  font-size: calc(11px * var(--font-scale));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.prestamos-item-meta {
+  margin: 8px 0 0;
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+  line-height: 1.45;
+}
+
+.prestamos-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.prestamos-item-actions .btn {
+  flex: 1 1 auto;
+  min-width: 130px;
+}
+
+/* ─── Badges de estado (llegan calculados del backend) ─── */
+
+.prestamos-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 3px 9px;
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.prestamos-badge.is-vencido {
+  background: var(--coral-dim);
+  color: var(--coral-ink);
+}
+
+.prestamos-badge.is-proximo {
+  background: var(--amber-dim);
+  color: var(--amber-ink);
+}
+
+.prestamos-badge.is-al-dia {
+  background: var(--mint-dim);
+  color: var(--mint-ink);
+}
+
+.prestamos-badge.is-saldado {
+  background: var(--surface-3);
+  color: var(--text-2);
+}
+
+.prestamos-badge.is-sin-fecha {
+  background: var(--surface-2);
+  color: var(--text-3);
+}
+
+.prestamos-badge.is-empate {
+  background: var(--purple-dim);
+  color: var(--text-2);
+}
+
+/* ─── Detalle ─── */
+
+.prestamos-detalle {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.prestamos-detalle-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.prestamos-detalle-header h2 {
+  font-size: calc(20px * var(--font-scale));
+  margin: 0;
+}
+
+.prestamos-saldos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.prestamos-saldo-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.prestamos-saldo-valor {
+  font-family: var(--font-display);
+  font-size: calc(18px * var(--font-scale));
+  word-break: break-word;
+}
+
+.prestamos-subtitulo {
+  font-size: calc(14px * var(--font-scale));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-3);
+  margin: 6px 0 0;
+}
+
+.prestamos-cuotas,
+.prestamos-pagos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prestamos-cuota-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: calc(13px * var(--font-scale));
+}
+
+.prestamos-cuota-num {
+  font-weight: 600;
+  flex: 1 1 auto;
+}
+
+.prestamos-cuota-monto {
+  font-family: var(--font-display);
+}
+
+.prestamos-cuota-fecha {
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+}
+
+.prestamos-pago-row {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.prestamos-pago-linea {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: calc(13px * var(--font-scale));
+}
+
+.prestamos-pago-monto {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.prestamos-pago-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+}
+
+/* ─── Modal de pago / cobro ─── */
+
+.prestamos-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.prestamos-modal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 420px;
+  max-height: 90vh;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl, 0 24px 60px rgba(0, 0, 0, 0.45));
+}
+
+.prestamos-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.prestamos-modal-header h2 {
+  font-size: calc(18px * var(--font-scale));
+  margin: 0;
+}
+
+.prestamos-modal-sub {
+  margin: 4px 0 0;
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+}
+
+.prestamos-modal-close {
+  background: transparent;
+  border: 0;
+  color: var(--text-2);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+}
+
+.prestamos-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  overflow-y: auto;
+}
+
+.prestamos-modal-actions {
+  display: flex;
+  gap: 10px;
+  padding: 14px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.prestamos-modal-actions .btn {
+  flex: 1 1 auto;
+}
+
+.prestamos-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prestamos-field label {
+  color: var(--text-2);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+}
+
+.prestamos-field input,
+.prestamos-field select,
+.prestamos-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: calc(15px * var(--font-scale));
+  font-family: var(--font-body);
+  padding: 10px 12px;
+}
+
+.prestamos-field input:focus,
+.prestamos-field select:focus,
+.prestamos-input:focus {
+  outline: none;
+  border-color: var(--mint);
+}
+
+.prestamos-field-hint {
+  color: var(--text-3);
+  font-size: calc(11px * var(--font-scale));
+  line-height: 1.4;
+}
+
+.prestamos-error {
+  margin: 0;
+  color: var(--coral-ink);
+  font-size: calc(13px * var(--font-scale));
+}
+
+/* ─── Calendario ─── */
+
+.prestamos-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.prestamos-chip {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-2);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.prestamos-chip-sub {
+  color: var(--text-3);
+  font-size: calc(10px * var(--font-scale));
+  font-weight: 400;
+}
+
+.prestamos-chip.is-activo {
+  background: var(--mint-dim);
+  border-color: var(--mint);
+  color: var(--mint-ink);
+}
+
+.prestamos-calendario {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.prestamos-dia-fecha {
+  font-size: calc(13px * var(--font-scale));
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-3);
+  margin: 0 0 8px;
+}
+
+.prestamos-dia-lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prestamos-evento {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.prestamos-evento-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.prestamos-evento-nombre {
+  font-size: calc(14px * var(--font-scale));
+  word-break: break-word;
+}
+
+.prestamos-evento-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.prestamos-evento-monto {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  text-align: right;
+  flex: 0 0 auto;
+}
+
+.prestamos-evento-monto strong {
+  font-family: var(--font-display);
+  font-size: calc(14px * var(--font-scale));
+}
+
+/* «No currency» note: an amount whose row carries no currency never looks like money
+   of some other currency (S26). */
+.prestamos-evento-monto-nota {
+  font-size: calc(10px * var(--font-scale));
+  line-height: 1.2;
+  color: var(--text-3);
+  max-width: 12ch;
+}
+
+.prestamos-evento-link {
+  background: transparent;
+  border: none;
+  color: var(--mint);
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ─── Saneamiento: estrategias y plan ─── */
+
+.prestamos-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.prestamos-estrategias {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prestamos-estrategia {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.prestamos-estrategia strong {
+  font-size: calc(14px * var(--font-scale));
+}
+
+.prestamos-estrategia span {
+  color: var(--text-3);
+  font-size: calc(12px * var(--font-scale));
+}
+
+.prestamos-estrategia.is-activo {
+  border-color: var(--mint);
+  background: var(--mint-dim);
+}
+
+.prestamos-plan-moneda {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prestamos-prioridad {
+  display: inline-block;
+  background: var(--surface-2);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 700;
+  color: var(--text-2);
+  vertical-align: middle;
+}
+
+.prestamos-empate {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.prestamos-empate-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* ─── Simulación ─── */
+
+.prestamos-sim-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: calc(13px * var(--font-scale));
+  color: var(--text-2);
+}
+
+.prestamos-sim-row.is-destacado {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 8px 0;
+  margin: 4px 0;
+  color: var(--text);
+}
+
+.prestamos-sim-row strong {
+  font-family: var(--font-display);
+  text-align: right;
+}
+
+.prestamos-no-calculable {
+  color: var(--text-3);
+  font-weight: 400;
+  font-size: calc(12px * var(--font-scale));
+}
+
+/* ─── Cuestionario de Vínculos ─── */
+
+.prestamos-vinculos {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+}
+
+.prestamos-vinculos-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.prestamos-vinculos-head h3 {
+  margin: 0;
+  font-size: calc(16px * var(--font-scale));
+}
+
+.prestamos-pregunta {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.prestamos-pregunta-texto {
+  margin: 0;
+  font-size: calc(13px * var(--font-scale));
+  line-height: 1.45;
+  color: var(--text);
+}
+
+.prestamos-pregunta-peso {
+  color: var(--amber-ink);
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 700;
+}
+
+.prestamos-vinculos-actions {
+  display: flex;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.prestamos-vinculos-actions .btn {
+  flex: 1 1 auto;
+}
+
+/* ─── Toolbar con acciones (lista) ─── */
+
+.prestamos-toolbar-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ─── Alta y edición: agrupaciones del formulario ─── */
+
+.prestamos-fieldset {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.prestamos-fieldset legend {
+  padding: 0;
+  color: var(--text-2);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+/* Dos campos lado a lado siguen entrando en 390px; el resto se apila. */
+.prestamos-field-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.prestamos-alta-derivado {
+  display: block;
+  background: var(--surface-2);
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  color: var(--text-2);
+  font-size: calc(13px * var(--font-scale));
+  line-height: 1.4;
+}
+
+.prestamos-nota-destacada {
+  background: var(--surface-2);
+  border-left: 3px solid var(--amber-ink);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 0;
+}
+
+/* ─── Editor de cronograma ─── */
+
+.prestamos-cuotas-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+}
+
+.prestamos-cuotas-editor-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  color: var(--text-2);
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.prestamos-cuota-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.prestamos-cuota-edit-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.prestamos-cuota-edit-num {
+  font-size: calc(12px * var(--font-scale));
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.prestamos-cuota-edit-quitar {
+  background: transparent;
+  border: none;
+  color: var(--coral-ink);
+  font-size: calc(11px * var(--font-scale));
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* ─── Acciones del detalle y del historial ─── */
+
+.prestamos-detalle-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.prestamos-pago-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.prestamos-evento-link.is-peligro {
+  color: var(--coral-ink);
+}
+
+.prestamos-zona-peligro {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 12px;
+  margin-top: 8px;
+}
+
+/* ─── Tipo de evento del calendario ─── */
+
+.prestamos-tipo-evento {
+  display: inline-flex;
+  align-self: flex-start;
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-size: calc(10px * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.prestamos-tipo-evento.is-prestamo {
+  background: var(--mint-dim);
+  color: var(--mint-ink);
+}
+
+.prestamos-tipo-evento.is-tarjeta {
+  background: var(--purple-dim);
+  color: var(--text-2);
+}
+
+.prestamos-tipo-evento.is-recurrente {
+  background: var(--surface-3);
+  color: var(--text-2);
+}
+
+/* ─── 390px: nada se sale del ancho ─── */
+
+@media (max-width: 400px) {
+  .prestamos-field-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .prestamos-header .btn {
+    width: 100%;
+  }
+}

@@ -62,6 +62,9 @@ export function ConfiguracionBorradoCard() {
   // destructive exists in the DOM. The server verifies; this flag only mirrors
   // that one accepted attempt for the current mount.
   const [pinUnlocked, setPinUnlocked] = useState(false)
+  // The PIN itself, kept only for this mount: the reset RPC verifies it server-side,
+  // so a stolen session cannot wipe the account by calling the RPC directly.
+  const [verifiedPin, setVerifiedPin] = useState<string | null>(null)
   const [pinMessageKey, setPinMessageKey] = useState<string | null>(null)
   const [verifyingPin, setVerifyingPin] = useState(false)
   const needsPin = !gate.locked && gate.requiresPin && !pinUnlocked
@@ -72,6 +75,7 @@ export function ConfiguracionBorradoCard() {
       const result = await verifyPin(pin)
       if (result.ok) {
         setPinUnlocked(true)
+        setVerifiedPin(pin)
         setPinMessageKey(null)
         haptics.success()
         return
@@ -98,6 +102,7 @@ export function ConfiguracionBorradoCard() {
     try {
       await rpc('fn_borrar_datos_usuario', {
         p_confirmacion_texto: DELETE_DATA_CONFIRMATION_TEXT,
+        p_pin: verifiedPin,
       })
       showToast(t('settings_delete_data_success'), 'success')
       haptics.success()
@@ -219,7 +224,7 @@ export function ConfiguracionBorradoCard() {
             </button>
             {accountOpen && (
               <div className="config-delete-option-body">
-                <DeleteAccountCard embedded />
+                <DeleteAccountCard embedded pin={verifiedPin} />
               </div>
             )}
           </div>

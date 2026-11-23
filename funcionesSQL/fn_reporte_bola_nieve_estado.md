@@ -6,6 +6,7 @@ CREATE OR REPLACE FUNCTION public.fn_reporte_bola_nieve_estado()
 AS $function$
 DECLARE
     v_user_id bigint;
+    v_hogar_id bigint;
     v_deuda_total numeric := 0;
     v_pagado_total numeric := 0;
     v_fecha_inicio date;
@@ -13,6 +14,8 @@ DECLARE
     v_cuota_total numeric;
 BEGIN
     SELECT user_id INTO v_user_id FROM public.usuarios WHERE auth_id = auth.uid();
+
+    SELECT hogar_id INTO v_hogar_id FROM public.p_hogar_participantes WHERE user_id = v_user_id;
     IF v_user_id IS NULL THEN
         RAISE EXCEPTION '{"key": "error_unauthorized", "params": {}}';
     END IF;
@@ -20,12 +23,12 @@ BEGIN
     SELECT COALESCE(SUM(saldo_actual), 0), COALESCE(SUM(monto_original - saldo_actual), 0)
     INTO v_deuda_total, v_pagado_total
     FROM public.p_prestamos
-    WHERE user_id = v_user_id AND estado = 'activo';
+    WHERE (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id)) AND estado = 'activo';
 
     SELECT COALESCE(SUM(cuota_mensual), 0)
     INTO v_cuota_total
     FROM public.p_prestamos
-    WHERE user_id = v_user_id AND estado = 'activo';
+    WHERE (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id)) AND estado = 'activo';
 
     SELECT fecha_inicio_plan, estrategia_activa
     INTO v_fecha_inicio, v_estrategia_actual

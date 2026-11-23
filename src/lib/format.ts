@@ -243,6 +243,59 @@ export function formatCurrency(
 }
 
 /**
+ * El mismo monto que `formatCurrency`, con el símbolo que decide el llamador.
+ *
+ * Existe por un caso concreto (A2, módulo de Préstamos): el locale inglés
+ * renderiza USD como un `$` pelado en TODAS sus regiones —CLDR sólo lo
+ * desambigua en es/pt, donde da `US$`—, así que respetar el idioma borraba la
+ * identidad de la moneda de la operación: un préstamo en dólares se leía como si
+ * fuera plata local. La resolución del símbolo NO vive acá: la decide quien
+ * llama. Acá sólo se reemplaza la parte `currency` de `formatToParts`, así el
+ * resto del formato (signo, agrupación, posición y espacio) sigue siendo el del
+ * locale activo y el idioma no se pierde.
+ *
+ * Aditivo a propósito: `formatCurrency` no cambia para el resto de la app.
+ */
+export function formatCurrencyWithSymbol(
+  amount: number | string | undefined | null,
+  currency: string | undefined,
+  symbol: string
+): string {
+  const value = typeof amount === 'string' ? parseFloat(amount) : Number(amount)
+  if (Number.isNaN(value)) return '-'
+  // Sin símbolo propio no se inventa nada: se comporta como `formatCurrency`.
+  if (!symbol) return formatCurrency(value, currency)
+
+  const code = normalizeCurrency(currency)
+  const digits = decimalsFor(code)
+  const separators = separatorsFor(code)
+
+  try {
+    const options: Record<string, unknown> = {
+      style: 'currency',
+      currency: code,
+      minimumFractionDigits: digits,
+      maximumFractionDigits: digits,
+    }
+    if (separators.group) options.useGrouping = 'always'
+
+    const formatter = new Intl.NumberFormat(
+      context.locale,
+      options as unknown as Intl.NumberFormatOptions
+    )
+    return withChosenSeparators(
+      formatter
+        .formatToParts(value)
+        .map((part) => (part.type === 'currency' ? { ...part, value: symbol } : part)),
+      separators
+    )
+  } catch {
+    // Moneda o locale que Intl no conoce: se cae al formateador de siempre.
+    return formatCurrency(value, code)
+  }
+}
+
+/**
  * El mismo monto, SIN símbolo, respetando los decimales de cada moneda.
  *
  * Existe porque hay lugares que arman el texto a mano con el símbolo aparte (el hero

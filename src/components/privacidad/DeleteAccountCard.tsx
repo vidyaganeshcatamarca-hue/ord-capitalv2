@@ -14,9 +14,12 @@ interface DeleteAccountCardProps {
   /** When embedded (bug 12), the card renders withOUT its own header/help: the
    *  host option already shows title + explanatory text (collapsed in Ajustes). */
   embedded?: boolean
+  /** S15: the PIN already accepted by the host card. The RPC verifies it server-side,
+   *  so a session alone cannot archive the account. */
+  pin?: string | null
 }
 
-export function DeleteAccountCard({ embedded = false }: DeleteAccountCardProps) {
+export function DeleteAccountCard({ embedded = false, pin = null }: DeleteAccountCardProps) {
   const { showToast } = useToast()
   const { signOut } = useAuth()
   const [confirmText, setConfirmText] = useState('')
@@ -32,6 +35,7 @@ export function DeleteAccountCard({ embedded = false }: DeleteAccountCardProps) 
     try {
       const { data, error } = await supabase.rpc('fn_eliminar_cuenta_usuario', {
         p_confirmacion_texto: CONFIRMATION_TEXT,
+        p_pin: pin,
       })
       if (error) throw error
       const fecha = data ? new Date(String(data)).toLocaleDateString() : ''

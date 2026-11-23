@@ -104,7 +104,7 @@ BEGIN
 
     SELECT COALESCE(SUM(monto_total_deuda - monto_pagado_acumulado), 0) INTO v_deudas
     FROM p_prestamos
-    WHERE user_id = v_user_id AND tipo_flujo = 'debo' AND estado != 'cancelado';
+    WHERE (user_id = v_user_id OR (v_hogar_id IS NOT NULL AND hogar_id = v_hogar_id)) AND tipo_flujo = 'debo' AND estado NOT IN ('cancelado', 'eliminado');
 
     v_activo_total_ars := v_billeteras_ars + v_sobres_ars + v_inversiones_ars +
                           ((v_billeteras_usd + v_sobres_usd + v_inversiones_usd) * v_cotizacion_usd);
@@ -200,4 +200,4 @@ BEGIN
         )
     );
 END;
-$function$;
+$function$
