@@ -40,6 +40,7 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 import { t } from '@/locales/i18n'
 import { MAX_CAPTURES, useFramedCamera, type CameraErrorCode } from './useFramedCamera'
+import { createShutterFeedback } from './shutterSound'
 import './CameraCaptureSurface.css'
 
 export type CameraCaptureSurfaceProps = {
@@ -141,6 +142,9 @@ export function CameraCaptureSurface({
    * of when the blob lands. Without it, a 600 ms encode reads as "the button did
    * not work" and the operator taps again.
    */
+  /* One instance for the session: it owns the audio context. */
+  const shutterFeedbackRef = useRef(createShutterFeedback())
+  const shutterFeedback = shutterFeedbackRef.current
   const [flash, setFlash] = useState(false)
   const flashTimerRef = useRef<number | null>(null)
   useEffect(
@@ -151,6 +155,10 @@ export function CameraCaptureSurface({
   )
   const handleCapture = useCallback(() => {
     camera.capture()
+    /* Acknowledged on three channels at once: the frame is taken, the screen
+       flashes and the phone clicks. The operator is looking at the receipt, so
+       sound is the one that reaches them without moving their eyes. */
+    shutterFeedback.fire()
     setFlash(true)
     if (flashTimerRef.current !== null) window.clearTimeout(flashTimerRef.current)
     flashTimerRef.current = window.setTimeout(() => setFlash(false), 140)
