@@ -46,6 +46,23 @@ export interface ShutterFeedback {
   fire: () => void
 }
 
+/**
+ * Wakes the audio context on the FIRST gesture anywhere on the screen.
+ *
+ * Browsers keep a context suspended until a gesture happens, and scheduling a
+ * sound in the same tick as the first gesture is a race the phone usually loses.
+ * Waking it on `pointerdown` means the tap that reaches `Capturar` later finds a
+ * running context.
+ */
+export function unlockShutterAudio(): void {
+  try {
+    const ctx = audioContext();
+    if (ctx !== null && ctx.state !== 'running') void ctx.resume().catch(() => undefined);
+  } catch {
+    /* nothing to unlock: no sound is not an error */
+  }
+}
+
 /** How long the phone buzzes with the shot. Short enough to feel like a button. */
 const VIBRATE_MS = 15
 
@@ -57,6 +74,29 @@ export function playShutterSound(): void {
   try {
     const ctx = audioContext();
     if (ctx === null) return;
+
+    /*
+     * The context starts suspended until the browser sees a gesture, and starting
+     * a node on a suspended context plays nothing -- silently, which is exactly
+     * the bug this file shipped with. `resume()` is a promise, so the sound is
+     * scheduled AFTER it settles, when the clock is actually running.
+     */
+    if (ctx.state !== 'running') {
+      void ctx.resume().then(
+        () => scheduleClick(ctx),
+        () => undefined,
+      );
+      return;
+    }
+    scheduleClick(ctx);
+  } catch {
+    /* no sound is not an error: the capture already happened */
+  }
+}
+
+/** Programs the click at the context's current time. */
+function scheduleClick(ctx: AudioContext): void {
+  try {
     const now = ctx.currentTime;
 
     // The mechanical part: a very short noise burst with a falling envelope.
@@ -71,7 +111,7 @@ export function playShutterSound(): void {
     const noise = ctx.createBufferSource();
     noise.buffer = buffer;
     const noiseGain = ctx.createGain();
-    noiseGain.gain.value = 0.22;
+    noiseGain.gain.value = 0.34;
     noise.connect(noiseGain);
     noiseGain.connect(ctx.destination);
     noise.start(now);
@@ -82,7 +122,7 @@ export function playShutterSound(): void {
     tone.type = 'square';
     tone.frequency.value = 1750;
     const toneGain = ctx.createGain();
-    toneGain.gain.setValueAtTime(0.09, now);
+    toneGain.gain.setValueAtTime(0.14, now);
     toneGain.gain.exponentialRampToValueAtTime(0.0001, now + CLICK_MS / 1000);
     tone.connect(toneGain);
     toneGain.connect(ctx.destination);

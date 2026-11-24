@@ -40,7 +40,7 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 import { t } from '@/locales/i18n'
 import { MAX_CAPTURES, useFramedCamera, type CameraErrorCode } from './useFramedCamera'
-import { createShutterFeedback } from './shutterSound'
+import { createShutterFeedback, unlockShutterAudio } from './shutterSound'
 import './CameraCaptureSurface.css'
 
 export type CameraCaptureSurfaceProps = {
@@ -145,6 +145,14 @@ export function CameraCaptureSurface({
   /* One instance for the session: it owns the audio context. */
   const shutterFeedbackRef = useRef(createShutterFeedback())
   const shutterFeedback = shutterFeedbackRef.current
+  /* One listener for the whole session: the first touch anywhere (including the
+     shutter itself) wakes the audio context, so the click is heard from the very
+     first shot instead of the second. */
+  useEffect(() => {
+    const unlock = (): void => unlockShutterAudio()
+    window.addEventListener('pointerdown', unlock, { once: true, passive: true })
+    return () => window.removeEventListener('pointerdown', unlock)
+  }, [])
   const [flash, setFlash] = useState(false)
   const flashTimerRef = useRef<number | null>(null)
   useEffect(
