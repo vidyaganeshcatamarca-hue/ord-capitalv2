@@ -14,12 +14,20 @@
 // mismas fotos o borrarla del historial. Sin eso quedaba "Recibido · En espera"
 // para siempre, que es peor que un error visible.
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { t } from '@/locales/i18n'
 import { useAuth } from '@/contexts/AuthContext'
-import { loadOcrHistory, type OcrHistoryEntry, type OcrHistoryStatus } from '@/ocr/history'
+import {
+  acknowledgeRejectedOcrHistory,
+  bumpOcrHistoryRetry,
+  canRetryRejectedEntry,
+  loadOcrHistory,
+  OCR_HISTORY_MAX_MANUAL_RETRIES,
+  type OcrHistoryEntry,
+  type OcrHistoryStatus,
+} from '@/ocr/history'
 import { describeOcrJobStatus } from '@/ocr/jobStatusLabel'
 import { loadOcrJobs, type StoredOcrJob } from '@/ocr/storage'
 import { isLostOcrHistoryEntry } from '@/ocr/recovery'
@@ -60,6 +68,19 @@ export function OcrHistoryModal({ onClose, onResend, onDiscard }: OcrHistoryModa
   // following it any more). A network failure is not lost: the upload exists.
   const jobs = loadOcrJobs().value
 
+  /*
+   * Opening this list IS the acknowledgement: the owner is reading it, so the
+   * rejection stops asking for attention. It also makes the row trimmable again
+   * -- while unseen, `trimHistory` keeps it no matter how old it is.
+   */
+  useEffect(() => {
+    acknowledgeRejectedOcrHistory()
+  }, [])
+
+  /** The stored job for a row, when there is one. */
+  const jobOf = (jobId: string): StoredOcrJob | undefined =>
+    jobs.find(job => job.job_id === jobId)
+
   // Two accounts share this phone. A row belongs to whoever uploaded it: the
   // entry records its owner, and the older ones that predate that field are
   // resolved through the job they point at. A row nobody can be attributed to
@@ -77,6 +98,13 @@ export function OcrHistoryModal({ onClose, onResend, onDiscard }: OcrHistoryModa
   const openQuarantine = (): void => {
     onClose()
     navigate('/cuarentena')
+  }
+
+  /** Counts the attempt and refreshes the rows so the limit shows immediately. */
+  const bumpOnce = (jobId: string): number | null => {
+    const bumped = bumpOcrHistoryRetry(jobId)
+    setEntries(loadOcrHistory().value)
+    return bumped === null ? null : bumped.retryCount
   }
 
   const run = async (
@@ -156,6 +184,38 @@ export function OcrHistoryModal({ onClose, onResend, onDiscard }: OcrHistoryModa
                         {statusText}
                       </span>
                     </Row>
+                    {entry.status === 'rejected' && (
+                      <div className="ocr-history-failed">
+                        <p className="ocr-history-failed-text">{t('ocr.job_failed_message')}</p>
+                        {onResend !== undefined && (
+                          <button
+                            type="button"
+                            className="ocr-history-action ocr-history-action--retry"
+                            disabled={
+                              busy !== null ||
+                              !canRetryRejectedEntry(entry, jobOf(entry.job_id)?.quarantine_dispatched === true)
+                            }
+                            onClick={() => {
+                              // The counter is bumped BEFORE the resend: if the
+                              // upload throws, the attempt still counts, which is
+                              // exactly what keeps a broken ticket from being
+                              // hammered.
+                              const bumped = bumpOnce(entry.job_id)
+                              if (bumped === null) return
+                              void run(entry.job_id, onResend)
+                            }}
+                          >
+                            {t('ocr.history_retry')}
+                          </button>
+                        )}
+                        {(entry.retry_count ?? 0) >= OCR_HISTORY_MAX_MANUAL_RETRIES && (
+                          <p className="ocr-history-failed-limit">
+                            {t('ocr.history_retry_limit')}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
                     {lost && (onResend !== undefined || onDiscard !== undefined) && (
                       <div className="ocr-history-actions">
                         {onResend !== undefined && (

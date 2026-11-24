@@ -1098,3 +1098,48 @@ button.ocr-file-btn:disabled {
 .ocr-history-status--upload_failed {
   color: var(--coral, #e63946);
 }
+
+/* A rejected ticket that nobody has read yet. It is a notice, not decoration:
+   without it a failed job reads as one that is merely still processing. */
+.ocr-history-badge {
+  align-items: center;
+  background: var(--coral, #e63946);
+  border-radius: 999px;
+  color: #fff;
+  display: inline-flex;
+  font-size: calc(0.7rem * var(--font-scale));
+  font-weight: 700;
+  gap: 4px;
+  margin-left: auto;
+  padding: 2px 8px;
+}
+
+.ocr-history-badge-text {
+  font-weight: 600;
+}
+
+/* The failed row: one sentence that says what happened, and the one action that
+   can help. No error codes here -- the code stays in telemetry. */
+.ocr-history-failed {
+  display: grid;
+  gap: 8px;
+  padding: 0 0 10px;
+}
+
+.ocr-history-failed-text {
+  color: var(--text-2);
+  font-size: calc(0.85rem * var(--font-scale));
+  line-height: 1.4;
+  margin: 0;
+}
+
+.ocr-history-failed-limit {
+  color: var(--text-3);
+  font-size: calc(0.8rem * var(--font-scale));
+  margin: 0;
+}
+
+.ocr-history-action--retry {
+  border-color: var(--coral, #e63946);
+  color: var(--coral, #e63946);
+}

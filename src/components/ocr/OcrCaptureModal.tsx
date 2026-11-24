@@ -37,6 +37,7 @@ import { isOcrPdfFile } from '@/ocr/contract'
 import { CameraCaptureSurface } from '@/ocr/camera/CameraCaptureSurface'
 import type { CameraErrorCode } from '@/ocr/camera/useFramedCamera'
 import { OcrHistoryModal } from './OcrHistoryModal'
+import { selectUnseenRejectedEntries, loadOcrHistory } from '@/ocr/history'
 import './Ocr.css'
 
 interface OcrCaptureModalProps {
@@ -121,6 +122,12 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
   const totalBytes = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files])
 
   const [showHistory, setShowHistory] = useState(false)
+  /* Rejections the owner has not read yet. Recomputed whenever the sheet or the
+     list changes state, so closing the list clears the badge immediately. */
+  const [unseenRejections, setUnseenRejections] = useState(0)
+  useEffect(() => {
+    setUnseenRejections(selectUnseenRejectedEntries(loadOcrHistory().value).length)
+  }, [open, showHistory])
 
   // The camera is a SOURCE the owner picks, never the screen the sheet opens on,
   // and never the only one. This holds the reason the browser refused it (no
@@ -729,6 +736,16 @@ export function OcrCaptureModal({ open, onClose }: OcrCaptureModalProps) {
             onClick={() => setShowHistory(true)}
           >
             <span>📷 {t('ocr.history_title')}</span>
+            {/* A rejected ticket nobody has read is the one thing this list owes
+                the owner: the count is the notice, and opening the list clears
+                it. A silent row would leave a failed ticket looking like one
+                that is merely still processing. */}
+            {unseenRejections > 0 && (
+              <span className="ocr-history-badge" aria-live="polite">
+                {unseenRejections}
+                <span className="ocr-history-badge-text">{t('ocr.history_failed_count')}</span>
+              </span>
+            )}
             <span aria-hidden="true">›</span>
           </button>
 

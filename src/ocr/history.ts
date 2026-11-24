@@ -38,6 +38,18 @@ export interface OcrHistoryEntry {
   /** Fila de cuarentena, cuando ya existe: permite saltar a ella. */
   pendiente_id: number | null;
   /**
+   * Cuantas veces el dueno reintento ESTE envio reusando los archivos
+   * originales. Una foto nueva crea otro envio y su propio contador; por eso el
+   * limite solo protege el reenvio de lo mismo, que es el que multiplica trafico
+   * contra el servicio OCR con un ticket que ya se sabe problematico.
+   */
+  retry_count?: number;
+  /**
+   * Cuando el dueno ya vio el rechazo. Ausente en un rechazo que todavia nadie
+   * miro: eso es lo que alimenta el aviso, y lo que el recorte no puede perder.
+   */
+  acknowledged_at?: string;
+  /**
    * Ultimo estado real del backend para ese envio. La fila lo usa para decir
    * que esta pasando (leyendo, clasificando, en espera) en vez de un
    * "Procesando" plano que a los diez minutos no informa nada.
@@ -60,6 +72,18 @@ export const OCR_HISTORY_STORAGE_KEY = 'ord.ocr.v1.history' as const;
 
 /** Cuantos envios recuerda el telefono. Pedido del dueño: los ultimos cinco. */
 export const OCR_HISTORY_LIMIT = 5;
+
+/**
+ * Reenvios manuales permitidos por envio rechazado, con las MISMAS imagenes.
+ *
+ * Dos alcanzan para descartar un fallo transitorio y no alcanzan para martillar
+ * el servicio con un ticket que falla siempre. Una foto nueva es otro envio y
+ * otro contador, asi que nunca limita al dueno que decide volver a sacarlo.
+ */
+export const OCR_HISTORY_MAX_MANUAL_RETRIES = 2;
+
+/** Rechazos que el dueno todavia no vio: son los que piden un aviso. */
+export const OCR_HISTORY_UNSEEN_STATUSES: readonly OcrHistoryStatus[] = ['rejected'];
 
 const STATUSES: readonly OcrHistoryStatus[] = [
   'upload_pending',
@@ -110,7 +134,17 @@ function trimHistory(entries: readonly OcrHistoryEntry[]): OcrHistoryEntry[] {
   const unsent = sorted.filter(
     (entry) => OCR_HISTORY_UNSENT_STATUSES.includes(entry.status) && !kept.includes(entry),
   )
-  return [...kept, ...unsent]
+  // An unseen rejection is the one row the owner still owes an explanation: the
+  // ticket failed, nobody told him, and trimming it here would erase the only
+  // notice he was ever going to get.
+  const unseen = sorted.filter(
+    (entry) =>
+      OCR_HISTORY_UNSEEN_STATUSES.includes(entry.status) &&
+      entry.acknowledged_at === undefined &&
+      !kept.includes(entry) &&
+      !unsent.includes(entry),
+  )
+  return [...kept, ...unsent, ...unseen]
 }
 
 export interface HistoryRead {
@@ -203,6 +237,68 @@ export function patchOcrHistory(
     updated_at: patch.updated_at ?? new Date().toISOString(),
   }
   return save(next)
+}
+
+/** Los rechazos que nadie miro todavia. */
+export function selectUnseenRejectedEntries(
+  entries: readonly OcrHistoryEntry[],
+): OcrHistoryEntry[] {
+  return entries.filter(
+    (entry) =>
+      OCR_HISTORY_UNSEEN_STATUSES.includes(entry.status) && entry.acknowledged_at === undefined,
+  )
+}
+
+/**
+ * Marca como vistos TODOS los rechazos pendientes de aviso.
+ *
+ * Se llama al abrir la lista de envios: a partir de ahi el dueno ya sabe que
+ * paso y el aviso no tiene por que seguir insistiendo.
+ */
+export function acknowledgeRejectedOcrHistory(): { durable: boolean; acknowledged: number } {
+  const current = loadOcrHistory().value
+  const unseen = selectUnseenRejectedEntries(current)
+  if (unseen.length === 0) return { durable: true, acknowledged: 0 }
+  const now = new Date().toISOString()
+  const ids = new Set(unseen.map((entry) => entry.job_id))
+  const next = current.map((entry) =>
+    ids.has(entry.job_id) ? { ...entry, acknowledged_at: now, updated_at: now } : entry,
+  )
+  const saved = save(next)
+  return { durable: saved.durable, acknowledged: unseen.length }
+}
+
+/**
+ * Suma un reenvio manual al contador del envio y lo devuelve.
+ *
+ * Devuelve `null` cuando el envio no existe o cuando ya agoto el limite: el
+ * llamador no tiene que reimplementar la regla ni confiar en que la UI la
+ * respete.
+ */
+export function bumpOcrHistoryRetry(jobId: string): { retryCount: number } | null {
+  const current = loadOcrHistory().value
+  const index = current.findIndex((entry) => entry.job_id === jobId)
+  if (index === -1) return null
+  const used = current[index].retry_count ?? 0
+  if (used >= OCR_HISTORY_MAX_MANUAL_RETRIES) return null
+  const next = [...current]
+  next[index] = { ...current[index], retry_count: used + 1, updated_at: new Date().toISOString() }
+  save(next)
+  return { retryCount: used + 1 }
+}
+
+/**
+ * Si un envio rechazado todavia puede reintentarse con SUS imagenes.
+ *
+ * `quarantine_dispatched` gana sobre todo lo demas: si la cuarentena ya se
+ * despacho, reenviar crearia un segundo despacho del mismo ticket.
+ */
+export function canRetryRejectedEntry(entry: OcrHistoryEntry, quarantineDispatched = false): boolean {
+  if (entry.status !== 'rejected') return false
+  // La cuarentena ya despachada gana sobre todo lo demas: reenviar crearia un
+  // segundo despacho del mismo ticket. El dato vive en el job, no en la fila.
+  if (quarantineDispatched) return false
+  return (entry.retry_count ?? 0) < OCR_HISTORY_MAX_MANUAL_RETRIES
 }
 
 /**
