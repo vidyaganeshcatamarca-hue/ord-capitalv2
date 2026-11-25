@@ -40,12 +40,7 @@
 import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 import { t } from '@/locales/i18n'
 import { MAX_CAPTURES, useFramedCamera, type CameraErrorCode } from './useFramedCamera'
-import {
-  createShutterFeedback,
-  playShutterSound,
-  unlockShutterAudio,
-  type ShutterVariant,
-} from './shutterSound'
+import { createShutterFeedback, unlockShutterAudio } from './shutterSound'
 import './CameraCaptureSurface.css'
 
 export type CameraCaptureSurfaceProps = {
@@ -249,22 +244,6 @@ export function CameraCaptureSurface({
         className === undefined ? '' : ` ${className}`
       }`}
     >
-      {/* PROOF ONLY: pick the shutter by ear. Removed once one is chosen. */}
-      {isScreen && (
-        <div className="camera-surface-sound-test">
-          {(['slr', 'press', 'compact'] as ShutterVariant[]).map(variant => (
-            <button
-              key={variant}
-              type="button"
-              className="camera-surface-sound-chip"
-              onClick={() => playShutterSound(variant)}
-            >
-              {variant}
-            </button>
-          ))}
-        </div>
-      )}
-
       {isScreen && (
         <div className="camera-surface-topbar">
           <button

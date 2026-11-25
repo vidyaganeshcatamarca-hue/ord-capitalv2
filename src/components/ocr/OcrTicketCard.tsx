@@ -309,6 +309,10 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
         changed_item_count: corrections.length,
         duplicate: undefined,
       })
+      // Local success signal for ORD Engage (S3.b): no amounts, no merchant and
+      // no ticket id — only the operation. Dispatched AFTER the save resolved
+      // and BEFORE the editor closes, so the pause can start here.
+      window.dispatchEvent(new CustomEvent('ocr-quarantine-saved', { detail: { operation: 'ocr-quarantine-saved' } }))
       showToast(t('ocr.saved'), 'success')
       // Saving is what closes the editor: the owner sees the updated card again.
       setEditing(false)
@@ -335,6 +339,10 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
         group_count: groupsCreated,
         status: 'completed',
       })
+      // Local success signal for ORD Engage (S3.b): only the operation, nothing
+      // financial and nothing identifying. Dispatched AFTER the confirmation
+      // resolved and BEFORE the editor closes.
+      window.dispatchEvent(new CustomEvent('ocr-ticket-confirmed', { detail: { operation: 'ocr-ticket-confirmed' } }))
       showToast(t('ocr.confirmed', { count: String(groupsCreated) }), 'success')
       // The local history keeps the outcome after the job itself is gone.
       if (jobId) patchOcrHistory(jobId, { status: 'approved' })
@@ -356,7 +364,7 @@ export function OcrTicketCard({ item, onChanged }: OcrTicketCardProps) {
         item_count: items.length,
       })
       showToast(t('ocr.rejected'), 'success')
-      if (jobId) patchOcrHistory(jobId, { status: 'rejected' })
+      if (jobId) patchOcrHistory(jobId, { status: 'dismissed' })
       onChanged()
     } catch (error) {
       showToast(parseError(error), 'error')

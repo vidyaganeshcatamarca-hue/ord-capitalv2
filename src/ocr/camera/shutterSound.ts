@@ -7,38 +7,70 @@
 // already acknowledges the tap, but sight needs the eyes: a click says "it fired"
 // while the eyes stay on the paper.
 //
-// WHAT A CAMERA SOUNDS LIKE
+// TWO SOURCES, IN THIS ORDER
 // -------------------------
-// Not a beep. A film camera has TWO mechanical events and a spring:
-//   1. the mirror slaps up   -> a sharp, broadband crack (noise, a few ms)
-//   2. the body of the hit   -> a low, short thump with a metallic edge
-//   3. the shutter closes    -> a second, softer crack a moment later
-//   4. the spring settles    -> a quiet, filtered tail
-// A single oscillator reads as a microwave keypad, which is why the first version
-// was rejected by ear.
+// 1. A real recording: `public/sounds/shutter.mp3`, a Holga 120S actuation, first
+//    click only. Public domain (Wikimedia Commons, by Doitashimashi), so it ships
+//    inside the app with no attribution and no share-alike obligation.
+// 2. A synthesised mechanism, used only when the recording cannot play: a cached
+//    bundle that lost the file, a browser that refuses audio, an old device.
+//
+// WHERE THE FILE LIVES
+// --------------------
+// Web: the file is part of the app's static assets. It is fetched once from the
+// hosting and then kept by the service worker, so later taps read it from the
+// phone, not from the network.
+// APK: the whole web bundle is packaged inside the APK, so the 4 KB file is
+// installed with the app and never travels over the network at all.
 //
 // THE APK, LATER
 // --------------
 // Same shape as `focus.ts`: this is the WEB fallback. The Android build replaces
-// `createShutterFeedback()` with the camera's own shutter sound plus Haptics, and
-// the surface keeps calling `fire()`.
+// `createShutterFeedback()` with the native shutter sound plus Haptics, and the
+// surface keeps calling `fire()`.
 
-/** The three mechanisms, kept as presets so the owner can pick by ear. */
+/** The synthesised mechanisms, kept as presets and as the fallback path. */
 export type ShutterVariant = 'slr' | 'press' | 'compact'
 
 /**
  * The one thing the surface needs: "the shot was taken". How that reaches the
- * operator (synthesised click, native shutter, haptics) is this module's problem.
+ * operator (recording, synthesised click, native shutter, haptics) is this
+ * module's problem.
  */
 export interface ShutterFeedback {
   fire: () => void
 }
 
-/** One context for the whole session: creating one per shot leaks and warns. */
-let context: AudioContext | null = null
+/** Served from `public/`, so it is one of the app's own static assets. */
+const SHUTTER_FILE = '/sounds/shutter.mp3'
 
 /** How long the phone buzzes with the shot. Short enough to feel like a button. */
 const VIBRATE_MS = 15
+
+/**
+ * One prepared element for the session.
+ *
+ * `Audio` instead of decoding into Web Audio: `play()` on a preloading element
+ * still emits as soon as its buffer exists, while `decodeAudioData` would need an
+ * `await` on the first tap.
+ */
+let shuttered: HTMLAudioElement | null | undefined
+
+function shutterElement(): HTMLAudioElement | null {
+  if (shuttered !== undefined) return shuttered
+  if (typeof Audio === 'undefined') {
+    shuttered = null
+    return null
+  }
+  const element = new Audio(SHUTTER_FILE)
+  element.preload = 'auto'
+  element.volume = 0.9
+  shuttered = element
+  return element
+}
+
+/** One context for the whole session: creating one per shot leaks and warns. */
+let context: AudioContext | null = null
 
 function audioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null
@@ -55,13 +87,13 @@ function audioContext(): AudioContext | null {
  *
  * Browsers keep a context suspended until a gesture happens, and scheduling a
  * sound in the same tick as the first gesture is a race the phone usually loses.
- * Waking it on `pointerdown` means the tap that reaches `Capturar` later finds a
- * running context.
  */
 export function unlockShutterAudio(): void {
   try {
     const ctx = audioContext()
     if (ctx !== null && ctx.state !== 'running') void ctx.resume().catch(() => undefined)
+    // Starting the fetch of the recording here means the first tap has it ready.
+    shutterElement()
   } catch {
     /* nothing to unlock: no sound is not an error */
   }
@@ -83,7 +115,6 @@ function crack(
   const data = buffer.getChannelData(0)
   for (let i = 0; i < frames; i += 1) {
     const p = i / frames
-    // A very fast decay is what makes it a "crack" and not a "shhh".
     data[i] = (Math.random() * 2 - 1) * Math.pow(1 - p, decay)
   }
   const source = ctx.createBufferSource()
@@ -112,7 +143,6 @@ function thump(
   const osc = ctx.createOscillator()
   osc.type = type
   osc.frequency.setValueAtTime(frequency, at)
-  // A small downward glide: metal under load, not a synthesizer note.
   osc.frequency.exponentialRampToValueAtTime(frequency * 0.72, at + duration)
   const gain = ctx.createGain()
   gain.gain.setValueAtTime(gainValue, at)
@@ -123,13 +153,7 @@ function thump(
   osc.stop(at + duration)
 }
 
-/**
- * Programs the click at the context's current time, for one mechanism.
- *
- *   slr     — a film SLR: two cracks with a heavy body between them.
- *   press   — a press camera: slower, deeper, more air and a longer spring.
- *   compact — a 90s compact: fast, dry, higher and much shorter.
- */
+/** Programs the fallback click at the context's current time. */
 function scheduleClick(ctx: AudioContext, variant: ShutterVariant): void {
   try {
     const t = ctx.currentTime
@@ -152,7 +176,6 @@ function scheduleClick(ctx: AudioContext, variant: ShutterVariant): void {
       return
     }
 
-    // 'slr' — the default: mirror up, then the shutter closes.
     crack(ctx, t, 0.007, 0.5, 'highpass', 900, 0.7, 5)
     thump(ctx, t, 165, 0.07, 0.42, 'sine')
     thump(ctx, t, 330, 0.05, 0.14, 'triangle')
@@ -164,20 +187,15 @@ function scheduleClick(ctx: AudioContext, variant: ShutterVariant): void {
   }
 }
 
-/**
- * Plays the shutter click. Never throws: a phone that cannot play it still
- * captures, and the flash remains as the acknowledgement.
- */
-export function playShutterSound(variant: ShutterVariant = 'slr'): void {
+/** The Web Audio path: only reached when the recording cannot play. */
+function playSynthesised(variant: ShutterVariant): void {
   try {
     const ctx = audioContext()
     if (ctx === null) return
-
     /*
-     * The context starts suspended until the browser sees a gesture, and starting
-     * a node on a suspended context plays nothing -- silently, which is exactly
-     * the bug this file shipped with. `resume()` is a promise, so the sound is
-     * scheduled AFTER it settles, when the clock is actually running.
+     * A context that never saw a gesture is `suspended`, and starting a node on it
+     * plays nothing at all -- silently. So the click is scheduled AFTER resume()
+     * settles, when the clock is actually running.
      */
     if (ctx.state !== 'running') {
       void ctx.resume().then(
@@ -193,7 +211,28 @@ export function playShutterSound(variant: ShutterVariant = 'slr'): void {
 }
 
 /**
- * The web implementation of the shutter feedback: synthesised click plus a short
+ * Plays the shutter. Never throws: a phone that cannot play it still captures,
+ * and the flash remains as the acknowledgement.
+ */
+export function playShutterSound(variant: ShutterVariant = 'slr'): void {
+  try {
+    const element = shutterElement()
+    if (element !== null) {
+      // Rewind: a rapid second shot must not resume mid-file.
+      element.currentTime = 0
+      const played = element.play()
+      if (played === undefined) return
+      void played.catch(() => playSynthesised(variant))
+      return
+    }
+  } catch {
+    /* fall through to the synthesised click */
+  }
+  playSynthesised(variant)
+}
+
+/**
+ * The web implementation of the shutter feedback: the recording plus a short
  * vibration, both on the tap.
  *
  * A device with neither still captures: `fire()` swallows everything.

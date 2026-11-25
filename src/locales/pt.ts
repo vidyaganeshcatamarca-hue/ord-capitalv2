@@ -922,6 +922,7 @@ export const ocr = {
   history_status_quarantine: "Para aprovar",
   history_status_approved: "Aprovado",
   history_status_rejected: "Recusado",
+  history_status_dismissed: "Rejeitado",
   history_open: "Ver na quarentena",
   history_lost: "O servidor não o tem mais",
   history_resend: "Reenviar",

@@ -922,6 +922,7 @@ export const ocr = {
   history_status_quarantine: "Ready to approve",
   history_status_approved: "Approved",
   history_status_rejected: "Rejected",
+  history_status_dismissed: "Rejected",
   history_open: "Open in quarantine",
   history_lost: "The server no longer has it",
   history_resend: "Resend",

@@ -22,7 +22,16 @@ export type OcrHistoryStatus =
   | 'classified'
   | 'quarantine'
   | 'approved'
-  | 'rejected';
+  /** The backend could not read the ticket: a failure the owner must be told about. */
+  | 'rejected'
+  /**
+   * The OWNER dismissed the proposed ticket in the quarantine.
+   *
+   * Not an error and never shown as one: rejecting a misread ticket is a normal
+   * decision, and painting it with the OCR failure message told the owner his
+   * system broke when he was the one who chose.
+   */
+  | 'dismissed';
 
 import type { OcrJobStatus } from './types';
 
@@ -93,6 +102,7 @@ const STATUSES: readonly OcrHistoryStatus[] = [
   'quarantine',
   'approved',
   'rejected',
+  'dismissed',
 ];
 
 /**
