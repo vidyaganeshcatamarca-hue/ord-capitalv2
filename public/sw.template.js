@@ -14,7 +14,7 @@ const ASSETS_TO_CACHE = [
   '/icon-shortcut-add-192.png',
   '/icono_logo.png',
   '/logo.png',
-  '/sounds/shutter-v2.mp3',
+  '/sounds/shutter.mp3',
 ];
 
 // Installation: cache core shell + skipWaiting para activar el nuevo SW inmediatamente
