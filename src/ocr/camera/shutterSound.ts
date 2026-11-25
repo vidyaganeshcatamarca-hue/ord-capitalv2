@@ -42,7 +42,7 @@ export interface ShutterFeedback {
 }
 
 /** Served from `public/`, so it is one of the app's own static assets. */
-const SHUTTER_FILE = '/sounds/shutter.mp3'
+const SHUTTER_FILE = '/sounds/shutter-v2.mp3'
 
 /** How long the phone buzzes with the shot. Short enough to feel like a button. */
 const VIBRATE_MS = 15
